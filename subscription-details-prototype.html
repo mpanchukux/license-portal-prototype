@@ -25,7 +25,7 @@
   .icon[hidden]{display:none}
 
   /* ---------- app shell ---------- */
-  .app{display:grid;grid-template-columns:220px 1fr;min-height:100vh}
+  .app{display:grid;grid-template-columns:1fr;min-height:100vh}
 
   .sidebar{background:var(--chrome);border-right:1px solid var(--chromeLine);display:flex;flex-direction:column}
   .brand{display:flex;align-items:center;gap:9px;padding:16px 16px;border-bottom:1px solid var(--chromeLine)}
@@ -40,6 +40,8 @@
 
   .main{display:flex;flex-direction:column;min-width:0}
   .topbar{height:52px;flex:none;display:flex;align-items:center;gap:14px;padding:0 18px;background:var(--chrome);border-bottom:1px solid var(--chromeLine)}
+  /* side + top navigation hidden for now so it doesn't distract */
+  .sidebar,.topbar{display:none}
   .topbar .pt{font-size:13.5px;font-weight:600}
   .topbar .sp{flex:1}
   .iconbutton{width:30px;height:30px;border:1px solid transparent;border-radius:6px;background:transparent;color:var(--mid);display:flex;align-items:center;justify-content:center}
@@ -58,17 +60,18 @@
   .crumb{padding:10px 22px;font-size:12px;color:var(--faint);background:var(--bg);border-bottom:1px solid var(--line2)}
   .crumb b{color:var(--mid);font-weight:600}
   .content{padding:22px;overflow:auto}
-  .sheet{max-width:none;margin:0}
+  .sheet{width:75%;margin:0}
 
   /* ---------- canvas ---------- */
   .canvas{background:var(--card);border:1px solid var(--line);border-radius:6px;overflow:hidden}
-  .head{padding:16px 18px 14px;border-bottom:1px solid var(--line2)}
+  .head{padding:22px 22px 20px;border-bottom:1px solid var(--line2);background:#fafafa}
   .head .top{display:flex;align-items:flex-start;gap:10px}
   .back{width:24px;height:24px;border:1px solid var(--line);border-radius:4px;display:flex;align-items:center;justify-content:center;color:var(--mid);background:#fff;flex:none}
   .back:hover{background:var(--hover);color:var(--ink)}
   .title{font-size:18px;font-weight:700;line-height:1.25}
   .sub{color:var(--mid);font-size:12.5px;margin-top:2px}
-  .badges{display:flex;gap:8px;margin-top:9px;flex-wrap:wrap;align-items:center}
+  .badges{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;align-items:center}
+  .period{font-size:12px;color:var(--ink);font-variant-numeric:tabular-nums}
   .chip{font-size:11.5px;padding:2px 9px;border:1px solid var(--line);border-radius:999px;color:var(--mid);background:#fafafa;display:inline-flex;align-items:center;gap:6px}
   .chip.status{border-color:var(--ink);color:var(--ink);font-weight:600;background:#fff}
   .chip .sdot{width:7px;height:7px;border-radius:50%;background:var(--ink);flex:none}
@@ -108,6 +111,14 @@
   .panel[hidden]{display:none}
   .section{padding:16px 18px;border-bottom:1px solid var(--line2)}
   .section:last-child{border-bottom:0}
+  /* divider between every top-level block on the details page */
+  #panel-details,#panel-prod{border-bottom:1px solid var(--line2)}
+  /* light-grey sub-cards (Billing / Invoices / Production instances) */
+  .billcard{background:#f6f6f4;border:1px solid var(--line2);border-radius:8px;padding:14px 16px;margin-top:12px}
+  .billcard-h{margin:0 0 10px;font-size:13px;font-weight:600;color:var(--ink)}
+  .billgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:12px}
+  .billgrid .billcard{margin-top:0}
+  .billcard-d{font-size:13px;color:var(--ink)}
   .sh{display:flex;align-items:center;gap:8px;margin-bottom:12px}
   .sh .n{width:20px;height:20px;border-radius:50%;background:var(--ink);color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center;flex:none}
   .sh h3{margin:0;font-size:13px;letter-spacing:.02em;text-transform:uppercase;color:var(--ink)}
@@ -154,14 +165,14 @@
   .pill{font-size:11px;padding:1px 8px;border:1px solid var(--ink);color:var(--ink);background:#fff;border-radius:999px}
   .pill.soft{border-color:var(--line);color:var(--mid)}
 
-  .inline{margin-top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .inline{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
   .inline[hidden]{display:none}
   .inline input{font:inherit;font-size:12.5px;padding:6px 10px;border:1px solid var(--ink);border-radius:5px;width:180px;outline:none}
 
   .stub{color:var(--faint);font-size:12.5px;padding:18px;text-align:center;border:1px dashed var(--line);border-radius:5px;background:#fafafa}
 
   /* license key in header */
-  .keyline{margin-top:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .keyline{margin-top:16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
   .keyline .kk{color:var(--mid);font-size:12.5px}
   .keyline .mono{font-size:12.5px}
 
@@ -311,30 +322,39 @@
   /* ---------- Manage add-ons: FULL-SCREEN variant ---------- */
   .fs-screen{position:fixed;inset:0;background:var(--bg);z-index:100;overflow:auto;display:flex;flex-direction:column;color:var(--ink)}
   .fs-screen[hidden]{display:none}
-  .fs-bar{position:sticky;top:0;background:#fff;border-bottom:1px solid var(--line2);padding:12px 24px;display:flex;align-items:center;gap:14px;z-index:5}
-  .fs-bar h3{margin:0;font-size:16px}
-  .fs-stepind{font-size:12px;color:var(--mid);border:1px solid var(--line2);border-radius:999px;padding:3px 11px}
-  .fs-bar .spacer{flex:1}
-  .fs-actions{display:flex;gap:9px;align-items:center}
-  .fs-actions[hidden]{display:none}
-  .fs-sub{padding:10px 24px;font-size:12.5px;color:var(--mid);background:#fff;border-bottom:1px solid var(--line2);display:flex;align-items:center;gap:12px}
+  .fs-minibar{position:sticky;top:0;z-index:6;display:flex;align-items:center;gap:12px;padding:11px 24px;background:#fff;border-bottom:1px solid var(--line2)}
+  .fs-minibar .spacer{flex:1}
+  .fs-minititle{font-size:11.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--faint)}
+  .fs-close{width:30px;height:30px;flex:none;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--mid);display:inline-flex;align-items:center;justify-content:center;font-size:15px}
+  .fs-close:hover{color:var(--ink);background:var(--hover)}
+  .fs-titlerow{display:flex;align-items:center;gap:14px;padding:16px 24px;background:#fff;border-bottom:1px solid var(--line2)}
+  .fs-maintitle{margin:0;font-size:18px;font-weight:700;flex:1;min-width:0}
+  .fs-nextbtn{width:100%;margin-top:14px}
+  .fs-reviewactions{display:flex;align-items:center;margin-top:20px;padding-top:16px;border-top:1px solid var(--line2)}
+  .fs-reviewactions .spacer{flex:1}
   .fs-body{padding:24px;width:100%;max-width:1180px;margin:0 auto;flex:1}
   .fs-grid{display:grid;grid-template-columns:2fr 1px 1fr;gap:24px;align-items:start}
   .fs-col{min-width:0}
   .fs-divider{background:var(--line2);align-self:stretch}
-  .fs-screen .am-cell,.fs-screen .am-card{background:#fff}
-  .fs-screen .am-capgrid{grid-template-columns:repeat(2,1fr)}
+  .fs-screen .am-cell,.fs-screen .am-card{background:#fff;border:0;padding:0}
+  .fs-screen .am-card.on{background:transparent}
+  /* item subheads sit clearly below the "Plan" / "Add-ons" block titles */
+  .fs-screen .am-celltop,.fs-screen .am-cardname{font-size:13px}
+  .am-sechead-sub{margin-top:24px}
+  .fs-screen .am-capgrid{grid-template-columns:1fr;gap:18px}
+  .fs-screen .am-cardgrid{grid-template-columns:1fr;gap:18px}
   .fs-panel{background:#fff;border:1px solid var(--line2);border-radius:8px;padding:16px}
   .fs-devinput{height:calc(var(--btnH) + 2px);width:110px;border:1px solid var(--line);border-radius:6px;background:var(--track);color:var(--ink);-webkit-text-fill-color:var(--ink);opacity:1;font:inherit;font-size:13px;text-align:center;font-variant-numeric:tabular-nums;padding:0 8px;cursor:not-allowed}
   .fs-cellhead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
   .fs-cellhead .am-celltop{margin-bottom:0}
   .fs-devctl{display:flex;flex-direction:column;align-items:flex-end;gap:2px;text-align:right}
   .fs-devctl .am-cellval{font-size:18px;line-height:1.1}
-  .fs-celldesc{margin-top:12px;font-size:12px;color:var(--faint);line-height:1.55}
-  .fs-right{position:sticky;top:70px;background:#fff;border:1px solid var(--line2);border-radius:8px;padding:14px 16px}
+  .fs-celldesc{margin-top:4px;font-size:12px;color:var(--faint);line-height:1.55}
+  .fs-right{position:sticky;top:52px;background:#fff;border:1px solid var(--line2);border-radius:8px;padding:14px 16px}
   .fs-right .am-figures{border:0;padding:0;margin-top:10px}
   .fs-review{max-width:640px;margin:0 auto}
   .am-addcheck{width:17px;height:17px;flex:none;accent-color:var(--ink);margin:0;cursor:pointer}
+  .fs-screen .am-addcheck{width:17px;height:17px}
   @media(max-width:900px){.fs-grid{grid-template-columns:1fr}.fs-divider{display:none}.fs-right{position:static}}
 
   @media(max-width:820px){
@@ -410,6 +430,7 @@
                 <div class="title">Prototype subscription plan</div>
                 <div class="badges">
                   <span class="chip status"><span class="sdot"></span>Active</span>
+                  <span class="period">2026-08-13 to 2026-09-13</span>
                   <span id="labelSlot"><button class="chip ghost" id="addLabel">+ Add label</button></span>
                 </div>
                 <div class="keyline">
@@ -422,12 +443,15 @@
                   <button class="iconbtn ib tip" id="copyBtn" aria-label="Copy license key" data-tip="Copy">
                     <svg class="icon" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg>
                   </button>
-                  <button class="iconbtn ib tip" id="helpApply" data-stub="How to apply this license" aria-label="How to apply this license" data-tip="How to apply this license">
-                    <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.4 9.3a2.7 2.7 0 0 1 5.2 1c0 1.8-2.6 2.2-2.6 4"/><path d="M12 17.4v.4"/></svg>
-                  </button>
                 </div>
               </div>
               <div class="headactions">
+                <button class="btn sec" id="couponBtn">Apply coupon</button>
+                <div class="inline" id="couponInline" hidden>
+                  <input type="text" id="couponInput" placeholder="Coupon code" aria-label="Coupon code">
+                  <button class="btn sec" id="couponApply">Apply</button>
+                  <button class="link" id="couponCancel">Cancel</button>
+                </div>
                 <button class="btn" data-modal="change-plan">Change plan</button>
                 <button class="btn ter" data-stub="Cancel subscription">Cancel subscription</button>
               </div>
@@ -442,20 +466,12 @@
             </div>
           </div>
 
-          <!-- tabs -->
-          <div class="tabs" role="tablist" aria-label="Subscription views">
-            <button class="tab" role="tab" id="tab-details" aria-controls="panel-details" aria-selected="true">Details</button>
-            <button class="tab" role="tab" id="tab-prod" aria-controls="panel-prod" aria-selected="false" tabindex="-1">Production instances</button>
-            <button class="tab" role="tab" id="tab-invoices" aria-controls="panel-invoices" aria-selected="false" tabindex="-1">Invoices</button>
-            <button class="tab" role="tab" id="tab-audit" aria-controls="panel-audit" aria-selected="false" tabindex="-1">Audit logs</button>
-          </div>
+          <!-- all sections in one scroll (tabs removed) -->
+          <div id="panel-details">
 
-          <!-- panel: DETAILS -->
-          <div class="panel" id="panel-details" role="tabpanel" aria-labelledby="tab-details">
-
-            <!-- 1. usage -->
+            <!-- Plan & Add-ons -->
             <div class="section">
-              <div class="sh"><h3>Usage &amp; entitlements</h3><span class="spacer"></span>
+              <div class="sh"><h3>Plan &amp; Add-ons</h3><span class="spacer"></span>
                 <button class="btn sec" data-modal="add-ons">Manage add-ons</button>
               </div>
               <table>
@@ -482,78 +498,20 @@
               </table>
             </div>
 
-            <!-- 2. billing -->
+            <!-- Billing & Invoices -->
             <div class="section">
-              <div class="sh"><h3>Billing</h3></div>
-              <div class="mini">
-                <div class="row">
-                  <div class="l">Next charge</div>
-                  <div class="r"><span class="big">$39.00</span> <span class="muted" style="font-size:12.5px">· 2026-08-30 · covers Aug 30 – Sep 30</span></div>
+              <div class="sh"><h3>Billing &amp; Invoices</h3></div>
+              <div class="billgrid">
+                <div class="billcard">
+                  <h4 class="billcard-h">Next charge</h4>
+                  <div class="billcard-d"><span class="big">$39.00</span> <span class="muted">· 2026-08-30</span></div>
                 </div>
-                <div class="row">
-                  <div class="l">Payment method</div>
-                  <div class="r">Visa ••4242 <span class="muted">· exp 12/2028 · auto-pay</span> <button class="link" data-modal="manage-payment">Manage payment →</button></div>
-                </div>
-                <div class="row">
-                  <div class="l">Last payment</div>
-                  <div class="r">$39.00 · 2026-07-30 <span class="pill">Paid</span> <button class="link" id="allInvoices">All invoices →</button></div>
+                <div class="billcard">
+                  <h4 class="billcard-h">Payment method</h4>
+                  <div class="billcard-d">Visa ••4242 <span class="muted">· exp 12/2028 · auto-pay</span> <button class="link" data-modal="manage-payment">Manage payment →</button></div>
                 </div>
               </div>
-              <div style="margin-top:12px">
-                <button class="btn sec" id="couponBtn">Apply coupon</button>
-                <div class="inline" id="couponInline" hidden>
-                  <input type="text" id="couponInput" placeholder="Coupon code" aria-label="Coupon code">
-                  <button class="btn sec" id="couponApply">Apply</button>
-                  <button class="link" id="couponCancel">Cancel</button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- panel: PRODUCTION INSTANCES -->
-          <div class="panel" id="panel-prod" role="tabpanel" aria-labelledby="tab-prod" hidden>
-            <div class="section">
-              <div class="sh"><span class="spacer"></span>
-                <button class="iconbtn ib" data-stub="Refresh" aria-label="Refresh" title="Refresh">
-                  <svg class="icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg>
-                </button>
-                <button class="iconbtn ib" data-stub="Search" aria-label="Search" title="Search">
-                  <svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-                </button>
-              </div>
-              <table>
-                <thead>
-                  <tr>
-                    <th class="chk"><input type="checkbox" aria-label="Select all"></th>
-                    <th class="sortable" id="sortCreated" aria-sort="descending" tabindex="0">Created Time <span class="arrow">▼</span></th>
-                    <th>Instance ID</th>
-                    <th>Label</th>
-                    <th>Status</th>
-                    <th>Last Activity Time</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr><td colspan="6"><div class="emptybox">No instances found</div></td></tr>
-                </tbody>
-              </table>
-              <div class="pager">
-                <span class="spacer"></span>
-                <span>Items per page<select aria-label="Items per page"><option>10</option><option>20</option><option>50</option><option>100</option></select></span>
-                <span class="range">0 of 0</span>
-                <span class="pagebtns">
-                  <button disabled aria-label="First page">«</button>
-                  <button disabled aria-label="Previous page">‹</button>
-                  <button disabled aria-label="Next page">›</button>
-                  <button disabled aria-label="Last page">»</button>
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <!-- panel: INVOICES -->
-          <div class="panel" id="panel-invoices" role="tabpanel" aria-labelledby="tab-invoices" hidden>
-            <div class="section">
-              <table>
+              <table style="margin-top:18px">
                 <thead>
                   <tr><th>Date</th><th class="num">Amount</th><th>Invoice #</th><th>Status</th><th aria-label="Invoice actions"></th></tr>
                 </thead>
@@ -575,14 +533,28 @@
             </div>
           </div>
 
-          <!-- panel: AUDIT -->
-          <div class="panel" id="panel-audit" role="tabpanel" aria-labelledby="tab-audit" hidden>
+          <!-- Production instances -->
+          <div id="panel-prod">
             <div class="section">
-              <div class="sh">
+              <div class="sh"><h3>Production instances</h3><span class="spacer"></span>
+                <button class="iconbtn ib" data-stub="Refresh" aria-label="Refresh" title="Refresh">
+                  <svg class="icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg>
+                </button>
+              </div>
+              <div class="billcard" style="text-align:center;padding:24px 16px">
+                <div style="font-size:13px;color:var(--faint)">No instances found</div>
+                <div style="font-size:12px;color:var(--faint);margin-top:6px">Instances appear automatically when a deployment is activated with the license.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Audit logs -->
+          <div id="panel-audit">
+            <div class="section">
+              <div class="sh"><h3>Audit logs</h3><span class="spacer"></span>
                 <button class="btn sec" data-stub="Time range: last day">
                   <svg class="icon" viewBox="0 0 24 24" style="margin-right:6px"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.5 2.5"/></svg>last day
                 </button>
-                <span class="spacer"></span>
                 <button class="iconbtn ib" data-stub="Refresh" aria-label="Refresh" title="Refresh">
                   <svg class="icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg>
                 </button>
@@ -797,23 +769,15 @@
 
 <!-- ============ MANAGE ADD-ONS — FULL-SCREEN VARIANT ============ -->
 <div class="fs-screen" id="fsAddons" role="dialog" aria-modal="true" aria-label="Manage add-ons (full-screen)" hidden>
-  <div class="fs-bar">
-    <h3>Manage add-ons</h3>
-    <span class="fs-stepind" id="fsStepInd">Adjust · 1 / 2</span>
+  <div class="fs-minibar">
+    <span class="fs-minititle">Manage plan &amp; Add-ons</span>
     <span class="spacer"></span>
-    <div class="fs-actions" id="fsActions1">
-      <button class="btn ter" id="fsCancel">Cancel</button>
-      <button class="btn" id="fsNext">Next: Review →</button>
-    </div>
-    <div class="fs-actions" id="fsActions2" hidden>
-      <button class="btn ter" id="fsBack">← Back</button>
-      <button class="btn" id="fsConfirm">Confirm — $0.00 due now</button>
-    </div>
-    <div class="fs-actions" id="fsActionsDone" hidden>
-      <button class="btn" id="fsDone">Done</button>
-    </div>
+    <button class="fs-close" id="fsCancel" aria-label="Close">✕</button>
   </div>
-  <div class="fs-sub"><span>ThingsBoard Professional edition (pay-as-you-go) · Prototype</span><span class="spacer"></span><button class="link" data-modal="change-plan">Change plan →</button></div>
+  <div class="fs-titlerow">
+    <h2 class="fs-maintitle">ThingsBoard Professional edition (pay-as-you-go) · Prototype</h2>
+    <button class="link" data-modal="change-plan">Change plan →</button>
+  </div>
 
   <div class="fs-body">
     <!-- STEP 1 — ADJUST -->
@@ -821,7 +785,7 @@
       <div class="fs-grid">
         <div class="fs-col">
           <div class="am-sec fs-panel">
-            <div class="am-sechead"><h4>Capacity</h4><span class="am-cap">set by your plan</span></div>
+            <div class="am-sechead"><h4>Plan</h4></div>
             <div class="am-capgrid">
               <div class="am-cell">
                 <div class="fs-cellhead">
@@ -868,10 +832,7 @@
                 <div class="am-cardprice">+$5.00 / mo per 1M block</div>
               </div>
             </div>
-          </div>
-
-          <div class="am-sec fs-panel">
-            <div class="am-sechead"><h4>Add-ons</h4><span class="am-cap" id="fsAddonCount">2 available · 0 active</span></div>
+            <div class="am-sechead am-sechead-sub"><h4>Add-ons</h4></div>
             <div class="am-cardgrid">
               <div class="am-card" id="fsCardEdge">
                 <div class="am-cardtop">
@@ -900,7 +861,7 @@
         <div class="fs-divider"></div>
 
         <div class="am-sec fs-right">
-          <div class="am-sechead"><h4>Billing impact</h4></div>
+          <div class="am-sechead"><h4>Calculation summary</h4></div>
           <div class="am-figures">
             <div class="am-sumlist" id="fsSumList"></div>
             <div class="am-sumrow am-total-row">
@@ -908,6 +869,7 @@
               <span id="fsNewMonthly">$39.00 / mo</span>
             </div>
           </div>
+          <button class="btn fs-nextbtn" id="fsNext">Review →</button>
         </div>
       </div>
     </div>
@@ -934,6 +896,11 @@
         </div>
 
         <div class="am-pay">Charged to Visa ••4242 · auto-pay · <button class="link" data-modal="manage-payment">Manage payment →</button></div>
+        <div class="fs-reviewactions">
+          <button class="btn ter" id="fsBack">← Back</button>
+          <span class="spacer"></span>
+          <button class="btn" id="fsConfirm">Confirm — $0.00 due now</button>
+        </div>
       </div>
     </div>
 
@@ -943,6 +910,7 @@
         <div class="am-checkbig">✓</div>
         <h4 class="am-h2">Changes applied</h4>
         <p class="am-sub2">Placeholder confirmation — no real charge was made. <span id="fsSuccessDue"></span></p>
+        <div style="margin-top:18px"><button class="btn" id="fsDone">Done</button></div>
       </div>
     </div>
   </div>
@@ -1068,11 +1036,6 @@
   $('#couponCancel').addEventListener('click', couponReset);
   $('#couponApply').addEventListener('click', function(){ couponReset(); });
   couponInput.addEventListener('keydown', function(e){ if(e.key==='Escape') couponReset(); });
-
-  /* ---------- billing links ---------- */
-  $('#allInvoices').addEventListener('click', function(){
-    var t = $('#tab-invoices'); selectTab(t); t.focus();
-  });
 
   /* ---------- sortable column headers (prod instances, audit logs) ---------- */
   $$('.sortable').forEach(function(th){
@@ -1318,9 +1281,6 @@
         st.querySelector('[data-dir="-1"]').disabled = s[f] <= MIN[f];
         st.querySelector('[data-dir="1"]').disabled  = s[f] >= MAX[f];
       });
-      var active = (s.edge?1:0) + (s.trendz?1:0);
-      $('#fsAddonCount').textContent = '2 available · ' + active + ' active';
-
       var ch = changes();
       $('#fsNewMonthly').textContent = money(newMonthly()) + ' / mo';
       $('#fsChgCount').textContent = ch.length ? ('· '+ch.length+' change'+(ch.length>1?'s':'')) : '· no changes';
@@ -1344,10 +1304,6 @@
       $('#fsStep1').hidden = n!==1;
       $('#fsStep2').hidden = n!==2;
       $('#fsSuccess').hidden = true;
-      $('#fsActions1').hidden = n!==1;
-      $('#fsActions2').hidden = n!==2;
-      $('#fsActionsDone').hidden = true;
-      $('#fsStepInd').textContent = (n===1?'Adjust':'Review') + ' · ' + n + ' / 2';
       if(n===2) render2();
       scr.scrollTop = 0;
     }
@@ -1356,10 +1312,6 @@
       $('#fsStep1').hidden = true;
       $('#fsStep2').hidden = true;
       $('#fsSuccess').hidden = false;
-      $('#fsActions1').hidden = true;
-      $('#fsActions2').hidden = true;
-      $('#fsActionsDone').hidden = false;
-      $('#fsStepInd').textContent = 'Done';
       scr.scrollTop = 0;
       $('#fsDone').focus();
     }
