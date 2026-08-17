@@ -91,6 +91,19 @@
   .titlerow .chip.status{margin-top:6px}
   .planname{margin:0;font-size:26px;font-weight:800;line-height:1.15;letter-spacing:-.01em}
   .sub{color:var(--mid);font-size:12.5px;margin-top:2px}
+  /* one-time price + updates term, sits under the licence name */
+  .priceline{margin-top:6px;font-size:12.5px;color:var(--mid);display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}
+  .priceval{font-size:14px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+  /* muted qualifier under an entitlement name */
+  .itemnote{font-size:11.5px;color:var(--faint);margin-top:3px;line-height:1.4}
+  /* Features: boolean entitlements as chips — no columns, no dashes */
+  .featureblock{margin-top:20px}
+  .fhead{font-size:12.5px;color:var(--mid);margin-bottom:9px}
+  .features{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .fchip{display:inline-flex;align-items:center;gap:7px;font-size:12px;padding:4px 11px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--ink)}
+  .fchip .fmark{width:13px;height:13px;flex:none}
+  /* available but not active: quieter, no checkmark */
+  .fchip.off{color:var(--faint);border-color:var(--line2);background:transparent}
   /* row 2: the label affordance on its own */
   .metarow{display:flex;gap:12px;margin-top:14px;flex-wrap:wrap;align-items:center}
   .period{font-size:12px;color:var(--ink);font-variant-numeric:tabular-nums}
@@ -141,6 +154,9 @@
   .tab[aria-selected="true"]{color:var(--ink);font-weight:600;border-color:var(--ink)}
 
   .panel[hidden]{display:none}
+  /* subscription-only vs perpetual-only bits; needed because .btn and table
+     elements set their own display, which would beat the plain [hidden] rule */
+  [data-page][hidden]{display:none}
   .section{padding:16px 18px 16px var(--contentX);border-bottom:1px solid var(--line2)}
   .section:last-child{border-bottom:0}
   /* Plan & Add-ons is separated from the tab bar by whitespace, not a rule */
@@ -151,9 +167,21 @@
   /* light-grey sub-cards (Billing / Invoices / Production instances) */
   .billcard{background:#f6f6f4;border:1px solid var(--line2);border-radius:8px;padding:14px 16px;margin-top:12px}
   .billcard-h{margin:0 0 10px;font-size:13px;font-weight:600;color:var(--ink)}
-  .billgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:12px}
+  /* two fixed tracks so the single Next charge card keeps its half-width size */
+  .billgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:12px}
+  @media(max-width:700px){.billgrid{grid-template-columns:1fr}}
   .billgrid .billcard{margin-top:0}
   .billcard-d{font-size:13px;color:var(--ink)}
+  /* Next charge card — when / how much / how, top to bottom */
+  .nc-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .nextcharge .billcard-h{margin:0}
+  .nc-when{font-size:12.5px;color:var(--mid);font-variant-numeric:tabular-nums}
+  /* the amount is the hero: its own line, nothing beside it */
+  .nc-amount{margin-top:10px}
+  .nextcharge .big{display:block;font-size:26px;line-height:1.15;letter-spacing:-.01em}
+  .nextcharge .hairline{margin:14px 0}
+  .nc-foot{font-size:12.5px;color:var(--mid)}
+  .nc-pay{font-size:12.5px;color:var(--mid)}
   .sh{display:flex;align-items:center;gap:8px;margin-bottom:12px}
   .sh .n{width:20px;height:20px;border-radius:50%;background:var(--ink);color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center;flex:none}
   .sh h3{margin:0;font-size:13px;letter-spacing:.02em;text-transform:uppercase;color:var(--ink)}
@@ -169,18 +197,25 @@
   .iconbtn.ib{padding:0;width:var(--btnH);justify-content:center}
   .iconbtn .icon{width:15px;height:15px}
   .iconbtn.copied{border-color:var(--ink);color:var(--ink)}
+  /* ghost icon button: no fill, no stroke — hover only darkens the glyph */
+  .iconbtn.ghost{border-color:transparent;background:transparent}
+  .iconbtn.ghost:hover{border-color:transparent;background:transparent;color:var(--ink)}
   .link{color:var(--ink);text-decoration:underline;text-underline-offset:2px;font-size:12.5px;background:transparent;border:0;padding:0}
   .link:hover{color:#000}
 
   table{width:100%;border-collapse:collapse;font-size:13px}
-  th{text-align:left;color:var(--faint);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:.04em;padding:6px 8px;border-bottom:1px solid var(--line2)}
-  td{padding:9px 8px;border-bottom:1px dashed var(--line2);vertical-align:middle}
+  th{text-align:left;color:var(--faint);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:.04em;padding:8px;border-bottom:1px solid var(--line2)}
+  td{padding:13px 8px;border-bottom:1px dashed var(--line2);vertical-align:middle}
+  /* breathing room around tables and before their pagination */
+  .section > table{margin-top:16px}
   tr:last-child td{border-bottom:0}
   th.num,td.num{text-align:right}
   .meter{height:8px;background:var(--track);border-radius:999px;overflow:hidden;min-width:120px;border:1px solid var(--line2)}
   .meter>span{display:block;height:100%;background:var(--fill)}
-  .usecell{display:flex;align-items:center;gap:8px;justify-content:flex-start;position:relative}
-  .usetxt{font-variant-numeric:tabular-nums;color:var(--mid);font-size:12px;text-align:left}
+  /* fixed text column so every meter starts at the same x and is the same width;
+     wide enough for the largest plan's "0 / 1,000" without wrapping */
+  .usecell{display:grid;grid-template-columns:58px 120px;align-items:center;gap:8px;position:relative}
+  .usetxt{font-variant-numeric:tabular-nums;color:var(--mid);font-size:12px;text-align:left;white-space:nowrap}
   .tip{position:relative}
   .tip:hover::after,.tip:focus-visible::after,.tip.show::after{
     content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);right:0;
@@ -217,8 +252,8 @@
   th.chk,td.chk{width:34px;text-align:center;padding-left:8px;padding-right:0}
   input[type=checkbox]{accent-color:var(--ink);width:14px;height:14px;margin:0}
   .emptybox{padding:34px 0;text-align:center;color:var(--faint);font-size:12.5px}
-  .rowactions{display:inline-flex;gap:6px}
-  .pager{display:flex;align-items:center;gap:14px;margin-top:14px;flex-wrap:wrap;font-size:12px;color:var(--mid)}
+  .rowactions{display:inline-flex;align-items:center;gap:16px;white-space:nowrap}
+  .pager{display:flex;align-items:center;gap:14px;margin-top:22px;padding-bottom:4px;flex-wrap:wrap;font-size:12px;color:var(--mid)}
   .pager .spacer{flex:1}
   .pager select{font:inherit;font-size:12px;height:var(--btnH);border:1px solid var(--line);border-radius:5px;padding:0 6px;background:#fff;color:var(--ink);margin-left:4px}
   .pager .range{font-variant-numeric:tabular-nums}
@@ -345,6 +380,13 @@
   .settings-panel h4{margin:0 0 3px;font-size:13px}
   .settings-panel .sp-note{font-size:11px;color:var(--faint);margin-bottom:12px}
   .settings-panel .sp-label{font-size:12px;color:var(--mid);margin-bottom:8px}
+  /* grouped page picker in the settings panel */
+  .sp-pick{display:flex;flex-direction:column;gap:1px}
+  .sp-grouphead{font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin:6px 0 3px}
+  .sp-grouphead:first-child{margin-top:0}
+  .sp-opt{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink);padding:3px 4px;border-radius:5px;cursor:pointer}
+  .sp-opt:hover{background:var(--hover)}
+  .sp-opt input{accent-color:var(--ink);margin:0;flex:none}
   .seg{display:flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
   .seg label{flex:1;position:relative;margin:0}
   .seg input{position:absolute;opacity:0;pointer-events:none}
@@ -484,10 +526,18 @@
             <div class="top">
               <div class="idline">
                 <div class="titleblock">
-                  <div class="titlekicker">Subscription plan</div>
+                  <div class="titlekicker" data-page="sub">Subscription plan</div>
+                  <div class="titlekicker" data-page="perp">Perpetual license</div>
                   <div class="titlerow">
-                    <h1 class="planname">Prototype</h1>
+                    <h1 class="planname" data-page="sub" id="planName">Prototype</h1>
+                    <h1 class="planname" data-page="perp">ThingsBoard PE Perpetual License</h1>
                     <span class="chip status"><span class="sdot"></span>Active</span>
+                  </div>
+                  <!-- perpetual: paid once, so the price sits with the name instead of
+                       in a Next charge card, with the updates term beside it -->
+                  <div class="priceline" data-page="perp">
+                    <span class="priceval">$4,999.00</span> <span class="muted">one-time</span>
+                    <span class="muted">· Including 1 year software updates</span>
                   </div>
                 </div>
               </div>
@@ -498,8 +548,12 @@
                   <button class="btn sec" id="couponApply">Apply</button>
                   <button class="link" id="couponCancel">Cancel</button>
                 </div>
-                <button class="btn" data-modal="change-plan">Change plan</button>
-                <div class="menu">
+                <button class="btn" data-modal="change-plan" data-page="sub">Change plan</button>
+                <!-- inferred: a perpetual license does not renew and has nothing to
+                     cancel, so Change plan and the ⋮ menu are dropped; the primary
+                     action becomes a one-time capacity purchase. Confirm with team. -->
+                <button class="btn" data-modal="add-capacity" data-page="perp">Add capacity</button>
+                <div class="menu" data-page="sub">
                   <button class="btn sec kebab-btn" id="headKebabBtn" aria-haspopup="true" aria-expanded="false" aria-label="More actions">⋮</button>
                   <div class="pop" id="headKebabPop" role="menu" hidden>
                     <button role="menuitem" data-stub="Cancel subscription">Cancel subscription</button>
@@ -530,9 +584,15 @@
                   </button>
                 </div>
               </div>
-              <div class="keycol right">
+              <div class="keycol right" data-page="sub">
                 <h3 class="periodhead">Subscription period</h3>
-                <div class="period">2026-08-13 to 2026-09-13</div>
+                <div class="period">Aug 13 2026 to Sep 13 2026</div>
+              </div>
+              <!-- the license itself never expires; what is dated here is the
+                   software-updates term -->
+              <div class="keycol right" data-page="perp">
+                <h3 class="periodhead">Software updates</h3>
+                <div class="period">1 year · until Aug 13 2027</div>
               </div>
             </div>
 
@@ -550,68 +610,116 @@
           <!-- Plan & Add-ons — always visible, above the tab bar -->
           <div class="section planblock">
               <div class="sh"><h3>Plan &amp; Add-ons</h3><span class="spacer"></span>
-                <button class="btn sec" data-modal="add-ons">Manage</button>
+                <button class="btn sec" data-modal="add-ons" data-page="sub">Manage</button>
+                <!-- inferred: capacity is bought once, so this opens a one-time
+                     purchase flow — not the recurring Manage add-ons flow, which
+                     computes proration and a new monthly total. -->
+                <button class="btn sec" data-modal="add-capacity" data-page="perp">Add capacity</button>
               </div>
               <table class="plantable">
                 <thead>
                   <tr><th>Item</th><th>Usage</th><th class="num">Included</th><th class="num">Extra</th><th class="num">Limit</th></tr>
                 </thead>
-                <tbody>
-                  <tr>
-                    <td>Devices</td>
-                    <td><div class="usecell tip" tabindex="0" data-tip="0 used / 50 limit"><span class="usetxt">0 / 50</span><div class="meter"><span style="width:0%"></span></div></div></td>
-                    <td class="num">50</td><td class="num muted">0</td><td class="num">50</td>
-                  </tr>
-                  <tr>
-                    <td>Production instances</td>
-                    <td><div class="usecell tip" tabindex="0" data-tip="0 used / 1 limit"><span class="usetxt">0 / 1</span><div class="meter"><span style="width:0%"></span></div></div></td>
-                    <td class="num">1</td><td class="num muted">0</td><td class="num">1</td>
-                  </tr>
-                  <tr>
-                    <td>AI credits <span class="muted">/ month</span></td>
-                    <td><div class="usecell tip" tabindex="0" data-tip="0 used / 2M limit"><span class="usetxt">0 / 2M</span><div class="meter"><span style="width:0%"></span></div></div></td>
-                    <td class="num">2M</td><td class="num muted">0</td><td class="num">2M</td>
-                  </tr>
+                <!-- quantified capacity only; rendered from the selected page's
+                     entitlements (see PAGES in JS) -->
+                <tbody id="planRows">
                 </tbody>
               </table>
+
+              <!-- boolean entitlements live here instead of as empty table rows.
+                   Demo hook: window.setFeature('edge'|'trendz'|'whitelabel', true) -->
+              <div class="featureblock">
+                <div class="fhead">Features</div>
+                <div class="features" id="featureChips"></div>
+              </div>
           </div>
 
           <!-- tab bar for the three data areas -->
-          <div class="tabs" role="tablist" aria-label="Subscription areas">
+          <div class="tabs" role="tablist" aria-label="Details areas">
             <button class="tab" role="tab" id="tab-invoices" aria-controls="panel-invoices" aria-selected="true" tabindex="0">Invoices</button>
-            <button class="tab" role="tab" id="tab-prod" aria-controls="panel-prod" aria-selected="false" tabindex="-1">Production instances</button>
+            <button class="tab" role="tab" id="tab-prod" aria-controls="panel-prod" aria-selected="false" tabindex="-1">Instances</button>
             <button class="tab" role="tab" id="tab-logs" aria-controls="panel-audit" aria-selected="false" tabindex="-1">Logs</button>
           </div>
 
           <!-- Invoices -->
           <div class="panel" id="panel-invoices" role="tabpanel" aria-labelledby="tab-invoices">
             <div class="section">
-              <div class="billgrid">
-                <div class="billcard">
-                  <h4 class="billcard-h">Next charge</h4>
-                  <div class="billcard-d"><span class="big">$39.00</span> <span class="muted">· 2026-08-30</span></div>
-                </div>
-                <div class="billcard">
-                  <h4 class="billcard-h">Payment method</h4>
-                  <div class="billcard-d">Visa ••4242 <span class="muted">· exp 12/2028 · auto-pay</span> <button class="link" data-modal="manage-payment">Manage payment →</button></div>
+              <!-- recurring billing: subscription only -->
+              <div class="billgrid" data-page="sub">
+                <div class="billcard nextcharge">
+                  <div class="nc-row">
+                    <h4 class="billcard-h">Next charge</h4>
+                    <!-- inferred: "in 5 days" is the countdown copy asked for; note it
+                         does not match the 16-of-31-days cycle the add-ons flow prorates
+                         against, so one of the two needs correcting. -->
+                    <span class="nc-when">in 5 days · Aug 30 2026</span>
+                  </div>
+                  <div class="nc-amount"><span class="big" id="ncAmount">$39.00</span></div>
+                  <div class="hairline"></div>
+                  <!-- the payment method is account-level, so this routes to Billing
+                       rather than pretending to be an inline edit -->
+                  <div class="nc-row nc-foot">
+                    <span class="nc-pay">Auto-pay · Visa ••4242</span>
+                    <button class="link" data-modal="manage-payment">Manage</button>
+                  </div>
                 </div>
               </div>
-              <table style="margin-top:18px">
+              <table style="margin-top:18px" data-page="sub">
                 <thead>
                   <tr><th>Date</th><th class="num">Amount</th><th>Invoice #</th><th>Status</th><th aria-label="Invoice actions"></th></tr>
                 </thead>
                 <tbody>
                   <tr>
-                    <td>2026-07-30</td><td class="num">$39.00</td><td class="mono">INV-2026-07</td>
+                    <td>2026-07-30</td><td class="num" id="invAmount">$39.00</td><td class="mono">INV-2026-07</td>
                     <td><span class="pill">Paid</span></td>
                     <td><span class="rowactions">
-                      <button class="iconbtn ib tip" data-stub="Download PDF" aria-label="Download PDF" data-tip="Download PDF"><svg class="icon" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><text x="12" y="15" text-anchor="middle" style="fill:currentColor;stroke:none" font-size="7" font-weight="700">PDF</text></svg></button>
-                      <button class="iconbtn ib tip" data-stub="View invoice" aria-label="View invoice" data-tip="View invoice"><svg class="icon" viewBox="0 0 24 24"><path d="M14 4h6v6"/><path d="M20 4l-8.5 8.5"/><path d="M18 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h6"/></svg></button>
+                      <button class="link" data-stub="Download PDF">Download PDF</button>
+                      <button class="link" data-stub="View invoice">View invoice</button>
                     </span></td>
                   </tr>
                 </tbody>
               </table>
-              <div class="pager">
+              <div class="pager" data-page="sub">
+                <span class="spacer"></span>
+                <span>Items per page<select aria-label="Items per page"><option>10</option><option>20</option><option>50</option><option>100</option></select></span>
+                <span class="range">1 of 1</span>
+                <span class="pagebtns">
+                  <button disabled aria-label="First page">«</button>
+                  <button disabled aria-label="Previous page">‹</button>
+                  <button disabled aria-label="Next page">›</button>
+                  <button disabled aria-label="Last page">»</button>
+                </span>
+              </div>
+
+              <!-- Perpetual: one-time purchases only — the initial license and any
+                   Add capacity purchase. No upcoming row, no next charge, no auto-pay.
+                   Amounts are "$?" because the price list is not known yet. -->
+              <table data-page="perp">
+                <thead>
+                  <tr><th>Date</th><th class="num">Amount</th><th>Invoice #</th><th>Status</th><th aria-label="Invoice actions"></th></tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <!-- inferred date: a capacity purchase made after the licence was issued -->
+                    <td>2026-08-20</td><td class="num muted">$?</td><td class="mono">INV-2026-08</td>
+                    <td><span class="pill">Paid</span></td>
+                    <td><span class="rowactions">
+                      <button class="link" data-stub="Download PDF">Download PDF</button>
+                      <button class="link" data-stub="View invoice">View invoice</button>
+                    </span></td>
+                  </tr>
+                  <tr>
+                    <!-- the initial licence purchase: confirmed one-time price -->
+                    <td>2026-08-13</td><td class="num">$4,999.00</td><td class="mono">INV-2026-08A</td>
+                    <td><span class="pill">Paid</span></td>
+                    <td><span class="rowactions">
+                      <button class="link" data-stub="Download PDF">Download PDF</button>
+                      <button class="link" data-stub="View invoice">View invoice</button>
+                    </span></td>
+                  </tr>
+                </tbody>
+              </table>
+              <div class="pager" data-page="perp">
                 <span class="spacer"></span>
                 <span>Items per page<select aria-label="Items per page"><option>10</option><option>20</option><option>50</option><option>100</option></select></span>
                 <span class="range">1 of 1</span>
@@ -1013,6 +1121,20 @@
   <div class="seg">
     <label><input type="radio" name="addonsStyle" value="modal" checked><span>Modal</span></label>
     <label><input type="radio" name="addonsStyle" value="fullscreen"><span>Full-screen</span></label>
+  </div>
+  <!-- Temporary home for the page picker: until the nav is built and each page
+       gets its own route, this decides which details page renders. Every
+       subscription plan renders the same template with that plan's content. -->
+  <div class="sp-label" style="margin-top:14px">Details page</div>
+  <div class="sp-pick" role="radiogroup" aria-label="Details page">
+    <div class="sp-grouphead">Perpetual</div>
+    <label class="sp-opt"><input type="radio" name="detailsPage" value="perp"><span>Perpetual license details</span></label>
+    <div class="sp-grouphead">Subscription plans</div>
+    <label class="sp-opt"><input type="radio" name="detailsPage" value="maker"><span>Maker</span></label>
+    <label class="sp-opt"><input type="radio" name="detailsPage" value="prototype" checked><span>Prototype</span></label>
+    <label class="sp-opt"><input type="radio" name="detailsPage" value="pilot"><span>Pilot</span></label>
+    <label class="sp-opt"><input type="radio" name="detailsPage" value="startup"><span>Startup</span></label>
+    <label class="sp-opt"><input type="radio" name="detailsPage" value="business"><span>Business</span></label>
   </div>
 </div>
 
@@ -1442,10 +1564,83 @@
     r.addEventListener('change', function(){ if(r.checked) addonsStyle = r.value; });
   });
 
+  /* ---------- prototype settings: which details page renders ----------
+     Every subscription plan renders the same details template; only the plan's
+     content differs (name, monthly price, entitlements). The perpetual page uses
+     the same shell too — the structural differences carry data-page="sub" /
+     data-page="perp". Temporary until the nav exists and each page gets its own
+     route. In-memory only. */
+  var PAGES = {
+    // confirmed perpetual base. dev:'0' keeps the Development instances row hidden
+    // (the row appears only once at least one dev instance exists) and aiPerMonth is
+    // false because a perpetual license carries no monthly cadence — inferred.
+    perp:      { kind:'perp', devices:'5,000', prod:'1', dev:'0', ai:'5M', aiPerMonth:false, whitelabel:true,
+                 prodNote:'each production instance includes 5,000 devices' },
+    maker:     { kind:'sub', name:'Maker',     price:'$10.00',  devices:'10',    prod:'1', ai:'1M',  whitelabel:false },
+    prototype: { kind:'sub', name:'Prototype', price:'$39.00',  devices:'50',    prod:'1', ai:'2M',  whitelabel:false },
+    pilot:     { kind:'sub', name:'Pilot',     price:'$99.00',  devices:'100',   prod:'1', ai:'4M',  whitelabel:true },
+    startup:   { kind:'sub', name:'Startup',   price:'$299.00', devices:'500',   prod:'2', ai:'8M',  whitelabel:true },
+    business:  { kind:'sub', name:'Business',  price:'$499.00', devices:'1,000', prod:'3', ai:'16M', whitelabel:true }
+  };
+  var detailsPage = 'prototype';
+
+  // usage stays a placeholder (0 used) under the limit
+  function meterRow(item, limit){
+    return '<tr><td>' + item + '</td>' +
+      '<td><div class="usecell tip" tabindex="0" data-tip="0 used / ' + limit + ' limit">' +
+      '<span class="usetxt">0 / ' + limit + '</span><div class="meter"><span style="width:0%"></span></div></div></td>' +
+      '<td class="num">' + limit + '</td><td class="num muted">0</td><td class="num">' + limit + '</td></tr>';
+  }
+  function renderPlanRows(p){
+    var prodItem = 'Production instances' + (p.prodNote ? '<div class="itemnote">' + p.prodNote + '</div>' : '');
+    var html = meterRow('Devices', p.devices) + meterRow(prodItem, p.prod);
+    // conditional row: development instances show up only once at least one exists
+    if(parseInt((p.dev || '0').replace(/,/g, ''), 10) >= 1) html += meterRow('Development instances', p.dev);
+    html += meterRow('AI credits' + (p.aiPerMonth === false ? '' : ' <span class="muted">/ month</span>'), p.ai);
+    $('#planRows').innerHTML = html;
+  }
+
+  /* Boolean entitlements: chips under the table, never table rows. Add-on state
+     (edge / trendz) is off by default on every page — the Manage add-ons flow is
+     a stub and does not persist, so flip it with window.setFeature() to demo. */
+  var FEATURES = [
+    { key:'whitelabel', label:'White-labeling' },
+    { key:'edge',       label:'Edge Computing' },
+    { key:'trendz',     label:'Trendz Analytics' }
+  ];
+  var FCHECK = '<svg class="icon fmark" viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5"/></svg>';
+  function renderFeatures(p){
+    $('#featureChips').innerHTML = FEATURES.map(function(f){
+      var on = !!p[f.key];
+      return '<span class="fchip' + (on ? '' : ' off') + '">' + (on ? FCHECK : '') + f.label + '</span>';
+    }).join('');
+  }
+  window.setFeature = function(name, on){
+    PAGES[detailsPage][name] = !!on;
+    renderFeatures(PAGES[detailsPage]);
+  };
+  function applyDetailsPage(){
+    var p = PAGES[detailsPage];
+    $$('[data-page]').forEach(function(el){ el.hidden = el.getAttribute('data-page') !== p.kind; });
+    if(p.kind === 'sub'){
+      $('#planName').textContent = p.name;
+      $('#ncAmount').textContent = p.price;
+      $('#invAmount').textContent = p.price;   // the last invoice charged the same monthly price
+    }
+    renderPlanRows(p);
+    renderFeatures(p);
+  }
+  $$('input[name="detailsPage"]').forEach(function(r){
+    r.addEventListener('change', function(){ if(r.checked){ detailsPage = r.value; applyDetailsPage(); } });
+  });
+  applyDetailsPage();
+
   var STUB = 'Placeholder — not part of this wireframe spec yet.';
   var MODALS = {
     'change-plan': function(){ openModal('Change plan', '<p>Placeholder — pick a different subscription plan here.</p>'); },
     'add-ons': openManageAddons,
+    // inferred: perpetual capacity is bought once — no recurring billing, no proration
+    'add-capacity': function(){ openModal('Add capacity', '<p>Placeholder — one-time purchase of extra devices, instances, or AI credits. Paid once, no renewal and no proration.</p>'); },
     'manage-payment': function(){ openModal('Manage payment', '<p>Payment method lives in account Billing.</p>'); }
   };
   $$('[data-modal]').forEach(function(el){
