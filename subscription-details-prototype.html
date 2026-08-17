@@ -11,7 +11,7 @@
     --fill:#3d3d3d; --track:#e6e6e6;
     --chrome:#efefec; --chromeLine:#dcdcd8; --hover:#f0f0ee; --sel:#e4e4e0;
     --btnH:31px;
-    --backW:24px; --backGap:12px; --contentX:58px;  /* 22px head padding + 24 + 12 */
+    --backW:31px; --backGap:12px; --contentX:65px;  /* 22px head padding + 31 + 12 */
   }
   *{box-sizing:border-box}
   html,body{height:100%}
@@ -77,12 +77,18 @@
   .head .top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;row-gap:12px}
   .idline{display:flex;align-items:center;gap:10px;min-width:0;flex:1 1 auto}
   .idline .title{min-width:0}
-  .back{width:24px;height:24px;border:1px solid var(--line);border-radius:4px;display:flex;align-items:center;justify-content:center;color:var(--mid);background:#fff;flex:none}
+  /* same box as the ⋮ overflow button in the header actions */
+  .back{width:var(--btnH);height:var(--btnH);font-size:15px;line-height:1;border:1px solid var(--line);border-radius:5px;display:flex;align-items:center;justify-content:center;color:var(--mid);background:#fff;flex:none}
   .back:hover{background:var(--hover);color:var(--ink)}
   /* plan identity: small grey subhead over the plan name + status chip */
   .titleblock{min-width:0}
   .titlekicker{font-size:12.5px;color:var(--mid);line-height:1.2}
   .titlerow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:3px}
+  /* optical centring: align-items:center centres the chip on the title's line
+     box, which sits ~3px above the ink of a word with descenders ("Prototype").
+     The margin shifts it down by half its value, so the chip's box lands on the
+     word's ink band (cap top to descender bottom). */
+  .titlerow .chip.status{margin-top:6px}
   .planname{margin:0;font-size:26px;font-weight:800;line-height:1.15;letter-spacing:-.01em}
   .sub{color:var(--mid);font-size:12.5px;margin-top:2px}
   /* row 2: the label affordance on its own */
