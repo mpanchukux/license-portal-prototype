@@ -337,40 +337,60 @@
   /* ---------- Manage add-ons: FULL-SCREEN variant ---------- */
   .fs-screen{position:fixed;inset:0;background:var(--bg);z-index:100;overflow:auto;display:flex;flex-direction:column;color:var(--ink)}
   .fs-screen[hidden]{display:none}
-  .fs-minibar{position:sticky;top:0;z-index:6;display:flex;align-items:center;gap:12px;padding:11px 24px;background:#fff;border-bottom:1px solid var(--line2)}
-  .fs-minibar .spacer{flex:1}
-  .fs-minititle{font-size:11.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--faint)}
+  /* one header row: muted label + title on the left, Change plan + close on the right */
+  .fs-header{position:sticky;top:0;z-index:6;display:flex;align-items:center;gap:12px;row-gap:8px;flex-wrap:wrap;padding:13px 24px;background:#fff;border-bottom:1px solid var(--line2)}
+  .fs-header .spacer{flex:1}
+  .fs-maintitle{margin:0;font-size:18px;font-weight:700;flex:0 1 auto;min-width:0}
+  .fs-headactions{display:flex;align-items:center;gap:14px;flex:none}
   .fs-close{width:30px;height:30px;flex:none;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--mid);display:inline-flex;align-items:center;justify-content:center;font-size:15px}
   .fs-close:hover{color:var(--ink);background:var(--hover)}
-  .fs-titlerow{display:flex;align-items:center;gap:14px;padding:16px 24px;background:#fff;border-bottom:1px solid var(--line2)}
-  .fs-maintitle{margin:0;font-size:18px;font-weight:700;flex:1;min-width:0}
   .fs-nextbtn{width:100%;margin-top:14px}
+  /* Back lives in the header on the review step; .fs-close sets display, so it
+     needs its own [hidden] rule to stay hidden on the adjust step */
+  .fs-headback{flex:none}
+  .fs-headback[hidden]{display:none}
+  /* review step: white itemised card, Due today carries the payment line */
+  .fs-screen .am-order{background:var(--card)}
+  .fs-screen .am-due{display:block;padding:0}
+  .fs-screen .am-duerow{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:12px 14px}
+  .fs-screen .am-payrow{padding:10px 14px;border-top:1px solid var(--line2);font-size:12.5px;color:var(--mid)}
   .fs-reviewactions{display:flex;align-items:center;margin-top:20px;padding-top:16px;border-top:1px solid var(--line2)}
-  .fs-reviewactions .spacer{flex:1}
+  .fs-confirmbtn{width:100%}
   .fs-body{padding:24px;width:100%;max-width:1180px;margin:0 auto;flex:1}
-  .fs-grid{display:grid;grid-template-columns:2fr 1px 1fr;gap:24px;align-items:start}
+  .fs-grid{display:grid;grid-template-columns:2fr 1fr;gap:24px;align-items:start}
   .fs-col{min-width:0}
-  .fs-divider{background:var(--line2);align-self:stretch}
   .fs-screen .am-cell,.fs-screen .am-card{background:#fff;border:0;padding:0}
   .fs-screen .am-card.on{background:transparent}
   /* item subheads sit clearly below the "Plan" / "Add-ons" block titles */
   .fs-screen .am-celltop,.fs-screen .am-cardname{font-size:13px}
-  .am-sechead-sub{margin-top:24px}
-  .fs-screen .am-capgrid{grid-template-columns:1fr;gap:18px}
-  .fs-screen .am-cardgrid{grid-template-columns:1fr;gap:18px}
+  /* "Plan" / "Add-ons" read as quiet section labels, not headings */
+  .fs-screen .fs-col .am-sechead h4{color:var(--mid)}
+  /* divider between the Plan and Add-ons sections, full-bleed inside the panel */
+  .fs-screen .am-sechead-sub{margin:22px -16px 12px;padding:22px 16px 0;border-top:1px solid var(--line2)}
+  /* each item is one tight unit: title+control / description / price, with a
+     generous gap to the next item */
+  .fs-screen .am-capgrid{grid-template-columns:1fr;gap:26px}
+  .fs-screen .am-cardgrid{grid-template-columns:1fr;gap:26px}
+  .fs-screen .am-cardprice{margin-top:4px}
+  .fs-screen .am-carddesc{margin-top:4px}
+  /* add-on price lines up with the title and description, past the checkbox */
+  .fs-screen .am-card .am-cardprice{margin-left:27px}
   .fs-panel{background:#fff;border:1px solid var(--line2);border-radius:8px;padding:16px}
   .fs-devinput{height:calc(var(--btnH) + 2px);width:110px;border:1px solid var(--line);border-radius:6px;background:var(--track);color:var(--ink);-webkit-text-fill-color:var(--ink);opacity:1;font:inherit;font-size:13px;text-align:center;font-variant-numeric:tabular-nums;padding:0 8px;cursor:not-allowed}
-  .fs-cellhead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+  /* title + description as one text block, control to its right on the top line */
+  .fs-cellhead{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+  .fs-celltext{flex:1;min-width:0}
   .fs-cellhead .am-celltop{margin-bottom:0}
   .fs-devctl{display:flex;flex-direction:column;align-items:flex-end;gap:2px;text-align:right}
   .fs-devctl .am-cellval{font-size:18px;line-height:1.1}
   .fs-celldesc{margin-top:4px;font-size:12px;color:var(--faint);line-height:1.55}
-  .fs-right{position:sticky;top:52px;background:#fff;border:1px solid var(--line2);border-radius:8px;padding:14px 16px}
+  /* pins right under the sticky header row (57px tall) */
+  .fs-right{position:sticky;top:57px;background:#fff;border:1px solid var(--line2);border-radius:8px;padding:14px 16px}
   .fs-right .am-figures{border:0;padding:0;margin-top:10px}
   .fs-review{max-width:640px;margin:0 auto}
   .am-addcheck{width:17px;height:17px;flex:none;accent-color:var(--ink);margin:0;cursor:pointer}
   .fs-screen .am-addcheck{width:17px;height:17px}
-  @media(max-width:900px){.fs-grid{grid-template-columns:1fr}.fs-divider{display:none}.fs-right{position:static}}
+  @media(max-width:900px){.fs-grid{grid-template-columns:1fr}.fs-right{position:static}}
 
   @media(max-width:820px){
     .app{grid-template-columns:1fr}
@@ -784,14 +804,14 @@
 
 <!-- ============ MANAGE ADD-ONS — FULL-SCREEN VARIANT ============ -->
 <div class="fs-screen" id="fsAddons" role="dialog" aria-modal="true" aria-label="Manage add-ons (full-screen)" hidden>
-  <div class="fs-minibar">
-    <span class="fs-minititle">Manage plan &amp; Add-ons</span>
+  <div class="fs-header">
+    <button class="fs-close fs-headback" id="fsBack" aria-label="Back" hidden>←</button>
+    <h2 class="fs-maintitle">Manage ThingsBoard Professional edition (pay-as-you-go) · Prototype</h2>
     <span class="spacer"></span>
-    <button class="fs-close" id="fsCancel" aria-label="Close">✕</button>
-  </div>
-  <div class="fs-titlerow">
-    <h2 class="fs-maintitle">ThingsBoard Professional edition (pay-as-you-go) · Prototype</h2>
-    <button class="link" data-modal="change-plan">Change plan →</button>
+    <div class="fs-headactions">
+      <button class="link" data-modal="change-plan">Change plan →</button>
+      <button class="fs-close" id="fsCancel" aria-label="Close">✕</button>
+    </div>
   </div>
 
   <div class="fs-body">
@@ -804,46 +824,54 @@
             <div class="am-capgrid">
               <div class="am-cell">
                 <div class="fs-cellhead">
-                  <div class="am-celltop">Devices</div>
+                  <div class="fs-celltext">
+                    <div class="am-celltop">Devices</div>
+                    <div class="fs-celldesc">Total number of IoT devices that will connect to your ThingsBoard platform.</div>
+                  </div>
                   <input class="fs-devinput" type="text" value="50" disabled aria-label="Devices">
                 </div>
-                <div class="fs-celldesc">Total number of IoT devices that will connect to your ThingsBoard platform.</div>
                 <div class="am-cardprice locked">fixed by Prototype Plan</div>
               </div>
               <div class="am-cell">
                 <div class="fs-cellhead">
-                  <div class="am-celltop">Production instances</div>
+                  <div class="fs-celltext">
+                    <div class="am-celltop">Production instances</div>
+                    <div class="fs-celldesc">Production compute — 1 included. Enables clustering and HA.</div>
+                  </div>
                   <div class="stepper" data-field="prod">
                     <button type="button" data-dir="-1" aria-label="Decrease production instances">−</button>
                     <span class="val" id="fsValProd" aria-live="polite">1</span>
                     <button type="button" data-dir="1" aria-label="Increase production instances">+</button>
                   </div>
                 </div>
-                <div class="fs-celldesc">Production compute — 1 included. Enables clustering and HA.</div>
                 <div class="am-cardprice">+$29.00 / mo each</div>
               </div>
               <div class="am-cell">
                 <div class="fs-cellhead">
-                  <div class="am-celltop">Development instances</div>
+                  <div class="fs-celltext">
+                    <div class="am-celltop">Development instances</div>
+                    <div class="fs-celldesc">Dedicated instances for dev, test, and CI/CD — keeps production data clean.</div>
+                  </div>
                   <div class="stepper" data-field="dev">
                     <button type="button" data-dir="-1" aria-label="Decrease development instances">−</button>
                     <span class="val" id="fsValDev" aria-live="polite">0</span>
                     <button type="button" data-dir="1" aria-label="Increase development instances">+</button>
                   </div>
                 </div>
-                <div class="fs-celldesc">Dedicated instances for dev, test, and CI/CD — keeps production data clean.</div>
                 <div class="am-cardprice">+$15.00 / mo each</div>
               </div>
               <div class="am-cell">
                 <div class="fs-cellhead">
-                  <div class="am-celltop">AI credits</div>
+                  <div class="fs-celltext">
+                    <div class="am-celltop">AI credits</div>
+                    <div class="fs-celldesc">1 = 1,000,000 credits. Minimum matches your plan — increase to buy more.</div>
+                  </div>
                   <div class="stepper" data-field="ai">
                     <button type="button" data-dir="-1" aria-label="Decrease AI credit blocks">−</button>
                     <span class="val" id="fsValAi" aria-live="polite">2</span>
                     <button type="button" data-dir="1" aria-label="Increase AI credit blocks">+</button>
                   </div>
                 </div>
-                <div class="fs-celldesc">1 = 1,000,000 credits. Minimum matches your plan — increase to buy more.</div>
                 <div class="am-cardprice">+$5.00 / mo per 1M block</div>
               </div>
             </div>
@@ -873,8 +901,6 @@
           </div>
         </div>
 
-        <div class="fs-divider"></div>
-
         <div class="am-sec fs-right">
           <div class="am-sechead"><h4>Calculation summary</h4></div>
           <div class="am-figures">
@@ -897,24 +923,23 @@
 
         <div class="am-order">
           <div class="am-orow am-planrow">
-            <div>Prototype</div>
+            <div>Prototype · 50 dev · 1 prod · 2M AI · white-label</div>
             <div>$39.00 / mo</div>
           </div>
-          <div class="am-orow"><div>Base · 50 dev · 1 prod · 2M AI · white-label</div><div>$39.00</div></div>
           <div id="fsOrderLines"></div>
           <div class="am-orow am-newmonthly"><div>New monthly · from 2026-08-30</div><div id="fsRecMonthly">$39.00 / mo</div></div>
         </div>
 
         <div class="am-due">
-          <div class="am-duelabel">Due today <span class="muted">— prorated change for the current cycle (16 of 31 days, to 2026-08-30)</span></div>
-          <div class="am-dueval" id="fsDueVal">$0.00</div>
+          <div class="am-duerow">
+            <div class="am-duelabel">Due today <span class="muted">— prorated change for the current cycle (16 of 31 days, to 2026-08-30)</span></div>
+            <div class="am-dueval" id="fsDueVal">$0.00</div>
+          </div>
+          <div class="am-payrow">Charged to Visa ••4242 · auto-pay · <button class="link" data-modal="manage-payment">Manage payment →</button></div>
         </div>
 
-        <div class="am-pay">Charged to Visa ••4242 · auto-pay · <button class="link" data-modal="manage-payment">Manage payment →</button></div>
         <div class="fs-reviewactions">
-          <button class="btn ter" id="fsBack">← Back</button>
-          <span class="spacer"></span>
-          <button class="btn" id="fsConfirm">Confirm — $0.00 due now</button>
+          <button class="btn fs-confirmbtn" id="fsConfirm">Approve &amp; pay</button>
         </div>
       </div>
     </div>
@@ -1321,7 +1346,7 @@
       $('#fsOrderLines').innerHTML = rows;
       $('#fsRecMonthly').textContent = money(newMonthly()) + ' / mo';
       $('#fsDueVal').textContent = money(dueToday());
-      $('#fsConfirm').textContent = 'Confirm — ' + money(dueToday()) + ' due now';
+      // the amount lives in the Due today block, so the button stays a plain label
       $('#fsSuccessDue').textContent = 'Prorated charge today: ' + money(dueToday()) + '.';
     }
 
@@ -1329,6 +1354,7 @@
       $('#fsStep1').hidden = n!==1;
       $('#fsStep2').hidden = n!==2;
       $('#fsSuccess').hidden = true;
+      $('#fsBack').hidden = n!==2;   // Back sits in the header, review step only
       if(n===2) render2();
       scr.scrollTop = 0;
     }
@@ -1337,6 +1363,7 @@
       $('#fsStep1').hidden = true;
       $('#fsStep2').hidden = true;
       $('#fsSuccess').hidden = false;
+      $('#fsBack').hidden = true;
       scr.scrollTop = 0;
       $('#fsDone').focus();
     }
