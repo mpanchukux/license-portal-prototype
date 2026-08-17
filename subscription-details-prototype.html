@@ -11,6 +11,7 @@
     --fill:#3d3d3d; --track:#e6e6e6;
     --chrome:#efefec; --chromeLine:#dcdcd8; --hover:#f0f0ee; --sel:#e4e4e0;
     --btnH:31px;
+    --backW:24px; --backGap:12px; --contentX:58px;  /* 22px head padding + 24 + 12 */
   }
   *{box-sizing:border-box}
   html,body{height:100%}
@@ -60,11 +61,17 @@
   .crumb{padding:10px 22px;font-size:12px;color:var(--faint);background:var(--bg);border-bottom:1px solid var(--line2)}
   .crumb b{color:var(--mid);font-weight:600}
   .content{padding:22px;overflow:auto}
-  .sheet{width:75%;margin:0}
+  .sheet{width:60%;margin:0}
+  @media(max-width:1100px){.sheet{width:100%}}
 
   /* ---------- canvas ---------- */
   .canvas{background:var(--card);border:1px solid var(--line);border-radius:6px;overflow:hidden}
   .head{padding:22px 22px 20px;border-bottom:1px solid var(--line2);background:#fafafa}
+  /* the back button sits alone in a narrow left gutter; every content block
+     below aligns to one vertical line at --contentX from the canvas edge
+     (head padding-left + gutter + gap) */
+  .headgrid{display:grid;grid-template-columns:var(--backW) 1fr;column-gap:var(--backGap);align-items:start}
+  .headcol{min-width:0}
   /* row 1: back · status · title on the left, actions on the right.
      Wraps instead of letting the title collide with the actions when narrow. */
   .head .top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;row-gap:12px}
@@ -72,15 +79,24 @@
   .idline .title{min-width:0}
   .back{width:24px;height:24px;border:1px solid var(--line);border-radius:4px;display:flex;align-items:center;justify-content:center;color:var(--mid);background:#fff;flex:none}
   .back:hover{background:var(--hover);color:var(--ink)}
-  .title{font-size:18px;font-weight:700;line-height:1.25}
+  /* plan identity: small grey subhead over the plan name + status chip */
+  .titleblock{min-width:0}
+  .titlekicker{font-size:12.5px;color:var(--mid);line-height:1.2}
+  .titlerow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:3px}
+  .planname{margin:0;font-size:26px;font-weight:800;line-height:1.15;letter-spacing:-.01em}
   .sub{color:var(--mid);font-size:12.5px;margin-top:2px}
-  /* row 2: label on the left, subscription period on the right */
-  .metarow{display:flex;gap:12px;margin-top:12px;flex-wrap:wrap;align-items:center}
-  .metarow .period{margin-left:auto}
+  /* row 2: the label affordance on its own */
+  .metarow{display:flex;gap:12px;margin-top:14px;flex-wrap:wrap;align-items:center}
   .period{font-size:12px;color:var(--ink);font-variant-numeric:tabular-nums}
-  .period .pk{color:var(--faint);font-variant-numeric:normal}
   /* thin divider between the meta row and the license key row */
   .hairline{height:1px;background:var(--line2);margin-top:12px}
+  /* license key (left) and subscription period (right) as a symmetric pair */
+  .keygrid{display:flex;justify-content:space-between;gap:24px;margin-top:14px;flex-wrap:wrap}
+  .keycol{min-width:0}
+  .keycol.right{text-align:right}
+  .minihead{margin:0 0 8px;font-size:13px;letter-spacing:.02em;text-transform:uppercase;color:var(--ink)}
+  /* the subscription-period label matches the "Subscription plan" subhead */
+  .periodhead{margin:0 0 6px;font-size:12.5px;font-weight:400;color:var(--mid);line-height:1.2}
   .chip{font-size:11.5px;padding:2px 9px;border:1px solid var(--line);border-radius:999px;color:var(--mid);background:#fafafa;display:inline-flex;align-items:center;gap:6px}
   .chip.status{border-color:var(--ink);color:var(--ink);font-weight:600;background:#fff}
   .chip .sdot{width:7px;height:7px;border-radius:50%;background:var(--ink);flex:none}
@@ -93,8 +109,9 @@
 
   .muted{color:var(--faint)}
 
+  /* equal spacing between every header action, including the ⋮ overflow button */
   .headactions{margin-left:auto;flex:none;align-self:center;display:flex;gap:9px;align-items:center}
-  .headactions .btn.ter{margin-left:6px}
+  .kebab-btn{width:var(--btnH);padding:0;font-size:15px;line-height:1}
 
   /* conditional attention alert (hidden in healthy state) */
   .alert{margin-top:12px;display:flex;align-items:center;gap:9px;font-size:13px;color:var(--ink);background:#f4f4f2;border:1px solid var(--line);border-left:3px solid var(--ink);border-radius:5px;padding:9px 12px}
@@ -112,16 +129,19 @@
   .btn.ter:hover{color:var(--ink)}
   .spacer{flex:1}
 
-  .tabs{display:flex;gap:2px;padding:0 18px;border-bottom:1px solid var(--line2)}
+  .tabs{display:flex;gap:2px;padding:0 18px 0 var(--contentX);border-bottom:1px solid var(--line2)}
   .tab{padding:11px 12px;font-size:13px;color:var(--mid);border:0;border-bottom:2px solid transparent;margin-bottom:-1px;background:transparent}
   .tab:hover{color:var(--ink)}
   .tab[aria-selected="true"]{color:var(--ink);font-weight:600;border-color:var(--ink)}
 
   .panel[hidden]{display:none}
-  .section{padding:16px 18px;border-bottom:1px solid var(--line2)}
+  .section{padding:16px 18px 16px var(--contentX);border-bottom:1px solid var(--line2)}
   .section:last-child{border-bottom:0}
-  /* divider between every top-level block on the details page */
-  #panel-details,#panel-prod{border-bottom:1px solid var(--line2)}
+  /* Plan & Add-ons is separated from the tab bar by whitespace, not a rule */
+  .section.planblock{border-bottom:0;margin-bottom:22px}
+  /* the Plan & Add-ons usage table stays narrower than the page */
+  .plantable{width:69%}
+  @media(max-width:900px){.plantable{width:100%}}
   /* light-grey sub-cards (Billing / Invoices / Production instances) */
   .billcard{background:#f6f6f4;border:1px solid var(--line2);border-radius:8px;padding:14px 16px;margin-top:12px}
   .billcard-h{margin:0 0 10px;font-size:13px;font-weight:600;color:var(--ink)}
@@ -132,12 +152,6 @@
   .sh .n{width:20px;height:20px;border-radius:50%;background:var(--ink);color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center;flex:none}
   .sh h3{margin:0;font-size:13px;letter-spacing:.02em;text-transform:uppercase;color:var(--ink)}
   .sh .spacer{flex:1}
-  /* collapsible section header (accordion) */
-  .sh-toggle{display:inline-flex;align-items:center;gap:8px;background:transparent;border:0;padding:0;margin:0;color:var(--ink);cursor:pointer;text-align:left}
-  .sh-chev{width:15px;height:15px;color:var(--mid);transition:transform .15s}
-  .sh-toggle[aria-expanded="true"] .sh-chev{transform:rotate(90deg)}
-  .sh-toggle:hover .sh-chev{color:var(--ink)}
-  .sh-body[hidden]{display:none}
 
   .kv{display:flex;justify-content:space-between;gap:16px;padding:7px 0;border-bottom:1px dashed var(--line2)}
   .kv:last-child{border-bottom:0}
@@ -187,8 +201,7 @@
   .stub{color:var(--faint);font-size:12.5px;padding:18px;text-align:center;border:1px dashed var(--line);border-radius:5px;background:#fafafa}
 
   /* license key in header */
-  .keyline{margin-top:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-  .keyline .kk{color:var(--mid);font-size:12.5px}
+  .keyline{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
   .keyline .mono{font-size:12.5px}
 
   /* data grid (production instances) */
@@ -457,13 +470,20 @@
       <div class="sheet">
         <div class="canvas">
 
-          <!-- header -->
+          <!-- header: back button in its own gutter, everything else in the content column -->
           <div class="head">
+           <div class="headgrid">
+            <button class="back" data-stub="Back to Subscriptions" aria-label="Back">&larr;</button>
+            <div class="headcol">
             <div class="top">
               <div class="idline">
-                <button class="back" data-stub="Back to Subscriptions" aria-label="Back">&larr;</button>
-                <span class="chip status"><span class="sdot"></span>Active</span>
-                <div class="title">Prototype subscription plan</div>
+                <div class="titleblock">
+                  <div class="titlekicker">Subscription plan</div>
+                  <div class="titlerow">
+                    <h1 class="planname">Prototype</h1>
+                    <span class="chip status"><span class="sdot"></span>Active</span>
+                  </div>
+                </div>
               </div>
               <div class="headactions">
                 <button class="btn sec" id="couponBtn">Apply coupon</button>
@@ -473,29 +493,41 @@
                   <button class="link" id="couponCancel">Cancel</button>
                 </div>
                 <button class="btn" data-modal="change-plan">Change plan</button>
-                <button class="btn ter" data-stub="Cancel subscription">Cancel subscription</button>
+                <div class="menu">
+                  <button class="btn sec kebab-btn" id="headKebabBtn" aria-haspopup="true" aria-expanded="false" aria-label="More actions">⋮</button>
+                  <div class="pop" id="headKebabPop" role="menu" hidden>
+                    <button role="menuitem" data-stub="Cancel subscription">Cancel subscription</button>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <!-- row 2: label (left) / subscription period (right) -->
+            <!-- row 2: the label affordance -->
             <div class="metarow">
               <span id="labelSlot"><button class="chip ghost" id="addLabel">+ Add label</button></span>
-              <span class="period"><span class="pk">Subscription period ·</span> 2026-08-13 to 2026-09-13</span>
             </div>
 
             <div class="hairline"></div>
 
-            <!-- row 3: license key -->
-            <div class="keyline">
-              <span class="kk">License key</span>
-              <span class="mono" id="keyText" data-masked="••••••••••••3f2a" data-full="d41d-8cd9-8f00-b204-e980-3f2a">••••••••••••3f2a</span>
-              <button class="iconbtn ib" id="revealBtn" aria-pressed="false" aria-label="Reveal license key" title="Reveal">
-                <svg class="icon eye" viewBox="0 0 24 24"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z"/><circle cx="12" cy="12" r="2.5"/></svg>
-                <svg class="icon eyeoff" viewBox="0 0 24 24" hidden><path d="M10.6 6.1A9.6 9.6 0 0 1 12 6c6.5 0 10 6 10 6a16.9 16.9 0 0 1-2.4 3M6.5 6.6A16.8 16.8 0 0 0 2 12s3.5 6 10 6a9.5 9.5 0 0 0 3.9-.8"/><path d="M3 3l18 18"/></svg>
-              </button>
-              <button class="iconbtn ib tip" id="copyBtn" aria-label="Copy license key" data-tip="Copy">
-                <svg class="icon" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg>
-              </button>
+            <!-- row 3: license key (left) / subscription period (right) -->
+            <div class="keygrid">
+              <div class="keycol">
+                <h3 class="minihead">License key</h3>
+                <div class="keyline">
+                  <span class="mono" id="keyText" data-masked="••••••••••••3f2a" data-full="d41d-8cd9-8f00-b204-e980-3f2a">••••••••••••3f2a</span>
+                  <button class="iconbtn ib" id="revealBtn" aria-pressed="false" aria-label="Reveal license key" title="Reveal">
+                    <svg class="icon eye" viewBox="0 0 24 24"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z"/><circle cx="12" cy="12" r="2.5"/></svg>
+                    <svg class="icon eyeoff" viewBox="0 0 24 24" hidden><path d="M10.6 6.1A9.6 9.6 0 0 1 12 6c6.5 0 10 6 10 6a16.9 16.9 0 0 1-2.4 3M6.5 6.6A16.8 16.8 0 0 0 2 12s3.5 6 10 6a9.5 9.5 0 0 0 3.9-.8"/><path d="M3 3l18 18"/></svg>
+                  </button>
+                  <button class="iconbtn ib tip" id="copyBtn" aria-label="Copy license key" data-tip="Copy">
+                    <svg class="icon" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg>
+                  </button>
+                </div>
+              </div>
+              <div class="keycol right">
+                <h3 class="periodhead">Subscription period</h3>
+                <div class="period">2026-08-13 to 2026-09-13</div>
+              </div>
             </div>
 
             <!-- Conditional alert. Rendered ONLY when the subscription needs attention
@@ -505,18 +537,16 @@
               <svg class="icon" viewBox="0 0 24 24"><path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4M12 17v.5"/></svg>
               <span class="atxt"></span>
             </div>
+            </div><!-- /headcol -->
+           </div><!-- /headgrid -->
           </div>
 
-          <!-- all sections in one scroll (tabs removed) -->
-          <div id="panel-details">
-
-            <!-- Plan & Add-ons -->
-            <div class="section">
-              <div class="sh"><button class="sh-toggle" aria-expanded="true" aria-controls="sec-plan"><svg class="icon sh-chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg><h3>Plan &amp; Add-ons</h3></button><span class="spacer"></span>
+          <!-- Plan & Add-ons — always visible, above the tab bar -->
+          <div class="section planblock">
+              <div class="sh"><h3>Plan &amp; Add-ons</h3><span class="spacer"></span>
                 <button class="btn sec" data-modal="add-ons">Manage</button>
               </div>
-              <div class="sh-body" id="sec-plan">
-              <table>
+              <table class="plantable">
                 <thead>
                   <tr><th>Item</th><th>Usage</th><th class="num">Included</th><th class="num">Extra</th><th class="num">Limit</th></tr>
                 </thead>
@@ -538,13 +568,18 @@
                   </tr>
                 </tbody>
               </table>
-              </div>
-            </div>
+          </div>
 
-            <!-- Billing & Invoices -->
+          <!-- tab bar for the three data areas -->
+          <div class="tabs" role="tablist" aria-label="Subscription areas">
+            <button class="tab" role="tab" id="tab-invoices" aria-controls="panel-invoices" aria-selected="true" tabindex="0">Invoices</button>
+            <button class="tab" role="tab" id="tab-prod" aria-controls="panel-prod" aria-selected="false" tabindex="-1">Production instances</button>
+            <button class="tab" role="tab" id="tab-logs" aria-controls="panel-audit" aria-selected="false" tabindex="-1">Logs</button>
+          </div>
+
+          <!-- Invoices -->
+          <div class="panel" id="panel-invoices" role="tabpanel" aria-labelledby="tab-invoices">
             <div class="section">
-              <div class="sh"><button class="sh-toggle" aria-expanded="true" aria-controls="sec-billing"><svg class="icon sh-chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg><h3>Billing &amp; Invoices</h3></button></div>
-              <div class="sh-body" id="sec-billing">
               <div class="billgrid">
                 <div class="billcard">
                   <h4 class="billcard-h">Next charge</h4>
@@ -570,32 +605,38 @@
                   </tr>
                 </tbody>
               </table>
+              <div class="pager">
+                <span class="spacer"></span>
+                <span>Items per page<select aria-label="Items per page"><option>10</option><option>20</option><option>50</option><option>100</option></select></span>
+                <span class="range">1 of 1</span>
+                <span class="pagebtns">
+                  <button disabled aria-label="First page">«</button>
+                  <button disabled aria-label="Previous page">‹</button>
+                  <button disabled aria-label="Next page">›</button>
+                  <button disabled aria-label="Last page">»</button>
+                </span>
               </div>
             </div>
           </div>
 
           <!-- Production instances -->
-          <div id="panel-prod">
+          <div class="panel" id="panel-prod" role="tabpanel" aria-labelledby="tab-prod" hidden>
             <div class="section">
-              <div class="sh"><button class="sh-toggle" aria-expanded="false" aria-controls="sec-prod"><svg class="icon sh-chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg><h3>Production instances</h3></button></div>
-              <div class="sh-body" id="sec-prod" hidden>
-              <div class="billcard" style="text-align:center;padding:24px 16px">
+              <div class="billcard" style="text-align:center;padding:24px 16px;margin-top:0">
                 <div style="font-size:13px;color:var(--faint)">No instances found</div>
                 <div style="font-size:12px;color:var(--faint);margin-top:6px">Instances appear automatically when a deployment is activated with the license.</div>
-              </div>
               </div>
             </div>
           </div>
 
-          <!-- Audit logs -->
-          <div id="panel-audit">
+          <!-- Logs -->
+          <div class="panel" id="panel-audit" role="tabpanel" aria-labelledby="tab-logs" hidden>
             <div class="section">
-              <div class="sh"><button class="sh-toggle" aria-expanded="false" aria-controls="sec-audit"><svg class="icon sh-chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg><h3>Audit logs</h3></button><span class="spacer"></span>
+              <div class="sh"><span class="spacer"></span>
                 <button class="btn sec" data-stub="Time range: last day">
                   <svg class="icon" viewBox="0 0 24 24" style="margin-right:6px"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.5 2.5"/></svg>last day
                 </button>
               </div>
-              <div class="sh-body" id="sec-audit" hidden>
               <table>
                 <thead>
                   <tr>
@@ -626,7 +667,6 @@
                   <button disabled aria-label="Next page">›</button>
                   <button disabled aria-label="Last page">»</button>
                 </span>
-              </div>
               </div>
             </div>
           </div>
@@ -1077,16 +1117,6 @@
   $('#couponApply').addEventListener('click', function(){ couponReset(); });
   couponInput.addEventListener('keydown', function(e){ if(e.key==='Escape') couponReset(); });
 
-  /* ---------- collapsible sections (accordion) ---------- */
-  $$('.sh-toggle').forEach(function(btn){
-    btn.addEventListener('click', function(){
-      var expanded = btn.getAttribute('aria-expanded') === 'true';
-      btn.setAttribute('aria-expanded', expanded ? 'false' : 'true');
-      var body = $('#'+btn.getAttribute('aria-controls'));
-      if(body) body.hidden = expanded;
-    });
-  });
-
   /* ---------- sortable column headers (prod instances, audit logs) ---------- */
   $$('.sortable').forEach(function(th){
     var toggleSort = function(){
@@ -1429,14 +1459,21 @@
       document.documentElement.requestFullscreen().catch(function(){});
     } else if(document.exitFullscreen){ document.exitFullscreen().catch(function(){}); }
   });
-  var kebabBtn=$('#kebabBtn'), kebabPop=$('#kebabPop');
-  function toggleKebab(open){
-    kebabPop.hidden = !open;
-    kebabBtn.setAttribute('aria-expanded', open?'true':'false');
-  }
-  kebabBtn.addEventListener('click', function(e){ e.stopPropagation(); toggleKebab(kebabPop.hidden); });
-  document.addEventListener('click', function(){ if(!kebabPop.hidden) toggleKebab(false); });
-  kebabPop.addEventListener('click', function(e){ e.stopPropagation(); });
+  /* ---------- overflow (⋮) menus: chrome kebab + header actions ---------- */
+  $$('.menu').forEach(function(menu){
+    var btn = $('[aria-haspopup]', menu), pop = $('.pop', menu);
+    if(!btn || !pop) return;
+    function toggle(open){
+      pop.hidden = !open;
+      btn.setAttribute('aria-expanded', open?'true':'false');
+    }
+    btn.addEventListener('click', function(e){ e.stopPropagation(); toggle(pop.hidden); });
+    pop.addEventListener('click', function(e){ e.stopPropagation(); });
+    document.addEventListener('click', function(){ if(!pop.hidden) toggle(false); });
+    document.addEventListener('keydown', function(e){
+      if(e.key==='Escape' && !pop.hidden){ toggle(false); btn.focus(); }
+    });
+  });
 })();
 </script>
 </body>
