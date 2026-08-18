@@ -177,7 +177,7 @@
   .nc-when{font-size:12.5px;color:var(--mid);font-variant-numeric:tabular-nums}
   /* the amount is the hero: its own line, nothing beside it */
   .nc-amount{margin-top:10px}
-  .nextcharge .big{display:block;font-size:26px;line-height:1.15;letter-spacing:-.01em}
+  .nextcharge .big{display:block;font-size:20px;line-height:1.15;letter-spacing:-.01em}
   .nextcharge .hairline{margin:14px 0}
   .nc-foot{font-size:12.5px;color:var(--mid)}
   .nc-pay{font-size:12.5px;color:var(--mid)}
@@ -251,6 +251,11 @@
   th.chk,td.chk{width:34px;text-align:center;padding-left:8px;padding-right:0}
   input[type=checkbox]{accent-color:var(--ink);width:14px;height:14px;margin:0}
   .emptybox{padding:34px 0;text-align:center;color:var(--faint);font-size:12.5px}
+  /* Instances tab: type switcher toolbar + generous air before pagination */
+  .insttoolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+  .insttoolbar .spacer{flex:1}
+  .insttype[hidden]{display:none}
+  .pager.instpager{margin-top:40px}
   .rowactions{display:inline-flex;align-items:center;gap:16px;white-space:nowrap}
   /* invoices: fixed proportional columns so the row fills the width evenly and the
      actions sit at the right edge instead of floating with a gap */
@@ -260,8 +265,6 @@
   .invtable th:nth-child(3),.invtable td:nth-child(3){width:20%}
   .invtable th:nth-child(4),.invtable td:nth-child(4){width:14%}
   .invtable th:nth-child(5),.invtable td:nth-child(5){width:32%;text-align:right}
-  /* Plan & Add-ons: left-align every column, numeric ones included */
-  .plantable th.num,.plantable td.num{text-align:left}
   .pager{display:flex;align-items:center;gap:14px;margin-top:22px;padding-bottom:4px;flex-wrap:wrap;font-size:12px;color:var(--mid)}
   .pager .spacer{flex:1}
   .pager select{font:inherit;font-size:12px;height:var(--btnH);border:1px solid var(--line);border-radius:5px;padding:0 6px;background:#fff;color:var(--ink);margin-left:4px}
@@ -531,7 +534,13 @@
   .lic-sub{margin:0 0 20px;font-size:13px;color:var(--mid)}
   .lic-controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
   .lic-controls .spacer{flex:1}
-  .lic-toggle{display:inline-flex;align-items:center;gap:9px;font-size:12.5px;color:var(--mid);cursor:pointer}
+  .lic-toggle{display:inline-flex;align-items:center;gap:9px;font-size:12.5px;color:var(--mid);cursor:pointer;margin-left:12px}
+  /* Type filter: segmented chips, mutually exclusive */
+  .lic-typeseg{display:inline-flex;align-items:center;gap:8px}
+  .lic-seglabel{font-size:12.5px;color:var(--mid)}
+  .typechip{height:var(--btnH);display:inline-flex;align-items:center;font-size:12px;padding:0 13px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--mid)}
+  .typechip:hover{border-color:var(--mid);color:var(--ink)}
+  .typechip.is-on{background:var(--ink);border-color:var(--ink);color:#fff}
   .lic-row{cursor:pointer}
   .lic-row:hover{background:var(--hover)}
   .lic-row[hidden]{display:none}
@@ -620,12 +629,6 @@
                     <h1 class="planname" data-page="sub" id="planName">Prototype</h1>
                     <h1 class="planname" data-page="perp">ThingsBoard PE Perpetual License</h1>
                     <span class="chip status"><span class="sdot"></span>Active</span>
-                  </div>
-                  <!-- perpetual: paid once, so the price sits with the name instead of
-                       in a Next charge card, with the updates term beside it -->
-                  <div class="priceline" data-page="perp">
-                    <span class="priceval">$4,999.00</span> <span class="muted">one-time</span>
-                    <span class="muted">· Including 1 year software updates</span>
                   </div>
                 </div>
               </div>
@@ -753,11 +756,11 @@
               </div>
               <table class="invtable" style="margin-top:18px" data-page="sub">
                 <thead>
-                  <tr><th>Date</th><th class="num">Amount</th><th>Invoice #</th><th>Status</th><th aria-label="Invoice actions"></th></tr>
+                  <tr><th>Invoice #</th><th>Date</th><th class="num">Amount</th><th>Status</th><th aria-label="Invoice actions"></th></tr>
                 </thead>
                 <tbody>
                   <tr>
-                    <td>2026-07-30</td><td class="num" id="invAmount">$39.00</td><td class="mono">INV-2026-07</td>
+                    <td class="mono">INV-2026-07</td><td>2026-07-30</td><td class="num" id="invAmount">$39.00</td>
                     <td><span class="pill">Paid</span></td>
                     <td><span class="rowactions">
                       <button class="link" data-stub="Download PDF">Download PDF</button>
@@ -782,12 +785,12 @@
                    Add capacity purchase. No upcoming row, no next charge, no auto-pay. -->
               <table class="invtable" data-page="perp">
                 <thead>
-                  <tr><th>Date</th><th class="num">Amount</th><th>Invoice #</th><th>Status</th><th aria-label="Invoice actions"></th></tr>
+                  <tr><th>Invoice #</th><th>Date</th><th class="num">Amount</th><th>Status</th><th aria-label="Invoice actions"></th></tr>
                 </thead>
                 <tbody>
                   <tr>
                     <!-- inferred date: a capacity purchase made after the licence was issued -->
-                    <td>2026-08-20</td><td class="num">$1,999.00</td><td class="mono">INV-2026-08</td>
+                    <td class="mono">INV-2026-08</td><td>2026-08-20</td><td class="num">$1,999.00</td>
                     <td><span class="pill">Paid</span></td>
                     <td><span class="rowactions">
                       <button class="link" data-stub="Download PDF">Download PDF</button>
@@ -796,7 +799,7 @@
                   </tr>
                   <tr>
                     <!-- the initial licence purchase: confirmed one-time price -->
-                    <td>2026-08-13</td><td class="num">$4,999.00</td><td class="mono">INV-2026-08A</td>
+                    <td class="mono">INV-2026-08A</td><td>2026-08-13</td><td class="num">$4,999.00</td>
                     <td><span class="pill">Paid</span></td>
                     <td><span class="rowactions">
                       <button class="link" data-stub="Download PDF">Download PDF</button>
@@ -819,12 +822,68 @@
             </div>
           </div>
 
-          <!-- Production instances -->
+          <!-- Instances -->
           <div class="panel" id="panel-prod" role="tabpanel" aria-labelledby="tab-prod" hidden>
             <div class="section">
-              <div class="billcard" style="text-align:center;padding:24px 16px;margin-top:0">
-                <div style="font-size:13px;color:var(--faint)">No instances found</div>
-                <div style="font-size:12px;color:var(--faint);margin-top:6px">Instances appear automatically when a deployment is activated with the license.</div>
+              <!-- type switcher (same segmented style as the Licenses "Type" filter) + toolbar -->
+              <div class="insttoolbar">
+                <div class="lic-typeseg" role="group" aria-label="Instance type">
+                  <button class="typechip is-on" data-insttype="prod" aria-pressed="true">Production</button>
+                  <button class="typechip" data-insttype="dev" aria-pressed="false">Development</button>
+                </div>
+                <span class="spacer"></span>
+                <button class="iconbtn ib" data-stub="Refresh instances" aria-label="Refresh" title="Refresh"><svg class="icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg></button>
+                <button class="iconbtn ib" data-stub="Search instances" aria-label="Search" title="Search"><svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></button>
+              </div>
+
+              <!-- PRODUCTION instances -->
+              <div class="insttype" data-insttype="prod">
+                <table class="insttable">
+                  <thead>
+                    <tr>
+                      <th class="chk"><input type="checkbox" aria-label="Select all production instances"></th>
+                      <th>Instance ID</th>
+                      <th>Label</th>
+                      <th>Status</th>
+                      <th>Last Activity Time</th>
+                      <th class="sortable" aria-sort="descending" tabindex="0">Created Time <span class="arrow">▼</span></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td class="chk"><input type="checkbox" aria-label="Select instance a1b2c3d4…e5f"></td>
+                      <td class="mono">a1b2c3d4…e5f</td>
+                      <td class="muted">—</td>
+                      <td><span class="pill">Online</span></td>
+                      <td>Aug 18 2026</td>
+                      <td>Aug 14 2026</td>
+                    </tr>
+                    <tr>
+                      <td class="chk"><input type="checkbox" aria-label="Select instance 7e5f9a2b…c3d"></td>
+                      <td class="mono">7e5f9a2b…c3d</td>
+                      <td class="muted">—</td>
+                      <td><span class="pill soft">Offline</span></td>
+                      <td>Aug 16 2026</td>
+                      <td>Aug 13 2026</td>
+                    </tr>
+                  </tbody>
+                </table>
+                <div class="pager instpager">
+                  <span class="spacer"></span>
+                  <span>Items per page<select aria-label="Items per page"><option>10</option><option>20</option><option>50</option><option>100</option></select></span>
+                  <span class="range">1–2 of 2</span>
+                  <span class="pagebtns">
+                    <button disabled aria-label="First page">«</button>
+                    <button disabled aria-label="Previous page">‹</button>
+                    <button disabled aria-label="Next page">›</button>
+                    <button disabled aria-label="Last page">»</button>
+                  </span>
+                </div>
+              </div>
+
+              <!-- DEVELOPMENT instances — seeded empty to show the empty-state -->
+              <div class="insttype" data-insttype="dev" hidden>
+                <div class="emptybox">No instances found · Instances appear automatically when a deployment is activated with the license.</div>
               </div>
             </div>
           </div>
@@ -877,25 +936,26 @@
   </div>
 </div>
 
-<!-- ============ LICENSES — unified list (inner content only; no chrome) ============
-     One table for both license types. A row click routes to the matching details
-     page already in this prototype; the ⋮ overflow carries type-specific actions
-     and must NOT navigate. Reachable from the prototype settings picker for now. -->
+<!-- ============ PRODUCTS — unified list (inner content only; no chrome) ============
+     One table for every subscription plan + perpetual license. Rows and both layout
+     variants (1 = grouped, 2 = one field per column) render from the PRODUCTS data in
+     JS. A row click routes to the matching details page; the ⋮ overflow carries
+     type-specific actions and must NOT navigate. In prototype settings for now. -->
 <div class="licview" id="licensesView" hidden>
-  <h1 class="lic-h1">Licenses</h1>
-  <p class="lic-sub">Every subscription and perpetual license on your account, in one place.</p>
+  <h1 class="lic-h1">Products</h1>
+  <p class="lic-sub">Every subscription plan and perpetual license on your account, in one place.</p>
 
   <div class="lic-controls">
-    <div class="dropwrap">
-      <button class="btn sec" id="licTypeBtn" aria-haspopup="true" aria-expanded="false">Type: All ▾</button>
-      <div class="dropmenu" id="licTypeMenu" hidden>
-        <button data-type="all">All</button>
-        <button data-type="Subscription">Subscription</button>
-        <button data-type="Perpetual">Perpetual</button>
-      </div>
+    <div class="lic-typeseg" role="group" aria-label="Filter by product type">
+      <span class="lic-seglabel">Type:</span>
+      <button class="typechip is-on" data-type="all" aria-pressed="true">All</button>
+      <button class="typechip" data-type="Subscription" aria-pressed="false">Subscription</button>
+      <button class="typechip" data-type="Perpetual" aria-pressed="false">Perpetual</button>
     </div>
-    <label class="lic-toggle"><span class="switch"><input type="checkbox" id="licCanceled"><span class="track"></span></span> Display canceled licenses</label>
+    <label class="lic-toggle"><span class="switch"><input type="checkbox" id="licCanceled"><span class="track"></span></span> Display canceled products</label>
     <span class="spacer"></span>
+    <button class="iconbtn ib" data-stub="Refresh products" aria-label="Refresh" title="Refresh"><svg class="icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg></button>
+    <button class="iconbtn ib" data-stub="Search products" aria-label="Search" title="Search"><svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></button>
     <div class="dropwrap">
       <button class="btn" id="licNewBtn" aria-haspopup="true" aria-expanded="false">+ New license ▾</button>
       <div class="dropmenu right" id="licNewMenu" hidden>
@@ -903,112 +963,14 @@
         <button data-new="perpetual">Perpetual license</button>
       </div>
     </div>
-    <button class="iconbtn ib" data-stub="Refresh licenses" aria-label="Refresh" title="Refresh"><svg class="icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg></button>
-    <button class="iconbtn ib" data-stub="Search licenses" aria-label="Search" title="Search"><svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></button>
   </div>
 
-  <table>
-    <thead>
-      <tr>
-        <th>Created</th><th>Type</th><th>Plan / Package</th><th>Label</th>
-        <th class="num">Prod</th><th class="num">Dev</th><th>Status</th><th>Renewal / Updates</th>
-        <th aria-label="Actions"></th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr class="lic-row" data-goto="startup" data-type="Subscription" data-status="active" tabindex="0" aria-label="Open Startup subscription details">
-        <td class="lic-num">Aug 13 2026</td>
-        <td><span class="chip">Subscription</span></td>
-        <td><div class="lp-name">Startup</div><div class="lp-meta">Professional edition · pay-as-you-go</div></td>
-        <td class="muted">—</td>
-        <td class="num lic-num">0/2</td>
-        <td class="num lic-num">0/0</td>
-        <td><span class="pill">Active</span></td>
-        <td><div class="lr-main">Renews Sep 20 2026</div><div class="lr-sub">$299.00 / mo · auto-pay</div></td>
-        <td>
-          <div class="lic-actions">
-            <button class="iconbtn ib tip lic-copy" aria-label="Copy license secret" data-tip="Copy license secret"><svg class="icon" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg></button>
-            <div class="menu">
-              <button class="iconbtn ib" aria-haspopup="true" aria-expanded="false" aria-label="More actions"><svg class="icon" viewBox="0 0 24 24" style="fill:currentColor;stroke:none"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button>
-              <div class="pop" role="menu" hidden>
-                <button role="menuitem" data-stub="Manage add-ons">Manage add-ons</button>
-                <button role="menuitem" data-stub="Change plan">Change plan</button>
-                <button role="menuitem" data-stub="Cancel subscription">Cancel subscription</button>
-              </div>
-            </div>
-          </div>
-        </td>
-      </tr>
-      <tr class="lic-row" data-goto="prototype" data-type="Subscription" data-status="active" tabindex="0" aria-label="Open Prototype subscription details">
-        <td class="lic-num">Jul 30 2026</td>
-        <td><span class="chip">Subscription</span></td>
-        <td><div class="lp-name">Prototype</div><div class="lp-meta">Professional edition · pay-as-you-go</div></td>
-        <td class="muted">—</td>
-        <td class="num lic-num">0/1</td>
-        <td class="num lic-num">0/0</td>
-        <td><span class="pill">Active</span></td>
-        <td><div class="lr-main">Renews Sep 06 2026</div><div class="lr-sub">$39.00 / mo · auto-pay</div></td>
-        <td>
-          <div class="lic-actions">
-            <button class="iconbtn ib tip lic-copy" aria-label="Copy license secret" data-tip="Copy license secret"><svg class="icon" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg></button>
-            <div class="menu">
-              <button class="iconbtn ib" aria-haspopup="true" aria-expanded="false" aria-label="More actions"><svg class="icon" viewBox="0 0 24 24" style="fill:currentColor;stroke:none"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button>
-              <div class="pop" role="menu" hidden>
-                <button role="menuitem" data-stub="Manage add-ons">Manage add-ons</button>
-                <button role="menuitem" data-stub="Change plan">Change plan</button>
-                <button role="menuitem" data-stub="Cancel subscription">Cancel subscription</button>
-              </div>
-            </div>
-          </div>
-        </td>
-      </tr>
-      <tr class="lic-row" data-goto="prototype" data-type="Subscription" data-status="active" tabindex="0" aria-label="Open Prototype subscription details">
-        <td class="lic-num">Jul 29 2026</td>
-        <td><span class="chip">Subscription</span></td>
-        <td><div class="lp-name">Prototype</div><div class="lp-meta">Professional edition · pay-as-you-go</div></td>
-        <td class="muted">—</td>
-        <td class="num lic-num">0/2</td>
-        <td class="num lic-num">0/0</td>
-        <td><span class="pill">Active</span></td>
-        <td><div class="lr-main">Renews Sep 05 2026</div><div class="lr-sub">$39.00 / mo · auto-pay</div></td>
-        <td>
-          <div class="lic-actions">
-            <button class="iconbtn ib tip lic-copy" aria-label="Copy license secret" data-tip="Copy license secret"><svg class="icon" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg></button>
-            <div class="menu">
-              <button class="iconbtn ib" aria-haspopup="true" aria-expanded="false" aria-label="More actions"><svg class="icon" viewBox="0 0 24 24" style="fill:currentColor;stroke:none"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button>
-              <div class="pop" role="menu" hidden>
-                <button role="menuitem" data-stub="Manage add-ons">Manage add-ons</button>
-                <button role="menuitem" data-stub="Change plan">Change plan</button>
-                <button role="menuitem" data-stub="Cancel subscription">Cancel subscription</button>
-              </div>
-            </div>
-          </div>
-        </td>
-      </tr>
-      <tr class="lic-row" data-goto="perp" data-type="Perpetual" data-status="active" tabindex="0" aria-label="Open Perpetual license details">
-        <td class="lic-num">Jul 27 2026</td>
-        <td><span class="chip">Perpetual</span></td>
-        <td><div class="lp-name">ThingsBoard PE Perpetual License</div><div class="lp-meta">Professional edition · perpetual</div></td>
-        <td class="muted">—</td>
-        <td class="num lic-num">0/1</td>
-        <td class="num lic-num">0/0</td>
-        <td><span class="pill">Active</span></td>
-        <td><div class="lr-main">Updates until Jul 27 2027</div><div class="lr-sub">one-time · paid</div></td>
-        <td>
-          <div class="lic-actions">
-            <button class="iconbtn ib tip lic-copy" aria-label="Copy license secret" data-tip="Copy license secret"><svg class="icon" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg></button>
-            <div class="menu">
-              <button class="iconbtn ib" aria-haspopup="true" aria-expanded="false" aria-label="More actions"><svg class="icon" viewBox="0 0 24 24" style="fill:currentColor;stroke:none"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button>
-              <div class="pop" role="menu" hidden>
-                <button role="menuitem" data-stub="Add capacity">Add capacity</button>
-                <button role="menuitem" data-stub="Renew software updates">Renew software updates</button>
-              </div>
-            </div>
-          </div>
-        </td>
-      </tr>
-    </tbody>
-  </table>
+  <div style="overflow-x:auto">
+    <table id="prodTable">
+      <thead id="prodHead"></thead>
+      <tbody id="prodBody"></tbody>
+    </table>
+  </div>
 
   <div class="pager">
     <span class="spacer"></span>
@@ -1087,19 +1049,22 @@
         <h1 class="dash-h1">Overview</h1>
         <p class="dash-sub">Everything you have and what needs attention, in one place.</p>
 
-        <!-- Conditional slot: rendered ONLY when something needs attention.
+        <!-- Alert slot: rendered ONLY for actionable states (payment failed, card
+             expiring, near/over a limit, updates term ending). A healthy upcoming
+             auto-pay renewal is NOT an alert, so the healthy state shows nothing.
              Demo hooks: window.showDashAlert('msg…') / window.clearDashAlert() -->
-        <div class="alert" id="dashAlert" role="status">
-          <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.5 2.5"/></svg>
-          <span class="atxt"><b>1 renewal coming up</b> — Prototype renews Aug 30 2026 ($39.00, auto-pay). No action needed.</span>
-          <button class="alink" data-stub="Review renewal">Review →</button>
+        <div class="alert" id="dashAlert" role="alert" hidden>
+          <svg class="icon" viewBox="0 0 24 24"><path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4M12 17v.5"/></svg>
+          <span class="atxt"></span>
         </div>
 
         <div class="kpirow">
           <div class="kpi"><div class="k">Active subscriptions</div><div class="v">2</div></div>
           <div class="kpi"><div class="k">Perpetual licenses</div><div class="v">1</div></div>
           <div class="kpi"><div class="k">Est. monthly spend</div><div class="v">$338 <span class="vsub">/ mo</span></div></div>
-          <div class="kpi"><div class="k">Devices in use</div><div class="v">352 <span class="vsub">/ 550</span></div></div>
+          <!-- device quotas are per-license (see each card), not one pool — a summed
+               "Devices in use" was misleading, so surface what's actionable instead -->
+          <div class="kpi"><div class="k">Needs attention</div><div class="v">0</div></div>
         </div>
 
         <div class="dashgrid">
@@ -1109,6 +1074,9 @@
               <div class="dsh"><h3>Subscriptions</h3><span class="spacer"></span>
                 <button class="link" data-stub="All subscriptions">All subscriptions →</button>
               </div>
+              <!-- Bounded preview, not the full list: at most 3 cards, ordered
+                   attention-first then soonest renewal (here: Aug 30 before Sep 13).
+                   The full set lives behind "All subscriptions →". -->
 
               <div class="dcard">
                 <div class="dcard-top">
@@ -1155,6 +1123,8 @@
               <div class="dsh"><h3>Perpetual licenses</h3><span class="spacer"></span>
                 <button class="link" data-stub="All perpetual licenses">All perpetual →</button>
               </div>
+              <!-- Bounded preview: at most 3 cards, attention-first then soonest
+                   updates-term end. Full set behind "All perpetual →". -->
 
               <div class="dcard">
                 <div class="dcard-top">
@@ -1186,13 +1156,6 @@
               <div class="dp-hero">$39.00</div>
               <div class="dp-herosub">Prototype · Aug 30 2026</div>
               <div class="dp-line" style="margin-top:11px"><span class="dp-k">Startup · Sep 13 2026</span><span>$299.00</span></div>
-            </div>
-
-            <div class="dpanel">
-              <h4>Payment method</h4>
-              <div class="dp-line"><span class="dp-k">Visa ••4242</span><span>exp 12/2028</span></div>
-              <div class="dp-line"><span class="dp-k">Auto-pay</span><span>On</span></div>
-              <button class="link" data-modal="manage-payment">Manage →</button>
             </div>
 
             <div class="dpanel">
@@ -1545,7 +1508,9 @@
   <div class="sp-label" style="margin-top:14px">Details page</div>
   <div class="sp-pick" role="radiogroup" aria-label="Details page">
     <label class="sp-opt"><input type="radio" name="detailsPage" value="dashboard"><span>Dashboard (Overview)</span></label>
-    <label class="sp-opt"><input type="radio" name="detailsPage" value="licenses"><span>Licenses</span></label>
+    <div class="sp-grouphead">Products</div>
+    <label class="sp-opt"><input type="radio" name="detailsPage" value="products"><span>Grouped (as now)</span></label>
+    <label class="sp-opt"><input type="radio" name="detailsPage" value="products2"><span>One column per field</span></label>
     <div class="sp-grouphead">Perpetual</div>
     <label class="sp-opt"><input type="radio" name="detailsPage" value="perp"><span>Perpetual license details</span></label>
     <div class="sp-grouphead">Subscription plans</div>
@@ -2001,8 +1966,10 @@
   var PAGES = {
     // standalone view with its own chrome — no plan content of its own
     dashboard: { kind:'dash' },
-    // unified license list — inner content only, no chrome
-    licenses:  { kind:'licenses' },
+    // Products list — inner content only, no chrome. Two layout variants:
+    // 1 = grouped (name+label, renewal+price+billing stacked); 2 = one field per column.
+    products:  { kind:'products', variant:1 },
+    products2: { kind:'products', variant:2 },
     // confirmed perpetual base. dev:'0' keeps the Development instances row hidden
     // (the row appears only once at least one dev instance exists) and aiPerMonth is
     // false because a perpetual license carries no monthly cadence — inferred.
@@ -2072,11 +2039,12 @@
   };
   function applyDetailsPage(){
     var p = PAGES[detailsPage];
-    // dashboard and licenses are whole separate views, so swap shells rather than parts
+    // dashboard and products are whole separate views, so swap shells rather than parts
     $('#dashView').hidden      = p.kind !== 'dash';
-    $('#licensesView').hidden  = p.kind !== 'licenses';
-    $('#appView').hidden       = p.kind === 'dash' || p.kind === 'licenses';
-    if(p.kind === 'dash' || p.kind === 'licenses') return;
+    $('#licensesView').hidden  = p.kind !== 'products';
+    $('#appView').hidden       = p.kind === 'dash' || p.kind === 'products';
+    if(p.kind === 'dash') return;
+    if(p.kind === 'products'){ productsVariant = p.variant; lastProducts = detailsPage; renderProducts(); return; }
     $$('[data-page]').forEach(function(el){ el.hidden = el.getAttribute('data-page') !== p.kind; });
     if(p.kind === 'sub'){
       $('#planName').textContent = p.name;
@@ -2091,8 +2059,8 @@
   });
   applyDetailsPage();
 
-  /* ---------- Licenses page: row routing, filters, dropdowns ---------- */
-  // route to an existing details page and keep the settings picker in sync
+  /* ---------- Products page: data-driven table (all plans + perpetual) ---------- */
+  // route to a details page and keep the settings picker in sync
   function goToPage(key){
     detailsPage = key;
     var radio = $('input[name="detailsPage"][value="' + key + '"]');
@@ -2100,55 +2068,131 @@
     applyDetailsPage();
     window.scrollTo(0, 0);
   }
-  // the details-page back button returns to the Licenses table (shared sub/perp shell)
+  // the details-page back button returns to whichever Products variant we came from
   var backBtn = $('#backBtn');
-  if(backBtn) backBtn.addEventListener('click', function(){ goToPage('licenses'); });
+  if(backBtn) backBtn.addEventListener('click', function(){ goToPage(lastProducts); });
 
-  // row click / keyboard opens the matching details page; the trailing actions
-  // (inline Copy + ⋮ overflow) are excluded so they never trigger navigation
-  $$('#licensesView .lic-row').forEach(function(tr){
-    tr.addEventListener('click', function(e){
-      if(e.target.closest('.lic-actions')) return;
-      goToPage(tr.getAttribute('data-goto'));
-    });
-    tr.addEventListener('keydown', function(e){
-      if((e.key === 'Enter' || e.key === ' ') && !e.target.closest('.lic-actions')){
-        e.preventDefault(); goToPage(tr.getAttribute('data-goto'));
-      }
-    });
-  });
+  // single data source — every subscription plan + perpetual license. `goto` is the
+  // details-page key each row routes to. Labels are example user tags. `created` is
+  // newest-first (the default sort).
+  var PRODUCTS = [
+    { goto:'business',        type:'Subscription', name:'Business',  label:'Global',     prod:'0/3', dev:'0/0', renew:'Renews Sep 20 2026', price:'$499.00 / mo', billing:'auto-pay', created:'Aug 13 2026' },
+    { goto:'startup',         type:'Subscription', name:'Startup',   label:'Production', prod:'0/2', dev:'0/0', renew:'Renews Sep 13 2026', price:'$299.00 / mo', billing:'auto-pay', created:'Aug 10 2026' },
+    { goto:'pilot',           type:'Subscription', name:'Pilot',     label:'EU pilot',   prod:'0/1', dev:'0/0', renew:'Renews Sep 06 2026', price:'$99.00 / mo',  billing:'auto-pay', created:'Aug 06 2026' },
+    { goto:'prototypeaddons', type:'Subscription', name:'Prototype', label:'Staging',    prod:'0/3', dev:'0/0', renew:'Renews Sep 05 2026', price:'$126.00 / mo', billing:'auto-pay', created:'Aug 02 2026' },
+    { goto:'prototype',       type:'Subscription', name:'Prototype', label:'Dev',        prod:'0/1', dev:'0/0', renew:'Renews Sep 03 2026', price:'$39.00 / mo',  billing:'auto-pay', created:'Jul 30 2026' },
+    { goto:'maker',           type:'Subscription', name:'Maker',     label:'Sandbox',    prod:'0/1', dev:'0/0', renew:'Renews Aug 30 2026', price:'$10.00 / mo',  billing:'auto-pay', created:'Jul 28 2026' },
+    { goto:'perp',            type:'Perpetual',    name:'ThingsBoard PE Perpetual License', label:'On-prem', prod:'0/1', dev:'0/0', renew:'Updates until Jul 27 2027', price:'one-time', billing:'paid', created:'Jul 27 2026' }
+  ];
 
-  // inline "Copy license secret": the highest-value row action, promoted out of ⋮.
-  // Stops propagation so it never opens the row's details page.
-  $$('#licensesView .lic-copy').forEach(function(btn){
-    btn.addEventListener('click', function(e){
-      e.stopPropagation();
-      var flash = function(){
-        btn.setAttribute('data-tip', 'Copied'); btn.classList.add('show', 'copied');
-        setTimeout(function(){ btn.classList.remove('show', 'copied'); btn.setAttribute('data-tip', 'Copy license secret'); }, 1200);
-      };
-      // wireframe: no real secret to copy — placeholder value, feedback is the point
-      if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText('license-secret').then(flash, flash); }
-      else { flash(); }
-    });
-  });
+  var KEBAB = '<svg class="icon" viewBox="0 0 24 24" style="fill:currentColor;stroke:none"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg>';
+  var COPYSVG = '<svg class="icon" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg>';
+  function menuItems(type){
+    return type === 'Perpetual'
+      ? '<button role="menuitem" data-stub="Add capacity">Add capacity</button><button role="menuitem" data-stub="Renew software updates">Renew software updates</button>'
+      : '<button role="menuitem" data-stub="Manage add-ons">Manage add-ons</button><button role="menuitem" data-stub="Change plan">Change plan</button><button role="menuitem" data-stub="Cancel subscription">Cancel subscription</button>';
+  }
+  function actionsCell(p){
+    return '<td><div class="lic-actions">'
+      + '<button class="iconbtn ib tip lic-copy" aria-label="Copy license secret" data-tip="Copy license secret">' + COPYSVG + '</button>'
+      + '<div class="menu"><button class="iconbtn ib" aria-haspopup="true" aria-expanded="false" aria-label="More actions">' + KEBAB + '</button>'
+      + '<div class="pop" role="menu" hidden>' + menuItems(p.type) + '</div></div></div></td>';
+  }
+  function rowOpen(p){
+    return '<tr class="lic-row" data-goto="' + p.goto + '" data-type="' + p.type + '" data-status="active" tabindex="0" aria-label="Open ' + p.name + ' ' + (p.type === 'Perpetual' ? 'perpetual license' : 'subscription') + ' details">';
+  }
 
-  // Type filter + "Display canceled" toggle
+  // Products state: layout variant + Type filter + canceled toggle
+  var productsVariant = 1, lastProducts = 'products';
   var licType = 'all', licShowCanceled = false;
-  function applyLicFilter(){
-    var vis = 0;
-    $$('#licensesView .lic-row').forEach(function(tr){
-      var t = tr.getAttribute('data-type');
-      var canceled = tr.getAttribute('data-status') === 'canceled';
-      var show = (licType === 'all' || t === licType) && (licShowCanceled || !canceled);
-      tr.hidden = !show;
-      if(show) vis++;
+
+  function headHtml(){
+    if(productsVariant === 2){
+      // variant 2 — nothing grouped: one field per column
+      return '<tr><th>Name</th><th>Label</th><th>Type</th>'
+        + '<th class="num">Prod</th><th class="num">Dev</th><th>Status</th>'
+        + '<th>Renewal / Updates</th><th class="num">Price</th><th>Billing</th><th>Created</th>'
+        + '<th aria-label="Actions"></th></tr>';
+    }
+    // variant 1 — grouped: name+label in one cell, renewal+price+billing stacked
+    return '<tr><th>Plan / Package</th><th>Type</th>'
+      + '<th class="num">Prod</th><th class="num">Dev</th><th>Status</th><th>Renewal / Updates</th><th>Created</th>'
+      + '<th aria-label="Actions"></th></tr>';
+  }
+  function rowHtml(p){
+    var typeCell = '<td><span class="chip">' + p.type + '</span></td>';
+    var useCells = '<td class="num lic-num">' + p.prod + '</td><td class="num lic-num">' + p.dev + '</td>';
+    var statusCell = '<td><span class="pill">Active</span></td>';
+    var createdCell = '<td class="lic-num">' + p.created + '</td>';
+    var labelText = p.label ? p.label : '<span class="muted">—</span>';
+    if(productsVariant === 2){
+      return rowOpen(p)
+        + '<td><div class="lp-name">' + p.name + '</div></td>'
+        + '<td>' + labelText + '</td>'
+        + typeCell + useCells + statusCell
+        + '<td>' + p.renew + '</td>'
+        + '<td class="num lic-num">' + p.price + '</td>'
+        + '<td>' + p.billing + '</td>'
+        + createdCell + actionsCell(p) + '</tr>';
+    }
+    var pkg = '<td><div class="lp-name">' + p.name + '</div>' + (p.label ? '<div class="lp-meta">' + p.label + '</div>' : '') + '</td>';
+    var renew = '<td><div class="lr-main">' + p.renew + '</div><div class="lr-sub">' + p.price + ' · ' + p.billing + '</div></td>';
+    return rowOpen(p) + pkg + typeCell + useCells + statusCell + renew + createdCell + actionsCell(p) + '</tr>';
+  }
+  function renderProducts(){
+    $('#prodHead').innerHTML = headHtml();
+    var vis = 0, html = '';
+    PRODUCTS.forEach(function(p){
+      // no canceled products in this mock, so the toggle is a functional no-op for now
+      var show = (licType === 'all' || p.type === licType) && (licShowCanceled || true);
+      if(!show) return;
+      vis++; html += rowHtml(p);
     });
+    $('#prodBody').innerHTML = html;
     $('#licRange').textContent = vis ? ('1–' + vis + ' of ' + vis) : '0 of 0';
   }
 
-  // lightweight dropdowns (Type filter, + New license) — own open/close so they
-  // don't collide with the generic .menu wiring used by the row ⋮ overflow
+  // rows are re-rendered on filter/variant change, so use delegation (not per-row binds)
+  var productsView = $('#licensesView');
+  function closeProdMenus(){
+    $$('#prodBody .menu .pop', productsView).forEach(function(pop){
+      pop.hidden = true;
+      var b = pop.parentNode.querySelector('[aria-haspopup]'); if(b) b.setAttribute('aria-expanded', 'false');
+    });
+  }
+  productsView.addEventListener('click', function(e){
+    var copy = e.target.closest('.lic-copy');
+    if(copy){
+      e.stopPropagation();
+      var flash = function(){
+        copy.setAttribute('data-tip', 'Copied'); copy.classList.add('show', 'copied');
+        setTimeout(function(){ copy.classList.remove('show', 'copied'); copy.setAttribute('data-tip', 'Copy license secret'); }, 1200);
+      };
+      if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText('license-secret').then(flash, flash); } else { flash(); }
+      return;
+    }
+    var item = e.target.closest('#prodBody .menu .pop [data-stub]');
+    if(item){ e.stopPropagation(); closeProdMenus(); openModal(item.getAttribute('data-stub'), '<p>' + STUB + '</p>'); return; }
+    var kebab = e.target.closest('#prodBody .menu [aria-haspopup]');
+    if(kebab){
+      e.stopPropagation();
+      var pop = kebab.parentNode.querySelector('.pop'), willOpen = pop.hidden;
+      closeProdMenus();
+      if(willOpen){ pop.hidden = false; kebab.setAttribute('aria-expanded', 'true'); }
+      return;
+    }
+    var row = e.target.closest('.lic-row');
+    if(row && !e.target.closest('.lic-actions')) goToPage(row.getAttribute('data-goto'));
+  });
+  productsView.addEventListener('keydown', function(e){
+    if((e.key === 'Enter' || e.key === ' ')){
+      var row = e.target.closest('.lic-row');
+      if(row && e.target === row){ e.preventDefault(); goToPage(row.getAttribute('data-goto')); }
+    }
+  });
+  document.addEventListener('click', function(e){ if(!e.target.closest('#prodBody .menu')) closeProdMenus(); });
+
+  // lightweight dropdown (+ New license) — own open/close
   $$('#licensesView .dropwrap').forEach(function(w){
     var btn = $('button[aria-haspopup]', w), menu = $('.dropmenu', w);
     function toggle(open){ menu.hidden = !open; btn.setAttribute('aria-expanded', open ? 'true' : 'false'); }
@@ -2157,16 +2201,19 @@
     document.addEventListener('click', function(){ if(!menu.hidden) toggle(false); });
     document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && !menu.hidden){ toggle(false); btn.focus(); } });
   });
-  $$('#licTypeMenu button').forEach(function(b){
-    b.addEventListener('click', function(){
-      licType = b.getAttribute('data-type');
-      $('#licTypeBtn').textContent = 'Type: ' + (licType === 'all' ? 'All' : licType) + ' ▾';
-      $('#licTypeMenu').hidden = true; $('#licTypeBtn').setAttribute('aria-expanded', 'false');
-      applyLicFilter();
+  // segmented Type chips — mutually exclusive; one click filters the table
+  $$('#licensesView .typechip').forEach(function(chip){
+    chip.addEventListener('click', function(){
+      licType = chip.getAttribute('data-type');
+      $$('#licensesView .typechip').forEach(function(c){
+        var on = c === chip;
+        c.classList.toggle('is-on', on);
+        c.setAttribute('aria-pressed', on ? 'true' : 'false');
+      });
+      renderProducts();
     });
   });
-  // no canceled rows in this mock, so the switch is a functional no-op for now
-  $('#licCanceled').addEventListener('change', function(){ licShowCanceled = this.checked; applyLicFilter(); });
+  $('#licCanceled').addEventListener('change', function(){ licShowCanceled = this.checked; renderProducts(); });
 
   // + New license → open the create flow for the chosen type in a modal (stub)
   $$('#licNewMenu button').forEach(function(b){
@@ -2174,13 +2221,37 @@
       var kind = b.getAttribute('data-new');
       $('#licNewMenu').hidden = true; $('#licNewBtn').setAttribute('aria-expanded', 'false');
       if(kind === 'subscription'){
-        openModal('New subscription license', '<p>Placeholder create flow — the subscription configurator opens here (edition, plan, add-ons, payment), then creates the license.</p>');
+        openModal('New subscription', '<p>Placeholder create flow — the subscription configurator opens here (edition, plan, add-ons, payment), then creates the subscription.</p>');
       } else {
         openModal('New perpetual license', '<p>Placeholder create flow — the perpetual configurator opens here (edition, capacity, one-time payment), then issues the license.</p>');
       }
     });
   });
-  applyLicFilter();
+  renderProducts();
+
+  /* ---------- Instances tab: Production / Development switcher + select-all ---------- */
+  var instPanel = $('#panel-prod');
+  if(instPanel){
+    $$('.insttoolbar .typechip', instPanel).forEach(function(chip){
+      chip.addEventListener('click', function(){
+        var type = chip.getAttribute('data-insttype');
+        $$('.insttoolbar .typechip', instPanel).forEach(function(c){
+          var on = c === chip;
+          c.classList.toggle('is-on', on);
+          c.setAttribute('aria-pressed', on ? 'true' : 'false');
+        });
+        $$('.insttype', instPanel).forEach(function(b){ b.hidden = b.getAttribute('data-insttype') !== type; });
+      });
+    });
+    // header checkbox toggles every row checkbox in the same table
+    $$('.insttable', instPanel).forEach(function(tbl){
+      var all = tbl.querySelector('thead input[type=checkbox]');
+      if(!all) return;
+      all.addEventListener('change', function(){
+        $$('tbody input[type=checkbox]', tbl).forEach(function(cb){ cb.checked = all.checked; });
+      });
+    });
+  }
 
   var STUB = 'Placeholder — not part of this wireframe spec yet.';
   var MODALS = {
