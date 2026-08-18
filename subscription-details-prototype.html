@@ -98,12 +98,11 @@
   .itemnote{font-size:11.5px;color:var(--faint);margin-top:3px;line-height:1.4}
   /* Features: boolean entitlements as chips — no columns, no dashes */
   .featureblock{margin-top:20px}
+  .featureblock[hidden]{display:none}
   .fhead{font-size:12.5px;color:var(--mid);margin-bottom:9px}
   .features{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
   .fchip{display:inline-flex;align-items:center;gap:7px;font-size:12px;padding:4px 11px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--ink)}
   .fchip .fmark{width:13px;height:13px;flex:none}
-  /* available but not active: quieter, no checkmark */
-  .fchip.off{color:var(--faint);border-color:var(--line2);background:transparent}
   /* row 2: the label affordance on its own */
   .metarow{display:flex;gap:12px;margin-top:14px;flex-wrap:wrap;align-items:center}
   .period{font-size:12px;color:var(--ink);font-variant-numeric:tabular-nums}
@@ -253,6 +252,16 @@
   input[type=checkbox]{accent-color:var(--ink);width:14px;height:14px;margin:0}
   .emptybox{padding:34px 0;text-align:center;color:var(--faint);font-size:12.5px}
   .rowactions{display:inline-flex;align-items:center;gap:16px;white-space:nowrap}
+  /* invoices: fixed proportional columns so the row fills the width evenly and the
+     actions sit at the right edge instead of floating with a gap */
+  .invtable{table-layout:fixed}
+  .invtable th:nth-child(1),.invtable td:nth-child(1){width:18%}
+  .invtable th:nth-child(2),.invtable td:nth-child(2){width:16%}
+  .invtable th:nth-child(3),.invtable td:nth-child(3){width:20%}
+  .invtable th:nth-child(4),.invtable td:nth-child(4){width:14%}
+  .invtable th:nth-child(5),.invtable td:nth-child(5){width:32%;text-align:right}
+  /* Plan & Add-ons: left-align every column, numeric ones included */
+  .plantable th.num,.plantable td.num{text-align:left}
   .pager{display:flex;align-items:center;gap:14px;margin-top:22px;padding-bottom:4px;flex-wrap:wrap;font-size:12px;color:var(--mid)}
   .pager .spacer{flex:1}
   .pager select{font:inherit;font-size:12px;height:var(--btnH);border:1px solid var(--line);border-radius:5px;padding:0 6px;background:#fff;color:var(--ink);margin-left:4px}
@@ -456,7 +465,7 @@
   /* ---------- Dashboard (Overview): standalone view with its own chrome ----------
      Separate entity for now, reachable from the prototype settings picker; it will
      fold into the real navigation later. */
-  .app[hidden],.dashview[hidden]{display:none}
+  .app[hidden],.dashview[hidden],.licview[hidden]{display:none}
   .dashview{display:grid;grid-template-columns:220px 1fr;min-height:100vh}
   /* the chrome is hidden globally on the details page, but this view owns it */
   .dashview .sidebar,.dashview .topbar{display:flex}
@@ -516,6 +525,28 @@
     .dashview{grid-template-columns:1fr}
     .dashview .sidebar{flex-direction:column}
   }
+  /* ---------- Licenses (unified list): inner content only, no chrome ---------- */
+  .licview{max-width:1120px;margin:0;padding:32px 30px}
+  .lic-h1{margin:0 0 4px;font-size:22px;font-weight:800;letter-spacing:-.01em}
+  .lic-sub{margin:0 0 20px;font-size:13px;color:var(--mid)}
+  .lic-controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+  .lic-controls .spacer{flex:1}
+  .lic-toggle{display:inline-flex;align-items:center;gap:9px;font-size:12.5px;color:var(--mid);cursor:pointer}
+  .lic-row{cursor:pointer}
+  .lic-row:hover{background:var(--hover)}
+  .lic-row[hidden]{display:none}
+  /* trailing row actions: inline Copy secret + ⋮ overflow */
+  .lic-actions{display:inline-flex;align-items:center;gap:6px;justify-content:flex-end}
+  .lp-name,.lr-main{color:var(--ink)}
+  .lp-meta,.lr-sub{font-size:11.5px;color:var(--faint);margin-top:2px}
+  .lic-num{font-variant-numeric:tabular-nums}
+  /* lightweight dropdowns for Type filter and + New license */
+  .dropwrap{position:relative}
+  .dropmenu{position:absolute;left:0;top:calc(100% + 4px);background:#fff;border:1px solid var(--line);border-radius:6px;min-width:180px;padding:5px;box-shadow:0 6px 20px rgba(0,0,0,.10);z-index:40}
+  .dropmenu.right{left:auto;right:0}
+  .dropmenu[hidden]{display:none}
+  .dropmenu button{display:block;width:100%;text-align:left;padding:8px 10px;border:0;background:transparent;border-radius:5px;font-size:12.5px;color:var(--ink)}
+  .dropmenu button:hover{background:var(--hover)}
 </style>
 </head>
 <body>
@@ -578,7 +609,7 @@
           <!-- header: back button in its own gutter, everything else in the content column -->
           <div class="head">
            <div class="headgrid">
-            <button class="back" data-stub="Back to Subscriptions" aria-label="Back">&larr;</button>
+            <button class="back" id="backBtn" aria-label="Back to Licenses" title="Back to Licenses">&larr;</button>
             <div class="headcol">
             <div class="top">
               <div class="idline">
@@ -685,7 +716,7 @@
 
               <!-- boolean entitlements live here instead of as empty table rows.
                    Demo hook: window.setFeature('edge'|'trendz'|'whitelabel', true) -->
-              <div class="featureblock">
+              <div class="featureblock" id="featureBlock">
                 <div class="fhead">Features</div>
                 <div class="features" id="featureChips"></div>
               </div>
@@ -706,10 +737,9 @@
                 <div class="billcard nextcharge">
                   <div class="nc-row">
                     <h4 class="billcard-h">Next charge</h4>
-                    <!-- inferred: "in 5 days" is the countdown copy asked for; note it
-                         does not match the 16-of-31-days cycle the add-ons flow prorates
-                         against, so one of the two needs correcting. -->
-                    <span class="nc-when">in 5 days · Aug 30 2026</span>
+                    <!-- 16 days matches the 16-of-31-days remaining that the add-ons
+                         flow prorates against (today ~Aug 14, cycle ends Aug 30). -->
+                    <span class="nc-when">in 16 days · Aug 30 2026</span>
                   </div>
                   <div class="nc-amount"><span class="big" id="ncAmount">$39.00</span></div>
                   <div class="hairline"></div>
@@ -721,7 +751,7 @@
                   </div>
                 </div>
               </div>
-              <table style="margin-top:18px" data-page="sub">
+              <table class="invtable" style="margin-top:18px" data-page="sub">
                 <thead>
                   <tr><th>Date</th><th class="num">Amount</th><th>Invoice #</th><th>Status</th><th aria-label="Invoice actions"></th></tr>
                 </thead>
@@ -749,16 +779,15 @@
               </div>
 
               <!-- Perpetual: one-time purchases only — the initial license and any
-                   Add capacity purchase. No upcoming row, no next charge, no auto-pay.
-                   Amounts are "$?" because the price list is not known yet. -->
-              <table data-page="perp">
+                   Add capacity purchase. No upcoming row, no next charge, no auto-pay. -->
+              <table class="invtable" data-page="perp">
                 <thead>
                   <tr><th>Date</th><th class="num">Amount</th><th>Invoice #</th><th>Status</th><th aria-label="Invoice actions"></th></tr>
                 </thead>
                 <tbody>
                   <tr>
                     <!-- inferred date: a capacity purchase made after the licence was issued -->
-                    <td>2026-08-20</td><td class="num muted">$?</td><td class="mono">INV-2026-08</td>
+                    <td>2026-08-20</td><td class="num">$1,999.00</td><td class="mono">INV-2026-08</td>
                     <td><span class="pill">Paid</span></td>
                     <td><span class="rowactions">
                       <button class="link" data-stub="Download PDF">Download PDF</button>
@@ -845,6 +874,152 @@
         </div><!-- /canvas -->
       </div>
     </div>
+  </div>
+</div>
+
+<!-- ============ LICENSES — unified list (inner content only; no chrome) ============
+     One table for both license types. A row click routes to the matching details
+     page already in this prototype; the ⋮ overflow carries type-specific actions
+     and must NOT navigate. Reachable from the prototype settings picker for now. -->
+<div class="licview" id="licensesView" hidden>
+  <h1 class="lic-h1">Licenses</h1>
+  <p class="lic-sub">Every subscription and perpetual license on your account, in one place.</p>
+
+  <div class="lic-controls">
+    <div class="dropwrap">
+      <button class="btn sec" id="licTypeBtn" aria-haspopup="true" aria-expanded="false">Type: All ▾</button>
+      <div class="dropmenu" id="licTypeMenu" hidden>
+        <button data-type="all">All</button>
+        <button data-type="Subscription">Subscription</button>
+        <button data-type="Perpetual">Perpetual</button>
+      </div>
+    </div>
+    <label class="lic-toggle"><span class="switch"><input type="checkbox" id="licCanceled"><span class="track"></span></span> Display canceled licenses</label>
+    <span class="spacer"></span>
+    <div class="dropwrap">
+      <button class="btn" id="licNewBtn" aria-haspopup="true" aria-expanded="false">+ New license ▾</button>
+      <div class="dropmenu right" id="licNewMenu" hidden>
+        <button data-new="subscription">Subscription</button>
+        <button data-new="perpetual">Perpetual license</button>
+      </div>
+    </div>
+    <button class="iconbtn ib" data-stub="Refresh licenses" aria-label="Refresh" title="Refresh"><svg class="icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg></button>
+    <button class="iconbtn ib" data-stub="Search licenses" aria-label="Search" title="Search"><svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></button>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Created</th><th>Type</th><th>Plan / Package</th><th>Label</th>
+        <th class="num">Prod</th><th class="num">Dev</th><th>Status</th><th>Renewal / Updates</th>
+        <th aria-label="Actions"></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="lic-row" data-goto="startup" data-type="Subscription" data-status="active" tabindex="0" aria-label="Open Startup subscription details">
+        <td class="lic-num">Aug 13 2026</td>
+        <td><span class="chip">Subscription</span></td>
+        <td><div class="lp-name">Startup</div><div class="lp-meta">Professional edition · pay-as-you-go</div></td>
+        <td class="muted">—</td>
+        <td class="num lic-num">0/2</td>
+        <td class="num lic-num">0/0</td>
+        <td><span class="pill">Active</span></td>
+        <td><div class="lr-main">Renews Sep 20 2026</div><div class="lr-sub">$299.00 / mo · auto-pay</div></td>
+        <td>
+          <div class="lic-actions">
+            <button class="iconbtn ib tip lic-copy" aria-label="Copy license secret" data-tip="Copy license secret"><svg class="icon" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg></button>
+            <div class="menu">
+              <button class="iconbtn ib" aria-haspopup="true" aria-expanded="false" aria-label="More actions"><svg class="icon" viewBox="0 0 24 24" style="fill:currentColor;stroke:none"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button>
+              <div class="pop" role="menu" hidden>
+                <button role="menuitem" data-stub="Manage add-ons">Manage add-ons</button>
+                <button role="menuitem" data-stub="Change plan">Change plan</button>
+                <button role="menuitem" data-stub="Cancel subscription">Cancel subscription</button>
+              </div>
+            </div>
+          </div>
+        </td>
+      </tr>
+      <tr class="lic-row" data-goto="prototype" data-type="Subscription" data-status="active" tabindex="0" aria-label="Open Prototype subscription details">
+        <td class="lic-num">Jul 30 2026</td>
+        <td><span class="chip">Subscription</span></td>
+        <td><div class="lp-name">Prototype</div><div class="lp-meta">Professional edition · pay-as-you-go</div></td>
+        <td class="muted">—</td>
+        <td class="num lic-num">0/1</td>
+        <td class="num lic-num">0/0</td>
+        <td><span class="pill">Active</span></td>
+        <td><div class="lr-main">Renews Sep 06 2026</div><div class="lr-sub">$39.00 / mo · auto-pay</div></td>
+        <td>
+          <div class="lic-actions">
+            <button class="iconbtn ib tip lic-copy" aria-label="Copy license secret" data-tip="Copy license secret"><svg class="icon" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg></button>
+            <div class="menu">
+              <button class="iconbtn ib" aria-haspopup="true" aria-expanded="false" aria-label="More actions"><svg class="icon" viewBox="0 0 24 24" style="fill:currentColor;stroke:none"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button>
+              <div class="pop" role="menu" hidden>
+                <button role="menuitem" data-stub="Manage add-ons">Manage add-ons</button>
+                <button role="menuitem" data-stub="Change plan">Change plan</button>
+                <button role="menuitem" data-stub="Cancel subscription">Cancel subscription</button>
+              </div>
+            </div>
+          </div>
+        </td>
+      </tr>
+      <tr class="lic-row" data-goto="prototype" data-type="Subscription" data-status="active" tabindex="0" aria-label="Open Prototype subscription details">
+        <td class="lic-num">Jul 29 2026</td>
+        <td><span class="chip">Subscription</span></td>
+        <td><div class="lp-name">Prototype</div><div class="lp-meta">Professional edition · pay-as-you-go</div></td>
+        <td class="muted">—</td>
+        <td class="num lic-num">0/2</td>
+        <td class="num lic-num">0/0</td>
+        <td><span class="pill">Active</span></td>
+        <td><div class="lr-main">Renews Sep 05 2026</div><div class="lr-sub">$39.00 / mo · auto-pay</div></td>
+        <td>
+          <div class="lic-actions">
+            <button class="iconbtn ib tip lic-copy" aria-label="Copy license secret" data-tip="Copy license secret"><svg class="icon" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg></button>
+            <div class="menu">
+              <button class="iconbtn ib" aria-haspopup="true" aria-expanded="false" aria-label="More actions"><svg class="icon" viewBox="0 0 24 24" style="fill:currentColor;stroke:none"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button>
+              <div class="pop" role="menu" hidden>
+                <button role="menuitem" data-stub="Manage add-ons">Manage add-ons</button>
+                <button role="menuitem" data-stub="Change plan">Change plan</button>
+                <button role="menuitem" data-stub="Cancel subscription">Cancel subscription</button>
+              </div>
+            </div>
+          </div>
+        </td>
+      </tr>
+      <tr class="lic-row" data-goto="perp" data-type="Perpetual" data-status="active" tabindex="0" aria-label="Open Perpetual license details">
+        <td class="lic-num">Jul 27 2026</td>
+        <td><span class="chip">Perpetual</span></td>
+        <td><div class="lp-name">ThingsBoard PE Perpetual License</div><div class="lp-meta">Professional edition · perpetual</div></td>
+        <td class="muted">—</td>
+        <td class="num lic-num">0/1</td>
+        <td class="num lic-num">0/0</td>
+        <td><span class="pill">Active</span></td>
+        <td><div class="lr-main">Updates until Jul 27 2027</div><div class="lr-sub">one-time · paid</div></td>
+        <td>
+          <div class="lic-actions">
+            <button class="iconbtn ib tip lic-copy" aria-label="Copy license secret" data-tip="Copy license secret"><svg class="icon" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg></button>
+            <div class="menu">
+              <button class="iconbtn ib" aria-haspopup="true" aria-expanded="false" aria-label="More actions"><svg class="icon" viewBox="0 0 24 24" style="fill:currentColor;stroke:none"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button>
+              <div class="pop" role="menu" hidden>
+                <button role="menuitem" data-stub="Add capacity">Add capacity</button>
+                <button role="menuitem" data-stub="Renew software updates">Renew software updates</button>
+              </div>
+            </div>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="pager">
+    <span class="spacer"></span>
+    <span>Items per page<select aria-label="Items per page"><option>10</option><option>20</option><option>50</option></select></span>
+    <span class="range" id="licRange">1–4 of 4</span>
+    <span class="pagebtns">
+      <button disabled aria-label="First page">«</button>
+      <button disabled aria-label="Previous page">‹</button>
+      <button disabled aria-label="Next page">›</button>
+      <button disabled aria-label="Last page">»</button>
+    </span>
   </div>
 </div>
 
@@ -1370,6 +1545,7 @@
   <div class="sp-label" style="margin-top:14px">Details page</div>
   <div class="sp-pick" role="radiogroup" aria-label="Details page">
     <label class="sp-opt"><input type="radio" name="detailsPage" value="dashboard"><span>Dashboard (Overview)</span></label>
+    <label class="sp-opt"><input type="radio" name="detailsPage" value="licenses"><span>Licenses</span></label>
     <div class="sp-grouphead">Perpetual</div>
     <label class="sp-opt"><input type="radio" name="detailsPage" value="perp"><span>Perpetual license details</span></label>
     <div class="sp-grouphead">Subscription plans</div>
@@ -1378,6 +1554,7 @@
     <label class="sp-opt"><input type="radio" name="detailsPage" value="pilot"><span>Pilot</span></label>
     <label class="sp-opt"><input type="radio" name="detailsPage" value="startup"><span>Startup</span></label>
     <label class="sp-opt"><input type="radio" name="detailsPage" value="business"><span>Business</span></label>
+    <label class="sp-opt"><input type="radio" name="detailsPage" value="prototypeaddons"><span>Prototype + add-ons</span></label>
   </div>
 </div>
 
@@ -1824,6 +2001,8 @@
   var PAGES = {
     // standalone view with its own chrome — no plan content of its own
     dashboard: { kind:'dash' },
+    // unified license list — inner content only, no chrome
+    licenses:  { kind:'licenses' },
     // confirmed perpetual base. dev:'0' keeps the Development instances row hidden
     // (the row appears only once at least one dev instance exists) and aiPerMonth is
     // false because a perpetual license carries no monthly cadence — inferred.
@@ -1833,23 +2012,38 @@
     prototype: { kind:'sub', name:'Prototype', price:'$39.00',  devices:'50',    prod:'1', ai:'2M',  whitelabel:false },
     pilot:     { kind:'sub', name:'Pilot',     price:'$99.00',  devices:'100',   prod:'1', ai:'4M',  whitelabel:true },
     startup:   { kind:'sub', name:'Startup',   price:'$299.00', devices:'500',   prod:'2', ai:'8M',  whitelabel:true },
-    business:  { kind:'sub', name:'Business',  price:'$499.00', devices:'1,000', prod:'3', ai:'16M', whitelabel:true }
+    business:  { kind:'sub', name:'Business',  price:'$499.00', devices:'1,000', prod:'3', ai:'16M', whitelabel:true },
+    // Prototype WITH purchased add-ons — demonstrates the Extra/Limit columns and
+    // active add-on feature chips. Base $39 + 2 prod ($29 ea) + 2 AI blocks ($5 ea)
+    // + Edge ($7) + Trendz ($12) = $126.00 / mo.
+    prototypeaddons: { kind:'sub', name:'Prototype', price:'$126.00', devices:'50', prod:'1', ai:'2M', dev:'0',
+                       extras:{ prod:'2', ai:'2M' }, whitelabel:false, edge:true, trendz:true }
   };
   var detailsPage = 'prototype';
 
-  // usage stays a placeholder (0 used) under the limit
-  function meterRow(item, limit){
+  // entitlement amounts may carry a trailing "M" (AI) or thousands commas (devices)
+  function parseUnit(v){ v = String(v == null ? '0' : v); var m = /M$/i.test(v); var n = parseFloat(v.replace(/,/g, '').replace(/M$/i, '')) || 0; return { n:n, m:m }; }
+  function fmtUnit(n, m){ return m ? (n + 'M') : n.toLocaleString('en-US'); }
+  // usage stays a placeholder (0 used) under the limit. `extra` = purchased add-ons:
+  // it lifts the limit and fills the Extra column so the row shows what was bought.
+  function meterRow(item, included, extra){
+    var inc = parseUnit(included), ex = parseUnit(extra || '0');
+    var incDisp = fmtUnit(inc.n, inc.m), limitDisp = fmtUnit(inc.n + ex.n, inc.m || ex.m);
+    var extraCell = ex.n > 0
+      ? '<td class="num">+' + fmtUnit(ex.n, ex.m) + '</td>'
+      : '<td class="num muted">0</td>';
     return '<tr><td>' + item + '</td>' +
-      '<td><div class="usecell tip" tabindex="0" data-tip="0 used / ' + limit + ' limit">' +
-      '<span class="usetxt">0 / ' + limit + '</span><div class="meter"><span style="width:0%"></span></div></div></td>' +
-      '<td class="num">' + limit + '</td><td class="num muted">0</td><td class="num">' + limit + '</td></tr>';
+      '<td><div class="usecell tip" tabindex="0" data-tip="0 used / ' + limitDisp + ' limit">' +
+      '<span class="usetxt">0 / ' + limitDisp + '</span><div class="meter"><span style="width:0%"></span></div></div></td>' +
+      '<td class="num">' + incDisp + '</td>' + extraCell + '<td class="num">' + limitDisp + '</td></tr>';
   }
   function renderPlanRows(p){
+    var x = p.extras || {};
     var prodItem = 'Production instances' + (p.prodNote ? '<div class="itemnote">' + p.prodNote + '</div>' : '');
-    var html = meterRow('Devices', p.devices) + meterRow(prodItem, p.prod);
-    // conditional row: development instances show up only once at least one exists
-    if(parseInt((p.dev || '0').replace(/,/g, ''), 10) >= 1) html += meterRow('Development instances', p.dev);
-    html += meterRow('AI credits' + (p.aiPerMonth === false ? '' : ' <span class="muted">/ month</span>'), p.ai);
+    var html = meterRow('Devices', p.devices, x.devices) + meterRow(prodItem, p.prod, x.prod);
+    // conditional row: development instances show up only once at least one exists (included or purchased)
+    if(parseUnit(p.dev).n + parseUnit(x.dev).n >= 1) html += meterRow('Development instances', p.dev, x.dev);
+    html += meterRow('AI credits' + (p.aiPerMonth === false ? '' : ' <span class="muted">/ month</span>'), p.ai, x.ai);
     $('#planRows').innerHTML = html;
   }
 
@@ -1862,11 +2056,15 @@
     { key:'trendz',     label:'Trendz Analytics' }
   ];
   var FCHECK = '<svg class="icon fmark" viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5"/></svg>';
+  // inventory logic: list ONLY active features as full-ink chips, and hide the
+  // whole block when the plan/license has none (no empty section, no greyed chips).
+  // Discovering/buying features stays in the Manage add-ons flow, not here.
   function renderFeatures(p){
-    $('#featureChips').innerHTML = FEATURES.map(function(f){
-      var on = !!p[f.key];
-      return '<span class="fchip' + (on ? '' : ' off') + '">' + (on ? FCHECK : '') + f.label + '</span>';
+    var active = FEATURES.filter(function(f){ return !!p[f.key]; });
+    $('#featureChips').innerHTML = active.map(function(f){
+      return '<span class="fchip">' + FCHECK + f.label + '</span>';
     }).join('');
+    $('#featureBlock').hidden = active.length === 0;
   }
   window.setFeature = function(name, on){
     PAGES[detailsPage][name] = !!on;
@@ -1874,10 +2072,11 @@
   };
   function applyDetailsPage(){
     var p = PAGES[detailsPage];
-    // the dashboard is a whole separate view, so swap shells rather than parts
-    $('#dashView').hidden = p.kind !== 'dash';
-    $('#appView').hidden  = p.kind === 'dash';
-    if(p.kind === 'dash') return;
+    // dashboard and licenses are whole separate views, so swap shells rather than parts
+    $('#dashView').hidden      = p.kind !== 'dash';
+    $('#licensesView').hidden  = p.kind !== 'licenses';
+    $('#appView').hidden       = p.kind === 'dash' || p.kind === 'licenses';
+    if(p.kind === 'dash' || p.kind === 'licenses') return;
     $$('[data-page]').forEach(function(el){ el.hidden = el.getAttribute('data-page') !== p.kind; });
     if(p.kind === 'sub'){
       $('#planName').textContent = p.name;
@@ -1891,6 +2090,97 @@
     r.addEventListener('change', function(){ if(r.checked){ detailsPage = r.value; applyDetailsPage(); } });
   });
   applyDetailsPage();
+
+  /* ---------- Licenses page: row routing, filters, dropdowns ---------- */
+  // route to an existing details page and keep the settings picker in sync
+  function goToPage(key){
+    detailsPage = key;
+    var radio = $('input[name="detailsPage"][value="' + key + '"]');
+    if(radio) radio.checked = true;
+    applyDetailsPage();
+    window.scrollTo(0, 0);
+  }
+  // the details-page back button returns to the Licenses table (shared sub/perp shell)
+  var backBtn = $('#backBtn');
+  if(backBtn) backBtn.addEventListener('click', function(){ goToPage('licenses'); });
+
+  // row click / keyboard opens the matching details page; the trailing actions
+  // (inline Copy + ⋮ overflow) are excluded so they never trigger navigation
+  $$('#licensesView .lic-row').forEach(function(tr){
+    tr.addEventListener('click', function(e){
+      if(e.target.closest('.lic-actions')) return;
+      goToPage(tr.getAttribute('data-goto'));
+    });
+    tr.addEventListener('keydown', function(e){
+      if((e.key === 'Enter' || e.key === ' ') && !e.target.closest('.lic-actions')){
+        e.preventDefault(); goToPage(tr.getAttribute('data-goto'));
+      }
+    });
+  });
+
+  // inline "Copy license secret": the highest-value row action, promoted out of ⋮.
+  // Stops propagation so it never opens the row's details page.
+  $$('#licensesView .lic-copy').forEach(function(btn){
+    btn.addEventListener('click', function(e){
+      e.stopPropagation();
+      var flash = function(){
+        btn.setAttribute('data-tip', 'Copied'); btn.classList.add('show', 'copied');
+        setTimeout(function(){ btn.classList.remove('show', 'copied'); btn.setAttribute('data-tip', 'Copy license secret'); }, 1200);
+      };
+      // wireframe: no real secret to copy — placeholder value, feedback is the point
+      if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText('license-secret').then(flash, flash); }
+      else { flash(); }
+    });
+  });
+
+  // Type filter + "Display canceled" toggle
+  var licType = 'all', licShowCanceled = false;
+  function applyLicFilter(){
+    var vis = 0;
+    $$('#licensesView .lic-row').forEach(function(tr){
+      var t = tr.getAttribute('data-type');
+      var canceled = tr.getAttribute('data-status') === 'canceled';
+      var show = (licType === 'all' || t === licType) && (licShowCanceled || !canceled);
+      tr.hidden = !show;
+      if(show) vis++;
+    });
+    $('#licRange').textContent = vis ? ('1–' + vis + ' of ' + vis) : '0 of 0';
+  }
+
+  // lightweight dropdowns (Type filter, + New license) — own open/close so they
+  // don't collide with the generic .menu wiring used by the row ⋮ overflow
+  $$('#licensesView .dropwrap').forEach(function(w){
+    var btn = $('button[aria-haspopup]', w), menu = $('.dropmenu', w);
+    function toggle(open){ menu.hidden = !open; btn.setAttribute('aria-expanded', open ? 'true' : 'false'); }
+    btn.addEventListener('click', function(e){ e.stopPropagation(); toggle(menu.hidden); });
+    menu.addEventListener('click', function(e){ e.stopPropagation(); });
+    document.addEventListener('click', function(){ if(!menu.hidden) toggle(false); });
+    document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && !menu.hidden){ toggle(false); btn.focus(); } });
+  });
+  $$('#licTypeMenu button').forEach(function(b){
+    b.addEventListener('click', function(){
+      licType = b.getAttribute('data-type');
+      $('#licTypeBtn').textContent = 'Type: ' + (licType === 'all' ? 'All' : licType) + ' ▾';
+      $('#licTypeMenu').hidden = true; $('#licTypeBtn').setAttribute('aria-expanded', 'false');
+      applyLicFilter();
+    });
+  });
+  // no canceled rows in this mock, so the switch is a functional no-op for now
+  $('#licCanceled').addEventListener('change', function(){ licShowCanceled = this.checked; applyLicFilter(); });
+
+  // + New license → open the create flow for the chosen type in a modal (stub)
+  $$('#licNewMenu button').forEach(function(b){
+    b.addEventListener('click', function(){
+      var kind = b.getAttribute('data-new');
+      $('#licNewMenu').hidden = true; $('#licNewBtn').setAttribute('aria-expanded', 'false');
+      if(kind === 'subscription'){
+        openModal('New subscription license', '<p>Placeholder create flow — the subscription configurator opens here (edition, plan, add-ons, payment), then creates the license.</p>');
+      } else {
+        openModal('New perpetual license', '<p>Placeholder create flow — the perpetual configurator opens here (edition, capacity, one-time payment), then issues the license.</p>');
+      }
+    });
+  });
+  applyLicFilter();
 
   var STUB = 'Placeholder — not part of this wireframe spec yet.';
   var MODALS = {
