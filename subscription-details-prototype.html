@@ -551,11 +551,36 @@
   .lic-num{font-variant-numeric:tabular-nums}
   /* lightweight dropdowns for Type filter and + New license */
   .dropwrap{position:relative}
+  .dropwrap[hidden]{display:none}
   .dropmenu{position:absolute;left:0;top:calc(100% + 4px);background:#fff;border:1px solid var(--line);border-radius:6px;min-width:180px;padding:5px;box-shadow:0 6px 20px rgba(0,0,0,.10);z-index:40}
   .dropmenu.right{left:auto;right:0}
   .dropmenu[hidden]{display:none}
   .dropmenu button{display:block;width:100%;text-align:left;padding:8px 10px;border:0;background:transparent;border-radius:5px;font-size:12.5px;color:var(--ink)}
   .dropmenu button:hover{background:var(--hover)}
+  /* Licenses — Portfolio (grouped by product) */
+  .pf-summary{display:flex;gap:12px;flex-wrap:wrap;margin:0 0 22px}
+  .pf-tile{border:1px solid var(--line2);border-radius:8px;padding:11px 16px;min-width:150px}
+  .pf-tile .k{font-size:11.5px;color:var(--faint);text-transform:uppercase;letter-spacing:.03em}
+  .pf-tile .v{font-size:20px;font-weight:700;margin-top:5px;font-variant-numeric:tabular-nums}
+  .pf-tile .vsub{font-size:12.5px;color:var(--faint);font-weight:400}
+  .pf-group{margin-bottom:22px}
+  .pf-group[hidden]{display:none}
+  .pf-ghead{display:flex;align-items:baseline;gap:12px;padding-bottom:7px;border-bottom:1px solid var(--line)}
+  .pf-gname{font-size:12.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+  .pf-groll{font-size:12px;color:var(--mid);font-variant-numeric:tabular-nums}
+  .pf-table{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed}
+  .pf-table th:nth-child(1),.pf-table td:nth-child(1){width:30%}
+  .pf-table th:nth-child(2),.pf-table td:nth-child(2){width:13%}
+  .pf-table th:nth-child(3),.pf-table td:nth-child(3){width:16%}
+  .pf-table th:nth-child(4),.pf-table td:nth-child(4){width:29%}
+  .pf-table th:nth-child(5),.pf-table td:nth-child(5){width:12%;text-align:right}
+  .pf-colhead{margin-bottom:4px}
+  .pf-row{cursor:pointer}
+  .pf-row:hover{background:var(--hover)}
+  .pf-row[hidden]{display:none}
+  .pf-billtext{color:var(--mid);font-variant-numeric:tabular-nums}
+  .pf-billtext.attn{color:var(--ink);font-weight:600}
+  .pill.attn{background:var(--ink);color:#fff;border-color:var(--ink);font-weight:600}
 </style>
 </head>
 <body>
@@ -952,6 +977,11 @@
       <button class="typechip" data-type="Subscription" aria-pressed="false">Subscription</button>
       <button class="typechip" data-type="Perpetual" aria-pressed="false">Perpetual</button>
     </div>
+    <!-- Label filter — shown only on the Product-first (neutral) variant -->
+    <div class="dropwrap" id="licLabelWrap" hidden>
+      <button class="btn sec" id="licLabelBtn" aria-haspopup="true" aria-expanded="false">Label: All ▾</button>
+      <div class="dropmenu" id="licLabelMenu" hidden></div>
+    </div>
     <label class="lic-toggle"><span class="switch"><input type="checkbox" id="licCanceled"><span class="track"></span></span> Display canceled products</label>
     <span class="spacer"></span>
     <button class="iconbtn ib" data-stub="Refresh products" aria-label="Refresh" title="Refresh"><svg class="icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg></button>
@@ -982,6 +1012,166 @@
       <button disabled aria-label="Next page">›</button>
       <button disabled aria-label="Last page">»</button>
     </span>
+  </div>
+</div>
+
+<!-- ============ LICENSES — PORTFOLIO (grouped by product; inner content only) ============
+     Rows grouped under product headers with a count + monthly-spend roll-up. Static
+     markup; the Type/Status filters hide rows (and empty groups). Row click → details;
+     ⋮ menu + stub buttons ride the generic .menu / [data-stub] handlers. -->
+<div class="licview" id="portfolioView" hidden>
+  <h1 class="lic-h1">Products</h1>
+  <p class="lic-sub">Your licenses grouped by product, with per-product roll-ups.</p>
+
+  <div class="lic-controls">
+    <div class="lic-typeseg" role="group" aria-label="Filter by type">
+      <span class="lic-seglabel">Type:</span>
+      <button class="typechip is-on" data-type="all" aria-pressed="true">All</button>
+      <button class="typechip" data-type="Subscription" aria-pressed="false">Subscription</button>
+      <button class="typechip" data-type="Perpetual" aria-pressed="false">Perpetual</button>
+      <button class="typechip" data-type="Offline" aria-pressed="false">Offline</button>
+    </div>
+    <div class="dropwrap">
+      <button class="btn sec" id="pfStatusBtn" aria-haspopup="true" aria-expanded="false">Status: All ▾</button>
+      <div class="dropmenu" id="pfStatusMenu" hidden>
+        <button data-status="all">All</button>
+        <button data-status="Active">Active</button>
+        <button data-status="Payment failed">Payment failed</button>
+        <button data-status="Updates expiring">Updates expiring</button>
+      </div>
+    </div>
+    <span class="spacer"></span>
+    <button class="iconbtn ib" data-stub="Search licenses" aria-label="Search" title="Search"><svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></button>
+    <button class="iconbtn ib" data-stub="Refresh licenses" aria-label="Refresh" title="Refresh"><svg class="icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg></button>
+    <div class="dropwrap">
+      <button class="btn" id="pfNewBtn" aria-haspopup="true" aria-expanded="false">+ New license ▾</button>
+      <div class="dropmenu right" id="pfNewMenu" hidden>
+        <button data-new="subscription">Subscription</button>
+        <button data-new="perpetual">Perpetual license</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="pf-summary">
+    <div class="pf-tile"><div class="k">Licenses</div><div class="v">5</div></div>
+    <div class="pf-tile"><div class="k">Monthly spend</div><div class="v">$353 <span class="vsub">/ mo</span></div></div>
+    <div class="pf-tile"><div class="k">One-time assets</div><div class="v">1</div></div>
+  </div>
+
+  <!-- shared column headers above all product groups -->
+  <table class="pf-table pf-colhead"><thead><tr>
+    <th>License</th><th>Type</th><th>Status</th><th>Billing</th><th aria-label="Actions"></th>
+  </tr></thead></table>
+
+  <div class="pf-group">
+    <div class="pf-ghead"><span class="pf-gname">ThingsBoard PE</span><span class="pf-groll">3 licenses · $338 / mo</span></div>
+    <table class="pf-table"><tbody>
+      <tr class="lic-row pf-row" data-goto="startup" data-product="ThingsBoard PE" data-type="Subscription" data-status="Active" tabindex="0" aria-label="Open ThingsBoard PE Startup details">
+        <td><div class="lp-name">Startup</div><div class="lp-meta">EU prod cluster</div></td>
+        <td><span class="chip">Subscription</span></td>
+        <td><span class="pill soft">Active</span></td>
+        <td><span class="pf-billtext">$299 / mo · auto-pay</span></td>
+        <td>
+          <div class="lic-actions">
+            <button class="iconbtn ib tip lic-copy" aria-label="Copy license secret" data-tip="Copy license secret"><svg class="icon" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg></button>
+            <div class="menu">
+              <button class="iconbtn ib" aria-haspopup="true" aria-expanded="false" aria-label="More actions"><svg class="icon" viewBox="0 0 24 24" style="fill:currentColor;stroke:none"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button>
+              <div class="pop" role="menu" hidden>
+                <button role="menuitem" data-stub="Manage add-ons">Manage add-ons</button>
+                <button role="menuitem" data-stub="Change plan">Change plan</button>
+                <button role="menuitem" data-stub="Cancel subscription">Cancel subscription</button>
+              </div>
+            </div>
+          </div>
+        </td>
+      </tr>
+      <tr class="lic-row pf-row" data-goto="prototype" data-product="ThingsBoard PE" data-type="Subscription" data-status="Payment failed" tabindex="0" aria-label="Open ThingsBoard PE Prototype details">
+        <td><div class="lp-name">Prototype</div><div class="lp-meta">— · Add label</div></td>
+        <td><span class="chip">Subscription</span></td>
+        <td><span class="pill attn">Payment failed</span></td>
+        <td><span class="pf-billtext attn">$39 / mo · payment failed</span></td>
+        <td>
+          <div class="lic-actions">
+            <button class="iconbtn ib tip lic-copy" aria-label="Copy license secret" data-tip="Copy license secret"><svg class="icon" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg></button>
+            <div class="menu">
+              <button class="iconbtn ib" aria-haspopup="true" aria-expanded="false" aria-label="More actions"><svg class="icon" viewBox="0 0 24 24" style="fill:currentColor;stroke:none"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button>
+              <div class="pop" role="menu" hidden>
+                <button role="menuitem" data-stub="Update payment method">Update payment method</button>
+                <button role="menuitem" data-stub="Manage add-ons">Manage add-ons</button>
+                <button role="menuitem" data-stub="Cancel subscription">Cancel subscription</button>
+              </div>
+            </div>
+          </div>
+        </td>
+      </tr>
+      <tr class="lic-row pf-row" data-goto="perp" data-product="ThingsBoard PE" data-type="Perpetual" data-status="Active" tabindex="0" aria-label="Open ThingsBoard PE Perpetual License details">
+        <td><div class="lp-name">ThingsBoard PE Perpetual License</div><div class="lp-meta">— · Add label</div></td>
+        <td><span class="chip">Perpetual</span></td>
+        <td><span class="pill soft">Active</span></td>
+        <td><span class="pf-billtext">one-time · paid</span></td>
+        <td>
+          <div class="lic-actions">
+            <button class="iconbtn ib tip lic-copy" aria-label="Copy license secret" data-tip="Copy license secret"><svg class="icon" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg></button>
+            <div class="menu">
+              <button class="iconbtn ib" aria-haspopup="true" aria-expanded="false" aria-label="More actions"><svg class="icon" viewBox="0 0 24 24" style="fill:currentColor;stroke:none"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button>
+              <div class="pop" role="menu" hidden>
+                <button role="menuitem" data-stub="Add capacity">Add capacity</button>
+                <button role="menuitem" data-stub="Renew software updates">Renew software updates</button>
+              </div>
+            </div>
+          </div>
+        </td>
+      </tr>
+    </tbody></table>
+  </div>
+
+  <div class="pf-group">
+    <div class="pf-ghead"><span class="pf-gname">TBMQ PE</span><span class="pf-groll">1 · $15 / mo</span></div>
+    <table class="pf-table"><tbody>
+      <tr class="lic-row pf-row" data-goto="" data-product="TBMQ PE" data-type="Subscription" data-status="Active" tabindex="0" aria-label="Open TBMQ PE subscription details">
+        <td><div class="lp-name">TBMQ PE subscription</div><div class="lp-meta">— · Add label</div></td>
+        <td><span class="chip">Subscription</span></td>
+        <td><span class="pill soft">Active</span></td>
+        <td><span class="pf-billtext">$15 / mo · auto-pay</span></td>
+        <td>
+          <div class="lic-actions">
+            <button class="iconbtn ib tip lic-copy" aria-label="Copy license secret" data-tip="Copy license secret"><svg class="icon" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg></button>
+            <div class="menu">
+              <button class="iconbtn ib" aria-haspopup="true" aria-expanded="false" aria-label="More actions"><svg class="icon" viewBox="0 0 24 24" style="fill:currentColor;stroke:none"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button>
+              <div class="pop" role="menu" hidden>
+                <button role="menuitem" data-stub="Manage add-ons">Manage add-ons</button>
+                <button role="menuitem" data-stub="Change plan">Change plan</button>
+                <button role="menuitem" data-stub="Cancel subscription">Cancel subscription</button>
+              </div>
+            </div>
+          </div>
+        </td>
+      </tr>
+    </tbody></table>
+  </div>
+
+  <div class="pf-group">
+    <div class="pf-ghead"><span class="pf-gname">Viaanix</span><span class="pf-groll">1 · one-time</span></div>
+    <table class="pf-table"><tbody>
+      <tr class="lic-row pf-row" data-goto="" data-product="Viaanix" data-type="Offline" data-status="Updates expiring" tabindex="0" aria-label="Open Viaanix offline details">
+        <td><div class="lp-name">Viaanix offline</div><div class="lp-meta">air-gapped site</div></td>
+        <td><span class="chip">Offline</span></td>
+        <td><span class="pill attn">Updates expiring</span></td>
+        <td><span class="pf-billtext attn">one-time · updates expiring</span></td>
+        <td>
+          <div class="lic-actions">
+            <button class="iconbtn ib tip lic-copy" aria-label="Copy license secret" data-tip="Copy license secret"><svg class="icon" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg></button>
+            <div class="menu">
+              <button class="iconbtn ib" aria-haspopup="true" aria-expanded="false" aria-label="More actions"><svg class="icon" viewBox="0 0 24 24" style="fill:currentColor;stroke:none"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button>
+              <div class="pop" role="menu" hidden>
+                <button role="menuitem" data-stub="Renew software updates">Renew software updates</button>
+                <button role="menuitem" data-stub="Cancel license">Cancel license</button>
+              </div>
+            </div>
+          </div>
+        </td>
+      </tr>
+    </tbody></table>
   </div>
 </div>
 
@@ -1511,6 +1701,8 @@
     <div class="sp-grouphead">Products</div>
     <label class="sp-opt"><input type="radio" name="detailsPage" value="products"><span>Grouped (as now)</span></label>
     <label class="sp-opt"><input type="radio" name="detailsPage" value="products2"><span>One column per field</span></label>
+    <label class="sp-opt"><input type="radio" name="detailsPage" value="products3"><span>Product-first (neutral)</span></label>
+    <label class="sp-opt"><input type="radio" name="detailsPage" value="portfolio"><span>Portfolio (grouped by product)</span></label>
     <div class="sp-grouphead">Perpetual</div>
     <label class="sp-opt"><input type="radio" name="detailsPage" value="perp"><span>Perpetual license details</span></label>
     <div class="sp-grouphead">Subscription plans</div>
@@ -1970,6 +2162,8 @@
     // 1 = grouped (name+label, renewal+price+billing stacked); 2 = one field per column.
     products:  { kind:'products', variant:1 },
     products2: { kind:'products', variant:2 },
+    products3: { kind:'products', variant:3 },
+    portfolio: { kind:'portfolio' },
     // confirmed perpetual base. dev:'0' keeps the Development instances row hidden
     // (the row appears only once at least one dev instance exists) and aiPerMonth is
     // false because a perpetual license carries no monthly cadence — inferred.
@@ -2039,12 +2233,14 @@
   };
   function applyDetailsPage(){
     var p = PAGES[detailsPage];
-    // dashboard and products are whole separate views, so swap shells rather than parts
+    // dashboard, products and portfolio are whole separate views, so swap shells
     $('#dashView').hidden      = p.kind !== 'dash';
     $('#licensesView').hidden  = p.kind !== 'products';
-    $('#appView').hidden       = p.kind === 'dash' || p.kind === 'products';
+    $('#portfolioView').hidden = p.kind !== 'portfolio';
+    $('#appView').hidden       = p.kind === 'dash' || p.kind === 'products' || p.kind === 'portfolio';
     if(p.kind === 'dash') return;
     if(p.kind === 'products'){ productsVariant = p.variant; lastProducts = detailsPage; renderProducts(); return; }
+    if(p.kind === 'portfolio'){ lastProducts = detailsPage; return; }
     $$('[data-page]').forEach(function(el){ el.hidden = el.getAttribute('data-page') !== p.kind; });
     if(p.kind === 'sub'){
       $('#planName').textContent = p.name;
@@ -2076,21 +2272,46 @@
   // details-page key each row routes to. Labels are example user tags. `created` is
   // newest-first (the default sort).
   var PRODUCTS = [
-    { goto:'business',        type:'Subscription', name:'Business',  label:'Global',     prod:'0/3', dev:'0/0', renew:'Renews Sep 20 2026', price:'$499.00 / mo', billing:'auto-pay', created:'Aug 13 2026' },
-    { goto:'startup',         type:'Subscription', name:'Startup',   label:'Production', prod:'0/2', dev:'0/0', renew:'Renews Sep 13 2026', price:'$299.00 / mo', billing:'auto-pay', created:'Aug 10 2026' },
-    { goto:'pilot',           type:'Subscription', name:'Pilot',     label:'EU pilot',   prod:'0/1', dev:'0/0', renew:'Renews Sep 06 2026', price:'$99.00 / mo',  billing:'auto-pay', created:'Aug 06 2026' },
-    { goto:'prototypeaddons', type:'Subscription', name:'Prototype', label:'Staging',    prod:'0/3', dev:'0/0', renew:'Renews Sep 05 2026', price:'$126.00 / mo', billing:'auto-pay', created:'Aug 02 2026' },
-    { goto:'prototype',       type:'Subscription', name:'Prototype', label:'Dev',        prod:'0/1', dev:'0/0', renew:'Renews Sep 03 2026', price:'$39.00 / mo',  billing:'auto-pay', created:'Jul 30 2026' },
-    { goto:'maker',           type:'Subscription', name:'Maker',     label:'Sandbox',    prod:'0/1', dev:'0/0', renew:'Renews Aug 30 2026', price:'$10.00 / mo',  billing:'auto-pay', created:'Jul 28 2026' },
-    { goto:'perp',            type:'Perpetual',    name:'ThingsBoard PE Perpetual License', label:'On-prem', prod:'0/1', dev:'0/0', renew:'Updates until Jul 27 2027', price:'one-time', billing:'paid', created:'Jul 27 2026' }
+    { goto:'business',        product:'ThingsBoard PE', type:'Subscription', name:'Business',  label:'Global',     prod:'0/3', dev:'0/0', renew:'Renews Sep 20 2026', price:'$499.00 / mo', billing:'auto-pay', created:'Aug 13 2026' },
+    { goto:'startup',         product:'ThingsBoard PE', type:'Subscription', name:'Startup',   label:'Production', prod:'0/2', dev:'0/0', renew:'Renews Sep 13 2026', price:'$299.00 / mo', billing:'auto-pay', created:'Aug 10 2026' },
+    { goto:'pilot',           product:'ThingsBoard PE', type:'Subscription', name:'Pilot',     label:'EU pilot',   prod:'0/1', dev:'0/0', renew:'Renews Sep 06 2026', price:'$99.00 / mo',  billing:'auto-pay', created:'Aug 06 2026' },
+    { goto:'prototypeaddons', product:'ThingsBoard PE', type:'Subscription', name:'Prototype', label:'Staging',    prod:'0/3', dev:'0/0', renew:'Renews Sep 05 2026', price:'$126.00 / mo', billing:'auto-pay', created:'Aug 02 2026' },
+    { goto:'prototype',       product:'ThingsBoard PE', type:'Subscription', name:'Prototype', label:'Dev',        prod:'0/1', dev:'0/0', renew:'Renews Sep 03 2026', price:'$39.00 / mo',  billing:'auto-pay', created:'Jul 30 2026' },
+    { goto:'maker',           product:'ThingsBoard PE', type:'Subscription', name:'Maker',     label:'Sandbox',    prod:'0/1', dev:'0/0', renew:'Renews Aug 30 2026', price:'$10.00 / mo',  billing:'auto-pay', created:'Jul 28 2026' },
+    { goto:'perp',            product:'ThingsBoard PE', type:'Perpetual',    name:'ThingsBoard PE Perpetual License', label:'On-prem', prod:'0/1', dev:'0/0', renew:'Updates until Jul 27 2027', price:'one-time', billing:'paid', created:'Jul 27 2026' }
   ];
+  // Variant 3 (product-neutral) has its own full row set — every product + package:
+  //   Perpetual   → ThingsBoard / TBMQ, package "Professional edition" each
+  //   Subscription→ ThingsBoard (Maker/Prototype/Pilot/Startup/Business) · TBMQ (TBMQ PE)
+  //   Offline     → Viaanix (Offline)
+  // ThingsBoard rows route to real detail pages; TBMQ / Viaanix have none in this
+  // prototype yet, so those rows open a stub. Variants 1 & 2 stay ThingsBoard-only
+  // (they show product-specific entitlement columns).
+  var PRODUCTS_V3 = [
+    { goto:'maker',     product:'ThingsBoard', type:'Subscription', name:'Maker',                label:'Sandbox',     created:'Jul 28 2026' },
+    { goto:'prototype', product:'ThingsBoard', type:'Subscription', name:'Prototype',            label:'Dev',         created:'Jul 30 2026' },
+    { goto:'pilot',     product:'ThingsBoard', type:'Subscription', name:'Pilot',                label:'EU pilot',    created:'Aug 06 2026' },
+    { goto:'startup',   product:'ThingsBoard', type:'Subscription', name:'Startup',              label:'Production',  created:'Aug 10 2026' },
+    { goto:'business',  product:'ThingsBoard', type:'Subscription', name:'Business',             label:'Global',      created:'Aug 13 2026' },
+    { goto:'perp',      product:'ThingsBoard', type:'Perpetual',    name:'Professional edition', label:'On-prem',     created:'Jul 27 2026' },
+    { goto:'',          product:'TBMQ',        type:'Subscription', name:'TBMQ PE',              label:'Broker prod', created:'Aug 08 2026' },
+    { goto:'',          product:'TBMQ',        type:'Perpetual',    name:'Professional edition', label:'',            created:'Aug 04 2026' },
+    { goto:'',          product:'Viaanix',     type:'Offline',      name:'Offline',              label:'',            created:'Aug 02 2026' }
+  ];
+  // variant 3 uses PRODUCTS_V3; variants 1 & 2 stay ThingsBoard-only. Always Created-desc.
+  function currentProducts(){
+    var list = productsVariant === 3 ? PRODUCTS_V3 : PRODUCTS;
+    var M = { Jan:1, Feb:2, Mar:3, Apr:4, May:5, Jun:6, Jul:7, Aug:8, Sep:9, Oct:10, Nov:11, Dec:12 };
+    function key(s){ var p = String(s).split(' '); return (+p[2]) * 10000 + (M[p[0]] || 0) * 100 + (+p[1]); }
+    return list.slice().sort(function(a, b){ return key(b.created) - key(a.created); });
+  }
 
   var KEBAB = '<svg class="icon" viewBox="0 0 24 24" style="fill:currentColor;stroke:none"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg>';
   var COPYSVG = '<svg class="icon" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg>';
   function menuItems(type){
-    return type === 'Perpetual'
-      ? '<button role="menuitem" data-stub="Add capacity">Add capacity</button><button role="menuitem" data-stub="Renew software updates">Renew software updates</button>'
-      : '<button role="menuitem" data-stub="Manage add-ons">Manage add-ons</button><button role="menuitem" data-stub="Change plan">Change plan</button><button role="menuitem" data-stub="Cancel subscription">Cancel subscription</button>';
+    if(type === 'Perpetual') return '<button role="menuitem" data-stub="Add capacity">Add capacity</button><button role="menuitem" data-stub="Renew software updates">Renew software updates</button>';
+    if(type === 'Offline')   return '<button role="menuitem" data-stub="Manage license">Manage license</button><button role="menuitem" data-stub="Cancel license">Cancel license</button>';
+    return '<button role="menuitem" data-stub="Manage add-ons">Manage add-ons</button><button role="menuitem" data-stub="Change plan">Change plan</button><button role="menuitem" data-stub="Cancel subscription">Cancel subscription</button>';
   }
   function actionsCell(p){
     return '<td><div class="lic-actions">'
@@ -2099,19 +2320,24 @@
       + '<div class="pop" role="menu" hidden>' + menuItems(p.type) + '</div></div></div></td>';
   }
   function rowOpen(p){
-    return '<tr class="lic-row" data-goto="' + p.goto + '" data-type="' + p.type + '" data-status="active" tabindex="0" aria-label="Open ' + p.name + ' ' + (p.type === 'Perpetual' ? 'perpetual license' : 'subscription') + ' details">';
+    return '<tr class="lic-row" data-goto="' + p.goto + '" data-product="' + (p.product || '') + '" data-type="' + p.type + '" data-status="active" tabindex="0" aria-label="Open ' + (p.product ? p.product + ' ' : '') + p.name + ' details">';
   }
 
-  // Products state: layout variant + Type filter + canceled toggle
+  // Products state: layout variant + Type filter + canceled toggle + label filter (variant 3)
   var productsVariant = 1, lastProducts = 'products';
-  var licType = 'all', licShowCanceled = false;
+  var licType = 'all', licShowCanceled = false, labelFilter = 'all';
 
   function headHtml(){
+    if(productsVariant === 3){
+      // variant 3 — product-first, product-neutral (no product-specific columns)
+      return '<tr><th>Product</th><th>License</th><th>Type</th><th>Status</th><th>Created</th>'
+        + '<th aria-label="Actions"></th></tr>';
+    }
     if(productsVariant === 2){
-      // variant 2 — nothing grouped: one field per column
-      return '<tr><th>Name</th><th>Label</th><th>Type</th>'
+      // variant 2 — nothing grouped: one field per column (Product first, no renewal)
+      return '<tr><th>Product</th><th>Name</th><th>Label</th><th>Type</th>'
         + '<th class="num">Prod</th><th class="num">Dev</th><th>Status</th>'
-        + '<th>Renewal / Updates</th><th class="num">Price</th><th>Billing</th><th>Created</th>'
+        + '<th class="num">Price</th><th>Billing</th><th>Created</th>'
         + '<th aria-label="Actions"></th></tr>';
     }
     // variant 1 — grouped: name+label in one cell, renewal+price+billing stacked
@@ -2125,12 +2351,17 @@
     var statusCell = '<td><span class="pill">Active</span></td>';
     var createdCell = '<td class="lic-num">' + p.created + '</td>';
     var labelText = p.label ? p.label : '<span class="muted">—</span>';
+    if(productsVariant === 3){
+      // License cell: plan/package name + user label (or "— · Add label") as the subline
+      var lic = '<td><div class="lp-name">' + p.name + '</div><div class="lp-meta">' + (p.label ? p.label : '— · Add label') + '</div></td>';
+      return rowOpen(p) + '<td>' + p.product + '</td>' + lic + typeCell + statusCell + createdCell + actionsCell(p) + '</tr>';
+    }
     if(productsVariant === 2){
       return rowOpen(p)
+        + '<td>' + (p.product || '') + '</td>'
         + '<td><div class="lp-name">' + p.name + '</div></td>'
         + '<td>' + labelText + '</td>'
         + typeCell + useCells + statusCell
-        + '<td>' + p.renew + '</td>'
         + '<td class="num lic-num">' + p.price + '</td>'
         + '<td>' + p.billing + '</td>'
         + createdCell + actionsCell(p) + '</tr>';
@@ -2140,16 +2371,27 @@
     return rowOpen(p) + pkg + typeCell + useCells + statusCell + renew + createdCell + actionsCell(p) + '</tr>';
   }
   function renderProducts(){
+    // the Label filter belongs to the Product-first (neutral) variant only
+    var lw = $('#licLabelWrap');
+    if(lw) lw.hidden = productsVariant !== 3;
+    if(productsVariant !== 3 && labelFilter !== 'all'){ labelFilter = 'all'; if($('#licLabelBtn')) $('#licLabelBtn').textContent = 'Label: All ▾'; }
     $('#prodHead').innerHTML = headHtml();
     var vis = 0, html = '';
-    PRODUCTS.forEach(function(p){
+    currentProducts().forEach(function(p){
       // no canceled products in this mock, so the toggle is a functional no-op for now
-      var show = (licType === 'all' || p.type === licType) && (licShowCanceled || true);
+      var okLabel = productsVariant !== 3 || labelFilter === 'all' || (p.label || '(no label)') === labelFilter;
+      var show = (licType === 'all' || p.type === licType) && (licShowCanceled || true) && okLabel;
       if(!show) return;
       vis++; html += rowHtml(p);
     });
     $('#prodBody').innerHTML = html;
     $('#licRange').textContent = vis ? ('1–' + vis + ' of ' + vis) : '0 of 0';
+  }
+  // route to a real detail page, or a stub for products the prototype has no page for
+  function openRow(row){
+    var key = row.getAttribute('data-goto');
+    if(key && PAGES[key]) goToPage(key);
+    else openModal('License details', '<p>Placeholder — the ' + (row.getAttribute('data-product') || 'product') + ' license detail page is not part of this prototype yet.</p>');
   }
 
   // rows are re-rendered on filter/variant change, so use delegation (not per-row binds)
@@ -2182,12 +2424,12 @@
       return;
     }
     var row = e.target.closest('.lic-row');
-    if(row && !e.target.closest('.lic-actions')) goToPage(row.getAttribute('data-goto'));
+    if(row && !e.target.closest('.lic-actions')) openRow(row);
   });
   productsView.addEventListener('keydown', function(e){
     if((e.key === 'Enter' || e.key === ' ')){
       var row = e.target.closest('.lic-row');
-      if(row && e.target === row){ e.preventDefault(); goToPage(row.getAttribute('data-goto')); }
+      if(row && e.target === row){ e.preventDefault(); openRow(row); }
     }
   });
   document.addEventListener('click', function(e){ if(!e.target.closest('#prodBody .menu')) closeProdMenus(); });
@@ -2227,7 +2469,97 @@
       }
     });
   });
+  // Label filter options — built from the variant-3 label set (incl. "(no label)")
+  (function(){
+    var menu = $('#licLabelMenu');
+    if(!menu) return;
+    var labels = [];
+    PRODUCTS_V3.forEach(function(p){ var l = p.label || '(no label)'; if(labels.indexOf(l) < 0) labels.push(l); });
+    var html = '<button data-label="all">All</button>';
+    labels.forEach(function(l){ html += '<button data-label="' + l + '">' + l + '</button>'; });
+    menu.innerHTML = html;
+    $$('button', menu).forEach(function(b){
+      b.addEventListener('click', function(){
+        labelFilter = b.getAttribute('data-label');
+        $('#licLabelBtn').textContent = 'Label: ' + (labelFilter === 'all' ? 'All' : labelFilter) + ' ▾';
+        menu.hidden = true; $('#licLabelBtn').setAttribute('aria-expanded', 'false');
+        renderProducts();
+      });
+    });
+  })();
   renderProducts();
+
+  /* ---------- Licenses — Portfolio page ---------- */
+  // Static rows; the ⋮ menus + stub buttons ride the generic .menu / [data-stub]
+  // handlers. Here we only wire the Type/Status filters, the + New license dropdown,
+  // inline Copy, and row-click routing (reusing openRow, so TBMQ/Viaanix fall to a stub).
+  var pfView = $('#portfolioView');
+  if(pfView){
+    var pfType = 'all', pfStatus = 'all';
+    function applyPfFilter(){
+      $$('.pf-row', pfView).forEach(function(tr){
+        var okT = pfType === 'all' || tr.getAttribute('data-type') === pfType;
+        var okS = pfStatus === 'all' || tr.getAttribute('data-status') === pfStatus;
+        tr.hidden = !(okT && okS);
+      });
+      $$('.pf-group', pfView).forEach(function(g){
+        g.hidden = !$$('.pf-row', g).some(function(tr){ return !tr.hidden; });
+      });
+    }
+    // Type segmented chips
+    $$('.lic-typeseg .typechip', pfView).forEach(function(chip){
+      chip.addEventListener('click', function(){
+        pfType = chip.getAttribute('data-type');
+        $$('.lic-typeseg .typechip', pfView).forEach(function(c){ var on = c === chip; c.classList.toggle('is-on', on); c.setAttribute('aria-pressed', on ? 'true' : 'false'); });
+        applyPfFilter();
+      });
+    });
+    // Status + New license dropdowns
+    $$('.dropwrap', pfView).forEach(function(w){
+      var btn = $('button[aria-haspopup]', w), menu = $('.dropmenu', w);
+      function toggle(open){ menu.hidden = !open; btn.setAttribute('aria-expanded', open ? 'true' : 'false'); }
+      btn.addEventListener('click', function(e){ e.stopPropagation(); toggle(menu.hidden); });
+      menu.addEventListener('click', function(e){ e.stopPropagation(); });
+      document.addEventListener('click', function(){ if(!menu.hidden) toggle(false); });
+      document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && !menu.hidden){ toggle(false); btn.focus(); } });
+    });
+    $$('#pfStatusMenu button').forEach(function(b){
+      b.addEventListener('click', function(){
+        pfStatus = b.getAttribute('data-status');
+        $('#pfStatusBtn').textContent = 'Status: ' + (pfStatus === 'all' ? 'All' : pfStatus) + ' ▾';
+        $('#pfStatusMenu').hidden = true; $('#pfStatusBtn').setAttribute('aria-expanded', 'false');
+        applyPfFilter();
+      });
+    });
+    $$('#pfNewMenu button').forEach(function(b){
+      b.addEventListener('click', function(){
+        var kind = b.getAttribute('data-new');
+        $('#pfNewMenu').hidden = true; $('#pfNewBtn').setAttribute('aria-expanded', 'false');
+        openModal(kind === 'subscription' ? 'New subscription' : 'New perpetual license', '<p>Placeholder create flow for a new ' + (kind === 'subscription' ? 'subscription' : 'perpetual license') + '.</p>');
+      });
+    });
+    // inline Copy + row-click routing (⋮ menu handled by the generic .menu handler)
+    pfView.addEventListener('click', function(e){
+      var copy = e.target.closest('.lic-copy');
+      if(copy){
+        e.stopPropagation();
+        var flash = function(){
+          copy.setAttribute('data-tip', 'Copied'); copy.classList.add('show', 'copied');
+          setTimeout(function(){ copy.classList.remove('show', 'copied'); copy.setAttribute('data-tip', 'Copy license secret'); }, 1200);
+        };
+        if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText('license-secret').then(flash, flash); } else { flash(); }
+        return;
+      }
+      var row = e.target.closest('.pf-row');
+      if(row && !e.target.closest('.lic-actions')) openRow(row);
+    });
+    pfView.addEventListener('keydown', function(e){
+      if((e.key === 'Enter' || e.key === ' ')){
+        var row = e.target.closest('.pf-row');
+        if(row && e.target === row){ e.preventDefault(); openRow(row); }
+      }
+    });
+  }
 
   /* ---------- Instances tab: Production / Development switcher + select-all ---------- */
   var instPanel = $('#panel-prod');
