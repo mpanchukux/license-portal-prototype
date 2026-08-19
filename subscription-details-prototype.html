@@ -1045,11 +1045,6 @@
       <button class="typechip" data-type="Subscription" aria-pressed="false">Subscription</button>
       <button class="typechip" data-type="Perpetual" aria-pressed="false">Perpetual</button>
     </div>
-    <!-- Label filter — shown only on the Product-first (neutral) variant -->
-    <div class="dropwrap" id="licLabelWrap" hidden>
-      <button class="btn sec" id="licLabelBtn" aria-haspopup="true" aria-expanded="false">Label: All ▾</button>
-      <div class="dropmenu" id="licLabelMenu" hidden></div>
-    </div>
     <label class="lic-toggle"><span class="switch"><input type="checkbox" id="licCanceled"><span class="track"></span></span> Display canceled products</label>
     <span class="spacer"></span>
     <button class="iconbtn ib" data-stub="Refresh products" aria-label="Refresh" title="Refresh"><svg class="icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg></button>
@@ -2574,9 +2569,9 @@
     return '<tr class="lic-row" data-goto="' + p.goto + '" data-product="' + (p.product || '') + '" data-type="' + p.type + '" data-status="active" tabindex="0" aria-label="Open ' + (p.product ? p.product + ' ' : '') + p.name + ' details">';
   }
 
-  // Products state: layout variant + Type filter + canceled toggle + label filter (variant 3)
+  // Products state: layout variant + Type filter + canceled toggle
   var productsVariant = 1, lastProducts = 'products';
-  var licType = 'all', licShowCanceled = false, labelFilter = 'all';
+  var licType = 'all', licShowCanceled = false;
 
   function headHtml(){
     if(productsVariant === 3){
@@ -2622,16 +2617,11 @@
     return rowOpen(p) + pkg + typeCell + useCells + statusCell + renew + createdCell + actionsCell(p) + '</tr>';
   }
   function renderProducts(){
-    // the Label filter belongs to the Product-first (neutral) variant only
-    var lw = $('#licLabelWrap');
-    if(lw) lw.hidden = productsVariant !== 3;
-    if(productsVariant !== 3 && labelFilter !== 'all'){ labelFilter = 'all'; if($('#licLabelBtn')) $('#licLabelBtn').textContent = 'Label: All ▾'; }
     $('#prodHead').innerHTML = headHtml();
     var vis = 0, html = '';
     currentProducts().forEach(function(p){
       // no canceled products in this mock, so the toggle is a functional no-op for now
-      var okLabel = productsVariant !== 3 || labelFilter === 'all' || (p.label || '(no label)') === labelFilter;
-      var show = (licType === 'all' || p.type === licType) && (licShowCanceled || true) && okLabel;
+      var show = (licType === 'all' || p.type === licType) && (licShowCanceled || true);
       if(!show) return;
       vis++; html += rowHtml(p);
     });
@@ -2720,24 +2710,6 @@
       }
     });
   });
-  // Label filter options — built from the variant-3 label set (incl. "(no label)")
-  (function(){
-    var menu = $('#licLabelMenu');
-    if(!menu) return;
-    var labels = [];
-    PRODUCTS_V3.forEach(function(p){ var l = p.label || '(no label)'; if(labels.indexOf(l) < 0) labels.push(l); });
-    var html = '<button data-label="all">All</button>';
-    labels.forEach(function(l){ html += '<button data-label="' + l + '">' + l + '</button>'; });
-    menu.innerHTML = html;
-    $$('button', menu).forEach(function(b){
-      b.addEventListener('click', function(){
-        labelFilter = b.getAttribute('data-label');
-        $('#licLabelBtn').textContent = 'Label: ' + (labelFilter === 'all' ? 'All' : labelFilter) + ' ▾';
-        menu.hidden = true; $('#licLabelBtn').setAttribute('aria-expanded', 'false');
-        renderProducts();
-      });
-    });
-  })();
   renderProducts();
 
   /* ---------- Licenses — Portfolio page ---------- */
