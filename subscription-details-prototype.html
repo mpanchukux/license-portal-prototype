@@ -539,6 +539,10 @@
   .lic-h1{margin:0 0 4px;font-size:22px;font-weight:800;letter-spacing:-.01em}
   .lic-sub{margin:0 0 20px;font-size:13px;color:var(--mid)}
   /* ---------- Settings pages (Profile / Billing): forms, section cards, save footers ---------- */
+  /* back button in its own left gutter; the content column aligns to one vertical
+     line to its right — same gutter mechanic as the details header (.headgrid). */
+  .setgrid{display:grid;grid-template-columns:var(--backW) 1fr;column-gap:var(--backGap);align-items:start}
+  .setgrid .lic-back{margin-bottom:0}
   .setheadrow{display:flex;align-items:flex-start;gap:16px;max-width:760px}
   .setheadrow .sp{flex:1}
   .setcard{background:var(--card);border:1px solid var(--line2);border-radius:8px;padding:18px 20px;margin-top:16px;max-width:760px}
@@ -1346,26 +1350,39 @@
 
 <!-- ============ PROFILE SETTINGS — full internal page ============ -->
 <div class="licview" id="profileView" hidden>
+ <div class="setgrid">
   <button class="back lic-back" id="profBackBtn" aria-label="Back to Overview" title="Back to Overview">&larr;</button>
+  <div class="setcol">
   <h1 class="lic-h1">Profile settings</h1>
   <p class="lic-sub">Your account and your company. Used across the portal and on invoices.</p>
 
   <div class="setcard">
     <div class="setcard-h"><h2>Your profile</h2><span class="setcard-hint">Personal account</span></div>
-    <div class="field ro">
-      <label>Email</label>
-      <input type="email" value="mpanchuk@thingsboard.io" readonly>
-      <div class="help">Your sign-in email. Changing it updates how you log in.</div>
-    </div>
+
+    <!-- Personal — even 2×2 grid (one .field2; grid gap spaces both rows) -->
+    <h3 class="minihead">Personal</h3>
     <div class="field2">
       <div class="field"><label>First name</label><input type="text" value="Mariia"></div>
       <div class="field"><label>Last name</label><input type="text" value="Panchuk"></div>
+      <div class="field ro">
+        <label>Email</label>
+        <input type="email" value="mpanchuk@thingsboard.io" readonly>
+        <div class="help">Your sign-in email — changing it updates how you log in.</div>
+      </div>
+      <div class="field"><label>Language</label><select><option>English</option><option>Українська</option><option>Deutsch</option><option>Español</option></select></div>
     </div>
-    <div class="field"><label>Language</label><select style="max-width:280px"><option>English</option><option>Українська</option><option>Deutsch</option><option>Español</option></select></div>
-    <div class="rowaction">
-      <div class="ra-txt"><div class="ra-t">Password</div><div class="ra-s">Last changed 3 months ago</div></div>
-      <button class="btn sec" data-stub="Change password">Change password</button>
+
+    <!-- Security — password change inline in the section (no button, no modal) -->
+    <div class="hairline"></div>
+    <h3 class="minihead" style="margin-top:16px">Security</h3>
+    <div class="field"><label>Current password</label><input type="password" placeholder="Enter only to change your password."></div>
+    <div class="field2">
+      <div class="field"><label>New password</label><input type="password"></div>
+      <div class="field"><label>Confirm new password</label><input type="password"></div>
     </div>
+    <div class="cardhelp">Leave the password fields blank to keep your current password. Last changed 3 months ago.</div>
+
+    <!-- One shared Save commits both sub-blocks; if the password fields are empty, only the Personal fields are saved. -->
     <div class="savebar"><span class="saved">All changes saved</span><span class="sp"></span><button class="btn" disabled>Save</button></div>
   </div>
 
@@ -1402,11 +1419,15 @@
     <button class="link" data-stub="Terms of service">Terms of service</button><span class="dot">·</span>
     <button class="link" data-stub="License agreement">License agreement</button>
   </div>
+  </div><!-- /setcol -->
+ </div><!-- /setgrid -->
 </div>
 
 <!-- ============ BILLING & PAYMENT — full internal page ============ -->
 <div class="licview" id="billingView" hidden>
+ <div class="setgrid">
   <button class="back lic-back" id="billBackBtn" aria-label="Back to Overview" title="Back to Overview">&larr;</button>
+  <div class="setcol">
   <div class="setheadrow">
     <div>
       <h1 class="lic-h1">Billing &amp; payment</h1>
@@ -1457,6 +1478,8 @@
     </div>
     <div class="savebar"><span class="saved">All changes saved</span><span class="sp"></span><button class="btn" disabled>Save</button></div>
   </div>
+  </div><!-- /setcol -->
+ </div><!-- /setgrid -->
 </div>
 
 <!-- ============ DASHBOARD (OVERVIEW) — full-width, no sidebar ============
