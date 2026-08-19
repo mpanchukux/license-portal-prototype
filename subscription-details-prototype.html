@@ -521,11 +521,12 @@
   /* Recent activity preview: muted timestamp on the right (replaces the status chip) */
   .da-when{font-size:11.5px;color:var(--faint);font-variant-numeric:tabular-nums;white-space:nowrap;flex:none}
   /* Products block (~2/3) + right-hand create CTAs (~1/3) */
-  .dproducts{display:grid;grid-template-columns:2fr 1fr;gap:20px;align-items:start;margin-top:20px}
+  /* stretch: the CTA column matches the Licenses block height; its two buttons split it */
+  .dproducts{display:grid;grid-template-columns:2fr 1fr;gap:20px;align-items:stretch;margin-top:20px}
   .dproducts .dblock{margin-top:0}
   @media(max-width:820px){.dproducts{grid-template-columns:1fr}}
   .dcta{display:flex;flex-direction:column;gap:12px}
-  .dcta-btn{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;font:inherit;color:var(--ink);cursor:pointer}
+  .dcta-btn{flex:1;display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;font:inherit;color:var(--ink);cursor:pointer}
   .dcta-btn:hover{border-color:var(--ink);background:var(--hover)}
   .dcta-txt{flex:1;min-width:0}
   .dcta-t{font-size:14px;font-weight:700;display:block}
@@ -534,6 +535,24 @@
   .dmini{flex:1;min-width:0}
   .dmini .k{font-size:13px;color:var(--ink)}
   .dmini .s{font-size:11.5px;color:var(--faint);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  /* New-user empty state: two comparison cards (clickable, → affordance) built from the
+     existing card (.dblock), row (.drow, dashed dividers) and button styles — no new colors. */
+  .eccards{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px;align-items:start}
+  @media(max-width:820px){.eccards{grid-template-columns:1fr}}
+  .eccard{position:relative;box-sizing:border-box;display:block;width:100%;text-align:left;margin-top:0;cursor:pointer}
+  .eccard:hover{border-color:var(--ink);background:var(--hover)}
+  .eccard-arr{position:absolute;top:16px;right:16px}
+  .ec-head{padding-right:26px;margin-bottom:8px}
+  .ec-head h2{margin:0;font-size:15px;font-weight:700}
+  .ec-tag{font-size:12.5px;color:var(--faint);margin-top:3px}
+  .ec-rows .drow{gap:12px}
+  .ec-k{font-size:12.5px;color:var(--mid)}
+  .ec-v{margin-left:auto;font-size:12.5px;color:var(--ink);text-align:right}
+  .ec-price{margin-top:12px;padding-top:12px;border-top:1px solid var(--line2);font-size:13px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+  .ec-reseller{display:flex;align-items:center;gap:14px;margin-top:20px;padding:14px 16px;border:1px dashed var(--line);border-radius:8px;background:#fafafa}
+  .ec-reseller .ec-res-txt{flex:1;min-width:0}
+  .ec-res-h{font-size:13px;color:var(--ink)}
+  .ec-res-s{font-size:11.5px;color:var(--faint);margin-top:3px}
   .dcols{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px}
   .dcols .dblock{margin-top:0}
   @media(max-width:820px){.dcols{grid-template-columns:1fr}}
@@ -547,6 +566,10 @@
   /* ---------- Licenses (unified list): inner content only, no chrome ---------- */
   .licview{max-width:1120px;margin:0;padding:32px 30px}
   .lic-back{margin-bottom:14px}
+  /* back button in one line with the page title (list pages) */
+  .lic-head{display:flex;align-items:center;gap:12px;margin-bottom:4px}
+  .lic-head .lic-back{margin-bottom:0}
+  .lic-head .lic-h1{margin:0}
   .pager.air{margin-top:40px}
   .act-ent{max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .lic-h1{margin:0 0 4px;font-size:22px;font-weight:800;letter-spacing:-.01em}
@@ -594,8 +617,18 @@
   .roblock{background:var(--bg);border:1px solid var(--line2);border-radius:6px;padding:12px 14px;font-size:12.5px;color:var(--mid);line-height:1.65}
   .roblock[hidden]{display:none}
   .roblock .rb-link{margin-top:8px}
+  /* readonly billing address: half the card width; billing email on top, then a divider,
+     then the address; the "edit in company profile" affordance is an icon top-right */
+  #billAddrReadonly{position:relative;width:50%;min-width:260px;box-sizing:border-box}
+  #billAddrReadonly .rb-edit{position:absolute;top:10px;right:10px}
+  #billAddrReadonly .rb-email{color:var(--ink);padding-right:38px}
+  #billAddrReadonly .hairline{margin:10px 0}
   .setfooter{display:flex;gap:10px;align-items:center;flex-wrap:wrap;max-width:760px;margin-top:22px;font-size:12px;color:var(--faint)}
   .setfooter .dot{color:var(--line)}
+  /* quiet delete action + disabled confirm button in the delete dialog (reuses the savebar's opacity treatment) */
+  .setdelete{margin-top:14px;max-width:760px}
+  .setdelete .btn.ter{padding:0}
+  .modal .mf .btn[disabled]{opacity:.45;cursor:not-allowed}
   .lic-controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
   .lic-controls .spacer{flex:1}
   /* persistent search input (always-visible, magnifier inside) — standard toolbar element */
@@ -673,6 +706,11 @@
     <div class="dprofmenu" id="dashProfMenu" role="menu" hidden>
       <button role="menuitem" data-goto="profile">Profile</button>
       <button role="menuitem" data-goto="billing">Billing &amp; payment</button>
+      <div class="sep"></div>
+      <div class="grp">Legal</div>
+      <button role="menuitem" data-stub="Privacy policy">Privacy policy</button>
+      <button role="menuitem" data-stub="Terms of service">Terms of service</button>
+      <button role="menuitem" data-stub="License agreement">License agreement</button>
       <div class="sep"></div>
       <button role="menuitem" data-stub="Sign out">Sign out</button>
     </div>
@@ -1064,8 +1102,10 @@
      JS. A row click routes to the matching details page; the ⋮ overflow carries
      type-specific actions and must NOT navigate. In prototype settings for now. -->
 <div class="licview" id="licensesView" hidden>
-  <button class="back lic-back" id="prodBackBtn" aria-label="Back to Overview" title="Back to Overview">&larr;</button>
-  <h1 class="lic-h1">Products</h1>
+  <div class="lic-head">
+    <button class="back lic-back" id="prodBackBtn" aria-label="Back to Overview" title="Back to Overview">&larr;</button>
+    <h1 class="lic-h1">Licenses</h1>
+  </div>
   <p class="lic-sub">Every subscription plan and perpetual license on your account, in one place.</p>
 
   <div class="lic-controls">
@@ -1270,8 +1310,10 @@
 
 <!-- ============ INVOICES — full internal page ============ -->
 <div class="licview" id="invoicesView" hidden>
-  <button class="back lic-back" id="invBackBtn" aria-label="Back to Overview" title="Back to Overview">&larr;</button>
-  <h1 class="lic-h1">Invoices</h1>
+  <div class="lic-head">
+    <button class="back lic-back" id="invBackBtn" aria-label="Back to Overview" title="Back to Overview">&larr;</button>
+    <h1 class="lic-h1">Invoices</h1>
+  </div>
   <div class="insttoolbar" style="margin-top:16px">
     <div class="searchbox"><svg class="icon searchglyph" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input type="text" placeholder="Search invoices" aria-label="Search invoices"></div>
     <span class="spacer"></span>
@@ -1310,8 +1352,10 @@
 
 <!-- ============ ACTIVITY — full internal page ============ -->
 <div class="licview" id="activityView" hidden>
-  <button class="back lic-back" id="actBackBtn" aria-label="Back to Overview" title="Back to Overview">&larr;</button>
-  <h1 class="lic-h1">Activity</h1>
+  <div class="lic-head">
+    <button class="back lic-back" id="actBackBtn" aria-label="Back to Overview" title="Back to Overview">&larr;</button>
+    <h1 class="lic-h1">Activity</h1>
+  </div>
   <div class="insttoolbar" style="margin-top:16px">
     <div class="searchbox"><svg class="icon searchglyph" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input type="text" placeholder="Search activity" aria-label="Search activity"></div>
     <button class="btn sec" data-stub="Time range: last day"><svg class="icon" viewBox="0 0 24 24" style="margin-right:6px"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.5 2.5"/></svg>last day</button>
@@ -1347,8 +1391,10 @@
 
 <!-- ============ USERS — full internal page ============ -->
 <div class="licview" id="usersView" hidden>
-  <button class="back lic-back" id="usrBackBtn" aria-label="Back to Overview" title="Back to Overview">&larr;</button>
-  <h1 class="lic-h1">Users</h1>
+  <div class="lic-head">
+    <button class="back lic-back" id="usrBackBtn" aria-label="Back to Overview" title="Back to Overview">&larr;</button>
+    <h1 class="lic-h1">Users</h1>
+  </div>
   <p class="lic-sub">Customer administrators</p>
   <div class="insttoolbar">
     <div class="searchbox"><svg class="icon searchglyph" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input type="text" placeholder="Search users" aria-label="Search users"></div>
@@ -1440,18 +1486,12 @@
     <div class="savebar"><span class="saved">All changes saved</span><span class="sp"></span><button class="btn" disabled>Save</button></div>
   </div>
 
-  <div class="setcard danger">
-    <div class="setcard-h"><h2>Delete account</h2></div>
-    <div class="rowaction bare">
-      <div class="ra-txt"><div class="ra-t">Delete this account</div><div class="ra-s">Removes your profile and access. Active licenses and billing history are not affected.</div></div>
-      <button class="btn sec" data-stub="Delete account">Delete account</button>
-    </div>
-  </div>
-
-  <div class="setfooter">
-    <button class="link" data-stub="Privacy policy">Privacy policy</button><span class="dot">·</span>
-    <button class="link" data-stub="Terms of service">Terms of service</button><span class="dot">·</span>
-    <button class="link" data-stub="License agreement">License agreement</button>
+  <!-- quiet, low-emphasis delete: a muted text link separated by a hairline; the
+       friction lives in the confirm dialog, not on the page -->
+  <div class="hairline" style="margin-top:22px"></div>
+  <div class="setdelete">
+    <button class="btn ter" id="deleteAcctBtn">Delete account</button>
+    <div class="cardhelp" style="margin-top:4px">Removes your profile and access. Active licenses and billing history are not affected. You'll confirm on the next step.</div>
   </div>
   </div><!-- /setcol -->
  </div><!-- /setgrid -->
@@ -1462,14 +1502,8 @@
  <div class="setgrid">
   <button class="back lic-back" id="billBackBtn" aria-label="Back to Overview" title="Back to Overview">&larr;</button>
   <div class="setcol">
-  <div class="setheadrow">
-    <div>
-      <h1 class="lic-h1">Billing &amp; payment</h1>
-      <p class="lic-sub">How you pay, where invoices go, and your billing history.</p>
-    </div>
-    <span class="sp"></span>
-    <button class="link" data-goto="invoices">View all invoices →</button>
-  </div>
+  <h1 class="lic-h1">Billing &amp; payment</h1>
+  <p class="lic-sub">How you pay, where invoices go, and your billing history.</p>
 
   <div class="setcard">
     <div class="setcard-h"><h2>Payment method</h2><span class="setcard-hint">Charged automatically for recurring plans</span></div>
@@ -1488,8 +1522,12 @@
     <div class="setcard-h"><h2>Billing address</h2><span class="setcard-hint">Printed on every invoice</span></div>
     <label class="lic-toggle" style="margin-left:0"><span class="switch"><input type="checkbox" id="billSameAsCompany" checked><span class="track"></span></span> Same as company address</label>
     <div class="roblock" id="billAddrReadonly" style="margin-top:12px">
-      ThingsBoard<br>500 7th Avenue<br>New York, New York 10001<br>United States
-      <div class="rb-link"><button class="link" data-goto="profile">Edit in Company profile →</button></div>
+      <button class="iconbtn ib rb-edit" data-goto="profile" title="Edit in Company profile" aria-label="Edit in Company profile">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+      </button>
+      <div class="rb-email">billing@thingsboard.io</div>
+      <div class="hairline"></div>
+      <div>ThingsBoard<br>500 7th Avenue<br>New York, New York 10001<br>United States</div>
     </div>
     <div id="billAddrEdit" hidden style="margin-top:12px">
       <div class="field2">
@@ -1502,15 +1540,6 @@
       <div class="field"><label>Address line 2</label><input type="text"></div>
     </div>
     <div class="cardhelp">Turn off to enter a billing address different from your company profile.</div>
-  </div>
-
-  <div class="setcard">
-    <div class="setcard-h"><h2>Billing contact &amp; tax</h2><span class="setcard-hint">Where receipts go</span></div>
-    <div class="field2">
-      <div class="field"><label>Billing email</label><input type="email" value="billing@thingsboard.io"></div>
-      <div class="field"><label>Tax ID / VAT <span class="muted">(optional)</span></label><input type="text" placeholder="e.g. EU VAT, US EIN"></div>
-    </div>
-    <div class="savebar"><span class="saved">All changes saved</span><span class="sp"></span><button class="btn" disabled>Save</button></div>
   </div>
   </div><!-- /setcol -->
  </div><!-- /setgrid -->
@@ -1600,6 +1629,63 @@
             <div class="drow"><div class="dmini"><div class="k">Ivan Petrenko</div><div class="s">ipetrenko@thingsboard.io</div></div><span class="pill soft">Activated</span></div>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ DASHBOARD — NEW USER (empty state) ============
+     What a user with no licenses sees. Same shared shell (top bar above);
+     two comparison cards route into the create flows, plus a claim row. -->
+<div class="dashview" id="dashEmptyView" hidden>
+  <div class="dmain">
+    <div class="dwrap">
+      <div class="dwelcome">
+        <h1>Welcome, Mariia</h1>
+        <p>ThingsBoard · you don't have any licenses yet. Start with one of these.</p>
+      </div>
+
+      <!-- two entry-point cards; whole card clickable, aligned comparison rows -->
+      <div class="eccards">
+        <button class="dblock eccard" data-new="subscription" aria-label="New subscription — pay monthly, cancel any time">
+          <svg class="icon dcta-arr eccard-arr" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          <div class="ec-head">
+            <h2>Subscription</h2>
+            <div class="ec-tag">Pay monthly, cancel any time.</div>
+          </div>
+          <div class="drows ec-rows">
+            <div class="drow"><span class="ec-k">Billing</span><span class="ec-v">Monthly</span></div>
+            <div class="drow"><span class="ec-k">Runs</span><span class="ec-v">While the subscription is active</span></div>
+            <div class="drow"><span class="ec-k">Updates</span><span class="ec-v">Included</span></div>
+            <div class="drow"><span class="ec-k">Change plan size</span><span class="ec-v">Any time</span></div>
+          </div>
+          <!-- lowest self-serve subscription tier is Maker $10/mo (not Prototype/Startup) -->
+          <div class="ec-price">From $10/mo · Maker</div>
+        </button>
+
+        <button class="dblock eccard" data-new="perpetual" aria-label="New perpetual license — pay once, run indefinitely">
+          <svg class="icon dcta-arr eccard-arr" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          <div class="ec-head">
+            <h2>Perpetual license</h2>
+            <div class="ec-tag">Pay once, run it indefinitely.</div>
+          </div>
+          <div class="drows ec-rows">
+            <div class="drow"><span class="ec-k">Billing</span><span class="ec-v">One-time</span></div>
+            <div class="drow"><span class="ec-k">Runs</span><span class="ec-v">Indefinitely</span></div>
+            <div class="drow"><span class="ec-k">Updates</span><span class="ec-v">12 months, renewable</span></div>
+            <div class="drow"><span class="ec-k">Change plan size</span><span class="ec-v">Buy a new license</span></div>
+          </div>
+          <div class="ec-price">From $1,999 · one-time</div>
+        </button>
+      </div>
+
+      <!-- already-bought path, in a quieter dashed container -->
+      <div class="ec-reseller">
+        <div class="ec-res-txt">
+          <div class="ec-res-h">Already bought through sales or a reseller?</div>
+          <div class="ec-res-s">Claim it here and it will show up in this portal.</div>
+        </div>
+        <button class="btn sec" data-stub="Claim a license">Claim a license</button>
       </div>
     </div>
   </div>
@@ -1942,7 +2028,8 @@
        subscription plan renders the same template with that plan's content. -->
   <div class="sp-label" style="margin-top:14px">Details page</div>
   <div class="sp-pick" role="radiogroup" aria-label="Details page">
-    <label class="sp-opt"><input type="radio" name="detailsPage" value="dashboard"><span>Dashboard (Overview)</span></label>
+    <label class="sp-opt"><input type="radio" name="detailsPage" value="dashboard"><span>Dashboard — populated</span></label>
+    <label class="sp-opt"><input type="radio" name="detailsPage" value="dashempty"><span>Dashboard — new user (empty)</span></label>
     <div class="sp-grouphead">Products</div>
     <label class="sp-opt"><input type="radio" name="detailsPage" value="products"><span>Grouped (as now)</span></label>
     <label class="sp-opt"><input type="radio" name="detailsPage" value="products2"><span>One column per field</span></label>
@@ -2118,12 +2205,36 @@
   }
   function closeModal(){
     overlay.hidden = true;
+    // drop any per-dialog buttons injected into the footer (e.g. the delete-account confirm)
+    $$('#overlay .mf button').forEach(function(b){ if(b.id !== 'modalCloseBtn') b.remove(); });
+    $('#modalCloseBtn').textContent = 'Close';
     if(lastFocus && lastFocus.focus) lastFocus.focus();
   }
   $('#modalClose').addEventListener('click', closeModal);
   $('#modalCloseBtn').addEventListener('click', closeModal);
   overlay.addEventListener('click', function(e){ if(e.target===overlay) closeModal(); });
   document.addEventListener('keydown', function(e){ if(e.key==='Escape' && !overlay.hidden) closeModal(); });
+
+  // Delete account — the page stays calm; this dialog carries the friction (type-to-confirm).
+  function openDeleteConfirm(){
+    openModal('Delete account',
+      '<p>This permanently removes your profile and your access to this portal. '
+      + 'Active licenses and billing history are not affected.</p>'
+      + '<div class="field" style="margin-top:14px"><label for="delConfirm">Type <b>DELETE</b> to confirm</label>'
+      + '<input id="delConfirm" type="text" autocomplete="off" placeholder="DELETE"></div>');
+    $('#modalCloseBtn').textContent = 'Cancel';
+    var foot = $('#overlay .mf');
+    var del = document.createElement('button');
+    del.type = 'button'; del.className = 'btn'; del.id = 'delConfirmBtn';
+    del.textContent = 'Delete account'; del.disabled = true;
+    foot.appendChild(del);
+    var inp = $('#delConfirm');
+    inp.addEventListener('input', function(){ del.disabled = inp.value.trim() !== 'DELETE'; });
+    del.addEventListener('click', function(){ if(!del.disabled) closeModal(); }); // stub: no real deletion
+    inp.focus();
+  }
+  var deleteAcctBtn = $('#deleteAcctBtn');
+  if(deleteAcctBtn) deleteAcctBtn.addEventListener('click', openDeleteConfirm);
 
   // ===== Manage add-ons: real two-step flow =====
   var AM = (function(){
@@ -2409,6 +2520,8 @@
   var PAGES = {
     // standalone view with its own chrome — no plan content of its own
     dashboard: { kind:'dash' },
+    // new-user empty state — shown when the account has no licenses yet
+    dashempty: { kind:'dashempty' },
     // Products list — inner content only, no chrome. Two layout variants:
     // 1 = grouped (name+label, renewal+price+billing stacked); 2 = one field per column.
     products:  { kind:'products', variant:1 },
@@ -2490,7 +2603,7 @@
   function applyDetailsPage(){
     var p = PAGES[detailsPage];
     // dashboard + the standalone inner-content pages are whole separate views
-    var VIEWS = { dash:'#dashView', products:'#licensesView', portfolio:'#portfolioView', invoices:'#invoicesView', activity:'#activityView', users:'#usersView', profile:'#profileView', billing:'#billingView' };
+    var VIEWS = { dash:'#dashView', dashempty:'#dashEmptyView', products:'#licensesView', portfolio:'#portfolioView', invoices:'#invoicesView', activity:'#activityView', users:'#usersView', profile:'#profileView', billing:'#billingView' };
     var standalone = false;
     for(var vk in VIEWS){ var vel = $(VIEWS[vk]); if(vel) vel.hidden = p.kind !== vk; if(p.kind === vk) standalone = true; }
     $('#appView').hidden = standalone;
@@ -2836,6 +2949,19 @@
         var row = e.target.closest('.dprodrow');
         if(row && e.target === row){ e.preventDefault(); var k = row.getAttribute('data-goto'); if(k && PAGES[k]) goToPage(k); }
       }
+    });
+  }
+
+  /* ---------- Dashboard — new user (empty state) ---------- */
+  // the two comparison cards are entry points into the same create flows as the
+  // populated dashboard's CTAs (stubbed here).
+  var dashEmptyV = $('#dashEmptyView');
+  if(dashEmptyV){
+    $$('.eccard', dashEmptyV).forEach(function(card){
+      card.addEventListener('click', function(){
+        var kind = card.getAttribute('data-new');
+        openModal(kind === 'subscription' ? 'New subscription' : 'New perpetual license', '<p>Placeholder create flow for a new ' + (kind === 'subscription' ? 'subscription' : 'perpetual license') + '.</p>');
+      });
     });
   }
 
