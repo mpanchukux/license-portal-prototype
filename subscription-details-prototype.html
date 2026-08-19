@@ -18,7 +18,10 @@
   body{
     margin:0; background:var(--bg); color:var(--ink);
     font:14px/1.45 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    display:flex; flex-direction:column;   /* persistent top bar + one scrolling content region */
   }
+  /* the shared shell: the top bar (.dtopbar) stays put; every page's view scrolls here */
+  #shellMain{flex:1;min-height:0;overflow:auto;background:var(--bg)}
   button{font:inherit;cursor:pointer}
   a{color:inherit}
   :focus-visible{outline:2px solid var(--ink);outline-offset:2px;border-radius:3px}
@@ -26,7 +29,7 @@
   .icon[hidden]{display:none}
 
   /* ---------- app shell ---------- */
-  .app{display:grid;grid-template-columns:1fr;min-height:100vh}
+  .app{display:grid;grid-template-columns:1fr;min-height:100%}
 
   .sidebar{background:var(--chrome);border-right:1px solid var(--chromeLine);display:flex;flex-direction:column}
   .brand{display:flex;align-items:center;gap:9px;padding:16px 16px;border-bottom:1px solid var(--chromeLine)}
@@ -470,10 +473,12 @@
 
   /* ---------- Dashboard (Overview): full-width top bar, no sidebar, centered column ---------- */
   .app[hidden],.dashview[hidden],.licview[hidden]{display:none}
-  .dashview{display:flex;flex-direction:column;min-height:100vh;background:var(--bg)}
+  .dashview{display:flex;flex-direction:column;min-height:100%;background:var(--bg)}
   .dtopbar{display:flex;align-items:center;gap:14px;height:56px;flex:none;padding:0 24px;background:var(--card);border-bottom:1px solid var(--line2)}
   .dtopbar .sp{flex:1}
   .dbrand{display:flex;align-items:center;gap:10px}
+  /* the logo doubles as a Home link — reset it to look identical as a <button> */
+  button.dbrand{background:none;border:0;padding:0;color:inherit;font:inherit;cursor:pointer}
   .dbrand .mark{width:26px;height:26px;border:1px solid var(--line);border-radius:6px;display:flex;align-items:center;justify-content:center;background:#fff;color:var(--ink)}
   .dbrand .bt{font-size:13px;font-weight:700;line-height:1.1}
   .dbrand .bt .bsep{color:var(--faint);font-weight:400;margin:0 6px}
@@ -489,7 +494,7 @@
   .dprofmenu button .who{font-size:11.5px;color:var(--faint)}
   .dprofmenu .sep{height:1px;background:var(--line2);margin:6px 4px}
 
-  .dmain{flex:1;overflow:auto;padding:26px 24px 44px}
+  .dmain{flex:1;overflow:visible;padding:26px 24px 44px}
   .dwrap{max-width:1040px;margin:0 auto}
   .dwelcome h1{margin:0;font-size:22px;font-weight:800;letter-spacing:-.01em}
   .dwelcome p{margin:5px 0 0;font-size:13px;color:var(--mid)}
@@ -649,6 +654,32 @@
 </style>
 </head>
 <body>
+
+<!-- ============ SHARED SHELL: persistent top bar over every page ============
+     Identical on every view — logo (Home) on the left, profile hub on the right.
+     Only the content inside #shellMain changes per page. The logo (Home) and the
+     per-page back button in the left gutter are separate: Home always goes to the
+     dashboard; back returns to the previous list. -->
+<header class="dtopbar">
+  <button class="dbrand" id="homeBtn" aria-label="ThingsBoard License Portal — home" title="Home">
+    <div class="mark"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4v16M4 12h16"/></svg></div>
+    <div class="bt">ThingsBoard<span class="bsep">·</span>License Portal</div>
+  </button>
+  <span class="sp"></span>
+  <div class="dprofile">
+    <button class="dprofbtn" id="dashProfBtn" aria-haspopup="true" aria-expanded="false">
+      <span class="avatar">MP</span><span>Mariia Panchuk</span><span aria-hidden="true">▾</span>
+    </button>
+    <div class="dprofmenu" id="dashProfMenu" role="menu" hidden>
+      <button role="menuitem" data-goto="profile">Profile</button>
+      <button role="menuitem" data-goto="billing">Billing &amp; payment</button>
+      <div class="sep"></div>
+      <button role="menuitem" data-stub="Sign out">Sign out</button>
+    </div>
+  </div>
+</header>
+
+<div id="shellMain">
 <div class="app" id="appView">
 
   <!-- ============ SIDEBAR (chrome) ============ -->
@@ -1490,25 +1521,6 @@
      The account hub lives in the profile menu; each block previews the latest few
      items and its "Show more →" routes to that full internal page. -->
 <div class="dashview" id="dashView" hidden>
-  <div class="dtopbar">
-    <div class="dbrand">
-      <div class="mark"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4v16M4 12h16"/></svg></div>
-      <div class="bt">ThingsBoard<span class="bsep">·</span>License Portal</div>
-    </div>
-    <span class="sp"></span>
-    <div class="dprofile">
-      <button class="dprofbtn" id="dashProfBtn" aria-haspopup="true" aria-expanded="false">
-        <span class="avatar">MP</span><span>Mariia Panchuk</span><span aria-hidden="true">▾</span>
-      </button>
-      <div class="dprofmenu" id="dashProfMenu" role="menu" hidden>
-        <button role="menuitem" data-goto="profile">Profile</button>
-        <button role="menuitem" data-goto="billing">Billing &amp; payment</button>
-        <div class="sep"></div>
-        <button role="menuitem" data-stub="Sign out">Sign out</button>
-      </div>
-    </div>
-  </div>
-
   <div class="dmain">
     <div class="dwrap">
       <div class="dwelcome">
@@ -1592,6 +1604,7 @@
     </div>
   </div>
 </div>
+</div><!-- /#shellMain -->
 
 <!-- ============ MODAL ============ -->
 <div class="overlay" id="overlay" hidden>
@@ -2506,6 +2519,7 @@
     var radio = $('input[name="detailsPage"][value="' + key + '"]');
     if(radio) radio.checked = true;
     applyDetailsPage();
+    var sm = $('#shellMain'); if(sm) sm.scrollTop = 0;   // reset the shared scroll region
     window.scrollTo(0, 0);
   }
   // the details-page back button returns to whichever Products variant we came from
@@ -2513,6 +2527,10 @@
   if(backBtn) backBtn.addEventListener('click', function(){ goToPage(lastProducts); });
   // every inner-content page (Products, Invoices, Activity, Users) returns to the Dashboard
   $$('.lic-back').forEach(function(b){ b.addEventListener('click', function(){ goToPage('dashboard'); }); });
+  // shared shell: the logo is a persistent Home link from anywhere. Distinct from the
+  // detail-page back button (which returns to the previous list) — both coexist.
+  var homeBtn = $('#homeBtn');
+  if(homeBtn) homeBtn.addEventListener('click', function(){ goToPage('dashboard'); });
 
   // single data source — every subscription plan + perpetual license. `goto` is the
   // details-page key each row routes to. Labels are example user tags. `created` is
