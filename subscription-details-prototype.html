@@ -507,6 +507,11 @@
   .di-inv{min-width:120px}
   .di-date{flex:1;color:var(--mid);font-variant-numeric:tabular-nums}
   .di-amt{font-variant-numeric:tabular-nums;text-align:right;min-width:88px}
+  /* Recent invoices preview: spread the columns across the full row width */
+  .di-row{justify-content:space-between}
+  .di-row .di-date{flex:0 1 auto}
+  /* Recent activity preview: muted timestamp on the right (replaces the status chip) */
+  .da-when{font-size:11.5px;color:var(--faint);font-variant-numeric:tabular-nums;white-space:nowrap;flex:none}
   /* Products block (~2/3) + right-hand create CTAs (~1/3) */
   .dproducts{display:grid;grid-template-columns:2fr 1fr;gap:20px;align-items:start;margin-top:20px}
   .dproducts .dblock{margin-top:0}
@@ -1516,19 +1521,24 @@
       <!-- Products (main block, ~2/3) + explicit create CTAs (~1/3) -->
       <div class="dproducts">
         <div class="dblock">
-          <div class="dblock-head"><h2>Products</h2><span class="sp"></span>
-            <button class="link" data-goto="products">Show all licenses →</button>
+          <div class="dblock-head"><h2>Licenses</h2><span class="sp"></span>
+            <button class="link" data-goto="products3">Show all →</button>
           </div>
+          <!-- flat preview of individual licenses (same row pattern as the other blocks).
+               Ordered attention-first: the one real problem on top (dark chip), then the
+               healthy rows by soonest upcoming event. Healthy rows show the next date quietly. -->
           <div class="drows">
-            <div class="drow dprodrow" data-goto="products" tabindex="0" role="button" aria-label="ThingsBoard PE — show licenses">
-              <span class="dprod-name">ThingsBoard PE</span>
-              <span class="dprod-sum">3 licenses · 2 subscription · 1 perpetual</span>
-              <span class="pill attn">1 needs attention</span>
+            <div class="drow dprodrow" data-goto="products" tabindex="0" role="button" aria-label="ThingsBoard PE perpetual — show licenses">
+              <div class="dmini"><div class="k">ThingsBoard PE</div><div class="s">Perpetual · ThingsBoard PE Perpetual License</div></div>
+              <span class="pill attn">Updates expire in 12 days</span>
             </div>
-            <div class="drow dprodrow" data-goto="products" tabindex="0" role="button" aria-label="TBMQ PE — show licenses">
-              <span class="dprod-name">TBMQ PE</span>
-              <span class="dprod-sum">1 license · subscription</span>
-              <span class="pill soft">Active</span>
+            <div class="drow dprodrow" data-goto="products" tabindex="0" role="button" aria-label="ThingsBoard PE Startup subscription — show licenses">
+              <div class="dmini"><div class="k">ThingsBoard PE</div><div class="s">Subscription · Startup</div></div>
+              <span class="pill soft">Renews Sep 20 · $299/mo</span>
+            </div>
+            <div class="drow dprodrow" data-goto="products" tabindex="0" role="button" aria-label="TBMQ PE subscription — show licenses">
+              <div class="dmini"><div class="k">TBMQ PE</div><div class="s">Subscription · Prototype</div></div>
+              <span class="pill soft">Renews Oct 30 · $39/mo</span>
             </div>
           </div>
         </div>
@@ -1547,12 +1557,12 @@
       <!-- Recent invoices -->
       <div class="dblock">
         <div class="dblock-head"><h2>Recent invoices</h2><span class="sp"></span>
-          <button class="link" data-goto="invoices">Show more →</button>
+          <button class="link" data-goto="invoices">Show all →</button>
         </div>
         <div class="drows">
-          <div class="drow"><span class="di-inv mono">INV-2026-08</span><span class="di-date">Aug 20 2026</span><span class="di-amt">$1,999.00</span><span class="pill soft">Paid</span><span class="rowactions"><button class="link" data-stub="Download PDF">Download PDF</button><button class="link" data-stub="View invoice">View invoice</button></span></div>
-          <div class="drow"><span class="di-inv mono">INV-2026-07</span><span class="di-date">Jul 30 2026</span><span class="di-amt">$39.00</span><span class="pill soft">Paid</span><span class="rowactions"><button class="link" data-stub="Download PDF">Download PDF</button><button class="link" data-stub="View invoice">View invoice</button></span></div>
-          <div class="drow"><span class="di-inv mono">INV-2026-06</span><span class="di-date">Jun 30 2026</span><span class="di-amt">$39.00</span><span class="pill soft">Paid</span><span class="rowactions"><button class="link" data-stub="Download PDF">Download PDF</button><button class="link" data-stub="View invoice">View invoice</button></span></div>
+          <div class="drow di-row"><span class="di-inv mono">INV-2026-08</span><span class="di-date">Aug 20 2026</span><span class="di-amt">$1,999.00</span><span class="pill soft">Paid</span><span class="rowactions"><button class="link" data-stub="Download PDF">Download PDF</button><button class="link" data-stub="View invoice">View invoice</button></span></div>
+          <div class="drow di-row"><span class="di-inv mono">INV-2026-07</span><span class="di-date">Jul 30 2026</span><span class="di-amt">$39.00</span><span class="pill soft">Paid</span><span class="rowactions"><button class="link" data-stub="Download PDF">Download PDF</button><button class="link" data-stub="View invoice">View invoice</button></span></div>
+          <div class="drow di-row"><span class="di-inv mono">INV-2026-06</span><span class="di-date">Jun 30 2026</span><span class="di-amt">$39.00</span><span class="pill soft">Paid</span><span class="rowactions"><button class="link" data-stub="Download PDF">Download PDF</button><button class="link" data-stub="View invoice">View invoice</button></span></div>
         </div>
       </div>
 
@@ -1560,22 +1570,24 @@
       <div class="dcols">
         <div class="dblock">
           <div class="dblock-head"><h2>Recent activity</h2><span class="sp"></span>
-            <button class="link" data-goto="activity">Show more →</button>
+            <button class="link" data-goto="activity">Show all →</button>
           </div>
+          <!-- no status chip — the portal has no per-entry status; the timestamp sits on the right instead -->
           <div class="drows">
-            <div class="drow"><div class="dmini"><div class="k">Subscription created</div><div class="s">mpanchuk@thingsboard.io · Aug 13 2026 10:33</div></div><span class="pill soft">Success</span></div>
-            <div class="drow"><div class="dmini"><div class="k">Payment method updated</div><div class="s">mpanchuk@thingsboard.io · Aug 12 2026 16:20</div></div><span class="pill soft">Success</span></div>
-            <div class="drow"><div class="dmini"><div class="k">Invoice paid · INV-2026-07</div><div class="s">system · Jul 30 2026 00:04</div></div><span class="pill soft">Success</span></div>
+            <div class="drow"><div class="dmini"><div class="k">Subscription created</div><div class="s">mpanchuk@thingsboard.io</div></div><span class="da-when">Aug 13 2026 10:33</span></div>
+            <div class="drow"><div class="dmini"><div class="k">Payment method updated</div><div class="s">mpanchuk@thingsboard.io</div></div><span class="da-when">Aug 12 2026 16:20</span></div>
+            <div class="drow"><div class="dmini"><div class="k">Invoice paid · INV-2026-07</div><div class="s">system</div></div><span class="da-when">Jul 30 2026 00:04</span></div>
           </div>
         </div>
         <div class="dblock">
           <div class="dblock-head"><h2>Users</h2><span class="sp"></span>
-            <button class="link" data-goto="users">Show more →</button>
+            <button class="link" data-goto="users">Show all →</button>
           </div>
+          <!-- chip = activation status (available in the data), Pending-first. -->
           <div class="drows">
+            <div class="drow"><div class="dmini"><div class="k">Olena Kovalenko</div><div class="s">okovalenko@thingsboard.io</div></div><span class="pill attn">Pending activation</span></div>
             <div class="drow"><div class="dmini"><div class="k">Mariia Panchuk</div><div class="s">mpanchuk@thingsboard.io</div></div><span class="pill soft">Activated</span></div>
             <div class="drow"><div class="dmini"><div class="k">Ivan Petrenko</div><div class="s">ipetrenko@thingsboard.io</div></div><span class="pill soft">Activated</span></div>
-            <div class="drow"><div class="dmini"><div class="k">Olena Kovalenko</div><div class="s">okovalenko@thingsboard.io</div></div><span class="pill attn">Pending</span></div>
           </div>
         </div>
       </div>
