@@ -465,75 +465,128 @@
   .fs-screen .am-addcheck{width:17px;height:17px}
   @media(max-width:900px){.fs-grid{grid-template-columns:1fr}.fs-right{position:static}}
 
-  /* ---------- Dashboard (Overview): standalone view with its own chrome ----------
-     Separate entity for now, reachable from the prototype settings picker; it will
-     fold into the real navigation later. */
+  /* ---------- Dashboard (Overview): full-width top bar, no sidebar, centered column ---------- */
   .app[hidden],.dashview[hidden],.licview[hidden]{display:none}
-  .dashview{display:grid;grid-template-columns:220px 1fr;min-height:100vh}
-  /* the chrome is hidden globally on the details page, but this view owns it */
-  .dashview .sidebar,.dashview .topbar{display:flex}
-  .navgroup{font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);padding:13px 10px 4px}
-  .dashbody{padding:22px;overflow:auto}
-  .dashsheet{width:min(1180px,100%)}
-  .dash-h1{margin:0;font-size:20px;font-weight:700;letter-spacing:-.01em}
-  .dash-sub{margin:5px 0 0;font-size:12.5px;color:var(--mid)}
+  .dashview{display:flex;flex-direction:column;min-height:100vh;background:var(--bg)}
+  .dtopbar{display:flex;align-items:center;gap:14px;height:56px;flex:none;padding:0 24px;background:var(--card);border-bottom:1px solid var(--line2)}
+  .dtopbar .sp{flex:1}
+  .dbrand{display:flex;align-items:center;gap:10px}
+  .dbrand .mark{width:26px;height:26px;border:1px solid var(--line);border-radius:6px;display:flex;align-items:center;justify-content:center;background:#fff;color:var(--ink)}
+  .dbrand .bt{font-size:13px;font-weight:700;line-height:1.1}
+  .dbrand .bt .bsep{color:var(--faint);font-weight:400;margin:0 6px}
+  .dprofile{position:relative}
+  .dprofbtn{display:inline-flex;align-items:center;gap:9px;padding:4px 12px 4px 4px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--ink);font:inherit;font-size:12.5px}
+  .dprofbtn:hover{border-color:var(--mid);background:var(--hover)}
+  .dprofbtn .avatar{width:26px;height:26px;border-radius:50%;background:#fff;border:1px solid var(--line);font-size:10.5px;font-weight:700;display:flex;align-items:center;justify-content:center}
+  .dprofmenu{position:absolute;right:0;top:calc(100% + 6px);min-width:232px;background:#fff;border:1px solid var(--line);border-radius:8px;box-shadow:0 12px 32px rgba(0,0,0,.16);padding:6px;z-index:60}
+  .dprofmenu[hidden]{display:none}
+  .dprofmenu .grp{font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);padding:9px 10px 4px}
+  .dprofmenu button{display:flex;align-items:baseline;gap:8px;width:100%;text-align:left;padding:8px 10px;border:0;background:transparent;border-radius:6px;font:inherit;font-size:13px;color:var(--ink)}
+  .dprofmenu button:hover{background:var(--hover)}
+  .dprofmenu button .who{font-size:11.5px;color:var(--faint)}
+  .dprofmenu .sep{height:1px;background:var(--line2);margin:6px 4px}
 
-  /* KPI tiles */
-  .kpirow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:18px}
-  @media(max-width:1000px){.kpirow{grid-template-columns:repeat(2,minmax(0,1fr))}}
-  .kpi{background:var(--card);border:1px solid var(--line2);border-radius:8px;padding:13px 15px}
-  .kpi .k{font-size:11px;color:var(--faint);text-transform:uppercase;letter-spacing:.04em}
-  .kpi .v{font-size:22px;font-weight:700;margin-top:7px;font-variant-numeric:tabular-nums;line-height:1.1}
-  .kpi .vsub{font-size:12.5px;color:var(--faint);font-weight:400}
+  .dmain{flex:1;overflow:auto;padding:26px 24px 44px}
+  .dwrap{max-width:1040px;margin:0 auto}
+  .dwelcome h1{margin:0;font-size:22px;font-weight:800;letter-spacing:-.01em}
+  .dwelcome p{margin:5px 0 0;font-size:13px;color:var(--mid)}
 
-  .dashgrid{display:grid;grid-template-columns:2fr 1fr;gap:20px;margin-top:20px;align-items:start}
-  @media(max-width:1000px){.dashgrid{grid-template-columns:1fr}}
-  .dsec + .dsec{margin-top:24px}
-  .dsh{display:flex;align-items:baseline;gap:12px;margin-bottom:10px}
-  .dsh h3{margin:0;font-size:13px;text-transform:uppercase;letter-spacing:.02em;color:var(--mid)}
-  .dsh .spacer{flex:1}
+  .dblock{background:var(--card);border:1px solid var(--line2);border-radius:10px;padding:15px 18px;margin-top:20px}
+  .dblock-head{display:flex;align-items:baseline;gap:12px;margin-bottom:4px}
+  .dblock-head h2{margin:0;font-size:15px;font-weight:700}
+  .dblock-head .sp{flex:1}
+  .dblock-foot{display:flex;align-items:center;margin-top:14px}
+  .dblock-foot .sp{flex:1}
 
-  /* entity cards */
-  .dcard{background:var(--card);border:1px solid var(--line2);border-radius:8px;padding:14px 16px}
-  .dcard + .dcard{margin-top:10px}
-  .dcard-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-  .dcard-name{font-size:14.5px;font-weight:700}
-  .dcard-price{margin-left:auto;font-size:12.5px;color:var(--mid);font-variant-numeric:tabular-nums}
-  .dmeters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 20px;margin-top:13px}
-  @media(max-width:700px){.dmeters{grid-template-columns:1fr}}
-  .dmeter .ml{font-size:11.5px;color:var(--faint);margin-bottom:6px}
-  .dmeter .mv{display:grid;grid-template-columns:74px 1fr;align-items:center;gap:8px}
-  .dcard-foot{display:flex;align-items:center;gap:12px;margin-top:13px;padding-top:11px;border-top:1px solid var(--line2);font-size:12.5px;color:var(--mid)}
-  .dcard-foot .spacer{flex:1}
-  .addcard{display:block;width:100%;margin-top:10px;padding:14px;border:1px dashed var(--line);border-radius:8px;background:transparent;color:var(--faint);font:inherit;font-size:12.5px;text-align:center}
-  .addcard:hover{color:var(--ink);border-color:var(--mid)}
-
-  /* billing snapshot panels */
-  .dpanel{background:var(--card);border:1px solid var(--line2);border-radius:8px;padding:14px 16px}
-  .dpanel + .dpanel{margin-top:12px}
-  .dpanel h4{margin:0 0 10px;font-size:12.5px;color:var(--mid);font-weight:600}
-  .dp-hero{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.15}
-  .dp-herosub{font-size:12.5px;color:var(--mid);margin-top:3px}
-  .dp-line{display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-size:12.5px;padding:8px 0;border-bottom:1px dashed var(--line2);font-variant-numeric:tabular-nums}
-  .dp-line:last-of-type{border-bottom:0}
-  .dp-line .dp-k{color:var(--mid)}
-  .dpanel .link{margin-top:10px}
-  .dashview .alert{margin-top:18px}
+  .drows .drow:last-child{border-bottom:0}
+  .drow{display:flex;align-items:center;gap:12px;padding:11px 2px;border-bottom:1px dashed var(--line2)}
+  .dprodrow{cursor:pointer;border-radius:6px}
+  .dprodrow:hover{background:var(--hover)}
+  .dprod-name{font-size:13.5px;font-weight:600;min-width:150px}
+  .dprod-sum{font-size:12.5px;color:var(--mid);flex:1}
+  .di-inv{min-width:120px}
+  .di-date{flex:1;color:var(--mid);font-variant-numeric:tabular-nums}
+  .di-amt{font-variant-numeric:tabular-nums;text-align:right;min-width:88px}
+  /* Products block (~2/3) + right-hand create CTAs (~1/3) */
+  .dproducts{display:grid;grid-template-columns:2fr 1fr;gap:20px;align-items:start;margin-top:20px}
+  .dproducts .dblock{margin-top:0}
+  @media(max-width:820px){.dproducts{grid-template-columns:1fr}}
+  .dcta{display:flex;flex-direction:column;gap:12px}
+  .dcta-btn{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;font:inherit;color:var(--ink);cursor:pointer}
+  .dcta-btn:hover{border-color:var(--ink);background:var(--hover)}
+  .dcta-txt{flex:1;min-width:0}
+  .dcta-t{font-size:14px;font-weight:700;display:block}
+  .dcta-s{font-size:12px;color:var(--faint);margin-top:3px;display:block}
+  .dcta-arr{width:16px;height:16px;flex:none;color:var(--mid)}
+  .dmini{flex:1;min-width:0}
+  .dmini .k{font-size:13px;color:var(--ink)}
+  .dmini .s{font-size:11.5px;color:var(--faint);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .dcols{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px}
+  .dcols .dblock{margin-top:0}
+  @media(max-width:820px){.dcols{grid-template-columns:1fr}}
 
   @media(max-width:820px){
     .app{grid-template-columns:1fr}
     .sidebar{flex-direction:row;overflow-x:auto}
     .brand{border-bottom:0;border-right:1px solid var(--chromeLine)}
     .nav{flex-direction:row}
-    .dashview{grid-template-columns:1fr}
-    .dashview .sidebar{flex-direction:column}
   }
   /* ---------- Licenses (unified list): inner content only, no chrome ---------- */
   .licview{max-width:1120px;margin:0;padding:32px 30px}
+  .lic-back{margin-bottom:14px}
+  .pager.air{margin-top:40px}
+  .act-ent{max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .lic-h1{margin:0 0 4px;font-size:22px;font-weight:800;letter-spacing:-.01em}
   .lic-sub{margin:0 0 20px;font-size:13px;color:var(--mid)}
+  /* ---------- Settings pages (Profile / Billing): forms, section cards, save footers ---------- */
+  .setheadrow{display:flex;align-items:flex-start;gap:16px;max-width:760px}
+  .setheadrow .sp{flex:1}
+  .setcard{background:var(--card);border:1px solid var(--line2);border-radius:8px;padding:18px 20px;margin-top:16px;max-width:760px}
+  .setcard-h{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+  .setcard-h h2{margin:0;font-size:15px;font-weight:700}
+  .setcard-hint{font-size:12px;color:var(--faint)}
+  .setcard.danger{border-color:var(--ink)}
+  .field{margin-bottom:14px}
+  .field:last-child{margin-bottom:0}
+  .field > label{display:block;font-size:12px;color:var(--mid);margin-bottom:6px}
+  .field input,.field select,.field textarea{font:inherit;font-size:13px;width:100%;height:var(--btnH);border:1px solid var(--line);border-radius:5px;padding:0 10px;background:#fff;color:var(--ink);outline:none}
+  .field textarea{height:auto;min-height:62px;padding:8px 10px;resize:vertical;line-height:1.5}
+  .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--ink)}
+  .field .help{font-size:11.5px;color:var(--faint);margin-top:5px}
+  .field.ro input{background:var(--bg);color:var(--mid);cursor:default}
+  .field2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:640px){.field2{grid-template-columns:1fr}}
+  .cardhelp{font-size:11.5px;color:var(--faint);margin-top:12px}
+  .rowaction{display:flex;align-items:center;gap:14px;padding-top:14px;margin-top:14px;border-top:1px solid var(--line2)}
+  .rowaction.bare{border-top:0;margin-top:0;padding-top:0}
+  .rowaction .ra-txt{flex:1;min-width:0}
+  .rowaction .ra-t{font-size:13px;color:var(--ink)}
+  .rowaction .ra-s{font-size:11.5px;color:var(--faint);margin-top:3px}
+  .savebar{display:flex;align-items:center;gap:12px;margin-top:16px;padding-top:14px;border-top:1px solid var(--line2)}
+  .savebar .sp{flex:1}
+  .savebar .saved{font-size:12px;color:var(--faint)}
+  .savebar .saved[hidden]{display:none}
+  .savebar .btn[disabled]{opacity:.45;cursor:not-allowed}
+  .paycard{display:flex;align-items:center;gap:14px;flex-wrap:wrap;border:1px solid var(--line2);border-radius:8px;padding:12px 14px}
+  .paycard .sp{flex:1}
+  .brandbadge{font-size:10px;font-weight:800;letter-spacing:.08em;border:1px solid var(--line);border-radius:4px;padding:3px 7px;background:#fff;color:var(--ink)}
+  .pc-num{font-variant-numeric:tabular-nums;font-size:13px;letter-spacing:.06em}
+  .pc-exp{font-size:12px;color:var(--mid)}
+  .addrow{display:block;width:100%;margin-top:10px;padding:12px 14px;border:1px dashed var(--line);border-radius:8px;background:transparent;color:var(--faint);font:inherit;font-size:12.5px;text-align:center;cursor:pointer}
+  .addrow:hover{color:var(--ink);border-color:var(--mid)}
+  .roblock{background:var(--bg);border:1px solid var(--line2);border-radius:6px;padding:12px 14px;font-size:12.5px;color:var(--mid);line-height:1.65}
+  .roblock[hidden]{display:none}
+  .roblock .rb-link{margin-top:8px}
+  .setfooter{display:flex;gap:10px;align-items:center;flex-wrap:wrap;max-width:760px;margin-top:22px;font-size:12px;color:var(--faint)}
+  .setfooter .dot{color:var(--line)}
   .lic-controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
   .lic-controls .spacer{flex:1}
+  /* persistent search input (always-visible, magnifier inside) — standard toolbar element */
+  .searchbox{position:relative;flex:none;width:280px;max-width:100%}
+  .searchbox .searchglyph{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:var(--faint);pointer-events:none}
+  .searchbox input{font:inherit;font-size:12.5px;width:100%;height:var(--btnH);border:1px solid var(--line);border-radius:5px;padding:0 10px 0 32px;background:#fff;color:var(--ink);outline:none}
+  .searchbox input:focus{border-color:var(--ink)}
+  .searchbox input::placeholder{color:var(--faint)}
   .lic-toggle{display:inline-flex;align-items:center;gap:9px;font-size:12.5px;color:var(--mid);cursor:pointer;margin-left:12px}
   /* Type filter: segmented chips, mutually exclusive */
   .lic-typeseg{display:inline-flex;align-items:center;gap:8px}
@@ -852,13 +905,13 @@
             <div class="section">
               <!-- type switcher (same segmented style as the Licenses "Type" filter) + toolbar -->
               <div class="insttoolbar">
+                <div class="searchbox"><svg class="icon searchglyph" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input type="text" placeholder="Search instances" aria-label="Search instances"></div>
                 <div class="lic-typeseg" role="group" aria-label="Instance type">
                   <button class="typechip is-on" data-insttype="prod" aria-pressed="true">Production</button>
                   <button class="typechip" data-insttype="dev" aria-pressed="false">Development</button>
                 </div>
                 <span class="spacer"></span>
                 <button class="iconbtn ib" data-stub="Refresh instances" aria-label="Refresh" title="Refresh"><svg class="icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg></button>
-                <button class="iconbtn ib" data-stub="Search instances" aria-label="Search" title="Search"><svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></button>
               </div>
 
               <!-- PRODUCTION instances -->
@@ -916,10 +969,11 @@
           <!-- Logs -->
           <div class="panel" id="panel-audit" role="tabpanel" aria-labelledby="tab-logs" hidden>
             <div class="section">
-              <div class="sh"><span class="spacer"></span>
-                <button class="btn sec" data-stub="Time range: last day">
-                  <svg class="icon" viewBox="0 0 24 24" style="margin-right:6px"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.5 2.5"/></svg>last day
-                </button>
+              <div class="insttoolbar">
+                <div class="searchbox"><svg class="icon searchglyph" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input type="text" placeholder="Search logs" aria-label="Search logs"></div>
+                <button class="btn sec" data-stub="Time range: last day"><svg class="icon" viewBox="0 0 24 24" style="margin-right:6px"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.5 2.5"/></svg>last day</button>
+                <span class="spacer"></span>
+                <button class="iconbtn ib" data-stub="Refresh logs" aria-label="Refresh" title="Refresh"><svg class="icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg></button>
               </div>
               <table>
                 <thead>
@@ -967,10 +1021,12 @@
      JS. A row click routes to the matching details page; the ⋮ overflow carries
      type-specific actions and must NOT navigate. In prototype settings for now. -->
 <div class="licview" id="licensesView" hidden>
+  <button class="back lic-back" id="prodBackBtn" aria-label="Back to Overview" title="Back to Overview">&larr;</button>
   <h1 class="lic-h1">Products</h1>
   <p class="lic-sub">Every subscription plan and perpetual license on your account, in one place.</p>
 
   <div class="lic-controls">
+    <div class="searchbox"><svg class="icon searchglyph" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input type="text" placeholder="Search licenses" aria-label="Search licenses"></div>
     <div class="lic-typeseg" role="group" aria-label="Filter by product type">
       <span class="lic-seglabel">Type:</span>
       <button class="typechip is-on" data-type="all" aria-pressed="true">All</button>
@@ -985,7 +1041,6 @@
     <label class="lic-toggle"><span class="switch"><input type="checkbox" id="licCanceled"><span class="track"></span></span> Display canceled products</label>
     <span class="spacer"></span>
     <button class="iconbtn ib" data-stub="Refresh products" aria-label="Refresh" title="Refresh"><svg class="icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg></button>
-    <button class="iconbtn ib" data-stub="Search products" aria-label="Search" title="Search"><svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></button>
     <div class="dropwrap">
       <button class="btn" id="licNewBtn" aria-haspopup="true" aria-expanded="false">+ New license ▾</button>
       <div class="dropmenu right" id="licNewMenu" hidden>
@@ -1024,6 +1079,7 @@
   <p class="lic-sub">Your licenses grouped by product, with per-product roll-ups.</p>
 
   <div class="lic-controls">
+    <div class="searchbox"><svg class="icon searchglyph" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input type="text" placeholder="Search licenses" aria-label="Search licenses"></div>
     <div class="lic-typeseg" role="group" aria-label="Filter by type">
       <span class="lic-seglabel">Type:</span>
       <button class="typechip is-on" data-type="all" aria-pressed="true">All</button>
@@ -1041,7 +1097,6 @@
       </div>
     </div>
     <span class="spacer"></span>
-    <button class="iconbtn ib" data-stub="Search licenses" aria-label="Search" title="Search"><svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></button>
     <button class="iconbtn ib" data-stub="Refresh licenses" aria-label="Refresh" title="Refresh"><svg class="icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg></button>
     <div class="dropwrap">
       <button class="btn" id="pfNewBtn" aria-haspopup="true" aria-expanded="false">+ New license ▾</button>
@@ -1175,185 +1230,329 @@
   </div>
 </div>
 
-<!-- ============ DASHBOARD (OVERVIEW) — standalone view ============
-     Its own app chrome (grouped sidebar + top bar). Reachable only from the
-     prototype settings picker for now; later it merges into the real nav. -->
-<div class="dashview" id="dashView" hidden>
+<!-- ============ INVOICES — full internal page ============ -->
+<div class="licview" id="invoicesView" hidden>
+  <button class="back lic-back" id="invBackBtn" aria-label="Back to Overview" title="Back to Overview">&larr;</button>
+  <h1 class="lic-h1">Invoices</h1>
+  <div class="insttoolbar" style="margin-top:16px">
+    <div class="searchbox"><svg class="icon searchglyph" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input type="text" placeholder="Search invoices" aria-label="Search invoices"></div>
+    <span class="spacer"></span>
+    <button class="iconbtn ib" data-stub="Refresh invoices" aria-label="Refresh" title="Refresh"><svg class="icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg></button>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Invoice #</th>
+        <th class="sortable" aria-sort="descending" tabindex="0">Date <span class="arrow">▼</span></th>
+        <th class="num">Amount</th>
+        <th>Status</th>
+        <th>Payment type</th>
+        <th aria-label="Invoice actions"></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td class="mono">NAWE49WG-0007</td><td>Aug 18 2026</td><td class="num">$166.46</td><td><span class="pill">Paid</span></td><td>Automatic payment</td><td><div class="lic-actions"><button class="iconbtn ib tip" data-stub="Download PDF" aria-label="Download PDF" data-tip="Download PDF"><svg class="icon" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><text x="12" y="15" text-anchor="middle" style="fill:currentColor;stroke:none" font-size="7" font-weight="700">PDF</text></svg></button><button class="iconbtn ib tip" data-stub="View invoice" aria-label="View invoice" data-tip="View invoice"><svg class="icon" viewBox="0 0 24 24"><path d="M14 4h6v6"/><path d="M20 4l-8.5 8.5"/><path d="M18 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h6"/></svg></button></div></td></tr>
+      <tr><td class="mono">NAWE49WG-0006</td><td>Aug 18 2026</td><td class="num">$2,999.00</td><td><span class="pill">Paid</span></td><td>Automatic payment</td><td><div class="lic-actions"><button class="iconbtn ib tip" data-stub="Download PDF" aria-label="Download PDF" data-tip="Download PDF"><svg class="icon" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><text x="12" y="15" text-anchor="middle" style="fill:currentColor;stroke:none" font-size="7" font-weight="700">PDF</text></svg></button><button class="iconbtn ib tip" data-stub="View invoice" aria-label="View invoice" data-tip="View invoice"><svg class="icon" viewBox="0 0 24 24"><path d="M14 4h6v6"/><path d="M20 4l-8.5 8.5"/><path d="M18 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h6"/></svg></button></div></td></tr>
+      <tr><td class="mono">NAWE49WG-0005</td><td>Aug 18 2026</td><td class="num">$15.00</td><td><span class="pill">Paid</span></td><td>Automatic payment</td><td><div class="lic-actions"><button class="iconbtn ib tip" data-stub="Download PDF" aria-label="Download PDF" data-tip="Download PDF"><svg class="icon" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><text x="12" y="15" text-anchor="middle" style="fill:currentColor;stroke:none" font-size="7" font-weight="700">PDF</text></svg></button><button class="iconbtn ib tip" data-stub="View invoice" aria-label="View invoice" data-tip="View invoice"><svg class="icon" viewBox="0 0 24 24"><path d="M14 4h6v6"/><path d="M20 4l-8.5 8.5"/><path d="M18 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h6"/></svg></button></div></td></tr>
+      <tr><td class="mono">NAWE49WG-0004</td><td>Aug 13 2026</td><td class="num">$299.00</td><td><span class="pill">Paid</span></td><td>Automatic payment</td><td><div class="lic-actions"><button class="iconbtn ib tip" data-stub="Download PDF" aria-label="Download PDF" data-tip="Download PDF"><svg class="icon" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><text x="12" y="15" text-anchor="middle" style="fill:currentColor;stroke:none" font-size="7" font-weight="700">PDF</text></svg></button><button class="iconbtn ib tip" data-stub="View invoice" aria-label="View invoice" data-tip="View invoice"><svg class="icon" viewBox="0 0 24 24"><path d="M14 4h6v6"/><path d="M20 4l-8.5 8.5"/><path d="M18 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h6"/></svg></button></div></td></tr>
+      <tr><td class="mono">NAWE49WG-0003</td><td>Jul 30 2026</td><td class="num">$39.00</td><td><span class="pill">Paid</span></td><td>Automatic payment</td><td><div class="lic-actions"><button class="iconbtn ib tip" data-stub="Download PDF" aria-label="Download PDF" data-tip="Download PDF"><svg class="icon" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><text x="12" y="15" text-anchor="middle" style="fill:currentColor;stroke:none" font-size="7" font-weight="700">PDF</text></svg></button><button class="iconbtn ib tip" data-stub="View invoice" aria-label="View invoice" data-tip="View invoice"><svg class="icon" viewBox="0 0 24 24"><path d="M14 4h6v6"/><path d="M20 4l-8.5 8.5"/><path d="M18 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h6"/></svg></button></div></td></tr>
+      <tr><td class="mono">NAWE49WG-0002</td><td>Jul 29 2026</td><td class="num">$139.00</td><td><span class="pill">Paid</span></td><td>Automatic payment</td><td><div class="lic-actions"><button class="iconbtn ib tip" data-stub="Download PDF" aria-label="Download PDF" data-tip="Download PDF"><svg class="icon" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><text x="12" y="15" text-anchor="middle" style="fill:currentColor;stroke:none" font-size="7" font-weight="700">PDF</text></svg></button><button class="iconbtn ib tip" data-stub="View invoice" aria-label="View invoice" data-tip="View invoice"><svg class="icon" viewBox="0 0 24 24"><path d="M14 4h6v6"/><path d="M20 4l-8.5 8.5"/><path d="M18 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h6"/></svg></button></div></td></tr>
+      <tr><td class="mono">NAWE49WG-0001</td><td>Jul 27 2026</td><td class="num">$4,999.00</td><td><span class="pill">Paid</span></td><td>Automatic payment</td><td><div class="lic-actions"><button class="iconbtn ib tip" data-stub="Download PDF" aria-label="Download PDF" data-tip="Download PDF"><svg class="icon" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><text x="12" y="15" text-anchor="middle" style="fill:currentColor;stroke:none" font-size="7" font-weight="700">PDF</text></svg></button><button class="iconbtn ib tip" data-stub="View invoice" aria-label="View invoice" data-tip="View invoice"><svg class="icon" viewBox="0 0 24 24"><path d="M14 4h6v6"/><path d="M20 4l-8.5 8.5"/><path d="M18 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h6"/></svg></button></div></td></tr>
+    </tbody>
+  </table>
+  <div class="pager air">
+    <span class="spacer"></span>
+    <span>Items per page<select aria-label="Items per page"><option>10</option><option>20</option><option>50</option><option>100</option></select></span>
+    <span class="range">1–7 of 7</span>
+    <span class="pagebtns">
+      <button disabled aria-label="First page">«</button><button disabled aria-label="Previous page">‹</button><button disabled aria-label="Next page">›</button><button disabled aria-label="Last page">»</button>
+    </span>
+  </div>
+</div>
 
-  <aside class="sidebar">
-    <div class="brand">
-      <div class="mark">
-        <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4v16M4 12h16"/></svg>
-      </div>
-      <div>
-        <div class="bt">ThingsBoard</div>
-        <div class="bs">License Portal</div>
-      </div>
+<!-- ============ ACTIVITY — full internal page ============ -->
+<div class="licview" id="activityView" hidden>
+  <button class="back lic-back" id="actBackBtn" aria-label="Back to Overview" title="Back to Overview">&larr;</button>
+  <h1 class="lic-h1">Activity</h1>
+  <div class="insttoolbar" style="margin-top:16px">
+    <div class="searchbox"><svg class="icon searchglyph" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input type="text" placeholder="Search activity" aria-label="Search activity"></div>
+    <button class="btn sec" data-stub="Time range: last day"><svg class="icon" viewBox="0 0 24 24" style="margin-right:6px"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.5 2.5"/></svg>last day</button>
+    <span class="spacer"></span>
+    <button class="iconbtn ib" data-stub="Refresh activity" aria-label="Refresh" title="Refresh"><svg class="icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg></button>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th class="sortable" aria-sort="descending" tabindex="0">Timestamp <span class="arrow">▼</span></th>
+        <th>Entity type</th>
+        <th>Entity name</th>
+        <th>User</th>
+        <th>Details</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td class="mono">2026-08-18 15:19:55</td><td>Subscription</td><td><div class="act-ent">Startup</div></td><td>mpanchuk@thingsboard.io</td><td><button class="iconbtn ib" data-stub="Activity entry details" aria-label="Details"><svg class="icon" viewBox="0 0 24 24" style="fill:currentColor;stroke:none"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button></td></tr>
+      <tr><td class="mono">2026-08-18 14:00:01</td><td>Subscription</td><td><div class="act-ent" title="TBMQ PE license — production broker cluster · eu-central-1 · long entity name">TBMQ PE license — production broker cluster · eu-central-1 · long entity name</div></td><td>mpanchuk@thingsboard.io</td><td><button class="iconbtn ib" data-stub="Activity entry details" aria-label="Details"><svg class="icon" viewBox="0 0 24 24" style="fill:currentColor;stroke:none"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button></td></tr>
+      <tr><td class="mono">2026-08-18 13:53:59</td><td>Subscription</td><td><div class="act-ent">TBMQ PE license</div></td><td>mpanchuk@thingsboard.io</td><td><button class="iconbtn ib" data-stub="Activity entry details" aria-label="Details"><svg class="icon" viewBox="0 0 24 24" style="fill:currentColor;stroke:none"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button></td></tr>
+      <tr><td class="mono">2026-08-18 13:53:38</td><td>Subscription</td><td><div class="act-ent">TBMQ PE subscription</div></td><td>mpanchuk@thingsboard.io</td><td><button class="iconbtn ib" data-stub="Activity entry details" aria-label="Details"><svg class="icon" viewBox="0 0 24 24" style="fill:currentColor;stroke:none"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button></td></tr>
+    </tbody>
+  </table>
+  <div class="pager air">
+    <span class="spacer"></span>
+    <span>Items per page<select aria-label="Items per page"><option>10</option><option>20</option><option>50</option><option>100</option></select></span>
+    <span class="range">1–4 of 4</span>
+    <span class="pagebtns">
+      <button disabled aria-label="First page">«</button><button disabled aria-label="Previous page">‹</button><button disabled aria-label="Next page">›</button><button disabled aria-label="Last page">»</button>
+    </span>
+  </div>
+</div>
+
+<!-- ============ USERS — full internal page ============ -->
+<div class="licview" id="usersView" hidden>
+  <button class="back lic-back" id="usrBackBtn" aria-label="Back to Overview" title="Back to Overview">&larr;</button>
+  <h1 class="lic-h1">Users</h1>
+  <p class="lic-sub">Customer administrators</p>
+  <div class="insttoolbar">
+    <div class="searchbox"><svg class="icon searchglyph" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input type="text" placeholder="Search users" aria-label="Search users"></div>
+    <span class="spacer"></span>
+    <button class="iconbtn ib" data-stub="Refresh users" aria-label="Refresh" title="Refresh"><svg class="icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg></button>
+    <button class="btn" data-stub="Add user">+ Add user</button>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Activation status</th>
+        <th class="sortable" aria-sort="descending" tabindex="0">Created <span class="arrow">▼</span></th>
+        <th aria-label="User actions"></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Dev User</td><td>dev@thingsboard.io</td><td><span class="pill attn">Pending</span></td><td>Aug 02 2026</td><td><span class="rowactions"><button class="link" data-stub="Login as Dev User">Login as →</button><button class="link" data-stub="Delete Dev User">Delete</button></span></td></tr>
+      <tr><td>A. Admin</td><td>a.admin@thingsboard.io</td><td><span class="pill soft">Activated</span></td><td>Jul 20 2026</td><td><span class="rowactions"><button class="link" data-stub="Login as A. Admin">Login as →</button><button class="link" data-stub="Delete A. Admin">Delete</button></span></td></tr>
+      <tr><td>Mariia Panchuk</td><td>mpanchuk@thingsboard.io</td><td><span class="pill soft">Activated</span></td><td>Jul 17 2026</td><td><span class="rowactions"><button class="link" data-stub="Login as Mariia Panchuk">Login as →</button><button class="link" data-stub="Delete Mariia Panchuk">Delete</button></span></td></tr>
+    </tbody>
+  </table>
+  <div class="pager air">
+    <span class="spacer"></span>
+    <span>Items per page<select aria-label="Items per page"><option>10</option><option>20</option><option>50</option><option>100</option></select></span>
+    <span class="range">1–3 of 3</span>
+    <span class="pagebtns">
+      <button disabled aria-label="First page">«</button><button disabled aria-label="Previous page">‹</button><button disabled aria-label="Next page">›</button><button disabled aria-label="Last page">»</button>
+    </span>
+  </div>
+</div>
+
+<!-- ============ PROFILE SETTINGS — full internal page ============ -->
+<div class="licview" id="profileView" hidden>
+  <button class="back lic-back" id="profBackBtn" aria-label="Back to Overview" title="Back to Overview">&larr;</button>
+  <h1 class="lic-h1">Profile settings</h1>
+  <p class="lic-sub">Your account and your company. Used across the portal and on invoices.</p>
+
+  <div class="setcard">
+    <div class="setcard-h"><h2>Your profile</h2><span class="setcard-hint">Personal account</span></div>
+    <div class="field ro">
+      <label>Email</label>
+      <input type="email" value="mpanchuk@thingsboard.io" readonly>
+      <div class="help">Your sign-in email. Changing it updates how you log in.</div>
     </div>
-    <nav class="nav" aria-label="Primary">
-      <a href="#" class="on" aria-current="page">
-        <svg class="icon" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg>Overview</a>
+    <div class="field2">
+      <div class="field"><label>First name</label><input type="text" value="Mariia"></div>
+      <div class="field"><label>Last name</label><input type="text" value="Panchuk"></div>
+    </div>
+    <div class="field"><label>Language</label><select style="max-width:280px"><option>English</option><option>Українська</option><option>Deutsch</option><option>Español</option></select></div>
+    <div class="rowaction">
+      <div class="ra-txt"><div class="ra-t">Password</div><div class="ra-s">Last changed 3 months ago</div></div>
+      <button class="btn sec" data-stub="Change password">Change password</button>
+    </div>
+    <div class="savebar"><span class="saved">All changes saved</span><span class="sp"></span><button class="btn" disabled>Save</button></div>
+  </div>
 
-      <div class="navgroup">Licenses</div>
-      <a href="#" data-stub="Subscriptions">
-        <svg class="icon" viewBox="0 0 24 24"><path d="M7 18a4 4 0 0 1 0-8 5 5 0 0 1 9.6-1.5A3.5 3.5 0 0 1 18 18H7Z"/></svg>Subscriptions</a>
-      <a href="#" data-stub="Perpetual licenses">
-        <svg class="icon" viewBox="0 0 24 24"><path d="M7 8a4 4 0 1 1 3 6.6M17 16a4 4 0 1 1-3-6.6"/></svg>Perpetual licenses</a>
+  <div class="setcard">
+    <div class="setcard-h"><h2>Company</h2><span class="setcard-hint">Organization · appears on invoices</span></div>
+    <div class="field"><label>Company name</label><input type="text" value="ThingsBoard"></div>
+    <div class="field"><label>Description</label><textarea>IoT platform provider.</textarea></div>
+    <div class="field2">
+      <div class="field"><label>Country</label><select><option>United States</option><option>Ukraine</option><option>Germany</option><option>United Kingdom</option></select></div>
+      <div class="field"><label>State / Province</label><input type="text" value="New York"></div>
+      <div class="field"><label>City</label><input type="text" value="New York"></div>
+      <div class="field"><label>ZIP / Postal code</label><input type="text" value="10001"></div>
+    </div>
+    <div class="field"><label>Address</label><input type="text" value="500 7th Avenue"></div>
+    <div class="field"><label>Address line 2</label><input type="text" value=""></div>
+    <div class="field2">
+      <div class="field"><label>Phone</label><input type="text" value="+1 555 010 0100"></div>
+      <div class="field"><label>Company email</label><input type="email" value="hello@thingsboard.io"></div>
+    </div>
+    <div class="cardhelp">This address is used as your default billing / invoice address.</div>
+    <div class="savebar"><span class="saved">All changes saved</span><span class="sp"></span><button class="btn" disabled>Save</button></div>
+  </div>
 
-      <div class="navgroup">Billing</div>
-      <a href="#" data-stub="Invoices">
-        <svg class="icon" viewBox="0 0 24 24"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3Z"/><path d="M9 8h6M9 12h6"/></svg>Invoices</a>
-      <a href="#" data-stub="Payment method">
-        <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18"/></svg>Payment method</a>
+  <div class="setcard danger">
+    <div class="setcard-h"><h2>Delete account</h2></div>
+    <div class="rowaction bare">
+      <div class="ra-txt"><div class="ra-t">Delete this account</div><div class="ra-s">Removes your profile and access. Active licenses and billing history are not affected.</div></div>
+      <button class="btn sec" data-stub="Delete account">Delete account</button>
+    </div>
+  </div>
 
-      <div class="navgroup">Admin</div>
-      <a href="#" data-stub="Users">
-        <svg class="icon" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M16 11a3 3 0 1 0 0-6"/><path d="M17 19a5.4 5.4 0 0 0-1.6-3.8"/></svg>Users</a>
-      <a href="#" data-stub="Audit logs">
-        <svg class="icon" viewBox="0 0 24 24"><path d="M5 4h14v16H5z"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>Audit logs</a>
-    </nav>
-  </aside>
+  <div class="setfooter">
+    <button class="link" data-stub="Privacy policy">Privacy policy</button><span class="dot">·</span>
+    <button class="link" data-stub="Terms of service">Terms of service</button><span class="dot">·</span>
+    <button class="link" data-stub="License agreement">License agreement</button>
+  </div>
+</div>
 
-  <div class="main">
-    <div class="topbar">
-      <span class="pt">Overview</span>
+<!-- ============ BILLING & PAYMENT — full internal page ============ -->
+<div class="licview" id="billingView" hidden>
+  <button class="back lic-back" id="billBackBtn" aria-label="Back to Overview" title="Back to Overview">&larr;</button>
+  <div class="setheadrow">
+    <div>
+      <h1 class="lic-h1">Billing &amp; payment</h1>
+      <p class="lic-sub">How you pay, where invoices go, and your billing history.</p>
+    </div>
+    <span class="sp"></span>
+    <button class="link" data-goto="invoices">View all invoices →</button>
+  </div>
+
+  <div class="setcard">
+    <div class="setcard-h"><h2>Payment method</h2><span class="setcard-hint">Charged automatically for recurring plans</span></div>
+    <div class="paycard">
+      <span class="brandbadge">VISA</span>
+      <span class="pc-num">•••• •••• •••• 4242</span>
+      <span class="pc-exp">Expires 12 / 2028</span>
+      <span class="chip">Default</span>
       <span class="sp"></span>
-      <button class="iconbutton fsbtn" title="Toggle fullscreen" aria-label="Toggle fullscreen">
-        <svg class="icon" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+      <button class="btn sec" data-stub="Update payment method">Update</button>
+    </div>
+    <button class="addrow" data-stub="Add payment method">＋ Add payment method</button>
+  </div>
+
+  <div class="setcard">
+    <div class="setcard-h"><h2>Billing address</h2><span class="setcard-hint">Printed on every invoice</span></div>
+    <label class="lic-toggle" style="margin-left:0"><span class="switch"><input type="checkbox" id="billSameAsCompany" checked><span class="track"></span></span> Same as company address</label>
+    <div class="roblock" id="billAddrReadonly" style="margin-top:12px">
+      ThingsBoard<br>500 7th Avenue<br>New York, New York 10001<br>United States
+      <div class="rb-link"><button class="link" data-goto="profile">Edit in Company profile →</button></div>
+    </div>
+    <div id="billAddrEdit" hidden style="margin-top:12px">
+      <div class="field2">
+        <div class="field"><label>Country</label><select><option>United States</option><option>Ukraine</option><option>Germany</option><option>United Kingdom</option></select></div>
+        <div class="field"><label>State / Province</label><input type="text"></div>
+        <div class="field"><label>City</label><input type="text"></div>
+        <div class="field"><label>ZIP / Postal code</label><input type="text"></div>
+      </div>
+      <div class="field"><label>Address</label><input type="text"></div>
+      <div class="field"><label>Address line 2</label><input type="text"></div>
+    </div>
+    <div class="cardhelp">Turn off to enter a billing address different from your company profile.</div>
+  </div>
+
+  <div class="setcard">
+    <div class="setcard-h"><h2>Billing contact &amp; tax</h2><span class="setcard-hint">Where receipts go</span></div>
+    <div class="field2">
+      <div class="field"><label>Billing email</label><input type="email" value="billing@thingsboard.io"></div>
+      <div class="field"><label>Tax ID / VAT <span class="muted">(optional)</span></label><input type="text" placeholder="e.g. EU VAT, US EIN"></div>
+    </div>
+    <div class="savebar"><span class="saved">All changes saved</span><span class="sp"></span><button class="btn" disabled>Save</button></div>
+  </div>
+</div>
+
+<!-- ============ DASHBOARD (OVERVIEW) — full-width, no sidebar ============
+     Full-width top bar (logo + profile hub menu) over a centered content column.
+     The account hub lives in the profile menu; each block previews the latest few
+     items and its "Show more →" routes to that full internal page. -->
+<div class="dashview" id="dashView" hidden>
+  <div class="dtopbar">
+    <div class="dbrand">
+      <div class="mark"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4v16M4 12h16"/></svg></div>
+      <div class="bt">ThingsBoard<span class="bsep">·</span>License Portal</div>
+    </div>
+    <span class="sp"></span>
+    <div class="dprofile">
+      <button class="dprofbtn" id="dashProfBtn" aria-haspopup="true" aria-expanded="false">
+        <span class="avatar">MP</span><span>Mariia Panchuk</span><span aria-hidden="true">▾</span>
       </button>
-      <button class="user" data-stub="Account">
-        <span class="avatar">MP</span><span class="un">Mariia Panchuk</span>
-      </button>
-      <div class="menu">
-        <button class="iconbutton kebab" aria-haspopup="true" aria-expanded="false" aria-label="More">⋮</button>
-        <div class="pop" role="menu" hidden>
-          <button role="menuitem" data-stub="Settings">Settings</button>
-          <button role="menuitem" data-stub="Help">Help</button>
-          <button role="menuitem" data-stub="Sign out">Sign out</button>
-        </div>
+      <div class="dprofmenu" id="dashProfMenu" role="menu" hidden>
+        <button role="menuitem" data-goto="profile">Profile</button>
+        <button role="menuitem" data-goto="billing">Billing &amp; payment</button>
+        <div class="sep"></div>
+        <button role="menuitem" data-stub="Sign out">Sign out</button>
       </div>
     </div>
+  </div>
 
-    <div class="dashbody">
-      <div class="dashsheet">
-        <h1 class="dash-h1">Overview</h1>
-        <p class="dash-sub">Everything you have and what needs attention, in one place.</p>
+  <div class="dmain">
+    <div class="dwrap">
+      <div class="dwelcome">
+        <h1>Welcome back, Mariia</h1>
+        <p>ThingsBoard · here's what's happening with your licenses.</p>
+      </div>
 
-        <!-- Alert slot: rendered ONLY for actionable states (payment failed, card
-             expiring, near/over a limit, updates term ending). A healthy upcoming
-             auto-pay renewal is NOT an alert, so the healthy state shows nothing.
-             Demo hooks: window.showDashAlert('msg…') / window.clearDashAlert() -->
-        <div class="alert" id="dashAlert" role="alert" hidden>
-          <svg class="icon" viewBox="0 0 24 24"><path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4M12 17v.5"/></svg>
-          <span class="atxt"></span>
-        </div>
-
-        <div class="kpirow">
-          <div class="kpi"><div class="k">Active subscriptions</div><div class="v">2</div></div>
-          <div class="kpi"><div class="k">Perpetual licenses</div><div class="v">1</div></div>
-          <div class="kpi"><div class="k">Est. monthly spend</div><div class="v">$338 <span class="vsub">/ mo</span></div></div>
-          <!-- device quotas are per-license (see each card), not one pool — a summed
-               "Devices in use" was misleading, so surface what's actionable instead -->
-          <div class="kpi"><div class="k">Needs attention</div><div class="v">0</div></div>
-        </div>
-
-        <div class="dashgrid">
-          <!-- LEFT: what you own -->
-          <div class="dashcol">
-            <div class="dsec">
-              <div class="dsh"><h3>Subscriptions</h3><span class="spacer"></span>
-                <button class="link" data-stub="All subscriptions">All subscriptions →</button>
-              </div>
-              <!-- Bounded preview, not the full list: at most 3 cards, ordered
-                   attention-first then soonest renewal (here: Aug 30 before Sep 13).
-                   The full set lives behind "All subscriptions →". -->
-
-              <div class="dcard">
-                <div class="dcard-top">
-                  <span class="dcard-name">Prototype</span>
-                  <span class="chip status"><span class="sdot"></span>Active</span>
-                  <span class="dcard-price">$39.00 / mo</span>
-                </div>
-                <div class="dmeters">
-                  <div class="dmeter"><div class="ml">Devices</div>
-                    <div class="mv"><span class="usetxt">12 / 50</span><div class="meter"><span style="width:24%"></span></div></div>
-                  </div>
-                  <div class="dmeter"><div class="ml">Production instances</div>
-                    <div class="mv"><span class="usetxt">1 / 1</span><div class="meter"><span style="width:100%"></span></div></div>
-                  </div>
-                </div>
-                <div class="dcard-foot"><span>Renews Aug 30 2026</span><span class="spacer"></span>
-                  <button class="link" data-stub="Manage Prototype subscription">Manage →</button>
-                </div>
-              </div>
-
-              <div class="dcard">
-                <div class="dcard-top">
-                  <span class="dcard-name">Startup</span>
-                  <span class="chip status"><span class="sdot"></span>Active</span>
-                  <span class="dcard-price">$299.00 / mo</span>
-                </div>
-                <div class="dmeters">
-                  <div class="dmeter"><div class="ml">Devices</div>
-                    <div class="mv"><span class="usetxt">340 / 500</span><div class="meter"><span style="width:68%"></span></div></div>
-                  </div>
-                  <div class="dmeter"><div class="ml">Production instances</div>
-                    <div class="mv"><span class="usetxt">2 / 2</span><div class="meter"><span style="width:100%"></span></div></div>
-                  </div>
-                </div>
-                <div class="dcard-foot"><span>Renews Sep 13 2026</span><span class="spacer"></span>
-                  <button class="link" data-stub="Manage Startup subscription">Manage →</button>
-                </div>
-              </div>
-
-              <button class="addcard" data-stub="New subscription">+ New subscription</button>
+      <!-- Products (main block, ~2/3) + explicit create CTAs (~1/3) -->
+      <div class="dproducts">
+        <div class="dblock">
+          <div class="dblock-head"><h2>Products</h2><span class="sp"></span>
+            <button class="link" data-goto="products">Show all licenses →</button>
+          </div>
+          <div class="drows">
+            <div class="drow dprodrow" data-goto="products" tabindex="0" role="button" aria-label="ThingsBoard PE — show licenses">
+              <span class="dprod-name">ThingsBoard PE</span>
+              <span class="dprod-sum">3 licenses · 2 subscription · 1 perpetual</span>
+              <span class="pill attn">1 needs attention</span>
             </div>
-
-            <div class="dsec">
-              <div class="dsh"><h3>Perpetual licenses</h3><span class="spacer"></span>
-                <button class="link" data-stub="All perpetual licenses">All perpetual →</button>
-              </div>
-              <!-- Bounded preview: at most 3 cards, attention-first then soonest
-                   updates-term end. Full set behind "All perpetual →". -->
-
-              <div class="dcard">
-                <div class="dcard-top">
-                  <span class="dcard-name">ThingsBoard PE Perpetual License</span>
-                  <span class="chip status"><span class="sdot"></span>Active</span>
-                  <span class="dcard-price">one-time</span>
-                </div>
-                <div class="dmeters">
-                  <div class="dmeter"><div class="ml">Device quota</div>
-                    <div class="mv"><span class="usetxt">1,200 / 5,000</span><div class="meter"><span style="width:24%"></span></div></div>
-                  </div>
-                  <div class="dmeter"><div class="ml">Production instances</div>
-                    <div class="mv"><span class="usetxt">1 / 1</span><div class="meter"><span style="width:100%"></span></div></div>
-                  </div>
-                </div>
-                <div class="dcard-foot"><span>Issued Aug 13 2026 · updates until Aug 13 2027</span><span class="spacer"></span>
-                  <button class="link" data-stub="Open perpetual license">Open →</button>
-                </div>
-              </div>
-
-              <button class="addcard" data-stub="New perpetual license">+ New perpetual license</button>
+            <div class="drow dprodrow" data-goto="products" tabindex="0" role="button" aria-label="TBMQ PE — show licenses">
+              <span class="dprod-name">TBMQ PE</span>
+              <span class="dprod-sum">1 license · subscription</span>
+              <span class="pill soft">Active</span>
             </div>
           </div>
+        </div>
+        <div class="dcta">
+          <button class="dcta-btn" data-new="subscription">
+            <span class="dcta-txt"><span class="dcta-t">New subscription</span><span class="dcta-s">Recurring monthly plan</span></span>
+            <svg class="icon dcta-arr" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+          <button class="dcta-btn" data-new="perpetual">
+            <span class="dcta-txt"><span class="dcta-t">New perpetual license</span><span class="dcta-s">One-time purchase</span></span>
+            <svg class="icon dcta-arr" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+        </div>
+      </div>
 
-          <!-- RIGHT: billing snapshot -->
-          <div class="dashcol">
-            <div class="dpanel">
-              <h4>Next charge</h4>
-              <div class="dp-hero">$39.00</div>
-              <div class="dp-herosub">Prototype · Aug 30 2026</div>
-              <div class="dp-line" style="margin-top:11px"><span class="dp-k">Startup · Sep 13 2026</span><span>$299.00</span></div>
-            </div>
+      <!-- Recent invoices -->
+      <div class="dblock">
+        <div class="dblock-head"><h2>Recent invoices</h2><span class="sp"></span>
+          <button class="link" data-goto="invoices">Show more →</button>
+        </div>
+        <div class="drows">
+          <div class="drow"><span class="di-inv mono">INV-2026-08</span><span class="di-date">Aug 20 2026</span><span class="di-amt">$1,999.00</span><span class="pill soft">Paid</span><span class="rowactions"><button class="link" data-stub="Download PDF">Download PDF</button><button class="link" data-stub="View invoice">View invoice</button></span></div>
+          <div class="drow"><span class="di-inv mono">INV-2026-07</span><span class="di-date">Jul 30 2026</span><span class="di-amt">$39.00</span><span class="pill soft">Paid</span><span class="rowactions"><button class="link" data-stub="Download PDF">Download PDF</button><button class="link" data-stub="View invoice">View invoice</button></span></div>
+          <div class="drow"><span class="di-inv mono">INV-2026-06</span><span class="di-date">Jun 30 2026</span><span class="di-amt">$39.00</span><span class="pill soft">Paid</span><span class="rowactions"><button class="link" data-stub="Download PDF">Download PDF</button><button class="link" data-stub="View invoice">View invoice</button></span></div>
+        </div>
+      </div>
 
-            <div class="dpanel">
-              <h4>Recent invoices</h4>
-              <div class="dp-line"><span class="dp-k">Jul 30 2026</span><span>$39.00 · Paid</span></div>
-              <div class="dp-line"><span class="dp-k">Jun 30 2026</span><span>$39.00 · Paid</span></div>
-              <button class="link" data-stub="All invoices">All invoices →</button>
-            </div>
+      <!-- Bottom split: activity + users -->
+      <div class="dcols">
+        <div class="dblock">
+          <div class="dblock-head"><h2>Recent activity</h2><span class="sp"></span>
+            <button class="link" data-goto="activity">Show more →</button>
+          </div>
+          <div class="drows">
+            <div class="drow"><div class="dmini"><div class="k">Subscription created</div><div class="s">mpanchuk@thingsboard.io · Aug 13 2026 10:33</div></div><span class="pill soft">Success</span></div>
+            <div class="drow"><div class="dmini"><div class="k">Payment method updated</div><div class="s">mpanchuk@thingsboard.io · Aug 12 2026 16:20</div></div><span class="pill soft">Success</span></div>
+            <div class="drow"><div class="dmini"><div class="k">Invoice paid · INV-2026-07</div><div class="s">system · Jul 30 2026 00:04</div></div><span class="pill soft">Success</span></div>
+          </div>
+        </div>
+        <div class="dblock">
+          <div class="dblock-head"><h2>Users</h2><span class="sp"></span>
+            <button class="link" data-goto="users">Show more →</button>
+          </div>
+          <div class="drows">
+            <div class="drow"><div class="dmini"><div class="k">Mariia Panchuk</div><div class="s">mpanchuk@thingsboard.io</div></div><span class="pill soft">Activated</span></div>
+            <div class="drow"><div class="dmini"><div class="k">Ivan Petrenko</div><div class="s">ipetrenko@thingsboard.io</div></div><span class="pill soft">Activated</span></div>
+            <div class="drow"><div class="dmini"><div class="k">Olena Kovalenko</div><div class="s">okovalenko@thingsboard.io</div></div><span class="pill attn">Pending</span></div>
           </div>
         </div>
       </div>
@@ -1703,6 +1902,12 @@
     <label class="sp-opt"><input type="radio" name="detailsPage" value="products2"><span>One column per field</span></label>
     <label class="sp-opt"><input type="radio" name="detailsPage" value="products3"><span>Product-first (neutral)</span></label>
     <label class="sp-opt"><input type="radio" name="detailsPage" value="portfolio"><span>Portfolio (grouped by product)</span></label>
+    <div class="sp-grouphead">Pages</div>
+    <label class="sp-opt"><input type="radio" name="detailsPage" value="invoices"><span>Invoices</span></label>
+    <label class="sp-opt"><input type="radio" name="detailsPage" value="activity"><span>Activity</span></label>
+    <label class="sp-opt"><input type="radio" name="detailsPage" value="users"><span>Users</span></label>
+    <label class="sp-opt"><input type="radio" name="detailsPage" value="profile"><span>Profile settings</span></label>
+    <label class="sp-opt"><input type="radio" name="detailsPage" value="billing"><span>Billing &amp; payment</span></label>
     <div class="sp-grouphead">Perpetual</div>
     <label class="sp-opt"><input type="radio" name="detailsPage" value="perp"><span>Perpetual license details</span></label>
     <div class="sp-grouphead">Subscription plans</div>
@@ -2164,6 +2369,11 @@
     products2: { kind:'products', variant:2 },
     products3: { kind:'products', variant:3 },
     portfolio: { kind:'portfolio' },
+    invoices:  { kind:'invoices' },
+    activity:  { kind:'activity' },
+    users:     { kind:'users' },
+    profile:   { kind:'profile' },
+    billing:   { kind:'billing' },
     // confirmed perpetual base. dev:'0' keeps the Development instances row hidden
     // (the row appears only once at least one dev instance exists) and aiPerMonth is
     // false because a perpetual license carries no monthly cadence — inferred.
@@ -2233,14 +2443,15 @@
   };
   function applyDetailsPage(){
     var p = PAGES[detailsPage];
-    // dashboard, products and portfolio are whole separate views, so swap shells
-    $('#dashView').hidden      = p.kind !== 'dash';
-    $('#licensesView').hidden  = p.kind !== 'products';
-    $('#portfolioView').hidden = p.kind !== 'portfolio';
-    $('#appView').hidden       = p.kind === 'dash' || p.kind === 'products' || p.kind === 'portfolio';
+    // dashboard + the standalone inner-content pages are whole separate views
+    var VIEWS = { dash:'#dashView', products:'#licensesView', portfolio:'#portfolioView', invoices:'#invoicesView', activity:'#activityView', users:'#usersView', profile:'#profileView', billing:'#billingView' };
+    var standalone = false;
+    for(var vk in VIEWS){ var vel = $(VIEWS[vk]); if(vel) vel.hidden = p.kind !== vk; if(p.kind === vk) standalone = true; }
+    $('#appView').hidden = standalone;
     if(p.kind === 'dash') return;
     if(p.kind === 'products'){ productsVariant = p.variant; lastProducts = detailsPage; renderProducts(); return; }
     if(p.kind === 'portfolio'){ lastProducts = detailsPage; return; }
+    if(standalone) return; // invoices / activity / users — static content pages
     $$('[data-page]').forEach(function(el){ el.hidden = el.getAttribute('data-page') !== p.kind; });
     if(p.kind === 'sub'){
       $('#planName').textContent = p.name;
@@ -2267,6 +2478,8 @@
   // the details-page back button returns to whichever Products variant we came from
   var backBtn = $('#backBtn');
   if(backBtn) backBtn.addEventListener('click', function(){ goToPage(lastProducts); });
+  // every inner-content page (Products, Invoices, Activity, Users) returns to the Dashboard
+  $$('.lic-back').forEach(function(b){ b.addEventListener('click', function(){ goToPage('dashboard'); }); });
 
   // single data source — every subscription plan + perpetual license. `goto` is the
   // details-page key each row routes to. Labels are example user tags. `created` is
@@ -2558,6 +2771,72 @@
         var row = e.target.closest('.pf-row');
         if(row && e.target === row){ e.preventDefault(); openRow(row); }
       }
+    });
+  }
+
+  /* ---------- Dashboard (Overview) ---------- */
+  var dashV = $('#dashView');
+  if(dashV){
+    // profile hub dropdown
+    var dpBtn = $('#dashProfBtn'), dpMenu = $('#dashProfMenu');
+    if(dpBtn && dpMenu){
+      function dpToggle(open){ dpMenu.hidden = !open; dpBtn.setAttribute('aria-expanded', open ? 'true' : 'false'); }
+      dpBtn.addEventListener('click', function(e){ e.stopPropagation(); dpToggle(dpMenu.hidden); });
+      dpMenu.addEventListener('click', function(e){ e.stopPropagation(); });
+      document.addEventListener('click', function(){ if(!dpMenu.hidden) dpToggle(false); });
+      document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && !dpMenu.hidden){ dpToggle(false); dpBtn.focus(); } });
+      // menu items that open a page (Profile → Profile settings, Billing & payment)
+      $$('#dashProfMenu [data-goto]').forEach(function(b){
+        b.addEventListener('click', function(){ dpToggle(false); var k = b.getAttribute('data-goto'); if(PAGES[k]) goToPage(k); });
+      });
+    }
+    // explicit create-flow CTA buttons (replaced the old + New license dropdown)
+    $$('.dcta-btn', dashV).forEach(function(b){
+      b.addEventListener('click', function(){
+        var kind = b.getAttribute('data-new');
+        openModal(kind === 'subscription' ? 'New subscription' : 'New perpetual license', '<p>Placeholder create flow for a new ' + (kind === 'subscription' ? 'subscription' : 'perpetual license') + '.</p>');
+      });
+    });
+    // "Show all licenses →" / product rows route to the Licenses (Products) page;
+    // other "Show more →" links stub (no standalone Invoices/Logs/Users page yet)
+    dashV.addEventListener('click', function(e){
+      var go = e.target.closest('[data-goto]');
+      if(go){ var k = go.getAttribute('data-goto'); if(k && PAGES[k]) goToPage(k); }
+    });
+    dashV.addEventListener('keydown', function(e){
+      if((e.key === 'Enter' || e.key === ' ')){
+        var row = e.target.closest('.dprodrow');
+        if(row && e.target === row){ e.preventDefault(); var k = row.getAttribute('data-goto'); if(k && PAGES[k]) goToPage(k); }
+      }
+    });
+  }
+
+  /* ---------- Settings pages (Profile / Billing) ---------- */
+  // Save footer per card: disabled + "All changes saved" until a field changes; Save clears it.
+  $$('.setcard').forEach(function(card){
+    var bar = $('.savebar', card); if(!bar) return;
+    var saveBtn = $('.btn', bar), saved = $('.saved', bar);
+    function clean(){ if(saveBtn) saveBtn.disabled = true; if(saved) saved.hidden = false; }
+    function dirty(){ if(saveBtn) saveBtn.disabled = false; if(saved) saved.hidden = true; }
+    clean();
+    card.addEventListener('input', dirty);
+    card.addEventListener('change', dirty);
+    if(saveBtn) saveBtn.addEventListener('click', clean);
+  });
+  // Billing address: "Same as company address" swaps read-only block ↔ override fields
+  var billSame = $('#billSameAsCompany');
+  if(billSame){
+    var roB = $('#billAddrReadonly'), edB = $('#billAddrEdit');
+    function syncBill(){ var on = billSame.checked; if(roB) roB.hidden = !on; if(edB) edB.hidden = on; }
+    billSame.addEventListener('change', syncBill);
+    syncBill();
+  }
+  // in-page routing links (View all invoices → Invoices, Edit in Company profile → Profile)
+  var billView = $('#billingView');
+  if(billView){
+    billView.addEventListener('click', function(e){
+      var go = e.target.closest('[data-goto]');
+      if(go){ var k = go.getAttribute('data-goto'); if(PAGES[k]) goToPage(k); }
     });
   }
 
