@@ -510,6 +510,19 @@
   .pgo-head .sp{flex:1}
   .pgo-title{font-size:13.5px;font-weight:600;color:var(--ink)}
   .pgo-body{flex:1;min-height:0;overflow:auto}
+  /* Flow 2 · first overlay level: the bar already carries the page title and the
+     close, and the page's own back would return to the dashboard exactly like the
+     close — so both go, and content starts at its toolbar / first section.
+     Deeper levels (detail pages) keep their gutter back and their own title,
+     because there back returns to the previous overlay content, not the dashboard. */
+  .pgo-body[data-level="root"] .lic-head,
+  .pgo-body[data-level="root"] .lic-h1,
+  .pgo-body[data-level="root"] .lic-sub,
+  .pgo-body[data-level="root"] .lic-back{display:none}
+  .pgo-body[data-level="root"] .setgrid{grid-template-columns:1fr}
+  /* the toolbar is the first thing in the overlay, so it needs no extra top gap */
+  .pgo-body[data-level="root"] .lic-controls,
+  .pgo-body[data-level="root"] .insttoolbar{margin-top:0}
   .dprofile{position:relative}
   .dprofbtn{display:inline-flex;align-items:center;gap:9px;padding:4px 12px 4px 4px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--ink);font:inherit;font-size:12.5px}
   .dprofbtn:hover{border-color:var(--mid);background:var(--hover)}
@@ -2661,10 +2674,16 @@
   };
   var flowMode = 'topbar';                    // 'topbar' = pages under the nav bar, 'overlay' = full-screen overlay
   var FLOW_HOSTS = { topbar:'#shellMain', overlay:'#pgoBody' };
-  // overlay header titles (chrome), by page kind
-  var PAGE_TITLES = { products:'Licenses', portfolio:'Licenses', invoices:'Invoices', activity:'Activity',
-                      users:'Users', profile:'Profile settings', billing:'Billing & payment',
-                      sub:'Subscription details', perp:'Perpetual license details' };
+  /* Overlay chrome: the bar carries the AREA title, so drilling from Licenses into
+     a licence keeps saying "Licenses" (and the close still exits to the dashboard).
+     A page is at the overlay root unless its own back goes somewhere other than the
+     dashboard — today that means the detail pages, which keep back + their title. */
+  var AREA_FOR_KIND = { products:'licenses', portfolio:'licenses', sub:'licenses', perp:'licenses',
+                        invoices:'invoices', activity:'activity', users:'users',
+                        profile:'profile', billing:'billing' };
+  var AREA_TITLES = { licenses:'Licenses', invoices:'Invoices', activity:'Activity', users:'Users',
+                      profile:'Profile settings', billing:'Billing & payment' };
+  function overlayLevel(kind){ return (kind === 'sub' || kind === 'perp') ? 'deep' : 'root'; }
   function isBaseKind(kind){ return kind === 'dash' || kind === 'dashempty'; }
   // which top-bar nav item owns each page
   var NAV_FOR_KIND = { dash:'home', dashempty:'home', products:'licenses', portfolio:'licenses',
@@ -2698,7 +2717,8 @@
       if(dash){ dash.hidden = false; if(dash.parentNode !== shell) shell.appendChild(dash); }
       if(target && target.parentNode !== obody) obody.appendChild(target);
       if(overlay) overlay.hidden = false;
-      $('#pgoTitle').textContent = PAGE_TITLES[kind] || '';
+      $('#pgoTitle').textContent = AREA_TITLES[AREA_FOR_KIND[kind]] || '';
+      obody.setAttribute('data-level', overlayLevel(kind));
       obody.scrollTop = 0;
     } else {
       if(overlay) overlay.hidden = true;
