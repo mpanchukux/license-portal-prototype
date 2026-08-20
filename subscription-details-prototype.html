@@ -515,7 +515,6 @@
      close — so both go, and content starts at its toolbar / first section.
      Deeper levels (detail pages) keep their gutter back and their own title,
      because there back returns to the previous overlay content, not the dashboard. */
-  .pgo-body[data-level="root"] .lic-head,
   .pgo-body[data-level="root"] .lic-h1,
   .pgo-body[data-level="root"] .lic-sub,
   .pgo-body[data-level="root"] .lic-back{display:none}
@@ -604,11 +603,6 @@
   }
   /* ---------- Licenses (unified list): inner content only, no chrome ---------- */
 
-  .lic-back{margin-bottom:14px}
-  /* back button in one line with the page title (list pages) */
-  .lic-head{display:flex;align-items:center;gap:12px;margin-bottom:4px}
-  .lic-head .lic-back{margin-bottom:0}
-  .lic-head .lic-h1{margin:0}
   .pager.air{margin-top:40px}
   /* activity feed: chronological history (newest first) — replaces the table on
      both the Activity page and the dashboard block. Icon frame matches .iconbtn.ib,
@@ -621,8 +615,6 @@
   .fi-meta{font-size:11.5px;color:var(--faint);font-variant-numeric:tabular-nums}
   .fi-txt{margin-top:5px;font-size:13px;color:var(--ink);line-height:1.5}
   .fi-txt b{font-weight:600}
-  .fi-det{margin-top:7px;font-size:12.5px;color:var(--mid)}
-  .fi-det .fi-detk{color:var(--faint);margin-right:4px}
   .fitem > .iconbtn{flex:none;margin-top:1px}
   .lic-h1{margin:0 0 4px;font-size:22px;font-weight:800;letter-spacing:-.01em}
   .lic-sub{margin:0 0 20px;font-size:13px;color:var(--mid)}
@@ -630,7 +622,6 @@
   /* back button in its own left gutter; the content column aligns to one vertical
      line to its right — same gutter mechanic as the details header (.headgrid). */
   .setgrid{display:grid;grid-template-columns:var(--backW) 1fr;column-gap:var(--backGap);align-items:start;max-width:calc(760px + var(--backW) + var(--backGap));margin:0 auto}
-  .setgrid .lic-back{margin-bottom:0}
   .setheadrow{display:flex;align-items:flex-start;gap:16px;max-width:760px}
   .setheadrow .sp{flex:1}
   .setcard{background:var(--card);border:1px solid var(--line2);border-radius:8px;padding:18px 20px;margin-top:16px;max-width:760px}
@@ -1161,10 +1152,7 @@
      JS. A row click routes to the matching details page; the ⋮ overflow carries
      type-specific actions and must NOT navigate. In prototype settings for now. -->
 <div class="licview" id="licensesView" hidden>
-  <div class="lic-head">
-    <button class="back lic-back" id="prodBackBtn" aria-label="Back to Overview" title="Back to Overview">&larr;</button>
-    <h1 class="lic-h1">Licenses</h1>
-  </div>
+  <h1 class="lic-h1">Licenses</h1>
   <p class="lic-sub">Every subscription plan and perpetual license on your account, in one place.</p>
 
   <div class="lic-controls">
@@ -1369,10 +1357,7 @@
 
 <!-- ============ INVOICES — full internal page ============ -->
 <div class="licview" id="invoicesView" hidden>
-  <div class="lic-head">
-    <button class="back lic-back" id="invBackBtn" aria-label="Back to Overview" title="Back to Overview">&larr;</button>
-    <h1 class="lic-h1">Invoices</h1>
-  </div>
+  <h1 class="lic-h1">Invoices</h1>
   <div class="insttoolbar" style="margin-top:16px">
     <div class="searchbox"><svg class="icon searchglyph" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input type="text" placeholder="Search invoices" aria-label="Search invoices"></div>
     <span class="spacer"></span>
@@ -1411,10 +1396,7 @@
 
 <!-- ============ ACTIVITY — full internal page ============ -->
 <div class="licview" id="activityView" hidden>
-  <div class="lic-head">
-    <button class="back lic-back" id="actBackBtn" aria-label="Back to Overview" title="Back to Overview">&larr;</button>
-    <h1 class="lic-h1">Activity</h1>
-  </div>
+  <h1 class="lic-h1">Activity</h1>
   <div class="insttoolbar" style="margin-top:16px">
     <div class="searchbox"><svg class="icon searchglyph" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input type="text" placeholder="Search activity" aria-label="Search activity"></div>
     <button class="btn sec" data-stub="Time range: last day"><svg class="icon" viewBox="0 0 24 24" style="margin-right:6px"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.5 2.5"/></svg>last day</button>
@@ -1435,10 +1417,7 @@
 
 <!-- ============ USERS — full internal page ============ -->
 <div class="licview" id="usersView" hidden>
-  <div class="lic-head">
-    <button class="back lic-back" id="usrBackBtn" aria-label="Back to Overview" title="Back to Overview">&larr;</button>
-    <h1 class="lic-h1">Users</h1>
-  </div>
+  <h1 class="lic-h1">Users</h1>
   <p class="lic-sub">Customer administrators</p>
   <div class="insttoolbar">
     <div class="searchbox"><svg class="icon searchglyph" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input type="text" placeholder="Search users" aria-label="Search users"></div>
@@ -1475,7 +1454,7 @@
 <!-- ============ PROFILE SETTINGS — full internal page ============ -->
 <div class="licview" id="profileView" hidden>
  <div class="setgrid">
-  <button class="back lic-back" id="profBackBtn" aria-label="Back to Overview" title="Back to Overview">&larr;</button>
+  <button class="back lic-back" id="profBackBtn" aria-label="Back" title="Back">&larr;</button>
   <div class="setcol">
   <h1 class="lic-h1">Profile settings</h1>
   <p class="lic-sub">Your account and your company. Used across the portal and on invoices.</p>
@@ -1544,7 +1523,7 @@
 <!-- ============ BILLING & PAYMENT — full internal page ============ -->
 <div class="licview" id="billingView" hidden>
  <div class="setgrid">
-  <button class="back lic-back" id="billBackBtn" aria-label="Back to Overview" title="Back to Overview">&larr;</button>
+  <button class="back lic-back" id="billBackBtn" aria-label="Back" title="Back">&larr;</button>
   <div class="setcol">
   <h1 class="lic-h1">Billing &amp; payment</h1>
   <p class="lic-sub">How you pay, where invoices go, and your billing history.</p>
@@ -2608,6 +2587,7 @@
                        extras:{ prod:'2', ai:'2M' }, whitelabel:false, edge:true, trendz:true }
   };
   var detailsPage = 'dashboard';   // the prototype opens on the populated dashboard
+  var prevPage = 'dashboard';      // the page before it — the settings back button's target
 
   // entitlement amounts may carry a trailing "M" (AI) or thousands commas (devices)
   function parseUnit(v){ v = String(v == null ? '0' : v); var m = /M$/i.test(v); var n = parseFloat(v.replace(/,/g, '').replace(/M$/i, '')) || 0; return { n:n, m:m }; }
@@ -2745,7 +2725,12 @@
   var applyDetailsPageInner = applyDetailsPage;
   applyDetailsPage = function(){ applyDetailsPageInner(); syncSettingsContext(); };
   $$('input[name="detailsPage"]').forEach(function(r){
-    r.addEventListener('change', function(){ if(r.checked){ detailsPage = r.value; applyDetailsPage(); } });
+    r.addEventListener('change', function(){
+      if(!r.checked) return;
+      if(r.value !== detailsPage) prevPage = detailsPage;
+      detailsPage = r.value;
+      applyDetailsPage();
+    });
   });
   // the panel only lists what is relevant to the open page: globals always, the
   // plan/perpetual variants only while a details page of that kind is open
@@ -2781,6 +2766,7 @@
   /* ---------- Products page: data-driven table (all plans + perpetual) ---------- */
   // route to a details page and keep the settings picker in sync
   function goToPage(key){
+    if(key !== detailsPage) prevPage = detailsPage;   // one step back, no stack
     detailsPage = key;
     var radio = $('input[name="detailsPage"][value="' + key + '"]');
     if(radio) radio.checked = true;
@@ -2788,12 +2774,19 @@
     var sm = $('#shellMain'); if(sm) sm.scrollTop = 0;   // reset the shared scroll region
     window.scrollTo(0, 0);
   }
-  // the details-page back button always returns to the flow's Licenses page —
-  // the other list layouts are archived explorations, not part of the flow
+  /* Back exists only where it does something the obvious alternative does not.
+     Details pages: back returns to the Licenses LIST with its state (filters,
+     pagination) intact, which the Licenses nav tab — a jump to the section root —
+     does not do; so the gutter back stays. The other list layouts are archived
+     explorations, not part of the flow, hence the hard-coded products3.
+     List pages (Licenses, Invoices, Activity, Users) have no back at all: their
+     nav tab already carries orientation and exit, so back would only duplicate it. */
   var backBtn = $('#backBtn');
   if(backBtn) backBtn.addEventListener('click', function(){ goToPage('products3'); });
-  // every inner-content page (Products, Invoices, Activity, Users) returns to the Dashboard
-  $$('.lic-back').forEach(function(b){ b.addEventListener('click', function(){ goToPage('dashboard'); }); });
+  /* Profile settings and Billing & payment are the exception: opened from the
+     profile menu from anywhere, with no nav tab to show where you are or to lead
+     out again. Their back means "the page I came from" — one step, no stack. */
+  $$('.lic-back').forEach(function(b){ b.addEventListener('click', function(){ goToPage(prevPage); }); });
   // shared shell: the logo is a persistent Home link from anywhere. Distinct from the
   // detail-page back button (which returns to the previous list) — both coexist.
   var homeBtn = $('#homeBtn');
@@ -3319,24 +3312,25 @@
   /* ---------- Activity feed (Activity page + dashboard block) ----------
      A chronological history instead of a table: type icon, muted meta line
      ("System note" for system-generated events, "Note" for user/info entries),
-     a sentence with the entities emphasised, an optional field-level Details
-     line (from → to, omitted when there is no delta), and the per-item action
-     that opens the raw audit payload. No event status — the portal has none. */
+     a sentence with the entities emphasised, and the per-item action that opens
+     the raw audit payload. A field-level change reads inside the sentence
+     ("... from Prototype to Startup"), not as a separate Details line.
+     No event status — the portal has none. */
   var FEED_ICONS = {
     created: '<path d="M12 4v16M4 12h16"/>',
     updated: '<path d="M4 20h4l10.5-10.5a2 2 0 0 0 0-2.8l-1.2-1.2a2 2 0 0 0-2.8 0L4 16v4Z"/><path d="M14.5 6.5l3 3"/>',
     status:  '<path d="M5 12h14M13 6l6 6-6 6"/>',
     info:    '<circle cx="12" cy="12" r="8"/><path d="M12 11.5v5M12 8v.6"/>'
   };
-  // newest first; `delta` renders the Details block, absent when nothing changed
+  // newest first; `delta` is the plain-text from → to for the audit payload only
   var ACTIVITY = [
     { kind:'created', system:false, ts:'19 Aug 2026, 13:13', entityType:'Subscription', entityName:'Startup', actor:'mpanchuk@thingsboard.io', action:'ADDED',
       txt:'<b>Subscription</b> <b>Startup</b> was created by <b>mpanchuk@thingsboard.io</b>.' },
     { kind:'updated', system:true, ts:'19 Aug 2026, 12:40', entityType:'Subscription', entityName:'Prototype', actor:'mpanchuk@thingsboard.io', action:'UPDATED',
       txt:'Add-on <b>Edge Computing</b> was enabled on <b>Prototype</b> by <b>mpanchuk@thingsboard.io</b>.' },
     { kind:'status', system:true, ts:'19 Aug 2026, 11:02', entityType:'Subscription', entityName:'Startup', actor:'mpanchuk@thingsboard.io', action:'UPDATED',
-      txt:'<b>Plan</b> was changed by <b>mpanchuk@thingsboard.io</b>.',
-      delta:'Plan changed from <b>Prototype</b> to <b>Startup</b>' },
+      txt:'<b>Plan</b> was changed by <b>mpanchuk@thingsboard.io</b> from <b>Prototype</b> to <b>Startup</b>.',
+      delta:'Plan changed from Prototype to Startup' },
     { kind:'updated', system:true, ts:'18 Aug 2026, 16:20', entityType:'Payment method', entityName:'Visa ••4242', actor:'a.admin@thingsboard.io', action:'UPDATED',
       txt:'<b>Payment method</b> was updated by <b>a.admin@thingsboard.io</b>.' },
     { kind:'info', system:true, ts:'30 Jul 2026, 00:04', entityType:'Invoice', entityName:'INV-2026-07', actor:'System', action:'PAID',
@@ -3349,7 +3343,6 @@
       + '<div class="fi-body">'
       +   '<div class="fi-meta">' + (a.system ? 'System note' : 'Note') + ' · ' + a.ts + '</div>'
       +   '<div class="fi-txt">' + a.txt + '</div>'
-      +   (a.delta ? '<div class="fi-det"><span class="fi-detk">Details:</span>' + a.delta + '</div>' : '')
       + '</div>'
       + '<button class="iconbtn ib" data-audit data-i="' + i + '" aria-label="View details" title="View details">' + AUDITSVG + '</button>'
       + '</div>';
