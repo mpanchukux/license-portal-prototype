@@ -65,66 +65,108 @@ Vite/React-скелет у `src/` — окрема історія, до прот
 
 **Git**: комітимо прямо в `main`, файл прототипу **окремо**, з trailer
 `Co-Authored-By: Claude …`. `.claude/launch.json` (сесійний scratchpad-шлях)
-**не комітимо**. ⚠️ Репо на Google Drive + робота з кількох машин → git-стан
+і `.claude/settings.local.json` **не комітимо**. У системі **не налаштована
+git-identity** (`~/.gitconfig` немає), тому `git commit` падає з «Author identity
+unknown» — підставляємо автора попередніх комітів через env:
+`GIT_AUTHOR_NAME=mpanchukux GIT_AUTHOR_EMAIL=mpanchuk@thingsboard.io` (те саме для
+`GIT_COMMITTER_*`). ⚠️ Репо на Google Drive + робота з кількох машин → git-стан
 інколи клобиться посеред сесії (застряглий `main.lock`, «no commits yet»);
 діагностика/відновлення — див. пам'ять `drive-git-hazard`.
 
-## Архітектура: один механізм view-перемикання
+## Архітектура: сторінки окремо, презентація окремо
 
-- **`PAGES`** (JS-обʼєкт) — реєстр усіх сторінок; ключ = значення radio в пікері,
-  `kind` визначає, який DOM-view показати. Плани підписки/перпетуал несуть ще
-  `name/price/devices/prod/dev/ai/…` (звідси `renderPlanRows`/`renderFeatures`).
-- **`applyDetailsPage()`** — серце навігації. Тримає мапу `VIEWS` (kind → `#id`
-  контейнера) і ховає всі, крім активного; `#appView` (деталі) показується лише
-  для `sub`/`perp`. Додати нову сторінку = запис у `PAGES` + запис у `VIEWS` +
-  контейнер `.licview` + опція в пікері.
-- **`goToPage(key)`** — програмна навігація (лишає radio в пікері синхронним).
-- Деталі (`#appView`, `.app`) розрізняють моделі атрибутом `data-page="sub"|"perp"`.
-  Глобально хром деталей прихований (`.sidebar,.topbar{display:none}`).
+Головний принцип: **один вузол контенту на сторінку**, і тонкий шар презентації,
+який вирішує, *де* цей вузол показати. Копій сторінок під різні флоу немає.
+
+- **`PAGES`** — реєстр сторінок; ключ = значення radio в пікері, `kind` каже, який
+  вузол показувати. Плани/перпетуал несуть ще `name/price/devices/prod/dev/ai/…`
+  (звідси `renderPlanRows`/`renderFeatures`).
+- **`PAGE_NODES`** (kind → `#id`) — той самий вузол контенту для обох флоу.
+  `sub` і `perp` свідомо ділять `#appView` (один шаблон деталей).
+- **`FLOW_HOSTS`** (`{ topbar:'#shellMain', overlay:'#pgoBody' }`) + `flowMode` —
+  куди монтувати. `presentPage(kind)` ховає все, крім цільового вузла, і робить
+  `host.appendChild(target)`. Додати новий спосіб показу = ще один хост, не копія
+  сторінок.
+- **`applyDetailsPage()`** готує дані сторінки й делегує показ у `presentPage`.
+- **`goToPage(key)`** — програмна навігація (тримає radio в пікері синхронним).
+- Деталі (`#appView`) розрізняють моделі атрибутом `data-page="sub"|"perp"`.
+
+### Два флоу презентації (глобальний перемикач «Flow» у налаштуваннях)
+1. **Top-bar navigation** (дефолт): у топбарі nav-пункти **Home · Licenses ·
+   Invoices · Activity · Users**, відцентровані по самому бару (`position:absolute;
+   left:50%`), активний підсвічений (`NAV_FOR_KIND`; для деталей — Licenses).
+   Сторінки рендеряться під баром у `#shellMain`.
+2. **Full-screen overlays**: nav-пунктів немає (`.tnav[hidden]`), базова сторінка
+   лише дашборд, усе інше відкривається **в одному** оверлеї `#pageOverlay`
+   (хедер = заголовок області + ✕, тіло `#pgoBody`). Дашборд лишається змонтований
+   під непрозорим оверлеєм. Заглиблення **замінює** контент оверлею — стеку немає.
+   - смуга оверлею показує **заголовок області** (`AREA_TITLES`/`AREA_FOR_KIND`):
+     у деталях це «Licenses», хоч зі списку, хоч із рядка дашборда;
+   - `#pgoBody[data-level]`: `root` (списки/форми — власні back, `h1` і підзаголовок
+     приховані, бо їхній back = ✕) / `deep` (деталі — back і власний заголовок є,
+     бо back веде на список). Правило: **back існує лише коли він ≠ close**;
+   - ✕ і Escape виходять на дашборд із будь-якої глибини.
+
+### Спільний контейнер контенту
+Усі сторінки в одному контейнері: `--pageW:1120px`, `--pageX:24px`, `--pageY:28px`,
+правило на `.pagewrap,.dwrap,.licview,.sheet` (центровано). Тому при переходах
+контент не стрибає горизонтально. Форми (Profile/Billing) мають власний ліміт
+~760px, але центровані в тому ж контейнері.
 
 ### Список поверхонь (kinds)
-- `dash` — **Dashboard (Overview) v2**: `#dashView`, full-width топ-бар (лого +
-  profile-hub меню), **без сайдбару**, центрована колонка ~1040px. Блоки: Products
-  (2/3) + дві create-CTA (1/3), Recent invoices, split Recent activity / Users.
-  «Show more →» ведуть на відповідні сторінки; back усіх list-сторінок вертає сюди.
-- `sub` / `perp` — сторінка деталей (спільний shell `#appView`). Плани:
-  `maker/prototype/pilot/startup/business` + `prototypeaddons` (Prototype з
-  докупленими add-on'ами: колонка Extra, ціна $126). Перпетуал — `perp`.
-- `products` / `products2` / `products3` — **сторінка Products** (`#licensesView`),
-  data-driven таблиця з `PRODUCTS`/`PRODUCTS_V3` через `renderProducts()`.
-  Три лейаути: `1` grouped (name+label, renewal+price+billing разом), `2` «one
-  column per field» (перша колонка Product, без Renewal), `3` «product-first
-  (neutral)»: Product·License·Type·Status·Created; у нього ще фільтр по лейблу.
-  Рядки TBMQ/Viaanix не мають детальних сторінок → відкривають stub (`openRow`).
-- `portfolio` — **Portfolio** (`#portfolioView`), теж заголовок «Products»,
-  згруповано по продукту з роллапами; спільні хедер-колонки над групами.
-- `invoices` / `activity` / `users` — окремі повні сторінки (зі списку дашборда).
-- `profile` / `billing` — **Profile settings** і **Billing & payment**, повні
-  форм-сторінки з профільного меню. Форм-система (нова, з токенів): `.setcard`
-  (секція+hint), `.field`/`.field2`, `.savebar` (Save **disabled until change**),
-  `.searchbox`, danger-картка, toggle `.switch`.
+- `dash` — **Dashboard (Home)**, стартова сторінка прототипу. Блоки: Licenses
+  (full-width таблиця, рендериться **тими самими** білдерами, що сторінка Licenses
+  у варіанті product-first — 3 найновіші рядки з реальними сторінками + рядок
+  перпетуалу), Recent invoices (колонки як на сторінці Invoices), Recent activity
+  (фід), Users (колонки як на сторінці Users, без Activation status). Праворуч
+  угорі — split-кнопка «+ New license».
+- `dashempty` — **новий користувач**: структура планів із перемикачами
+  **Product** (ThingsBoard/TBMQ) × **Billing** (Pay-as-you-go/Perpetual), дані з
+  `EC_PLANS`. TB×PAYG — 5 карток, решта — одна центрована + «You can fine-tune
+  capacity before checkout». Deployment-перемикача немає (портал self-managed).
+- `sub` / `perp` — деталі (спільний `#appView`): `maker/prototype/pilot/startup/
+  business` + `prototypeaddons`, перпетуал — `perp`.
+- `products3` — **сторінка Licenses** у флоу (product-first neutral). У флоу
+  ведуть **лише** на неї (back із деталей — жорстко `products3`).
+- `invoices` / `activity` / `users` / `profile` / `billing` — повні сторінки.
+- Архів: `products` (grouped), `products2` (one column per field), `portfolio`.
+
+### Активність — фід, не таблиця
+`ACTIVITY` (список подій) + `feedItem()` рендерять і сторінку Activity, і блок на
+дашборді (там 3 останні). Елемент: іконка типу (заливка `--track`), muted-мета
+(`System note` / `Note` + час), фраза з виділеними сутностями, «Details:» лише
+за наявності дельти, і кнопка з raw-JSON у модалці «Audit log details».
+
+### Таблиці
+Колонки дій позначені класом `cellact` (+ `th[aria-label$="ctions"]`) і
+стискаються під контент із `text-align:right`, щоб дії тримались краю таблиці.
+Колонки з даними, що стоять останніми (Created Time в Instances, Limit у Plan &
+Add-ons), свідомо не зачеплені.
 
 ### Стандартний тулбар (усі list-сторінки однаково)
 Зліва направо: **`.searchbox`** (persistent input ~280px, лупа всередині, page-
 placeholder) → фільтри (якщо є) → `.spacer` → refresh (outlined icon-btn) →
 **primary** (напр. «+ New license») в самому правому куті. Search-інпути поки
-**невізуальні** (без логіки). Патерн застосований на Products, Portfolio,
+**невізуальні** (без логіки). Патерн застосований на Licenses, Portfolio,
 Invoices, Activity, Users, Instances-таб, Logs-таб.
 
-### Пікер сторінок (тимчасовий)
-⚙-кнопка внизу праворуч → «Prototype settings». Перемикачі: «Manage add-ons style»
-(Modal/Full-screen) і «Details page» — radio-список: Dashboard · група **Products**
-(Grouped / One column per field / Product-first / Portfolio) · група **Pages**
-(Invoices / Activity / Users / Profile settings / Billing) · група Perpetual ·
-група Subscription plans (Maker…Business, Prototype + add-ons). Дефолт —
-**Prototype**. Стан у JS-змінних (`detailsPage`, `productsVariant`, `addonsStyle`),
-без persist.
+### Пікер сторінок (тимчасовий, контекстний)
+⚙ внизу праворуч → «Prototype settings». Порядок: **Flow** (Top-bar navigation /
+Full-screen overlays) → таби **Settings | Archive**.
+- Settings: «Dashboard (Home)» (populated / new user) + Products →
+  «Product-first (neutral)». Варіанти планів (Maker…Business, Prototype + add-ons)
+  і «Perpetual license details» показуються **лише** коли відкрита сторінка деталей
+  (`syncSettingsContext`).
+- Archive: `products`, `products2`, `portfolio` + перемикач Manage add-ons
+  (Full-screen = флоу / Modal = архів).
+- Секцій «Pages» і окремої «Perpetual» немає — ці сторінки досяжні у флоу.
+- Стан у JS-змінних (`flowMode`, `detailsPage`, `productsVariant`, `addonsStyle`),
+  без persist.
 
 ### Демо-хуки
 - `window.showSubAlert('…')` / `clearSubAlert()` — банер на деталях.
 - `window.setFeature('edge'|'trendz'|'whitelabel', on)` — чипи фіч на поточній
-  details-сторінці. (Дашбордного банера `showDashAlert` більше нема у v2 —
-  функція лишилась як no-op, бо `#dashAlert` прибрано.)
+  details-сторінці.
 
 ## Підтверджені дані
 
@@ -143,17 +185,33 @@ Prototype + add-ons = $126/mo (1+2 prod, 2M+2M AI, Edge+Trendz).
 для ThingsBoard, TBMQ PE + Professional edition для TBMQ, Offline для Viaanix.
 Типи білінгу: Subscription / Perpetual / Offline.
 
-**Дати**: у списках/картках формат `Mon DD YYYY`; таймстемпи логів/activity —
-ISO `YYYY-MM-DD HH:MM:SS` (свідомо, як у Logs-табі).
+**Дати**: у списках/картках — `Mon DD YYYY` (напр. `Aug 30 2026`); у фіді
+активності — `19 Aug 2026, 13:13` (формат із референсу); у таблицях логів та
+інвойсів — ISO `YYYY-MM-DD HH:MM:SS`. Розбіжність фід↔ISO свідома, але не
+узгоджена остаточно — питання відкрите.
 
 ## Дві поверхні «Manage add-ons» (не плутати)
-1. **Modal** (`#addonsOverlay`, контролер `AM`) — компактна двокрокова модалка.
-2. **Full-screen** (`#fsAddons`, контролер `AMF`) — окрема сторінка.
+1. **Full-screen** (`#fsAddons`, контролер `AMF`) — **це варіант флоу** (дефолт).
+2. **Modal** (`#addonsOverlay`, контролер `AM`) — архівна двокрокова модалка,
+   вибирається в Archive-табі налаштувань.
 Класи `.am-*` спільні; щоб змінити лише full-screen — скоупи `.fs-screen .am-…`.
 Проратація фіксована **16 з 31 дня** (картка Next charge каже «in 16 days», щоб не
 суперечити — це вже узгоджено).
 
 ## Відкриті питання / борг
+- **Немає сторінки створення ліцензії.** «+ New license» (дашборд, Licenses,
+  Portfolio) відкриває stub-модалку в **обох** флоу; в оверлейному флоу ТЗ хотіло
+  «overlay with the create flow entry», але презентувати нічого — потрібна спільна
+  сторінка-заготовка. Рішення за користувачкою.
+- **Превʼю Invoices і Users на дашборді — статичні копії рядків** цих сторінок
+  (Licenses-превʼю і фід уже беруть спільні джерела). Зміниш дані на сторінці —
+  треба правити і превʼю.
+- **Хронологія фіду суперечлива**: порядок задала користувачка (newest first), тож
+  зверху «Subscription created», а нижче «Plan changed» — тобто підписку ніби
+  створили після зміни плану. Виправляється переворотом масиву `ACTIVITY`.
+- **`prototypeaddons` не має лінка у флоу**: у `PRODUCTS_V3` (product-first) такого
+  рядка немає, тож сторінка досяжна лише через контекстний список у налаштуваннях —
+  так вирішено свідомо («хай там і лежить»).
 - **`AM`/`AMF` не знають про плани**: жорстко зашитий Prototype (BASE 39, incl
   1 prod / 2M AI). Відкривши «Manage» на Business — побачиш дані Prototype.
   Полагодити = перевести контролери на `PAGES`.
