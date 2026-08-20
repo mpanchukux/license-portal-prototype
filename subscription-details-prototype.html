@@ -260,6 +260,9 @@
   .insttype[hidden]{display:none}
   .pager.instpager{margin-top:40px}
   .rowactions{display:inline-flex;align-items:center;gap:16px;white-space:nowrap}
+  /* action columns shrink to their content, so row actions sit at the table's right
+     edge instead of floating in the middle of an over-wide last column */
+  th[aria-label$="ctions"],th.cellact,td.cellact{width:1%;white-space:nowrap;text-align:right}
   /* invoices: fixed proportional columns so the row fills the width evenly and the
      actions sit at the right edge instead of floating with a gap */
   .invtable{table-layout:fixed}
@@ -405,6 +408,9 @@
   .sp-opt{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink);padding:3px 4px;border-radius:5px;cursor:pointer}
   .sp-opt:hover{background:var(--hover)}
   .sp-opt input{accent-color:var(--ink);margin:0;flex:none}
+  /* page-specific variant group, shown only in that page's context */
+  .sp-ctx{display:flex;flex-direction:column;gap:1px}
+  .sp-ctx[hidden],#spMain[hidden],#spArchive[hidden]{display:none}
   .seg{display:flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
   .seg label{flex:1;position:relative;margin:0}
   .seg input{position:absolute;opacity:0;pointer-events:none}
@@ -496,6 +502,9 @@
 
   .dmain{flex:1;overflow:visible;padding:26px 24px 44px}
   .dwrap{max-width:1040px;margin:0 auto}
+  /* welcome text and the page-level action sit on one row */
+  .dwelcome{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .dwelcome .dw-txt{flex:1;min-width:0}
   .dwelcome h1{margin:0;font-size:22px;font-weight:800;letter-spacing:-.01em}
   .dwelcome p{margin:5px 0 0;font-size:13px;color:var(--mid)}
 
@@ -520,12 +529,10 @@
   .di-row .di-date{flex:0 1 auto}
   /* Recent activity preview: muted timestamp on the right (replaces the status chip) */
   .da-when{font-size:11.5px;color:var(--faint);font-variant-numeric:tabular-nums;white-space:nowrap;flex:none}
-  /* page-level create action: one split button, right-aligned above the blocks */
-  .dtop{display:flex;align-items:center;margin-top:20px}
-  .dtop .sp{flex:1}
   /* preview tables inside a dashboard block */
   .dblock table{margin-top:10px}
   .dblock table td{padding:11px 8px}
+
   .dmini{flex:1;min-width:0}
   .dmini .k{font-size:13px;color:var(--ink)}
   .dmini .s{font-size:11.5px;color:var(--faint);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -575,7 +582,7 @@
   .feed{margin-top:8px}
   .fitem{display:flex;align-items:flex-start;gap:12px;padding:14px 2px;border-bottom:1px dashed var(--line2)}
   .fitem:last-child{border-bottom:0}
-  .fi-ic{width:var(--btnH);height:var(--btnH);flex:none;border:1px solid var(--line2);border-radius:5px;display:flex;align-items:center;justify-content:center;color:var(--mid);background:#fff}
+  .fi-ic{width:var(--btnH);height:var(--btnH);flex:none;border:0;border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--mid);background:var(--track)}
   .fi-body{flex:1;min-width:0}
   .fi-meta{font-size:11.5px;color:var(--faint);font-variant-numeric:tabular-nums}
   .fi-txt{margin-top:5px;font-size:13px;color:var(--ink);line-height:1.5}
@@ -931,7 +938,7 @@
                   <tr>
                     <td class="mono">INV-2026-07</td><td>2026-07-30</td><td class="num" id="invAmount">$39.00</td>
                     <td><span class="pill">Paid</span></td>
-                    <td><span class="rowactions">
+                    <td class="cellact"><span class="rowactions">
                       <button class="link" data-stub="Download PDF">Download PDF</button>
                       <button class="link" data-stub="View invoice">View invoice</button>
                     </span></td>
@@ -961,7 +968,7 @@
                     <!-- inferred date: a capacity purchase made after the licence was issued -->
                     <td class="mono">INV-2026-08</td><td>2026-08-20</td><td class="num">$1,999.00</td>
                     <td><span class="pill">Paid</span></td>
-                    <td><span class="rowactions">
+                    <td class="cellact"><span class="rowactions">
                       <button class="link" data-stub="Download PDF">Download PDF</button>
                       <button class="link" data-stub="View invoice">View invoice</button>
                     </span></td>
@@ -970,7 +977,7 @@
                     <!-- the initial licence purchase: confirmed one-time price -->
                     <td class="mono">INV-2026-08A</td><td>2026-08-13</td><td class="num">$4,999.00</td>
                     <td><span class="pill">Paid</span></td>
-                    <td><span class="rowactions">
+                    <td class="cellact"><span class="rowactions">
                       <button class="link" data-stub="Download PDF">Download PDF</button>
                       <button class="link" data-stub="View invoice">View invoice</button>
                     </span></td>
@@ -1073,7 +1080,7 @@
                     <th>User</th>
                     <th>Type</th>
                     <th>Status</th>
-                    <th>Details</th>
+                    <th class="cellact">Details</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1082,7 +1089,7 @@
                     <td>mpanchuk@thingsboard.io</td>
                     <td>Subscription created</td>
                     <td>Success</td>
-                    <td><button class="iconbtn ib" data-stub="Audit entry details" aria-label="Details"><svg class="icon" viewBox="0 0 24 24" style="fill:currentColor;stroke:none"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button></td>
+                    <td class="cellact"><button class="iconbtn ib" data-stub="Audit entry details" aria-label="Details"><svg class="icon" viewBox="0 0 24 24" style="fill:currentColor;stroke:none"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button></td>
                   </tr>
                 </tbody>
               </table>
@@ -1214,7 +1221,7 @@
         <td><span class="chip">Subscription</span></td>
         <td><span class="pill soft">Active</span></td>
         <td><span class="pf-billtext">$299 / mo · auto-pay</span></td>
-        <td>
+        <td class="cellact">
           <div class="lic-actions">
             <button class="iconbtn ib tip lic-copy" aria-label="Copy license secret" data-tip="Copy license secret"><svg class="icon" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg></button>
             <div class="menu">
@@ -1233,7 +1240,7 @@
         <td><span class="chip">Subscription</span></td>
         <td><span class="pill attn">Payment failed</span></td>
         <td><span class="pf-billtext attn">$39 / mo · payment failed</span></td>
-        <td>
+        <td class="cellact">
           <div class="lic-actions">
             <button class="iconbtn ib tip lic-copy" aria-label="Copy license secret" data-tip="Copy license secret"><svg class="icon" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg></button>
             <div class="menu">
@@ -1252,7 +1259,7 @@
         <td><span class="chip">Perpetual</span></td>
         <td><span class="pill soft">Active</span></td>
         <td><span class="pf-billtext">one-time · paid</span></td>
-        <td>
+        <td class="cellact">
           <div class="lic-actions">
             <button class="iconbtn ib tip lic-copy" aria-label="Copy license secret" data-tip="Copy license secret"><svg class="icon" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg></button>
             <div class="menu">
@@ -1276,7 +1283,7 @@
         <td><span class="chip">Subscription</span></td>
         <td><span class="pill soft">Active</span></td>
         <td><span class="pf-billtext">$15 / mo · auto-pay</span></td>
-        <td>
+        <td class="cellact">
           <div class="lic-actions">
             <button class="iconbtn ib tip lic-copy" aria-label="Copy license secret" data-tip="Copy license secret"><svg class="icon" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg></button>
             <div class="menu">
@@ -1301,7 +1308,7 @@
         <td><span class="chip">Offline</span></td>
         <td><span class="pill attn">Updates expiring</span></td>
         <td><span class="pf-billtext attn">one-time · updates expiring</span></td>
-        <td>
+        <td class="cellact">
           <div class="lic-actions">
             <button class="iconbtn ib tip lic-copy" aria-label="Copy license secret" data-tip="Copy license secret"><svg class="icon" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg></button>
             <div class="menu">
@@ -1341,13 +1348,13 @@
       </tr>
     </thead>
     <tbody>
-      <tr><td class="mono">NAWE49WG-0007</td><td>Aug 18 2026</td><td class="num">$166.46</td><td><span class="pill">Paid</span></td><td>Automatic payment</td><td><span class="rowactions"><button class="link" data-stub="Download PDF">Download PDF</button><button class="link" data-stub="View invoice">View invoice</button></span></td></tr>
-      <tr><td class="mono">NAWE49WG-0006</td><td>Aug 18 2026</td><td class="num">$2,999.00</td><td><span class="pill">Paid</span></td><td>Automatic payment</td><td><span class="rowactions"><button class="link" data-stub="Download PDF">Download PDF</button><button class="link" data-stub="View invoice">View invoice</button></span></td></tr>
-      <tr><td class="mono">NAWE49WG-0005</td><td>Aug 18 2026</td><td class="num">$15.00</td><td><span class="pill">Paid</span></td><td>Automatic payment</td><td><span class="rowactions"><button class="link" data-stub="Download PDF">Download PDF</button><button class="link" data-stub="View invoice">View invoice</button></span></td></tr>
-      <tr><td class="mono">NAWE49WG-0004</td><td>Aug 13 2026</td><td class="num">$299.00</td><td><span class="pill">Paid</span></td><td>Automatic payment</td><td><span class="rowactions"><button class="link" data-stub="Download PDF">Download PDF</button><button class="link" data-stub="View invoice">View invoice</button></span></td></tr>
-      <tr><td class="mono">NAWE49WG-0003</td><td>Jul 30 2026</td><td class="num">$39.00</td><td><span class="pill">Paid</span></td><td>Automatic payment</td><td><span class="rowactions"><button class="link" data-stub="Download PDF">Download PDF</button><button class="link" data-stub="View invoice">View invoice</button></span></td></tr>
-      <tr><td class="mono">NAWE49WG-0002</td><td>Jul 29 2026</td><td class="num">$139.00</td><td><span class="pill">Paid</span></td><td>Automatic payment</td><td><span class="rowactions"><button class="link" data-stub="Download PDF">Download PDF</button><button class="link" data-stub="View invoice">View invoice</button></span></td></tr>
-      <tr><td class="mono">NAWE49WG-0001</td><td>Jul 27 2026</td><td class="num">$4,999.00</td><td><span class="pill">Paid</span></td><td>Automatic payment</td><td><span class="rowactions"><button class="link" data-stub="Download PDF">Download PDF</button><button class="link" data-stub="View invoice">View invoice</button></span></td></tr>
+      <tr><td class="mono">NAWE49WG-0007</td><td>Aug 18 2026</td><td class="num">$166.46</td><td><span class="pill">Paid</span></td><td>Automatic payment</td><td class="cellact"><span class="rowactions"><button class="link" data-stub="Download PDF">Download PDF</button><button class="link" data-stub="View invoice">View invoice</button></span></td></tr>
+      <tr><td class="mono">NAWE49WG-0006</td><td>Aug 18 2026</td><td class="num">$2,999.00</td><td><span class="pill">Paid</span></td><td>Automatic payment</td><td class="cellact"><span class="rowactions"><button class="link" data-stub="Download PDF">Download PDF</button><button class="link" data-stub="View invoice">View invoice</button></span></td></tr>
+      <tr><td class="mono">NAWE49WG-0005</td><td>Aug 18 2026</td><td class="num">$15.00</td><td><span class="pill">Paid</span></td><td>Automatic payment</td><td class="cellact"><span class="rowactions"><button class="link" data-stub="Download PDF">Download PDF</button><button class="link" data-stub="View invoice">View invoice</button></span></td></tr>
+      <tr><td class="mono">NAWE49WG-0004</td><td>Aug 13 2026</td><td class="num">$299.00</td><td><span class="pill">Paid</span></td><td>Automatic payment</td><td class="cellact"><span class="rowactions"><button class="link" data-stub="Download PDF">Download PDF</button><button class="link" data-stub="View invoice">View invoice</button></span></td></tr>
+      <tr><td class="mono">NAWE49WG-0003</td><td>Jul 30 2026</td><td class="num">$39.00</td><td><span class="pill">Paid</span></td><td>Automatic payment</td><td class="cellact"><span class="rowactions"><button class="link" data-stub="Download PDF">Download PDF</button><button class="link" data-stub="View invoice">View invoice</button></span></td></tr>
+      <tr><td class="mono">NAWE49WG-0002</td><td>Jul 29 2026</td><td class="num">$139.00</td><td><span class="pill">Paid</span></td><td>Automatic payment</td><td class="cellact"><span class="rowactions"><button class="link" data-stub="Download PDF">Download PDF</button><button class="link" data-stub="View invoice">View invoice</button></span></td></tr>
+      <tr><td class="mono">NAWE49WG-0001</td><td>Jul 27 2026</td><td class="num">$4,999.00</td><td><span class="pill">Paid</span></td><td>Automatic payment</td><td class="cellact"><span class="rowactions"><button class="link" data-stub="Download PDF">Download PDF</button><button class="link" data-stub="View invoice">View invoice</button></span></td></tr>
     </tbody>
   </table>
   <div class="pager air">
@@ -1408,9 +1415,9 @@
       </tr>
     </thead>
     <tbody>
-      <tr><td>Dev User</td><td>dev@thingsboard.io</td><td><span class="pill attn">Pending</span></td><td>Aug 02 2026</td><td><span class="rowactions"><button class="link" data-stub="Login as Dev User">Login as →</button><button class="link" data-stub="Delete Dev User">Delete</button></span></td></tr>
-      <tr><td>A. Admin</td><td>a.admin@thingsboard.io</td><td><span class="pill soft">Activated</span></td><td>Jul 20 2026</td><td><span class="rowactions"><button class="link" data-stub="Login as A. Admin">Login as →</button><button class="link" data-stub="Delete A. Admin">Delete</button></span></td></tr>
-      <tr><td>Mariia Panchuk</td><td>mpanchuk@thingsboard.io</td><td><span class="pill soft">Activated</span></td><td>Jul 17 2026</td><td><span class="rowactions"><button class="link" data-stub="Login as Mariia Panchuk">Login as →</button><button class="link" data-stub="Delete Mariia Panchuk">Delete</button></span></td></tr>
+      <tr><td>Dev User</td><td>dev@thingsboard.io</td><td><span class="pill attn">Pending</span></td><td>Aug 02 2026</td><td class="cellact"><span class="rowactions"><button class="link" data-stub="Login as Dev User">Login as →</button><button class="link" data-stub="Delete Dev User">Delete</button></span></td></tr>
+      <tr><td>A. Admin</td><td>a.admin@thingsboard.io</td><td><span class="pill soft">Activated</span></td><td>Jul 20 2026</td><td class="cellact"><span class="rowactions"><button class="link" data-stub="Login as A. Admin">Login as →</button><button class="link" data-stub="Delete A. Admin">Delete</button></span></td></tr>
+      <tr><td>Mariia Panchuk</td><td>mpanchuk@thingsboard.io</td><td><span class="pill soft">Activated</span></td><td>Jul 17 2026</td><td class="cellact"><span class="rowactions"><button class="link" data-stub="Login as Mariia Panchuk">Login as →</button><button class="link" data-stub="Delete Mariia Panchuk">Delete</button></span></td></tr>
     </tbody>
   </table>
   <div class="pager air">
@@ -1547,14 +1554,12 @@
 <div class="dashview" id="dashView" hidden>
   <div class="dmain">
     <div class="dwrap">
+      <!-- welcome text and the create action share one row -->
       <div class="dwelcome">
-        <h1>Welcome back, Mariia</h1>
-        <p>ThingsBoard · here's what's happening with your licenses.</p>
-      </div>
-
-      <!-- create action: one split button, top right, above the Licenses block -->
-      <div class="dtop">
-        <span class="sp"></span>
+        <div class="dw-txt">
+          <h1>Welcome back, Mariia</h1>
+          <p>ThingsBoard · here's what's happening with your licenses.</p>
+        </div>
         <div class="dropwrap">
           <button class="btn" id="dashNewBtn" aria-haspopup="true" aria-expanded="false">+ New license ▾</button>
           <div class="dropmenu right" id="dashNewMenu" hidden>
@@ -1596,9 +1601,9 @@
             </tr>
           </thead>
           <tbody>
-            <tr><td class="mono">NAWE49WG-0007</td><td>Aug 18 2026</td><td class="num">$166.46</td><td><span class="pill">Paid</span></td><td>Automatic payment</td><td><span class="rowactions"><button class="link" data-stub="Download PDF">Download PDF</button><button class="link" data-stub="View invoice">View invoice</button></span></td></tr>
-            <tr><td class="mono">NAWE49WG-0006</td><td>Aug 18 2026</td><td class="num">$2,999.00</td><td><span class="pill">Paid</span></td><td>Automatic payment</td><td><span class="rowactions"><button class="link" data-stub="Download PDF">Download PDF</button><button class="link" data-stub="View invoice">View invoice</button></span></td></tr>
-            <tr><td class="mono">NAWE49WG-0005</td><td>Aug 18 2026</td><td class="num">$15.00</td><td><span class="pill">Paid</span></td><td>Automatic payment</td><td><span class="rowactions"><button class="link" data-stub="Download PDF">Download PDF</button><button class="link" data-stub="View invoice">View invoice</button></span></td></tr>
+            <tr><td class="mono">NAWE49WG-0007</td><td>Aug 18 2026</td><td class="num">$166.46</td><td><span class="pill">Paid</span></td><td>Automatic payment</td><td class="cellact"><span class="rowactions"><button class="link" data-stub="Download PDF">Download PDF</button><button class="link" data-stub="View invoice">View invoice</button></span></td></tr>
+            <tr><td class="mono">NAWE49WG-0006</td><td>Aug 18 2026</td><td class="num">$2,999.00</td><td><span class="pill">Paid</span></td><td>Automatic payment</td><td class="cellact"><span class="rowactions"><button class="link" data-stub="Download PDF">Download PDF</button><button class="link" data-stub="View invoice">View invoice</button></span></td></tr>
+            <tr><td class="mono">NAWE49WG-0005</td><td>Aug 18 2026</td><td class="num">$15.00</td><td><span class="pill">Paid</span></td><td>Automatic payment</td><td class="cellact"><span class="rowactions"><button class="link" data-stub="Download PDF">Download PDF</button><button class="link" data-stub="View invoice">View invoice</button></span></td></tr>
           </tbody>
         </table>
       </div>
@@ -1628,9 +1633,9 @@
             </tr>
           </thead>
           <tbody>
-            <tr><td>Dev User</td><td>dev@thingsboard.io</td><td>Aug 02 2026</td><td><span class="rowactions"><button class="link" data-stub="Login as Dev User">Login as →</button><button class="link" data-stub="Delete Dev User">Delete</button></span></td></tr>
-            <tr><td>A. Admin</td><td>a.admin@thingsboard.io</td><td>Jul 20 2026</td><td><span class="rowactions"><button class="link" data-stub="Login as A. Admin">Login as →</button><button class="link" data-stub="Delete A. Admin">Delete</button></span></td></tr>
-            <tr><td>Mariia Panchuk</td><td>mpanchuk@thingsboard.io</td><td>Jul 17 2026</td><td><span class="rowactions"><button class="link" data-stub="Login as Mariia Panchuk">Login as →</button><button class="link" data-stub="Delete Mariia Panchuk">Delete</button></span></td></tr>
+            <tr><td>Dev User</td><td>dev@thingsboard.io</td><td>Aug 02 2026</td><td class="cellact"><span class="rowactions"><button class="link" data-stub="Login as Dev User">Login as →</button><button class="link" data-stub="Delete Dev User">Delete</button></span></td></tr>
+            <tr><td>A. Admin</td><td>a.admin@thingsboard.io</td><td>Jul 20 2026</td><td class="cellact"><span class="rowactions"><button class="link" data-stub="Login as A. Admin">Login as →</button><button class="link" data-stub="Delete A. Admin">Delete</button></span></td></tr>
+            <tr><td>Mariia Panchuk</td><td>mpanchuk@thingsboard.io</td><td>Jul 17 2026</td><td class="cellact"><span class="rowactions"><button class="link" data-stub="Login as Mariia Panchuk">Login as →</button><button class="link" data-stub="Delete Mariia Panchuk">Delete</button></span></td></tr>
           </tbody>
         </table>
       </div>
@@ -1999,38 +2004,51 @@
 <div class="settings-panel" id="settingsPanel" role="dialog" aria-label="Prototype settings" hidden>
   <h4>Prototype settings</h4>
   <div class="sp-note">Prototype-only — not part of the product UI.</div>
-  <div class="sp-label">Manage add-ons style</div>
-  <div class="seg">
-    <label><input type="radio" name="addonsStyle" value="modal" checked><span>Modal</span></label>
-    <label><input type="radio" name="addonsStyle" value="fullscreen"><span>Full-screen</span></label>
+
+  <!-- deprecated / alternative explorations live apart from the working list -->
+  <div class="seg" role="radiogroup" aria-label="Settings section">
+    <label><input type="radio" name="spTab" value="main" checked><span>Settings</span></label>
+    <label><input type="radio" name="spTab" value="archive"><span>Archive</span></label>
   </div>
-  <!-- Temporary home for the page picker: until the nav is built and each page
-       gets its own route, this decides which details page renders. Every
-       subscription plan renders the same template with that plan's content. -->
-  <div class="sp-label" style="margin-top:14px">Details page</div>
-  <div class="sp-pick" role="radiogroup" aria-label="Details page">
-    <label class="sp-opt"><input type="radio" name="detailsPage" value="dashboard"><span>Dashboard — populated</span></label>
-    <label class="sp-opt"><input type="radio" name="detailsPage" value="dashempty"><span>Dashboard — new user (empty)</span></label>
-    <div class="sp-grouphead">Products</div>
-    <label class="sp-opt"><input type="radio" name="detailsPage" value="products"><span>Grouped (as now)</span></label>
-    <label class="sp-opt"><input type="radio" name="detailsPage" value="products2"><span>One column per field</span></label>
-    <label class="sp-opt"><input type="radio" name="detailsPage" value="products3"><span>Product-first (neutral)</span></label>
-    <label class="sp-opt"><input type="radio" name="detailsPage" value="portfolio"><span>Portfolio (grouped by product)</span></label>
-    <div class="sp-grouphead">Pages</div>
-    <label class="sp-opt"><input type="radio" name="detailsPage" value="invoices"><span>Invoices</span></label>
-    <label class="sp-opt"><input type="radio" name="detailsPage" value="activity"><span>Activity</span></label>
-    <label class="sp-opt"><input type="radio" name="detailsPage" value="users"><span>Users</span></label>
-    <label class="sp-opt"><input type="radio" name="detailsPage" value="profile"><span>Profile settings</span></label>
-    <label class="sp-opt"><input type="radio" name="detailsPage" value="billing"><span>Billing &amp; payment</span></label>
-    <div class="sp-grouphead">Perpetual</div>
-    <label class="sp-opt"><input type="radio" name="detailsPage" value="perp"><span>Perpetual license details</span></label>
-    <div class="sp-grouphead">Subscription plans</div>
-    <label class="sp-opt"><input type="radio" name="detailsPage" value="maker"><span>Maker</span></label>
-    <label class="sp-opt"><input type="radio" name="detailsPage" value="prototype" checked><span>Prototype</span></label>
-    <label class="sp-opt"><input type="radio" name="detailsPage" value="pilot"><span>Pilot</span></label>
-    <label class="sp-opt"><input type="radio" name="detailsPage" value="startup"><span>Startup</span></label>
-    <label class="sp-opt"><input type="radio" name="detailsPage" value="business"><span>Business</span></label>
-    <label class="sp-opt"><input type="radio" name="detailsPage" value="prototypeaddons"><span>Prototype + add-ons</span></label>
+
+  <div id="spMain">
+    <!-- global: a flow behaviour option, not page-specific -->
+    <div class="sp-label" style="margin-top:14px">Manage add-ons style</div>
+    <div class="seg">
+      <label><input type="radio" name="addonsStyle" value="modal" checked><span>Modal</span></label>
+      <label><input type="radio" name="addonsStyle" value="fullscreen"><span>Full-screen</span></label>
+    </div>
+
+    <!-- global entry points; every other page is reached by navigating the flow -->
+    <div class="sp-label" style="margin-top:14px">Dashboard (Home)</div>
+    <div class="sp-pick" role="radiogroup" aria-label="Dashboard">
+      <label class="sp-opt"><input type="radio" name="detailsPage" value="dashboard" checked><span>Dashboard — populated</span></label>
+      <label class="sp-opt"><input type="radio" name="detailsPage" value="dashempty"><span>Dashboard — new user (empty)</span></label>
+      <div class="sp-grouphead">Products</div>
+      <label class="sp-opt"><input type="radio" name="detailsPage" value="products3"><span>Product-first (neutral)</span></label>
+      <!-- plan variants only exist in the plans context (see syncSettingsContext) -->
+      <div class="sp-ctx" id="spPlanCtx" hidden>
+        <div class="sp-grouphead">Subscription plans</div>
+        <label class="sp-opt"><input type="radio" name="detailsPage" value="maker"><span>Maker</span></label>
+        <label class="sp-opt"><input type="radio" name="detailsPage" value="prototype"><span>Prototype</span></label>
+        <label class="sp-opt"><input type="radio" name="detailsPage" value="pilot"><span>Pilot</span></label>
+        <label class="sp-opt"><input type="radio" name="detailsPage" value="startup"><span>Startup</span></label>
+        <label class="sp-opt"><input type="radio" name="detailsPage" value="business"><span>Business</span></label>
+        <label class="sp-opt"><input type="radio" name="detailsPage" value="prototypeaddons"><span>Prototype + add-ons</span></label>
+        <div class="sp-grouphead">Perpetual</div>
+        <label class="sp-opt"><input type="radio" name="detailsPage" value="perp"><span>Perpetual license details</span></label>
+      </div>
+    </div>
+  </div>
+
+  <div id="spArchive" hidden>
+    <div class="sp-note" style="margin-top:14px">Deprecated explorations — kept for reference, not part of the flow.</div>
+    <div class="sp-pick" role="radiogroup" aria-label="Archived variants">
+      <div class="sp-grouphead">Products</div>
+      <label class="sp-opt"><input type="radio" name="detailsPage" value="products"><span>Grouped (as now)</span></label>
+      <label class="sp-opt"><input type="radio" name="detailsPage" value="products2"><span>One column per field</span></label>
+      <label class="sp-opt"><input type="radio" name="detailsPage" value="portfolio"><span>Portfolio (grouped by product)</span></label>
+    </div>
   </div>
 </div>
 
@@ -2530,7 +2548,7 @@
     prototypeaddons: { kind:'sub', name:'Prototype', price:'$126.00', devices:'50', prod:'1', ai:'2M', dev:'0',
                        extras:{ prod:'2', ai:'2M' }, whitelabel:false, edge:true, trendz:true }
   };
-  var detailsPage = 'prototype';
+  var detailsPage = 'dashboard';   // the prototype opens on the populated dashboard
 
   // entitlement amounts may carry a trailing "M" (AI) or thousands commas (devices)
   function parseUnit(v){ v = String(v == null ? '0' : v); var m = /M$/i.test(v); var n = parseFloat(v.replace(/,/g, '').replace(/M$/i, '')) || 0; return { n:n, m:m }; }
@@ -2589,8 +2607,8 @@
     for(var vk in VIEWS){ var vel = $(VIEWS[vk]); if(vel) vel.hidden = p.kind !== vk; if(p.kind === vk) standalone = true; }
     $('#appView').hidden = standalone;
     if(p.kind === 'dash') return;
-    if(p.kind === 'products'){ productsVariant = p.variant; lastProducts = detailsPage; renderProducts(); return; }
-    if(p.kind === 'portfolio'){ lastProducts = detailsPage; return; }
+    if(p.kind === 'products'){ productsVariant = p.variant; renderProducts(); return; }
+    if(p.kind === 'portfolio'){ return; }
     if(standalone) return; // invoices / activity / users — static content pages
     $$('[data-page]').forEach(function(el){ el.hidden = el.getAttribute('data-page') !== p.kind; });
     if(p.kind === 'sub'){
@@ -2601,8 +2619,25 @@
     renderPlanRows(p);
     renderFeatures(p);
   }
+  // wrap so context sync runs for every page change, including early returns
+  var applyDetailsPageInner = applyDetailsPage;
+  applyDetailsPage = function(){ applyDetailsPageInner(); syncSettingsContext(); };
   $$('input[name="detailsPage"]').forEach(function(r){
     r.addEventListener('change', function(){ if(r.checked){ detailsPage = r.value; applyDetailsPage(); } });
+  });
+  // the panel only lists what is relevant to the open page: globals always, the
+  // plan/perpetual variants only while a details page of that kind is open
+  function syncSettingsContext(){
+    var p = PAGES[detailsPage] || {}, ctx = $('#spPlanCtx');
+    if(ctx) ctx.hidden = !(p.kind === 'sub' || p.kind === 'perp');
+  }
+  $$('input[name="spTab"]').forEach(function(r){
+    r.addEventListener('change', function(){
+      if(!r.checked) return;
+      var archive = r.value === 'archive';
+      $('#spMain').hidden = archive;
+      $('#spArchive').hidden = !archive;
+    });
   });
   applyDetailsPage();
 
@@ -2616,9 +2651,10 @@
     var sm = $('#shellMain'); if(sm) sm.scrollTop = 0;   // reset the shared scroll region
     window.scrollTo(0, 0);
   }
-  // the details-page back button returns to whichever Products variant we came from
+  // the details-page back button always returns to the flow's Licenses page —
+  // the other list layouts are archived explorations, not part of the flow
   var backBtn = $('#backBtn');
-  if(backBtn) backBtn.addEventListener('click', function(){ goToPage(lastProducts); });
+  if(backBtn) backBtn.addEventListener('click', function(){ goToPage('products3'); });
   // every inner-content page (Products, Invoices, Activity, Users) returns to the Dashboard
   $$('.lic-back').forEach(function(b){ b.addEventListener('click', function(){ goToPage('dashboard'); }); });
   // shared shell: the logo is a persistent Home link from anywhere. Distinct from the
@@ -2672,7 +2708,7 @@
     return '<button role="menuitem" data-stub="Manage add-ons">Manage add-ons</button><button role="menuitem" data-stub="Change plan">Change plan</button><button role="menuitem" data-stub="Cancel subscription">Cancel subscription</button>';
   }
   function actionsCell(p){
-    return '<td><div class="lic-actions">'
+    return '<td class="cellact"><div class="lic-actions">'
       + '<button class="iconbtn ib tip lic-copy" aria-label="Copy license secret" data-tip="Copy license secret">' + COPYSVG + '</button>'
       + '<div class="menu"><button class="iconbtn ib" aria-haspopup="true" aria-expanded="false" aria-label="More actions">' + KEBAB + '</button>'
       + '<div class="pop" role="menu" hidden>' + menuItems(p.type) + '</div></div></div></td>';
@@ -2682,7 +2718,7 @@
   }
 
   // Products state: layout variant + Type filter + canceled toggle
-  var productsVariant = 1, lastProducts = 'products';
+  var productsVariant = 3;   // product-first is the variant the flow uses
   var licType = 'all', licShowCanceled = false;
 
   function headHtml(){
@@ -2938,9 +2974,14 @@
       var prev = productsVariant;
       productsVariant = 3;
       head.innerHTML = headHtml();
-      body.innerHTML = currentProducts()
-        .filter(function(p){ return p.goto && PAGES[p.goto]; })
-        .slice(0, 3).map(rowHtml).join('');
+      var rows = currentProducts().filter(function(p){ return p.goto && PAGES[p.goto]; });
+      var top = rows.slice(0, 3);
+      // keep one perpetual row so its details page has a direct in-flow entry point
+      if(!top.some(function(p){ return PAGES[p.goto].kind === 'perp'; })){
+        var perpRow = rows.filter(function(p){ return PAGES[p.goto].kind === 'perp'; })[0];
+        if(perpRow) top.push(perpRow);
+      }
+      body.innerHTML = top.map(rowHtml).join('');
       productsVariant = prev;
     }
     renderDashLicenses();
