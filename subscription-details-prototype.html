@@ -12,6 +12,8 @@
     --chrome:#efefec; --chromeLine:#dcdcd8; --hover:#f0f0ee; --sel:#e4e4e0;
     --btnH:31px;
     --backW:31px; --backGap:12px; --contentX:65px;  /* 22px head padding + 31 + 12 */
+    /* one shared page container: same width, same side padding, centred */
+    --pageW:1120px; --pageX:24px; --pageY:28px;
   }
   *{box-sizing:border-box}
   html,body{height:100%}
@@ -22,6 +24,10 @@
   }
   /* the shared shell: the top bar (.dtopbar) stays put; every page's view scrolls here */
   #shellMain{flex:1;min-height:0;overflow:auto;background:var(--bg)}
+  /* every page renders inside the same container: one max-width, centred, same
+     side padding — so nothing shifts horizontally when navigating between pages.
+     .dwrap = dashboards, .licview = list/settings pages, .sheet = details page. */
+  .pagewrap,.dwrap,.licview,.sheet{width:100%;max-width:var(--pageW);margin:0 auto;padding:var(--pageY) var(--pageX) 44px}
   button{font:inherit;cursor:pointer}
   a{color:inherit}
   :focus-visible{outline:2px solid var(--ink);outline-offset:2px;border-radius:3px}
@@ -63,9 +69,9 @@
 
   .crumb{padding:10px 22px;font-size:12px;color:var(--faint);background:var(--bg);border-bottom:1px solid var(--line2)}
   .crumb b{color:var(--mid);font-weight:600}
-  .content{padding:22px;overflow:auto}
-  .sheet{width:60%;margin:0}
-  @media(max-width:1100px){.sheet{width:100%}}
+  .content{padding:0;overflow:auto}
+  /* the shared container — see .pagewrap; .sheet is the details page's instance */
+  .sheet{width:100%}
 
   /* ---------- canvas ---------- */
   .canvas{background:var(--card);border:1px solid var(--line);border-radius:6px;overflow:hidden}
@@ -410,6 +416,8 @@
   .sp-opt input{accent-color:var(--ink);margin:0;flex:none}
   /* page-specific variant group, shown only in that page's context */
   .sp-ctx{display:flex;flex-direction:column;gap:1px}
+  .sp-opt.is-off,.sp-opt input:disabled + span{color:var(--faint)}
+  .sp-soon{font-size:11px;color:var(--faint);margin-left:4px;white-space:nowrap}
   .sp-ctx[hidden],#spMain[hidden],#spArchive[hidden]{display:none}
   .seg{display:flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
   .seg label{flex:1;position:relative;margin:0}
@@ -480,7 +488,7 @@
   /* ---------- Dashboard (Overview): full-width top bar, no sidebar, centered column ---------- */
   .app[hidden],.dashview[hidden],.licview[hidden]{display:none}
   .dashview{display:flex;flex-direction:column;min-height:100%;background:var(--bg)}
-  .dtopbar{display:flex;align-items:center;gap:14px;height:56px;flex:none;padding:0 24px;background:var(--card);border-bottom:1px solid var(--line2)}
+  .dtopbar{position:relative;display:flex;align-items:center;gap:14px;height:56px;flex:none;padding:0 24px;background:var(--card);border-bottom:1px solid var(--line2)}
   .dtopbar .sp{flex:1}
   .dbrand{display:flex;align-items:center;gap:10px}
   /* the logo doubles as a Home link — reset it to look identical as a <button> */
@@ -488,6 +496,20 @@
   .dbrand .mark{width:26px;height:26px;border:1px solid var(--line);border-radius:6px;display:flex;align-items:center;justify-content:center;background:#fff;color:var(--ink)}
   .dbrand .bt{font-size:13px;font-weight:700;line-height:1.1}
   .dbrand .bt .bsep{color:var(--faint);font-weight:400;margin:0 6px}
+  /* top-bar nav — same treatment as the old sidebar items, laid out horizontally */
+  /* centred on the bar itself, so the logo/profile widths don't shift it */
+  .tnav{position:absolute;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:2px}
+  .tnav-item{padding:7px 11px;border:1px solid transparent;border-radius:6px;background:transparent;color:var(--mid);font:inherit;font-size:13px}
+  .tnav-item:hover{background:var(--hover);color:var(--ink)}
+  .tnav-item.on{background:var(--sel);border-color:var(--chromeLine);color:var(--ink);font-weight:600}
+  .tnav[hidden]{display:none}
+  /* Flow 2 overlay: header mirrors the top bar so it reads as the same chrome */
+  .pgoverlay{position:fixed;inset:0;z-index:80;background:var(--bg);display:flex;flex-direction:column}
+  .pgoverlay[hidden]{display:none}
+  .pgo-head{flex:none;display:flex;align-items:center;gap:12px;height:56px;padding:0 24px;background:var(--card);border-bottom:1px solid var(--line2)}
+  .pgo-head .sp{flex:1}
+  .pgo-title{font-size:13.5px;font-weight:600;color:var(--ink)}
+  .pgo-body{flex:1;min-height:0;overflow:auto}
   .dprofile{position:relative}
   .dprofbtn{display:inline-flex;align-items:center;gap:9px;padding:4px 12px 4px 4px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--ink);font:inherit;font-size:12.5px}
   .dprofbtn:hover{border-color:var(--mid);background:var(--hover)}
@@ -500,8 +522,7 @@
   .dprofmenu button .who{font-size:11.5px;color:var(--faint)}
   .dprofmenu .sep{height:1px;background:var(--line2);margin:6px 4px}
 
-  .dmain{flex:1;overflow:visible;padding:26px 24px 44px}
-  .dwrap{max-width:1040px;margin:0 auto}
+  .dmain{flex:1;overflow:visible;padding:0}
   /* welcome text and the page-level action sit on one row */
   .dwelcome{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
   .dwelcome .dw-txt{flex:1;min-width:0}
@@ -569,7 +590,7 @@
     .nav{flex-direction:row}
   }
   /* ---------- Licenses (unified list): inner content only, no chrome ---------- */
-  .licview{max-width:1120px;margin:0;padding:32px 30px}
+
   .lic-back{margin-bottom:14px}
   /* back button in one line with the page title (list pages) */
   .lic-head{display:flex;align-items:center;gap:12px;margin-bottom:4px}
@@ -595,7 +616,7 @@
   /* ---------- Settings pages (Profile / Billing): forms, section cards, save footers ---------- */
   /* back button in its own left gutter; the content column aligns to one vertical
      line to its right — same gutter mechanic as the details header (.headgrid). */
-  .setgrid{display:grid;grid-template-columns:var(--backW) 1fr;column-gap:var(--backGap);align-items:start}
+  .setgrid{display:grid;grid-template-columns:var(--backW) 1fr;column-gap:var(--backGap);align-items:start;max-width:calc(760px + var(--backW) + var(--backGap));margin:0 auto}
   .setgrid .lic-back{margin-bottom:0}
   .setheadrow{display:flex;align-items:flex-start;gap:16px;max-width:760px}
   .setheadrow .sp{flex:1}
@@ -716,6 +737,14 @@
     <div class="mark"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4v16M4 12h16"/></svg></div>
     <div class="bt">ThingsBoard<span class="bsep">·</span>License Portal</div>
   </button>
+  <!-- primary nav for the top-bar flow; the active item follows the open page -->
+  <nav class="tnav" aria-label="Primary">
+    <button class="tnav-item" data-nav="home" data-goto="dashboard">Home</button>
+    <button class="tnav-item" data-nav="licenses" data-goto="products3">Licenses</button>
+    <button class="tnav-item" data-nav="invoices" data-goto="invoices">Invoices</button>
+    <button class="tnav-item" data-nav="activity" data-goto="activity">Activity</button>
+    <button class="tnav-item" data-nav="users" data-goto="users">Users</button>
+  </nav>
   <span class="sp"></span>
   <div class="dprofile">
     <button class="dprofbtn" id="dashProfBtn" aria-haspopup="true" aria-expanded="false">
@@ -1678,6 +1707,19 @@
 </div>
 </div><!-- /#shellMain -->
 
+<!-- ============ FLOW 2: full-screen page overlay ============
+     Chrome only. The page nodes are mounted into #pgoBody by presentPage(), so
+     there is exactly one copy of every page shared by both flows. Drilling
+     deeper replaces this body's content — no stacked overlays. -->
+<div class="pgoverlay" id="pageOverlay" hidden role="dialog" aria-modal="true" aria-labelledby="pgoTitle">
+  <header class="pgo-head">
+    <span class="pgo-title" id="pgoTitle"></span>
+    <span class="sp"></span>
+    <button class="fs-close" id="pgoClose" aria-label="Close and return to the dashboard" title="Close">✕</button>
+  </header>
+  <div class="pgo-body" id="pgoBody"></div>
+</div>
+
 <!-- ============ MODAL ============ -->
 <div class="overlay" id="overlay" hidden>
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
@@ -2005,20 +2047,20 @@
   <h4>Prototype settings</h4>
   <div class="sp-note">Prototype-only — not part of the product UI.</div>
 
+  <!-- prototype-wide mode, so it sits above everything else -->
+  <div class="sp-label">Flow</div>
+  <div class="sp-pick" role="radiogroup" aria-label="Flow">
+    <label class="sp-opt"><input type="radio" name="flowMode" value="topbar" checked><span>Top-bar navigation</span></label>
+    <label class="sp-opt"><input type="radio" name="flowMode" value="overlay"><span>Full-screen overlays</span></label>
+  </div>
+
   <!-- deprecated / alternative explorations live apart from the working list -->
-  <div class="seg" role="radiogroup" aria-label="Settings section">
+  <div class="seg" style="margin-top:14px" role="radiogroup" aria-label="Settings section">
     <label><input type="radio" name="spTab" value="main" checked><span>Settings</span></label>
     <label><input type="radio" name="spTab" value="archive"><span>Archive</span></label>
   </div>
 
   <div id="spMain">
-    <!-- global: a flow behaviour option, not page-specific -->
-    <div class="sp-label" style="margin-top:14px">Manage add-ons style</div>
-    <div class="seg">
-      <label><input type="radio" name="addonsStyle" value="modal" checked><span>Modal</span></label>
-      <label><input type="radio" name="addonsStyle" value="fullscreen"><span>Full-screen</span></label>
-    </div>
-
     <!-- global entry points; every other page is reached by navigating the flow -->
     <div class="sp-label" style="margin-top:14px">Dashboard (Home)</div>
     <div class="sp-pick" role="radiogroup" aria-label="Dashboard">
@@ -2048,6 +2090,10 @@
       <label class="sp-opt"><input type="radio" name="detailsPage" value="products"><span>Grouped (as now)</span></label>
       <label class="sp-opt"><input type="radio" name="detailsPage" value="products2"><span>One column per field</span></label>
       <label class="sp-opt"><input type="radio" name="detailsPage" value="portfolio"><span>Portfolio (grouped by product)</span></label>
+      <!-- the modal Manage add-ons is an archived exploration; the flow uses full-screen -->
+      <div class="sp-grouphead">Manage add-ons</div>
+      <label class="sp-opt"><input type="radio" name="addonsStyle" value="fullscreen" checked><span>Full-screen (flow)</span></label>
+      <label class="sp-opt"><input type="radio" name="addonsStyle" value="modal"><span>Modal (archived)</span></label>
     </div>
   </div>
 </div>
@@ -2496,7 +2542,7 @@
   })();
 
   // ----- which Manage add-ons variant opens (prototype setting, in-memory only) -----
-  var addonsStyle = 'modal';
+  var addonsStyle = 'fullscreen';   // the flow's Manage add-ons; modal is archived
   function openManageAddons(){ if(addonsStyle === 'fullscreen'){ AMF.open(); } else { AM.open(); } }
 
   /* ---------- prototype settings: add-ons style ---------- */
@@ -2599,17 +2645,73 @@
     PAGES[detailsPage][name] = !!on;
     renderFeatures(PAGES[detailsPage]);
   };
+  /* ---------- presentation layer ----------------------------------------------
+     Each page's content lives in exactly ONE node (PAGE_NODES) — there is no
+     per-flow copy of any page. The shell only decides *where* that node is
+     presented: today it is mounted in the top-bar shell's scroll region; the
+     overlay flow will mount the same node into an overlay host, so adding it
+     means adding a host + an entry in FLOW_HOSTS, not duplicating markup.
+     `sub` and `perp` deliberately share #appView — one details template. */
+  var PAGE_NODES = {
+    dash:'#dashView', dashempty:'#dashEmptyView',
+    products:'#licensesView', portfolio:'#portfolioView',
+    invoices:'#invoicesView', activity:'#activityView', users:'#usersView',
+    profile:'#profileView', billing:'#billingView',
+    sub:'#appView', perp:'#appView'
+  };
+  var flowMode = 'topbar';                    // 'topbar' = pages under the nav bar, 'overlay' = full-screen overlay
+  var FLOW_HOSTS = { topbar:'#shellMain', overlay:'#pgoBody' };
+  // overlay header titles (chrome), by page kind
+  var PAGE_TITLES = { products:'Licenses', portfolio:'Licenses', invoices:'Invoices', activity:'Activity',
+                      users:'Users', profile:'Profile settings', billing:'Billing & payment',
+                      sub:'Subscription details', perp:'Perpetual license details' };
+  function isBaseKind(kind){ return kind === 'dash' || kind === 'dashempty'; }
+  // which top-bar nav item owns each page
+  var NAV_FOR_KIND = { dash:'home', dashempty:'home', products:'licenses', portfolio:'licenses',
+                       sub:'licenses', perp:'licenses', invoices:'invoices', activity:'activity', users:'users' };
+  function syncTopNav(kind){
+    var active = NAV_FOR_KIND[kind] || '';
+    $$('.tnav-item').forEach(function(b){
+      var on = b.getAttribute('data-nav') === active;
+      b.classList.toggle('on', on);
+      if(on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
+    });
+  }
+  // Flow 2 has no nav items: navigation happens from the dashboard and profile menu
+  function syncFlowChrome(){
+    var nav = $('.tnav');
+    if(nav) nav.hidden = flowMode === 'overlay';
+  }
+  /* Mount the page node in whichever shell the current flow uses and show only it.
+     In the overlay flow every page except the dashboard rides in the single
+     overlay, so drilling deeper replaces its content instead of stacking. */
+  function presentPage(kind){
+    var overlayFlow = flowMode === 'overlay', base = isBaseKind(kind);
+    var target = $(PAGE_NODES[kind]), shell = $('#shellMain'), overlay = $('#pageOverlay'), obody = $('#pgoBody');
+    Object.keys(PAGE_NODES).forEach(function(k){
+      var el = $(PAGE_NODES[k]);
+      if(el) el.hidden = el !== target;
+    });
+    if(overlayFlow && !base){
+      // the dashboard stays mounted underneath; the overlay covers it opaquely
+      var dash = $(PAGE_NODES.dash);
+      if(dash){ dash.hidden = false; if(dash.parentNode !== shell) shell.appendChild(dash); }
+      if(target && target.parentNode !== obody) obody.appendChild(target);
+      if(overlay) overlay.hidden = false;
+      $('#pgoTitle').textContent = PAGE_TITLES[kind] || '';
+      obody.scrollTop = 0;
+    } else {
+      if(overlay) overlay.hidden = true;
+      if(target && target.parentNode !== shell) shell.appendChild(target);
+    }
+    syncTopNav(kind);
+  }
+
   function applyDetailsPage(){
     var p = PAGES[detailsPage];
-    // dashboard + the standalone inner-content pages are whole separate views
-    var VIEWS = { dash:'#dashView', dashempty:'#dashEmptyView', products:'#licensesView', portfolio:'#portfolioView', invoices:'#invoicesView', activity:'#activityView', users:'#usersView', profile:'#profileView', billing:'#billingView' };
-    var standalone = false;
-    for(var vk in VIEWS){ var vel = $(VIEWS[vk]); if(vel) vel.hidden = p.kind !== vk; if(p.kind === vk) standalone = true; }
-    $('#appView').hidden = standalone;
-    if(p.kind === 'dash') return;
+    presentPage(p.kind);
     if(p.kind === 'products'){ productsVariant = p.variant; renderProducts(); return; }
-    if(p.kind === 'portfolio'){ return; }
-    if(standalone) return; // invoices / activity / users — static content pages
+    if(p.kind !== 'sub' && p.kind !== 'perp') return;   // other pages are static content
     $$('[data-page]').forEach(function(el){ el.hidden = el.getAttribute('data-page') !== p.kind; });
     if(p.kind === 'sub'){
       $('#planName').textContent = p.name;
@@ -2631,6 +2733,21 @@
     var p = PAGES[detailsPage] || {}, ctx = $('#spPlanCtx');
     if(ctx) ctx.hidden = !(p.kind === 'sub' || p.kind === 'perp');
   }
+  // switching flows changes presentation only: same pages, same links, same data
+  $$('input[name="flowMode"]').forEach(function(r){
+    r.addEventListener('change', function(){
+      if(!r.checked) return;
+      flowMode = r.value;
+      syncFlowChrome();
+      applyDetailsPage();
+    });
+  });
+  var pgoClose = $('#pgoClose');
+  if(pgoClose) pgoClose.addEventListener('click', function(){ goToPage('dashboard'); });
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape' && !$('#pageOverlay').hidden && $('#overlay').hidden && $('#fsAddons').hidden){ goToPage('dashboard'); }
+  });
+  syncFlowChrome();
   $$('input[name="spTab"]').forEach(function(r){
     r.addEventListener('change', function(){
       if(!r.checked) return;
@@ -2661,6 +2778,10 @@
   // detail-page back button (which returns to the previous list) — both coexist.
   var homeBtn = $('#homeBtn');
   if(homeBtn) homeBtn.addEventListener('click', function(){ goToPage('dashboard'); });
+  // top-bar nav: same navigation as the in-page links
+  $$('.tnav-item').forEach(function(b){
+    b.addEventListener('click', function(){ var k = b.getAttribute('data-goto'); if(PAGES[k]) goToPage(k); });
+  });
 
   // single data source — every subscription plan + perpetual license. `goto` is the
   // details-page key each row routes to. Labels are example user tags. `created` is
