@@ -128,20 +128,64 @@ topbar/overlay) переїхали в таб **Archive** («Flow (archived)»). 
 `dash` (populated) тепер має **два датасети густини**, обидва kind `dash`, DOM `#dashView`:
 - **A — small account** (`PAGES.dashboard`, `variant:'A'`): 2 ліцензії (TB + TBMQ sub),
   2 users, 3 invoices. Licenses-блок показує **всі** рядки (нема чого тримати).
-- **B — large account** (`PAGES.dashB`, `variant:'B'`): 12 ліцензій (TB+TBMQ, sub+perp
-  мікс, з мітками), 8 users, 7 invoices. Licenses-блок — **top-5 attention-first**
-  (`payment_failed` → `updates_expiring` → найближчий `event`), рядок **label-first**
-  (мітка головна, plan name у subline — бо при такій кількості розрізняють за міткою);
-  Show all показує тотал: «Show all (12) →» / «Show all (8) →».
+- **B — large account** (`PAGES.dashB`, `variant:'B'`): **12 ліцензій** (`id` B1–B12,
+  кожна з `tier`), 8 users, 7 invoices. Мікс TB (maker/prototype/pilot/startup/business),
+  TBMQ subs, TB/TBMQ perpetuals; статуси: active / **payment_failed** (B3) / **canceled**
+  (B5) / **updates_expiring** (B11). Licenses-блок — **top-5 attention-first**
+  (`payment_failed` 0 → `updates_expiring` 1 → active 2 → canceled 3, далі найближчий
+  `event`), рядок **label-first**; Show all тотал: «Show all (12) →» / «Show all (8) →».
 - `dashempty` — новий користувач (без змін).
 
-**Єдине джерело на варіант** (`DATASETS[dashVariant]`, `DATA()`): дашборд-блоки,
-header state-line (`#dashState`: «N active licenses · next charge $X on Mon DD, YYYY»),
+**Єдине джерело на варіант** (`DATASETS[dashVariant]`, `DATA()`): дашборд-блоки
 і **повні сторінки** Licenses/Invoices/Users/Activity рендеряться з того самого набору
-(`renderDatasetViews`). `currentProducts()` для variant 3 читає `DATA().licenses`;
-Invoices/Users/Activity сторінки та їх пейджери — теж з `DATA()`. Дати — `Mon DD YYYY`
-(парсер `dateKey`, дисплей `fmtDate` додає кому). `next charge` = найближчий active
-Subscription renewal. today = **Aug 19 2026**.
+(`renderDatasetViews`). **Субтайтла на Home немає взагалі** — H1 стоїть сам
+(`#dashState`/`renderDashState` видалено). «Show all»-лінки **без стрілки →** (усі 4
+блоки + `setShowAll`). `currentProducts()` для variant 3 читає `DATA().licenses`.
+Дати — `Mon DD YYYY` (`dateKey`/`fmtDate`). today = **Aug 19 2026**.
+
+### Деталі ліцензії керуються рядком (`openLicense` / `renderLicenseDetails`)
+`#appView` більше **не** статичний per-plan — він наповнюється з **об'єкта ліцензії**
+(рядок датасету). Кожен рядок несе `data-licid`; `openRow` → `openLicense(licById(id))`
+→ `activeLicense` + `PAGES.licenseView={kind:sub|perp}` + `goToPage('licenseView')`.
+`applyDetailsPage` для licenseView кличе `renderLicenseDetails(activeLicense)`; для
+іменованих plan-сторінок пікера — `licFromNamed(key)` (той самий рендер).
+- **`TIER_SPECS`** (maker…business, `tbmqsub`, `tbperp`, `tbmqperp`) дає entitlements
+  (**+ рядок Assets**; TBMQ — Sessions / Messages/sec, без Devices/AI; perp — без /month;
+  perp/TB — 5,000/5,000/1/5M AI/WL; TBMQ perp — 10,000/1,000/1/WL). `renderEntitlements`
+  будує meter-рядки; `extras` (prototypeaddons) → колонка Extra.
+- `renderLicenseDetails` виставляє: назву (`#planName`/`#planNamePerp`), **статус-чіп**
+  (`#statusSlot`: Active/dark attn/muted Canceled), мітку (`#labelSlot`), period
+  (`#periodSub`/`#periodPerp`), ціну/next-charge, features (WL/edge/trendz), **alert**
+  (`#subAlert`: payment-failed з лінком на Billing / updates-expiring / canceled), і
+  **actions** (canceled → ховає Change plan+kebab, показує `#renewBtn`).
+- **TBMQ-рядки більше не stub** — відкривають TBMQ-наповнену сторінку. Немає dead rows.
+- **Details Activity-таб** (перейм. з «Audit log»): фід `#licFeed`, синтезований
+  `licenseActivity(lic)` (created/label/payment/cancel/updates події цієї ліцензії),
+  ті самі картки з expand-in-place; audit-toggle тепер слухає й `#appView`.
+
+### Cancel subscription (`openCancelModal`)
+Кебаб деталей (`[data-cancel-active]` → `activeLicense`) і меню рядка (`[data-cancel]`
+→ `cancelFromRow` → `licById`) відкривають confirm-модалку (назва+мітка, наслідок,
+**Keep subscription** secondary+focus / **Cancel subscription** destructive). Confirm:
+`lic.status='canceled'` → `renderDatasetViews()` + `renderProducts()` + (якщо відкрита)
+`renderLicenseDetails`. Статус пропагується скрізь (muted pill `Canceled · until {date}`,
+рядок `.off`; хедер деталей — muted чіп + Renew-плейсхолдер).
+
+### Період-фільтр активності (`filterFeedByPeriod`)
+Компактний контрол `.perctl` (Period-дропдаун: All time / Last 24h / 7d / 30d / Custom
+range…) на **Activity-сторінці** й у **details Activity-табі**. **Усе живе в одній
+панелі дропдауна**: Custom range розкриває date-поля + Apply **всередині** `.permenu`
+(панель лишається відкритою; toolbar ніколи не змінює склад). Apply закриває панель,
+тригер читає «Period: 12.08 – 19.08» (`fmtDM`, dd.mm; один край → «from/until dd.mm»).
+Повторне відкриття з активним custom тримає поля видимими. ⚠️ Generic `.dropmenu button`
+стриптить хром — для Apply є явний override `.percustom .perapply` (вид secondary-кнопки).
+Стан `actPeriod` / `licPeriod`; фільтр по днях через `epochDay` (days-from-civil — бо
+`Date()` заблоковано), `TODAY_DAY = Aug 19 2026`. Порожньо → empty-state.
+
+### Refresh feedback (`data-refresh`)
+Усі refresh-кнопки (`aria-label="Refresh"`) → `data-refresh` (не stub-модалка):
+делегований хендлер додає `.spinning` (~600ms CSS-спін) і вставляє muted
+`.refresh-note` «Updated just now» ліворуч від кнопки.
 
 **`homeKey`**: nav Home / лого / overlay-close / Escape ведуть на `homeKey` (останній
 вибраний dash-варіант: dashboard/dashB/dashempty), а не жорстко на A — тому вибраний
@@ -157,9 +201,11 @@ dataset-driven); рядки строяться **тими самими** `headHt
 ### Список поверхонь (kinds)
 - `dash` — **Dashboard (Home)**, стартова сторінка (варіанти A/B — див. вище).
 - `dashempty` — **новий користувач**: структура планів із перемикачами
-  **Product** (ThingsBoard/TBMQ) × **Billing** (Subscription/Perpetual), дані з
-  `EC_PLANS`. TB×PAYG — 5 карток, решта — одна центрована + «You can fine-tune
-  capacity before checkout». Deployment-перемикача немає (портал self-managed).
+  **Product** (ThingsBoard/TBMQ) і **Billing** (Subscription/Perpetual), дані з
+  `EC_PLANS`. Перемикачі **вертикально** (`.planpick` column, по `.planpick-row`): Product
+  зверху, Billing під ним — залежність читається top-down (обидва left-aligned, лейбли
+  вирівняні `min-width`). TB×Subscription — 5 карток, решта — одна центрована.
+  Deployment-перемикача немає (портал self-managed).
 - `sub` / `perp` — деталі (спільний `#appView`): `maker/prototype/pilot/startup/
   business` + `prototypeaddons`, перпетуал — `perp`.
 - `products3` — **сторінка Licenses** у флоу (product-first neutral). У флоу
@@ -196,10 +242,13 @@ JS більше **не свопає** ▲/▼ текстом, лише пере�
 на картці **не ставимо** (клипить дропдауни); широкі таблиці скролить власний wrapper.
 Portfolio (архів) не загорнутий. Фільтр Licenses — **без префікса «Type:»** (лише чипи).
 
-**Топ-бар**: фон/бордер full-width, але **контент бару обмежений** `.dtopbar-inner`
-(`max-width:var(--pageW)`, `padding:0 var(--pageX)`, центрований) — лого/профіль
-вирівняні **точно** з контентом сторінки (перевірено: logo-left == h1-left,
-profile-right == primary-right). `.tnav` абсолютно центрується в inner.
+**Топ-бар — contained band**: білий фон **не** тягнеться edge-to-edge. Зовнішній
+`.dtopbar` — прозорий (bg сторінки, `padding:12px 24px 0`); **сам бенд** —
+`.dtopbar-inner` (`max-width:var(--pageW)`, центрований, `background:var(--card)`,
+`border:--line2`, `border-radius:10`) — «плаваючий» бар, сірий фон видно з боків.
+Контент бару (лого/nav/профіль) через внутрішній `padding:0 var(--pageX)` вирівняний
+точно з текстом сторінок; біла кромка бенда — на ширині pageW-боксу (трохи ширша за
+текст). `.tnav` абсолютно центрується в inner.
 
 ### Стандартний тулбар (усі list-сторінки однаково)
 Зліва направо: **`.searchbox`** (persistent input ~280px, лупа всередині, page-
@@ -287,9 +336,13 @@ Body/контроли/клітинки, що вже були 14px (= підло�
   Leave кличе всі `settingsClean` (скидає прапорці; значення полів у прототипі **не**
   відкочуються — свідомо, це wireframe). Прото-gear-перемикання сторінок guard оминає
   (кличе `applyDetailsPage`, не `goToPage`).
-- **Profile / Billing без back-кнопки**: `#profBackBtn`/`#billBackBtn` прибрано;
-  `.setgrid` тепер простий блок `max-width:760` (ліво-вирівняний), заголовок стартує
-  від краю контейнера як на nav-сторінках.
+- **Profile / Billing без back-кнопки**: `#profBackBtn`/`#billBackBtn` прибрано.
+  `.setgrid{width:100%}` — сторінки займають **весь спільний контейнер** (1120).
+  **Картки (`.setcard`) теж full-width** (та сама кромка, що таблиці/дашборд-блоки);
+  форми всередині капнуті: `.setcard > *:not(.setcard-h){max-width:800px}` — поля не
+  розтягуються, ліве вирівнювання по паддінгу картки. Хедер+Save — до правого краю
+  контейнера. Субтайтли обох сторінок прибрано (Billing — «How you pay…» видалено;
+  H1 стоїть сам).
 - **Profile — три картки**: «Your profile» розбито на окремі `.setcard` **Personal**
   (First/Last/Email/Language) і **Security** (паролі + helper), поряд із **Company** —
   усі один стиль. Опис-рядок під заголовком прибрано (title сам). Sticky Save один
@@ -359,11 +412,42 @@ Prototype + add-ons = $126/mo (1+2 prod, 2M+2M AI, Edge+Trendz).
 Класи `.am-*` спільні; щоб змінити лише flow-версію — скоупи `.fs-screen .am-…`.
 Проратація фіксована **16 з 31 дня** (картка Next charge каже «in 16 days»).
 
+## New license flow (`#nlModal`, контролер `NL`)
+Створення ліцензії тепер **робочий степовий флоу** на chrome великої Manage-модалки
+(`.fs-screen`/`.fs-box`, бекдроп, sticky footer). Вибір — **видимі картки, ніколи
+селекти**.
+- **Входи**: «+ New license ▾» (Home, Licenses, Portfolio-архів) → subscription /
+  perpetual, `NL.open({kind})`; «Get started» на плані нового користувача →
+  `NL.open({kind, product, plan, startStep:3})` — одразу Customize, кроки 1–2 ✓.
+- **Степер** над тілом (класи `.am-steps`, обгортка `.nl-stepbar`): sub — Product →
+  Plan → Customize → Review & pay; perp — Product → **Package** → Customize → Review
+  & pay. Пройдені кроки клікабельні назад (вибір зберігається), майбутні — disabled.
+  Футер `.nl-foot`: Back (secondary, схований на кроці 1 — ⚠️ `.btn` ставить display,
+  тому є правило `.nl-foot .btn[hidden]{display:none}`) / Continue (primary, disabled
+  без вибору; на кроці 4 → «Subscribe»/«Buy license»).
+- **Крок 1**: 2 product-картки (`.nl-select` — hover mid, selected ink ring inset).
+- **Крок 2**: плани з **`EC_PLANS`** (той самий сорс, що new-user екран): TB sub — 5
+  карток; TBMQ sub / обидва perp — одна картка, **preselected** (Continue одразу
+  активний; крок існує під майбутні пакети).
+- **Крок 3 Customize**: контент Manage add-ons, **сідиться з обраного tier**
+  (`INCL`/`BASE` в NL): fixed-поля з `TIER_SPECS.ent` (Devices/Assets або
+  Sessions/Msg-sec), степери prod/AI (+dev лише TB sub), add-ons лише TB sub.
+  Unit-ціни: sub 29/15/5; perp TB prod **$1,999 one-time** (заякорено інвойсом
+  Add-capacity), AI $500/1M; perp TBMQ prod $999 — **inferred**. Праворуч calc
+  summary: base + дельти + «New monthly» / «One-time total».
+- **Крок 4 Review & pay**: itemized `.am-order` (план+summary → дельти → total),
+  Due today, платіжний рядок Visa ••4242 (+auto-pay для sub) з лінком
+  «Change → Billing & payment» (веде на Billing через guard).
+- **Confirm** (`buy()`): пушить ліцензію в **поточний** `DATA().licenses` (id `N1…`,
+  created **Aug 19 2026**, sub renews Sep 19 2026 / perp updates до Aug 19 2027,
+  extras/edge/trendz зберігаються — деталі рядка показують Extra-колонку й фічі),
+  `renderDatasetViews()`+`renderProducts()`, закриває модалку і **веде на Licenses**,
+  де новий рядок видно (і в dashboard-блоці).
+- **Закриття mid-flow** (✕/Esc) з зробленим вибором → та сама unsaved-changes
+  модалка (Stay / Leave without saving); preselected-вхід (Get started) теж рахується
+  як «selections made». Контент кроків повністю рендериться JS — усі події делеговані.
+
 ## Відкриті питання / борг
-- **Немає сторінки створення ліцензії.** «+ New license» (дашборд, Licenses,
-  Portfolio) відкриває stub-модалку в **обох** флоу; в оверлейному флоу ТЗ хотіло
-  «overlay with the create flow entry», але презентувати нічого — потрібна спільна
-  сторінка-заготовка. Рішення за користувачкою.
 - ~~Превʼю Invoices і Users на дашборді — статичні копії~~ **виправлено**: дашборд
   і повні сторінки Invoices/Users/Activity/Licenses тепер усі з `DATASETS[dashVariant]`
   (див. «Dashboard density variants»). `ACTIVITY`-масив прибрано — фід теж з `DATA()`.
@@ -373,12 +457,12 @@ Prototype + add-ons = $126/mo (1+2 prod, 2M+2M AI, Edge+Trendz).
 - **`AM`/`AMF` не знають про плани**: жорстко зашитий Prototype (BASE 39, incl
   1 prod / 2M AI). Відкривши «Manage» на Business — побачиш дані Prototype.
   Полагодити = перевести контролери на `PAGES`.
-- **TBMQ не має детальних сторінок** — його рядки (variant 3, portfolio, дашборд)
-  відкривають stub-модалку. ThingsBoard-рядки ведуть на реальні. (Viaanix прибрано.)
-- **Дані сторінок тепер зведені per-variant** (`DATASETS` A/B): дашборд +
-  Invoices/Activity/Users/Licenses читають один набір на варіант. Ще НЕ зведено:
-  ці набори не похідні від `PAGES`/details-сторінок (деталі плану досі з `PAGES`),
-  тож напр. відкривши деталі рядка з B, entitlements беруться з `PAGES`, не з датасету.
+- ~~TBMQ не має детальних сторінок~~ **виправлено**: TBMQ-рядки (sub і perp) відкривають
+  повноцінну TBMQ-наповнену сторінку (`TIER_SPECS.tbmqsub`/`tbmqperp`). Немає dead rows.
+- **Дані рядка → деталі зведені**: деталі тепер керуються об'єктом ліцензії (не `PAGES`) —
+  entitlements із `TIER_SPECS[tier]`, хедер/статус/період/ціна з рядка (див. «Деталі
+  ліцензії керуються рядком»). Ще окремо стоять: **Instances-таб** (статичні 2 інстанси,
+  не per-license), **license key** (спільний мок), і perp-**Invoices**-таб (статичні суми).
 - **Search-інпути невізуальні** (лупа + placeholder, без фільтрації).
 - **Заголовки списків**: `#licensesView` тепер **«Licenses»**; `#portfolioView`
   (архів) ще «Products».
