@@ -97,12 +97,17 @@ HEAD. Діагностика/відновлення — див. пам'ять `d
 - **`goToPage(key)`** — програмна навігація (тримає radio в пікері синхронним).
 - Деталі (`#appView`) розрізняють моделі атрибутом `data-page="sub"|"perp"`.
 
-### Два флоу презентації (глобальний перемикач «Flow» у налаштуваннях)
-1. **Top-bar navigation** (дефолт): у топбарі nav-пункти **Home · Licenses ·
+### Два флоу презентації
+**Активний флоу — лише Top-bar navigation.** Full-screen overlays **заархівовано**:
+перемикач Flow прибрано з верху панелі налаштувань, обидва radio (`flowMode`
+topbar/overlay) переїхали в таб **Archive** («Flow (archived)»). Код декаплінгу
+(`presentPage` / `FLOW_HOSTS` / overlay-гілка) лишили як є — overlay ще працює, якщо
+вибрати його в Archive, просто він більше не дефолтний шлях.
+1. **Top-bar navigation** (єдиний активний): у топбарі nav-пункти **Home · Licenses ·
    Invoices · Activity · Users**, відцентровані по самому бару (`position:absolute;
    left:50%`), активний підсвічений (`NAV_FOR_KIND`; для деталей — Licenses).
    Сторінки рендеряться під баром у `#shellMain`.
-2. **Full-screen overlays**: nav-пунктів немає (`.tnav[hidden]`), базова сторінка
+2. **Full-screen overlays** (архів): nav-пунктів немає (`.tnav[hidden]`), базова сторінка
    лише дашборд, усе інше відкривається **в одному** оверлеї `#pageOverlay`
    (хедер = заголовок області + ✕, тіло `#pgoBody`). Дашборд лишається змонтований
    під непрозорим оверлеєм. Заглиблення **замінює** контент оверлею — стеку немає.
@@ -119,13 +124,38 @@ HEAD. Діагностика/відновлення — див. пам'ять `d
 контент не стрибає горизонтально. Форми (Profile/Billing) мають власний ліміт
 ~760px, але центровані в тому ж контейнері.
 
+### Dashboard density variants (A / B) — `DATASETS`
+`dash` (populated) тепер має **два датасети густини**, обидва kind `dash`, DOM `#dashView`:
+- **A — small account** (`PAGES.dashboard`, `variant:'A'`): 2 ліцензії (TB + TBMQ sub),
+  2 users, 3 invoices. Licenses-блок показує **всі** рядки (нема чого тримати).
+- **B — large account** (`PAGES.dashB`, `variant:'B'`): 12 ліцензій (TB+TBMQ, sub+perp
+  мікс, з мітками), 8 users, 7 invoices. Licenses-блок — **top-5 attention-first**
+  (`payment_failed` → `updates_expiring` → найближчий `event`), рядок **label-first**
+  (мітка головна, plan name у subline — бо при такій кількості розрізняють за міткою);
+  Show all показує тотал: «Show all (12) →» / «Show all (8) →».
+- `dashempty` — новий користувач (без змін).
+
+**Єдине джерело на варіант** (`DATASETS[dashVariant]`, `DATA()`): дашборд-блоки,
+header state-line (`#dashState`: «N active licenses · next charge $X on Mon DD, YYYY»),
+і **повні сторінки** Licenses/Invoices/Users/Activity рендеряться з того самого набору
+(`renderDatasetViews`). `currentProducts()` для variant 3 читає `DATA().licenses`;
+Invoices/Users/Activity сторінки та їх пейджери — теж з `DATA()`. Дати — `Mon DD YYYY`
+(парсер `dateKey`, дисплей `fmtDate` додає кому). `next charge` = найближчий active
+Subscription renewal. today = **Aug 19 2026**.
+
+**`homeKey`**: nav Home / лого / overlay-close / Escape ведуть на `homeKey` (останній
+вибраний dash-варіант: dashboard/dashB/dashempty), а не жорстко на A — тому вибраний
+варіант тримається при поверненні на Home.
+
+Рендер dashboard-блоків: `renderDashLicenses/Invoices/Users/State` (top-level,
+dataset-driven); рядки строяться **тими самими** `headHtml`/`rowHtml` (variant 3), що
+сторінка Licenses. Recent invoices/users — тепер **не статичні копії**, а з `DATA()`
+(`#dashInvBody`/`#dashUsersBody`). Стуб-кнопки в перерендерених таблицях працюють через
+делегування на persistent `<tbody>` (не per-element). Рядки-ліцензії дашборда клікаються
+через `openRow` (реальна сторінка або stub для TBMQ).
+
 ### Список поверхонь (kinds)
-- `dash` — **Dashboard (Home)**, стартова сторінка прототипу. Блоки: Licenses
-  (full-width таблиця, рендериться **тими самими** білдерами, що сторінка Licenses
-  у варіанті product-first — 3 найновіші рядки з реальними сторінками + рядок
-  перпетуалу), Recent invoices (колонки як на сторінці Invoices), Recent activity
-  (фід), Users (колонки як на сторінці Users, без Activation status). Праворуч
-  угорі — split-кнопка «+ New license».
+- `dash` — **Dashboard (Home)**, стартова сторінка (варіанти A/B — див. вище).
 - `dashempty` — **новий користувач**: структура планів із перемикачами
   **Product** (ThingsBoard/TBMQ) × **Billing** (Subscription/Perpetual), дані з
   `EC_PLANS`. TB×PAYG — 5 карток, решта — одна центрована + «You can fine-tune
@@ -139,18 +169,37 @@ HEAD. Діагностика/відновлення — див. пам'ять `d
 
 ### Активність — фід, не таблиця
 `ACTIVITY` (список подій) + `feedItem()` рендерять і сторінку Activity, і блок на
-дашборді (там 3 останні). Елемент: **компактна іконка типу 24px** (заливка `--track`),
-muted-мета = **лише таймстемп** (без «Note»/«System note»), фраза в єдиному порядку
-**що зроблено → from/to → ким** (виділені сутності). Кнопка «details» **розгортає
-raw-JSON payload на місці** (`.fi-audit`, capped 300px зі скролом, кілька можна відкрити
-разом) — модалки «Audit log details» **більше немає**. На деталях та сама структура
-використовується в табі **«Audit log»** (перейменований з «Logs»).
+дашборді (там 3 останні). Елемент: **іконка типу inline в мета-рядку** (`.fi-ic`,
+16px, заливка `--track`, у розмір тексту мети) — таймстемп поруч праворуч, **фраза
+нижче** на всю ширину (раніше іконка була окремим блоком 24px зліва). muted-мета =
+**лише таймстемп**, фраза в порядку **що зроблено → from/to → ким** (виділені сутності).
+Кнопка «details» **розгортає raw-JSON payload на місці** (`.fi-audit`, capped 300px зі
+скролом, кілька разом) і **тримає pressed-стан** поки payload відкритий
+(`.iconbtn[data-audit][aria-expanded="true"]` — рамка/заливка ink) — модалки
+«Audit log details» **більше немає**. На деталях та сама структура — таб **«Audit log»**.
 
 ### Таблиці
 Колонки дій позначені класом `cellact` (+ `th[aria-label$="ctions"]`) і
 стискаються під контент із `text-align:right`, щоб дії тримались краю таблиці.
 Колонки з даними, що стоять останніми (Created Time в Instances, Limit у Plan &
 Add-ons), свідомо не зачеплені.
+
+**Стиль `th`**: uppercase label-токен, але **weight 400** (не 500 — column-heads
+свідомо легші за секційні заголовки). Сорт-індикатор — **тонкий SVG-шеврон** у
+`.arrow` (11px), обертається через CSS `th[aria-sort="ascending"] .arrow{rotate 180}`;
+JS більше **не свопає** ▲/▼ текстом, лише перемикає `aria-sort`.
+
+**Рамка list-сторінок** (`.listcard`): Licenses / Invoices / Activity / Users — по
+**дві окремі картки** (`--line2`-рамка, `border-radius:10`, як `.dblock` дашборда):
+(1) **тулбар** (search/фільтри/refresh/primary) у власному блоці, (2) **таблиця/фід
++ пейджер** у білій картці нижче. Заголовок+підзаголовок — **над** обома. `overflow`
+на картці **не ставимо** (клипить дропдауни); широкі таблиці скролить власний wrapper.
+Portfolio (архів) не загорнутий. Фільтр Licenses — **без префікса «Type:»** (лише чипи).
+
+**Топ-бар**: фон/бордер full-width, але **контент бару обмежений** `.dtopbar-inner`
+(`max-width:var(--pageW)`, `padding:0 var(--pageX)`, центрований) — лого/профіль
+вирівняні **точно** з контентом сторінки (перевірено: logo-left == h1-left,
+profile-right == primary-right). `.tnav` абсолютно центрується в inner.
 
 ### Стандартний тулбар (усі list-сторінки однаково)
 Зліва направо: **`.searchbox`** (persistent input ~280px, лупа всередині, page-
@@ -160,13 +209,14 @@ placeholder) → фільтри (якщо є) → `.spacer` → refresh (outline
 Invoices, Activity, Users, Instances-таб, Logs-таб.
 
 ### Пікер сторінок (тимчасовий, контекстний)
-⚙ внизу праворуч → «Prototype settings». Порядок: **Flow** (Top-bar navigation /
-Full-screen overlays) → таби **Settings | Archive**.
-- Settings: «Dashboard (Home)» (populated / new user) + Products →
-  «Product-first (neutral)». Варіанти планів (Maker…Business, Prototype + add-ons)
-  і «Perpetual license details» показуються **лише** коли відкрита сторінка деталей
-  (`syncSettingsContext`).
-- Archive: `products`, `products2`, `portfolio` + перемикач Manage add-ons
+⚙ внизу праворуч → «Prototype settings». Перемикача **Flow вгорі більше немає** —
+одразу таби **Settings | Archive**.
+- Settings: «Dashboard (Home)» — три опції: **small account (A)** / **large account
+  (B)** / **new user (empty)** + Products → «Product-first (neutral)». Варіанти планів
+  (Maker…Business, Prototype + add-ons) і «Perpetual license details» показуються
+  **лише** коли відкрита сторінка деталей (`syncSettingsContext`).
+- Archive: **Flow (archived)** (topbar / overlay), `products`, `products2`, `portfolio`
+  + перемикач Manage add-ons
   (Full-screen = флоу / Modal = архів).
 - Секцій «Pages» і окремої «Perpetual» немає — ці сторінки досяжні у флоу.
 - Стан у JS-змінних (`flowMode`, `detailsPage`, `productsVariant`, `addonsStyle`),
@@ -177,7 +227,7 @@ Full-screen overlays) → таби **Settings | Archive**.
 - `window.setFeature('edge'|'trendz'|'whitelabel', on)` — чипи фіч на поточній
   details-сторінці.
 
-## Типографіка (type-system, WIP)
+## Типографіка (type-system)
 
 **Шрифти вбудовані base64-woff2** (константа «без зовнішніх запитів»): Ubuntu
 **400/500/700** + **Ubuntu Mono** (license keys / IDs). Light 300 свідомо не
@@ -189,11 +239,65 @@ Full-screen overlays) → таби **Settings | Archive**.
 вага росте з розміром, **bold 700 лише для display/h1**; `--t-small` і `--t-label` —
 один розмір, різняться регістром+трекінгом. Числа — `.tnum`; mono — `.t-mono` (ls:0).
 
-**Застосовано частково — лише Profile settings** (спільні селектори `.lic-h1`,
-`.setcard-h h2`, `.field*`, `.cardhelp` зачепили й Billing + усі page-titles). Решта
-сторінок ще на старих розмірах. Процес — **по секції, з рев'ю в браузері**. Не вирішено:
-field-labels → `--t-small` чи `--t-label`?; page-subtitle → `small`/`body`?; input-текст
-→ `body 16` чи `small 14`?
+**Застосовано на всіх сторінках.** Ієрархію зведено на 6 рівнів шкали (рев'ю в
+браузері по кожній поверхні: dashboard, деталі sub/perp, Licenses, Users, portfolio,
+модалки Manage add-ons / generic / pay). Мапінг, за яким котили:
+- **page-titles → h1** (36/700): `.lic-h1` (Profile/Billing/списки), `.planname`
+  (деталі), `.dwelcome h1` (дашборд). Прибрано ad-hoc 30/800.
+- **блок/картка/модалка-титули → h2** (20/500, sentence): `.dblock-head h2`,
+  `.pc-head h2` (plan cards), `.am-h2`, `.am-titlebar h3`, `.modal .mh h3`,
+  `.paymodal-h h3`, `.fs-maintitle`. Прибрано 16–18/700.
+- **тихі маркери/колонки/груп-лейбли → label** (14/500 UPPERCASE +0.10em):
+  `th`, `.sh h3`, `.am-sechead h4`, `.pf-gname`, `.pf-tile .k`, `.dprofmenu .grp`,
+  `.setcard-h h2`, `.minihead`, і **`.billcard-h`** (тепер теж uppercase-кікер).
+- **hero/stat-числа → h2 size, weight 500, `.tnum`**: `.nextcharge .big` (сума
+  next-charge), `.am-cellval`, `.am-dueval`, `.pf-tile .v`, `.pc-price`, `.big`.
+  Свідомо weight **500, не 700** — правило «bold 700 лише для display/h1» тримаємо
+  навіть на числах.
+- **subtitle → small**: `.dwelcome p` (як `.lic-sub`).
+Body/контроли/клітинки, що вже були 14px (= підлога small), лишили літералами —
+не churn'или. Прото-gear-панель (`.settings-panel`, `.sp-*`) свідомо не чіпали.
+
+Розв'язані раніше відкриті питання: field-labels = `--t-small`; input-текст =
+`body 16`; page-subtitle = `small`.
+
+⚠️ Один свідомий компроміс: на plan-cards (`dashempty`) назва плану і ціна тепер
+**однакові** (обидві h2/500) — ціна більше не домінує як 22/800, бо правило забороняє
+важчу вагу. Узгоджено з карткою Next charge (label-заголовок + h2-число). Якщо
+захочеться повернути ціні перевагу в межах системи — демоутити назву до label-кікера.
+
+**Деталі — один section-heading стиль**: усі секційні заголовки на details
+(«License key», «Subscription period»/«Software updates», «Plan & add-ons») **і таби**
+(Invoices/Instances/Audit log) тепер label-стиль (uppercase 14/500 +0.10em, ink).
+`.periodhead` і `.tab` зведені на label-токен; вибраний таб лишає ink+underline (600).
+
+## Модалки та поведінкові додатки
+
+- **Apply coupon → модалка** (`#couponOverlay`, IIFE-контролер): reuse chrome
+  payment-modal (`.payoverlay/.paymodal`, вужча — inline `width:min(420px,96vw)`).
+  Один інпут + placeholder, Cancel/✕/Esc/бекдроп закривають, **Apply disabled поки
+  інпут порожній**. Раніше був inline-експандер у хедері (`#couponInline`) — прибрано.
+- **Unsaved-changes guard** (Profile + Billing): `goToPage` обгорнуто —
+  `goToPage` перевіряє `anyDirty()` і, якщо є незбережені правки, кличе `confirmLeave`
+  (реальна навігація в `_goToPage`). Через це guard ловить **усі** переходи одним
+  місцем: nav-таби, лого, профіль-меню, in-page `[data-goto]`-лінки. `dirtyViews` +
+  `settingsClean` веде `wirePageSave`; Save чистить прапорець (guard не спрацює).
+  Модалка — generic `openModal` з ін'єктованими кнопками (як delete-confirm):
+  **Stay** (`.btn.sec`, справа) / **Leave without saving** (`.btn.ter`, зліва).
+  Leave кличе всі `settingsClean` (скидає прапорці; значення полів у прототипі **не**
+  відкочуються — свідомо, це wireframe). Прото-gear-перемикання сторінок guard оминає
+  (кличе `applyDetailsPage`, не `goToPage`).
+- **Profile / Billing без back-кнопки**: `#profBackBtn`/`#billBackBtn` прибрано;
+  `.setgrid` тепер простий блок `max-width:760` (ліво-вирівняний), заголовок стартує
+  від краю контейнера як на nav-сторінках.
+- **Profile — три картки**: «Your profile» розбито на окремі `.setcard` **Personal**
+  (First/Last/Email/Language) і **Security** (паролі + helper), поряд із **Company** —
+  усі один стиль. Опис-рядок під заголовком прибрано (title сам). Sticky Save один
+  на всю сторінку (гардить обидві + Company через `#profileView` input-делегування).
+- **Billing → Payment method**: кнопка «Update» замінена на **icon-btn олівець**
+  (`.iconbtn.ib`, `#payUpdateBtn`) — відкриває ту саму Update-payment-method модалку.
+- **Activity шрифти**: увесь фід (meta / речення / raw-JSON) уже ≥14px (з type-pass);
+  перевірено — нічого нижче 14 немає, JSON лишається 14px mono.
 
 ## Content audit (копірайт/дані-пас) — статус
 
@@ -209,8 +313,9 @@ JSON); **Offline/Viaanix прибрано**; no «Pay-as-you-go» (→ Subscript
 - §2 **єдиний датасет**: today Aug 19 2026; інвойси → `NAWE49WG-000X` (вбити `INV-2026-…`);
   одна renewal-дата на підписку, узгоджена з проратацією (16/31 → цикл до **Sep 4 2026**?
   — **відкрите питання, чекає підтвердження**); одна purchase+updates-end для перпетуалу.
-- §3 **Users без статусу**: прибрати Activation-status + чипи (→ «Added {date}»); таб
-  «Audit log» вирівняти до фіду (прибрати Status/Success).
+- §3 **Users без статусу**: колонку Activation-status + чипи (Pending/Activated)
+  **прибрано** ✅. Ще: перейменувати Created → «Added {date}»? і таб «Audit log» на
+  деталях вирівняти до фіду (прибрати Status/Success) — **не зроблено**.
 - §4 **прайсинг**: рядок **Assets** в entitlements; AI-юніт «{N}M AI credits» + `TODO`
   (cadence перпетуалу; чи включають self-managed subs AI взагалі); `+$0.10`.
 - §5 **механіка**: формат дат/грошей; sentence case.
@@ -259,12 +364,9 @@ Prototype + add-ons = $126/mo (1+2 prod, 2M+2M AI, Edge+Trendz).
   Portfolio) відкриває stub-модалку в **обох** флоу; в оверлейному флоу ТЗ хотіло
   «overlay with the create flow entry», але презентувати нічого — потрібна спільна
   сторінка-заготовка. Рішення за користувачкою.
-- **Превʼю Invoices і Users на дашборді — статичні копії рядків** цих сторінок
-  (Licenses-превʼю і фід уже беруть спільні джерела). Зміниш дані на сторінці —
-  треба правити і превʼю.
-- **Хронологія фіду суперечлива**: порядок задала користувачка (newest first), тож
-  зверху «Subscription created», а нижче «Plan changed» — тобто підписку ніби
-  створили після зміни плану. Виправляється переворотом масиву `ACTIVITY`.
+- ~~Превʼю Invoices і Users на дашборді — статичні копії~~ **виправлено**: дашборд
+  і повні сторінки Invoices/Users/Activity/Licenses тепер усі з `DATASETS[dashVariant]`
+  (див. «Dashboard density variants»). `ACTIVITY`-масив прибрано — фід теж з `DATA()`.
 - **`prototypeaddons` не має лінка у флоу**: у `PRODUCTS_V3` (product-first) такого
   рядка немає, тож сторінка досяжна лише через контекстний список у налаштуваннях —
   так вирішено свідомо («хай там і лежить»).
@@ -273,9 +375,10 @@ Prototype + add-ons = $126/mo (1+2 prod, 2M+2M AI, Edge+Trendz).
   Полагодити = перевести контролери на `PAGES`.
 - **TBMQ не має детальних сторінок** — його рядки (variant 3, portfolio, дашборд)
   відкривають stub-модалку. ThingsBoard-рядки ведуть на реальні. (Viaanix прибрано.)
-- **Дані окремих сторінок мокові й не звʼязані** між собою: Invoices/Activity/
-  Users/дашборд мають власні набори, не похідні від `PAGES`. Números/дати не
-  зведені в одну систему.
+- **Дані сторінок тепер зведені per-variant** (`DATASETS` A/B): дашборд +
+  Invoices/Activity/Users/Licenses читають один набір на варіант. Ще НЕ зведено:
+  ці набори не похідні від `PAGES`/details-сторінок (деталі плану досі з `PAGES`),
+  тож напр. відкривши деталі рядка з B, entitlements беруться з `PAGES`, не з датасету.
 - **Search-інпути невізуальні** (лупа + placeholder, без фільтрації).
 - **Заголовки списків**: `#licensesView` тепер **«Licenses»**; `#portfolioView`
   (архів) ще «Products».

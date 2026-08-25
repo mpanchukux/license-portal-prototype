@@ -126,7 +126,7 @@
      The margin shifts it down by half its value, so the chip's box lands on the
      word's ink band (cap top to descender bottom). */
   .titlerow .chip.status{margin-top:6px}
-  .planname{margin:0;font-size:30px;font-weight:800;line-height:1.15;letter-spacing:-.01em}
+  .planname{margin:0;font-family:var(--font-ui);font-size:var(--t-h1-fs);line-height:var(--t-h1-lh);letter-spacing:var(--t-h1-ls);font-weight:var(--t-h1-fw)}
   .sub{color:var(--mid);font-size:14px;margin-top:2px}
   /* one-time price + updates term, sits under the licence name */
   .priceline{margin-top:6px;font-size:14px;color:var(--mid);display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}
@@ -151,7 +151,7 @@
   .keycol.right{text-align:right}
   .minihead{margin:0 0 8px;font-family:var(--font-ui);font-size:var(--t-label-fs);line-height:var(--t-label-lh);letter-spacing:var(--t-label-ls);font-weight:var(--t-label-fw);text-transform:uppercase;color:var(--ink)}
   /* the subscription-period label matches the "Subscription plan" subhead */
-  .periodhead{margin:0 0 6px;font-size:14px;font-weight:400;color:var(--mid);line-height:1.2}
+  .periodhead{margin:0 0 6px;font-family:var(--font-ui);font-size:var(--t-label-fs);line-height:var(--t-label-lh);letter-spacing:var(--t-label-ls);font-weight:var(--t-label-fw);text-transform:uppercase;color:var(--ink)}
   .chip{font-size:14px;padding:2px 9px;border:1px solid var(--line);border-radius:999px;color:var(--mid);background:#fafafa;display:inline-flex;align-items:center;gap:6px}
   .chip.status{border-color:var(--ink);color:var(--ink);font-weight:600;background:#fff}
   .chip .sdot{width:7px;height:7px;border-radius:50%;background:var(--ink);flex:none}
@@ -185,7 +185,7 @@
   .spacer{flex:1}
 
   .tabs{display:flex;gap:2px;padding:0 18px 0 var(--contentX);border-bottom:1px solid var(--line2)}
-  .tab{padding:11px 12px;font-size:14px;color:var(--mid);border:0;border-bottom:2px solid transparent;margin-bottom:-1px;background:transparent}
+  .tab{padding:11px 12px;font-family:var(--font-ui);font-size:var(--t-label-fs);line-height:var(--t-label-lh);letter-spacing:var(--t-label-ls);font-weight:var(--t-label-fw);text-transform:uppercase;color:var(--mid);border:0;border-bottom:2px solid transparent;margin-bottom:-1px;background:transparent}
   .tab:hover{color:var(--ink)}
   .tab[aria-selected="true"]{color:var(--ink);font-weight:600;border-color:var(--ink)}
 
@@ -202,7 +202,7 @@
   @media(max-width:900px){.plantable{width:100%}}
   /* light-grey sub-cards (Billing / Invoices / Production instances) */
   .billcard{background:#f6f6f4;border:1px solid var(--line2);border-radius:8px;padding:14px 16px;margin-top:12px}
-  .billcard-h{margin:0 0 10px;font-size:14px;font-weight:600;color:var(--ink)}
+  .billcard-h{margin:0 0 10px;font-family:var(--font-ui);font-size:var(--t-label-fs);line-height:var(--t-label-lh);letter-spacing:var(--t-label-ls);font-weight:var(--t-label-fw);text-transform:uppercase;color:var(--ink)}
   /* two fixed tracks so the single Next charge card keeps its half-width size */
   .billgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:12px}
   @media(max-width:700px){.billgrid{grid-template-columns:1fr}}
@@ -214,13 +214,13 @@
   .nc-when{font-size:14px;color:var(--mid);font-variant-numeric:tabular-nums}
   /* the amount is the hero: its own line, nothing beside it */
   .nc-amount{margin-top:10px}
-  .nextcharge .big{display:block;font-size:20px;line-height:1.15;letter-spacing:-.01em}
+  .nextcharge .big{display:block;font-size:var(--t-h2-fs);line-height:1.15;letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw);font-variant-numeric:tabular-nums}
   .nextcharge .hairline{margin:14px 0}
   .nc-foot{font-size:14px;color:var(--mid)}
   .nc-pay{font-size:14px;color:var(--mid)}
   .sh{display:flex;align-items:center;gap:8px;margin-bottom:12px}
   .sh .n{width:20px;height:20px;border-radius:50%;background:var(--ink);color:#fff;font-size:14px;display:flex;align-items:center;justify-content:center;flex:none}
-  .sh h3{margin:0;font-size:14px;letter-spacing:.02em;text-transform:uppercase;color:var(--ink)}
+  .sh h3{margin:0;font-family:var(--font-ui);font-size:var(--t-label-fs);line-height:var(--t-label-lh);letter-spacing:var(--t-label-ls);font-weight:var(--t-label-fw);text-transform:uppercase;color:var(--ink)}
   .sh .spacer{flex:1}
 
   .kv{display:flex;justify-content:space-between;gap:16px;padding:7px 0;border-bottom:1px dashed var(--line2)}
@@ -240,7 +240,7 @@
   .link:hover{color:#000}
 
   table{width:100%;border-collapse:collapse;font-size:14px}
-  th{text-align:left;color:var(--faint);font-weight:500;font-size:14px;text-transform:uppercase;letter-spacing:.04em;padding:8px;border-bottom:1px solid var(--line2)}
+  th{text-align:left;color:var(--faint);font-family:var(--font-ui);font-size:var(--t-label-fs);line-height:var(--t-label-lh);letter-spacing:var(--t-label-ls);font-weight:400;text-transform:uppercase;padding:8px;border-bottom:1px solid var(--line2)}
   td{padding:13px 8px;border-bottom:1px dashed var(--line2);vertical-align:middle}
   /* breathing room around tables and before their pagination */
   .section > table{margin-top:16px}
@@ -267,7 +267,7 @@
   .row:last-child{border-bottom:0;padding-bottom:0}
   .row .l{color:var(--mid);font-size:14px}
   .row .r{text-align:right;display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
-  .big{font-size:17px;font-weight:700}
+  .big{font-size:var(--t-h2-fs);font-weight:var(--t-h2-fw);font-variant-numeric:tabular-nums}
   .pill{font-size:14px;padding:1px 8px;border:1px solid var(--ink);color:var(--ink);background:#fff;border-radius:999px}
   .pill.soft{border-color:var(--line);color:var(--mid)}
 
@@ -284,7 +284,9 @@
   /* data grid (production instances) */
   th.sortable{cursor:pointer;user-select:none;white-space:nowrap}
   th.sortable:hover{color:var(--mid)}
-  th .arrow{display:inline-block;margin-left:4px;font-size:14px;color:var(--mid)}
+  th .arrow{display:inline-flex;align-items:center;margin-left:5px;color:var(--faint)}
+  th .arrow svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:block}
+  th[aria-sort="ascending"] .arrow{transform:rotate(180deg)}
   th.chk,td.chk{width:34px;text-align:center;padding-left:8px;padding-right:0}
   input[type=checkbox]{accent-color:var(--ink);width:14px;height:14px;margin:0}
   .emptybox{padding:34px 0;text-align:center;color:var(--faint);font-size:14px}
@@ -319,7 +321,7 @@
   .overlay[hidden]{display:none}
   .modal{background:#fff;border:1px solid var(--line);border-radius:8px;max-width:460px;width:100%;box-shadow:0 14px 44px rgba(0,0,0,.18)}
   .modal .mh{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line2)}
-  .modal .mh h3{margin:0;font-size:16px}
+  .modal .mh h3{margin:0;font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw)}
   .modal .mh .spacer{flex:1}
   .modal .mclose{width:26px;height:26px;border:1px solid var(--line);border-radius:5px;background:#fff;color:var(--mid);display:flex;align-items:center;justify-content:center;font-size:15px}
   .modal .mclose:hover{color:var(--ink);background:var(--hover)}
@@ -332,7 +334,7 @@
   .addons-modal{background:#fff;border:1px solid var(--line);border-radius:8px;width:min(900px,94vw);height:min(790px,92vh);display:flex;flex-direction:column;box-shadow:0 14px 44px rgba(0,0,0,.18)}
   .am-head{flex:none;padding:14px 18px 12px;border-bottom:1px solid var(--line2)}
   .am-titlebar{display:flex;align-items:center;gap:10px}
-  .am-titlebar h3{margin:0;font-size:16px;flex:none}
+  .am-titlebar h3{margin:0;font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw);flex:none}
   .am-counter{font-size:14px;color:var(--faint);flex:none}
   .am-help,.am-x{width:26px;height:26px;border:1px solid var(--line);border-radius:5px;background:#fff;color:var(--mid);display:inline-flex;align-items:center;justify-content:center;font-size:14px;flex:none}
   .am-help:hover,.am-x:hover{color:var(--ink);background:var(--hover)}
@@ -350,12 +352,12 @@
   .am-sec{margin-bottom:22px}
   .am-sec:last-child{margin-bottom:0}
   .am-sechead{display:flex;align-items:baseline;gap:10px;margin-bottom:12px}
-  .am-sechead h4{margin:0;font-size:14px;text-transform:uppercase;letter-spacing:.03em}
+  .am-sechead h4{margin:0;font-family:var(--font-ui);font-size:var(--t-label-fs);line-height:var(--t-label-lh);letter-spacing:var(--t-label-ls);font-weight:var(--t-label-fw);text-transform:uppercase}
   .am-cap{font-size:14px;color:var(--faint)}
   .am-capgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
   .am-cell{border:1px solid var(--line2);border-radius:6px;padding:12px;display:flex;flex-direction:column}
   .am-celltop{font-size:14.5px;font-weight:600;color:var(--ink);margin-bottom:9px}
-  .am-cellval{font-size:20px;font-weight:700;line-height:var(--btnH)}
+  .am-cellval{font-size:var(--t-h2-fs);font-weight:var(--t-h2-fw);line-height:var(--btnH);font-variant-numeric:tabular-nums}
   .am-cellnote{margin-top:9px;font-size:14px;color:var(--faint);line-height:1.5}
 
   .am-cardgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
@@ -384,7 +386,7 @@
   .switch input:checked + .track::after{transform:translateX(18px);background:#fff}
   .switch input:focus-visible + .track{outline:2px solid var(--ink);outline-offset:2px}
 
-  .am-h2{margin:0 0 4px;font-size:16px}
+  .am-h2{margin:0 0 4px;font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw)}
   .am-sub2{margin:0 0 14px;font-size:14px;color:var(--mid)}
   .am-recap{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:14px;margin-bottom:16px;background:#fafafa}
   .am-order{border:1px solid var(--line2);border-radius:6px;padding:2px 14px;margin-bottom:16px}
@@ -396,7 +398,7 @@
   .am-newmonthly{font-weight:700;font-size:14px}
   .am-due{display:flex;justify-content:space-between;align-items:center;gap:16px;border:1px solid var(--line);border-radius:6px;padding:12px 14px;margin-bottom:14px;background:#fafafa}
   .am-duelabel{font-size:14px}
-  .am-dueval{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;flex:none}
+  .am-dueval{font-size:var(--t-h2-fs);font-weight:var(--t-h2-fw);font-variant-numeric:tabular-nums;flex:none}
   .am-pay{font-size:14px;color:var(--mid)}
   .am-success{text-align:center;padding:30px 10px}
   .am-checkbig{width:52px;height:52px;border-radius:50%;border:2px solid var(--ink);color:var(--ink);font-size:26px;display:inline-flex;align-items:center;justify-content:center;margin-bottom:14px}
@@ -460,7 +462,7 @@
   /* one header row: muted label + title on the left, Change plan + close on the right */
   .fs-header{flex:none;display:flex;align-items:center;gap:12px;row-gap:8px;flex-wrap:wrap;padding:13px 24px;background:#fff;border-bottom:1px solid var(--line2)}
   .fs-header .spacer{flex:1}
-  .fs-maintitle{margin:0;font-size:18px;font-weight:700;flex:0 1 auto;min-width:0}
+  .fs-maintitle{margin:0;font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw);flex:0 1 auto;min-width:0}
   .fs-headactions{display:flex;align-items:center;gap:14px;flex:none}
   .fs-close{width:30px;height:30px;flex:none;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--mid);display:inline-flex;align-items:center;justify-content:center;font-size:15px}
   .fs-close:hover{color:var(--ink);background:var(--hover)}
@@ -515,7 +517,9 @@
   /* ---------- Dashboard (Overview): full-width top bar, no sidebar, centered column ---------- */
   .app[hidden],.dashview[hidden],.licview[hidden]{display:none}
   .dashview{display:flex;flex-direction:column;min-height:100%;background:var(--bg)}
-  .dtopbar{position:relative;display:flex;align-items:center;gap:14px;height:56px;flex:none;padding:0 24px;background:var(--card);border-bottom:1px solid var(--line2)}
+  .dtopbar{display:flex;height:56px;flex:none;padding:0;background:var(--card);border-bottom:1px solid var(--line2)}
+  /* bar background/border stay full-width; contents align to the shared page container */
+  .dtopbar-inner{position:relative;display:flex;align-items:center;gap:14px;width:100%;max-width:var(--pageW);margin:0 auto;padding:0 var(--pageX)}
   .dtopbar .sp{flex:1}
   .dbrand{display:flex;align-items:center;gap:10px}
   /* the logo doubles as a Home link — reset it to look identical as a <button> */
@@ -555,7 +559,7 @@
   .dprofbtn .avatar{width:26px;height:26px;border-radius:50%;background:#fff;border:1px solid var(--line);font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center}
   .dprofmenu{position:absolute;right:0;top:calc(100% + 6px);min-width:232px;background:#fff;border:1px solid var(--line);border-radius:8px;box-shadow:0 12px 32px rgba(0,0,0,.16);padding:6px;z-index:60}
   .dprofmenu[hidden]{display:none}
-  .dprofmenu .grp{font-size:14px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);padding:9px 10px 4px}
+  .dprofmenu .grp{font-family:var(--font-ui);font-size:var(--t-label-fs);line-height:var(--t-label-lh);letter-spacing:var(--t-label-ls);font-weight:var(--t-label-fw);text-transform:uppercase;color:var(--faint);padding:9px 10px 4px}
   .dprofmenu button{display:flex;align-items:baseline;gap:8px;width:100%;text-align:left;padding:8px 10px;border:0;background:transparent;border-radius:6px;font:inherit;font-size:14px;color:var(--ink)}
   .dprofmenu button:hover{background:var(--hover)}
   .dprofmenu button .who{font-size:14px;color:var(--faint)}
@@ -565,12 +569,12 @@
   /* welcome text and the page-level action sit on one row */
   .dwelcome{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
   .dwelcome .dw-txt{flex:1;min-width:0}
-  .dwelcome h1{margin:0;font-size:30px;font-weight:800;letter-spacing:-.01em}
-  .dwelcome p{margin:5px 0 0;font-size:14px;color:var(--mid)}
+  .dwelcome h1{margin:0;font-family:var(--font-ui);font-size:var(--t-h1-fs);line-height:var(--t-h1-lh);letter-spacing:var(--t-h1-ls);font-weight:var(--t-h1-fw)}
+  .dwelcome p{margin:5px 0 0;font-family:var(--font-ui);font-size:var(--t-small-fs);line-height:var(--t-small-lh);letter-spacing:var(--t-small-ls);font-weight:var(--t-small-fw);color:var(--mid)}
 
   .dblock{background:var(--card);border:1px solid var(--line2);border-radius:10px;padding:15px 18px;margin-top:20px}
   .dblock-head{display:flex;align-items:baseline;gap:12px;margin-bottom:4px}
-  .dblock-head h2{margin:0;font-size:16px;font-weight:700}
+  .dblock-head h2{margin:0;font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw)}
   .dblock-head .sp{flex:1}
   .dblock-foot{display:flex;align-items:center;margin-top:14px}
   .dblock-foot .sp{flex:1}
@@ -610,8 +614,8 @@
   .plangrid.one{grid-template-columns:minmax(0,380px);justify-content:center}
   .plancard{display:flex;flex-direction:column;margin-top:0;padding:16px 18px}
   .pc-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-height:22px}
-  .pc-head h2{margin:0;font-size:16px;font-weight:700}
-  .pc-price{margin-top:9px;font-size:22px;font-weight:800;line-height:1.1;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+  .pc-head h2{margin:0;font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw)}
+  .pc-price{margin-top:9px;font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw);font-variant-numeric:tabular-nums}
   .pc-per{font-size:14px;font-weight:400;color:var(--faint);letter-spacing:0}
   .pc-term{margin-top:5px;font-size:14px;color:var(--mid)}
   .pc-feats{margin-top:13px;flex:1}
@@ -631,6 +635,11 @@
   /* ---------- Licenses (unified list): inner content only, no chrome ---------- */
 
   .pager.air{margin-top:40px}
+  /* list pages framed like the dashboard blocks: white card, gray border, rounded */
+  .listcard{background:var(--card);border:1px solid var(--line2);border-radius:10px;padding:15px 18px;margin-top:16px}
+  .listcard .lic-controls,.listcard .insttoolbar{margin:0}
+  .listcard .pager{margin-top:18px;padding-bottom:0}
+  .listcard .feed{margin-top:0}
   /* activity feed: chronological history (newest first) — replaces the table on
      both the Activity page and the dashboard block. Icon frame matches .iconbtn.ib,
      rows use the same dashed dividers as .drow — no new colors or components. */
@@ -638,22 +647,24 @@
   .fitem{padding:14px 2px;border-bottom:1px dashed var(--line2)}
   .fitem:last-child{border-bottom:0}
   .fi-row{display:flex;align-items:flex-start;gap:12px}
-  .fi-ic{width:24px;height:24px;flex:none;border:0;border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--mid);background:var(--track);margin-top:1px}
-  .fi-ic .icon{width:15px;height:15px}
+  .fi-ic{width:16px;height:16px;flex:none;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;color:var(--mid);background:var(--track)}
+  .fi-ic .icon{width:11px;height:11px}
   .fi-body{flex:1;min-width:0}
-  .fi-meta{font-size:14px;color:var(--faint);font-variant-numeric:tabular-nums}
+  .fi-meta{display:flex;align-items:center;gap:7px;font-size:14px;color:var(--faint);font-variant-numeric:tabular-nums}
   .fi-txt{margin-top:4px;font-size:14px;color:var(--ink);line-height:1.5}
   .fi-txt b{font-weight:600}
   .fi-row > .iconbtn{flex:none;margin-top:0}
   /* audit payload expands in place under the entry — capped height, own scroll */
-  .fi-audit{margin:10px 0 2px 36px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:14px;line-height:1.5;color:var(--ink);background:#fafafa;border:1px solid var(--line2);border-radius:6px;padding:12px 14px;max-height:300px;overflow:auto;white-space:pre}
+  .fi-audit{margin:10px 0 2px 0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:14px;line-height:1.5;color:var(--ink);background:#fafafa;border:1px solid var(--line2);border-radius:6px;padding:12px 14px;max-height:300px;overflow:auto;white-space:pre}
   .fi-audit[hidden]{display:none}
+  /* expand button stays visibly pressed while its payload is open */
+  .iconbtn[data-audit][aria-expanded="true"]{border-color:var(--ink);color:var(--ink);background:var(--sel)}
   .lic-h1{margin:0 0 4px;font-family:var(--font-ui);font-size:var(--t-h1-fs);line-height:var(--t-h1-lh);letter-spacing:var(--t-h1-ls);font-weight:var(--t-h1-fw)}
   .lic-sub{margin:0 0 20px;font-size:var(--t-small-fs);line-height:var(--t-small-lh);letter-spacing:var(--t-small-ls);font-weight:var(--t-small-fw);color:var(--mid)}
   /* ---------- Settings pages (Profile / Billing): forms, section cards, save footers ---------- */
   /* back button in its own left gutter; the content column aligns to one vertical
      line to its right — same gutter mechanic as the details header (.headgrid). */
-  .setgrid{display:grid;grid-template-columns:var(--backW) 1fr;column-gap:var(--backGap);align-items:start;max-width:calc(760px + var(--backW) + var(--backGap));margin:0 auto}
+  .setgrid{max-width:760px}
   .setgrid .lic-back{margin-top:14px;margin-bottom:0}
   .setheadrow{display:flex;align-items:flex-start;gap:16px;max-width:760px}
   .setheadrow .sp{flex:1}
@@ -719,7 +730,7 @@
   .payoverlay[hidden]{display:none}
   .paymodal{background:#fff;border:1px solid var(--line);border-radius:10px;width:min(560px,96vw);box-shadow:0 18px 48px rgba(0,0,0,.20);display:flex;flex-direction:column}
   .paymodal-h{display:flex;align-items:center;gap:12px;padding:20px 24px;border-bottom:1px solid var(--line2)}
-  .paymodal-h h3{margin:0;font-size:16px;font-weight:700}
+  .paymodal-h h3{margin:0;font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw)}
   .paymodal-h .sp{flex:1}
   .paymodal-x{width:28px;height:28px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--mid);display:flex;align-items:center;justify-content:center;font-size:15px}
   .paymodal-x:hover{color:var(--ink);background:var(--hover)}
@@ -771,13 +782,13 @@
   /* Licenses — Portfolio (grouped by product) */
   .pf-summary{display:flex;gap:12px;flex-wrap:wrap;margin:0 0 22px}
   .pf-tile{border:1px solid var(--line2);border-radius:8px;padding:11px 16px;min-width:150px}
-  .pf-tile .k{font-size:14px;color:var(--faint);text-transform:uppercase;letter-spacing:.03em}
-  .pf-tile .v{font-size:20px;font-weight:700;margin-top:5px;font-variant-numeric:tabular-nums}
+  .pf-tile .k{font-family:var(--font-ui);font-size:var(--t-label-fs);line-height:var(--t-label-lh);letter-spacing:var(--t-label-ls);font-weight:var(--t-label-fw);text-transform:uppercase;color:var(--faint)}
+  .pf-tile .v{font-size:var(--t-h2-fs);font-weight:var(--t-h2-fw);margin-top:5px;font-variant-numeric:tabular-nums}
   .pf-tile .vsub{font-size:14px;color:var(--faint);font-weight:400}
   .pf-group{margin-bottom:22px}
   .pf-group[hidden]{display:none}
   .pf-ghead{display:flex;align-items:baseline;gap:12px;padding-bottom:7px;border-bottom:1px solid var(--line)}
-  .pf-gname{font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+  .pf-gname{font-family:var(--font-ui);font-size:var(--t-label-fs);line-height:var(--t-label-lh);letter-spacing:var(--t-label-ls);font-weight:var(--t-label-fw);text-transform:uppercase}
   .pf-groll{font-size:14px;color:var(--mid);font-variant-numeric:tabular-nums}
   .pf-table{width:100%;border-collapse:collapse;font-size:14px;table-layout:fixed}
   .pf-table th:nth-child(1),.pf-table td:nth-child(1){width:30%}
@@ -802,6 +813,7 @@
      per-page back button in the left gutter are separate: Home always goes to the
      dashboard; back returns to the previous list. -->
 <header class="dtopbar">
+  <div class="dtopbar-inner">
   <button class="dbrand" id="homeBtn" aria-label="ThingsBoard License Portal — home" title="Home">
     <div class="mark"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4v16M4 12h16"/></svg></div>
     <div class="bt">ThingsBoard<span class="bsep">·</span>License Portal</div>
@@ -829,6 +841,7 @@
       <div class="sep"></div>
       <button role="menuitem" data-stub="Sign out">Sign out</button>
     </div>
+  </div>
   </div>
 </header>
 
@@ -908,11 +921,6 @@
               </div>
               <div class="headactions">
                 <button class="btn sec" id="couponBtn">Apply coupon</button>
-                <div class="inline" id="couponInline" hidden>
-                  <input type="text" id="couponInput" placeholder="Coupon code" aria-label="Coupon code">
-                  <button class="btn sec" id="couponApply">Apply</button>
-                  <button class="link" id="couponCancel">Cancel</button>
-                </div>
                 <button class="btn" data-modal="change-plan" data-page="sub">Change plan</button>
                 <!-- inferred: a perpetual license does not renew and has nothing to
                      cancel, so Change plan and the ⋮ menu are dropped; the primary
@@ -1120,7 +1128,7 @@
                       <th>Label</th>
                       <th>Status</th>
                       <th>Last activity time</th>
-                      <th class="sortable" aria-sort="descending" tabindex="0">Created time <span class="arrow">▼</span></th>
+                      <th class="sortable" aria-sort="descending" tabindex="0">Created time <span class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></span></th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1174,7 +1182,7 @@
               <table>
                 <thead>
                   <tr>
-                    <th class="sortable" id="sortAudit" aria-sort="descending" tabindex="0">Timestamp <span class="arrow">▼</span></th>
+                    <th class="sortable" id="sortAudit" aria-sort="descending" tabindex="0">Timestamp <span class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></span></th>
                     <th>User</th>
                     <th>Type</th>
                     <th>Status</th>
@@ -1220,10 +1228,11 @@
   <h1 class="lic-h1">Licenses</h1>
   <p class="lic-sub">Every subscription plan and perpetual license on your account, in one place.</p>
 
+  <div class="listcard">
+
   <div class="lic-controls">
     <div class="searchbox"><svg class="icon searchglyph" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input type="text" placeholder="Search licenses" aria-label="Search licenses"></div>
     <div class="lic-typeseg" role="group" aria-label="Filter by product type">
-      <span class="lic-seglabel">Type:</span>
       <button class="typechip is-on" data-type="all" aria-pressed="true">All</button>
       <button class="typechip" data-type="Subscription" aria-pressed="false">Subscription</button>
       <button class="typechip" data-type="Perpetual" aria-pressed="false">Perpetual</button>
@@ -1239,7 +1248,9 @@
       </div>
     </div>
   </div>
+  </div>
 
+  <div class="listcard">
   <div style="overflow-x:auto">
     <table id="prodTable">
       <thead id="prodHead"></thead>
@@ -1257,6 +1268,7 @@
       <button disabled aria-label="Next page">›</button>
       <button disabled aria-label="Last page">»</button>
     </span>
+  </div>
   </div>
 </div>
 
@@ -1399,16 +1411,20 @@
 <!-- ============ INVOICES — full internal page ============ -->
 <div class="licview" id="invoicesView" hidden>
   <h1 class="lic-h1">Invoices</h1>
-  <div class="insttoolbar" style="margin-top:16px">
+  <div class="listcard">
+  <div class="insttoolbar">
     <div class="searchbox"><svg class="icon searchglyph" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input type="text" placeholder="Search invoices" aria-label="Search invoices"></div>
     <span class="spacer"></span>
     <button class="iconbtn ib" data-stub="Refresh invoices" aria-label="Refresh" title="Refresh"><svg class="icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg></button>
   </div>
+  </div>
+
+  <div class="listcard">
   <table>
     <thead>
       <tr>
         <th>Invoice #</th>
-        <th class="sortable" aria-sort="descending" tabindex="0">Date <span class="arrow">▼</span></th>
+        <th class="sortable" aria-sort="descending" tabindex="0">Date <span class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></span></th>
         <th class="num">Amount</th>
         <th>Status</th>
         <th>Payment type</th>
@@ -1433,17 +1449,22 @@
       <button disabled aria-label="First page">«</button><button disabled aria-label="Previous page">‹</button><button disabled aria-label="Next page">›</button><button disabled aria-label="Last page">»</button>
     </span>
   </div>
+  </div>
 </div>
 
 <!-- ============ ACTIVITY — full internal page ============ -->
 <div class="licview" id="activityView" hidden>
   <h1 class="lic-h1">Activity</h1>
-  <div class="insttoolbar" style="margin-top:16px">
+  <div class="listcard">
+  <div class="insttoolbar">
     <div class="searchbox"><svg class="icon searchglyph" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input type="text" placeholder="Search activity" aria-label="Search activity"></div>
     <button class="btn sec" data-stub="Time range: last day"><svg class="icon" viewBox="0 0 24 24" style="margin-right:6px"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.5 2.5"/></svg>last day</button>
     <span class="spacer"></span>
     <button class="iconbtn ib" data-stub="Refresh activity" aria-label="Refresh" title="Refresh"><svg class="icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg></button>
   </div>
+  </div>
+
+  <div class="listcard">
   <!-- chronological feed, rendered from ACTIVITY (newest first) -->
   <div class="feed" id="actFeed"></div>
   <div class="pager air">
@@ -1454,32 +1475,36 @@
       <button disabled aria-label="First page">«</button><button disabled aria-label="Previous page">‹</button><button disabled aria-label="Next page">›</button><button disabled aria-label="Last page">»</button>
     </span>
   </div>
+  </div>
 </div>
 
 <!-- ============ USERS — full internal page ============ -->
 <div class="licview" id="usersView" hidden>
   <h1 class="lic-h1">Users</h1>
   <p class="lic-sub">Customer administrators</p>
+  <div class="listcard">
   <div class="insttoolbar">
     <div class="searchbox"><svg class="icon searchglyph" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input type="text" placeholder="Search users" aria-label="Search users"></div>
     <span class="spacer"></span>
     <button class="iconbtn ib" data-stub="Refresh users" aria-label="Refresh" title="Refresh"><svg class="icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg></button>
     <button class="btn" data-stub="Add user">+ Add user</button>
   </div>
+  </div>
+
+  <div class="listcard">
   <table>
     <thead>
       <tr>
         <th>Name</th>
         <th>Email</th>
-        <th>Activation status</th>
-        <th class="sortable" aria-sort="descending" tabindex="0">Created <span class="arrow">▼</span></th>
+        <th class="sortable" aria-sort="descending" tabindex="0">Created <span class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></span></th>
         <th aria-label="User actions"></th>
       </tr>
     </thead>
     <tbody>
-      <tr><td>Dev User</td><td>dev@thingsboard.io</td><td><span class="pill attn">Pending</span></td><td>Aug 02 2026</td><td class="cellact"><span class="rowactions"><button class="link" data-stub="Login as Dev User">Login as →</button><button class="link" data-stub="Delete Dev User">Delete</button></span></td></tr>
-      <tr><td>A. Admin</td><td>a.admin@thingsboard.io</td><td><span class="pill soft">Activated</span></td><td>Jul 20 2026</td><td class="cellact"><span class="rowactions"><button class="link" data-stub="Login as A. Admin">Login as →</button><button class="link" data-stub="Delete A. Admin">Delete</button></span></td></tr>
-      <tr><td>Mariia Panchuk</td><td>mpanchuk@thingsboard.io</td><td><span class="pill soft">Activated</span></td><td>Jul 17 2026</td><td class="cellact"><span class="rowactions"><button class="link" data-stub="Login as Mariia Panchuk">Login as →</button><button class="link" data-stub="Delete Mariia Panchuk">Delete</button></span></td></tr>
+      <tr><td>Dev User</td><td>dev@thingsboard.io</td><td>Aug 02 2026</td><td class="cellact"><span class="rowactions"><button class="link" data-stub="Login as Dev User">Login as →</button><button class="link" data-stub="Delete Dev User">Delete</button></span></td></tr>
+      <tr><td>A. Admin</td><td>a.admin@thingsboard.io</td><td>Jul 20 2026</td><td class="cellact"><span class="rowactions"><button class="link" data-stub="Login as A. Admin">Login as →</button><button class="link" data-stub="Delete A. Admin">Delete</button></span></td></tr>
+      <tr><td>Mariia Panchuk</td><td>mpanchuk@thingsboard.io</td><td>Jul 17 2026</td><td class="cellact"><span class="rowactions"><button class="link" data-stub="Login as Mariia Panchuk">Login as →</button><button class="link" data-stub="Delete Mariia Panchuk">Delete</button></span></td></tr>
     </tbody>
   </table>
   <div class="pager air">
@@ -1490,12 +1515,12 @@
       <button disabled aria-label="First page">«</button><button disabled aria-label="Previous page">‹</button><button disabled aria-label="Next page">›</button><button disabled aria-label="Last page">»</button>
     </span>
   </div>
+  </div>
 </div>
 
 <!-- ============ PROFILE SETTINGS — full internal page ============ -->
 <div class="licview" id="profileView" hidden>
  <div class="setgrid">
-  <button class="back lic-back" id="profBackBtn" aria-label="Back" title="Back">&larr;</button>
   <div class="setcol">
   <!-- sticky page header: one Save for the whole page, aligned right on the H1 row -->
   <div class="pagehead">
@@ -1504,13 +1529,8 @@
     <span class="saved" id="profSavedNote">All changes saved</span>
     <button class="btn" id="profSaveBtn" disabled>Save</button>
   </div>
-  <p class="lic-sub">Your account and your company. Used across the portal and on invoices.</p>
-
   <div class="setcard">
-    <div class="setcard-h"><h2>Your profile</h2><span class="setcard-hint">Personal account</span></div>
-
-    <!-- Personal — even 2×2 grid (one .field2; grid gap spaces both rows) -->
-    <h3 class="minihead">Personal</h3>
+    <div class="setcard-h"><h2>Personal</h2><span class="setcard-hint">Personal account</span></div>
     <div class="field2">
       <div class="field"><label>First name</label><input type="text" value="Mariia"></div>
       <div class="field"><label>Last name</label><input type="text" value="Panchuk"></div>
@@ -1521,10 +1541,10 @@
       </div>
       <div class="field"><label>Language</label><select><option>English</option><option>Українська</option><option>Deutsch</option><option>Español</option></select></div>
     </div>
+  </div>
 
-    <!-- Security — password change inline in the section (no button, no modal) -->
-    <div class="hairline"></div>
-    <h3 class="minihead" style="margin-top:16px">Security</h3>
+  <div class="setcard">
+    <div class="setcard-h"><h2>Security</h2><span class="setcard-hint">Password</span></div>
     <div class="field"><label>Current password</label><input type="password" placeholder="Enter only to change your password."></div>
     <div class="field2">
       <div class="field"><label>New password</label><input type="password"></div>
@@ -1565,7 +1585,6 @@
 <!-- ============ BILLING & PAYMENT — full internal page ============ -->
 <div class="licview" id="billingView" hidden>
  <div class="setgrid">
-  <button class="back lic-back" id="billBackBtn" aria-label="Back" title="Back">&larr;</button>
   <div class="setcol">
   <!-- sticky page header: one Save for the whole page (billing address edits) -->
   <div class="pagehead">
@@ -1583,7 +1602,7 @@
       <span class="pc-num">•••• •••• •••• 4242</span>
       <span class="pc-exp">Expires 12 / 2028</span>
       <span class="sp"></span>
-      <button class="btn sec" id="payUpdateBtn">Update</button>
+      <button class="iconbtn ib" id="payUpdateBtn" aria-label="Update payment method" title="Update payment method"><svg class="icon" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
     </div>
   </div>
 
@@ -1616,7 +1635,7 @@
       <div class="dwelcome">
         <div class="dw-txt">
           <h1>Welcome back, Mariia</h1>
-          <p>ThingsBoard · here's what's happening with your licenses.</p>
+          <p id="dashState">ThingsBoard · here's what's happening with your licenses.</p>
         </div>
         <div class="dropwrap">
           <button class="btn" id="dashNewBtn" aria-haspopup="true" aria-expanded="false">+ New license ▾</button>
@@ -1651,14 +1670,14 @@
           <thead>
             <tr>
               <th>Invoice #</th>
-              <th class="sortable" aria-sort="descending" tabindex="0">Date <span class="arrow">▼</span></th>
+              <th class="sortable" aria-sort="descending" tabindex="0">Date <span class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></span></th>
               <th class="num">Amount</th>
               <th>Status</th>
               <th>Payment type</th>
               <th aria-label="Invoice actions"></th>
             </tr>
           </thead>
-          <tbody>
+          <tbody id="dashInvBody">
             <tr><td class="mono">NAWE49WG-0007</td><td>Aug 18 2026</td><td class="num">$166.46</td><td><span class="pill">Paid</span></td><td>Auto-pay</td><td class="cellact"><span class="rowactions"><button class="link" data-stub="Download PDF">Download PDF</button><button class="link" data-stub="View invoice">View invoice</button></span></td></tr>
             <tr><td class="mono">NAWE49WG-0006</td><td>Aug 18 2026</td><td class="num">$2,999.00</td><td><span class="pill">Paid</span></td><td>Auto-pay</td><td class="cellact"><span class="rowactions"><button class="link" data-stub="Download PDF">Download PDF</button><button class="link" data-stub="View invoice">View invoice</button></span></td></tr>
             <tr><td class="mono">NAWE49WG-0005</td><td>Aug 18 2026</td><td class="num">$15.00</td><td><span class="pill">Paid</span></td><td>Auto-pay</td><td class="cellact"><span class="rowactions"><button class="link" data-stub="Download PDF">Download PDF</button><button class="link" data-stub="View invoice">View invoice</button></span></td></tr>
@@ -1686,11 +1705,11 @@
             <tr>
               <th>Name</th>
               <th>Email</th>
-              <th class="sortable" aria-sort="descending" tabindex="0">Created <span class="arrow">▼</span></th>
+              <th class="sortable" aria-sort="descending" tabindex="0">Created <span class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></span></th>
               <th aria-label="User actions"></th>
             </tr>
           </thead>
-          <tbody>
+          <tbody id="dashUsersBody">
             <tr><td>Dev User</td><td>dev@thingsboard.io</td><td>Aug 02 2026</td><td class="cellact"><span class="rowactions"><button class="link" data-stub="Login as Dev User">Login as →</button><button class="link" data-stub="Delete Dev User">Delete</button></span></td></tr>
             <tr><td>A. Admin</td><td>a.admin@thingsboard.io</td><td>Jul 20 2026</td><td class="cellact"><span class="rowactions"><button class="link" data-stub="Login as A. Admin">Login as →</button><button class="link" data-stub="Delete A. Admin">Delete</button></span></td></tr>
             <tr><td>Mariia Panchuk</td><td>mpanchuk@thingsboard.io</td><td>Jul 17 2026</td><td class="cellact"><span class="rowactions"><button class="link" data-stub="Login as Mariia Panchuk">Login as →</button><button class="link" data-stub="Delete Mariia Panchuk">Delete</button></span></td></tr>
@@ -1792,6 +1811,28 @@
       <span class="sp"></span>
       <button class="btn sec" id="payCancel">Cancel</button>
       <button class="btn" id="payUpdate" disabled>Update</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ APPLY COUPON MODAL (payment-method modal chrome) ============ -->
+<div class="payoverlay" id="couponOverlay" hidden>
+  <div class="paymodal" role="dialog" aria-modal="true" aria-labelledby="couponTitle" style="width:min(420px,96vw)">
+    <div class="paymodal-h">
+      <h3 id="couponTitle">Apply coupon</h3>
+      <span class="sp"></span>
+      <button class="paymodal-x" id="couponClose" aria-label="Close">✕</button>
+    </div>
+    <div class="paymodal-b">
+      <div class="field">
+        <label for="couponInput">Coupon code</label>
+        <input type="text" id="couponInput" placeholder="Enter coupon code" autocomplete="off" aria-label="Coupon code">
+      </div>
+    </div>
+    <div class="paymodal-f">
+      <span class="sp"></span>
+      <button class="btn sec" id="couponCancel">Cancel</button>
+      <button class="btn" id="couponApply" disabled>Apply</button>
     </div>
   </div>
 </div>
@@ -2112,13 +2153,6 @@
   <h4>Prototype settings</h4>
   <div class="sp-note">Prototype-only — not part of the product UI.</div>
 
-  <!-- prototype-wide mode, so it sits above everything else -->
-  <div class="sp-label">Flow</div>
-  <div class="sp-pick" role="radiogroup" aria-label="Flow">
-    <label class="sp-opt"><input type="radio" name="flowMode" value="topbar" checked><span>Top-bar navigation</span></label>
-    <label class="sp-opt"><input type="radio" name="flowMode" value="overlay"><span>Full-screen overlays</span></label>
-  </div>
-
   <!-- deprecated / alternative explorations live apart from the working list -->
   <div class="seg" style="margin-top:14px" role="radiogroup" aria-label="Settings section">
     <label><input type="radio" name="spTab" value="main" checked><span>Settings</span></label>
@@ -2129,7 +2163,8 @@
     <!-- global entry points; every other page is reached by navigating the flow -->
     <div class="sp-label" style="margin-top:14px">Dashboard (Home)</div>
     <div class="sp-pick" role="radiogroup" aria-label="Dashboard">
-      <label class="sp-opt"><input type="radio" name="detailsPage" value="dashboard" checked><span>Dashboard — populated</span></label>
+      <label class="sp-opt"><input type="radio" name="detailsPage" value="dashboard" checked><span>Dashboard — small account (A)</span></label>
+      <label class="sp-opt"><input type="radio" name="detailsPage" value="dashB"><span>Dashboard — large account (B)</span></label>
       <label class="sp-opt"><input type="radio" name="detailsPage" value="dashempty"><span>Dashboard — new user (empty)</span></label>
       <div class="sp-grouphead">Products</div>
       <label class="sp-opt"><input type="radio" name="detailsPage" value="products3"><span>Product-first (neutral)</span></label>
@@ -2151,6 +2186,9 @@
   <div id="spArchive" hidden>
     <div class="sp-note" style="margin-top:14px">Deprecated explorations — kept for reference, not part of the flow.</div>
     <div class="sp-pick" role="radiogroup" aria-label="Archived variants">
+      <div class="sp-grouphead">Flow (archived)</div>
+      <label class="sp-opt"><input type="radio" name="flowMode" value="topbar" checked><span>Top-bar navigation</span></label>
+      <label class="sp-opt"><input type="radio" name="flowMode" value="overlay"><span>Full-screen overlays (archived)</span></label>
       <div class="sp-grouphead">Products</div>
       <label class="sp-opt"><input type="radio" name="detailsPage" value="products"><span>Grouped (as now)</span></label>
       <label class="sp-opt"><input type="radio" name="detailsPage" value="products2"><span>One column per field</span></label>
@@ -2261,22 +2299,26 @@
   bindAdd();
 
   /* ---------- coupon ---------- */
-  var couponBtn=$('#couponBtn'), couponInline=$('#couponInline'), couponInput=$('#couponInput');
-  couponBtn.addEventListener('click', function(){
-    couponInline.hidden=false; couponBtn.style.display='none'; couponInput.focus();
-  });
-  function couponReset(){ couponInline.hidden=true; couponBtn.style.display=''; couponInput.value=''; }
-  $('#couponCancel').addEventListener('click', couponReset);
-  $('#couponApply').addEventListener('click', function(){ couponReset(); });
-  couponInput.addEventListener('keydown', function(e){ if(e.key==='Escape') couponReset(); });
+  (function(){
+    var ov=$('#couponOverlay'), btn=$('#couponBtn'), input=$('#couponInput'), apply=$('#couponApply');
+    if(!ov || !btn) return;
+    function refresh(){ apply.disabled = !input.value.trim(); }
+    function open(){ input.value=''; refresh(); ov.hidden=false; input.focus(); }
+    function close(){ ov.hidden=true; btn.focus(); }
+    btn.addEventListener('click', open);
+    input.addEventListener('input', refresh);
+    $('#couponClose').addEventListener('click', close);
+    $('#couponCancel').addEventListener('click', close);
+    apply.addEventListener('click', function(){ if(!apply.disabled) close(); });   // stub: no real redemption
+    ov.addEventListener('click', function(e){ if(e.target===ov) close(); });
+    document.addEventListener('keydown', function(e){ if(e.key==='Escape' && !ov.hidden) close(); });
+  })();
 
   /* ---------- sortable column headers (prod instances, audit logs) ---------- */
   $$('.sortable').forEach(function(th){
     var toggleSort = function(){
       var desc = th.getAttribute('aria-sort') === 'descending';
       th.setAttribute('aria-sort', desc ? 'ascending' : 'descending');
-      var arrow = $('.arrow', th);
-      if(arrow) arrow.textContent = desc ? '▲' : '▼';
     };
     th.addEventListener('click', toggleSort);
     th.addEventListener('keydown', function(e){
@@ -2630,7 +2672,8 @@
      route. In-memory only. */
   var PAGES = {
     // standalone view with its own chrome — no plan content of its own
-    dashboard: { kind:'dash' },
+    dashboard: { kind:'dash', variant:'A' },
+    dashB:     { kind:'dash', variant:'B' },
     // new-user empty state — shown when the account has no licenses yet
     dashempty: { kind:'dashempty' },
     // Products list — inner content only, no chrome. Two layout variants:
@@ -2784,6 +2827,7 @@
   function applyDetailsPage(){
     var p = PAGES[detailsPage];
     presentPage(p.kind);
+    if(p.kind === 'dash'){ dashVariant = p.variant || 'A'; renderDatasetViews(); return; }
     if(p.kind === 'products'){ productsVariant = p.variant; renderProducts(); return; }
     if(p.kind !== 'sub' && p.kind !== 'perp') return;   // other pages are static content
     $$('[data-page]').forEach(function(el){ el.hidden = el.getAttribute('data-page') !== p.kind; });
@@ -2803,6 +2847,7 @@
       if(!r.checked) return;
       if(r.value !== detailsPage) prevPage = detailsPage;
       detailsPage = r.value;
+      if(r.value==='dashboard'||r.value==='dashB'||r.value==='dashempty') homeKey = r.value;
       applyDetailsPage();
     });
   });
@@ -2822,9 +2867,9 @@
     });
   });
   var pgoClose = $('#pgoClose');
-  if(pgoClose) pgoClose.addEventListener('click', function(){ goToPage('dashboard'); });
+  if(pgoClose) pgoClose.addEventListener('click', function(){ goToPage(homeKey); });
   document.addEventListener('keydown', function(e){
-    if(e.key === 'Escape' && !$('#pageOverlay').hidden && $('#overlay').hidden && $('#fsAddons').hidden && $('#payOverlay').hidden){ goToPage('dashboard'); }
+    if(e.key === 'Escape' && !$('#pageOverlay').hidden && $('#overlay').hidden && $('#fsAddons').hidden && $('#payOverlay').hidden){ goToPage(homeKey); }
   });
   syncFlowChrome();
   $$('input[name="spTab"]').forEach(function(r){
@@ -2835,11 +2880,201 @@
       $('#spArchive').hidden = !archive;
     });
   });
-  applyDetailsPage();
+  /* ============ Dashboard density datasets (single source per variant) ============
+     Two populated dashboards: A (small account) and B (large account, labelled).
+     Each carries its own consistent licenses / users / invoices / activity, so the
+     dashboard blocks, the header state line, and the Licenses / Invoices / Users /
+     Activity pages opened from it all read from the same data. `event` is the
+     licence's next renewal (subscription) or updates-end (perpetual) date, used for
+     the next-charge line and for attention-first ordering. Today = Aug 19 2026. */
+  var dashVariant = 'A';
+  var homeKey = 'dashboard';
+  function dateKey(sv){ var M={Jan:1,Feb:2,Mar:3,Apr:4,May:5,Jun:6,Jul:7,Aug:8,Sep:9,Oct:10,Nov:11,Dec:12}; var q=String(sv).split(' '); return (+q[2])*10000+(M[q[0]]||0)*100+(+q[1]); }
+  function fmtDate(sv){ var q=String(sv).split(' '); return q.length===3 ? (q[0]+' '+q[1]+', '+q[2]) : sv; }
+  var DATASETS = {
+    A: {
+      licenses: [
+        { goto:'prototype', product:'ThingsBoard', type:'Subscription', name:'Prototype', label:'Production', created:'Aug 10 2026', status:'active', event:'Aug 28 2026', price:'$39.00 / mo', billing:'auto-pay' },
+        { goto:'',          product:'TBMQ',        type:'Subscription', name:'TBMQ PE',   label:'Broker',     created:'Jul 22 2026', status:'active', event:'Sep 05 2026', price:'$15.00 / mo', billing:'auto-pay' }
+      ],
+      users: [
+        { name:'Mariia Panchuk', email:'mpanchuk@thingsboard.io', created:'Jul 17 2026' },
+        { name:'A. Admin',       email:'a.admin@thingsboard.io',  created:'Jul 20 2026' }
+      ],
+      invoices: [
+        { num:'NAWE49WG-0003', date:'Aug 03 2026', amount:'$39.00', status:'Paid', payment:'Auto-pay' },
+        { num:'NAWE49WG-0002', date:'Jul 30 2026', amount:'$15.00', status:'Paid', payment:'Auto-pay' },
+        { num:'NAWE49WG-0001', date:'Jul 22 2026', amount:'$15.00', status:'Paid', payment:'Auto-pay' }
+      ],
+      activity: [
+        { kind:'created', ts:'10 Aug 2026, 09:14', entityType:'Subscription', entityName:'Prototype', actor:'mpanchuk@thingsboard.io', action:'ADDED',
+          txt:'<b>Subscription</b> <b>Prototype</b> was created by <b>mpanchuk@thingsboard.io</b>.' },
+        { kind:'updated', ts:'28 Jul 2026, 15:02', entityType:'Payment method', entityName:'Visa ••4242', actor:'mpanchuk@thingsboard.io', action:'UPDATED',
+          txt:'<b>Payment method</b> was added by <b>mpanchuk@thingsboard.io</b>.' },
+        { kind:'created', ts:'22 Jul 2026, 11:40', entityType:'Subscription', entityName:'TBMQ PE', actor:'mpanchuk@thingsboard.io', action:'ADDED',
+          txt:'<b>Subscription</b> <b>TBMQ PE</b> was created by <b>mpanchuk@thingsboard.io</b>.' },
+        { kind:'info', ts:'22 Jul 2026, 11:41', entityType:'Invoice', entityName:'NAWE49WG-0001', actor:'System', action:'PAID',
+          txt:'Invoice <b>NAWE49WG-0001</b> was paid by <b>System</b>.' }
+      ]
+    },
+    B: {
+      licenses: [
+        { goto:'business',  product:'ThingsBoard', type:'Subscription', name:'Business',  label:'Global',         created:'May 02 2026', status:'active',           event:'Aug 24 2026', price:'$499.00 / mo', billing:'auto-pay' },
+        { goto:'startup',   product:'ThingsBoard', type:'Subscription', name:'Startup',   label:'EU pilot',       created:'Jun 06 2026', status:'active',           event:'Sep 13 2026', price:'$299.00 / mo', billing:'auto-pay' },
+        { goto:'startup',   product:'ThingsBoard', type:'Subscription', name:'Startup',   label:'Production',     created:'Jun 20 2026', status:'payment_failed',   event:'Aug 18 2026', price:'$299.00 / mo', billing:'auto-pay' },
+        { goto:'pilot',     product:'ThingsBoard', type:'Subscription', name:'Pilot',     label:'Factory A',      created:'Jul 01 2026', status:'active',           event:'Aug 30 2026', price:'$99.00 / mo',  billing:'auto-pay' },
+        { goto:'prototype', product:'ThingsBoard', type:'Subscription', name:'Prototype', label:'Staging',        created:'Jul 10 2026', status:'active',           event:'Sep 05 2026', price:'$39.00 / mo',  billing:'auto-pay' },
+        { goto:'prototype', product:'ThingsBoard', type:'Subscription', name:'Prototype', label:'Dev',            created:'Jul 15 2026', status:'active',           event:'Aug 27 2026', price:'$39.00 / mo',  billing:'auto-pay' },
+        { goto:'maker',     product:'ThingsBoard', type:'Subscription', name:'Maker',     label:'Sandbox',        created:'Jul 20 2026', status:'active',           event:'Sep 02 2026', price:'$10.00 / mo',  billing:'auto-pay' },
+        { goto:'perp',      product:'ThingsBoard', type:'Perpetual',    name:'ThingsBoard PE Perpetual License', label:'On-prem',    created:'Aug 28 2025', status:'updates_expiring', event:'Aug 28 2026', price:'one-time', billing:'paid' },
+        { goto:'perp',      product:'ThingsBoard', type:'Perpetual',    name:'ThingsBoard PE Perpetual License', label:'Air-gapped', created:'Mar 15 2026', status:'active',           event:'Mar 15 2027', price:'one-time', billing:'paid' },
+        { goto:'',          product:'TBMQ',        type:'Subscription', name:'TBMQ PE',   label:'Broker prod',    created:'Jun 30 2026', status:'active',           event:'Aug 26 2026', price:'$15.00 / mo', billing:'auto-pay' },
+        { goto:'',          product:'TBMQ',        type:'Subscription', name:'TBMQ PE',   label:'Broker staging', created:'Jul 05 2026', status:'active',           event:'Sep 08 2026', price:'$15.00 / mo', billing:'auto-pay' },
+        { goto:'',          product:'TBMQ',        type:'Perpetual',    name:'Professional edition', label:'Edge broker', created:'Apr 10 2026', status:'active',      event:'Apr 10 2027', price:'one-time', billing:'paid' }
+      ],
+      users: [
+        { name:'Mariia Panchuk', email:'mpanchuk@thingsboard.io',  created:'Jul 17 2026' },
+        { name:'A. Admin',       email:'a.admin@thingsboard.io',   created:'Jul 20 2026' },
+        { name:'Dev User',       email:'dev@thingsboard.io',       created:'Aug 02 2026' },
+        { name:'Olena Kravets',  email:'o.kravets@thingsboard.io', created:'Aug 05 2026' },
+        { name:'Ivan Petrenko',  email:'i.petrenko@thingsboard.io',created:'Aug 09 2026' },
+        { name:'Sara Lee',       email:'s.lee@thingsboard.io',     created:'Aug 12 2026' },
+        { name:'Tom Fischer',    email:'t.fischer@thingsboard.io', created:'Aug 15 2026' },
+        { name:'Nina Rossi',     email:'n.rossi@thingsboard.io',   created:'Aug 18 2026' }
+      ],
+      invoices: [
+        { num:'NAWE49WG-0021', date:'Aug 18 2026', amount:'$299.00', status:'Paid', payment:'Auto-pay' },
+        { num:'NAWE49WG-0020', date:'Aug 15 2026', amount:'$15.00',  status:'Paid', payment:'Auto-pay' },
+        { num:'NAWE49WG-0019', date:'Aug 12 2026', amount:'$99.00',  status:'Paid', payment:'Auto-pay' },
+        { num:'NAWE49WG-0018', date:'Aug 08 2026', amount:'$499.00', status:'Paid', payment:'Auto-pay' },
+        { num:'NAWE49WG-0017', date:'Aug 05 2026', amount:'$39.00',  status:'Paid', payment:'Auto-pay' },
+        { num:'NAWE49WG-0016', date:'Aug 02 2026', amount:'$10.00',  status:'Paid', payment:'Auto-pay' },
+        { num:'NAWE49WG-0015', date:'Jul 28 2026', amount:'$299.00', status:'Paid', payment:'Auto-pay' }
+      ],
+      activity: [
+        { kind:'status',  ts:'18 Aug 2026, 07:12', entityType:'Subscription', entityName:'Startup', actor:'System', action:'PAYMENT_FAILED',
+          txt:'<b>Payment failed</b> for <b>Startup</b> (Production) — card <b>Visa ••4242</b> was declined.', delta:'Auto-pay charge of $299.00 failed' },
+        { kind:'created', ts:'18 Aug 2026, 10:26', entityType:'User', entityName:'Nina Rossi', actor:'mpanchuk@thingsboard.io', action:'ADDED',
+          txt:'User <b>Nina Rossi</b> was invited by <b>mpanchuk@thingsboard.io</b>.' },
+        { kind:'status',  ts:'15 Aug 2026, 14:03', entityType:'Subscription', entityName:'Pilot', actor:'i.petrenko@thingsboard.io', action:'UPDATED',
+          txt:'<b>Plan</b> was changed from <b>Prototype</b> to <b>Pilot</b> on <b>Factory A</b> by <b>i.petrenko@thingsboard.io</b>.', delta:'Plan changed from Prototype to Pilot' },
+        { kind:'updated', ts:'12 Aug 2026, 09:31', entityType:'Subscription', entityName:'Business', actor:'o.kravets@thingsboard.io', action:'UPDATED',
+          txt:'Add-on <b>Edge Computing</b> was enabled on <b>Business</b> (Global) by <b>o.kravets@thingsboard.io</b>.' },
+        { kind:'info',    ts:'08 Aug 2026, 00:05', entityType:'Invoice', entityName:'NAWE49WG-0018', actor:'System', action:'PAID',
+          txt:'Invoice <b>NAWE49WG-0018</b> was paid by <b>System</b>.' },
+        { kind:'status',  ts:'05 Aug 2026, 08:00', entityType:'License', entityName:'ThingsBoard PE Perpetual License', actor:'System', action:'UPDATES_EXPIRING',
+          txt:'<b>Software updates</b> for the <b>On-prem</b> perpetual license expire on <b>Aug 28, 2026</b>.', delta:'Updates term ends Aug 28 2026' }
+      ]
+    }
+  };
+  function DATA(){ return DATASETS[dashVariant] || DATASETS.A; }
+  function attnRank(l){ return l.status==='payment_failed' ? 0 : l.status==='updates_expiring' ? 1 : 2; }
+  function statusPill(st){
+    if(st==='payment_failed')   return '<td><span class="pill attn">Payment failed</span></td>';
+    if(st==='updates_expiring') return '<td><span class="pill attn">Updates expiring</span></td>';
+    return '<td><span class="pill">Active</span></td>';
+  }
+  function nextCharge(ds){
+    var subs = ds.licenses.filter(function(l){ return l.type==='Subscription' && l.status==='active'; });
+    subs.sort(function(a,b){ return dateKey(a.event)-dateKey(b.event); });
+    return subs[0] || null;
+  }
+  function invRow(v){
+    var pill = v.status==='Past due' ? '<span class="pill attn">Past due</span>' : '<span class="pill">'+(v.status||'Paid')+'</span>';
+    return '<tr><td class="mono">'+v.num+'</td><td>'+v.date+'</td><td class="num">'+v.amount+'</td><td>'+pill+'</td><td>'+v.payment+'</td>'
+      + '<td class="cellact"><span class="rowactions"><button class="link" data-stub="Download PDF">Download PDF</button><button class="link" data-stub="View invoice">View invoice</button></span></td></tr>';
+  }
+  function userRow(u){
+    return '<tr><td>'+u.name+'</td><td>'+u.email+'</td><td>'+u.created+'</td>'
+      + '<td class="cellact"><span class="rowactions"><button class="link" data-stub="Login as '+u.name+'">Login as →</button><button class="link" data-stub="Delete '+u.name+'">Delete</button></span></td></tr>';
+  }
+  function setShowAll(sel, total, shown){
+    var a = $(sel); if(!a) return;
+    a.textContent = 'Show all' + (total>shown ? ' ('+total+')' : '') + ' →';
+  }
+  function dashLicList(){
+    var ls = DATA().licenses.slice();
+    if(dashVariant === 'B'){
+      ls.sort(function(a,b){ return attnRank(a)-attnRank(b) || dateKey(a.event)-dateKey(b.event); });
+      return ls.slice(0, 5);
+    }
+    ls.sort(function(a,b){ return dateKey(b.created)-dateKey(a.created); });
+    return ls;
+  }
+  function renderDashLicenses(){
+    var head=$('#dashLicHead'), body=$('#dashLicBody'); if(!head||!body) return;
+    var prev=productsVariant; productsVariant=3;
+    head.innerHTML = headHtml();
+    var shown = dashLicList();
+    body.innerHTML = shown.map(rowHtml).join('');
+    productsVariant=prev;
+    setShowAll('#dashView [data-goto="products3"]', DATA().licenses.length, shown.length);
+  }
+  function renderDashInvoices(){
+    var b=$('#dashInvBody'); if(!b) return;
+    b.innerHTML = DATA().invoices.slice(0, 3).map(invRow).join('');
+  }
+  function renderDashUsers(){
+    var b=$('#dashUsersBody'); if(!b) return;
+    var us = DATA().users.slice().sort(function(a,c){ return dateKey(c.created)-dateKey(a.created); });
+    var shown = us.slice(0, 5);
+    b.innerHTML = shown.map(userRow).join('');
+    setShowAll('#dashView [data-goto="users"]', DATA().users.length, shown.length);
+  }
+  function renderDashState(){
+    var el=$('#dashState'); if(!el) return;
+    var ds=DATA(), n=ds.licenses.length, nc=nextCharge(ds);
+    var txt = n + ' active license' + (n===1?'':'s');
+    if(nc) txt += ' · next charge ' + nc.price.replace(/\s*\/\s*mo/i,'') + ' on ' + fmtDate(nc.event);
+    el.textContent = txt;
+  }
+  function renderInvoicesPage(){
+    var b=$('#invoicesView tbody'); if(!b) return;
+    b.innerHTML = DATA().invoices.map(invRow).join('');
+    var r=$('#invoicesView .pager .range'); if(r) r.textContent = '1–'+DATA().invoices.length+' of '+DATA().invoices.length;
+  }
+  function renderUsersPage(){
+    var b=$('#usersView tbody'); if(!b) return;
+    var us = DATA().users.slice().sort(function(a,c){ return dateKey(c.created)-dateKey(a.created); });
+    b.innerHTML = us.map(userRow).join('');
+    var r=$('#usersView .pager .range'); if(r) r.textContent = '1–'+us.length+' of '+us.length;
+  }
+  function renderDatasetViews(){
+    renderDashState();
+    renderDashLicenses();
+    renderDashInvoices();
+    renderDashUsers();
+    renderFeed('#dashFeed', 3);
+    renderFeed('#actFeed');
+    renderInvoicesPage();
+    renderUsersPage();
+    var ar=$('#actRange'); if(ar) ar.textContent = '1–'+DATA().activity.length+' of '+DATA().activity.length;
+  }
 
   /* ---------- Products page: data-driven table (all plans + perpetual) ---------- */
   // route to a details page and keep the settings picker in sync
+  // Unsaved-changes guard shared by Profile settings and Billing & payment.
+  var dirtyViews = {}, settingsClean = {};
+  function anyDirty(){ return Object.keys(dirtyViews).some(function(k){ return dirtyViews[k]; }); }
+  function confirmLeave(proceed){
+    openModal('You have unsaved changes.',
+      '<p>Your edits on this page haven\u2019t been saved yet. If you leave now, they\u2019ll be lost.</p>');
+    var foot = $('#overlay .mf');
+    var leave = document.createElement('button');
+    leave.type='button'; leave.className='btn ter'; leave.id='leaveBtn'; leave.textContent='Leave without saving';
+    foot.insertBefore(leave, $('#modalCloseBtn'));
+    $('#modalCloseBtn').textContent = 'Stay';
+    leave.addEventListener('click', function(){
+      Object.keys(settingsClean).forEach(function(k){ settingsClean[k](); });
+      closeModal(); proceed();
+    });
+    $('#modalCloseBtn').focus();
+  }
   function goToPage(key){
+    if(anyDirty()){ confirmLeave(function(){ _goToPage(key); }); return; }
+    _goToPage(key);
+  }
+  function _goToPage(key){
     if(key !== detailsPage) prevPage = detailsPage;   // one step back, no stack
     detailsPage = key;
     var radio = $('input[name="detailsPage"][value="' + key + '"]');
@@ -2864,10 +3099,13 @@
   // shared shell: the logo is a persistent Home link from anywhere. Distinct from the
   // detail-page back button (which returns to the previous list) — both coexist.
   var homeBtn = $('#homeBtn');
-  if(homeBtn) homeBtn.addEventListener('click', function(){ goToPage('dashboard'); });
+  if(homeBtn) homeBtn.addEventListener('click', function(){ goToPage(homeKey); });
   // top-bar nav: same navigation as the in-page links
   $$('.tnav-item').forEach(function(b){
-    b.addEventListener('click', function(){ var k = b.getAttribute('data-goto'); if(PAGES[k]) goToPage(k); });
+    b.addEventListener('click', function(){
+      var k = b.getAttribute('data-nav') === 'home' ? homeKey : b.getAttribute('data-goto');
+      if(PAGES[k]) goToPage(k);
+    });
   });
 
   // single data source — every subscription plan + perpetual license. `goto` is the
@@ -2901,10 +3139,8 @@
   ];
   // variant 3 uses PRODUCTS_V3; variants 1 & 2 stay ThingsBoard-only. Always Created-desc.
   function currentProducts(){
-    var list = productsVariant === 3 ? PRODUCTS_V3 : PRODUCTS;
-    var M = { Jan:1, Feb:2, Mar:3, Apr:4, May:5, Jun:6, Jul:7, Aug:8, Sep:9, Oct:10, Nov:11, Dec:12 };
-    function key(s){ var p = String(s).split(' '); return (+p[2]) * 10000 + (M[p[0]] || 0) * 100 + (+p[1]); }
-    return list.slice().sort(function(a, b){ return key(b.created) - key(a.created); });
+    var list = productsVariant === 3 ? DATA().licenses : PRODUCTS;
+    return list.slice().sort(function(a, b){ return dateKey(b.created) - dateKey(a.created); });
   }
 
   var KEBAB = '<svg class="icon" viewBox="0 0 24 24" style="fill:currentColor;stroke:none"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg>';
@@ -2953,9 +3189,13 @@
     var createdCell = '<td class="lic-num">' + p.created + '</td>';
     var labelText = p.label ? p.label : '<span class="muted">—</span>';
     if(productsVariant === 3){
-      // License cell: plan/package name + user label (or "— · Add label") as the subline
-      var lic = '<td><div class="lp-name">' + p.name + '</div><div class="lp-meta">' + (p.label ? p.label : '— · Add label') + '</div></td>';
-      return rowOpen(p) + '<td>' + p.product + '</td>' + lic + typeCell + statusCell + createdCell + actionsCell(p) + '</tr>';
+      // In the large account (B) the user label is how licenses are told apart, so it
+      // leads the cell and the plan name drops to the subline; small account keeps name first.
+      var labelFirst = (dashVariant === 'B');
+      var main = labelFirst ? (p.label || p.name) : p.name;
+      var sub  = labelFirst ? p.name : (p.label ? p.label : '— · Add label');
+      var lic = '<td><div class="lp-name">' + main + '</div><div class="lp-meta">' + sub + '</div></td>';
+      return rowOpen(p) + '<td>' + p.product + '</td>' + lic + typeCell + statusPill(p.status) + createdCell + actionsCell(p) + '</tr>';
     }
     if(productsVariant === 2){
       return rowOpen(p)
@@ -3172,26 +3412,8 @@
       });
     }
 
-    /* Licenses preview: reuse the Products page head/row builders in variant 3 so
-       the columns and row markup stay identical, limited to the three newest rows
-       that actually have a details page in this prototype. */
-    function renderDashLicenses(){
-      var head = $('#dashLicHead'), body = $('#dashLicBody');
-      if(!head || !body) return;
-      var prev = productsVariant;
-      productsVariant = 3;
-      head.innerHTML = headHtml();
-      var rows = currentProducts().filter(function(p){ return p.goto && PAGES[p.goto]; });
-      var top = rows.slice(0, 3);
-      // keep one perpetual row so its details page has a direct in-flow entry point
-      if(!top.some(function(p){ return PAGES[p.goto].kind === 'perp'; })){
-        var perpRow = rows.filter(function(p){ return PAGES[p.goto].kind === 'perp'; })[0];
-        if(perpRow) top.push(perpRow);
-      }
-      body.innerHTML = top.map(rowHtml).join('');
-      productsVariant = prev;
-    }
-    renderDashLicenses();
+    // Licenses preview is rendered by renderDashLicenses() (top-level, dataset-driven,
+    // see renderDatasetViews). Row actions below use delegation on the persistent table.
 
     // row-level actions inside the preview, mirroring the Products page (the row
     // itself routes via the [data-goto] handler below, so these stop propagation)
@@ -3230,6 +3452,8 @@
     // "Show all licenses →" / product rows route to the Licenses (Products) page;
     // other "Show more →" links stub (no standalone Invoices/Logs/Users page yet)
     dashV.addEventListener('click', function(e){
+      var licrow = e.target.closest('.lic-row');
+      if(licrow){ openRow(licrow); return; }
       var go = e.target.closest('[data-goto]');
       if(go){ var k = go.getAttribute('data-goto'); if(k && PAGES[k]) goToPage(k); }
     });
@@ -3315,8 +3539,9 @@
   function wirePageSave(viewSel, btnSel, noteSel){
     var view = $(viewSel), btn = $(btnSel), note = $(noteSel);
     if(!view || !btn) return;
-    function clean(){ btn.disabled = true; if(note) note.hidden = false; }
-    function dirty(){ btn.disabled = false; if(note) note.hidden = true; }
+    function clean(){ btn.disabled = true; if(note) note.hidden = false; dirtyViews[viewSel] = false; }
+    function dirty(){ btn.disabled = false; if(note) note.hidden = true; dirtyViews[viewSel] = true; }
+    settingsClean[viewSel] = clean;
     clean();
     view.addEventListener('input', dirty);
     view.addEventListener('change', dirty);
@@ -3395,6 +3620,16 @@
       openModal(el.getAttribute('data-stub'), '<p>'+STUB+'</p>');
     });
   });
+  // dataset-driven tables are re-rendered, so their row stubs ride event delegation
+  // on the (persistent) tbody instead of per-element binding
+  ['#dashInvBody','#dashUsersBody','#invoicesView tbody','#usersView tbody'].forEach(function(sel){
+    var host = $(sel); if(!host) return;
+    host.addEventListener('click', function(e){
+      var el = e.target.closest('[data-stub]'); if(!el) return;
+      if(el.tagName==='A') e.preventDefault();
+      openModal(el.getAttribute('data-stub'), '<p>'+STUB+'</p>');
+    });
+  });
 
   /* ---------- Activity feed (Activity page + dashboard block) ----------
      A chronological history instead of a table: type icon, muted meta line
@@ -3411,19 +3646,7 @@
   };
   // newest first; standard sentence order: what was done -> from -> to (if any) -> by whom.
   // `delta` is the plain-text change, kept for the raw audit payload only.
-  var ACTIVITY = [
-    { kind:'created', ts:'19 Aug 2026, 13:13', entityType:'Subscription', entityName:'Startup', actor:'mpanchuk@thingsboard.io', action:'ADDED',
-      txt:'<b>Subscription</b> <b>Startup</b> was created by <b>mpanchuk@thingsboard.io</b>.' },
-    { kind:'updated', ts:'19 Aug 2026, 12:40', entityType:'Subscription', entityName:'Prototype', actor:'mpanchuk@thingsboard.io', action:'UPDATED',
-      txt:'Add-on <b>Edge Computing</b> was enabled on <b>Prototype</b> by <b>mpanchuk@thingsboard.io</b>.' },
-    { kind:'status', ts:'19 Aug 2026, 11:02', entityType:'Subscription', entityName:'Startup', actor:'mpanchuk@thingsboard.io', action:'UPDATED',
-      txt:'<b>Plan</b> was changed from <b>Prototype</b> to <b>Startup</b> by <b>mpanchuk@thingsboard.io</b>.',
-      delta:'Plan changed from Prototype to Startup' },
-    { kind:'updated', ts:'18 Aug 2026, 16:20', entityType:'Payment method', entityName:'Visa \u2022\u20224242', actor:'a.admin@thingsboard.io', action:'UPDATED',
-      txt:'<b>Payment method</b> was updated by <b>a.admin@thingsboard.io</b>.' },
-    { kind:'info', ts:'30 Jul 2026, 00:04', entityType:'Invoice', entityName:'INV-2026-07', actor:'System', action:'PAID',
-      txt:'Invoice <b>INV-2026-07</b> was paid by <b>System</b>.' }
-  ];
+  // Activity now lives per-variant in DATASETS (density datasets block above).
   var AUDITSVG = '<svg class="icon" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h5"/></svg>';
   var esc = function(x){ return String(x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
   function auditJson(a){
@@ -3450,9 +3673,8 @@
   function feedItem(a, i){
     return '<div class="fitem">'
       + '<div class="fi-row">'
-      +   '<span class="fi-ic"><svg class="icon" viewBox="0 0 24 24">' + (FEED_ICONS[a.kind] || FEED_ICONS.info) + '</svg></span>'
       +   '<div class="fi-body">'
-      +     '<div class="fi-meta">' + a.ts + '</div>'
+      +     '<div class="fi-meta"><span class="fi-ic"><svg class="icon" viewBox="0 0 24 24">' + (FEED_ICONS[a.kind] || FEED_ICONS.info) + '</svg></span>' + a.ts + '</div>'
       +     '<div class="fi-txt">' + a.txt + '</div>'
       +   '</div>'
       +   '<button class="iconbtn ib" data-audit data-i="' + i + '" aria-expanded="false" aria-label="Show details" title="Show details">' + AUDITSVG + '</button>'
@@ -3462,12 +3684,11 @@
   }
   function renderFeed(sel, limit){
     var el = $(sel); if(!el) return;
-    var list = typeof limit === 'number' ? ACTIVITY.slice(0, limit) : ACTIVITY;
-    el.innerHTML = list.map(function(a){ return feedItem(a, ACTIVITY.indexOf(a)); }).join('');
+    var all = DATA().activity;
+    var list = typeof limit === 'number' ? all.slice(0, limit) : all;
+    el.innerHTML = list.map(function(a, idx){ return feedItem(a, idx); }).join('');
   }
-  renderFeed('#actFeed');
-  renderFeed('#dashFeed', 3);
-  if($('#actRange')) $('#actRange').textContent = '1\u2013' + ACTIVITY.length + ' of ' + ACTIVITY.length;
+  // feeds + ranges render via renderDatasetViews()
 
   // clicking the details icon expands the raw action-data payload in place (toggle; multiple can be open)
   ['#activityView', '#dashView'].forEach(function(sel){
@@ -3509,6 +3730,8 @@
       if(e.key==='Escape' && !pop.hidden){ toggle(false); btn.focus(); }
     });
   });
+
+  applyDetailsPage();   // initial render — datasets + feed helpers are all defined by now
 })();
 </script>
 </body>
