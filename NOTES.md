@@ -133,7 +133,7 @@ topbar/overlay) переїхали в таб **Archive** («Flow (archived)»). 
   TBMQ subs, TB/TBMQ perpetuals; статуси: active / **payment_failed** (B3) / **canceled**
   (B5) / **updates_expiring** (B11). Licenses-блок — **top-5 attention-first**
   (`payment_failed` 0 → `updates_expiring` 1 → active 2 → canceled 3, далі найближчий
-  `event`), рядок **label-first**; Show all тотал: «Show all (12) →» / «Show all (8) →».
+  `event`), рядок **label-first**; Show all тотал: «Show all (12)» / «Show all (8)».
 - `dashempty` — новий користувач (без змін).
 
 **Єдине джерело на варіант** (`DATASETS[dashVariant]`, `DATA()`): дашборд-блоки
@@ -191,12 +191,12 @@ range…) на **Activity-сторінці** й у **details Activity-табі**
 вибраний dash-варіант: dashboard/dashB/dashempty), а не жорстко на A — тому вибраний
 варіант тримається при поверненні на Home.
 
-Рендер dashboard-блоків: `renderDashLicenses/Invoices/Users/State` (top-level,
+Рендер dashboard-блоків: `renderDashLicenses/Invoices/Users` (top-level,
 dataset-driven); рядки строяться **тими самими** `headHtml`/`rowHtml` (variant 3), що
 сторінка Licenses. Recent invoices/users — тепер **не статичні копії**, а з `DATA()`
 (`#dashInvBody`/`#dashUsersBody`). Стуб-кнопки в перерендерених таблицях працюють через
 делегування на persistent `<tbody>` (не per-element). Рядки-ліцензії дашборда клікаються
-через `openRow` (реальна сторінка або stub для TBMQ).
+через `openRow` → `openLicense` (кожен рядок відкриває реальну сторінку деталей).
 
 ### Список поверхонь (kinds)
 - `dash` — **Dashboard (Home)**, стартова сторінка (варіанти A/B — див. вище).
@@ -206,23 +206,26 @@ dataset-driven); рядки строяться **тими самими** `headHt
   зверху, Billing під ним — залежність читається top-down (обидва left-aligned, лейбли
   вирівняні `min-width`). TB×Subscription — 5 карток, решта — одна центрована.
   Deployment-перемикача немає (портал self-managed).
-- `sub` / `perp` — деталі (спільний `#appView`): `maker/prototype/pilot/startup/
-  business` + `prototypeaddons`, перпетуал — `perp`.
+- `sub` / `perp` — деталі (спільний `#appView`). Головний вхід — **`licenseView`**
+  (row-driven, з `activeLicense`); іменовані plan-сторінки пікера (`maker`…`business`,
+  `prototypeaddons`, `perp`) — той самий рендер через `licFromNamed`.
 - `products3` — **сторінка Licenses** у флоу (product-first neutral). У флоу
   ведуть **лише** на неї (back із деталей — жорстко `products3`).
 - `invoices` / `activity` / `users` / `profile` / `billing` — повні сторінки.
 - Архів: `products` (grouped), `products2` (one column per field), `portfolio`.
 
 ### Активність — фід, не таблиця
-`ACTIVITY` (список подій) + `feedItem()` рендерять і сторінку Activity, і блок на
-дашборді (там 3 останні). Елемент: **іконка типу inline в мета-рядку** (`.fi-ic`,
+Події живуть **per-variant** у `DATASETS[..].activity` (`DATA().activity`);
+`feedItem()` рендерить сторінку Activity, блок на дашборді (3 останні) і details-таб
+(`licenseActivity`). Елемент: **іконка типу inline в мета-рядку** (`.fi-ic`,
 16px, заливка `--track`, у розмір тексту мети) — таймстемп поруч праворуч, **фраза
 нижче** на всю ширину (раніше іконка була окремим блоком 24px зліва). muted-мета =
 **лише таймстемп**, фраза в порядку **що зроблено → from/to → ким** (виділені сутності).
 Кнопка «details» **розгортає raw-JSON payload на місці** (`.fi-audit`, capped 300px зі
 скролом, кілька разом) і **тримає pressed-стан** поки payload відкритий
 (`.iconbtn[data-audit][aria-expanded="true"]` — рамка/заливка ink) — модалки
-«Audit log details» **більше немає**. На деталях та сама структура — таб **«Audit log»**.
+«Audit log details» **більше немає**. На деталях та сама структура — таб **«Activity»**
+(перейменований з «Audit log», тепер фід, не таблиця).
 
 ### Таблиці
 Колонки дій позначені класом `cellact` (+ `th[aria-label$="ctions"]`) і
@@ -317,7 +320,7 @@ Body/контроли/клітинки, що вже були 14px (= підло�
 
 **Деталі — один section-heading стиль**: усі секційні заголовки на details
 («License key», «Subscription period»/«Software updates», «Plan & add-ons») **і таби**
-(Invoices/Instances/Audit log) тепер label-стиль (uppercase 14/500 +0.10em, ink).
+(Invoices/Instances/Activity) тепер label-стиль (uppercase 14/500 +0.10em, ink).
 `.periodhead` і `.tab` зведені на label-токен; вибраний таб лишає ink+underline (600).
 
 ## Модалки та поведінкові додатки
@@ -367,15 +370,17 @@ JSON); **Offline/Viaanix прибрано**; no «Pay-as-you-go» (→ Subscript
   одна renewal-дата на підписку, узгоджена з проратацією (16/31 → цикл до **Sep 4 2026**?
   — **відкрите питання, чекає підтвердження**); одна purchase+updates-end для перпетуалу.
 - §3 **Users без статусу**: колонку Activation-status + чипи (Pending/Activated)
-  **прибрано** ✅. Ще: перейменувати Created → «Added {date}»? і таб «Audit log» на
-  деталях вирівняти до фіду (прибрати Status/Success) — **не зроблено**.
+  **прибрано** ✅; таб на деталях **вирівняно до фіду** ✅ (тепер «Activity»,
+  Status/Success-таблиці немає). Ще: перейменувати Created → «Added {date}»? —
+  **не зроблено**.
 - §4 **прайсинг**: рядок **Assets** в entitlements; AI-юніт «{N}M AI credits» + `TODO`
   (cadence перпетуалу; чи включають self-managed subs AI взагалі); `+$0.10`.
 - §5 **механіка**: формат дат/грошей; sentence case.
 - §6 **зайвий копірайт**: usage-tooltip геть; пароль-плейсхолдери «••••••••»;
   entitlements-заголовки **Resource / Purchased**; stateful dashboard-subtitle; empty-states.
-- §7 **поведінка**: діалог «Login as» (підтвердження + запис в audit); payment-failed
-  алерт із дедлайном + кнопкою «Update payment method» → Billing.
+- §7 **поведінка**: payment-failed алерт із дедлайном + лінком «Update payment
+  method →» на Billing — **зроблено** ✅ (`renderLicenseAlert`). Діалог «Login as»
+  (підтвердження + запис в audit) — **не зроблено**.
 
 ## Підтверджені дані
 
@@ -383,6 +388,10 @@ JSON); **Offline/Viaanix прибрано**; no «Pay-as-you-go» (→ Subscript
 Maker $10/mo (10 dev · 1 prod · 1M AI); Prototype $39 (50·1·2M);
 Pilot $99 (100·1·4M +WL); Startup $299 (500·2·8M +WL); Business $499 (1,000·3·16M +WL).
 Prototype + add-ons = $126/mo (1+2 prod, 2M+2M AI, Edge+Trendz).
+**+ Assets** (підтверджено пізнішим ТЗ): assets = devices на кожному tier
+(10/10 … 1,000/1,000; перпетуал TB 5,000/5,000) — рядок Assets є в `TIER_SPECS`.
+**TBMQ** (теж із ТЗ): sub $15/mo — 100 sessions · 100 msg/sec · 1 prod;
+perp $2,999 — 10,000 sessions · 1,000 msg/sec · 1 prod · WL.
 
 **Перпетуал**: «ThingsBoard PE Perpetual License», **$4,999 one-time**,
 1 рік апдейтів (issued Aug 13 2026 · until Aug 13 2027), 5,000 dev · 1 prod ·
@@ -467,7 +476,10 @@ Prototype + add-ons = $126/mo (1+2 prod, 2M+2M AI, Edge+Trendz).
 - **Заголовки списків**: `#licensesView` тепер **«Licenses»**; `#portfolioView`
   (архів) ще «Products».
 - Дрібні свідомі рішення (можуть «повернутися» питанням): Users сортовані Created
-  desc; Pending — attention-чип (заливка); у профільному меню лишено «Sign out».
+  desc; у профільному меню лишено «Sign out».
+- **NL-флоу — inferred ціни**: perp-юніти (TB prod $1,999 / AI $500 / TBMQ prod $999)
+  і дати нових ліцензій (renews Sep 19 2026 / updates Aug 19 2027) — плейсхолдери.
+  «Renew subscription» на canceled-деталях — TODO-стаб.
 - `.claude/launch.json` містить сесійний scratchpad-шлях (див. «Як запускати»).
 
 ## Файли
