@@ -13,7 +13,8 @@ self-contained клікабельний low-fi wireframe порталу ThingsBo
 немає роутів — усе в одному файлі.
 
 Vite/React-скелет у `src/` — окрема історія, до прототипу відношення не має.
-`subscription-details-wireframe.html` — вихідний драфт-референс, не редагуємо.
+(`subscription-details-wireframe.html` — колишній драфт-референс — видалено як
+сміття; за потреби він є в git-історії.)
 
 ## Жорсткі константи прототипу (не порушувати)
 
@@ -593,6 +594,5 @@ perp $2,999 — 10,000 sessions · 1,000 msg/sec · 1 prod · WL.
 
 ## Файли
 - `subscription-details-prototype.html` — **єдиний активний файл** прототипу.
-- `subscription-details-wireframe.html` — вихідний драфт-референс, не редагуємо.
 - `serve_prototype.py` (у scratchpad сесії) — статичний сервер + `www/`-дзеркало.
 - `NOTES.md` — цей файл.
