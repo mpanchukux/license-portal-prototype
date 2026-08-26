@@ -12,6 +12,12 @@ self-contained клікабельний low-fi wireframe порталу ThingsBo
 механізмом (`PAGES` + `applyDetailsPage`, див. «Архітектура»). Немає збірки,
 немає роутів — усе в одному файлі.
 
+⚠️ **Рефакторинг на `index.html` + `styles.css` + `app.js` + `data.js` у цій робочій копії
+відсутній** (2026-08-26): таких файлів немає, git-історія їх не знає, кореневий `index.html` —
+це скелет Vite. Правки з цієї сесії лежать у **єдиному** `subscription-details-prototype.html`.
+Якщо розділені файли існують на іншій машині — їх треба спершу довезти сюди (див. пастку
+Drive+git нижче), інакше зміни розійдуться.
+
 Vite/React-скелет у `src/` — окрема історія, до прототипу відношення не має.
 (`subscription-details-wireframe.html` — колишній драфт-референс — видалено як
 сміття; за потреби він є в git-історії.)
@@ -69,7 +75,12 @@ Vite/React-скелет у `src/` — окрема історія, до прот
 - **SVG/`[hidden]`**: атрибут `hidden` на `<svg>` не ховає без CSS
   (`.icon[hidden]{display:none}` є); так само `[hidden]` не діє там, де CSS задає
   `display` — для view є явні правила `.app[hidden],.dashview[hidden],.licview[hidden]{display:none}`.
-- Після кожної правки — screenshot + `read_console_messages(onlyErrors:true)` (чисто).
+- Після кожної правки — screenshot + `read_console_messages(onlyErrors:true)`. ⚠️ Буфер
+  консолі панелі **не чиститься перезавантаженням** — стара помилка висить у списку;
+  зіставляй номери рядків із поточним файлом, перш ніж їй вірити.
+- ⚠️ **Порядок визначень**: рендерери таблиць викликаються під час першого рендера, тому
+  хелпери, якими вони користуються, мусять бути **function-декларацією** (гоїстяться), а не
+  `var f = function…`. `esc` через це перероблено на декларацію.
 
 **Git**: комітимо прямо в `main`, файл прототипу **окремо**, з trailer
 `Co-Authored-By: Claude …`. `.claude/launch.json` (сесійний scratchpad-шлях)
@@ -129,19 +140,33 @@ topbar/overlay) переїхали в таб **Archive** («Flow (archived)»). 
 `dash` (populated) тепер має **два датасети густини**, обидва kind `dash`, DOM `#dashView`:
 - **A — small account** (`PAGES.dashboard`, `variant:'A'`): 2 ліцензії (TB + TBMQ sub),
   2 users, 3 invoices. Licenses-блок показує **всі** рядки (нема чого тримати).
-- **B — large account** (`PAGES.dashB`, `variant:'B'`): **12 ліцензій** (`id` B1–B12,
-  кожна з `tier`), 8 users, 7 invoices. Мікс TB (maker/prototype/pilot/startup/business),
-  TBMQ subs, TB/TBMQ perpetuals; статуси: active / **payment_failed** (B3) / **canceled**
-  (B5) / **updates_expiring** (B11). Licenses-блок — **top-5 attention-first**
-  (`payment_failed` 0 → `updates_expiring` 1 → active 2 → canceled 3, далі найближчий
-  `event`), рядок **label-first**; Show all тотал: «Show all (12)» / «Show all (8)».
+- **B — large account** (`PAGES.dashB`, `variant:'B'`): **14 ліцензій** (`id` B1–B14,
+  кожна з `tier`), 8 users, 7 invoices, **15 подій активності** (стільки, щоб було що
+  доливати лези-лоудом на Home). Мікс TB (maker/prototype/pilot/startup/business),
+  TBMQ subs, TB/TBMQ perpetuals; статуси в даних: active / **payment_failed** (B3) /
+  **canceled** (B5) / **updates_expiring** (B11) — у таблиці вони згортаються до
+  Active/Canceled (див. «Таблиці»). **B13/B14 несуть свідомо довгі мітки**
+  («Production — Central Europe manufacturing cluster, building 4» і «Long-term
+  evaluation environment for the Munich pilot») — тест на перенос у Product-колонці.
+  Licenses-блок — **top-5 attention-first** (`payment_failed` 0 → `updates_expiring` 1
+  → active 2 → canceled 3, далі найближчий `event`); «Show all» — без тотала (див. нижче).
 - `dashempty` — новий користувач (без змін).
+- **G — grant approved** (`PAGES.dashgrant`, `variant:'G'`): акаунт із **однією**
+  ліцензією — Community Grant (`id` G1, `tier:'grant'`, `type:'Grant'`, `grant:true`,
+  `price:'Free'`, `status:'awaiting_checkin'`, без `event`). 1 user, **0 інвойсів**
+  (`noInvoicesNote` → рядок-emptybox замість таблиці), 1 подія активності
+  («Community Grant issued»). Рядок у Licenses — звичайний: `rowHtml` має grant-гілку
+  (мітка `—` · Free · muted «No expiry», другий meta-рядок — ліміти `p.limits`),
+  статус — **тихий** `.pill.soft` «Waiting for first check-in» (`statusPill`),
+  а `actionsCell` для гранту віддає лише copy-key **без кебаба** (грант нічого
+  не змінює й не скасовує — inferred).
 
 **Єдине джерело на варіант** (`DATASETS[dashVariant]`, `DATA()`): дашборд-блоки
 і **повні сторінки** Licenses/Invoices/Users/Activity рендеряться з того самого набору
 (`renderDatasetViews`). **Субтайтла на Home немає взагалі** — H1 стоїть сам
-(`#dashState`/`renderDashState` видалено). «Show all»-лінки **без стрілки →** (усі 4
-блоки + `setShowAll`). `currentProducts()` для variant 3 читає `DATA().licenses`.
+(`#dashState`/`renderDashState` видалено). «Show all»-лінки — **без стрілки → і без
+кількості** (`setShowAll` більше немає; деталі — у блоці про Home нижче).
+`currentProducts()` для variant 3 читає `DATA().licenses`.
 Дати — `Mon DD YYYY` (`dateKey`/`fmtDate`). today = **Aug 19 2026**.
 
 ### Деталі ліцензії керуються рядком (`openLicense` / `renderLicenseDetails`)
@@ -163,6 +188,13 @@ topbar/overlay) переїхали в таб **Archive** («Flow (archived)»). 
 - **Details Activity-таб** (перейм. з «Audit log»): фід `#licFeed`, синтезований
   `licenseActivity(lic)` (created/label/payment/cancel/updates події цієї ліцензії),
   ті самі картки з expand-in-place; audit-toggle тепер слухає й `#appView`.
+
+### Мітка на деталях — опис, не тег
+`renderLabelSlot` віддає **muted текст-рядок** (`.labeltext`, `--t-small` + `--mid`) під
+заголовком, а не `.chip.label`. Інтерактивний шлях (`commit` після «+ Add label») будує
+той самий `.labeltext` + маленький `.labelx` ✕ поруч, тож обидва шляхи дають однаковий
+вигляд. Афорданс «+ Add label» лишається для ліцензій без мітки. У таблиці мітка живе
+у Product-колонці (див. «Таблиці») — це два різні місця з однією суттю.
 
 ### Cancel subscription (`openCancelModal`)
 Кебаб деталей (`[data-cancel-active]` → `activeLicense`) і меню рядка (`[data-cancel]`
@@ -187,34 +219,110 @@ range…) на **Activity-сторінці** й у **details Activity-табі**
 Усі refresh-кнопки → `data-refresh`: делегований хендлер додає `.spinning`
 (~600ms CSS-спін). **Лише спін** — текст «Updated just now» прибрано на прохання.
 
+**Nav-підсвітка теж іде за походженням**: `syncTopNav` для `sub`/`perp` дивиться на
+`licenseOrigin` — ліцензія, відкрита з Home, тримає підсвіченим **Home**; відкрита зі
+списку — **Licenses**. Тобто back-кнопка й активний nav-пункт завжди кажуть одне й те саме.
+
+**Origin-aware back на деталях**: `openLicense(lic, origin)` запам'ятовує, звідки відкрито
+ліцензію (`licenseOrigin`): рядок на Home → back веде на `homeKey`, рядок зі сторінки
+Licenses → на `products3` (стан списку живе в JS-змінних, тому фільтри/варіант вертаються
+самі). `#backBtn` більше **не** захардкоджений на `products3`; `syncBackTarget()` (кличеться
+з `renderLicenseDetails`) переписує його `aria-label`/`title` на «Back to Home» / «Back to
+Licenses».
+
 **`homeKey`**: nav Home / лого / overlay-close / Escape ведуть на `homeKey` (останній
 вибраний dash-варіант: dashboard/dashB/dashempty), а не жорстко на A — тому вибраний
 варіант тримається при поверненні на Home.
 
-Рендер dashboard-блоків: `renderDashLicenses/Invoices/Users` (top-level,
+Рендер dashboard-блоків: `renderDashLicenses/Invoices` + `renderDashFeed` (top-level,
 dataset-driven); рядки строяться **тими самими** `headHtml`/`rowHtml` (variant 3), що
-сторінка Licenses. Recent invoices/users — тепер **не статичні копії**, а з `DATA()`
-(`#dashInvBody`/`#dashUsersBody`). Стуб-кнопки в перерендерених таблицях працюють через
-делегування на persistent `<tbody>` (не per-element). Рядки-ліцензії дашборда клікаються
-через `openRow` → `openLicense` (кожен рядок відкриває реальну сторінку деталей).
+сторінка Licenses. Recent invoices — не статична копія, а з `DATA()` (`#dashInvBody`).
+Стуб-кнопки в перерендерених таблицях працюють через делегування на persistent `<tbody>`
+(не per-element). Рядки-ліцензії дашборда клікаються через `openRow` → `openLicense`.
+
+**Блоки Home** (у цьому порядку): Licenses → Recent invoices → **Recent activity**.
+**«Show all» стоїть поруч із заголовком блоку** (порядок у `.dblock-head`: `h2` → лінк →
+`.sp`), а не в правому куті, і **без кількості** — `setShowAll` прибрана зовсім, у розмітці
+просто «Show all» (тотал видно на сторінці, яку лінк відкриває).
+**Users-блоку на Home немає** — юзери живуть лише на власній сторінці (nav → Users);
+`renderDashUsers` і статична таблиця прибрані.
+
+**Вітання за часом дня** (`greetingFor(h)` + `renderGreeting`, `#dashGreeting`): 05:00–11:59
+«Good morning» · 12:00–17:59 «Good afternoon» · 18:00–04:59 «Good evening», ім'я через кому.
+Це **єдине місце, де прототип читає реальний час** (`new Date().getHours()`) — дані датасетів
+лишаються прив'язані до Aug 19 2026. H1 на new-user дашборді («Welcome, Mariia») не чіпали.
+
+**Лези-лоуд фіду на Home** (`renderDashFeed` / `dashFeedLoadMore`, `DASH_FEED_BATCH = 5`):
+спершу 5 подій, далі доливається по 5. Тригерів **два**: `IntersectionObserver` на
+`#dashFeedSentinel` і — бо в прихованому табі/вбудованій панелі колбеки обсервера не
+запускаються (той самий клас пасток, що rAF) — **throttled scroll-хендлер** на `#shellMain`,
+який сам міряє `#dashFeedMore`. Плюс тиха кнопка «Load more» (фолбек + клавіатурний шлях),
+яка ховається, коли долито все. Лічильник `dashFeedShown` **скидається при зміні датасету**
+(в `applyDetailsPage`, гілка `dash`), але не при кожному `renderDatasetViews`.
 
 ### Список поверхонь (kinds)
 - `dash` — **Dashboard (Home)**, стартова сторінка (варіанти A/B — див. вище).
+- **Community Grant states** (обидва в пікері поруч з рештою dash-варіантів):
+  - `dashgrantpending` (`kind:'dashempty'`, `grant:'pending'`) — **той самий**
+    new-user дашборд плюс статус-картка `#grantPending` (`.gstatus`: icon + h2
+    «Your Community Grant is almost ready» + тіло + тихий лінк «Learn more»,
+    стаб-модалка) **над** перемикачами й план-картками. Купівля **не блокується**:
+    Product/Billing, план-картки й «Get started» → NL-візард працюють як завжди.
+  - `dashgrant` (`kind:'dash'`, `variant:'G'`) — populated дашборд датасету G
+    плюс **одноразовий** банер `#grantBanner` першим елементом `.dwrap`:
+    «Your Community Grant is ready…» + «View license» (`openLicense(licById('G1'))`)
+    + ✕ (`grantBannerDismissed` — на сесію, без persist). Вигляд — **як банер
+    імперсонації** (`.imp-banner`): заливка ink, білий текст, біла пілюля-дія,
+    напівпрозорий ✕. Відмінність лише в посадці: імперсонаційний живе в chrome
+    і приклеєний до топ-бар-бенда (скруглення тільки знизу), а grant-банер стоїть
+    у контентній колонці — тому всі чотири кути й `margin-bottom:26px` до H1.
+  Обидва елементи чіпляє **`syncGrantChrome(p)`** з `applyDetailsPage` — тому жоден
+  інший dash-стан їх не показує. `homeKey` тепер обчислюється через `isBaseKind`
+  (а не списком трьох ключів), тож nav Home вертає у вибраний grant-стан.
 - `dashempty` — **новий користувач**: структура планів із перемикачами
   **Product** (ThingsBoard/TBMQ) і **Billing** (Subscription/Perpetual), дані з
   `EC_PLANS`. Перемикачі **вертикально** (`.planpick` column, по `.planpick-row`): Product
   зверху, Billing під ним — залежність читається top-down (обидва left-aligned, лейбли
   вирівняні `min-width`). TB×Subscription — 5 карток, решта — одна центрована.
   Deployment-перемикача немає (портал self-managed).
+- **Деталі гранту** — той самий `#appView` на **perp-гілці**: рішення «як перпетуал»
+  зведено в один хелпер **`isPerpLike(lic)`** (`type==='Perpetual' || lic.grant`),
+  який тепер використовують `renderLicenseDetails`, `renderLicenseActions` і
+  `openLicense` (раніше `renderLicenseActions` мав власну перевірку типу й тому
+  показував грантові Apply coupon). Відмінності гранту складає
+  **`renderGrantChrome(lic)`**: кікер «Grant license», `.periodhead` → «Expiry»
+  + `#periodPerp` → muted «No expiry», ховає Apply coupon і **Add capacity**,
+  Invoices-таб → `#grantInvEmpty` (грант безплатний, тому інвойсів немає — inferred),
+  Instances-таб → тулбар і таблиці приховані, лишається `#grantInstEmpty`
+  («An instance appears here after it connects using this license key.»).
+  Ентайтлменти — `TIER_SPECS.grant` (Devices 6,050 / Production servers 2).
+  `licenseActivity` для гранту віддає одну подію «Community Grant issued».
+  Хедер-чіпи: `statusChipHTML` для гранту — **два тихі чіпи** «Free» +
+  «Waiting for first check-in» (`#statusSlot` тепер inline-flex із gap).
+  ⚠️ Дві латентні CSS-пастки, знайдені тут: `.btn` і `.insttoolbar` задають
+  `display`, тому плейн-`[hidden]` їх не ховав — додано `.headactions .btn[hidden]`
+  і `.insttoolbar[hidden]` (у `[data-page]`-вузлів це працювало через
+  `[data-page][hidden]{display:none}`).
 - `sub` / `perp` — деталі (спільний `#appView`). Головний вхід — **`licenseView`**
   (row-driven, з `activeLicense`); іменовані plan-сторінки пікера (`maker`…`business`,
   `prototypeaddons`, `perp`) — той самий рендер через `licFromNamed`.
 - `products3` — **сторінка Licenses** у флоу (product-first neutral). У флоу
   ведуть **лише** на неї (back із деталей — жорстко `products3`).
-- `invoices` / `activity` / `users` / `profile` / `billing` — повні сторінки.
+- `invoices` / `activity` / `users` / `profile` (**Account**) / `billing` — повні сторінки.
+- `security` — внутрішня сторінка Account (Change password), із власною back-канавкою.
 - Архів: `products` (grouped), `products2` (one column per field), `portfolio`.
 
 ### Активність — фід, не таблиця
+**Що акцентуємо** (пас по всіх 25 семплах + синтезованих `licenseActivity`): **лише об'єкт
+дії та змінені значення** — назви ліцензій/планів, значення міток, імена юзерів, номери
+інвойсів, from → to, дати-значення. **Звичайною вагою**: дієслівні фрази («Payment failed»,
+«was changed», «was invited»), родові іменники на початку («Subscription», «Plan», «Add-on»,
+«Label», «User», «Invoice»), **email актора в кінці**, «System» і **номери карт**
+(«Visa ••4242»). Приклад: `Plan was changed from <b>Prototype</b> to <b>Pilot</b> on
+<b>Factory A</b> by i.petrenko@thingsboard.io.` Таблиці **не** отримали жодного жирного —
+перевірено (0 `<b>/<strong>` у всіх tbody + `#planRows`).
+Алерт на деталях (`#subAlert`, «**Payment failed.**») лишився жирним — це інший компонент
+(attention-банер), не фід.
 Події живуть **per-variant** у `DATASETS[..].activity` (`DATA().activity`);
 `feedItem()` рендерить сторінку Activity, блок на дашборді (3 останні) і details-таб
 (`licenseActivity`). Елемент: **іконка типу inline в мета-рядку** (`.fi-ic`,
@@ -228,6 +336,23 @@ dataset-driven); рядки строяться **тими самими** `headHt
 (перейменований з «Audit log», тепер фід, не таблиця).
 
 ### Таблиці
+**Licenses (variant 3) — колонки**: Product · License · Type · Status · **State** ·
+Created · actions. (Колонку перейменовано з «Renewal / Updates» — той самий `renewCell`.)
+- **Мітка ліцензії живе в Product-колонці** другим рядком під назвою продукту
+  (`.lic-prodcell` / `.lic-prodlabel`, `min-width:230px`, перенос дозволений) — саме мітка
+  розрізняє рядки, тому вона отримала місце, де може розгорнутись на два рядки. Немітковані
+  рядки тримають muted `—` (справжній «+ Add label» лишається на деталях). Старий
+  label-first-режим для варіанта B прибраний — мітка тепер завжди в Product.
+- **Status має лише два значення** — `Active` / `Canceled` (`statusPill`). `payment_failed`
+  і `updates_expiring` **лишаються в даних** і далі керують алертом на деталях та
+  attention-first сортуванням дашборда — таблиця їх просто не викрикує. Дата тепер у своїй
+  колонці, тому з canceled-пілюлі знято «· until {date}» (більше не дублюється).
+  Виняток — грант: тихий `Waiting for first check-in` (його стан, замовлений окремо).
+- **`renewCell(p)`** формулює дату за суттю ліцензії: `Renews {date}` (підписка) /
+  `Updates until {date}` (перпетуал) / `Active until {date}` (canceled) / muted `No expiry`
+  (грант) / muted `—` (без `event`). `.lic-num` отримав `white-space:nowrap`, щоб дати
+  не ламались на два рядки після того, як Product забрав ширину.
+
 Колонки дій позначені класом `cellact` (+ `th[aria-label$="ctions"]`) і
 стискаються під контент із `text-align:right`, щоб дії тримались краю таблиці.
 Колонки з даними, що стоять останніми (Created Time в Instances, Limit у Plan &
@@ -243,7 +368,13 @@ JS більше **не свопає** ▲/▼ текстом, лише пере�
 (1) **тулбар** (search/фільтри/refresh/primary) у власному блоці, (2) **таблиця/фід
 + пейджер** у білій картці нижче. Заголовок+підзаголовок — **над** обома. `overflow`
 на картці **не ставимо** (клипить дропдауни); широкі таблиці скролить власний wrapper.
-Portfolio (архів) не загорнутий. Фільтр Licenses — **без префікса «Type:»** (лише чипи).
+Portfolio (архів) не загорнутий. Фільтр Licenses — **без префікса «Type:»** (лише чипи) і **взаємовиключний**: замість
+`licTypes{}` тепер одна змінна **`licType`** (`null` = нічого не вибрано = показати все).
+Клік по чипу вибирає тип, клік по іншому — перемикає, повторний клік по активному —
+скидає у «все». Хендлер перемальовує `is-on`/`aria-pressed` на **обох** чипах з `licType`.
+
+**Профіль у топ-барі — без аватара**: коло «MP» прибрано, лишились ім'я + ▾
+(правило `.dprofbtn .avatar` видалено; базовий `.avatar` лишився для архівного сайдбару).
 
 **Топ-бар — contained band**: білий фон **не** тягнеться edge-to-edge. Зовнішній
 `.dtopbar` — прозорий (bg сторінки, `padding:12px 24px 0`); **сам бенд** —
@@ -263,8 +394,11 @@ Invoices, Activity, Users, Instances-таб, Logs-таб.
 ### Пікер сторінок (тимчасовий, контекстний)
 ⚙ внизу праворуч → «Prototype settings». Перемикача **Flow вгорі більше немає** —
 одразу таби **Settings | Archive**.
-- Settings: «Dashboard (Home)» — три опції: **small account (A)** / **large account
-  (B)** / **new user (empty)** + Products → «Product-first (neutral)» + **Wizard
+- Settings: група **Account** з дев-кнопкою «Confirm email change» (грає підтвердження
+  з нової адреси; disabled, коли pending немає).
+- Settings: «Dashboard (Home)» — п'ять опцій: **small account (A)** / **large account
+  (B)** / **new user (empty)** / **grant pending** / **grant approved**
+  + Products → «Product-first (neutral)» + **Wizard
   stepper** (A — Summary rail / B — Progress line / C — Numbered steps; перемикає
   презентацію степера NL-візарда наживо). Варіанти планів (Maker…Business, Prototype
   + add-ons) і «Perpetual license details» показуються **лише** коли відкрита
@@ -286,6 +420,11 @@ Invoices, Activity, Users, Instances-таб, Logs-таб.
 **Шрифти вбудовані base64-woff2** (константа «без зовнішніх запитів»): Ubuntu
 **400/500/700** + **Ubuntu Mono** (license keys / IDs). Light 300 свідомо не
 вантажимо. Через це файл ~550KB (див. пастку Read-token-ліміту вище).
+
+**Акцент у реченні** — `--t-em-fw:500` + клас **`.em`** (і `<b>` у текстах фіду мапиться
+на той самий токен правилом `.em,.fi-txt b`). Це **єдина** вага акценту для активності:
+body 400 → акцент 500, **ніколи 700** — фрагмент має підніматись із речення, а не читатись
+як заголовок у ньому. Стара локальна `.fi-txt b{font-weight:600}` прибрана.
 
 **Шкала** — CSS custom properties у `:root` (одне місце) + утиліти `.t-*`:
 `--t-display 64` · `--t-h1 36/700` · `--t-h2 20/500` · `--t-body 16/400` ·
@@ -348,10 +487,34 @@ Body/контроли/клітинки, що вже були 14px (= підло�
   розтягуються, ліве вирівнювання по паддінгу картки. Хедер+Save — до правого краю
   контейнера. Субтайтли обох сторінок прибрано (Billing — «How you pay…» видалено;
   H1 стоїть сам).
-- **Profile — три картки**: «Your profile» розбито на окремі `.setcard` **Personal**
-  (First/Last/Email/Language) і **Security** (паролі + helper), поряд із **Company** —
-  усі один стиль. Опис-рядок під заголовком прибрано (title сам). Sticky Save один
-  на всю сторінку (гардить обидві + Company через `#profileView` input-делегування).
+- **Сторінка тепер «Account»** (не «Profile settings»): H1, пункт профіль-меню і
+  `AREA_TITLES.profile` — усі три. Картки: **Personal details** (First/Last/Email/Language)
+  і **Company details**.
+- **Усі дії Account — в одному sticky-хедері** (`.pagehead`), праворуч, у порядку
+  наростання до primary: **Log out** (`.btn.ter` — найтихіша, підкреслений текст) ·
+  **Change password** (`.btn.sec`, `data-goto="security"`) · **Save** (primary).
+  Блок `.pdactions` у Personal details прибрано. **Тексту «All changes saved» на Account
+  немає** — disabled-стан Save сам каже, що зберігати нічого (`wirePageSave(…, null)`;
+  третій аргумент опційний). ⚠️ На **Billing** і **Security** нотатка ще є — свідомо
+  не чіпала, бо просили тільки Account.
+- **Security — окрема внутрішня сторінка** (`#securityView`, `PAGES.security`,
+  `kind:'security'`): картку Security з Account прибрано, замість неї в Personal details
+  два `.btn.sec` — **Change password** (`data-goto="security"`) і **Log out** (стаб-модалка).
+  Сторінка має **власну back-канавку** (`.secgrid` = ті самі `--backW`/`--backGap`, що
+  `.headgrid` деталей; `#secBackBtn` → `goToPage('profile')` через unsaved-guard) і **власний
+  Save** (`wirePageSave('#securityView', …)`). Три поля пароля стоять **вертикально**
+  (`.pwstack`), кожен інпут — 393px = ширина однієї клітинки `.field2`; кап стоїть на
+  **інпутах** (`.pwstack .field input{max-width:393px}`), бо `.setcard > *:not(.setcard-h)`
+  зі своїм `max-width:800px` специфічніший за `.pwstack`. `overlayLevel` для `security` —
+  `deep` (back ≠ close).
+- **Зміна email — verify-then-switch** (контролер `EMAIL`): Save з новою адресою **не**
+  міняє акаунтний email. Поле відкатується на поточну адресу, під ним — pending-чіп
+  «Verification sent to {new} — the change applies once confirmed.» + текстові дії
+  **Resend** (тимчасово підмінює текст на «re-sent…») і **Cancel change**. Опис поля
+  попереджає, що зміна потребує підтвердження з нової адреси, а поточна працює доти.
+  Підтвердження в прототипі — **клік по чіпу** або дев-кнопка **Confirm email change**
+  у Settings-табі пікера (enabled лише коли є pending). Невалідний email на Save просто
+  відкатується без pending.
 - **Billing → Payment method**: кнопка «Update» замінена на **icon-btn олівець**
   (`.iconbtn.ib`, `#payUpdateBtn`) — відкриває ту саму Update-payment-method модалку.
 - **Activity шрифти**: увесь фід (meta / речення / raw-JSON) уже ≥14px (з type-pass);
@@ -364,8 +527,9 @@ Body/контроли/клітинки, що вже були 14px (= підло�
 §1: Activity vs таб «Audit log»; **License key** скрізь (не «secret» — воно лише в raw
 JSON); **Offline/Viaanix прибрано**; no «Pay-as-you-go» (→ Subscription); заголовок
 «Products»→**«Licenses»**; **Auto-pay**; дві Manage-дії розведено (**«Manage add-ons»** +
-прямий лінк **«Billing & payment →»**); меню **«Profile settings»**; одне «White labeling»;
-**Cardholder name**; **Plan & add-ons**; AI-формулювання; sentence-case заголовки.
+прямий лінк **«Billing & payment →»**); меню **«Profile settings»** (згодом → **«Account»**);
+одне «White labeling»; **Cardholder name**; **Plan & add-ons**; AI-формулювання;
+sentence-case заголовки.
 
 Ще НЕ зроблено:
 - §2 **єдиний датасет**: today Aug 19 2026; інвойси → `NAWE49WG-000X` (вбити `INV-2026-…`);
@@ -470,13 +634,19 @@ perp $2,999 — 10,000 sessions · 1,000 msg/sec · 1 prod · WL.
   **Клік одразу веде на крок 2** — Continue на цьому кроці немає. На perp-шляху
   крок 1 — **злиті Product & Plan картки** (див. блок про кроки вище).
 - **Крок 2 (sub)**: план-картки з **`EC_PLANS`** — name/price/**повні feats**
-  (capacity + support-tier + WL, див. нижче). Під ґрідом один muted-рядок «All plans include
-  unlimited customers…» (лише sub-шлях) і **один спільний блок** «What's included
-  in Professional Edition» (`PE_FEATURES`, **7 фіч** — White-labeling прибрано,
-  бо він НЕ edition-wide: лише Pilot+; HTML-`TODO: confirm with product that these
-  PE features apply to Maker/Prototype` біля `#nlPlanExtra`) — **завжди розгорнутий**,
-  без шеврона/кліку, вирівняний по лівому краю контенту кроку (як план-картки);
-  **лише продукт ThingsBoard** (фічі TB PE, для TBMQ не показуємо — inferred).
+  (capacity + support-tier + WL, див. нижче). Під ґрідом — **одна самодостатня картка**
+  «What's included in Professional Edition» (`peBlockHTML(intro)`, `.nl-pe`): титул =
+  хедер картки (h2), під ним muted-інтро **«All plans include unlimited customers…»**
+  (`PLANS_INCLUDE_NOTE`; на perp-шляху інтро немає), далі список `PE_FEATURES`
+  (**7 фіч** — White-labeling прибрано, бо він НЕ edition-wide: лише Pilot+;
+  HTML-`TODO: confirm with product…` біля `#nlPlanExtra`). Окремого плавучого
+  рядка між ґрідом і карткою **немає** (`#nlPlanNote` видалено) — ґрід → один
+  20px-гап → картка, вирівняна по лівому/правому краю ґріда на всю його ширину.
+  `peBlockHTML` живе на топ-левелі (не в NL-IIFE) — той самий рендер на **трьох
+  поверхнях**: крок 2 візарда, perp-крок 1 (`#nlProdExtra`, центрована до 960),
+  екран нового користувача (`#ecPlanExtra`). **Лише продукт ThingsBoard** (фічі TB PE,
+  для TBMQ не показуємо — inferred); на single-сетах (perp / TBMQ) картки немає,
+  `#ecNote` лишає тільки `EC_SINGLE_NOTE`.
   Вибір картки **не** авто-продовжує. TBMQ sub — одна картка preselected.
   **План-картки кроку 2 — повні feats** з `EC_PLANS` (capacity + support-tier +
   White labeling лише Pilot/Startup/Business — на Maker/Prototype рядка просто немає)
@@ -540,12 +710,16 @@ perp $2,999 — 10,000 sessions · 1,000 msg/sec · 1 prod · WL.
   скруглення лише знизу; у бенда знімається нижній радіус через
   `body.impersonating`). «Return to my account» (біла кнопка) знімає. Персистить
   між сторінками (живе в chrome поза `#shellMain`).
-- **Licenses-фільтр без «All»**: два чипи Subscription/Perpetual, тогляться
-  **незалежно** (`licTypes{}`); обидва off = показати все.
+- **Licenses-фільтр без «All»**: два чипи Subscription/Perpetual. ⚠️ Спочатку тоглились
+  незалежно (`licTypes{}`) — тепер **взаємовиключні** (`licType`), див. «Таблиці».
 - **Change plan = режим візарда** (`NL.openChange(lic)`, `st.mode='change'`):
   продукт залочений (крок 1 done, **не клікабельний**), старт із Plan; поточний
-  план — бейдж **Current plan** + `.nl-current` (не вибирається; `currentCardName`
-  мапить tbmqsub→'TBMQ PE subscription'); Customize/Review показують перехід
+  план — **стрип «CURRENT PLAN»** на верхній кромці картки (`.pc-strip`, поза тілом
+  картки, накриває її верхній бордер), а не чіп усередині. Висота стрипа
+  **зарезервована над кожною карткою** (`.plangrid.withcur{--stripH}` +
+  `margin-top` на всіх `.plancard`) — тому висоти карток рівні, а назви планів
+  стоять на одній горизонталі; картка лишається невибірною (`.nl-current`,
+  `currentCardName` мапить tbmqsub→'TBMQ PE subscription'); Customize/Review показують перехід
   «Prototype → Startup» (cap, mainline, rail «Plan — Prototype → Startup»),
   summary має рядок «Current · {old}», **Due today prorated** = (new−oldBase)×16/31
   з тим самим формулюванням. Кнопка «Confirm change» → лоадинг → апдейт об'єкта
@@ -565,6 +739,15 @@ perp $2,999 — 10,000 sessions · 1,000 msg/sec · 1 prod · WL.
   `.help`-слот); Security-хелпер про паролі видалено; Company-хелпер → «Used as
   your billing / invoice address by default — change it in [Billing & payment]»
   з робочим `[data-goto="billing"]`-лінком (делегування на `#profileView`).
+- **Глобальний футер** (`#shellFoot`, `.shellfoot` / `.shellfoot-in`): один тихий muted
+  рядок «© 2026 ThingsBoard · Privacy policy · Terms of service · License agreement»
+  на **кожній** сторінці, шириною спільного контейнера (`--pageW` + `--pageX`). Живе
+  **всередині `#shellMain`** (скролиться разом з контентом), тому `presentPage` після
+  монтування вузла сторінки **перевішує футер назад у кінець** — інакше `appendChild`
+  цільового вузла лишав би футер вище контенту. Лінки — власний делегований хендлер
+  на `#shellFoot` (у футері немає view-скоупу, який ловить `[data-goto]`).
+  **Групу Legal з профіль-меню прибрано** — тепер меню це Account · Billing & payment ·
+  Sign out.
 - **Legal-сторінки**: `privacy`/`terms`/`eula` — повні сторінки в спільному shell
   (`#privacyView/#termsView/#eulaView`, стилі `.legal` — body 16/1.6, h2-секції,
   max-width 800), відкриваються з Legal-групи профіль-меню (`data-goto`).
@@ -599,6 +782,7 @@ perp $2,999 — 10,000 sessions · 1,000 msg/sec · 1 prod · WL.
 - `.claude/launch.json` містить сесійний scratchpad-шлях (див. «Як запускати»).
 
 ## Файли
-- `subscription-details-prototype.html` — **єдиний активний файл** прототипу.
+- `subscription-details-prototype.html` — **єдиний активний файл** прототипу
+  (розділених `styles.css`/`app.js`/`data.js` тут немає — див. попередження вгорі).
 - `serve_prototype.py` (у scratchpad сесії) — статичний сервер + `www/`-дзеркало.
 - `NOTES.md` — цей файл.
