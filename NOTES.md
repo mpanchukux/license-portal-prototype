@@ -94,41 +94,39 @@ HEAD. Діагностика/відновлення — див. пам'ять `d
 ## Архітектура: сторінки окремо, презентація окремо
 
 Головний принцип: **один вузол контенту на сторінку**, і тонкий шар презентації,
-який вирішує, *де* цей вузол показати. Копій сторінок під різні флоу немає.
+який вирішує, *що* показати. Копій сторінок немає — рівно один вузол на поверхню.
 
 - **`PAGES`** — реєстр сторінок; ключ = значення radio в пікері, `kind` каже, який
   вузол показувати. Плани/перпетуал несуть ще `name/price/devices/prod/dev/ai/…`
   (звідси `renderPlanRows`/`renderFeatures`).
-- **`PAGE_NODES`** (kind → `#id`) — той самий вузол контенту для обох флоу.
+- **`PAGE_NODES`** (kind → `#id`) — вузол контенту сторінки.
   `sub` і `perp` свідомо ділять `#appView` (один шаблон деталей).
-- **`FLOW_HOSTS`** (`{ topbar:'#shellMain', overlay:'#pgoBody' }`) + `flowMode` —
-  куди монтувати. `presentPage(kind)` ховає все, крім цільового вузла, і робить
-  `host.appendChild(target)`. Додати новий спосіб показу = ще один хост, не копія
-  сторінок.
+- **`presentPage(kind)`** ховає все, крім цільового вузла, і монтує його
+  в `#shellMain` (`appendChild`), тримаючи футер останнім.
 - **`applyDetailsPage()`** готує дані сторінки й делегує показ у `presentPage`.
 - **`goToPage(key)`** — програмна навігація (тримає radio в пікері синхронним).
 - Деталі (`#appView`) розрізняють моделі атрибутом `data-page="sub"|"perp"`.
 
-### Два флоу презентації
-**Активний флоу — лише Top-bar navigation.** Full-screen overlays **заархівовано**:
-перемикач Flow прибрано з верху панелі налаштувань, обидва radio (`flowMode`
-topbar/overlay) переїхали в таб **Archive** («Flow (archived)»). Код декаплінгу
-(`presentPage` / `FLOW_HOSTS` / overlay-гілка) лишили як є — overlay ще працює, якщо
-вибрати його в Archive, просто він більше не дефолтний шлях.
-1. **Top-bar navigation** (єдиний активний): у топбарі nav-пункти **Home · Licenses ·
-   Invoices · Activity · Users**, відцентровані по самому бару (`position:absolute;
-   left:50%`), активний підсвічений (`NAV_FOR_KIND`; для деталей — Licenses).
-   Сторінки рендеряться під баром у `#shellMain`.
-2. **Full-screen overlays** (архів): nav-пунктів немає (`.tnav[hidden]`), базова сторінка
-   лише дашборд, усе інше відкривається **в одному** оверлеї `#pageOverlay`
-   (хедер = заголовок області + ✕, тіло `#pgoBody`). Дашборд лишається змонтований
-   під непрозорим оверлеєм. Заглиблення **замінює** контент оверлею — стеку немає.
-   - смуга оверлею показує **заголовок області** (`AREA_TITLES`/`AREA_FOR_KIND`):
-     у деталях це «Licenses», хоч зі списку, хоч із рядка дашборда;
-   - `#pgoBody[data-level]`: `root` (списки/форми — власні back, `h1` і підзаголовок
-     приховані, бо їхній back = ✕) / `deep` (деталі — back і власний заголовок є,
-     бо back веде на список). Правило: **back існує лише коли він ≠ close**;
-   - ✕ і Escape виходять на дашборд із будь-якої глибини.
+### Навігація — top-bar (єдиний флоу)
+У топбарі nav-пункти **Home · Licenses · Invoices · Activity · Users**, відцентровані
+по самому бару (`position:absolute; left:50%`), активний підсвічений (`NAV_FOR_KIND`).
+Сторінки рендеряться під баром у `#shellMain`. Деталі належать тій секції, звідки їх
+відкрили: ліцензія з Home лишає підсвіченим Home, зі списку — Licenses (`licenseOrigin`,
+той самий орієнтир, що й у back-кнопки).
+
+Альтернативний флоу full-screen overlays (`#pageOverlay`, `flowMode`, `FLOW_HOSTS`,
+`AREA_TITLES`) **видалено з коду** разом з архівом — не «приховано», а знято.
+
+### Back-кнопка: лише там, де вона робить не те саме
+- **Списки під nav-табами** (Licenses, Invoices, Activity, Users) back **не мають** —
+  таб уже дає і орієнтацію, і вихід.
+- **Деталі** тримають back у лівій канавці: він вертає у *список* зі станом, а таб
+  Licenses — у корінь секції.
+- **Security** — внутрішня сторінка Account, тому має власну канавку back
+  (`#secBackBtn` → `profile`).
+- **Account / Billing & payment** back **не мають**: коли Profile розклали на картки
+  Personal / Security / Company, канавку прибрали. Механізм `prevPage`, який їх
+  обслуговував, теж знято — якщо back туди повернеться, його треба писати наново.
 
 ### Спільний контейнер контенту
 Усі сторінки в одному контейнері: `--pageW:1120px`, `--pageX:24px`, `--pageY:28px`,
@@ -306,11 +304,11 @@ dataset-driven); рядки строяться **тими самими** `headHt
 - `sub` / `perp` — деталі (спільний `#appView`). Головний вхід — **`licenseView`**
   (row-driven, з `activeLicense`); іменовані plan-сторінки пікера (`maker`…`business`,
   `prototypeaddons`, `perp`) — той самий рендер через `licFromNamed`.
-- `products3` — **сторінка Licenses** у флоу (product-first neutral). У флоу
-  ведуть **лише** на неї (back із деталей — жорстко `products3`).
+- `products3` — **сторінка Licenses** (product-first neutral), єдиний макет списку:
+  таблиця рендериться з поточного датасету, без варіантів. Back із деталей веде на
+  `licenseOrigin` (звідки відкрили), із фолбеком `products3`.
 - `invoices` / `activity` / `users` / `profile` (**Account**) / `billing` — повні сторінки.
 - `security` — внутрішня сторінка Account (Change password), із власною back-канавкою.
-- Архів: `products` (grouped), `products2` (one column per field), `portfolio`.
 
 ### Активність — фід, не таблиця
 **Що акцентуємо** (пас по всіх 25 семплах + синтезованих `licenseActivity`): **лише об'єкт
@@ -368,13 +366,13 @@ JS більше **не свопає** ▲/▼ текстом, лише пере�
 (1) **тулбар** (search/фільтри/refresh/primary) у власному блоці, (2) **таблиця/фід
 + пейджер** у білій картці нижче. Заголовок+підзаголовок — **над** обома. `overflow`
 на картці **не ставимо** (клипить дропдауни); широкі таблиці скролить власний wrapper.
-Portfolio (архів) не загорнутий. Фільтр Licenses — **без префікса «Type:»** (лише чипи) і **взаємовиключний**: замість
+Фільтр Licenses — **без префікса «Type:»** (лише чипи) і **взаємовиключний**: замість
 `licTypes{}` тепер одна змінна **`licType`** (`null` = нічого не вибрано = показати все).
 Клік по чипу вибирає тип, клік по іншому — перемикає, повторний клік по активному —
 скидає у «все». Хендлер перемальовує `is-on`/`aria-pressed` на **обох** чипах з `licType`.
 
 **Профіль у топ-барі — без аватара**: коло «MP» прибрано, лишились ім'я + ▾
-(правило `.dprofbtn .avatar` видалено; базовий `.avatar` лишився для архівного сайдбару).
+(правило `.dprofbtn .avatar` видалено; базовий `.avatar` лишився).
 
 **Топ-бар — contained band**: білий фон **не** тягнеться edge-to-edge. Зовнішній
 `.dtopbar` — прозорий (bg сторінки, `padding:12px 24px 0`); **сам бенд** —
@@ -388,27 +386,20 @@ Portfolio (архів) не загорнутий. Фільтр Licenses — **б
 Зліва направо: **`.searchbox`** (persistent input ~280px, лупа всередині, page-
 placeholder) → фільтри (якщо є) → `.spacer` → refresh (outlined icon-btn) →
 **primary** (напр. «+ New license») в самому правому куті. Search-інпути поки
-**невізуальні** (без логіки). Патерн застосований на Licenses, Portfolio,
-Invoices, Activity, Users, Instances-таб, Logs-таб.
+**невізуальні** (без логіки). Патерн застосований на Licenses, Invoices,
+Activity, Users та Instances-табі.
 
 ### Пікер сторінок (тимчасовий, контекстний)
-⚙ внизу праворуч → «Prototype settings». Перемикача **Flow вгорі більше немає** —
-одразу таби **Settings | Archive**.
-- Settings: група **Account** з дев-кнопкою «Confirm email change» (грає підтвердження
-  з нової адреси; disabled, коли pending немає).
-- Settings: «Dashboard (Home)» — п'ять опцій: **small account (A)** / **large account
-  (B)** / **new user (empty)** / **grant pending** / **grant approved**
-  + Products → «Product-first (neutral)» + **Wizard
-  stepper** (A — Summary rail / B — Progress line / C — Numbered steps; перемикає
-  презентацію степера NL-візарда наживо). Варіанти планів (Maker…Business, Prototype
-  + add-ons) і «Perpetual license details» показуються **лише** коли відкрита
-  сторінка деталей (`syncSettingsContext`).
-- Archive: **Flow (archived)** (topbar / overlay), `products`, `products2`, `portfolio`
-  + перемикач Manage add-ons
-  (Full-screen = флоу / Modal = архів).
-- Секцій «Pages» і окремої «Perpetual» немає — ці сторінки досяжні у флоу.
-- Стан у JS-змінних (`flowMode`, `detailsPage`, `productsVariant`, `addonsStyle`),
-  без persist.
+⚙ внизу праворуч → «Prototype settings». Ні перемикача Flow, ні табів — **один список**
+(таб Archive і все, що в ньому жило, видалено).
+- «Dashboard (Home)» — п'ять опцій: **small account (A)** / **large account (B)** /
+  **new user (empty)** / **grant pending** / **grant approved**.
+- **Products** → «Product-first (neutral)» (`products3`) — єдиний макет списку Licenses.
+- **Account** — дев-кнопка «Confirm email change» (грає підтвердження з нової адреси;
+  disabled, коли pending немає).
+- Варіанти планів (Maker…Business, Prototype + add-ons) і «Perpetual license details»
+  показуються **лише** коли відкрита сторінка деталей (`syncSettingsContext`).
+- Стан у JS-змінних (`detailsPage`, `dashVariant`, `homeKey`), без persist.
 
 ### Демо-хуки
 - `window.showSubAlert('…')` / `clearSubAlert()` — банер на деталях.
@@ -433,7 +424,7 @@ body 400 → акцент 500, **ніколи 700** — фрагмент має 
 один розмір, різняться регістром+трекінгом. Числа — `.tnum`; mono — `.t-mono` (ls:0).
 
 **Застосовано на всіх сторінках.** Ієрархію зведено на 6 рівнів шкали (рев'ю в
-браузері по кожній поверхні: dashboard, деталі sub/perp, Licenses, Users, portfolio,
+браузері по кожній поверхні: dashboard, деталі sub/perp, Licenses, Users,
 модалки Manage add-ons / generic / pay). Мапінг, за яким котили:
 - **page-titles → h1** (36/700): `.lic-h1` (Profile/Billing/списки), `.planname`
   (деталі), `.dwelcome h1` (дашборд). Прибрано ad-hoc 30/800.
@@ -569,7 +560,7 @@ perp $2,999 — 10,000 sessions · 1,000 msg/sec · 1 prod · WL.
 5M AI · White labeling. Жодних recurring-понять. (Прайс-рядок у хедері прибрано
 на прохання — суму видно в Invoices.)
 
-**Продукти (variant 3 / portfolio)**: сімʼї **ThingsBoard / TBMQ** (Viaanix та тип
+**Продукти**: сімʼї **ThingsBoard / TBMQ** (Viaanix та тип
 **Offline прибрано** — content audit §1); пакети — Maker/Prototype/Pilot/Startup/Business
 + Professional edition (perpetual) для ThingsBoard, TBMQ PE + Professional edition для TBMQ.
 Типи білінгу: **Subscription / Perpetual**. (Instance-статус Online/**Offline** лишається —
@@ -581,39 +572,31 @@ perp $2,999 — 10,000 sessions · 1,000 msg/sec · 1 prod · WL.
 `19 Aug 2026, 13:13`, ISO в деяких таблицях. Єдиний датасет (today = **Aug 19, 2026**)
 і одна renewal-дата — теж §2, ще не зведені.
 
-## Дві поверхні «Manage add-ons» (не плутати)
-1. **Великa центрована модалка** (`#fsAddons`, контролер `AMF`) — **дефолт флоу**.
-   Раніше був full-screen takeover; тепер `.fs-screen` = бекдроп (dim + `backdrop-filter:blur`),
-   `.fs-box` = панель (~90vw до 1200px × 90vh, rounded, shadow), `.fs-body` скролиться
-   всередині. Клік по бекдропу — no-op; закриття лише ✕ / Cancel / Esc.
-   ⚠️ У пікері перемикач ще підписаний «Full-screen» — назва застаріла (це вже модалка).
-2. **Modal** (`#addonsOverlay`, контролер `AM`) — архівна компактна двокрокова модалка,
-   вибирається в Archive-табі налаштувань.
-Класи `.am-*` спільні; щоб змінити лише flow-версію — скоупи `.fs-screen .am-…`.
+## Manage add-ons (`#fsAddons`, контролер `AMF`)
+Одна поверхня — **велика центрована модалка**: `.fs-screen` = бекдроп (dim +
+`backdrop-filter:blur`), `.fs-box` = панель (~90vw до 1200px × 90vh, rounded, shadow),
+`.fs-body` скролиться всередині. Клік по бекдропу — no-op; закриття лише ✕ / Cancel / Esc.
+Відкривається засіяною з ліцензії (`AMF.open(lic)` через `openManageAddons`) — і з рядка
+списку, і з деталей, тому дані відповідають плану, а не зашитому Prototype.
+Архівна компактна двокрокова модалка (`#addonsOverlay`, контролер `AM`) **видалена**;
+класи `.am-*`, що лишились, обслуговують цю модалку і візард.
 Проратація фіксована **16 з 31 дня** (картка Next charge каже «in 16 days»).
 
 ## New license flow (`#nlModal`, контролер `NL`)
 Створення ліцензії тепер **робочий степовий флоу** на chrome великої Manage-модалки
 (`.fs-screen`/`.fs-box`, бекдроп, sticky footer). Вибір — **видимі картки, ніколи
 селекти**.
-- **Входи**: «+ New license ▾» (Home, Licenses, Portfolio-архів) → subscription /
+- **Входи**: «+ New license ▾» (Home, Licenses) → subscription /
   perpetual, `NL.open({kind})`; «Get started» на плані нового користувача →
   `NL.open({kind, product, plan, startStep})` — `open()` сам приземляє на Customize
   відповідного шляху (sub → крок 3, perp → крок 2), попередні кроки ✓.
-- **Степер — три варіанти презентації** (`nlStepperMode`, перемикач «Wizard stepper»
-  у Settings-табі пікера: A/B/C; live-перемикання навіть із відкритим візардом):
-  - **A — Summary rail (дефолт)**: вертикальний рейл ліворуч (`#nlRail`, `.nl-rstep`),
-    заміняє горизонтальний бар повністю. Пройдені кроки — заливний ✓-дот + **обране
-    значення** під лейблом («Product — ThingsBoard», «Plan — Pilot · $99 / month»,
-    Customize — тотал; `railValue`), клікабельні назад; активний виділений; майбутні
-    dimmed. Розмітка: `.nl-main` (flex row) = рейл + `.fs-body`.
-  - **B — Progress line**: тонкий (3px) трек **на всю ширину модалки** одразу під
-    hairline хедера (степбар у `nl-pb-mode` без паддінгів), fill = step/totalSteps;
-    нижче один рядок з лівим паддінгом «Step 2 of 4 · **Plan**» (muted + bold назва).
-    Без окремих пунктів, без часткових треків.
-  - **C — Numbered steps**: горизонтальні нумеровані кроки (`.am-steps`),
-    розподілені **на всю ширину** (max-width знято; `.am-stepline{flex:1}`
-    розтягує з'єднувальні лінії).
+- **Степер — один: Progress line.** Тонкий (3px) трек **на всю ширину модалки**
+  одразу під hairline хедера (`.nl-stepbar`, паддінг `0 0 10px`), fill = step/totalSteps;
+  нижче один рядок з лівим паддінгом «Step 2 of 4 · **Plan**» (muted + bold назва,
+  `.nl-plabel`). Без окремих пунктів, без часткових треків. Рендерить `renderSteps()`
+  у `#nlSteps`. Варіанти A (summary rail) і C (numbered steps) **видалено** разом із
+  перемикачем «Wizard stepper»; клікнути пройдений крок, щоб повернутись, більше не
+  можна — назад лише кнопкою Back.
   Кроки: sub — **4** (Product → Plan → Customize → Review & pay); perp — **3**
   (**Product & Plan** злиті → Customize → Review & pay, бо на продукт рівно один
   пакет). Механіка: `totalSteps()` (3/4) + `panelFor(n)` мапить wizard-крок на
@@ -621,8 +604,7 @@ perp $2,999 — 10,000 sessions · 1,000 msg/sec · 1 prod · WL.
   На perp-кроці 1 картки несуть **повний пакет** (назва пакета, value-line, ціна
   «$4,999 · one-time», термін апдейтів, ліміти з `EC_PLANS` без «All …»-рядка) +
   PE-блок нижче (`#nlProdExtra`); клік ставить product **і** plan → одразу Customize.
-  Rail-значення кроку 1: «ThingsBoard PE Perpetual · $4,999» / «TBMQ PE license ·
-  $2,999»; B: «Step N of 3», fill N/3. Футер `.nl-foot`: **на кроці 1 схований
+  На perp-шляху степер каже «Step N of 3», fill N/3. Футер `.nl-foot`: **на кроці 1 схований
   повністю** (клік по картці = перехід);
   далі Back / Continue (disabled без вибору; на останньому кроці —
   «Subscribe» / «Buy license» / «Confirm change» via `confirmLabel()`).
@@ -720,7 +702,7 @@ perp $2,999 — 10,000 sessions · 1,000 msg/sec · 1 prod · WL.
   `margin-top` на всіх `.plancard`) — тому висоти карток рівні, а назви планів
   стоять на одній горизонталі; картка лишається невибірною (`.nl-current`,
   `currentCardName` мапить tbmqsub→'TBMQ PE subscription'); Customize/Review показують перехід
-  «Prototype → Startup» (cap, mainline, rail «Plan — Prototype → Startup»),
+  «Prototype → Startup» (cap, mainline),
   summary має рядок «Current · {old}», **Due today prorated** = (new−oldBase)×16/31
   з тим самим формулюванням. Кнопка «Confirm change» → лоадинг → апдейт об'єкта
   ліцензії (tier/name/price/extras/addons) → деталі цієї ліцензії. Входи: details
@@ -753,18 +735,35 @@ perp $2,999 — 10,000 sessions · 1,000 msg/sec · 1 prod · WL.
   max-width 800), відкриваються з Legal-групи профіль-меню (`data-goto`).
   Плейсхолдерний юридичний текст, помічений як несправжній.
 
+## Пас чистки перед реструктуризацією (2026-08-26)
+Прибрано **все, що не в активному флоу**, щоб реструктуризація на кілька файлів
+починалася з мінімальної бази:
+- **Архів** цілком: таб Archive у пікері, Portfolio-сторінка, макети списку Grouped /
+  One column per field (разом зі статичними `PRODUCTS` / `PRODUCTS_V3` і
+  `productsVariant`), архівна модалка Manage add-ons (`#addonsOverlay` + контролер `AM`),
+  флоу full-screen overlays (`#pageOverlay`, `flowMode`, `FLOW_HOSTS`, `AREA_*`,
+  `overlayLevel`, `syncFlowChrome`).
+- **Степер візарда** зведено до Progress line (варіанти rail і numbered видалені).
+- **Мертвий CSS**: ~160 правил (сімейство `.am-*` архівної модалки, `.pf-*`, `.pgo-*`,
+  `.nl-r*`, `.t-*`-утиліти, `.savebar`, `.rowaction`, `.roblock`, `#billAddrReadonly`,
+  `.setheadrow`, `.setfooter`, `.addrow`, `.crumb`, `.kv`, `.drow`/`.di-*`/`.dmini`).
+- **Мертвий JS**: гілка `Offline` в `menuItems()` (тип прибрано ще в аудиті
+  термінології), хендлер `.lic-back` разом зі змінною `prevPage` (кнопок із цим
+  класом у розмітці не лишилось після розділення Profile на картки).
+Файл: 5 461 → 4 526 рядків (−935). Поведінка не змінювалась — лише видалення.
+
 ## Відкриті питання / борг
 - ~~Превʼю Invoices і Users на дашборді — статичні копії~~ **виправлено**: дашборд
   і повні сторінки Invoices/Users/Activity/Licenses тепер усі з `DATASETS[dashVariant]`
   (див. «Dashboard density variants»). `ACTIVITY`-масив прибрано — фід теж з `DATA()`.
-- **`prototypeaddons` не має лінка у флоу**: у `PRODUCTS_V3` (product-first) такого
-  рядка немає, тож сторінка досяжна лише через контекстний список у налаштуваннях —
-  так вирішено свідомо («хай там і лежить»).
+- **`prototypeaddons` не має лінка у флоу**: у датасетах такого рядка немає, тож
+  сторінка досяжна лише через контекстний список у налаштуваннях — так вирішено
+  свідомо («хай там і лежить»).
 - ~~`AMF` не знає про плани~~ **виправлено**: `AMF.open(lic)` сідиться з ліцензії
   (`AMF_TIERS` + `TIER_SPECS`: base/incl/extras/addons, титул `#fsTitle`, devices-поле,
   «fixed by {plan} plan», рядок review `#fsPlanLine`). Вхід: details (activeLicense)
   і **меню рядка** (`[data-manageaddons]` → `licById`). Лишилось: статичні лейбли
-  markup TB-словами (для TBMQ «Devices» ≠ Sessions); архівний `AM` досі Prototype.
+  markup TB-словами (для TBMQ «Devices» ≠ Sessions).
 - ~~TBMQ не має детальних сторінок~~ **виправлено**: TBMQ-рядки (sub і perp) відкривають
   повноцінну TBMQ-наповнену сторінку (`TIER_SPECS.tbmqsub`/`tbmqperp`). Немає dead rows.
 - **Дані рядка → деталі зведені**: деталі тепер керуються об'єктом ліцензії (не `PAGES`) —
@@ -772,8 +771,6 @@ perp $2,999 — 10,000 sessions · 1,000 msg/sec · 1 prod · WL.
   ліцензії керуються рядком»). Ще окремо стоять: **Instances-таб** (статичні 2 інстанси,
   не per-license), **license key** (спільний мок), і perp-**Invoices**-таб (статичні суми).
 - **Search-інпути невізуальні** (лупа + placeholder, без фільтрації).
-- **Заголовки списків**: `#licensesView` тепер **«Licenses»**; `#portfolioView`
-  (архів) ще «Products».
 - Дрібні свідомі рішення (можуть «повернутися» питанням): Users сортовані Created
   desc; у профільному меню лишено «Sign out».
 - **NL-флоу — inferred ціни**: perp-юніти (TB prod $1,999 / AI $500 / TBMQ prod $999)
