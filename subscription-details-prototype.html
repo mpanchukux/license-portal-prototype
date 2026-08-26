@@ -33,6 +33,9 @@
     --t-body-fs:16px;    --t-body-lh:1.50;    --t-body-ls:0;           --t-body-fw:400;
     --t-small-fs:14px;   --t-small-lh:1.45;   --t-small-ls:0;          --t-small-fw:400;
     --t-label-fs:14px;   --t-label-lh:1.20;   --t-label-ls:0.10em;     --t-label-fw:500;
+    /* in-sentence emphasis (the activity feed): lifts the object of an action out of
+       the sentence without reading as a heading. 400 body → 500 emphasis, never 700. */
+    --t-em-fw:500;
   }
   *{box-sizing:border-box}
   html,body{height:100%}
@@ -50,8 +53,15 @@
   .t-label{font-family:var(--font-ui);font-size:var(--t-label-fs);line-height:var(--t-label-lh);letter-spacing:var(--t-label-ls);font-weight:var(--t-label-fw);text-transform:uppercase}
   .t-mono{font-family:var(--font-mono);letter-spacing:0}
   .tnum{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+  /* the feed's one emphasis style: .em, and <b> inside feed text maps onto it */
+  .em,.fi-txt b{font-weight:var(--t-em-fw)}
   /* the shared shell: the top bar (.dtopbar) stays put; every page's view scrolls here */
   #shellMain{flex:1;min-height:0;overflow:auto;background:var(--bg)}
+  /* global footer: quiet, muted, one line, aligned to the content container */
+  .shellfoot{background:var(--bg);padding:6px 24px 22px}
+  .shellfoot-in{max-width:var(--pageW);margin:0 auto;padding:0 var(--pageX);display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:14px;color:var(--faint)}
+  .shellfoot-in .link{color:var(--faint)}
+  .shellfoot-in .link:hover{color:var(--ink)}
   /* every page renders inside the same container: one max-width, centred, same
      side padding — so nothing shifts horizontally when navigating between pages.
      .dwrap = dashboards, .licview = list/settings pages, .sheet = details page. */
@@ -142,6 +152,11 @@
   .fchip .fmark{width:13px;height:13px;flex:none}
   /* row 2: the label affordance on its own */
   .metarow{display:flex;gap:12px;margin-top:14px;flex-wrap:wrap;align-items:center}
+  /* the licence label as description: muted body text right under the title */
+  .metarow #labelSlot{display:inline-flex;align-items:center;gap:8px}
+  .labeltext{font-size:var(--t-small-fs);line-height:var(--t-small-lh);letter-spacing:var(--t-small-ls);color:var(--mid)}
+  .labelx{border:0;background:none;padding:0;font-size:13px;line-height:1;color:var(--faint);cursor:pointer}
+  .labelx:hover{color:var(--ink)}
   .period{font-size:14px;color:var(--ink);font-variant-numeric:tabular-nums}
   /* thin divider between the meta row and the license key row */
   .hairline{height:1px;background:var(--line2);margin-top:12px}
@@ -166,6 +181,9 @@
 
   /* equal spacing between every header action, including the ⋮ overflow button */
   .headactions{margin-left:auto;flex:none;align-self:center;display:flex;gap:9px;align-items:center}
+  /* .btn sets display, so a plain [hidden] on a header action would not hide it
+     (the data-page buttons get away with it through [data-page][hidden]) */
+  .headactions .btn[hidden]{display:none}
   .kebab-btn{width:var(--btnH);padding:0;font-size:15px;line-height:1}
 
   /* conditional attention alert (hidden in healthy state) */
@@ -295,6 +313,7 @@
   .emptybox{padding:34px 0;text-align:center;color:var(--faint);font-size:14px}
   /* Instances tab: type switcher toolbar + generous air before pagination */
   .insttoolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+  .insttoolbar[hidden]{display:none}   /* display:flex above would defeat a plain [hidden] */
   .insttoolbar .spacer{flex:1}
   .insttype[hidden]{display:none}
   .pager.instpager{margin-top:40px}
@@ -564,11 +583,14 @@
   .nl-unl-k{font-family:var(--font-ui);font-size:var(--t-label-fs);line-height:var(--t-label-lh);letter-spacing:var(--t-label-ls);font-weight:var(--t-label-fw);text-transform:uppercase;color:var(--faint)}
   .nl-unl-v{margin-top:6px;font-size:14px;line-height:1.6;color:var(--ink)}
   .nl-quiet{margin-top:12px;font-size:14px;color:var(--faint)}
-  /* step 2 — the shared PE expander under the plan grid */
-  /* PE feature block: always expanded, left-aligned to the step content edge */
-  .nl-pe{max-width:820px;margin:18px 0 0}
-  .nl-pe-h{font-size:14px;font-weight:600;color:var(--ink)}
-  .nl-pe-body{margin-top:10px;border:1px solid var(--line2);border-radius:8px;background:#fff;padding:10px 16px}
+  /* step 2 — the shared PE card under the plan grid: the title is the card's
+     header, the "All plans include…" line its muted intro; the card spans the
+     plan grid width and nothing floats between the grid and the card */
+  .nl-pe{margin:20px 0 0;border:1px solid var(--line2);border-radius:10px;background:var(--card);padding:16px 18px}
+  .nl-pe-h{font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw);color:var(--ink)}
+  .nl-pe-intro{margin:6px 0 0;font-size:14px;color:var(--faint)}
+  .nl-pe-body{margin-top:6px}
+  #nlProdExtra .nl-pe{max-width:960px;margin-left:auto;margin-right:auto}   /* spans the centered perp product grid */
   .nl-pe-item{padding:8px 0;border-bottom:1px dashed var(--line2);font-size:14px;line-height:1.5;color:var(--mid)}
   .nl-pe-item:last-child{border-bottom:0}
   .nl-pe-item b{color:var(--ink);font-weight:600}
@@ -635,7 +657,6 @@
   .dprofile{position:relative}
   .dprofbtn{display:inline-flex;align-items:center;gap:9px;padding:4px 12px 4px 4px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--ink);font:inherit;font-size:14px}
   .dprofbtn:hover{border-color:var(--mid);background:var(--hover)}
-  .dprofbtn .avatar{width:26px;height:26px;border-radius:50%;background:#fff;border:1px solid var(--line);font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center}
   .dprofmenu{position:absolute;right:0;top:calc(100% + 6px);min-width:232px;background:#fff;border:1px solid var(--line);border-radius:8px;box-shadow:0 12px 32px rgba(0,0,0,.16);padding:6px;z-index:60}
   .dprofmenu[hidden]{display:none}
   .dprofmenu .grp{font-family:var(--font-ui);font-size:var(--t-label-fs);line-height:var(--t-label-lh);letter-spacing:var(--t-label-ls);font-weight:var(--t-label-fw);text-transform:uppercase;color:var(--faint);padding:9px 10px 4px}
@@ -670,6 +691,10 @@
   .dwelcome p{margin:5px 0 0;font-family:var(--font-ui);font-size:var(--t-small-fs);line-height:var(--t-small-lh);letter-spacing:var(--t-small-ls);font-weight:var(--t-small-fw);color:var(--mid)}
 
   .dblock{background:var(--card);border:1px solid var(--line2);border-radius:10px;padding:15px 18px;margin-top:20px}
+  /* Home feed lazy load: a sentinel the observer watches, plus a quiet fallback */
+  .feedmore{display:flex;justify-content:center;padding:10px 0 2px}
+  .feedmore[hidden]{display:none}
+  .feedsentinel{display:block;width:1px;height:1px}
   .dblock-head{display:flex;align-items:baseline;gap:12px;margin-bottom:4px}
   .dblock-head h2{margin:0;font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw)}
   .dblock-head .sp{flex:1}
@@ -699,6 +724,33 @@
   .dmini .s{font-size:14px;color:var(--faint);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   /* New-user empty state: plan structure. Switchers reuse the .seg segmented
      control; cards reuse .dblock + .pill + .btn — no new colors or components. */
+  /* ---------- Community Grant states (pending / approved) ----------
+     Both reuse the shared shell. "Grant pending" is the new-user dashboard with a
+     status card above the plan cards — it states where the application stands and
+     blocks nothing: the switchers and plan cards below stay fully live. "Grant
+     approved" is a populated dashboard whose single licence is the grant, plus a
+     one-time banner. Quiet monochrome — neither surface is an alert. */
+  .gstatus{display:flex;align-items:flex-start;gap:14px;margin-top:20px;border:1px solid var(--line2);border-radius:10px;background:var(--card);padding:16px 18px}
+  .gstatus[hidden]{display:none}
+  .gstatus .gs-ic{width:22px;height:22px;margin-top:2px;color:var(--mid)}
+  .gs-h{font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw);color:var(--ink)}
+  .gs-b{margin:6px 0 0;max-width:720px;font-size:14px;line-height:1.6;color:var(--mid)}
+  .gs-f{margin-top:10px}
+  /* The approved banner wears the impersonation banner's clothes (.imp-banner):
+     ink band, white text, white pill action — a statement across the top of the
+     dashboard rather than another card in the stack. It sits inside the content
+     column, so it keeps all four corners and clears the content below it.
+     One-time: dismissing removes it for the session. */
+  .gbanner{display:flex;align-items:center;gap:12px;margin:0 0 26px;border-radius:10px;background:var(--ink);color:#fff;padding:10px 10px 10px 16px;font-size:14px}
+  .gbanner[hidden]{display:none}
+  .gbanner .sp{flex:1}
+  .gbanner .gb-ic{width:18px;height:18px;color:#fff}
+  .gb-txt{font-size:14px;color:#fff}
+  .gb-act{height:26px;padding:0 12px;border:0;border-radius:5px;background:#fff;color:var(--ink);font:inherit;font-size:14px;cursor:pointer;flex:none}
+  .gb-act:hover{background:var(--hover)}
+  .gb-x{flex:none;border:0;background:none;cursor:pointer;color:rgba(255,255,255,.72);font-size:15px;line-height:1;padding:5px 8px;border-radius:5px}
+  .gb-x:hover{color:#fff;background:rgba(255,255,255,.14)}
+  #statusSlot{display:inline-flex;align-items:center;gap:8px}   /* a grant carries two quiet chips */
   .planpick{display:flex;flex-direction:column;align-items:flex-start;gap:12px;margin-top:20px}
   .planpick-row{display:flex;align-items:center;gap:12px}
   .planpick .pp-label{font-size:14px;color:var(--mid);min-width:56px}
@@ -710,7 +762,13 @@
   @media(max-width:760px){.plangrid{grid-template-columns:1fr}}
   /* single-plan states: centered card, not stretched */
   .plangrid.one{grid-template-columns:minmax(0,380px);justify-content:center}
-  .plancard{display:flex;flex-direction:column;margin-top:0;padding:16px 18px}
+  .plancard{position:relative;display:flex;flex-direction:column;margin-top:0;padding:16px 18px}
+  /* Change plan: "Current plan" is a strip on the current card's top edge; its
+     height is reserved above EVERY card (empty elsewhere) so card heights match
+     and the plan names stay on one horizontal line */
+  .plangrid.withcur{--stripH:24px}
+  .plangrid.withcur .plancard{margin-top:var(--stripH)}
+  .pc-strip{position:absolute;bottom:calc(100% - 1px);left:12px;display:inline-flex;align-items:center;height:calc(var(--stripH) + 1px);padding:0 10px;background:var(--card);border:1px solid var(--line2);border-bottom:0;border-radius:8px 8px 0 0;font-family:var(--font-ui);font-size:var(--t-label-fs);letter-spacing:var(--t-label-ls);font-weight:var(--t-label-fw);text-transform:uppercase;color:var(--mid);white-space:nowrap}
   .pc-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-height:22px}
   .pc-head h2{margin:0;font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw)}
   .pc-price{margin-top:9px;font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw);font-variant-numeric:tabular-nums}
@@ -750,7 +808,6 @@
   .fi-body{flex:1;min-width:0}
   .fi-meta{display:flex;align-items:center;gap:7px;font-size:14px;color:var(--faint);font-variant-numeric:tabular-nums}
   .fi-txt{margin-top:4px;font-size:14px;color:var(--ink);line-height:1.5}
-  .fi-txt b{font-weight:600}
   .fi-row > .iconbtn{flex:none;margin-top:0}
   /* audit payload expands in place under the entry — capped height, own scroll */
   .fi-audit{margin:10px 0 2px 0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:14px;line-height:1.5;color:var(--ink);background:#fafafa;border:1px solid var(--line2);border-radius:6px;padding:12px 14px;max-height:300px;overflow:auto;white-space:pre}
@@ -816,6 +873,23 @@
   .setfooter{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:22px;font-size:14px;color:var(--faint)}
   .setfooter .dot{color:var(--line)}
   /* quiet delete action + disabled confirm button in the delete dialog (reuses the savebar's opacity treatment) */
+  /* Account → Personal details: the two account-level actions sit under the fields */
+  .pdactions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+  /* Email change is pending until the new address confirms: a muted chip carrying
+     the target address, with the two text actions beside it */
+  .emailpend{margin-top:7px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px}
+  .emailpend[hidden]{display:none}
+  .emailpend-t{font:inherit;font-size:14px;text-align:left;color:var(--mid);background:#fff;border:1px dashed var(--line);border-radius:999px;padding:3px 11px;cursor:pointer}
+  .emailpend-t:hover{border-color:var(--mid);color:var(--ink)}
+  .emailpend-a{display:inline-flex;gap:12px}
+  /* Security page: back button in its own gutter, aligned with the H1 row */
+  .secgrid{display:grid;grid-template-columns:var(--backW) 1fr;column-gap:var(--backGap);align-items:start}
+  .secgrid > .back{margin-top:19px}
+  /* the three password fields stack, each the width of one .field2 cell
+     (the 800px card body minus the 14px column gap, halved). The cap sits on the
+     inputs: .setcard > *:not(.setcard-h) already claims max-width:800px here. */
+  .pwstack{display:grid;gap:12px}
+  .pwstack .field input{max-width:393px}
   .setdelete{margin-top:14px}
   .setdelete .btn.ter{padding:0}
   .modal .mf .btn[disabled]{opacity:.45;cursor:not-allowed}
@@ -873,7 +947,14 @@
   .lic-actions{display:inline-flex;align-items:center;gap:6px;justify-content:flex-end}
   .lp-name,.lr-main{color:var(--ink)}
   .lp-meta,.lr-sub{font-size:14px;color:var(--faint);margin-top:2px}
-  .lic-num{font-variant-numeric:tabular-nums}
+  /* The label is the field that tells rows apart, so it rides in the Product
+     column under the product name. The column is wide enough that a real-world
+     label ("Production — Central Europe manufacturing cluster, building 4")
+     wraps onto a second line instead of stretching the table. */
+  th.lic-prodhead{min-width:230px}
+  td.lic-prodcell{min-width:230px}
+  .lic-prodlabel{font-size:14px;color:var(--faint);margin-top:2px;white-space:normal}
+  .lic-num{font-variant-numeric:tabular-nums;white-space:nowrap}   /* dates stay on one line now that Product takes the width */
   /* lightweight dropdowns for Type filter and + New license */
   .dropwrap{position:relative}
   .dropwrap[hidden]{display:none}
@@ -958,15 +1039,12 @@
   <span class="sp"></span>
   <div class="dprofile">
     <button class="dprofbtn" id="dashProfBtn" aria-haspopup="true" aria-expanded="false">
-      <span class="avatar">MP</span><span>Mariia Panchuk</span><span aria-hidden="true">▾</span>
+      <span>Mariia Panchuk</span><span aria-hidden="true">▾</span>
     </button>
     <div class="dprofmenu" id="dashProfMenu" role="menu" hidden>
-      <button role="menuitem" data-goto="profile">Profile settings</button>
+      <button role="menuitem" data-goto="profile">Account</button>
       <button role="menuitem" data-goto="billing">Billing &amp; payment</button>
-      <div class="sep"></div>
-      <button role="menuitem" data-goto="privacy">Privacy policy</button>
-      <button role="menuitem" data-goto="terms">Terms of service</button>
-      <button role="menuitem" data-goto="eula">License agreement</button>
+      <!-- legal pages live in the global footer now, not in this menu -->
       <div class="sep"></div>
       <button role="menuitem" data-stub="Sign out">Sign out</button>
     </div>
@@ -1073,7 +1151,7 @@
               </div>
             </div>
 
-            <!-- row 2: the label affordance -->
+            <!-- row 2: the label — a muted description line under the title -->
             <div class="metarow">
               <span id="labelSlot"><button class="chip ghost" id="addLabel">+ Add label</button></span>
             </div>
@@ -1239,6 +1317,9 @@
                   <button disabled aria-label="Last page">»</button>
                 </span>
               </div>
+
+              <!-- inferred: a grant is free, so it has no invoices at all -->
+              <div class="emptybox" id="grantInvEmpty" hidden>No invoices &mdash; the Community Grant is free.</div>
             </div>
           </div>
 
@@ -1305,6 +1386,10 @@
               <div class="insttype" data-insttype="dev" hidden>
                 <div class="emptybox">No instances found · Instances appear automatically when a deployment is activated with the license.</div>
               </div>
+
+              <!-- Community Grant: nothing has connected with the new key yet, so the
+                   whole tab is this one line (toolbar and tables hidden) -->
+              <div class="emptybox" id="grantInstEmpty" hidden>An instance appears here after it connects using this license key.</div>
             </div>
           </div>
 
@@ -1662,38 +1747,41 @@
 <div class="licview" id="profileView" hidden>
  <div class="setgrid">
   <div class="setcol">
-  <!-- sticky page header: one Save for the whole page, aligned right on the H1 row -->
+  <!-- sticky page header: every action on one line, ordered by escalation toward
+       the primary — Log out (quietest) · Change password · Save. No "all saved"
+       text: Save's disabled state already says there is nothing to save. -->
   <div class="pagehead">
-    <h1 class="lic-h1">Profile settings</h1>
+    <h1 class="lic-h1">Account</h1>
     <span class="sp"></span>
-    <span class="saved" id="profSavedNote">All changes saved</span>
+    <button class="btn ter" id="profLogoutBtn">Log out</button>
+    <button class="btn sec" data-goto="security">Change password</button>
     <button class="btn" id="profSaveBtn" disabled>Save</button>
   </div>
   <div class="setcard">
-    <div class="setcard-h"><h2>Personal</h2><span class="setcard-hint">Personal account</span></div>
+    <div class="setcard-h"><h2>Personal details</h2><span class="setcard-hint">Personal account</span></div>
     <div class="field2">
       <div class="field"><label>First name</label><input type="text" value="Mariia"></div>
       <div class="field"><label>Last name</label><input type="text" value="Panchuk"></div>
       <div class="field">
         <label>Email</label>
-        <input type="email" value="mpanchuk@thingsboard.io">
-        <div class="help">Used to sign in.</div>
+        <input type="email" id="profEmail" value="mpanchuk@thingsboard.io">
+        <div class="help">Used to sign in. Changing it needs confirmation from the new address — this one stays active until then.</div>
+        <!-- pending state: the field keeps showing the current address until the new
+             one confirms. Prototype: clicking the line plays the confirmation. -->
+        <div class="emailpend" id="emailPending" hidden>
+          <button class="emailpend-t" id="emailPendingTxt" title="Prototype: click to play the confirmation"></button>
+          <span class="emailpend-a">
+            <button class="link" id="emailResend">Resend</button>
+            <button class="link" id="emailCancel">Cancel change</button>
+          </span>
+        </div>
       </div>
       <div class="field"><label>Language</label><select><option>English</option><option>Українська</option><option>Deutsch</option><option>Español</option></select></div>
     </div>
   </div>
 
   <div class="setcard">
-    <div class="setcard-h"><h2>Security</h2><span class="setcard-hint">Password</span></div>
-    <div class="field"><label>Current password</label><input type="password" placeholder="Enter only to change your password."></div>
-    <div class="field2">
-      <div class="field"><label>New password</label><input type="password"></div>
-      <div class="field"><label>Confirm new password</label><input type="password"></div>
-    </div>
-  </div>
-
-  <div class="setcard">
-    <div class="setcard-h"><h2>Company</h2><span class="setcard-hint">Organization · appears on invoices</span></div>
+    <div class="setcard-h"><h2>Company details</h2><span class="setcard-hint">Organization · appears on invoices</span></div>
     <div class="field"><label>Company name</label><input type="text" value="ThingsBoard"></div>
     <div class="field"><label>Description</label><textarea>IoT platform provider.</textarea></div>
     <div class="field2">
@@ -1716,6 +1804,33 @@
   <div class="setdelete">
     <button class="btn ter" id="deleteAcctBtn">Delete account</button>
     <div class="cardhelp" style="margin-top:4px">Removes your profile and access. Active licenses and billing history are not affected. You'll confirm on the next step.</div>
+  </div>
+  </div><!-- /setcol -->
+ </div><!-- /setgrid -->
+</div>
+
+<!-- ============ SECURITY — inner page of Account ============
+     Reached from Account → Change password. The back button sits in its own
+     gutter (same tokens as the licence details page), because back here means
+     "up to Account" — something no nav item does. -->
+<div class="licview" id="securityView" hidden>
+ <div class="setgrid secgrid">
+  <button class="back" id="secBackBtn" aria-label="Back to Account" title="Back to Account">&larr;</button>
+  <div class="setcol">
+  <div class="pagehead">
+    <h1 class="lic-h1">Security</h1>
+    <span class="sp"></span>
+    <span class="saved" id="secSavedNote">All changes saved</span>
+    <button class="btn" id="secSaveBtn" disabled>Save</button>
+  </div>
+  <div class="setcard">
+    <div class="setcard-h"><h2>Password</h2><span class="setcard-hint">Signs out your other sessions</span></div>
+    <!-- one column: the three fields stack, each as wide as a single .field2 cell -->
+    <div class="pwstack">
+      <div class="field"><label>Current password</label><input type="password" placeholder="••••••••"></div>
+      <div class="field"><label>New password</label><input type="password" placeholder="••••••••"></div>
+      <div class="field"><label>Confirm new password</label><input type="password" placeholder="••••••••"></div>
+    </div>
   </div>
   </div><!-- /setcol -->
  </div><!-- /setgrid -->
@@ -1768,10 +1883,20 @@
 <div class="dashview" id="dashView" hidden>
   <div class="dmain">
     <div class="dwrap">
+      <!-- Community Grant approved: one-time success banner, shown only in the
+           grant state and only until dismissed (see syncGrantChrome) -->
+      <div class="gbanner" id="grantBanner" role="status" hidden>
+        <svg class="icon gb-ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.4l2.4 2.4 4.6-5"/></svg>
+        <span class="gb-txt">Your Community Grant is ready &mdash; the license key has been issued.</span>
+        <span class="sp"></span>
+        <button class="gb-act" id="grantViewBtn">View license</button>
+        <button class="gb-x" id="grantDismissBtn" aria-label="Dismiss">&#10005;</button>
+      </div>
+
       <!-- welcome text and the create action share one row -->
       <div class="dwelcome">
         <div class="dw-txt">
-          <h1>Welcome back, Mariia</h1>
+          <h1 id="dashGreeting">Good morning, Mariia</h1>
         </div>
         <div class="dropwrap">
           <button class="btn" id="dashNewBtn" aria-haspopup="true" aria-expanded="false">+ New license ▾</button>
@@ -1786,8 +1911,10 @@
            Products page "Product-first (neutral)" variant, capped at the three
            newest rows that have a real details page (see renderDashLicenses). -->
       <div class="dblock">
-        <div class="dblock-head"><h2>Licenses</h2><span class="sp"></span>
+        <!-- the link sits with the title, not across the block (see .dblock-head) -->
+        <div class="dblock-head"><h2>Licenses</h2>
           <button class="link" data-goto="products3">Show all</button>
+          <span class="sp"></span>
         </div>
         <div style="overflow-x:auto">
           <table id="dashLicTable">
@@ -1799,8 +1926,9 @@
 
       <!-- Recent invoices — same columns and order as the Invoices page -->
       <div class="dblock">
-        <div class="dblock-head"><h2>Recent invoices</h2><span class="sp"></span>
+        <div class="dblock-head"><h2>Recent invoices</h2>
           <button class="link" data-goto="invoices">Show all</button>
+          <span class="sp"></span>
         </div>
         <table>
           <thead>
@@ -1821,36 +1949,21 @@
         </table>
       </div>
 
-      <!-- Recent activity and Users: stacked, each full width -->
-      <div class="dblock">
-        <div class="dblock-head"><h2>Recent activity</h2><span class="sp"></span>
+      <!-- Recent activity — the last block on Home. Users are not previewed here:
+           they live on their own page (nav → Users). The feed shows the latest few
+           and grows in place as you reach its end (see renderDashFeed). -->
+      <div class="dblock" id="dashActBlock">
+        <div class="dblock-head"><h2>Recent activity</h2>
           <button class="link" data-goto="activity">Show all</button>
+          <span class="sp"></span>
         </div>
-        <!-- same feed items as the Activity page, latest few (see renderFeed) -->
         <div class="feed" id="dashFeed"></div>
-      </div>
-
-      <div class="dblock">
-        <div class="dblock-head"><h2>Users</h2><span class="sp"></span>
-          <button class="link" data-goto="users">Show all</button>
+        <!-- lazy load: the sentinel appends the next batch when it scrolls into
+             view; the button is the fallback (and the keyboard path) -->
+        <div class="feedmore" id="dashFeedMore" hidden>
+          <span class="feedsentinel" id="dashFeedSentinel" aria-hidden="true"></span>
+          <button class="link" id="dashFeedMoreBtn">Load more</button>
         </div>
-        <!-- same columns as the Users page, minus Activation status — the portal
-             has no such state, so no invented status is shown here -->
-        <table>
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Email</th>
-              <th class="sortable" aria-sort="descending" tabindex="0">Created <span class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></span></th>
-              <th aria-label="User actions"></th>
-            </tr>
-          </thead>
-          <tbody id="dashUsersBody">
-            <tr><td>Dev User</td><td>dev@thingsboard.io</td><td>Aug 02 2026</td><td class="cellact"><span class="rowactions"><button class="link" data-stub="Login as Dev User">Login as →</button><button class="link" data-stub="Delete Dev User">Delete</button></span></td></tr>
-            <tr><td>A. Admin</td><td>a.admin@thingsboard.io</td><td>Jul 20 2026</td><td class="cellact"><span class="rowactions"><button class="link" data-stub="Login as A. Admin">Login as →</button><button class="link" data-stub="Delete A. Admin">Delete</button></span></td></tr>
-            <tr><td>Mariia Panchuk</td><td>mpanchuk@thingsboard.io</td><td>Jul 17 2026</td><td class="cellact"><span class="rowactions"><button class="link" data-stub="Login as Mariia Panchuk">Login as →</button><button class="link" data-stub="Delete Mariia Panchuk">Delete</button></span></td></tr>
-          </tbody>
-        </table>
       </div>
     </div>
   </div>
@@ -1865,6 +1978,18 @@
       <div class="dwelcome">
         <h1>Welcome, Mariia</h1>
         <p>ThingsBoard · you don't have any licenses yet. Start with one of these.</p>
+      </div>
+
+      <!-- Community Grant under review. Shown only in the "grant pending" state.
+           It reports status and asks for nothing: the switchers and plan cards
+           below stay fully live, so buying is never blocked by an application. -->
+      <div class="gstatus" id="grantPending" role="status" hidden>
+        <svg class="icon gs-ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5l3 2"/></svg>
+        <div>
+          <div class="gs-h">Your Community Grant is almost ready</div>
+          <p class="gs-b">The automatic checks are done. A deployment this size is confirmed by someone on our team &mdash; you'll hear from us within five working days. A copy was sent to mpanchuk@thingsboard.io. Your deployment keeps running as is until then.</p>
+          <div class="gs-f"><button class="link" id="grantLearnBtn">Learn more</button></div>
+        </div>
       </div>
 
       <!-- Product × Billing switchers. No deployment switcher: the portal is
@@ -1890,10 +2015,24 @@
       <!-- plan area: rendered from EC_PLANS for the current Product × Billing pair -->
       <div class="plangrid" id="ecPlans"></div>
       <div class="pc-note" id="ecNote"></div>
+      <div id="ecPlanExtra"></div>
 
     </div>
   </div>
 </div>
+<!-- global footer: one quiet line on every page, capped to the content container.
+     presentPage re-appends it after mounting a page node so it stays last. -->
+<footer class="shellfoot" id="shellFoot">
+  <div class="shellfoot-in">
+    <span>&copy; 2026 ThingsBoard</span>
+    <span aria-hidden="true">&middot;</span>
+    <button class="link" data-goto="privacy">Privacy policy</button>
+    <span aria-hidden="true">&middot;</span>
+    <button class="link" data-goto="terms">Terms of service</button>
+    <span aria-hidden="true">&middot;</span>
+    <button class="link" data-goto="eula">License agreement</button>
+  </div>
+</footer>
 </div><!-- /#shellMain -->
 
 <!-- ============ ADD USER — modal flow (monochrome, fresh) ============ -->
@@ -2389,7 +2528,6 @@
         <!-- STEP 2 — PLAN / PACKAGE -->
         <div id="nlStep2" hidden>
           <div class="plangrid" id="nlPlanCards"></div>
-          <p class="pc-note" id="nlPlanNote"></p>
           <!-- TODO: confirm with product that these PE features apply to Maker/Prototype -->
           <div id="nlPlanExtra"></div>
         </div>
@@ -2445,8 +2583,13 @@
       <label class="sp-opt"><input type="radio" name="detailsPage" value="dashboard" checked><span>Dashboard — small account (A)</span></label>
       <label class="sp-opt"><input type="radio" name="detailsPage" value="dashB"><span>Dashboard — large account (B)</span></label>
       <label class="sp-opt"><input type="radio" name="detailsPage" value="dashempty"><span>Dashboard — new user (empty)</span></label>
+      <label class="sp-opt"><input type="radio" name="detailsPage" value="dashgrantpending"><span>Dashboard — grant pending</span></label>
+      <label class="sp-opt"><input type="radio" name="detailsPage" value="dashgrant"><span>Dashboard — grant approved</span></label>
       <div class="sp-grouphead">Products</div>
       <label class="sp-opt"><input type="radio" name="detailsPage" value="products3"><span>Product-first (neutral)</span></label>
+      <div class="sp-grouphead">Account</div>
+      <!-- dev-only: plays the confirmation click from the new address -->
+      <label class="sp-opt"><button class="link" id="devConfirmEmail" disabled>Confirm email change</button></label>
       <div class="sp-grouphead">Wizard stepper</div>
       <label class="sp-opt"><input type="radio" name="nlStepper" value="rail" checked><span>A — Summary rail</span></label>
       <label class="sp-opt"><input type="radio" name="nlStepper" value="progress"><span>B — Progress line</span></label>
@@ -2566,14 +2709,15 @@
   function commit(val){
     if(!val){ reset(); return; }
     slot.innerHTML = '';
-    var chip = document.createElement('span');
-    chip.className = 'chip label';
-    chip.textContent = val + ' ';
+    // same muted description the row-driven render produces, plus a way back out
+    var text = document.createElement('span');
+    text.className = 'labeltext';
+    text.textContent = val;
     var x = document.createElement('button');
-    x.className = 'x'; x.setAttribute('aria-label','Remove label'); x.textContent='✕';
+    x.className = 'labelx'; x.setAttribute('aria-label','Remove label'); x.textContent='✕';
     x.addEventListener('click', reset);
-    chip.appendChild(x);
-    slot.appendChild(chip);
+    slot.appendChild(text);
+    slot.appendChild(x);
   }
   function reset(){
     slot.innerHTML = '<button class="chip ghost" id="addLabel">+ Add label</button>';
@@ -2982,6 +3126,10 @@
     dashB:     { kind:'dash', variant:'B' },
     // new-user empty state — shown when the account has no licenses yet
     dashempty: { kind:'dashempty' },
+    // Community Grant states: pending reuses the new-user dashboard (status card +
+    // the plan cards stay buyable); approved is a populated dashboard (dataset G)
+    dashgrantpending: { kind:'dashempty', grant:'pending' },
+    dashgrant:        { kind:'dash', variant:'G' },
     // Products list — inner content only, no chrome. Two layout variants:
     // 1 = grouped (name+label, renewal+price+billing stacked); 2 = one field per column.
     products:  { kind:'products', variant:1 },
@@ -2992,6 +3140,7 @@
     activity:  { kind:'activity' },
     users:     { kind:'users' },
     profile:   { kind:'profile' },
+    security:  { kind:'security' },   // inner page of Account (Change password)
     billing:   { kind:'billing' },
     privacy:   { kind:'privacy' },
     terms:     { kind:'terms' },
@@ -3079,7 +3228,10 @@
     business: { name:'Business',  price:'$499.00', wl:true,  ent:[['Devices','1,000'],['Assets','1,000'],['Production instances','3'],['AI credits','16M','/ month']] },
     tbmqsub:  { name:'PE subscription', price:'$15.00', wl:false, ent:[['Sessions','100'],['Messages / sec','100'],['Production instances','1']] },
     tbperp:   { name:'PE Perpetual License', price:'one-time', perp:true, wl:true, ent:[['Devices','5,000'],['Assets','5,000'],['Production instances','1'],['AI credits','5M']] },
-    tbmqperp: { name:'PE license', price:'one-time', perp:true, wl:true, ent:[['Sessions','10,000'],['Messages / sec','1,000'],['Production instances','1']] }
+    tbmqperp: { name:'PE license', price:'one-time', perp:true, wl:true, ent:[['Sessions','10,000'],['Messages / sec','1,000'],['Production instances','1']] },
+    // Community Grant — free, no expiry, nothing recurring. perp:true puts it on the
+    // perpetual-style details layout (no renewal, no next charge, no add-ons).
+    grant:    { name:'Community Grant', price:'Free', perp:true, grant:true, wl:false, ent:[['Devices','6,050'],['Production servers','2']] }
   };
   var NAMED_TIER = { maker:'maker', prototype:'prototype', pilot:'pilot', startup:'startup', business:'business', perp:'tbperp', prototypeaddons:'prototype' };
   var ENT_EXTRA_KEY = { 'Devices':'devices', 'Production instances':'prod', 'AI credits':'ai' };
@@ -3087,7 +3239,8 @@
 
   function licById(id){
     if(!id) return null;
-    var all = DATASETS.A.licenses.concat(DATASETS.B.licenses);
+    var all = [];
+    Object.keys(DATASETS).forEach(function(k){ all = all.concat(DATASETS[k].licenses); });
     for(var i=0;i<all.length;i++){ if(all[i].id === id) return all[i]; }
     return null;
   }
@@ -3101,8 +3254,14 @@
     return lic;
   }
 
+  // A grant and a perpetual licence share the details layout: nothing recurs, so
+  // no renewal, no next charge, no plan to change. One test, used by every caller.
+  function isPerpLike(lic){ return !!lic && (lic.type === 'Perpetual' || !!lic.grant); }
   function statusChipHTML(lic){
     var st = lic.status;
+    // a grant states what it is (free) and what it waits for — both quiet, no alarm
+    if(lic.grant) return '<span class="chip">Free</span>'
+      + (st==='awaiting_checkin' ? '<span class="chip">Waiting for first check-in</span>' : '');
     if(st==='payment_failed')   return '<span class="chip status attn">Payment failed</span>';
     if(st==='updates_expiring') return '<span class="chip status attn">Updates expiring</span>';
     if(st==='canceled')         return '<span class="chip status off">Canceled &middot; active until ' + fmtDate(lic.event) + '</span>';
@@ -3137,7 +3296,7 @@
     else al.hidden = true;
   }
   function renderLicenseActions(lic){
-    var canceled = lic.status==='canceled', isPerp = lic.type==='Perpetual';
+    var canceled = lic.status==='canceled', isPerp = isPerpLike(lic);
     var coupon=$('#couponBtn'), change=$('#changePlanBtn'), kebab=$('#headKebabMenu'), renew=$('#renewBtn');
     if(!isPerp){
       if(coupon) coupon.hidden = canceled;
@@ -3146,21 +3305,48 @@
       if(renew)  renew.hidden  = !canceled;
     }
   }
+  /* A label describes the deployment, so on details it reads as a muted sub-line
+     under the title — not a chip. The "+ Add label" affordance stays for licences
+     that have none. */
   function renderLabelSlot(lic){
-    if(lic.label){ slot.innerHTML = '<span class="chip label">' + esc(lic.label) + '</span>'; }
+    if(lic.label){ slot.innerHTML = '<span class="labeltext">' + esc(lic.label) + '</span>'; }
     else { reset(); }   // restores the interactive "+ Add label" affordance
+  }
+  /* A grant rides the perpetual details layout, with the few things that differ
+     switched over: what the dated block means (nothing expires), no coupon or
+     capacity purchase, no invoices, and no instance until the deployment checks
+     in with the new key. Every non-grant licence restores the same nodes. */
+  function renderGrantChrome(lic){
+    var isGrant = !!(lic && lic.grant);
+    var kicker = $('#appView .titlekicker[data-page="perp"]');
+    if(kicker) kicker.textContent = isGrant ? 'Grant license' : 'Perpetual license';
+    var ph = $('#appView .keycol[data-page="perp"] .periodhead');
+    if(ph) ph.textContent = isGrant ? 'Expiry' : 'Software updates';
+    var coupon = $('#couponBtn'); if(coupon) coupon.hidden = isGrant;
+    // the data-page pass above already restored these for a perpetual licence,
+    // so a grant only has to take them back out
+    if(isGrant) $$('#appView [data-modal="add-capacity"]').forEach(function(b){ b.hidden = true; });
+    var invEmpty = $('#grantInvEmpty'); if(invEmpty) invEmpty.hidden = !isGrant;
+    if(isGrant) $$('#panel-invoices [data-page]').forEach(function(el){ el.hidden = true; });
+    var instEmpty = $('#grantInstEmpty'); if(instEmpty) instEmpty.hidden = !isGrant;
+    var instBar = $('#panel-prod .insttoolbar'); if(instBar) instBar.hidden = isGrant;
+    var onChip = $('#panel-prod .typechip.is-on'), instType = onChip ? onChip.getAttribute('data-insttype') : 'prod';
+    $$('#panel-prod .insttype').forEach(function(el){ el.hidden = isGrant || el.getAttribute('data-insttype') !== instType; });
   }
   function renderLicenseDetails(lic){
     if(!lic) return;
-    var spec = TIER_SPECS[lic.tier] || {}, isPerp = lic.type==='Perpetual', pk = isPerp ? 'perp' : 'sub';
+    var spec = TIER_SPECS[lic.tier] || {}, isPerp = isPerpLike(lic), pk = isPerp ? 'perp' : 'sub';
     $$('#appView [data-page]').forEach(function(el){ el.hidden = el.getAttribute('data-page') !== pk; });
     var nameEl = isPerp ? $('#planNamePerp') : $('#planName');
     if(nameEl) nameEl.textContent = lic.name;
     $('#statusSlot').innerHTML = statusChipHTML(lic);
     renderLabelSlot(lic);
+    renderGrantChrome(lic);
     if(isPerp){
       var pp = $('#periodPerp');
-      if(pp) pp.textContent = (lic.status==='updates_expiring' ? 'Expires ' : 'Until ') + fmtDate(lic.event);
+      // a grant has no term at all — the dated block says so instead of a date
+      if(pp && lic.grant) pp.innerHTML = '<span class="muted">No expiry</span>';
+      else if(pp) pp.textContent = (lic.status==='updates_expiring' ? 'Expires ' : 'Until ') + fmtDate(lic.event);
     } else {
       var ps = $('#periodSub');
       if(ps) ps.textContent = (lic.status==='canceled' ? 'Active until ' : 'Renews ') + fmtDate(lic.event);
@@ -3175,12 +3361,27 @@
     renderLicenseAlert(lic);
     renderLicenseActions(lic);
     renderLicFeed(lic);
+    syncBackTarget();
   }
-  function openLicense(lic){
+  /* Where a licence was opened from decides where its back button returns: a row
+     on Home goes back Home, a row on the Licenses page goes back to that list
+     (its filter/variant state lives in JS, so the list returns as it was). */
+  var licenseOrigin = 'products3';
+  function openLicense(lic, origin){
     if(!lic) return;
     activeLicense = lic;
-    PAGES.licenseView = { kind: lic.type==='Perpetual' ? 'perp' : 'sub' };
+    if(origin) licenseOrigin = origin;
+    else {
+      var k = PAGES[detailsPage] && PAGES[detailsPage].kind;
+      licenseOrigin = (k === 'dash' || k === 'dashempty') ? homeKey : 'products3';
+    }
+    PAGES.licenseView = { kind: isPerpLike(lic) ? 'perp' : 'sub' };
     goToPage('licenseView');
+  }
+  function syncBackTarget(){
+    var b = $('#backBtn'); if(!b) return;
+    var lbl = licenseOrigin === 'products3' ? 'Back to Licenses' : 'Back to Home';
+    b.setAttribute('aria-label', lbl); b.setAttribute('title', lbl);
   }
 
   /* Cancel subscription — confirmation modal reused from openModal, injected buttons */
@@ -3215,17 +3416,21 @@
   function tsFrom(created, time){ var q=String(created).split(' '); return (q[1]||'01')+' '+q[0]+' '+q[2]+', '+time; }
   function licenseActivity(lic){
     var who='mpanchuk@thingsboard.io', noun = lic.type==='Perpetual' ? 'License' : 'Subscription';
+    // the grant has exactly one event of its own: it was issued
+    if(lic.grant) return [{ kind:'created', ts: tsFrom(lic.created,'09:02'), entityType:'License', entityName:lic.name,
+      actor:'System', action:'GRANT_ISSUED',
+      txt:'<b>'+lic.name+'</b> was issued to '+who+' — license key created.', delta:'Community Grant issued' }];
     var acts = [];
     acts.push({ kind:'created', ts: tsFrom(lic.created,'09:14'), entityType:noun, entityName:lic.name, actor:who, action:'ADDED',
-      txt:'<b>'+noun+'</b> <b>'+lic.name+'</b> was created by <b>'+who+'</b>.' });
+      txt:noun+' <b>'+lic.name+'</b> was created by '+who+'.' });
     if(lic.label) acts.push({ kind:'updated', ts: tsFrom(lic.created,'09:22'), entityType:noun, entityName:lic.name, actor:who, action:'UPDATED',
-      txt:'Label <b>'+esc(lic.label)+'</b> was set by <b>'+who+'</b>.', delta:'label = '+lic.label });
+      txt:'Label <b>'+esc(lic.label)+'</b> was set by '+who+'.', delta:'label = '+lic.label });
     if(lic.status==='payment_failed') acts.unshift({ kind:'status', ts:'18 Aug 2026, 07:12', entityType:noun, entityName:lic.name, actor:'System', action:'PAYMENT_FAILED',
-      txt:'<b>Payment failed</b> — card <b>Visa ••4242</b> was declined.', delta:'Auto-pay charge failed' });
+      txt:'Payment failed — card Visa ••4242 was declined.', delta:'Auto-pay charge failed' });
     if(lic.status==='updates_expiring') acts.unshift({ kind:'status', ts:'05 Aug 2026, 08:00', entityType:'License', entityName:lic.name, actor:'System', action:'UPDATES_EXPIRING',
-      txt:'<b>Software updates</b> expire on <b>'+fmtDate(lic.event)+'</b>.', delta:'Updates term ends '+lic.event });
+      txt:'Software updates expire on <b>'+fmtDate(lic.event)+'</b>.', delta:'Updates term ends '+lic.event });
     if(lic.status==='canceled') acts.unshift({ kind:'status', ts:'19 Aug 2026, 09:00', entityType:noun, entityName:lic.name, actor:who, action:'CANCELED',
-      txt:'<b>Subscription</b> was canceled — active until <b>'+fmtDate(lic.event)+'</b>.', delta:'Canceled; active until '+lic.event });
+      txt:'Subscription was canceled — active until <b>'+fmtDate(lic.event)+'</b>.', delta:'Canceled; active until '+lic.event });
     return acts;
   }
   function renderLicFeed(lic){
@@ -3247,7 +3452,7 @@
     dash:'#dashView', dashempty:'#dashEmptyView',
     products:'#licensesView', portfolio:'#portfolioView',
     invoices:'#invoicesView', activity:'#activityView', users:'#usersView',
-    profile:'#profileView', billing:'#billingView',
+    profile:'#profileView', security:'#securityView', billing:'#billingView',
     privacy:'#privacyView', terms:'#termsView', eula:'#eulaView',
     sub:'#appView', perp:'#appView'
   };
@@ -3259,17 +3464,22 @@
      dashboard — today that means the detail pages, which keep back + their title. */
   var AREA_FOR_KIND = { products:'licenses', portfolio:'licenses', sub:'licenses', perp:'licenses',
                         invoices:'invoices', activity:'activity', users:'users',
-                        profile:'profile', billing:'billing',
+                        profile:'profile', security:'security', billing:'billing',
                         privacy:'legal', terms:'legal', eula:'legal' };
   var AREA_TITLES = { licenses:'Licenses', invoices:'Invoices', activity:'Activity', users:'Users',
-                      profile:'Profile settings', billing:'Billing & payment', legal:'Legal' };
-  function overlayLevel(kind){ return (kind === 'sub' || kind === 'perp') ? 'deep' : 'root'; }
+                      profile:'Account', security:'Security', billing:'Billing & payment', legal:'Legal' };
+  // Security is one level deeper than Account, so it keeps its own back (back ≠ close)
+  function overlayLevel(kind){ return (kind === 'sub' || kind === 'perp' || kind === 'security') ? 'deep' : 'root'; }
   function isBaseKind(kind){ return kind === 'dash' || kind === 'dashempty'; }
   // which top-bar nav item owns each page
   var NAV_FOR_KIND = { dash:'home', dashempty:'home', products:'licenses', portfolio:'licenses',
                        sub:'licenses', perp:'licenses', invoices:'invoices', activity:'activity', users:'users' };
   function syncTopNav(kind){
     var active = NAV_FOR_KIND[kind] || '';
+    /* Details pages belong to whichever section the user came from: a licence
+       opened from Home keeps Home highlighted (same origin the back button uses),
+       one opened from the list highlights Licenses. */
+    if((kind === 'sub' || kind === 'perp') && licenseOrigin !== 'products3') active = 'home';
     $$('.tnav-item').forEach(function(b){
       var on = b.getAttribute('data-nav') === active;
       b.classList.toggle('on', on);
@@ -3304,13 +3514,33 @@
       if(overlay) overlay.hidden = true;
       if(target && target.parentNode !== shell) shell.appendChild(target);
     }
+    var foot = $('#shellFoot');   // appendChild above would otherwise leave it above the page
+    if(foot && foot.parentNode === shell) shell.appendChild(foot);
     syncTopNav(kind);
   }
 
+  /* The grant surfaces are chrome on top of dashboards that already exist: the
+     pending card belongs to the new-user dashboard, the banner to the populated
+     one. Both are toggled from the page entry, so no dashboard state can leak a
+     grant element into another. The banner is one-time per session. */
+  var grantBannerDismissed = false;
+  function syncGrantChrome(p){
+    var pend = $('#grantPending');
+    if(pend) pend.hidden = !(p.kind === 'dashempty' && p.grant === 'pending');
+    var ban = $('#grantBanner');
+    if(ban) ban.hidden = !(p.kind === 'dash' && p.variant === 'G' && !grantBannerDismissed);
+  }
   function applyDetailsPage(){
     var p = PAGES[detailsPage];
     presentPage(p.kind);
-    if(p.kind === 'dash'){ dashVariant = p.variant || 'A'; renderDatasetViews(); return; }
+    syncGrantChrome(p);
+    if(p.kind === 'dash'){
+      var v = p.variant || 'A';
+      if(v !== dashVariant) dashFeedShown = DASH_FEED_BATCH;   // a different account, a fresh feed
+      dashVariant = v;
+      renderDatasetViews();
+      return;
+    }
     if(p.kind === 'products'){ productsVariant = p.variant; renderProducts(); return; }
     if(p.kind !== 'sub' && p.kind !== 'perp') return;   // other pages are static content
     if(detailsPage !== 'licenseView') activeLicense = licFromNamed(detailsPage);
@@ -3324,7 +3554,8 @@
       if(!r.checked) return;
       if(r.value !== detailsPage) prevPage = detailsPage;
       detailsPage = r.value;
-      if(r.value==='dashboard'||r.value==='dashB'||r.value==='dashempty') homeKey = r.value;
+      // Home returns to whichever dashboard state is selected, grant states included
+      if(PAGES[r.value] && isBaseKind(PAGES[r.value].kind)) homeKey = r.value;
       applyDetailsPage();
     });
   });
@@ -3342,6 +3573,17 @@
       syncFlowChrome();
       applyDetailsPage();
     });
+  });
+  var grantViewBtn = $('#grantViewBtn');
+  if(grantViewBtn) grantViewBtn.addEventListener('click', function(){ var g = licById('G1'); if(g) openLicense(g); });
+  var grantDismissBtn = $('#grantDismissBtn');
+  if(grantDismissBtn) grantDismissBtn.addEventListener('click', function(){
+    grantBannerDismissed = true;
+    var b = $('#grantBanner'); if(b) b.hidden = true;
+  });
+  var grantLearnBtn = $('#grantLearnBtn');
+  if(grantLearnBtn) grantLearnBtn.addEventListener('click', function(){
+    openModal('Community Grant', '<p>Placeholder — the Community Grant programme page is not part of this prototype.</p>');
   });
   var pgoClose = $('#pgoClose');
   if(pgoClose) pgoClose.addEventListener('click', function(){ goToPage(homeKey); });
@@ -3385,13 +3627,13 @@
       ],
       activity: [
         { kind:'created', ts:'10 Aug 2026, 09:14', entityType:'Subscription', entityName:'Prototype', actor:'mpanchuk@thingsboard.io', action:'ADDED',
-          txt:'<b>Subscription</b> <b>Prototype</b> was created by <b>mpanchuk@thingsboard.io</b>.' },
+          txt:'Subscription <b>Prototype</b> was created by mpanchuk@thingsboard.io.' },
         { kind:'updated', ts:'28 Jul 2026, 15:02', entityType:'Payment method', entityName:'Visa ••4242', actor:'mpanchuk@thingsboard.io', action:'UPDATED',
-          txt:'<b>Payment method</b> was added by <b>mpanchuk@thingsboard.io</b>.' },
+          txt:'Payment method was added by mpanchuk@thingsboard.io.' },
         { kind:'created', ts:'22 Jul 2026, 11:40', entityType:'Subscription', entityName:'TBMQ PE', actor:'mpanchuk@thingsboard.io', action:'ADDED',
-          txt:'<b>Subscription</b> <b>TBMQ PE</b> was created by <b>mpanchuk@thingsboard.io</b>.' },
+          txt:'Subscription <b>TBMQ PE</b> was created by mpanchuk@thingsboard.io.' },
         { kind:'info', ts:'22 Jul 2026, 11:41', entityType:'Invoice', entityName:'NAWE49WG-0001', actor:'System', action:'PAID',
-          txt:'Invoice <b>NAWE49WG-0001</b> was paid by <b>System</b>.' }
+          txt:'Invoice <b>NAWE49WG-0001</b> was paid by System.' }
       ]
     },
     B: {
@@ -3407,7 +3649,11 @@
         { id:'B9',  tier:'tbmqsub',  product:'TBMQ',        type:'Subscription', name:'PE subscription', label:'MQTT staging', created:'Jul 05 2026', status:'active',   event:'Sep 10 2026', price:'$15.00 / mo', billing:'auto-pay' },
         { id:'B10', tier:'tbperp',   product:'ThingsBoard', type:'Perpetual',    name:'PE Perpetual License', label:'On-prem HQ',    created:'Aug 28 2025', status:'active',           event:'Jul 27 2027', price:'one-time', billing:'paid' },
         { id:'B11', tier:'tbperp',   product:'ThingsBoard', type:'Perpetual',    name:'PE Perpetual License', label:'Plant B',       created:'Mar 15 2026', status:'updates_expiring', event:'Sep 01 2026', price:'one-time', billing:'paid' },
-        { id:'B12', tier:'tbmqperp', product:'TBMQ',        type:'Perpetual',    name:'PE license',           label:'Broker on-prem',created:'Apr 10 2026', status:'active',           event:'Aug 13 2027', price:'one-time', billing:'paid' }
+        { id:'B12', tier:'tbmqperp', product:'TBMQ',        type:'Perpetual',    name:'PE license',           label:'Broker on-prem',created:'Apr 10 2026', status:'active',           event:'Aug 13 2027', price:'one-time', billing:'paid' },
+        // two deliberately long labels: real deployments name themselves like this,
+        // and the Product column has to wrap them rather than stretch the table
+        { id:'B13', tier:'business', product:'ThingsBoard', type:'Subscription', name:'Business',  label:'Production — Central Europe manufacturing cluster, building 4', created:'Feb 18 2026', status:'active', event:'Sep 18 2026', price:'$499.00 / mo', billing:'auto-pay' },
+        { id:'B14', tier:'pilot',    product:'ThingsBoard', type:'Subscription', name:'Pilot',     label:'Long-term evaluation environment for the Munich pilot',          created:'May 24 2026', status:'active', event:'Sep 24 2026', price:'$99.00 / mo',  billing:'auto-pay' }
       ],
       users: [
         { name:'Mariia Panchuk', email:'mpanchuk@thingsboard.io',  created:'Jul 17 2026' },
@@ -3430,28 +3676,82 @@
       ],
       activity: [
         { kind:'status',  ts:'18 Aug 2026, 07:12', entityType:'Subscription', entityName:'Startup', actor:'System', action:'PAYMENT_FAILED',
-          txt:'<b>Payment failed</b> for <b>Startup</b> (Production) — card <b>Visa ••4242</b> was declined.', delta:'Auto-pay charge of $299.00 failed' },
+          txt:'Payment failed for <b>Startup</b> (Production) — card Visa ••4242 was declined.', delta:'Auto-pay charge of $299.00 failed' },
         { kind:'created', ts:'18 Aug 2026, 10:26', entityType:'User', entityName:'Nina Rossi', actor:'mpanchuk@thingsboard.io', action:'ADDED',
-          txt:'User <b>Nina Rossi</b> was invited by <b>mpanchuk@thingsboard.io</b>.' },
+          txt:'User <b>Nina Rossi</b> was invited by mpanchuk@thingsboard.io.' },
         { kind:'status',  ts:'15 Aug 2026, 14:03', entityType:'Subscription', entityName:'Pilot', actor:'i.petrenko@thingsboard.io', action:'UPDATED',
-          txt:'<b>Plan</b> was changed from <b>Prototype</b> to <b>Pilot</b> on <b>Factory A</b> by <b>i.petrenko@thingsboard.io</b>.', delta:'Plan changed from Prototype to Pilot' },
+          txt:'Plan was changed from <b>Prototype</b> to <b>Pilot</b> on <b>Factory A</b> by i.petrenko@thingsboard.io.', delta:'Plan changed from Prototype to Pilot' },
         { kind:'updated', ts:'12 Aug 2026, 09:31', entityType:'Subscription', entityName:'Business', actor:'o.kravets@thingsboard.io', action:'UPDATED',
-          txt:'Add-on <b>Edge Computing</b> was enabled on <b>Business</b> (Global) by <b>o.kravets@thingsboard.io</b>.' },
+          txt:'Add-on <b>Edge Computing</b> was enabled on <b>Business</b> (Global) by o.kravets@thingsboard.io.' },
         { kind:'info',    ts:'08 Aug 2026, 00:05', entityType:'Invoice', entityName:'NAWE49WG-0018', actor:'System', action:'PAID',
-          txt:'Invoice <b>NAWE49WG-0018</b> was paid by <b>System</b>.' },
+          txt:'Invoice <b>NAWE49WG-0018</b> was paid by System.' },
         { kind:'status',  ts:'05 Aug 2026, 08:00', entityType:'License', entityName:'ThingsBoard PE Perpetual License', actor:'System', action:'UPDATES_EXPIRING',
-          txt:'<b>Software updates</b> for the <b>On-prem</b> perpetual license expire on <b>Aug 28, 2026</b>.', delta:'Updates term ends Aug 28 2026' }
+          txt:'Software updates for the <b>On-prem</b> perpetual license expire on <b>Aug 28, 2026</b>.', delta:'Updates term ends Aug 28 2026' },
+        // a large account keeps producing events — enough of them that the Home feed
+        // has a second and third batch to load
+        { kind:'updated', ts:'04 Aug 2026, 16:48', entityType:'License', entityName:'Business', actor:'o.kravets@thingsboard.io', action:'UPDATED',
+          txt:'Label <b>Production — Central Europe manufacturing cluster, building 4</b> was set on <b>Business</b> by o.kravets@thingsboard.io.', delta:'label = Production — Central Europe manufacturing cluster, building 4' },
+        { kind:'created', ts:'02 Aug 2026, 11:05', entityType:'User', entityName:'Dev User', actor:'mpanchuk@thingsboard.io', action:'ADDED',
+          txt:'User <b>Dev User</b> was invited by mpanchuk@thingsboard.io.' },
+        { kind:'info',    ts:'02 Aug 2026, 00:05', entityType:'Invoice', entityName:'NAWE49WG-0016', actor:'System', action:'PAID',
+          txt:'Invoice <b>NAWE49WG-0016</b> was paid by System.' },
+        { kind:'updated', ts:'30 Jul 2026, 13:22', entityType:'Subscription', entityName:'Prototype', actor:'i.petrenko@thingsboard.io', action:'UPDATED',
+          txt:'Add-on <b>Trendz Analytics</b> was enabled on <b>Prototype</b> (Demo) by i.petrenko@thingsboard.io.' },
+        { kind:'status',  ts:'28 Jul 2026, 09:10', entityType:'Subscription', entityName:'Prototype', actor:'mpanchuk@thingsboard.io', action:'CANCELED',
+          txt:'Subscription <b>Prototype</b> (Sandbox) was canceled by mpanchuk@thingsboard.io — active until <b>Sep 05, 2026</b>.', delta:'Canceled; active until Sep 05 2026' },
+        { kind:'created', ts:'24 Jul 2026, 15:40', entityType:'Subscription', entityName:'Pilot', actor:'mpanchuk@thingsboard.io', action:'ADDED',
+          txt:'Subscription <b>Pilot</b> was created by mpanchuk@thingsboard.io.' },
+        { kind:'updated', ts:'20 Jul 2026, 08:57', entityType:'Payment method', entityName:'Visa ••4242', actor:'mpanchuk@thingsboard.io', action:'UPDATED',
+          txt:'Payment method was updated by mpanchuk@thingsboard.io.' },
+        { kind:'created', ts:'15 Jul 2026, 10:12', entityType:'Subscription', entityName:'Maker', actor:'i.petrenko@thingsboard.io', action:'ADDED',
+          txt:'Subscription <b>Maker</b> was created by i.petrenko@thingsboard.io.' },
+        { kind:'info',    ts:'12 Jul 2026, 00:05', entityType:'Invoice', entityName:'NAWE49WG-0012', actor:'System', action:'PAID',
+          txt:'Invoice <b>NAWE49WG-0012</b> was paid by System.' }
+      ]
+    },
+    /* G — Community Grant approved. One licence, and it is an ordinary row: the
+       grant carries no price, no renewal and no expiry, and its status is the
+       first-check-in wait (the key has been issued, nothing has used it yet). */
+    G: {
+      noInvoicesNote: 'No invoices &mdash; the Community Grant is free.',
+      licenses: [
+        { id:'G1', tier:'grant', product:'ThingsBoard', type:'Grant', name:'Community Grant', label:'', created:'Aug 19 2026',
+          status:'awaiting_checkin', event:'', price:'Free', billing:'—', grant:true, limits:'6,050 devices &middot; 2 production servers' }
+      ],
+      users: [
+        { name:'Mariia Panchuk', email:'mpanchuk@thingsboard.io', created:'Aug 12 2026' }
+      ],
+      invoices: [],
+      activity: [
+        { kind:'created', ts:'19 Aug 2026, 09:02', entityType:'License', entityName:'Community Grant', actor:'System', action:'GRANT_ISSUED',
+          txt:'<b>Community Grant</b> was issued to mpanchuk@thingsboard.io — license key created.', delta:'Community Grant issued' }
       ]
     }
   };
   function DATA(){ return DATASETS[dashVariant] || DATASETS.A; }
   function attnRank(l){ return l.status==='payment_failed' ? 0 : l.status==='updates_expiring' ? 1 : l.status==='canceled' ? 3 : 2; }
+  /* The Licenses table carries only two statuses for now: Active and Canceled.
+     Attention states still live on the licence and still drive the details-page
+     alert and the dashboard ordering — the table just does not shout them, and
+     their date shows in the Renewal / Updates column instead. */
   function statusPill(l){
     var st = l && typeof l === 'object' ? l.status : l;
-    if(st==='payment_failed')   return '<td><span class="pill attn">Payment failed</span></td>';
-    if(st==='updates_expiring') return '<td><span class="pill attn">Updates expiring</span></td>';
-    if(st==='canceled')         return '<td><span class="pill off">Canceled &middot; until ' + fmtDate(l.event) + '</span></td>';
+    // the grant is the one exception: no key has been used yet, so it says so quietly
+    if(st==='awaiting_checkin') return '<td><span class="pill soft">Waiting for first check-in</span></td>';
+    if(st==='canceled')         return '<td><span class="pill off">Canceled</span></td>';
     return '<td><span class="pill">Active</span></td>';
+  }
+  /* What the next date means depends on the licence: a subscription renews, a
+     perpetual stops receiving updates, a cancelled subscription runs out, and a
+     grant never expires. Attention states keep their date here. */
+  function renewCell(p){
+    if(p.grant)  return '<td><span class="muted">No expiry</span></td>';
+    if(!p.event) return '<td><span class="muted">—</span></td>';
+    var d = fmtDate(p.event);
+    var txt = p.status === 'canceled' ? ('Active until ' + d)
+            : p.type === 'Perpetual'  ? ('Updates until ' + d)
+            : ('Renews ' + d);
+    return '<td class="lic-num">' + txt + '</td>';
   }
   function nextCharge(ds){
     var subs = ds.licenses.filter(function(l){ return l.type==='Subscription' && l.status==='active'; });
@@ -3467,10 +3767,7 @@
     return '<tr><td>'+u.name+'</td><td>'+u.email+'</td><td>'+u.created+'</td>'
       + '<td class="cellact"><span class="rowactions"><button class="link" data-loginas="'+u.email+'">Login as →</button><button class="link" data-deluser="'+u.email+'">Delete</button></span></td></tr>';
   }
-  function setShowAll(sel, total, shown){
-    var a = $(sel); if(!a) return;
-    a.textContent = 'Show all' + (total>shown ? ' ('+total+')' : '');
-  }
+  // "Show all" is a plain link — the count lives on the page it opens
   function dashLicList(){
     var ls = DATA().licenses.slice();
     if(dashVariant === 'B'){
@@ -3487,23 +3784,46 @@
     var shown = dashLicList();
     body.innerHTML = shown.map(rowHtml).join('');
     productsVariant=prev;
-    setShowAll('#dashView [data-goto="products3"]', DATA().licenses.length, shown.length);
+  }
+  // a dataset may legitimately have no invoices (the grant is free) — say so
+  function invEmptyRow(){
+    return '<tr><td colspan="6" class="emptybox">' + (DATA().noInvoicesNote || 'No invoices yet.') + '</td></tr>';
   }
   function renderDashInvoices(){
     var b=$('#dashInvBody'); if(!b) return;
-    b.innerHTML = DATA().invoices.slice(0, 3).map(invRow).join('');
+    b.innerHTML = DATA().invoices.length ? DATA().invoices.slice(0, 3).map(invRow).join('') : invEmptyRow();
   }
-  function renderDashUsers(){
-    var b=$('#dashUsersBody'); if(!b) return;
-    var us = DATA().users.slice().sort(function(a,c){ return dateKey(c.created)-dateKey(a.created); });
-    var shown = us.slice(0, 5);
-    b.innerHTML = shown.map(userRow).join('');
-    setShowAll('#dashView [data-goto="users"]', DATA().users.length, shown.length);
+  /* Home greeting follows the viewer's own clock — the one place the prototype
+     reads real time (dataset dates stay pinned to Aug 19 2026).
+     05:00–11:59 morning · 12:00–17:59 afternoon · 18:00–04:59 evening. */
+  function greetingFor(h){ return (h >= 5 && h < 12) ? 'Good morning' : (h >= 12 && h < 18) ? 'Good afternoon' : 'Good evening'; }
+  function renderGreeting(){
+    var el = $('#dashGreeting'); if(!el) return;
+    el.textContent = greetingFor(new Date().getHours()) + ', Mariia';
+  }
+  /* Home activity block: latest batch first, then it grows in place. The count is
+     per dashboard visit — switching dataset resets it (see applyDetailsPage). */
+  var DASH_FEED_BATCH = 5;
+  var dashFeedShown = DASH_FEED_BATCH;
+  function renderDashFeed(){
+    var el = $('#dashFeed'); if(!el) return;
+    var all = DATA().activity, list = all.slice(0, dashFeedShown);
+    el.innerHTML = list.length
+      ? list.map(function(a, i){ return feedItem(a, i); }).join('')
+      : '<div class="emptybox">No activity yet.</div>';
+    var more = $('#dashFeedMore'); if(more) more.hidden = all.length <= dashFeedShown;
+  }
+  function dashFeedLoadMore(){
+    var all = DATA().activity;
+    if(dashFeedShown >= all.length) return;
+    dashFeedShown += DASH_FEED_BATCH;
+    renderDashFeed();
   }
   function renderInvoicesPage(){
     var b=$('#invoicesView tbody'); if(!b) return;
-    b.innerHTML = DATA().invoices.map(invRow).join('');
-    var r=$('#invoicesView .pager .range'); if(r) r.textContent = '1–'+DATA().invoices.length+' of '+DATA().invoices.length;
+    var inv = DATA().invoices;
+    b.innerHTML = inv.length ? inv.map(invRow).join('') : invEmptyRow();
+    var r=$('#invoicesView .pager .range'); if(r) r.textContent = inv.length ? ('1–'+inv.length+' of '+inv.length) : '0 of 0';
   }
   function renderUsersPage(){
     var b=$('#usersView tbody'); if(!b) return;
@@ -3512,10 +3832,10 @@
     var r=$('#usersView .pager .range'); if(r) r.textContent = '1–'+us.length+' of '+us.length;
   }
   function renderDatasetViews(){
+    renderGreeting();
     renderDashLicenses();
     renderDashInvoices();
-    renderDashUsers();
-    renderFeed('#dashFeed', 3);
+    renderDashFeed();
     renderActFeed();
     renderInvoicesPage();
     renderUsersPage();
@@ -3570,13 +3890,20 @@
   var renewBtn = $('#renewBtn');
   if(renewBtn) renewBtn.addEventListener('click', function(){ openModal('Renew subscription', '<p>Placeholder — reactivate this subscription and resume billing (TODO).</p>'); });
   var backBtn = $('#backBtn');
-  if(backBtn) backBtn.addEventListener('click', function(){ goToPage('products3'); });
+  // not a hard-coded list any more — back follows where the licence was opened from
+  if(backBtn) backBtn.addEventListener('click', function(){ goToPage(licenseOrigin || 'products3'); });
   /* Profile settings and Billing & payment are the exception: opened from the
      profile menu from anywhere, with no nav tab to show where you are or to lead
      out again. Their back means "the page I came from" — one step, no stack. */
   $$('.lic-back').forEach(function(b){ b.addEventListener('click', function(){ goToPage(prevPage); }); });
   // shared shell: the logo is a persistent Home link from anywhere. Distinct from the
   // detail-page back button (which returns to the previous list) — both coexist.
+  // footer legal links (the profile menu no longer carries them)
+  var shellFoot = $('#shellFoot');
+  if(shellFoot) shellFoot.addEventListener('click', function(e){
+    var go = e.target.closest('[data-goto]');
+    if(go){ var k = go.getAttribute('data-goto'); if(PAGES[k]) goToPage(k); }
+  });
   var homeBtn = $('#homeBtn');
   if(homeBtn) homeBtn.addEventListener('click', function(){ goToPage(homeKey); });
   // top-bar nav: same navigation as the in-page links
@@ -3634,6 +3961,10 @@
     return '<button role="menuitem" data-manageaddons>Manage add-ons</button><button role="menuitem" data-changeplan>Change plan</button>' + last;
   }
   function actionsCell(p){
+    // a grant cannot be changed, cancelled or topped up — the key is all there is,
+    // so its row carries the copy action and no overflow menu (inferred)
+    if(p && p.grant) return '<td class="cellact"><div class="lic-actions">'
+      + '<button class="iconbtn ib tip lic-copy" aria-label="Copy license key" data-tip="Copy license key">' + COPYSVG + '</button></div></td>';
     return '<td class="cellact"><div class="lic-actions">'
       + '<button class="iconbtn ib tip lic-copy" aria-label="Copy license key" data-tip="Copy license key">' + COPYSVG + '</button>'
       + '<div class="menu"><button class="iconbtn ib" aria-haspopup="true" aria-expanded="false" aria-label="More actions">' + KEBAB + '</button>'
@@ -3647,13 +3978,18 @@
 
   // Products state: layout variant + Type filter + canceled toggle
   var productsVariant = 3;   // product-first is the variant the flow uses
-  var licTypes = { Subscription:false, Perpetual:false };   // both off = show everything
+  // one type at a time: null = no chip selected = every licence shown. Clicking the
+  // active chip clears it; clicking the other one switches.
+  var licType = null;
   var licShowCanceled = false;
 
   function headHtml(){
     if(productsVariant === 3){
-      // variant 3 — product-first, product-neutral (no product-specific columns)
-      return '<tr><th>Product</th><th>License</th><th>Type</th><th>Status</th><th>Created</th>'
+      // variant 3 — product-first, product-neutral (no product-specific columns).
+      // The label lives under Product; the next date has its own column (State),
+      // which is what lets the Status column carry only Active / Canceled.
+      return '<tr><th class="lic-prodhead">Product</th><th>License</th><th>Type</th><th>Status</th>'
+        + '<th>State</th><th>Created</th>'
         + '<th aria-label="Actions"></th></tr>';
     }
     if(productsVariant === 2){
@@ -3675,13 +4011,14 @@
     var createdCell = '<td class="lic-num">' + p.created + '</td>';
     var labelText = p.label ? p.label : '<span class="muted">—</span>';
     if(productsVariant === 3){
-      // In the large account (B) the user label is how licenses are told apart, so it
-      // leads the cell and the plan name drops to the subline; small account keeps name first.
-      var labelFirst = (dashVariant === 'B');
-      var main = labelFirst ? (p.label || p.name) : p.name;
-      var sub  = labelFirst ? p.name : (p.label ? p.label : '— · Add label');
-      var lic = '<td><div class="lp-name">' + main + '</div><div class="lp-meta">' + sub + '</div></td>';
-      return rowOpen(p) + '<td>' + p.product + '</td>' + lic + typeCell + statusPill(p) + createdCell + actionsCell(p) + '</tr>';
+      // Product name, label underneath (muted "—" keeps the two-line rhythm when a
+      // licence has no label yet; the real "+ Add label" affordance is on details).
+      var prodCell = '<td class="lic-prodcell"><div class="lp-name">' + (p.product || '') + '</div>'
+        + '<div class="lic-prodlabel">' + (p.label ? esc(p.label) : '<span class="muted">—</span>') + '</div></td>';
+      // the licence column is the plan/package; a grant adds what it has instead of a price
+      var lic = '<td><div class="lp-name">' + p.name + '</div>'
+        + (p.grant ? '<div class="lp-meta">Free &middot; ' + p.limits + '</div>' : '') + '</td>';
+      return rowOpen(p) + prodCell + lic + typeCell + statusPill(p) + renewCell(p) + createdCell + actionsCell(p) + '</tr>';
     }
     if(productsVariant === 2){
       return rowOpen(p)
@@ -3702,8 +4039,7 @@
     var vis = 0, html = '';
     currentProducts().forEach(function(p){
       // no canceled products in this mock, so the toggle is a functional no-op for now
-      var anyType = licTypes.Subscription || licTypes.Perpetual;
-      var show = (!anyType || licTypes[p.type]) && (licShowCanceled || true);
+      var show = (!licType || p.type === licType) && (licShowCanceled || true);
       if(!show) return;
       vis++; html += rowHtml(p);
     });
@@ -3780,13 +4116,17 @@
     document.addEventListener('click', function(){ if(!menu.hidden) toggle(false); });
     document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && !menu.hidden){ toggle(false); btn.focus(); } });
   });
-  // Type chips toggle independently; both off = everything shown
+  /* Type chips are mutually exclusive: pick one, switch to the other, or click the
+     active one again to clear the filter and see everything. */
   $$('#licensesView .typechip').forEach(function(chip){
     chip.addEventListener('click', function(){
       var t = chip.getAttribute('data-type');
-      licTypes[t] = !licTypes[t];
-      chip.classList.toggle('is-on', licTypes[t]);
-      chip.setAttribute('aria-pressed', licTypes[t] ? 'true' : 'false');
+      licType = (licType === t) ? null : t;
+      $$('#licensesView .typechip').forEach(function(c){
+        var on = c.getAttribute('data-type') === licType;
+        c.classList.toggle('is-on', on);
+        c.setAttribute('aria-pressed', on ? 'true' : 'false');
+      });
       renderProducts();
     });
   });
@@ -3973,7 +4313,6 @@
      configurator/checkout flow is not part of this prototype. */
   var EC_PLANS = {
     'thingsboard|payg': {
-      note: 'All subscription plans include unlimited customers, dashboards, integrations, API calls, data points & messages.',
       cards: [
         { name:'Maker',     price:'$10',  per:'/ month', feats:['10 devices', '10 assets', '1 production instance', 'Community support'],
           foot:'Includes Trendz Analytics & Edge Computing for testing.' },
@@ -4000,6 +4339,29 @@
     }
   };
   var EC_SINGLE_NOTE = 'You can fine-tune capacity before checkout.';
+  // intro sentence of the PE card — same wording on every plan surface
+  var PLANS_INCLUDE_NOTE = 'All plans include unlimited customers, dashboards, integrations, API calls, data points & messages.';
+
+  // full PE feature set — rendered once per surface as a self-contained card
+  // (wizard step 2, perpetual step 1, new-user screen), never per plan card.
+  // White-labeling is NOT edition-wide (Pilot+ only) — it lives on the plan cards
+  var PE_FEATURES = [
+    ['Advanced RBAC for IoT', 'Fine-grained roles and permissions across customers, users, and assets.'],
+    ['Entity groups', 'Organize devices, assets, and customers into managed groups with group-level permissions.'],
+    ['Scheduler', 'Schedule device commands, firmware updates, and reports.'],
+    ['Reporting', 'Generate and email dashboard-based PDF reports on a schedule.'],
+    ['Export widget data to CSV/XLS', 'Download any widget\u2019s data for offline analysis.'],
+    ['Data converters', 'Transform uplink and downlink payloads between devices and the platform.'],
+    ['Platform integrations', 'Connect external systems via MQTT, HTTP, CoAP, LoRaWAN, Sigfox, and more.']
+  ];
+  function peBlockHTML(intro){
+    return '<div class="nl-pe">'
+      + '<div class="nl-pe-h">What\u2019s included in Professional Edition</div>'
+      + (intro ? '<p class="nl-pe-intro">' + intro + '</p>' : '')
+      + '<div class="nl-pe-body">'
+      + PE_FEATURES.map(function(f){ return '<div class="nl-pe-item"><b>' + f[0] + '</b> — ' + f[1] + '</div>'; }).join('')
+      + '</div></div>';
+  }
 
   var dashEmptyV = $('#dashEmptyView');
   if(dashEmptyV){
@@ -4019,7 +4381,10 @@
       grid.className = 'plangrid' + (set.single ? ' one' : '');
       grid.innerHTML = set.cards.map(planCard).join('');
       note.className = 'pc-note' + (set.single ? ' center' : '');
-      note.textContent = set.single ? EC_SINGLE_NOTE : (set.note || '');
+      note.textContent = set.single ? EC_SINGLE_NOTE : '';
+      // inferred: same PE card as wizard step 2 — the shared "…include unlimited…"
+      // note is the card's muted intro now, so nothing floats under the grid
+      $('#ecPlanExtra').innerHTML = !set.single && ecProduct === 'thingsboard' ? peBlockHTML(PLANS_INCLUDE_NOTE) : '';
     }
     $$('input[name="ecProduct"]', dashEmptyV).forEach(function(r){
       r.addEventListener('change', function(){ if(r.checked){ ecProduct = r.value; renderEcPlans(); } });
@@ -4064,17 +4429,6 @@
       { key:'tbmq', name:'TBMQ',
         vline:'Scale your messaging. On demand.',
         sline:'High-performance MQTT broker with a flexible, consumption-based licensing model.' }
-    ];
-    // full PE feature set — listed ONCE in the step-2 expander, never per card
-    // White-labeling is NOT edition-wide (Pilot+ only) — it lives on the plan cards
-    var PE_FEATURES = [
-      ['Advanced RBAC for IoT', 'Fine-grained roles and permissions across customers, users, and assets.'],
-      ['Entity groups', 'Organize devices, assets, and customers into managed groups with group-level permissions.'],
-      ['Scheduler', 'Schedule device commands, firmware updates, and reports.'],
-      ['Reporting', 'Generate and email dashboard-based PDF reports on a schedule.'],
-      ['Export widget data to CSV/XLS', 'Download any widget\u2019s data for offline analysis.'],
-      ['Data converters', 'Transform uplink and downlink payloads between devices and the platform.'],
-      ['Platform integrations', 'Connect external systems via MQTT, HTTP, CoAP, LoRaWAN, Sigfox, and more.']
     ];
     // included quantities per tier (production instances / AI blocks of 1M)
     var INCL = { maker:{prod:1,ai:1}, prototype:{prod:1,ai:2}, pilot:{prod:1,ai:4}, startup:{prod:2,ai:8}, business:{prod:3,ai:16},
@@ -4195,13 +4549,6 @@
 
     /* ---- step 1: large product cards; clicking advances (no Continue).
        Perpetual path merges Product & Plan: each card carries its full package. ---- */
-    function peBlockHTML(){
-      return '<div class="nl-pe">'
-        + '<div class="nl-pe-h">What\u2019s included in Professional Edition</div>'
-        + '<div class="nl-pe-body">'
-        + PE_FEATURES.map(function(f){ return '<div class="nl-pe-item"><b>' + f[0] + '</b> — ' + f[1] + '</div>'; }).join('')
-        + '</div></div>';
-    }
     function renderStep1(){
       var grid = $('#nlProdCards'), extra = $('#nlProdExtra');
       if(isPerp()){
@@ -4233,17 +4580,20 @@
     }
 
     /* ---- step 2 (subscription): plan cards with capacity + support tier + White
-       labeling (Pilot+); one shared muted line + the always-open PE block ---- */
+       labeling (Pilot+); the PE card below carries the shared included-in-all line ---- */
     function renderStep2(){
       var set = EC_PLANS[ecKey()];
       if(set.single && !st.plan && !isChange()) st.plan = set.cards[0].name;
       var grid = $('#nlPlanCards');
-      grid.className = 'plangrid' + (set.single ? ' one' : '');
+      grid.className = 'plangrid' + (set.single ? ' one' : '') + (isChange() ? ' withcur' : '');
       grid.innerHTML = set.cards.map(function(c){
         var current = isChange() && c.name === currentCardName();
         var on = !current && c.name === st.plan;
-        var badge = current ? '<span class="pill">Current plan</span>' : (c.badge ? '<span class="pill">' + c.badge + '</span>' : '');
+        // Current plan = a strip sitting on the card's top edge (see .pc-strip)
+        var strip = current ? '<div class="pc-strip">Current plan</div>' : '';
+        var badge = !current && c.badge ? '<span class="pill">' + c.badge + '</span>' : '';
         return '<div class="dblock plancard ' + (current ? 'nl-current' : 'nl-select') + (on ? ' on' : '') + '" data-plan="' + c.name + '" role="button" tabindex="0" aria-pressed="' + on + '"' + (current ? ' aria-disabled="true"' : '') + '>'
+          + strip
           + '<div class="pc-head"><h2>' + c.name + '</h2>' + badge + '</div>'
           + '<div class="pc-price">' + c.price + ' <span class="pc-per">' + c.per + '</span></div>'
           + (c.term ? '<div class="pc-term">' + c.term + '</div>' : '')
@@ -4251,13 +4601,15 @@
           + (c.foot ? '<div class="pc-note">' + c.foot + '</div>' : '')
           + '</div>';
       }).join('');
-      // one shared line instead of per-card support/feature rows (subscription path)
-      $('#nlPlanNote').textContent = isPerp() ? '' : 'All plans include unlimited customers, dashboards, integrations, API calls, data points & messages.';
-      // the full PE feature set, once — always expanded, left-aligned.
-      // inferred: listed features are ThingsBoard PE, so the block shows for the
+      // the full PE feature set, once — a self-contained card; the shared
+      // "All plans include…" line is its muted intro (nothing floats between
+      // the grid and the card).
+      // inferred: listed features are ThingsBoard PE, so the card shows for the
       // ThingsBoard product only (both billing kinds); TBMQ gets none.
       var extra = $('#nlPlanExtra');
-      extra.innerHTML = st.product === 'thingsboard' ? peBlockHTML() : '';
+      extra.innerHTML = st.product === 'thingsboard'
+        ? peBlockHTML(isPerp() ? '' : PLANS_INCLUDE_NOTE)
+        : '';
     }
 
     /* ---- step 3: customize (manage add-ons content, seeded from the plan) ---- */
@@ -4759,8 +5111,54 @@
     view.addEventListener('change', dirty);
     btn.addEventListener('click', clean);
   }
-  wirePageSave('#profileView', '#profSaveBtn', '#profSavedNote');
+  /* Email change is verify-then-switch: saving a new address does not change the
+     account email. The field snaps back to the current address and carries a
+     pending line until the new address confirms — the old one keeps working.
+     Prototype confirmation: click the pending chip, or the dev action in the
+     settings panel. */
+  var EMAIL = (function(){
+    var input = $('#profEmail'), pend = $('#emailPending'), txt = $('#emailPendingTxt');
+    if(!input) return {};
+    var current = input.value, pendingTo = null, resendTimer = null;
+    var VALID = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+    function render(msg){
+      input.value = current;
+      if(pend) pend.hidden = !pendingTo;
+      if(txt && pendingTo) txt.textContent = msg || ('Verification sent to ' + pendingTo + ' — the change applies once confirmed.');
+      var dev = $('#devConfirmEmail'); if(dev) dev.disabled = !pendingTo;
+    }
+    function onSave(){
+      var v = input.value.trim();
+      if(v && v !== current && VALID.test(v)) pendingTo = v;
+      render();   // the field always reverts to the address that is actually active
+    }
+    function confirm(){ if(!pendingTo) return; current = pendingTo; pendingTo = null; render(); }
+    function cancel(){ pendingTo = null; render(); }
+    function resend(){
+      if(!pendingTo) return;
+      render('Verification re-sent to ' + pendingTo + '…');
+      clearTimeout(resendTimer);
+      resendTimer = setTimeout(function(){ render(); }, 1600);
+    }
+    if(txt) txt.addEventListener('click', confirm);
+    var rs = $('#emailResend'); if(rs) rs.addEventListener('click', resend);
+    var cn = $('#emailCancel'); if(cn) cn.addEventListener('click', cancel);
+    var dev = $('#devConfirmEmail'); if(dev) dev.addEventListener('click', confirm);
+    render();
+    return { onSave:onSave, confirm:confirm };
+  })();
+  var profSaveBtn = $('#profSaveBtn');
+  if(profSaveBtn) profSaveBtn.addEventListener('click', function(){ if(EMAIL.onSave) EMAIL.onSave(); });
+  wirePageSave('#profileView', '#profSaveBtn', null);   // no saved-note on Account by design
+  wirePageSave('#securityView', '#secSaveBtn', '#secSavedNote');
   wirePageSave('#billingView', '#billSaveBtn', '#billSavedNote');
+  // back on Security means up to Account (through the unsaved-changes guard)
+  var secBackBtn = $('#secBackBtn');
+  if(secBackBtn) secBackBtn.addEventListener('click', function(){ goToPage('profile'); });
+  var profLogoutBtn = $('#profLogoutBtn');
+  if(profLogoutBtn) profLogoutBtn.addEventListener('click', function(){
+    openModal('Log out', '<p>Placeholder — signing out is not part of this prototype.</p>');
+  });
 
   // Update payment method — bespoke modal (own overlay; deliberately not the generic openModal)
   (function(){
@@ -4875,7 +5273,8 @@
   // `delta` is the plain-text change, kept for the raw audit payload only.
   // Activity now lives per-variant in DATASETS (density datasets block above).
   var AUDITSVG = '<svg class="icon" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h5"/></svg>';
-  var esc = function(x){ return String(x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
+  // a declaration, not a var: renderers above call it during the first render
+  function esc(x){ return String(x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
   function auditJson(a){
     var et = a.entityType.toUpperCase().replace(/ /g, '_');
     var payload = {
@@ -4915,6 +5314,31 @@
     var list = typeof limit === 'number' ? all.slice(0, limit) : all;
     el.innerHTML = list.map(function(a, idx){ return feedItem(a, idx); }).join('');
   }
+  /* Reaching the end of the Home feed appends the next batch. The button is both
+     the fallback where IntersectionObserver is missing and the keyboard path. */
+  (function(){
+    var btn = $('#dashFeedMoreBtn'), sentinel = $('#dashFeedSentinel');
+    if(btn) btn.addEventListener('click', dashFeedLoadMore);
+    if(sentinel && window.IntersectionObserver){
+      new IntersectionObserver(function(entries){
+        entries.forEach(function(e){ if(e.isIntersecting) dashFeedLoadMore(); });
+      }, { rootMargin: '80px' }).observe(sentinel);
+    }
+    /* Second path: hosts that never run observer callbacks (background tabs, the
+       embedded preview pane) still scroll, so the scroll region checks the block's
+       end directly. Throttled, and a no-op once everything is loaded. */
+    var shell = $('#shellMain'), queued = false;
+    function nearEnd(){
+      var more = $('#dashFeedMore');
+      if(!more || more.hidden || !shell) return false;
+      return more.getBoundingClientRect().top <= shell.getBoundingClientRect().bottom + 120;
+    }
+    if(shell) shell.addEventListener('scroll', function(){
+      if(queued) return;
+      queued = true;
+      setTimeout(function(){ queued = false; if(nearEnd()) dashFeedLoadMore(); }, 120);
+    });
+  })();
   // feeds + ranges render via renderDatasetViews()
 
   // clicking the details icon expands the raw action-data payload in place (toggle; multiple can be open)
