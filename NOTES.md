@@ -375,8 +375,9 @@ JSON); **Offline/Viaanix прибрано**; no «Pay-as-you-go» (→ Subscript
   **прибрано** ✅; таб на деталях **вирівняно до фіду** ✅ (тепер «Activity»,
   Status/Success-таблиці немає). Ще: перейменувати Created → «Added {date}»? —
   **не зроблено**.
-- §4 **прайсинг**: рядок **Assets** в entitlements; AI-юніт «{N}M AI credits» + `TODO`
-  (cadence перпетуалу; чи включають self-managed subs AI взагалі); `+$0.10`.
+- §4 **прайсинг**: рядок **Assets** в entitlements ✅ (`TIER_SPECS`); `+$0.10` ✅
+  (Business-картка). Ще: AI-юніт «{N}M AI credits» + `TODO` (cadence перпетуалу;
+  чи включають self-managed subs AI взагалі) — **не зроблено**.
 - §5 **механіка**: формат дат/грошей; sentence case.
 - §6 **зайвий копірайт**: usage-tooltip геть; пароль-плейсхолдери «••••••••»;
   entitlements-заголовки **Resource / Purchased**; stateful dashboard-subtitle; empty-states.
@@ -392,6 +393,10 @@ Pilot $99 (100·1·4M +WL); Startup $299 (500·2·8M +WL); Business $499 (1,000�
 Prototype + add-ons = $126/mo (1+2 prod, 2M+2M AI, Edge+Trendz).
 **+ Assets** (підтверджено пізнішим ТЗ): assets = devices на кожному tier
 (10/10 … 1,000/1,000; перпетуал TB 5,000/5,000) — рядок Assets є в `TIER_SPECS`.
+**Support / WL** (verified ТЗ): support-tier per plan — Maker/Prototype Community
+support · Pilot Help desk · Startup/Business Priority help desk; **White labeling
+лише з Pilot** (Maker/Prototype без WL — рядка просто немає, без перекреслень).
+Maker включає **Trendz & Edge для тестування** (muted foot-рядок на картці).
 **TBMQ** (теж із ТЗ): sub $15/mo — 100 sessions · 100 msg/sec · 1 prod;
 perp $2,999 — 10,000 sessions · 1,000 msg/sec · 1 prod · WL.
 
@@ -429,7 +434,8 @@ perp $2,999 — 10,000 sessions · 1,000 msg/sec · 1 prod · WL.
 селекти**.
 - **Входи**: «+ New license ▾» (Home, Licenses, Portfolio-архів) → subscription /
   perpetual, `NL.open({kind})`; «Get started» на плані нового користувача →
-  `NL.open({kind, product, plan, startStep:3})` — одразу Customize, кроки 1–2 ✓.
+  `NL.open({kind, product, plan, startStep})` — `open()` сам приземляє на Customize
+  відповідного шляху (sub → крок 3, perp → крок 2), попередні кроки ✓.
 - **Степер — три варіанти презентації** (`nlStepperMode`, перемикач «Wizard stepper»
   у Settings-табі пікера: A/B/C; live-перемикання навіть із відкритим візардом):
   - **A — Summary rail (дефолт)**: вертикальний рейл ліворуч (`#nlRail`, `.nl-rstep`),
@@ -441,9 +447,9 @@ perp $2,999 — 10,000 sessions · 1,000 msg/sec · 1 prod · WL.
     hairline хедера (степбар у `nl-pb-mode` без паддінгів), fill = step/totalSteps;
     нижче один рядок з лівим паддінгом «Step 2 of 4 · **Plan**» (muted + bold назва).
     Без окремих пунктів, без часткових треків.
-  - **C — Numbered**: кроки розподілені **на всю ширину** (max-width:680 знято;
-    `.am-stepline{flex:1}` розтягує з'єднувальні лінії).
-  - **C — Numbered steps**: початкова горизонтальна реалізація (`.am-steps`).
+  - **C — Numbered steps**: горизонтальні нумеровані кроки (`.am-steps`),
+    розподілені **на всю ширину** (max-width знято; `.am-stepline{flex:1}`
+    розтягує з'єднувальні лінії).
   Кроки: sub — **4** (Product → Plan → Customize → Review & pay); perp — **3**
   (**Product & Plan** злиті → Customize → Review & pay, бо на продукт рівно один
   пакет). Механіка: `totalSteps()` (3/4) + `panelFor(n)` мапить wizard-крок на
@@ -454,17 +460,17 @@ perp $2,999 — 10,000 sessions · 1,000 msg/sec · 1 prod · WL.
   Rail-значення кроку 1: «ThingsBoard PE Perpetual · $4,999» / «TBMQ PE license ·
   $2,999»; B: «Step N of 3», fill N/3. Футер `.nl-foot`: **на кроці 1 схований
   повністю** (клік по картці = перехід);
-  далі Back / Continue (disabled без вибору; на кроці 4 → «Subscribe»/«Buy license»).
+  далі Back / Continue (disabled без вибору; на останньому кроці —
+  «Subscribe» / «Buy license» / «Confirm change» via `confirmLabel()`).
   ⚠️ `.btn` ставить display → правила `.nl-foot[hidden]`/`.nl-foot .btn[hidden]`.
-- **Крок 1**: 2 **великі** product-картки (`.nl-prodcard`, ~половина модалки кожна,
+- **Крок 1 (sub)**: 2 **великі** product-картки (`.nl-prodcard`, ~половина модалки,
   grid max-width 960): назва + value-line («Build your IoT solution. On your terms.» /
   «Scale your messaging. On demand.») + sub-line + для TB група **Unlimited**
-  (Customers · Users · Dashboards · Messages · API calls · Integrations); на perp-шляху
-  обидві картки додають тихий рядок «First year of software updates included.»
-  **Клік одразу веде на крок 2** — Continue на цьому кроці немає.
-- **Крок 2**: плани з **`EC_PLANS`**, але картки **компактні** — name/price/**лише
-  key limits** (фільтр `keyLimits`: devices/assets/instances/sessions/msg-sec/AI;
-  support/WL-рядки прибрано з карток). Під ґрідом один muted-рядок «All plans include
+  (Customers · Users · Dashboards · Messages · API calls · Integrations).
+  **Клік одразу веде на крок 2** — Continue на цьому кроці немає. На perp-шляху
+  крок 1 — **злиті Product & Plan картки** (див. блок про кроки вище).
+- **Крок 2 (sub)**: план-картки з **`EC_PLANS`** — name/price/**повні feats**
+  (capacity + support-tier + WL, див. нижче). Під ґрідом один muted-рядок «All plans include
   unlimited customers…» (лише sub-шлях) і **один спільний блок** «What's included
   in Professional Edition» (`PE_FEATURES`, **7 фіч** — White-labeling прибрано,
   бо він НЕ edition-wide: лише Pilot+; HTML-`TODO: confirm with product that these
