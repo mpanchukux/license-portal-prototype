@@ -44,15 +44,6 @@
     font:14px/1.45 Ubuntu,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
     display:flex; flex-direction:column;   /* persistent top bar + one scrolling content region */
   }
-  /* ---- Type-scale utilities: apply exactly one level. Hierarchy by size + tracking + (limited) weight. ---- */
-  .t-display{font-family:var(--font-ui);font-size:var(--t-display-fs);line-height:var(--t-display-lh);letter-spacing:var(--t-display-ls);font-weight:var(--t-display-fw)}
-  .t-h1{font-family:var(--font-ui);font-size:var(--t-h1-fs);line-height:var(--t-h1-lh);letter-spacing:var(--t-h1-ls);font-weight:var(--t-h1-fw)}
-  .t-h2{font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw)}
-  .t-body{font-family:var(--font-ui);font-size:var(--t-body-fs);line-height:var(--t-body-lh);letter-spacing:var(--t-body-ls);font-weight:var(--t-body-fw)}
-  .t-small{font-family:var(--font-ui);font-size:var(--t-small-fs);line-height:var(--t-small-lh);letter-spacing:var(--t-small-ls);font-weight:var(--t-small-fw)}
-  .t-label{font-family:var(--font-ui);font-size:var(--t-label-fs);line-height:var(--t-label-lh);letter-spacing:var(--t-label-ls);font-weight:var(--t-label-fw);text-transform:uppercase}
-  .t-mono{font-family:var(--font-mono);letter-spacing:0}
-  .tnum{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
   /* the feed's one emphasis style: .em, and <b> inside feed text maps onto it */
   .em,.fi-txt b{font-weight:var(--t-em-fw)}
   /* the shared shell: the top bar (.dtopbar) stays put; every page's view scrolls here */
@@ -65,7 +56,7 @@
   /* every page renders inside the same container: one max-width, centred, same
      side padding — so nothing shifts horizontally when navigating between pages.
      .dwrap = dashboards, .licview = list/settings pages, .sheet = details page. */
-  .pagewrap,.dwrap,.licview,.sheet{width:100%;max-width:var(--pageW);margin:0 auto;padding:var(--pageY) var(--pageX) 44px}
+  .dwrap,.licview,.sheet{width:100%;max-width:var(--pageW);margin:0 auto;padding:var(--pageY) var(--pageX) 44px}
   button{font:inherit;cursor:pointer}
   a{color:inherit}
   :focus-visible{outline:2px solid var(--ink);outline-offset:2px;border-radius:3px}
@@ -105,10 +96,8 @@
   .menu .pop button{display:block;width:100%;text-align:left;padding:7px 9px;border:0;background:transparent;border-radius:5px;font-size:14px;color:var(--ink)}
   .menu .pop button:hover{background:var(--hover)}
 
-  .crumb{padding:10px 22px;font-size:14px;color:var(--faint);background:var(--bg);border-bottom:1px solid var(--line2)}
-  .crumb b{color:var(--mid);font-weight:600}
   .content{padding:0;overflow:auto}
-  /* the shared container — see .pagewrap; .sheet is the details page's instance */
+  /* the shared page container; .sheet is the details page's instance */
   .sheet{width:100%}
 
   /* ---------- canvas ---------- */
@@ -139,8 +128,6 @@
   .planname{margin:0;font-family:var(--font-ui);font-size:var(--t-h1-fs);line-height:var(--t-h1-lh);letter-spacing:var(--t-h1-ls);font-weight:var(--t-h1-fw)}
   .sub{color:var(--mid);font-size:14px;margin-top:2px}
   /* one-time price + updates term, sits under the licence name */
-  .priceline{margin-top:6px;font-size:14px;color:var(--mid);display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}
-  .priceval{font-size:14px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
   /* muted qualifier under an entitlement name */
   .itemnote{font-size:14px;color:var(--faint);margin-top:3px;line-height:1.4}
   /* Features: boolean entitlements as chips — no columns, no dashes */
@@ -191,7 +178,6 @@
   .alert[hidden]{display:none}
   .alert .icon{width:17px;height:17px;flex:none}
   .alert .atxt b{font-weight:600}
-  .alert .alink{margin-left:auto;flex:none;color:var(--ink);text-decoration:underline;text-underline-offset:2px;background:transparent;border:0;font-size:14px}
 
   .actions{display:flex;gap:9px;margin-top:14px;flex-wrap:wrap;align-items:center}
   .btn{font-size:14px;height:var(--btnH);display:inline-flex;align-items:center;justify-content:center;padding:0 13px;border-radius:5px;border:1px solid var(--ink);background:var(--ink);color:#fff}
@@ -225,7 +211,6 @@
   .billgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:12px}
   @media(max-width:700px){.billgrid{grid-template-columns:1fr}}
   .billgrid .billcard{margin-top:0}
-  .billcard-d{font-size:14px;color:var(--ink)}
   /* Next charge card — when / how much / how, top to bottom */
   .nc-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
   .nextcharge .billcard-h{margin:0}
@@ -241,10 +226,6 @@
   .sh h3{margin:0;font-family:var(--font-ui);font-size:var(--t-label-fs);line-height:var(--t-label-lh);letter-spacing:var(--t-label-ls);font-weight:var(--t-label-fw);text-transform:uppercase;color:var(--ink)}
   .sh .spacer{flex:1}
 
-  .kv{display:flex;justify-content:space-between;gap:16px;padding:7px 0;border-bottom:1px dashed var(--line2)}
-  .kv:last-child{border-bottom:0}
-  .kv .k{color:var(--mid);font-size:14px;flex:none;min-width:150px}
-  .kv .v{color:var(--ink);text-align:right;display:flex;align-items:center;justify-content:flex-end;gap:6px;flex-wrap:wrap}
   .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
   .iconbtn{display:inline-flex;align-items:center;gap:5px;height:var(--btnH);font-size:14px;color:var(--mid);border:1px solid var(--line);border-radius:5px;padding:0 10px;background:#fff}
   .iconbtn:hover{color:var(--ink);border-color:var(--mid);background:var(--hover)}
@@ -282,7 +263,6 @@
     content:"";position:absolute;bottom:calc(100% + 3px);right:14px;
     border:5px solid transparent;border-top-color:var(--ink);z-index:20}
 
-  .mini{border:1px solid var(--line2);border-radius:5px;padding:14px}
   .row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px dashed var(--line2)}
   .row:first-child{padding-top:0}
   .row:last-child{border-bottom:0;padding-bottom:0}
@@ -348,29 +328,7 @@
   .modal .mclose{width:26px;height:26px;border:1px solid var(--line);border-radius:5px;background:#fff;color:var(--mid);display:flex;align-items:center;justify-content:center;font-size:15px}
   .modal .mclose:hover{color:var(--ink);background:var(--hover)}
   .modal .mb{padding:16px;font-size:14px;color:var(--mid);line-height:1.5}
-  .modal .mb .todo{margin-top:12px;border:1px dashed var(--line);border-radius:5px;padding:10px 12px;font-size:14px;color:var(--faint);background:#fafafa}
-  .modal .mb .todo b{color:var(--mid)}
   .modal .mf{padding:12px 16px;border-top:1px solid var(--line2);display:flex;justify-content:flex-end;gap:8px}
-
-  /* ---------- Manage add-ons modal (two-step flow) ---------- */
-  .addons-modal{background:#fff;border:1px solid var(--line);border-radius:8px;width:min(900px,94vw);height:min(790px,92vh);display:flex;flex-direction:column;box-shadow:0 14px 44px rgba(0,0,0,.18)}
-  .am-head{flex:none;padding:14px 18px 12px;border-bottom:1px solid var(--line2)}
-  .am-titlebar{display:flex;align-items:center;gap:10px}
-  .am-titlebar h3{margin:0;font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw);flex:none}
-  .am-counter{font-size:14px;color:var(--faint);flex:none}
-  .am-help,.am-x{width:26px;height:26px;border:1px solid var(--line);border-radius:5px;background:#fff;color:var(--mid);display:inline-flex;align-items:center;justify-content:center;font-size:14px;flex:none}
-  .am-help:hover,.am-x:hover{color:var(--ink);background:var(--hover)}
-  .am-steps{display:flex;align-items:center;gap:10px;margin-top:12px;font-size:14px;color:var(--faint)}
-  .am-step{display:inline-flex;align-items:center;gap:7px;flex:none}
-  .am-step .am-num{width:20px;height:20px;border-radius:50%;background:var(--line2);color:var(--mid);font-size:14px;display:inline-flex;align-items:center;justify-content:center;flex:none}
-  .am-step.active{color:var(--ink);font-weight:600}
-  .am-step.active .am-num,.am-step.done .am-num{background:var(--ink);color:#fff}
-  .am-step.done{color:var(--ink)}
-  .am-stepline{flex:1;height:1px;background:var(--line2);min-width:20px}
-  .am-subhead{margin-top:10px;font-size:14px;color:var(--mid);display:flex;align-items:center;gap:12px}
-
-  .am-body{flex:1;overflow-y:auto;padding:18px}
-  .am-panel[hidden]{display:none}
   .am-sec{margin-bottom:22px}
   .am-sec:last-child{margin-bottom:0}
   .am-sechead{display:flex;align-items:baseline;gap:10px;margin-bottom:12px}
@@ -379,8 +337,6 @@
   .am-capgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
   .am-cell{border:1px solid var(--line2);border-radius:6px;padding:12px;display:flex;flex-direction:column}
   .am-celltop{font-size:14.5px;font-weight:600;color:var(--ink);margin-bottom:9px}
-  .am-cellval{font-size:var(--t-h2-fs);font-weight:var(--t-h2-fw);line-height:var(--btnH);font-variant-numeric:tabular-nums}
-  .am-cellnote{margin-top:9px;font-size:14px;color:var(--faint);line-height:1.5}
 
   .am-cardgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
   .am-card{border:1px solid var(--line2);border-radius:6px;padding:12px}
@@ -410,25 +366,16 @@
 
   .am-h2{margin:0 0 4px;font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw)}
   .am-sub2{margin:0 0 14px;font-size:14px;color:var(--mid)}
-  .am-recap{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:14px;margin-bottom:16px;background:#fafafa}
   .am-order{border:1px solid var(--line2);border-radius:6px;padding:2px 14px;margin-bottom:16px}
   .am-orow{display:flex;justify-content:space-between;gap:16px;padding:10px 0;border-bottom:1px dashed var(--line2);font-size:14px}
   .am-orow:last-child{border-bottom:0}
   .am-planrow{font-weight:600}
-  .am-incl{padding:0 0 10px;font-size:14px;color:var(--faint);display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:4px 16px}
-  .am-incl[hidden]{display:none}
   .am-newmonthly{font-weight:700;font-size:14px}
   .am-due{display:flex;justify-content:space-between;align-items:center;gap:16px;border:1px solid var(--line);border-radius:6px;padding:12px 14px;margin-bottom:14px;background:#fafafa}
   .am-duelabel{font-size:14px}
   .am-dueval{font-size:var(--t-h2-fs);font-weight:var(--t-h2-fw);font-variant-numeric:tabular-nums;flex:none}
-  .am-pay{font-size:14px;color:var(--mid)}
   .am-success{text-align:center;padding:30px 10px}
   .am-checkbig{width:52px;height:52px;border-radius:50%;border:2px solid var(--ink);color:var(--ink);font-size:26px;display:inline-flex;align-items:center;justify-content:center;margin-bottom:14px}
-
-  .am-foot{flex:none;border-top:1px solid var(--line2);padding:12px 18px}
-  .am-footpanel[hidden]{display:none}
-  .am-summary{margin-bottom:10px}
-  .am-sumtoggle{background:transparent;border:0;color:var(--ink);font-size:14px;font-weight:600;display:inline-flex;gap:6px;cursor:pointer;padding:2px 0}
   .am-figures{margin-top:8px;border:1px solid var(--line2);border-radius:6px;padding:10px 12px;font-size:14px;font-variant-numeric:tabular-nums}
   .am-sumlist{display:flex;flex-direction:column;gap:7px;padding-bottom:8px;margin-bottom:8px;border-bottom:1px dashed var(--line2)}
   .am-sumlist[hidden]{display:none}
@@ -436,16 +383,9 @@
   .am-sumrow.cur{color:var(--mid)}
   .am-total-row{font-weight:700;font-size:14px}
   .am-total-row .am-chgcount{font-weight:400}
-  .am-total-toggle{width:100%;border:0;background:transparent;padding:0;cursor:pointer;font:inherit;font-weight:700;font-size:14px;color:inherit}
-  .am-tl{display:inline-flex;align-items:center;gap:7px}
-  .am-caret{width:12px;height:12px;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform .15s}
-  .am-total-toggle[aria-expanded="true"] .am-caret{transform:rotate(90deg)}
-  .am-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-  .am-total{font-size:14px;color:var(--mid)}
-  .am-total b{font-size:16px;color:var(--ink)}
   .am-chgcount{font-size:14px;color:var(--faint)}
 
-  /* generic stub overlay sits above both add-ons variants */
+  /* the generic stub overlay sits above the add-ons and wizard modals */
   #overlay{z-index:400}
 
   /* ---------- prototype settings gear (prototype-only) ---------- */
@@ -465,9 +405,8 @@
   .sp-opt input{accent-color:var(--ink);margin:0;flex:none}
   /* page-specific variant group, shown only in that page's context */
   .sp-ctx{display:flex;flex-direction:column;gap:1px}
-  .sp-opt.is-off,.sp-opt input:disabled + span{color:var(--faint)}
-  .sp-soon{font-size:14px;color:var(--faint);margin-left:4px;white-space:nowrap}
-  .sp-ctx[hidden],#spMain[hidden],#spArchive[hidden]{display:none}
+  .sp-opt input:disabled + span{color:var(--faint)}
+  .sp-ctx[hidden]{display:none}
   .seg{display:flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
   .seg label{flex:1;position:relative;margin:0}
   .seg input{position:absolute;opacity:0;pointer-events:none}
@@ -525,8 +464,6 @@
   .fs-cellhead{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
   .fs-celltext{flex:1;min-width:0}
   .fs-cellhead .am-celltop{margin-bottom:0}
-  .fs-devctl{display:flex;flex-direction:column;align-items:flex-end;gap:2px;text-align:right}
-  .fs-devctl .am-cellval{font-size:18px;line-height:1.1}
   .fs-celldesc{margin-top:4px;font-size:14px;color:var(--faint);line-height:1.55}
   /* pins right under the sticky header row (57px tall) */
   /* top:0 — the sticky inset resolves against the scrollport's padding box, so any
@@ -540,36 +477,14 @@
   .fs-screen .am-addcheck{width:17px;height:17px}
   @media(max-width:900px){.fs-grid{grid-template-columns:1fr}.fs-right{position:static}}
   /* ---------- New license flow (stepped; rides the manage-modal chrome) ---------- */
-  .nl-stepbar{flex:none;padding:10px 24px;background:#fff;border-bottom:1px solid var(--line2)}
-  .nl-stepbar[hidden]{display:none}
-  /* the step indicator spans the full modal width (B track and C numbered steps) */
-  .nl-stepbar .am-steps{margin-top:0}
-  .nl-steps .am-step{border:0;background:none;padding:0;font:inherit;cursor:default}
-  .nl-steps .am-step.done{cursor:pointer}
-  .nl-steps .am-step.done:hover{text-decoration:underline;text-underline-offset:3px}
-  /* stepper variant B — thin progress line + "Step N of 4 · Label" */
-  /* variant B: a thin full-width track directly under the header hairline,
-     then one padded label row — no extra rules, no partial-width bars */
-  .nl-stepbar.nl-pb-mode{padding:0 0 10px}
-  .nl-pb-mode .am-steps{display:block;max-width:none;gap:0}
+  /* the stepper: a thin full-width track directly under the header hairline,
+     then one padded label row — "Step N of 4 · Plan" */
+  .nl-stepbar{flex:none;padding:0 0 10px;background:#fff;border-bottom:1px solid var(--line2)}
   .nl-progress{width:100%}
   .nl-ptrack{height:3px;background:var(--track);overflow:hidden}
   .nl-pfill{display:block;height:100%;background:var(--ink)}
   .nl-plabel{margin-top:9px;padding:0 24px;font-size:var(--t-small-fs);color:var(--mid)}
   .nl-plabel b{color:var(--ink);font-weight:600}
-  /* stepper variant A — vertical summary rail on the modal's left */
-  .nl-main{display:flex;flex:1;min-height:0}
-  .nl-rail{flex:none;width:236px;padding:20px 18px;border-right:1px solid var(--line2);background:var(--card);overflow:auto}
-  .nl-rail[hidden]{display:none}
-  .nl-rstep{display:flex;gap:10px;align-items:flex-start;width:100%;padding:10px 0;border:0;background:none;font:inherit;font-size:14px;text-align:left;color:var(--faint);cursor:default}
-  .nl-rstep .nl-rdot{width:20px;height:20px;flex:none;border-radius:50%;border:1px solid var(--line);background:#fff;color:var(--mid);font-size:12px;display:inline-flex;align-items:center;justify-content:center}
-  .nl-rstep.done{color:var(--ink);cursor:pointer}
-  .nl-rstep.done .nl-rdot{background:var(--ink);border-color:var(--ink);color:#fff}
-  .nl-rstep.done:hover .nl-rlabel{text-decoration:underline;text-underline-offset:3px}
-  .nl-rstep.active{color:var(--ink);font-weight:600}
-  .nl-rstep.active .nl-rdot{border-color:var(--ink);color:var(--ink)}
-  .nl-rtext{min-width:0}
-  .nl-rval{display:block;margin-top:2px;font-weight:400;font-size:var(--t-small-fs);color:var(--mid)}
   .nl-foot{flex:none;display:flex;align-items:center;gap:12px;padding:12px 24px;background:#fff;border-top:1px solid var(--line2)}
   .nl-foot[hidden]{display:none}
   .nl-foot .btn[hidden]{display:none}   /* .btn sets display, so [hidden] needs help */
@@ -582,7 +497,6 @@
   .nl-unl{margin-top:16px;padding-top:14px;border-top:1px dashed var(--line2)}
   .nl-unl-k{font-family:var(--font-ui);font-size:var(--t-label-fs);line-height:var(--t-label-lh);letter-spacing:var(--t-label-ls);font-weight:var(--t-label-fw);text-transform:uppercase;color:var(--faint)}
   .nl-unl-v{margin-top:6px;font-size:14px;line-height:1.6;color:var(--ink)}
-  .nl-quiet{margin-top:12px;font-size:14px;color:var(--faint)}
   /* step 2 — the shared PE card under the plan grid: the title is the card's
      header, the "All plans include…" line its muted intro; the card spans the
      plan grid width and nothing floats between the grid and the card */
@@ -634,32 +548,11 @@
   .tnav-item{padding:7px 11px;border:1px solid transparent;border-radius:6px;background:transparent;color:var(--mid);font:inherit;font-size:14px}
   .tnav-item:hover{background:var(--hover);color:var(--ink)}
   .tnav-item.on{background:var(--sel);border-color:var(--chromeLine);color:var(--ink);font-weight:600}
-  .tnav[hidden]{display:none}
-  /* Flow 2 overlay: header mirrors the top bar so it reads as the same chrome */
-  .pgoverlay{position:fixed;inset:0;z-index:80;background:var(--bg);display:flex;flex-direction:column}
-  .pgoverlay[hidden]{display:none}
-  .pgo-head{flex:none;display:flex;align-items:center;gap:12px;height:56px;padding:0 24px;background:var(--card);border-bottom:1px solid var(--line2)}
-  .pgo-head .sp{flex:1}
-  .pgo-title{font-size:14px;font-weight:600;color:var(--ink)}
-  .pgo-body{flex:1;min-height:0;overflow:auto}
-  /* Flow 2 · first overlay level: the bar already carries the page title and the
-     close, and the page's own back would return to the dashboard exactly like the
-     close — so both go, and content starts at its toolbar / first section.
-     Deeper levels (detail pages) keep their gutter back and their own title,
-     because there back returns to the previous overlay content, not the dashboard. */
-  .pgo-body[data-level="root"] .lic-h1,
-  .pgo-body[data-level="root"] .lic-sub,
-  .pgo-body[data-level="root"] .lic-back{display:none}
-  .pgo-body[data-level="root"] .setgrid{grid-template-columns:1fr}
-  /* the toolbar is the first thing in the overlay, so it needs no extra top gap */
-  .pgo-body[data-level="root"] .lic-controls,
-  .pgo-body[data-level="root"] .insttoolbar{margin-top:0}
   .dprofile{position:relative}
   .dprofbtn{display:inline-flex;align-items:center;gap:9px;padding:4px 12px 4px 4px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--ink);font:inherit;font-size:14px}
   .dprofbtn:hover{border-color:var(--mid);background:var(--hover)}
   .dprofmenu{position:absolute;right:0;top:calc(100% + 6px);min-width:232px;background:#fff;border:1px solid var(--line);border-radius:8px;box-shadow:0 12px 32px rgba(0,0,0,.16);padding:6px;z-index:60}
   .dprofmenu[hidden]{display:none}
-  .dprofmenu .grp{font-family:var(--font-ui);font-size:var(--t-label-fs);line-height:var(--t-label-lh);letter-spacing:var(--t-label-ls);font-weight:var(--t-label-fw);text-transform:uppercase;color:var(--faint);padding:9px 10px 4px}
   .dprofmenu button{display:flex;align-items:baseline;gap:8px;width:100%;text-align:left;padding:8px 10px;border:0;background:transparent;border-radius:6px;font:inherit;font-size:14px;color:var(--ink)}
   .dprofmenu button:hover{background:var(--hover)}
   .dprofmenu button .who{font-size:14px;color:var(--faint)}
@@ -698,30 +591,15 @@
   .dblock-head{display:flex;align-items:baseline;gap:12px;margin-bottom:4px}
   .dblock-head h2{margin:0;font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw)}
   .dblock-head .sp{flex:1}
-  .dblock-foot{display:flex;align-items:center;margin-top:14px}
-  .dblock-foot .sp{flex:1}
 
-  .drows .drow:last-child{border-bottom:0}
-  .drow{display:flex;align-items:center;gap:12px;padding:11px 2px;border-bottom:1px dashed var(--line2)}
   .dprodrow{cursor:pointer;border-radius:6px}
   .dprodrow:hover{background:var(--hover)}
-  .dprod-name{font-size:14px;font-weight:600;min-width:150px}
-  .dprod-sum{font-size:14px;color:var(--mid);flex:1}
-  .di-inv{min-width:120px;font-size:14px}
-  .di-date{flex:1;color:var(--mid);font-variant-numeric:tabular-nums}
-  .di-amt{font-variant-numeric:tabular-nums;text-align:right;min-width:88px}
   /* Recent invoices preview: spread the columns across the full row width */
-  .di-row{justify-content:space-between}
-  .di-row .di-date{flex:0 1 auto}
   /* Recent activity preview: muted timestamp on the right (replaces the status chip) */
-  .da-when{font-size:14px;color:var(--faint);font-variant-numeric:tabular-nums;white-space:nowrap;flex:none}
   /* preview tables inside a dashboard block */
   .dblock table{margin-top:10px}
   .dblock table td{padding:11px 8px}
 
-  .dmini{flex:1;min-width:0}
-  .dmini .k{font-size:14px;color:var(--ink)}
-  .dmini .s{font-size:14px;color:var(--faint);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   /* New-user empty state: plan structure. Switchers reuse the .seg segmented
      control; cards reuse .dblock + .pill + .btn — no new colors or components. */
   /* ---------- Community Grant states (pending / approved) ----------
@@ -822,16 +700,12 @@
   /* settings pages span the shared 1120 container; header + cards align with every
      other page — only the form cards keep their own comfortable max-width */
   .setgrid{width:100%}
-  .setgrid .lic-back{margin-top:14px;margin-bottom:0}
-  .setheadrow{display:flex;align-items:flex-start;gap:16px}
-  .setheadrow .sp{flex:1}
   /* cards span the shared container; the form grid inside stays comfortable */
   .setcard{background:var(--card);border:1px solid var(--line2);border-radius:8px;padding:18px 20px;margin-top:16px}
   .setcard > *:not(.setcard-h){max-width:800px}
   .setcard-h{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:14px}
   .setcard-h h2{margin:0;font-family:var(--font-ui);font-size:var(--t-label-fs);line-height:var(--t-label-lh);letter-spacing:var(--t-label-ls);font-weight:var(--t-label-fw);text-transform:uppercase}
   .setcard-hint{font-size:var(--t-small-fs);line-height:var(--t-small-lh);letter-spacing:var(--t-small-ls);font-weight:var(--t-small-fw);color:var(--faint)}
-  .setcard.danger{border-color:var(--ink)}
   .field{margin-bottom:14px}
   .field:last-child{margin-bottom:0}
   .field > label{display:block;font-size:var(--t-small-fs);line-height:var(--t-small-lh);letter-spacing:var(--t-small-ls);font-weight:var(--t-small-fw);color:var(--mid);margin-bottom:6px}
@@ -839,42 +713,19 @@
   .field textarea{height:auto;min-height:62px;padding:8px 10px;resize:vertical;line-height:1.5}
   .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--ink)}
   .field .help{font-size:var(--t-small-fs);line-height:var(--t-small-lh);letter-spacing:var(--t-small-ls);color:var(--faint);margin-top:5px}
-  .field.ro input{background:var(--bg);color:var(--mid);cursor:default}
   .field2{display:grid;grid-template-columns:1fr 1fr;gap:12px 14px}
   .field2 .field{margin-bottom:0}   /* the grid gap spaces rows — no double margin */
   @media(max-width:640px){.field2{grid-template-columns:1fr}}
   .cardhelp{font-size:var(--t-small-fs);line-height:var(--t-small-lh);letter-spacing:var(--t-small-ls);color:var(--faint);margin-top:12px}
-  .rowaction{display:flex;align-items:center;gap:14px;padding-top:14px;margin-top:14px;border-top:1px solid var(--line2)}
-  .rowaction.bare{border-top:0;margin-top:0;padding-top:0}
-  .rowaction .ra-txt{flex:1;min-width:0}
-  .rowaction .ra-t{font-size:14px;color:var(--ink)}
-  .rowaction .ra-s{font-size:14px;color:var(--faint);margin-top:3px}
-  .savebar{display:flex;align-items:center;gap:12px;margin-top:16px;padding-top:14px;border-top:1px solid var(--line2)}
-  .savebar .sp{flex:1}
-  .savebar .saved{font-size:14px;color:var(--faint)}
-  .savebar .saved[hidden]{display:none}
-  .savebar .btn[disabled]{opacity:.45;cursor:not-allowed}
   .paycard{display:flex;align-items:center;gap:14px;flex-wrap:wrap;border:1px solid var(--line2);border-radius:8px;padding:12px 14px}
   .paycard .sp{flex:1}
   .brandbadge{font-size:14px;font-weight:800;letter-spacing:.08em;border:1px solid var(--line);border-radius:4px;padding:3px 7px;background:#fff;color:var(--ink)}
   .pc-num{font-variant-numeric:tabular-nums;font-size:14px;letter-spacing:.06em}
   .pc-exp{font-size:14px;color:var(--mid)}
-  .addrow{display:block;width:100%;margin-top:10px;padding:12px 14px;border:1px dashed var(--line);border-radius:8px;background:transparent;color:var(--faint);font:inherit;font-size:14px;text-align:center;cursor:pointer}
-  .addrow:hover{color:var(--ink);border-color:var(--mid)}
-  .roblock{background:var(--bg);border:1px solid var(--line2);border-radius:6px;padding:12px 14px;font-size:14px;color:var(--mid);line-height:1.65}
-  .roblock[hidden]{display:none}
-  .roblock .rb-link{margin-top:8px}
   /* readonly billing address: half the card width; billing email on top, then a divider,
      then the address; the "edit in company profile" affordance is an icon top-right */
-  #billAddrReadonly{position:relative;width:50%;min-width:260px;box-sizing:border-box}
-  #billAddrReadonly .rb-edit{position:absolute;top:10px;right:10px}
-  #billAddrReadonly .rb-email{color:var(--ink);padding-right:38px}
-  #billAddrReadonly .hairline{margin:10px 0}
-  .setfooter{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:22px;font-size:14px;color:var(--faint)}
-  .setfooter .dot{color:var(--line)}
   /* quiet delete action + disabled confirm button in the delete dialog (reuses the savebar's opacity treatment) */
   /* Account → Personal details: the two account-level actions sit under the fields */
-  .pdactions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
   /* Email change is pending until the new address confirms: a muted chip carrying
      the target address, with the two text actions beside it */
   .emailpend{margin-top:7px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px}
@@ -901,7 +752,6 @@
   .pagehead .saved[hidden]{display:none}
   .pagehead .btn[disabled]{opacity:.45;cursor:not-allowed}
   /* muted caption under a section title (e.g. billing address prefill note) */
-  .setcap{font-size:14px;color:var(--faint);margin:-4px 0 14px}
   /* ---------- Update payment method: bespoke monochrome modal (NOT the generic .modal) ---------- */
   .payoverlay{position:fixed;inset:0;z-index:100;background:rgba(28,28,28,.32);display:flex;align-items:center;justify-content:center;padding:20px}
   .payoverlay[hidden]{display:none}
@@ -936,7 +786,6 @@
   .lic-toggle{display:inline-flex;align-items:center;gap:9px;font-size:14px;color:var(--mid);cursor:pointer;margin-left:12px}
   /* Type filter: segmented chips, mutually exclusive */
   .lic-typeseg{display:inline-flex;align-items:center;gap:8px}
-  .lic-seglabel{font-size:14px;color:var(--mid)}
   .typechip{height:var(--btnH);display:inline-flex;align-items:center;font-size:14px;padding:0 13px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--mid)}
   .typechip:hover{border-color:var(--mid);color:var(--ink)}
   .typechip.is-on{background:var(--ink);border-color:var(--ink);color:#fff}
@@ -945,8 +794,8 @@
   .lic-row[hidden]{display:none}
   /* trailing row actions: inline Copy license key + ⋮ overflow */
   .lic-actions{display:inline-flex;align-items:center;gap:6px;justify-content:flex-end}
-  .lp-name,.lr-main{color:var(--ink)}
-  .lp-meta,.lr-sub{font-size:14px;color:var(--faint);margin-top:2px}
+  .lp-name{color:var(--ink)}
+  .lp-meta{font-size:14px;color:var(--faint);margin-top:2px}
   /* The label is the field that tells rows apart, so it rides in the Product
      column under the product name. The column is wide enough that a real-world
      label ("Production — Central Europe manufacturing cluster, building 4")
@@ -965,29 +814,6 @@
   .dropmenu[hidden]{display:none}
   .dropmenu button{display:block;width:100%;text-align:left;padding:8px 10px;border:0;background:transparent;border-radius:5px;font-size:14px;color:var(--ink)}
   .dropmenu button:hover{background:var(--hover)}
-  /* Licenses — Portfolio (grouped by product) */
-  .pf-summary{display:flex;gap:12px;flex-wrap:wrap;margin:0 0 22px}
-  .pf-tile{border:1px solid var(--line2);border-radius:8px;padding:11px 16px;min-width:150px}
-  .pf-tile .k{font-family:var(--font-ui);font-size:var(--t-label-fs);line-height:var(--t-label-lh);letter-spacing:var(--t-label-ls);font-weight:var(--t-label-fw);text-transform:uppercase;color:var(--faint)}
-  .pf-tile .v{font-size:var(--t-h2-fs);font-weight:var(--t-h2-fw);margin-top:5px;font-variant-numeric:tabular-nums}
-  .pf-tile .vsub{font-size:14px;color:var(--faint);font-weight:400}
-  .pf-group{margin-bottom:22px}
-  .pf-group[hidden]{display:none}
-  .pf-ghead{display:flex;align-items:baseline;gap:12px;padding-bottom:7px;border-bottom:1px solid var(--line)}
-  .pf-gname{font-family:var(--font-ui);font-size:var(--t-label-fs);line-height:var(--t-label-lh);letter-spacing:var(--t-label-ls);font-weight:var(--t-label-fw);text-transform:uppercase}
-  .pf-groll{font-size:14px;color:var(--mid);font-variant-numeric:tabular-nums}
-  .pf-table{width:100%;border-collapse:collapse;font-size:14px;table-layout:fixed}
-  .pf-table th:nth-child(1),.pf-table td:nth-child(1){width:30%}
-  .pf-table th:nth-child(2),.pf-table td:nth-child(2){width:13%}
-  .pf-table th:nth-child(3),.pf-table td:nth-child(3){width:16%}
-  .pf-table th:nth-child(4),.pf-table td:nth-child(4){width:29%}
-  .pf-table th:nth-child(5),.pf-table td:nth-child(5){width:12%;text-align:right}
-  .pf-colhead{margin-bottom:4px}
-  .pf-row{cursor:pointer}
-  .pf-row:hover{background:var(--hover)}
-  .pf-row[hidden]{display:none}
-  .pf-billtext{color:var(--mid);font-variant-numeric:tabular-nums}
-  .pf-billtext.attn{color:var(--ink);font-weight:600}
   .pill.attn{background:var(--ink);color:#fff;border-color:var(--ink);font-weight:600}
   /* inactive (canceled) status: muted, not attention */
   .pill.off{border-color:var(--line);color:var(--faint);background:#fff}
@@ -1430,11 +1256,10 @@
   </div>
 </div>
 
-<!-- ============ PRODUCTS — unified list (inner content only; no chrome) ============
-     One table for every subscription plan + perpetual license. Rows and both layout
-     variants (1 = grouped, 2 = one field per column) render from the PRODUCTS data in
-     JS. A row click routes to the matching details page; the ⋮ overflow carries
-     type-specific actions and must NOT navigate. In prototype settings for now. -->
+<!-- ============ LICENSES — unified list (inner content only; no chrome) ============
+     One table for every subscription plan + perpetual license, rendered from the
+     current dataset in JS. A row click routes to the matching details page; the ⋮
+     overflow carries type-specific actions and must NOT navigate. -->
 <div class="licview" id="licensesView" hidden>
   <h1 class="lic-h1">Licenses</h1>
 
@@ -1479,142 +1304,6 @@
     </span>
   </div>
   </div>
-</div>
-
-<!-- ============ LICENSES — PORTFOLIO (grouped by product; inner content only) ============
-     Rows grouped under product headers with a count + monthly-spend roll-up. Static
-     markup; the Type/Status filters hide rows (and empty groups). Row click → details;
-     ⋮ menu + stub buttons ride the generic .menu / [data-stub] handlers. -->
-<div class="licview" id="portfolioView" hidden>
-  <h1 class="lic-h1">Licenses</h1>
-  <p class="lic-sub">Your licenses grouped by product, with per-product roll-ups.</p>
-
-  <div class="lic-controls">
-    <div class="searchbox"><svg class="icon searchglyph" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input type="text" placeholder="Search licenses" aria-label="Search licenses"></div>
-    <div class="lic-typeseg" role="group" aria-label="Filter by type">
-      <span class="lic-seglabel">Type:</span>
-      <button class="typechip is-on" data-type="all" aria-pressed="true">All</button>
-      <button class="typechip" data-type="Subscription" aria-pressed="false">Subscription</button>
-      <button class="typechip" data-type="Perpetual" aria-pressed="false">Perpetual</button>
-    </div>
-    <div class="dropwrap">
-      <button class="btn sec" id="pfStatusBtn" aria-haspopup="true" aria-expanded="false">Status: All ▾</button>
-      <div class="dropmenu" id="pfStatusMenu" hidden>
-        <button data-status="all">All</button>
-        <button data-status="Active">Active</button>
-        <button data-status="Payment failed">Payment failed</button>
-        <button data-status="Updates expiring">Updates expiring</button>
-      </div>
-    </div>
-    <span class="spacer"></span>
-    <button class="iconbtn ib" data-refresh aria-label="Refresh" title="Refresh"><svg class="icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg></button>
-    <div class="dropwrap">
-      <button class="btn" id="pfNewBtn" aria-haspopup="true" aria-expanded="false">+ New license ▾</button>
-      <div class="dropmenu right" id="pfNewMenu" hidden>
-        <button data-new="subscription">Subscription</button>
-        <button data-new="perpetual">Perpetual license</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="pf-summary">
-    <div class="pf-tile"><div class="k">Licenses</div><div class="v">5</div></div>
-    <div class="pf-tile"><div class="k">Monthly spend</div><div class="v">$353 <span class="vsub">/ mo</span></div></div>
-    <div class="pf-tile"><div class="k">One-time assets</div><div class="v">1</div></div>
-  </div>
-
-  <!-- shared column headers above all product groups -->
-  <table class="pf-table pf-colhead"><thead><tr>
-    <th>License</th><th>Type</th><th>Status</th><th>Billing</th><th aria-label="Actions"></th>
-  </tr></thead></table>
-
-  <div class="pf-group">
-    <div class="pf-ghead"><span class="pf-gname">ThingsBoard PE</span><span class="pf-groll">3 licenses · $338 / mo</span></div>
-    <table class="pf-table"><tbody>
-      <tr class="lic-row pf-row" data-goto="startup" data-product="ThingsBoard PE" data-type="Subscription" data-status="Active" tabindex="0" aria-label="Open ThingsBoard PE Startup details">
-        <td><div class="lp-name">Startup</div><div class="lp-meta">EU prod cluster</div></td>
-        <td><span class="chip">Subscription</span></td>
-        <td><span class="pill soft">Active</span></td>
-        <td><span class="pf-billtext">$299 / mo · auto-pay</span></td>
-        <td class="cellact">
-          <div class="lic-actions">
-            <button class="iconbtn ib tip lic-copy" aria-label="Copy license key" data-tip="Copy license key"><svg class="icon" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg></button>
-            <div class="menu">
-              <button class="iconbtn ib" aria-haspopup="true" aria-expanded="false" aria-label="More actions"><svg class="icon" viewBox="0 0 24 24" style="fill:currentColor;stroke:none"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button>
-              <div class="pop" role="menu" hidden>
-                <button role="menuitem" data-stub="Manage add-ons">Manage add-ons</button>
-                <button role="menuitem" data-stub="Change plan">Change plan</button>
-                <button role="menuitem" data-stub="Cancel subscription">Cancel subscription</button>
-              </div>
-            </div>
-          </div>
-        </td>
-      </tr>
-      <tr class="lic-row pf-row" data-goto="prototype" data-product="ThingsBoard PE" data-type="Subscription" data-status="Payment failed" tabindex="0" aria-label="Open ThingsBoard PE Prototype details">
-        <td><div class="lp-name">Prototype</div><div class="lp-meta">— · Add label</div></td>
-        <td><span class="chip">Subscription</span></td>
-        <td><span class="pill attn">Payment failed</span></td>
-        <td><span class="pf-billtext attn">$39 / mo · payment failed</span></td>
-        <td class="cellact">
-          <div class="lic-actions">
-            <button class="iconbtn ib tip lic-copy" aria-label="Copy license key" data-tip="Copy license key"><svg class="icon" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg></button>
-            <div class="menu">
-              <button class="iconbtn ib" aria-haspopup="true" aria-expanded="false" aria-label="More actions"><svg class="icon" viewBox="0 0 24 24" style="fill:currentColor;stroke:none"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button>
-              <div class="pop" role="menu" hidden>
-                <button role="menuitem" data-stub="Update payment method">Update payment method</button>
-                <button role="menuitem" data-stub="Manage add-ons">Manage add-ons</button>
-                <button role="menuitem" data-stub="Cancel subscription">Cancel subscription</button>
-              </div>
-            </div>
-          </div>
-        </td>
-      </tr>
-      <tr class="lic-row pf-row" data-goto="perp" data-product="ThingsBoard PE" data-type="Perpetual" data-status="Active" tabindex="0" aria-label="Open ThingsBoard PE Perpetual License details">
-        <td><div class="lp-name">ThingsBoard PE Perpetual License</div><div class="lp-meta">— · Add label</div></td>
-        <td><span class="chip">Perpetual</span></td>
-        <td><span class="pill soft">Active</span></td>
-        <td><span class="pf-billtext">one-time · paid</span></td>
-        <td class="cellact">
-          <div class="lic-actions">
-            <button class="iconbtn ib tip lic-copy" aria-label="Copy license key" data-tip="Copy license key"><svg class="icon" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg></button>
-            <div class="menu">
-              <button class="iconbtn ib" aria-haspopup="true" aria-expanded="false" aria-label="More actions"><svg class="icon" viewBox="0 0 24 24" style="fill:currentColor;stroke:none"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button>
-              <div class="pop" role="menu" hidden>
-                <button role="menuitem" data-stub="Add capacity">Add capacity</button>
-                <button role="menuitem" data-stub="Renew software updates">Renew software updates</button>
-              </div>
-            </div>
-          </div>
-        </td>
-      </tr>
-    </tbody></table>
-  </div>
-
-  <div class="pf-group">
-    <div class="pf-ghead"><span class="pf-gname">TBMQ PE</span><span class="pf-groll">1 · $15 / mo</span></div>
-    <table class="pf-table"><tbody>
-      <tr class="lic-row pf-row" data-goto="" data-product="TBMQ PE" data-type="Subscription" data-status="Active" tabindex="0" aria-label="Open TBMQ PE subscription details">
-        <td><div class="lp-name">TBMQ PE subscription</div><div class="lp-meta">— · Add label</div></td>
-        <td><span class="chip">Subscription</span></td>
-        <td><span class="pill soft">Active</span></td>
-        <td><span class="pf-billtext">$15 / mo · auto-pay</span></td>
-        <td class="cellact">
-          <div class="lic-actions">
-            <button class="iconbtn ib tip lic-copy" aria-label="Copy license key" data-tip="Copy license key"><svg class="icon" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg></button>
-            <div class="menu">
-              <button class="iconbtn ib" aria-haspopup="true" aria-expanded="false" aria-label="More actions"><svg class="icon" viewBox="0 0 24 24" style="fill:currentColor;stroke:none"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button>
-              <div class="pop" role="menu" hidden>
-                <button role="menuitem" data-stub="Manage add-ons">Manage add-ons</button>
-                <button role="menuitem" data-stub="Change plan">Change plan</button>
-                <button role="menuitem" data-stub="Cancel subscription">Cancel subscription</button>
-              </div>
-            </div>
-          </div>
-        </td>
-      </tr>
-    </tbody></table>
-  </div>
-
 </div>
 
 <!-- ============ INVOICES — full internal page ============ -->
@@ -2116,19 +1805,6 @@
   </div>
 </div>
 
-<!-- ============ FLOW 2: full-screen page overlay ============
-     Chrome only. The page nodes are mounted into #pgoBody by presentPage(), so
-     there is exactly one copy of every page shared by both flows. Drilling
-     deeper replaces this body's content — no stacked overlays. -->
-<div class="pgoverlay" id="pageOverlay" hidden role="dialog" aria-modal="true" aria-labelledby="pgoTitle">
-  <header class="pgo-head">
-    <span class="pgo-title" id="pgoTitle"></span>
-    <span class="sp"></span>
-    <button class="fs-close" id="pgoClose" aria-label="Close and return to the dashboard" title="Close">✕</button>
-  </header>
-  <div class="pgo-body" id="pgoBody"></div>
-</div>
-
 <!-- ============ MODAL ============ -->
 <div class="overlay" id="overlay" hidden>
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
@@ -2194,158 +1870,6 @@
       <span class="sp"></span>
       <button class="btn sec" id="couponCancel">Cancel</button>
       <button class="btn" id="couponApply" disabled>Apply</button>
-    </div>
-  </div>
-</div>
-
-<!-- ============ MANAGE ADD-ONS MODAL (two-step) ============ -->
-<div class="overlay" id="addonsOverlay" hidden>
-  <div class="addons-modal" role="dialog" aria-modal="true" aria-labelledby="amTitle">
-    <div class="am-head">
-      <div class="am-titlebar">
-        <h3 id="amTitle">Manage add-ons · <span id="amStepName">Adjust</span></h3>
-        <span class="spacer"></span>
-        <span class="am-counter" id="amStepCounter">Step 1 / 2</span>
-        <button class="am-help" data-stub="Manage add-ons help" aria-label="Help">?</button>
-        <button class="am-x" id="amClose" aria-label="Close">✕</button>
-      </div>
-      <div class="am-subhead"><span>ThingsBoard Professional edition · Prototype</span><span class="spacer"></span><button class="link" data-modal="change-plan">Change plan →</button></div>
-    </div>
-
-    <div class="am-body" id="amBody">
-
-      <!-- STEP 1 — ADJUST -->
-      <div class="am-panel" id="amStep1">
-        <div class="am-sec">
-          <div class="am-sechead"><h4>Capacity</h4><span class="am-cap">set by your plan</span></div>
-          <div class="am-capgrid">
-            <div class="am-cell">
-              <div class="am-celltop">Devices</div>
-              <div class="am-cellval">50</div>
-              <div class="am-cellnote">Total number of IoT devices that will connect to your ThingsBoard platform.</div>
-              <div class="am-cardprice locked">fixed by Prototype Plan</div>
-            </div>
-            <div class="am-cell">
-              <div class="am-celltop">Production instances</div>
-              <div class="stepper" data-field="prod">
-                <button type="button" data-dir="-1" aria-label="Decrease production instances">−</button>
-                <span class="val" id="amValProd" aria-live="polite">1</span>
-                <button type="button" data-dir="1" aria-label="Increase production instances">+</button>
-              </div>
-              <div class="am-cellnote">Production compute — 1 included. Enables clustering and HA.</div>
-              <div class="am-cardprice">+$29.00 / mo each</div>
-            </div>
-            <div class="am-cell">
-              <div class="am-celltop">Development instances</div>
-              <div class="stepper" data-field="dev">
-                <button type="button" data-dir="-1" aria-label="Decrease development instances">−</button>
-                <span class="val" id="amValDev" aria-live="polite">0</span>
-                <button type="button" data-dir="1" aria-label="Increase development instances">+</button>
-              </div>
-              <div class="am-cellnote">Dedicated instances for dev, test, and CI/CD — keeps production data clean.</div>
-              <div class="am-cardprice">+$15.00 / mo each</div>
-            </div>
-            <div class="am-cell">
-              <div class="am-celltop">AI credits</div>
-              <div class="stepper" data-field="ai">
-                <button type="button" data-dir="-1" aria-label="Decrease AI credits">−</button>
-                <span class="val" id="amValAi" aria-live="polite">2</span>
-                <button type="button" data-dir="1" aria-label="Increase AI credits">+</button>
-              </div>
-              <div class="am-cellnote">1 = 1,000,000 credits. Minimum matches your plan — increase to buy more.</div>
-              <div class="am-cardprice">+$5.00 / mo per 1M AI credits</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="am-sec">
-          <div class="am-sechead"><h4>Add-ons</h4><span class="am-cap" id="amAddonCount">2 available · 0 active</span></div>
-          <div class="am-cardgrid">
-            <div class="am-card" id="amCardEdge">
-              <div class="am-cardtop">
-                <input type="checkbox" class="am-addcheck" id="amEdge" data-addon="edge" aria-label="Add Edge Computing add-on">
-                <div>
-                  <div class="am-cardname">Edge Computing</div>
-                  <div class="am-carddesc">Edge instances at remote sites for offline processing and auto-sync.</div>
-                </div>
-              </div>
-              <div class="am-cardprice">+$7.00 /mo</div>
-            </div>
-            <div class="am-card" id="amCardTrendz">
-              <div class="am-cardtop">
-                <input type="checkbox" class="am-addcheck" id="amTrendz" data-addon="trendz" aria-label="Add Trendz Analytics add-on">
-                <div>
-                  <div class="am-cardname">Trendz Analytics</div>
-                  <div class="am-carddesc">Advanced analytics, custom dashboards, and trend discovery.</div>
-                </div>
-              </div>
-              <div class="am-cardprice">+$12.00 /mo</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- STEP 2 — REVIEW -->
-      <div class="am-panel" id="amStep2" hidden>
-        <h4 class="am-h2">Review your changes</h4>
-        <p class="am-sub2">Confirm what changes and what you'll be charged now.</p>
-
-        <div class="am-order">
-          <div class="am-orow am-planrow">
-            <div>Prototype</div>
-            <div>$39.00 / mo</div>
-          </div>
-          <div class="am-orow"><div>Base · 50 dev · 1 prod · 2M AI credits · White labeling</div><div>$39.00</div></div>
-          <div id="amOrderLines"></div>
-          <div class="am-orow am-newmonthly"><div>New monthly · from 2026-08-30</div><div id="amRecMonthly">$39.00 / mo</div></div>
-        </div>
-
-        <div class="am-due">
-          <div class="am-duelabel">Due today <span class="muted">— prorated change for the current cycle (16 of 31 days, to 2026-08-30)</span></div>
-          <div class="am-dueval" id="amDueVal">$0.00</div>
-        </div>
-
-        <div class="am-pay">Charged to Visa ••4242 · auto-pay · <button class="link" data-modal="manage-payment">Manage payment →</button></div>
-      </div>
-
-      <!-- SUCCESS (stub) -->
-      <div class="am-panel am-success" id="amSuccess" hidden>
-        <div class="am-checkbig">✓</div>
-        <h4 class="am-h2">Changes applied</h4>
-        <p class="am-sub2">Placeholder confirmation — no real charge was made. <span id="amSuccessDue"></span></p>
-      </div>
-    </div>
-
-    <div class="am-foot" id="amFoot">
-      <!-- footer: step 1 -->
-      <div class="am-footpanel" id="amFoot1">
-        <div class="am-summary">
-          <div class="am-figures">
-            <div class="am-sumlist" id="amSumList"></div>
-            <button class="am-sumrow am-total-row am-total-toggle" id="amSumToggle" type="button" aria-expanded="true" aria-controls="amSumList">
-              <span class="am-tl"><svg class="am-caret" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>New monthly <span class="am-chgcount" id="amChgCount">· no changes</span></span>
-              <span id="amNewMonthly">$39.00 / mo</span>
-            </button>
-          </div>
-        </div>
-        <div class="am-bar">
-          <span class="spacer"></span>
-          <button class="btn ter" id="amCancel1">Cancel</button>
-          <button class="btn" id="amNext">Next: Review →</button>
-        </div>
-      </div>
-      <!-- footer: step 2 -->
-      <div class="am-footpanel" id="amFoot2" hidden>
-        <div class="am-bar">
-          <button class="btn ter" id="amBack">← Back</button>
-          <span class="spacer"></span>
-          <button class="btn" id="amConfirm">Confirm — $0.00 due now</button>
-        </div>
-      </div>
-      <!-- footer: success -->
-      <div class="am-footpanel" id="amFootDone" hidden>
-        <div class="am-bar"><span class="spacer"></span><button class="btn" id="amDone">Done</button></div>
-      </div>
     </div>
   </div>
 </div>
@@ -2518,24 +2042,21 @@
         <button class="fs-close" id="nlClose" aria-label="Close">✕</button>
       </div>
     </div>
-    <div class="nl-stepbar" id="nlStepbar"><div class="am-steps nl-steps" id="nlSteps"></div></div>
-    <div class="nl-main">
-      <!-- stepper variant A: vertical summary rail (replaces the horizontal bar) -->
-      <aside class="nl-rail" id="nlRail" aria-label="Steps" hidden></aside>
-      <div class="fs-body" id="nlBody">
-        <!-- STEP 1 — PRODUCT (click a card advances; no Continue on this step) -->
-        <div id="nlStep1"><div class="nl-prodgrid" id="nlProdCards"></div><div id="nlProdExtra"></div></div>
-        <!-- STEP 2 — PLAN / PACKAGE -->
-        <div id="nlStep2" hidden>
-          <div class="plangrid" id="nlPlanCards"></div>
-          <!-- TODO: confirm with product that these PE features apply to Maker/Prototype -->
-          <div id="nlPlanExtra"></div>
-        </div>
-        <!-- STEP 3 — CUSTOMIZE (manage add-ons content, seeded from the chosen plan) -->
-        <div id="nlStep3" hidden></div>
-        <!-- STEP 4 — REVIEW & PAY -->
-        <div id="nlStep4" hidden></div>
+    <!-- the one stepper: a thin progress line + "Step N of M · Label" -->
+    <div class="nl-stepbar" id="nlStepbar"><div id="nlSteps"></div></div>
+    <div class="fs-body" id="nlBody">
+      <!-- STEP 1 — PRODUCT (click a card advances; no Continue on this step) -->
+      <div id="nlStep1"><div class="nl-prodgrid" id="nlProdCards"></div><div id="nlProdExtra"></div></div>
+      <!-- STEP 2 — PLAN / PACKAGE -->
+      <div id="nlStep2" hidden>
+        <div class="plangrid" id="nlPlanCards"></div>
+        <!-- TODO: confirm with product that these PE features apply to Maker/Prototype -->
+        <div id="nlPlanExtra"></div>
       </div>
+      <!-- STEP 3 — CUSTOMIZE (manage add-ons content, seeded from the chosen plan) -->
+      <div id="nlStep3" hidden></div>
+      <!-- STEP 4 — REVIEW & PAY -->
+      <div id="nlStep4" hidden></div>
     </div>
     <div class="nl-foot" id="nlFoot">
       <button class="btn sec" id="nlBack" hidden>Back</button>
@@ -2570,61 +2091,33 @@
   <h4>Prototype settings</h4>
   <div class="sp-note">Prototype-only — not part of the product UI.</div>
 
-  <!-- deprecated / alternative explorations live apart from the working list -->
-  <div class="seg" style="margin-top:14px" role="radiogroup" aria-label="Settings section">
-    <label><input type="radio" name="spTab" value="main" checked><span>Settings</span></label>
-    <label><input type="radio" name="spTab" value="archive"><span>Archive</span></label>
-  </div>
-
-  <div id="spMain">
-    <!-- global entry points; every other page is reached by navigating the flow -->
-    <div class="sp-label" style="margin-top:14px">Dashboard (Home)</div>
-    <div class="sp-pick" role="radiogroup" aria-label="Dashboard">
-      <label class="sp-opt"><input type="radio" name="detailsPage" value="dashboard" checked><span>Dashboard — small account (A)</span></label>
-      <label class="sp-opt"><input type="radio" name="detailsPage" value="dashB"><span>Dashboard — large account (B)</span></label>
-      <label class="sp-opt"><input type="radio" name="detailsPage" value="dashempty"><span>Dashboard — new user (empty)</span></label>
-      <label class="sp-opt"><input type="radio" name="detailsPage" value="dashgrantpending"><span>Dashboard — grant pending</span></label>
-      <label class="sp-opt"><input type="radio" name="detailsPage" value="dashgrant"><span>Dashboard — grant approved</span></label>
-      <div class="sp-grouphead">Products</div>
-      <label class="sp-opt"><input type="radio" name="detailsPage" value="products3"><span>Product-first (neutral)</span></label>
-      <div class="sp-grouphead">Account</div>
-      <!-- dev-only: plays the confirmation click from the new address -->
-      <label class="sp-opt"><button class="link" id="devConfirmEmail" disabled>Confirm email change</button></label>
-      <div class="sp-grouphead">Wizard stepper</div>
-      <label class="sp-opt"><input type="radio" name="nlStepper" value="rail" checked><span>A — Summary rail</span></label>
-      <label class="sp-opt"><input type="radio" name="nlStepper" value="progress"><span>B — Progress line</span></label>
-      <label class="sp-opt"><input type="radio" name="nlStepper" value="numbered"><span>C — Numbered steps</span></label>
-      <!-- plan variants only exist in the plans context (see syncSettingsContext) -->
-      <div class="sp-ctx" id="spPlanCtx" hidden>
-        <div class="sp-grouphead">Subscription plans</div>
-        <label class="sp-opt"><input type="radio" name="detailsPage" value="maker"><span>Maker</span></label>
-        <label class="sp-opt"><input type="radio" name="detailsPage" value="prototype"><span>Prototype</span></label>
-        <label class="sp-opt"><input type="radio" name="detailsPage" value="pilot"><span>Pilot</span></label>
-        <label class="sp-opt"><input type="radio" name="detailsPage" value="startup"><span>Startup</span></label>
-        <label class="sp-opt"><input type="radio" name="detailsPage" value="business"><span>Business</span></label>
-        <label class="sp-opt"><input type="radio" name="detailsPage" value="prototypeaddons"><span>Prototype + add-ons</span></label>
-        <div class="sp-grouphead">Perpetual</div>
-        <label class="sp-opt"><input type="radio" name="detailsPage" value="perp"><span>Perpetual license details</span></label>
-      </div>
+  <!-- global entry points; every other page is reached by navigating the flow -->
+  <div class="sp-label" style="margin-top:14px">Dashboard (Home)</div>
+  <div class="sp-pick" role="radiogroup" aria-label="Dashboard">
+    <label class="sp-opt"><input type="radio" name="detailsPage" value="dashboard" checked><span>Dashboard — small account (A)</span></label>
+    <label class="sp-opt"><input type="radio" name="detailsPage" value="dashB"><span>Dashboard — large account (B)</span></label>
+    <label class="sp-opt"><input type="radio" name="detailsPage" value="dashempty"><span>Dashboard — new user (empty)</span></label>
+    <label class="sp-opt"><input type="radio" name="detailsPage" value="dashgrantpending"><span>Dashboard — grant pending</span></label>
+    <label class="sp-opt"><input type="radio" name="detailsPage" value="dashgrant"><span>Dashboard — grant approved</span></label>
+    <div class="sp-grouphead">Products</div>
+    <label class="sp-opt"><input type="radio" name="detailsPage" value="products3"><span>Product-first (neutral)</span></label>
+    <div class="sp-grouphead">Account</div>
+    <!-- dev-only: plays the confirmation click from the new address -->
+    <label class="sp-opt"><button class="link" id="devConfirmEmail" disabled>Confirm email change</button></label>
+    <!-- plan variants only exist in the plans context (see syncSettingsContext) -->
+    <div class="sp-ctx" id="spPlanCtx" hidden>
+      <div class="sp-grouphead">Subscription plans</div>
+      <label class="sp-opt"><input type="radio" name="detailsPage" value="maker"><span>Maker</span></label>
+      <label class="sp-opt"><input type="radio" name="detailsPage" value="prototype"><span>Prototype</span></label>
+      <label class="sp-opt"><input type="radio" name="detailsPage" value="pilot"><span>Pilot</span></label>
+      <label class="sp-opt"><input type="radio" name="detailsPage" value="startup"><span>Startup</span></label>
+      <label class="sp-opt"><input type="radio" name="detailsPage" value="business"><span>Business</span></label>
+      <label class="sp-opt"><input type="radio" name="detailsPage" value="prototypeaddons"><span>Prototype + add-ons</span></label>
+      <div class="sp-grouphead">Perpetual</div>
+      <label class="sp-opt"><input type="radio" name="detailsPage" value="perp"><span>Perpetual license details</span></label>
     </div>
   </div>
 
-  <div id="spArchive" hidden>
-    <div class="sp-note" style="margin-top:14px">Deprecated explorations — kept for reference, not part of the flow.</div>
-    <div class="sp-pick" role="radiogroup" aria-label="Archived variants">
-      <div class="sp-grouphead">Flow (archived)</div>
-      <label class="sp-opt"><input type="radio" name="flowMode" value="topbar" checked><span>Top-bar navigation</span></label>
-      <label class="sp-opt"><input type="radio" name="flowMode" value="overlay"><span>Full-screen overlays (archived)</span></label>
-      <div class="sp-grouphead">Products</div>
-      <label class="sp-opt"><input type="radio" name="detailsPage" value="products"><span>Grouped (as now)</span></label>
-      <label class="sp-opt"><input type="radio" name="detailsPage" value="products2"><span>One column per field</span></label>
-      <label class="sp-opt"><input type="radio" name="detailsPage" value="portfolio"><span>Portfolio (grouped by product)</span></label>
-      <!-- the modal Manage add-ons is an archived exploration; the flow uses full-screen -->
-      <div class="sp-grouphead">Manage add-ons</div>
-      <label class="sp-opt"><input type="radio" name="addonsStyle" value="fullscreen" checked><span>Full-screen (flow)</span></label>
-      <label class="sp-opt"><input type="radio" name="addonsStyle" value="modal"><span>Modal (archived)</span></label>
-    </div>
-  </div>
 </div>
 
 <script>
@@ -2816,161 +2309,6 @@
   if(deleteAcctBtn) deleteAcctBtn.addEventListener('click', openDeleteConfirm);
 
   // ===== Manage add-ons: real two-step flow =====
-  var AM = (function(){
-    var BASE = 39;                 // Prototype base $/mo
-    var PRORATE = 16 / 31;         // 16 of 31 days remain in the cycle (to 2026-08-30)
-    var INCL = { prod:1, dev:0, ai:2 };
-    var MIN  = { prod:1, dev:0, ai:2 };
-    var MAX  = { prod:9, dev:9, ai:99 };
-    var ADD  = { edge:7, trendz:12 };
-    // PLACEHOLDER per-unit prices (prototype only — the real portal supplies these):
-    //   production instance +$29/mo each · development instance +$15/mo each · AI block +$5/mo per 1M
-    var UNIT = { prod:29, dev:15, ai:5 };
-    var NAME = { edge:'Edge Computing', trendz:'Trendz Analytics' };
-    var s = { prod:1, dev:0, ai:2, edge:false, trendz:false };
-
-    var ov = $('#addonsOverlay');
-    var lastFocus = null;
-
-    function money(n){ return '$' + n.toFixed(2); }
-    function extras(){ return { prod:s.prod-INCL.prod, dev:s.dev-INCL.dev, ai:s.ai-INCL.ai }; }
-    function addonMonthly(){ return (s.edge?ADD.edge:0) + (s.trendz?ADD.trendz:0); }
-    function extrasMonthly(){ var e=extras(); return e.prod*UNIT.prod + e.dev*UNIT.dev + e.ai*UNIT.ai; }
-    function deltaMonthly(){ return addonMonthly() + extrasMonthly(); }   // everything above base
-    function newMonthly(){ return BASE + deltaMonthly(); }
-    function dueToday(){ return deltaMonthly() * PRORATE; }               // prorated change for the cycle
-
-    function changes(){
-      var out = [], e = extras();
-      if(s.edge)   out.push({ t:'+ Edge Computing',   amt:ADD.edge });
-      if(s.trendz) out.push({ t:'+ Trendz Analytics', amt:ADD.trendz });
-      if(e.prod>0) out.push({ t:'+'+e.prod+' production instance'+(e.prod>1?'s':''), amt:e.prod*UNIT.prod, unit:UNIT.prod });
-      if(e.dev>0)  out.push({ t:'+'+e.dev+' development instance'+(e.dev>1?'s':''),  amt:e.dev*UNIT.dev, unit:UNIT.dev });
-      if(e.ai>0)   out.push({ t:'+'+e.ai+' AI block'+(e.ai>1?'s':'')+' (1M)',         amt:e.ai*UNIT.ai, unit:UNIT.ai });
-      return out;
-    }
-
-    // ---- render step 1 footer + controls ----
-    function render(){
-      $('#amValProd').textContent = s.prod;
-      $('#amValDev').textContent  = s.dev;
-      $('#amValAi').textContent   = s.ai;
-      $('#amEdge').checked   = s.edge;
-      $('#amTrendz').checked = s.trendz;
-      $('#amCardEdge').classList.toggle('on', s.edge);
-      $('#amCardTrendz').classList.toggle('on', s.trendz);
-
-      // stepper disabled states (scoped to this modal)
-      $$('.stepper', ov).forEach(function(st){
-        var f = st.getAttribute('data-field');
-        st.querySelector('[data-dir="-1"]').disabled = s[f] <= MIN[f];
-        st.querySelector('[data-dir="1"]').disabled  = s[f] >= MAX[f];
-      });
-
-      var active = (s.edge?1:0) + (s.trendz?1:0);
-      $('#amAddonCount').textContent = '2 available · ' + active + ' active';
-
-      var ch = changes();
-      $('#amNewMonthly').textContent = money(newMonthly()) + ' / mo';
-      $('#amChgCount').textContent = ch.length ? ('· '+ch.length+' change'+(ch.length>1?'s':'')) : '· no changes';
-
-      var list = $('#amSumList');
-      var html = '<div class="am-sumrow cur"><span>Current</span><span>'+money(BASE)+' / mo</span></div>';
-      ch.forEach(function(c){ html += '<div class="am-sumrow"><span>'+c.t+'</span><span>+'+money(c.amt)+'</span></div>'; });
-      if(!ch.length) html += '<div class="am-sumrow cur"><span>No changes yet</span><span></span></div>';
-      list.innerHTML = html;
-    }
-
-    // ---- render step 2 receipt ----
-    function render2(){
-      var ch = changes();
-
-      var rows = '';
-      ch.forEach(function(c){
-        var left = c.unit ? (c.t + ' × ' + money(c.unit)) : c.t; rows += '<div class="am-orow"><div>'+left+'</div><div>'+money(c.amt)+'</div></div>';
-      });
-      $('#amOrderLines').innerHTML = rows;
-
-      $('#amRecMonthly').textContent = money(newMonthly()) + ' / mo';
-      $('#amDueVal').textContent = money(dueToday());
-      $('#amConfirm').textContent = 'Confirm — ' + money(dueToday()) + ' due now';
-      $('#amSuccessDue').textContent = 'Prorated charge today: ' + money(dueToday()) + '.';
-    }
-
-    // ---- step navigation ----
-    function goStep(n){
-      $('#amStep1').hidden = n!==1;
-      $('#amStep2').hidden = n!==2;
-      $('#amSuccess').hidden = true;
-      $('#amFoot1').hidden = n!==1;
-      $('#amFoot2').hidden = n!==2;
-      $('#amFootDone').hidden = true;
-      $('#amStepName').textContent = n===1 ? 'Adjust' : 'Review';
-      $('#amStepCounter').textContent = 'Step ' + n + ' / 2';
-      if(n===2) render2();
-      $('#amBody').scrollTop = 0;
-    }
-
-    function showSuccess(){
-      $('#amStep1').hidden = true;
-      $('#amStep2').hidden = true;
-      $('#amSuccess').hidden = false;
-      $('#amFoot1').hidden = true;
-      $('#amFoot2').hidden = true;
-      $('#amFootDone').hidden = false;
-      $('#amStepName').textContent = 'Done';
-      $('#amStepCounter').textContent = '';
-      $('#amBody').scrollTop = 0;
-      $('#amDone').focus();
-    }
-
-    function open(){
-      lastFocus = document.activeElement;
-      render();
-      goStep(1);
-      // keep the "New monthly" changes list expanded by default
-      $('#amSumList').hidden = false;
-      $('#amSumToggle').setAttribute('aria-expanded', 'true');
-      ov.hidden = false;
-      $('#amClose').focus();
-    }
-    function close(){
-      ov.hidden = true;
-      if(lastFocus && lastFocus.focus) lastFocus.focus();
-    }
-
-    // ---- wiring ----
-    $$('.stepper button', ov).forEach(function(btn){
-      btn.addEventListener('click', function(){
-        var st = btn.closest('.stepper'), f = st.getAttribute('data-field');
-        var next = s[f] + parseInt(btn.getAttribute('data-dir'), 10);
-        s[f] = Math.max(MIN[f], Math.min(MAX[f], next));
-        render();
-      });
-    });
-    $$('#addonsOverlay input[data-addon]').forEach(function(cb){
-      cb.addEventListener('change', function(){ s[cb.getAttribute('data-addon')] = cb.checked; render(); });
-    });
-
-    $('#amSumToggle').addEventListener('click', function(){
-      var l = $('#amSumList'), open = l.hidden;
-      l.hidden = !open;
-      this.setAttribute('aria-expanded', open ? 'true' : 'false');
-    });
-
-    $('#amNext').addEventListener('click', function(){ goStep(2); });
-    $('#amBack').addEventListener('click', function(){ goStep(1); });
-    $('#amConfirm').addEventListener('click', showSuccess);
-    $('#amDone').addEventListener('click', close);
-    $('#amCancel1').addEventListener('click', close);
-    $('#amClose').addEventListener('click', close);
-    ov.addEventListener('click', function(e){ if(e.target===ov) close(); });
-    document.addEventListener('keydown', function(e){ if(e.key==='Escape' && !ov.hidden && $('#overlay').hidden) close(); });
-
-    return { open: open };
-  })();
-
-  // ===== Manage add-ons: FULL-SCREEN variant (Startup plan) =====
   var AMF = (function(){
     var BASE = 39;                 // reseeded per licence in seed() — Prototype default
     var PRORATE = 16 / 31;         // 16 of 31 days remain in the cycle (to 2026-08-30)
@@ -3099,20 +2437,15 @@
     return { open: open };
   })();
 
-  // ----- which Manage add-ons variant opens (prototype setting, in-memory only) -----
-  var addonsStyle = 'fullscreen';   // the flow's Manage add-ons; modal is archived
-  function openManageAddons(lic){ if(addonsStyle === 'fullscreen'){ AMF.open(lic); } else { AM.open(); } }
+  function openManageAddons(lic){ AMF.open(lic); }
 
-  /* ---------- prototype settings: add-ons style ---------- */
+  /* ---------- prototype settings panel ---------- */
   var gearBtn = $('#gearBtn'), settingsPanel = $('#settingsPanel');
   function toggleSettings(open){ settingsPanel.hidden = !open; gearBtn.setAttribute('aria-expanded', open ? 'true' : 'false'); }
   gearBtn.addEventListener('click', function(e){ e.stopPropagation(); toggleSettings(settingsPanel.hidden); });
   settingsPanel.addEventListener('click', function(e){ e.stopPropagation(); });
   document.addEventListener('click', function(){ if(!settingsPanel.hidden) toggleSettings(false); });
   document.addEventListener('keydown', function(e){ if(e.key==='Escape' && !settingsPanel.hidden) toggleSettings(false); });
-  $$('input[name="addonsStyle"]').forEach(function(r){
-    r.addEventListener('change', function(){ if(r.checked) addonsStyle = r.value; });
-  });
 
   /* ---------- prototype settings: which details page renders ----------
      Every subscription plan renders the same details template; only the plan's
@@ -3130,12 +2463,8 @@
     // the plan cards stay buyable); approved is a populated dashboard (dataset G)
     dashgrantpending: { kind:'dashempty', grant:'pending' },
     dashgrant:        { kind:'dash', variant:'G' },
-    // Products list — inner content only, no chrome. Two layout variants:
-    // 1 = grouped (name+label, renewal+price+billing stacked); 2 = one field per column.
-    products:  { kind:'products', variant:1 },
-    products2: { kind:'products', variant:2 },
-    products3: { kind:'products', variant:3 },
-    portfolio: { kind:'portfolio' },
+    // Licenses list — inner content only, no chrome
+    products3: { kind:'products' },
     invoices:  { kind:'invoices' },
     activity:  { kind:'activity' },
     users:     { kind:'users' },
@@ -3162,7 +2491,6 @@
                        extras:{ prod:'2', ai:'2M' }, whitelabel:false, edge:true, trendz:true }
   };
   var detailsPage = 'dashboard';   // the prototype opens on the populated dashboard
-  var prevPage = 'dashboard';      // the page before it — the settings back button's target
 
   // entitlement amounts may carry a trailing "M" (AI) or thousands commas (devices)
   function parseUnit(v){ v = String(v == null ? '0' : v); var m = /M$/i.test(v); var n = parseFloat(v.replace(/,/g, '').replace(/M$/i, '')) || 0; return { n:n, m:m }; }
@@ -3442,37 +2770,20 @@
   }
 
   /* ---------- presentation layer ----------------------------------------------
-     Each page's content lives in exactly ONE node (PAGE_NODES) — there is no
-     per-flow copy of any page. The shell only decides *where* that node is
-     presented: today it is mounted in the top-bar shell's scroll region; the
-     overlay flow will mount the same node into an overlay host, so adding it
-     means adding a host + an entry in FLOW_HOSTS, not duplicating markup.
+     Each page's content lives in exactly ONE node (PAGE_NODES); presentPage shows
+     that node and hides the rest, all inside the top-bar shell's scroll region.
      `sub` and `perp` deliberately share #appView — one details template. */
   var PAGE_NODES = {
     dash:'#dashView', dashempty:'#dashEmptyView',
-    products:'#licensesView', portfolio:'#portfolioView',
+    products:'#licensesView',
     invoices:'#invoicesView', activity:'#activityView', users:'#usersView',
     profile:'#profileView', security:'#securityView', billing:'#billingView',
     privacy:'#privacyView', terms:'#termsView', eula:'#eulaView',
     sub:'#appView', perp:'#appView'
   };
-  var flowMode = 'topbar';                    // 'topbar' = pages under the nav bar, 'overlay' = full-screen overlay
-  var FLOW_HOSTS = { topbar:'#shellMain', overlay:'#pgoBody' };
-  /* Overlay chrome: the bar carries the AREA title, so drilling from Licenses into
-     a licence keeps saying "Licenses" (and the close still exits to the dashboard).
-     A page is at the overlay root unless its own back goes somewhere other than the
-     dashboard — today that means the detail pages, which keep back + their title. */
-  var AREA_FOR_KIND = { products:'licenses', portfolio:'licenses', sub:'licenses', perp:'licenses',
-                        invoices:'invoices', activity:'activity', users:'users',
-                        profile:'profile', security:'security', billing:'billing',
-                        privacy:'legal', terms:'legal', eula:'legal' };
-  var AREA_TITLES = { licenses:'Licenses', invoices:'Invoices', activity:'Activity', users:'Users',
-                      profile:'Account', security:'Security', billing:'Billing & payment', legal:'Legal' };
-  // Security is one level deeper than Account, so it keeps its own back (back ≠ close)
-  function overlayLevel(kind){ return (kind === 'sub' || kind === 'perp' || kind === 'security') ? 'deep' : 'root'; }
   function isBaseKind(kind){ return kind === 'dash' || kind === 'dashempty'; }
   // which top-bar nav item owns each page
-  var NAV_FOR_KIND = { dash:'home', dashempty:'home', products:'licenses', portfolio:'licenses',
+  var NAV_FOR_KIND = { dash:'home', dashempty:'home', products:'licenses',
                        sub:'licenses', perp:'licenses', invoices:'invoices', activity:'activity', users:'users' };
   function syncTopNav(kind){
     var active = NAV_FOR_KIND[kind] || '';
@@ -3486,34 +2797,14 @@
       if(on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
     });
   }
-  // Flow 2 has no nav items: navigation happens from the dashboard and profile menu
-  function syncFlowChrome(){
-    var nav = $('.tnav');
-    if(nav) nav.hidden = flowMode === 'overlay';
-  }
-  /* Mount the page node in whichever shell the current flow uses and show only it.
-     In the overlay flow every page except the dashboard rides in the single
-     overlay, so drilling deeper replaces its content instead of stacking. */
+  /* Show the requested page node in the shell and hide every other one. */
   function presentPage(kind){
-    var overlayFlow = flowMode === 'overlay', base = isBaseKind(kind);
-    var target = $(PAGE_NODES[kind]), shell = $('#shellMain'), overlay = $('#pageOverlay'), obody = $('#pgoBody');
+    var target = $(PAGE_NODES[kind]), shell = $('#shellMain');
     Object.keys(PAGE_NODES).forEach(function(k){
       var el = $(PAGE_NODES[k]);
       if(el) el.hidden = el !== target;
     });
-    if(overlayFlow && !base){
-      // the dashboard stays mounted underneath; the overlay covers it opaquely
-      var dash = $(PAGE_NODES.dash);
-      if(dash){ dash.hidden = false; if(dash.parentNode !== shell) shell.appendChild(dash); }
-      if(target && target.parentNode !== obody) obody.appendChild(target);
-      if(overlay) overlay.hidden = false;
-      $('#pgoTitle').textContent = AREA_TITLES[AREA_FOR_KIND[kind]] || '';
-      obody.setAttribute('data-level', overlayLevel(kind));
-      obody.scrollTop = 0;
-    } else {
-      if(overlay) overlay.hidden = true;
-      if(target && target.parentNode !== shell) shell.appendChild(target);
-    }
+    if(target && target.parentNode !== shell) shell.appendChild(target);
     var foot = $('#shellFoot');   // appendChild above would otherwise leave it above the page
     if(foot && foot.parentNode === shell) shell.appendChild(foot);
     syncTopNav(kind);
@@ -3541,7 +2832,7 @@
       renderDatasetViews();
       return;
     }
-    if(p.kind === 'products'){ productsVariant = p.variant; renderProducts(); return; }
+    if(p.kind === 'products'){ renderProducts(); return; }
     if(p.kind !== 'sub' && p.kind !== 'perp') return;   // other pages are static content
     if(detailsPage !== 'licenseView') activeLicense = licFromNamed(detailsPage);
     renderLicenseDetails(activeLicense);
@@ -3552,7 +2843,6 @@
   $$('input[name="detailsPage"]').forEach(function(r){
     r.addEventListener('change', function(){
       if(!r.checked) return;
-      if(r.value !== detailsPage) prevPage = detailsPage;
       detailsPage = r.value;
       // Home returns to whichever dashboard state is selected, grant states included
       if(PAGES[r.value] && isBaseKind(PAGES[r.value].kind)) homeKey = r.value;
@@ -3565,15 +2855,6 @@
     var p = PAGES[detailsPage] || {}, ctx = $('#spPlanCtx');
     if(ctx) ctx.hidden = !(p.kind === 'sub' || p.kind === 'perp');
   }
-  // switching flows changes presentation only: same pages, same links, same data
-  $$('input[name="flowMode"]').forEach(function(r){
-    r.addEventListener('change', function(){
-      if(!r.checked) return;
-      flowMode = r.value;
-      syncFlowChrome();
-      applyDetailsPage();
-    });
-  });
   var grantViewBtn = $('#grantViewBtn');
   if(grantViewBtn) grantViewBtn.addEventListener('click', function(){ var g = licById('G1'); if(g) openLicense(g); });
   var grantDismissBtn = $('#grantDismissBtn');
@@ -3584,20 +2865,6 @@
   var grantLearnBtn = $('#grantLearnBtn');
   if(grantLearnBtn) grantLearnBtn.addEventListener('click', function(){
     openModal('Community Grant', '<p>Placeholder — the Community Grant programme page is not part of this prototype.</p>');
-  });
-  var pgoClose = $('#pgoClose');
-  if(pgoClose) pgoClose.addEventListener('click', function(){ goToPage(homeKey); });
-  document.addEventListener('keydown', function(e){
-    if(e.key === 'Escape' && !$('#pageOverlay').hidden && $('#overlay').hidden && $('#fsAddons').hidden && $('#nlModal').hidden && $('#payOverlay').hidden){ goToPage(homeKey); }
-  });
-  syncFlowChrome();
-  $$('input[name="spTab"]').forEach(function(r){
-    r.addEventListener('change', function(){
-      if(!r.checked) return;
-      var archive = r.value === 'archive';
-      $('#spMain').hidden = archive;
-      $('#spArchive').hidden = !archive;
-    });
   });
   /* ============ Dashboard density datasets (single source per variant) ============
      Two populated dashboards: A (small account) and B (large account, labelled).
@@ -3779,11 +3046,8 @@
   }
   function renderDashLicenses(){
     var head=$('#dashLicHead'), body=$('#dashLicBody'); if(!head||!body) return;
-    var prev=productsVariant; productsVariant=3;
     head.innerHTML = headHtml();
-    var shown = dashLicList();
-    body.innerHTML = shown.map(rowHtml).join('');
-    productsVariant=prev;
+    body.innerHTML = dashLicList().map(rowHtml).join('');
   }
   // a dataset may legitimately have no invoices (the grant is free) — say so
   function invEmptyRow(){
@@ -3865,7 +3129,6 @@
     _goToPage(key);
   }
   function _goToPage(key){
-    if(key !== detailsPage) prevPage = detailsPage;   // one step back, no stack
     detailsPage = key;
     var radio = $('input[name="detailsPage"][value="' + key + '"]');
     if(radio) radio.checked = true;
@@ -3892,10 +3155,6 @@
   var backBtn = $('#backBtn');
   // not a hard-coded list any more — back follows where the licence was opened from
   if(backBtn) backBtn.addEventListener('click', function(){ goToPage(licenseOrigin || 'products3'); });
-  /* Profile settings and Billing & payment are the exception: opened from the
-     profile menu from anywhere, with no nav tab to show where you are or to lead
-     out again. Their back means "the page I came from" — one step, no stack. */
-  $$('.lic-back').forEach(function(b){ b.addEventListener('click', function(){ goToPage(prevPage); }); });
   // shared shell: the logo is a persistent Home link from anywhere. Distinct from the
   // detail-page back button (which returns to the previous list) — both coexist.
   // footer legal links (the profile menu no longer carries them)
@@ -3914,39 +3173,9 @@
     });
   });
 
-  // single data source — every subscription plan + perpetual license. `goto` is the
-  // details-page key each row routes to. Labels are example user tags. `created` is
-  // newest-first (the default sort).
-  var PRODUCTS = [
-    { goto:'business',        product:'ThingsBoard PE', type:'Subscription', name:'Business',  label:'Global',     prod:'0/3', dev:'0/0', renew:'Renews Sep 20 2026', price:'$499.00 / mo', billing:'auto-pay', created:'Aug 13 2026' },
-    { goto:'startup',         product:'ThingsBoard PE', type:'Subscription', name:'Startup',   label:'Production', prod:'0/2', dev:'0/0', renew:'Renews Sep 13 2026', price:'$299.00 / mo', billing:'auto-pay', created:'Aug 10 2026' },
-    { goto:'pilot',           product:'ThingsBoard PE', type:'Subscription', name:'Pilot',     label:'EU pilot',   prod:'0/1', dev:'0/0', renew:'Renews Sep 06 2026', price:'$99.00 / mo',  billing:'auto-pay', created:'Aug 06 2026' },
-    { goto:'prototypeaddons', product:'ThingsBoard PE', type:'Subscription', name:'Prototype', label:'Staging',    prod:'0/3', dev:'0/0', renew:'Renews Sep 05 2026', price:'$126.00 / mo', billing:'auto-pay', created:'Aug 02 2026' },
-    { goto:'prototype',       product:'ThingsBoard PE', type:'Subscription', name:'Prototype', label:'Dev',        prod:'0/1', dev:'0/0', renew:'Renews Sep 03 2026', price:'$39.00 / mo',  billing:'auto-pay', created:'Jul 30 2026' },
-    { goto:'maker',           product:'ThingsBoard PE', type:'Subscription', name:'Maker',     label:'Sandbox',    prod:'0/1', dev:'0/0', renew:'Renews Aug 30 2026', price:'$10.00 / mo',  billing:'auto-pay', created:'Jul 28 2026' },
-    { goto:'perp',            product:'ThingsBoard PE', type:'Perpetual',    name:'ThingsBoard PE Perpetual License', label:'On-prem', prod:'0/1', dev:'0/0', renew:'Updates until Jul 27 2027', price:'one-time', billing:'paid', created:'Jul 27 2026' }
-  ];
-  // Variant 3 (product-neutral) has its own full row set — every product + package:
-  //   Perpetual   → ThingsBoard / TBMQ, package "Professional edition" each
-  //   Subscription→ ThingsBoard (Maker/Prototype/Pilot/Startup/Business) · TBMQ (TBMQ PE)
-  //   Offline     → Viaanix (Offline)
-  // ThingsBoard rows route to real detail pages; TBMQ / Viaanix have none in this
-  // prototype yet, so those rows open a stub. Variants 1 & 2 stay ThingsBoard-only
-  // (they show product-specific entitlement columns).
-  var PRODUCTS_V3 = [
-    { goto:'maker',     product:'ThingsBoard', type:'Subscription', name:'Maker',                label:'Sandbox',     created:'Jul 28 2026' },
-    { goto:'prototype', product:'ThingsBoard', type:'Subscription', name:'Prototype',            label:'Dev',         created:'Jul 30 2026' },
-    { goto:'pilot',     product:'ThingsBoard', type:'Subscription', name:'Pilot',                label:'EU pilot',    created:'Aug 06 2026' },
-    { goto:'startup',   product:'ThingsBoard', type:'Subscription', name:'Startup',              label:'Production',  created:'Aug 10 2026' },
-    { goto:'business',  product:'ThingsBoard', type:'Subscription', name:'Business',             label:'Global',      created:'Aug 13 2026' },
-    { goto:'perp',      product:'ThingsBoard', type:'Perpetual',    name:'Professional edition', label:'On-prem',     created:'Jul 27 2026' },
-    { goto:'',          product:'TBMQ',        type:'Subscription', name:'TBMQ PE',              label:'Broker prod', created:'Aug 08 2026' },
-    { goto:'',          product:'TBMQ',        type:'Perpetual',    name:'Professional edition', label:'',            created:'Aug 04 2026' },
-  ];
-  // variant 3 uses PRODUCTS_V3; variants 1 & 2 stay ThingsBoard-only. Always Created-desc.
+  // the list always reads the current dataset, Created-desc
   function currentProducts(){
-    var list = productsVariant === 3 ? DATA().licenses : PRODUCTS;
-    return list.slice().sort(function(a, b){ return dateKey(b.created) - dateKey(a.created); });
+    return DATA().licenses.slice().sort(function(a, b){ return dateKey(b.created) - dateKey(a.created); });
   }
 
   var KEBAB = '<svg class="icon" viewBox="0 0 24 24" style="fill:currentColor;stroke:none"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg>';
@@ -3954,7 +3183,6 @@
   function menuItems(p){
     var type = p && typeof p === 'object' ? p.type : p;
     if(type === 'Perpetual') return '<button role="menuitem" data-stub="Add capacity">Add capacity</button><button role="menuitem" data-stub="Renew software updates">Renew software updates</button>';
-    if(type === 'Offline')   return '<button role="menuitem" data-stub="Manage license">Manage license</button><button role="menuitem" data-stub="Cancel license">Cancel license</button>';
     var last = (p && p.status==='canceled')
       ? '<button role="menuitem" data-stub="Renew subscription">Renew subscription</button>'
       : '<button role="menuitem" data-cancel>Cancel subscription</button>';
@@ -3976,63 +3204,31 @@
       + 'data-goto="' + (p.goto || '') + '" data-product="' + (p.product || '') + '" data-type="' + p.type + '" data-status="' + (p.status || 'active') + '" tabindex="0" aria-label="Open ' + (p.product ? p.product + ' ' : '') + p.name + ' details">';
   }
 
-  // Products state: layout variant + Type filter + canceled toggle
-  var productsVariant = 3;   // product-first is the variant the flow uses
+  // Products state: Type filter + canceled toggle
   // one type at a time: null = no chip selected = every licence shown. Clicking the
   // active chip clears it; clicking the other one switches.
   var licType = null;
   var licShowCanceled = false;
 
+  /* Product-first, product-neutral: no product-specific columns. The label lives
+     under Product; the next date has its own State column, which is what lets the
+     Status column carry only Active / Canceled. */
   function headHtml(){
-    if(productsVariant === 3){
-      // variant 3 — product-first, product-neutral (no product-specific columns).
-      // The label lives under Product; the next date has its own column (State),
-      // which is what lets the Status column carry only Active / Canceled.
-      return '<tr><th class="lic-prodhead">Product</th><th>License</th><th>Type</th><th>Status</th>'
-        + '<th>State</th><th>Created</th>'
-        + '<th aria-label="Actions"></th></tr>';
-    }
-    if(productsVariant === 2){
-      // variant 2 — nothing grouped: one field per column (Product first, no renewal)
-      return '<tr><th>Product</th><th>Name</th><th>Label</th><th>Type</th>'
-        + '<th class="num">Prod</th><th class="num">Dev</th><th>Status</th>'
-        + '<th class="num">Price</th><th>Billing</th><th>Created</th>'
-        + '<th aria-label="Actions"></th></tr>';
-    }
-    // variant 1 — grouped: name+label in one cell, renewal+price+billing stacked
-    return '<tr><th>Plan / Package</th><th>Type</th>'
-      + '<th class="num">Prod</th><th class="num">Dev</th><th>Status</th><th>Renewal / Updates</th><th>Created</th>'
+    return '<tr><th class="lic-prodhead">Product</th><th>License</th><th>Type</th><th>Status</th>'
+      + '<th>State</th><th>Created</th>'
       + '<th aria-label="Actions"></th></tr>';
   }
   function rowHtml(p){
+    // Product name, label underneath (muted "—" keeps the two-line rhythm when a
+    // licence has no label yet; the real "+ Add label" affordance is on details).
+    var prodCell = '<td class="lic-prodcell"><div class="lp-name">' + (p.product || '') + '</div>'
+      + '<div class="lic-prodlabel">' + (p.label ? esc(p.label) : '<span class="muted">—</span>') + '</div></td>';
+    // the licence column is the plan/package; a grant adds what it has instead of a price
+    var lic = '<td><div class="lp-name">' + p.name + '</div>'
+      + (p.grant ? '<div class="lp-meta">Free &middot; ' + p.limits + '</div>' : '') + '</td>';
     var typeCell = '<td><span class="chip">' + p.type + '</span></td>';
-    var useCells = '<td class="num lic-num">' + p.prod + '</td><td class="num lic-num">' + p.dev + '</td>';
-    var statusCell = '<td><span class="pill">Active</span></td>';
     var createdCell = '<td class="lic-num">' + p.created + '</td>';
-    var labelText = p.label ? p.label : '<span class="muted">—</span>';
-    if(productsVariant === 3){
-      // Product name, label underneath (muted "—" keeps the two-line rhythm when a
-      // licence has no label yet; the real "+ Add label" affordance is on details).
-      var prodCell = '<td class="lic-prodcell"><div class="lp-name">' + (p.product || '') + '</div>'
-        + '<div class="lic-prodlabel">' + (p.label ? esc(p.label) : '<span class="muted">—</span>') + '</div></td>';
-      // the licence column is the plan/package; a grant adds what it has instead of a price
-      var lic = '<td><div class="lp-name">' + p.name + '</div>'
-        + (p.grant ? '<div class="lp-meta">Free &middot; ' + p.limits + '</div>' : '') + '</td>';
-      return rowOpen(p) + prodCell + lic + typeCell + statusPill(p) + renewCell(p) + createdCell + actionsCell(p) + '</tr>';
-    }
-    if(productsVariant === 2){
-      return rowOpen(p)
-        + '<td>' + (p.product || '') + '</td>'
-        + '<td><div class="lp-name">' + p.name + '</div></td>'
-        + '<td>' + labelText + '</td>'
-        + typeCell + useCells + statusCell
-        + '<td class="num lic-num">' + p.price + '</td>'
-        + '<td>' + p.billing + '</td>'
-        + createdCell + actionsCell(p) + '</tr>';
-    }
-    var pkg = '<td><div class="lp-name">' + p.name + '</div>' + (p.label ? '<div class="lp-meta">' + p.label + '</div>' : '') + '</td>';
-    var renew = '<td><div class="lr-main">' + p.renew + '</div><div class="lr-sub">' + p.price + ' · ' + p.billing + '</div></td>';
-    return rowOpen(p) + pkg + typeCell + useCells + statusCell + renew + createdCell + actionsCell(p) + '</tr>';
+    return rowOpen(p) + prodCell + lic + typeCell + statusPill(p) + renewCell(p) + createdCell + actionsCell(p) + '</tr>';
   }
   function renderProducts(){
     $('#prodHead').innerHTML = headHtml();
@@ -4141,78 +3337,6 @@
     });
   });
   renderProducts();
-
-  /* ---------- Licenses — Portfolio page ---------- */
-  // Static rows; the ⋮ menus + stub buttons ride the generic .menu / [data-stub]
-  // handlers. Here we only wire the Type/Status filters, the + New license dropdown,
-  // inline Copy, and row-click routing (reusing openRow, so TBMQ/Viaanix fall to a stub).
-  var pfView = $('#portfolioView');
-  if(pfView){
-    var pfType = 'all', pfStatus = 'all';
-    function applyPfFilter(){
-      $$('.pf-row', pfView).forEach(function(tr){
-        var okT = pfType === 'all' || tr.getAttribute('data-type') === pfType;
-        var okS = pfStatus === 'all' || tr.getAttribute('data-status') === pfStatus;
-        tr.hidden = !(okT && okS);
-      });
-      $$('.pf-group', pfView).forEach(function(g){
-        g.hidden = !$$('.pf-row', g).some(function(tr){ return !tr.hidden; });
-      });
-    }
-    // Type segmented chips
-    $$('.lic-typeseg .typechip', pfView).forEach(function(chip){
-      chip.addEventListener('click', function(){
-        pfType = chip.getAttribute('data-type');
-        $$('.lic-typeseg .typechip', pfView).forEach(function(c){ var on = c === chip; c.classList.toggle('is-on', on); c.setAttribute('aria-pressed', on ? 'true' : 'false'); });
-        applyPfFilter();
-      });
-    });
-    // Status + New license dropdowns
-    $$('.dropwrap', pfView).forEach(function(w){
-      var btn = $('button[aria-haspopup]', w), menu = $('.dropmenu', w);
-      function toggle(open){ menu.hidden = !open; btn.setAttribute('aria-expanded', open ? 'true' : 'false'); }
-      btn.addEventListener('click', function(e){ e.stopPropagation(); toggle(menu.hidden); });
-      menu.addEventListener('click', function(e){ e.stopPropagation(); });
-      document.addEventListener('click', function(){ if(!menu.hidden) toggle(false); });
-      document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && !menu.hidden){ toggle(false); btn.focus(); } });
-    });
-    $$('#pfStatusMenu button').forEach(function(b){
-      b.addEventListener('click', function(){
-        pfStatus = b.getAttribute('data-status');
-        $('#pfStatusBtn').textContent = 'Status: ' + (pfStatus === 'all' ? 'All' : pfStatus) + ' ▾';
-        $('#pfStatusMenu').hidden = true; $('#pfStatusBtn').setAttribute('aria-expanded', 'false');
-        applyPfFilter();
-      });
-    });
-    $$('#pfNewMenu button').forEach(function(b){
-      b.addEventListener('click', function(){
-        var kind = b.getAttribute('data-new');
-        $('#pfNewMenu').hidden = true; $('#pfNewBtn').setAttribute('aria-expanded', 'false');
-        NL.open({ kind: kind });
-      });
-    });
-    // inline Copy + row-click routing (⋮ menu handled by the generic .menu handler)
-    pfView.addEventListener('click', function(e){
-      var copy = e.target.closest('.lic-copy');
-      if(copy){
-        e.stopPropagation();
-        var flash = function(){
-          copy.setAttribute('data-tip', 'Copied'); copy.classList.add('show', 'copied');
-          setTimeout(function(){ copy.classList.remove('show', 'copied'); copy.setAttribute('data-tip', 'Copy license key'); }, 1200);
-        };
-        if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText('license-secret').then(flash, flash); } else { flash(); }
-        return;
-      }
-      var row = e.target.closest('.pf-row');
-      if(row && !e.target.closest('.lic-actions')) openRow(row);
-    });
-    pfView.addEventListener('keydown', function(e){
-      if((e.key === 'Enter' || e.key === ' ')){
-        var row = e.target.closest('.pf-row');
-        if(row && e.target === row){ e.preventDefault(); openRow(row); }
-      }
-    });
-  }
 
   /* ---------- Dashboard (Overview) ---------- */
   var dashV = $('#dashView');
@@ -4413,7 +3537,6 @@
      and lands on the Licenses page so the new row is visible. Closing mid-flow
      with selections made asks the same unsaved-changes confirmation as the
      settings pages. */
-  var nlStepperMode = 'rail';   // wizard stepper presentation: rail (A) / progress (B) / numbered (C)
   var NL = (function(){
     var scr = $('#nlModal'), body = $('#nlBody');
     var lastFocus = null, nlSeq = 1;
@@ -4479,64 +3602,18 @@
       }).join(' · ');
     }
 
-    /* ---- step indicator: three switchable presentations (settings > Wizard stepper).
-       A rail / B progress / C numbered — same wizard content under all three. ---- */
+    /* ---- step indicator: a thin progress line under the header, then one
+       "Step N of M · Label" row. ---- */
     // perpetual path is 3 steps (each product has exactly one package)
     function stepLabels(){ return isPerp() ? ['Product & Plan', 'Customize', 'Review & pay'] : ['Product', 'Plan', 'Customize', 'Review & pay']; }
     function totalSteps(){ return isPerp() ? 3 : 4; }
     function panelFor(n){ return isPerp() ? (n === 1 ? 1 : n + 1) : n; }   // perp: 1→1, 2→3(customize), 3→4(review)
     function m0(n){ return '$' + n.toLocaleString('en-US'); }
-    function railValue(n){
-      var t = tier();
-      if(isPerp()){
-        if(n === 1) return st.product ? ((st.product === 'tbmq' ? 'TBMQ PE license' : 'ThingsBoard PE Perpetual') + ' · ' + m0(BASE[t] || 0)) : '';
-        if(n === 2) return seededTier === t ? (m0(total()) + ' one-time') : '';
-        return '';
-      }
-      if(n === 1) return st.product ? (st.product === 'tbmq' ? 'TBMQ' : 'ThingsBoard') : '';
-      if(n === 2){
-        if(isChange()) return st.plan ? (st.oldName + ' \u2192 ' + st.plan) : (st.oldName + ' (current)');
-        return st.plan ? (st.plan + (BASE[t] != null ? ' · ' + m0(BASE[t]) + ' / month' : '')) : '';
-      }
-      if(n === 3) return seededTier === t ? (m0(total()) + ' / month') : '';
-      return '';
-    }
     function renderSteps(){
-      var labels = stepLabels(), mode = nlStepperMode;
-      $('#nlStepbar').hidden = mode === 'rail';
-      $('#nlRail').hidden = mode !== 'rail';
-      if(mode === 'rail'){
-        var rhtml = '';
-        labels.forEach(function(lb, i){
-          var n = i + 1;
-          var clickable = n < st.step && !(isChange() && n === 1);   // product is locked in change mode
-          var cls = 'nl-rstep' + (n < st.step ? ' done' : (n === st.step ? ' active' : ''));
-          rhtml += '<button type="button" class="' + cls + '" data-step="' + n + '"' + (clickable ? '' : ' disabled') + '>'
-            + '<span class="nl-rdot">' + (n < st.step ? '✓' : n) + '</span>'
-            + '<span class="nl-rtext"><span class="nl-rlabel">' + lb + '</span>'
-            + (n < st.step && railValue(n) ? '<span class="nl-rval">' + railValue(n) + '</span>' : '')
-            + '</span></button>';
-        });
-        $('#nlRail').innerHTML = rhtml;
-        return;
-      }
-      $('#nlStepbar').classList.toggle('nl-pb-mode', mode === 'progress');
-      if(mode === 'progress'){
-        $('#nlSteps').innerHTML = '<div class="nl-progress">'
-          + '<div class="nl-ptrack"><span class="nl-pfill" style="width:' + (st.step / totalSteps() * 100) + '%"></span></div>'
-          + '<div class="nl-plabel">Step ' + st.step + ' of ' + totalSteps() + ' · <b>' + labels[st.step - 1] + '</b></div></div>';
-        return;
-      }
-      var html = '';
-      labels.forEach(function(lb, i){
-        var n = i + 1;
-        var clickable = n < st.step && !(isChange() && n === 1);
-        var cls = n < st.step ? 'am-step done' : (n === st.step ? 'am-step active' : 'am-step');
-        if(i) html += '<span class="am-stepline"></span>';
-        html += '<button type="button" class="' + cls + '" data-step="' + n + '"' + (clickable ? '' : ' disabled')
-          + '><span class="am-num">' + (n < st.step ? '✓' : n) + '</span>' + lb + '</button>';
-      });
-      $('#nlSteps').innerHTML = html;
+      var labels = stepLabels();
+      $('#nlSteps').innerHTML = '<div class="nl-progress">'
+        + '<div class="nl-ptrack"><span class="nl-pfill" style="width:' + (st.step / totalSteps() * 100) + '%"></span></div>'
+        + '<div class="nl-plabel">Step ' + st.step + ' of ' + totalSteps() + ' · <b>' + labels[st.step - 1] + '</b></div></div>';
     }
     function renderFooter(){
       // step 1 has no footer at all — clicking a product card advances
@@ -4842,18 +3919,6 @@
     /* ---- events (step content re-renders, so everything is delegated) ---- */
     $('#nlBack').addEventListener('click', function(){ if(st.step > 1) gotoStep(st.step - 1); });
     $('#nlNext').addEventListener('click', function(){ if(st.step < totalSteps()){ gotoStep(st.step + 1); } else { startPurchase(); } });
-    $('#nlSteps').addEventListener('click', function(e){
-      var b = e.target.closest('.am-step.done');
-      if(b) gotoStep(parseInt(b.getAttribute('data-step'), 10));
-    });
-    $('#nlRail').addEventListener('click', function(e){
-      var b = e.target.closest('.nl-rstep.done');
-      if(b) gotoStep(parseInt(b.getAttribute('data-step'), 10));
-    });
-    // the settings panel switches the stepper presentation live
-    $$('input[name="nlStepper"]').forEach(function(r){
-      r.addEventListener('change', function(){ if(r.checked){ nlStepperMode = r.value; if(!scr.hidden) renderSteps(); } });
-    });
     $('#nlSuccessDone').addEventListener('click', finishSuccess);
     document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && !$('#nlSuccess').hidden && $('#overlay').hidden) finishSuccess(); });
     $('#nlKeyCopy').addEventListener('click', function(){
