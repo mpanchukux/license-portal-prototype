@@ -183,9 +183,8 @@ range…) на **Activity-сторінці** й у **details Activity-табі**
 `Date()` заблоковано), `TODAY_DAY = Aug 19 2026`. Порожньо → empty-state.
 
 ### Refresh feedback (`data-refresh`)
-Усі refresh-кнопки (`aria-label="Refresh"`) → `data-refresh` (не stub-модалка):
-делегований хендлер додає `.spinning` (~600ms CSS-спін) і вставляє muted
-`.refresh-note` «Updated just now» ліворуч від кнопки.
+Усі refresh-кнопки → `data-refresh`: делегований хендлер додає `.spinning`
+(~600ms CSS-спін). **Лише спін** — текст «Updated just now» прибрано на прохання.
 
 **`homeKey`**: nav Home / лого / overlay-close / Escape ведуть на `homeKey` (останній
 вибраний dash-варіант: dashboard/dashB/dashempty), а не жорстко на A — тому вибраний
@@ -264,9 +263,11 @@ Invoices, Activity, Users, Instances-таб, Logs-таб.
 ⚙ внизу праворуч → «Prototype settings». Перемикача **Flow вгорі більше немає** —
 одразу таби **Settings | Archive**.
 - Settings: «Dashboard (Home)» — три опції: **small account (A)** / **large account
-  (B)** / **new user (empty)** + Products → «Product-first (neutral)». Варіанти планів
-  (Maker…Business, Prototype + add-ons) і «Perpetual license details» показуються
-  **лише** коли відкрита сторінка деталей (`syncSettingsContext`).
+  (B)** / **new user (empty)** + Products → «Product-first (neutral)» + **Wizard
+  stepper** (A — Summary rail / B — Progress line / C — Numbered steps; перемикає
+  презентацію степера NL-візарда наживо). Варіанти планів (Maker…Business, Prototype
+  + add-ons) і «Perpetual license details» показуються **лише** коли відкрита
+  сторінка деталей (`syncSettingsContext`).
 - Archive: **Flow (archived)** (topbar / overlay), `products`, `products2`, `portfolio`
   + перемикач Manage add-ons
   (Full-screen = флоу / Modal = архів).
@@ -428,33 +429,139 @@ perp $2,999 — 10,000 sessions · 1,000 msg/sec · 1 prod · WL.
 - **Входи**: «+ New license ▾» (Home, Licenses, Portfolio-архів) → subscription /
   perpetual, `NL.open({kind})`; «Get started» на плані нового користувача →
   `NL.open({kind, product, plan, startStep:3})` — одразу Customize, кроки 1–2 ✓.
-- **Степер** над тілом (класи `.am-steps`, обгортка `.nl-stepbar`): sub — Product →
-  Plan → Customize → Review & pay; perp — Product → **Package** → Customize → Review
-  & pay. Пройдені кроки клікабельні назад (вибір зберігається), майбутні — disabled.
-  Футер `.nl-foot`: Back (secondary, схований на кроці 1 — ⚠️ `.btn` ставить display,
-  тому є правило `.nl-foot .btn[hidden]{display:none}`) / Continue (primary, disabled
-  без вибору; на кроці 4 → «Subscribe»/«Buy license»).
-- **Крок 1**: 2 product-картки (`.nl-select` — hover mid, selected ink ring inset).
-- **Крок 2**: плани з **`EC_PLANS`** (той самий сорс, що new-user екран): TB sub — 5
-  карток; TBMQ sub / обидва perp — одна картка, **preselected** (Continue одразу
-  активний; крок існує під майбутні пакети).
+- **Степер — три варіанти презентації** (`nlStepperMode`, перемикач «Wizard stepper»
+  у Settings-табі пікера: A/B/C; live-перемикання навіть із відкритим візардом):
+  - **A — Summary rail (дефолт)**: вертикальний рейл ліворуч (`#nlRail`, `.nl-rstep`),
+    заміняє горизонтальний бар повністю. Пройдені кроки — заливний ✓-дот + **обране
+    значення** під лейблом («Product — ThingsBoard», «Plan — Pilot · $99 / month»,
+    Customize — тотал; `railValue`), клікабельні назад; активний виділений; майбутні
+    dimmed. Розмітка: `.nl-main` (flex row) = рейл + `.fs-body`.
+  - **B — Progress line**: тонкий (3px) трек **на всю ширину модалки** одразу під
+    hairline хедера (степбар у `nl-pb-mode` без паддінгів), fill = step/totalSteps;
+    нижче один рядок з лівим паддінгом «Step 2 of 4 · **Plan**» (muted + bold назва).
+    Без окремих пунктів, без часткових треків.
+  - **C — Numbered**: кроки розподілені **на всю ширину** (max-width:680 знято;
+    `.am-stepline{flex:1}` розтягує з'єднувальні лінії).
+  - **C — Numbered steps**: початкова горизонтальна реалізація (`.am-steps`).
+  Кроки: sub — **4** (Product → Plan → Customize → Review & pay); perp — **3**
+  (**Product & Plan** злиті → Customize → Review & pay, бо на продукт рівно один
+  пакет). Механіка: `totalSteps()` (3/4) + `panelFor(n)` мапить wizard-крок на
+  панель (`perp: 2→#nlStep3, 3→#nlStep4`; `#nlStep2` на perp-шляху не існує).
+  На perp-кроці 1 картки несуть **повний пакет** (назва пакета, value-line, ціна
+  «$4,999 · one-time», термін апдейтів, ліміти з `EC_PLANS` без «All …»-рядка) +
+  PE-блок нижче (`#nlProdExtra`); клік ставить product **і** plan → одразу Customize.
+  Rail-значення кроку 1: «ThingsBoard PE Perpetual · $4,999» / «TBMQ PE license ·
+  $2,999»; B: «Step N of 3», fill N/3. Футер `.nl-foot`: **на кроці 1 схований
+  повністю** (клік по картці = перехід);
+  далі Back / Continue (disabled без вибору; на кроці 4 → «Subscribe»/«Buy license»).
+  ⚠️ `.btn` ставить display → правила `.nl-foot[hidden]`/`.nl-foot .btn[hidden]`.
+- **Крок 1**: 2 **великі** product-картки (`.nl-prodcard`, ~половина модалки кожна,
+  grid max-width 960): назва + value-line («Build your IoT solution. On your terms.» /
+  «Scale your messaging. On demand.») + sub-line + для TB група **Unlimited**
+  (Customers · Users · Dashboards · Messages · API calls · Integrations); на perp-шляху
+  обидві картки додають тихий рядок «First year of software updates included.»
+  **Клік одразу веде на крок 2** — Continue на цьому кроці немає.
+- **Крок 2**: плани з **`EC_PLANS`**, але картки **компактні** — name/price/**лише
+  key limits** (фільтр `keyLimits`: devices/assets/instances/sessions/msg-sec/AI;
+  support/WL-рядки прибрано з карток). Під ґрідом один muted-рядок «All plans include
+  unlimited customers…» (лише sub-шлях) і **один спільний блок** «What's included
+  in Professional Edition» (`PE_FEATURES`, **7 фіч** — White-labeling прибрано,
+  бо він НЕ edition-wide: лише Pilot+; HTML-`TODO: confirm with product that these
+  PE features apply to Maker/Prototype` біля `#nlPlanExtra`) — **завжди розгорнутий**,
+  без шеврона/кліку, вирівняний по лівому краю контенту кроку (як план-картки);
+  **лише продукт ThingsBoard** (фічі TB PE, для TBMQ не показуємо — inferred).
+  Вибір картки **не** авто-продовжує. TBMQ sub — одна картка preselected.
+  **План-картки кроку 2 — повні feats** з `EC_PLANS` (capacity + support-tier +
+  White labeling лише Pilot/Startup/Business — на Maker/Prototype рядка просто немає)
+  + muted `foot`-рядок (Maker: «Includes Trendz Analytics & Edge Computing for
+  testing.»; Business лишає «+$0.10 per extra device»). `foot` рендериться і на
+  new-user екрані (`planCard`). Дані WL узгоджені з `TIER_SPECS` (maker/prototype
+  wl:false) — Customize/Review/деталі показують те саме.
 - **Крок 3 Customize**: контент Manage add-ons, **сідиться з обраного tier**
   (`INCL`/`BASE` в NL): fixed-поля з `TIER_SPECS.ent` (Devices/Assets або
   Sessions/Msg-sec), степери prod/AI (+dev лише TB sub), add-ons лише TB sub.
   Unit-ціни: sub 29/15/5; perp TB prod **$1,999 one-time** (заякорено інвойсом
-  Add-capacity), AI $500/1M; perp TBMQ prod $999 — **inferred**. Праворуч calc
-  summary: base + дельти + «New monthly» / «One-time total».
-- **Крок 4 Review & pay**: itemized `.am-order` (план+summary → дельти → total),
-  Due today, платіжний рядок Visa ••4242 (+auto-pay для sub) з лінком
-  «Change → Billing & payment» (веде на Billing через guard).
-- **Confirm** (`buy()`): пушить ліцензію в **поточний** `DATA().licenses` (id `N1…`,
+  Add-capacity), AI $500/1M; perp TBMQ prod $999 — **inferred**. Fixed-рядки
+  (Devices/Assets): «fixed by {plan} plan» лежить у **description-слоті**
+  (`.fs-celldesc`) — один 4px-токен title→desc на всі рядки PLAN-секції.
+  Праворуч calc summary: base + дельти + «New monthly» / «One-time total».
+  **Review-крок вирівняний вліво** (`#nlModal .fs-review{margin:0}`; AMF-рев'ю
+  лишився центрованим). **Топи вирівняні**:
+  `.fs-right{top:0}` — ⚠️ sticky-інсет резолвиться від **padding box** скролпорта
+  (fs-body має padding 24), тож будь-який позитивний top зсував панель нижче лівої
+  навіть у спокої (старі 57px → 57px зсуву; стосувалось і AMF — виправлено спільно).
+- **Крок 4 Review & pay**: головний рядок **розбитий**: жирний «ThingsBoard Pilot»
+  зліва + жирна ціна справа (`.nl-mainline`), під ним regular-рядок ентайтлментів
+  «100 devices · 100 assets · …» (`.nl-entline`); далі дельти → total → Due today,
+  платіжний рядок Visa ••4242 (+auto-pay для sub) з лінком «Change → Billing &
+  payment» (веде на Billing через guard).
+- **Subscribe / Buy license → loading + success**: клік → кнопка в loading
+  (`.nl-spin`, disabled, **ширина зафіксована** JS-ом) ~1.5s (`startPurchase`) →
+  `commitPurchase` пушить ліцензію в **поточний** `DATA().licenses` (id `N1…`,
   created **Aug 19 2026**, sub renews Sep 19 2026 / perp updates до Aug 19 2027,
-  extras/edge/trendz зберігаються — деталі рядка показують Extra-колонку й фічі),
-  `renderDatasetViews()`+`renderProducts()`, закриває модалку і **веде на Licenses**,
-  де новий рядок видно (і в dashboard-блоці).
+  extras/edge/trendz зберігаються), рендерить усе і ховає візард → **success-модалка**
+  `#nlSuccess` (свіжий монохром, не копія порталу: ✓-коло, «Thank you for purchasing
+  {ThingsBoard|TBMQ} Professional Edition {subscription|perpetual license}», «Use this
+  license key to activate your instance:», **mono-key** у `.nl-keybox` + copy-iconbtn,
+  лінк «installation page» (stub), full-width **Done**). Done/Esc → **Licenses**, де
+  новий рядок видно (і в dashboard-блоці). Ключ детермінований від `nlSeq`.
 - **Закриття mid-flow** (✕/Esc) з зробленим вибором → та сама unsaved-changes
   модалка (Stay / Leave without saving); preselected-вхід (Get started) теж рахується
   як «selections made». Контент кроків повністю рендериться JS — усі події делеговані.
+
+## Інтеракції-пас (15-пунктовий батч)
+- **Дропдауни не кліпляться**: `elevateOpenPops` — на кожен клік (capture-фаза +
+  `setTimeout 0`, бо opener-и роблять stopPropagation; rAF не годиться — не тікає
+  в прихованому табі) всі відкриті `.dropmenu`/`.menu .pop` перепозиціонуються
+  `position:fixed` (z 320) із прив'язкою до тригера ([aria-haspopup] у батьку);
+  `.pop`/`.right` — right-aligned; фліп догори біля низу вьюпорта. Без внутрішніх
+  скролбарів (`overflow:visible`).
+- **View invoice → мок-PDF у новому табі**: усі кнопки → **`<a data-viewinv
+  target="_blank">`**, blob-`href` (print-styled HTML-інвойс: хедер ThingsBoard,
+  номер, line items, total, @media print) заповнюється в **capture-фазі реального
+  кліку** — новий таб відкриває сам браузер, popup-blocker не діє. ⚠️ Вбудована
+  панель прев'ю глушить navіть untrusted-anchor нові таби — в реальному браузері ок;
+  контент верифіковано через iframe.
+- **Download PDF**: `buildPdf()` — мінімальний валідний односторінковий PDF,
+  зібраний ран-таймом (динамічні xref-офсети, Helvetica) → `{num}.pdf` через
+  blob+`a[download]`; фідбек: лейбл «✓ Downloaded» ~1s. Дані рядка — `rowInvoiceData`
+  (перші 3 `<td>`), тож працює і в статичних таблицях деталей.
+- **Delete user**: `[data-deluser]` → confirm-модалка «Delete {email}? They will
+  lose access…», Cancel (default) / Delete (ter) → видаляє з **усіх** датасетів.
+- **Login as → імперсонація**: `[data-loginas]` → confirm → **чорний банер**
+  `#impBanner` під топ-бар-бендом (та сама ширина/лівий край, **без зазору**,
+  скруглення лише знизу; у бенда знімається нижній радіус через
+  `body.impersonating`). «Return to my account» (біла кнопка) знімає. Персистить
+  між сторінками (живе в chrome поза `#shellMain`).
+- **Licenses-фільтр без «All»**: два чипи Subscription/Perpetual, тогляться
+  **незалежно** (`licTypes{}`); обидва off = показати все.
+- **Change plan = режим візарда** (`NL.openChange(lic)`, `st.mode='change'`):
+  продукт залочений (крок 1 done, **не клікабельний**), старт із Plan; поточний
+  план — бейдж **Current plan** + `.nl-current` (не вибирається; `currentCardName`
+  мапить tbmqsub→'TBMQ PE subscription'); Customize/Review показують перехід
+  «Prototype → Startup» (cap, mainline, rail «Plan — Prototype → Startup»),
+  summary має рядок «Current · {old}», **Due today prorated** = (new−oldBase)×16/31
+  з тим самим формулюванням. Кнопка «Confirm change» → лоадинг → апдейт об'єкта
+  ліцензії (tier/name/price/extras/addons) → деталі цієї ліцензії. Входи: details
+  `#changePlanBtn` (MODALS через activeLicense) і меню рядків `[data-changeplan]`.
+- **Період-фільтр**: вибір «Custom range…» одразу позначається в списку
+  (`.is-sel` + ✓ через ::after; активний пресет теж маркується), поля+Apply
+  рендеряться нижче **в тій самій панелі**.
+- **Add user** (`#addUserOverlay`, свій монохром): Email (required, regex) /
+  First/Last/Description/Activation method (select: Display activation link /
+  Send activation email). Add disabled без валідного email. Крок 2: link-режим —
+  «Share this activation link…» + mono-блок + copy; email-режим — «Activation
+  email sent to {email}». В обох — юзер додається в `DATA().users` і видимий
+  у таблиці одразу.
+- **Profile**: gap рядків форм зменшено (`.field2{gap:12px 14px}` +
+  `.field2 .field{margin-bottom:0}`); email-хелпер → «Used to sign in.» (той самий
+  `.help`-слот); Security-хелпер про паролі видалено; Company-хелпер → «Used as
+  your billing / invoice address by default — change it in [Billing & payment]»
+  з робочим `[data-goto="billing"]`-лінком (делегування на `#profileView`).
+- **Legal-сторінки**: `privacy`/`terms`/`eula` — повні сторінки в спільному shell
+  (`#privacyView/#termsView/#eulaView`, стилі `.legal` — body 16/1.6, h2-секції,
+  max-width 800), відкриваються з Legal-групи профіль-меню (`data-goto`).
+  Плейсхолдерний юридичний текст, помічений як несправжній.
 
 ## Відкриті питання / борг
 - ~~Превʼю Invoices і Users на дашборді — статичні копії~~ **виправлено**: дашборд
@@ -463,9 +570,11 @@ perp $2,999 — 10,000 sessions · 1,000 msg/sec · 1 prod · WL.
 - **`prototypeaddons` не має лінка у флоу**: у `PRODUCTS_V3` (product-first) такого
   рядка немає, тож сторінка досяжна лише через контекстний список у налаштуваннях —
   так вирішено свідомо («хай там і лежить»).
-- **`AM`/`AMF` не знають про плани**: жорстко зашитий Prototype (BASE 39, incl
-  1 prod / 2M AI). Відкривши «Manage» на Business — побачиш дані Prototype.
-  Полагодити = перевести контролери на `PAGES`.
+- ~~`AMF` не знає про плани~~ **виправлено**: `AMF.open(lic)` сідиться з ліцензії
+  (`AMF_TIERS` + `TIER_SPECS`: base/incl/extras/addons, титул `#fsTitle`, devices-поле,
+  «fixed by {plan} plan», рядок review `#fsPlanLine`). Вхід: details (activeLicense)
+  і **меню рядка** (`[data-manageaddons]` → `licById`). Лишилось: статичні лейбли
+  markup TB-словами (для TBMQ «Devices» ≠ Sessions); архівний `AM` досі Prototype.
 - ~~TBMQ не має детальних сторінок~~ **виправлено**: TBMQ-рядки (sub і perp) відкривають
   повноцінну TBMQ-наповнену сторінку (`TIER_SPECS.tbmqsub`/`tbmqperp`). Немає dead rows.
 - **Дані рядка → деталі зведені**: деталі тепер керуються об'єктом ліцензії (не `PAGES`) —
