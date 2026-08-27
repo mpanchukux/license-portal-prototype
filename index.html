@@ -28,13 +28,8 @@
         <div class="dw-txt">
           <h1 id="dashGreeting">Good morning, Mariia</h1>
         </div>
-        <div class="dropwrap">
-          <button class="btn" id="dashNewBtn" aria-haspopup="true" aria-expanded="false">+ New license ▾</button>
-          <div class="dropmenu right" id="dashNewMenu" hidden>
-            <button data-new="subscription">New subscription</button>
-            <button data-new="perpetual">New perpetual license</button>
-          </div>
-        </div>
+        <!-- one button: the billing type is chosen inside step 1 of the wizard -->
+        <button class="btn" id="dashNewBtn">+ New license</button>
       </div>
 
       <!-- Licenses: full width, rendered with the same head/row builders as the
@@ -154,6 +149,7 @@
 <script src="shared.js"></script>
 <script src="components.js"></script>
 <script src="wizard.js"></script>
+<script src="license-details.js"></script>
 <script src="page-home.js"></script>
 </body>
 </html>

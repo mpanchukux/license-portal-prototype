@@ -26,6 +26,8 @@ function renderProducts(){
 }
 renderProducts();
 wireLicenseRows('#licensesView', { from:'licenses', rerender: renderProducts });
+// modal mode: a change made inside the details modal restates this page too
+if(window.LicenseDetails) LicenseDetails.setRerender(renderProducts);
 
 /* Type chips are mutually exclusive: pick one, switch to the other, or click the
    active one again to clear the filter and see everything. */
@@ -49,11 +51,6 @@ licCanceledBox.addEventListener('change', function(){
   renderProducts();
 });
 
-// + New license → the wizard, for the chosen type
-$$('#licNewMenu button').forEach(function(b){
-  b.addEventListener('click', function(){
-    $('#licNewMenu').hidden = true;
-    $('#licNewBtn').setAttribute('aria-expanded', 'false');
-    NL.open({ kind: b.getAttribute('data-new') });
-  });
-});
+// + New license → the wizard; product and billing type are chosen on its step 1
+var licNewBtn = $('#licNewBtn');
+if(licNewBtn) licNewBtn.addEventListener('click', function(){ NL.open({}); });

@@ -383,6 +383,19 @@ th[aria-label$="ctions"],th.cellact,td.cellact{width:1%;white-space:nowrap;text-
 .am-planrow{font-weight:600}
 .am-newmonthly{font-weight:700;font-size:14px}
 .am-due{display:flex;justify-content:space-between;align-items:center;gap:16px;border:1px solid var(--line);border-radius:6px;padding:12px 14px;margin-bottom:14px;background:#fafafa}
+/* the Due today card carries the commit now, so it stacks instead of sitting in
+   one row: amount row, the payment line, then the action full-width */
+.nl-duecard{display:block}
+.nl-duecard .am-duerow{display:flex;justify-content:space-between;align-items:center;gap:16px}
+.nl-duecard .am-payrow{margin-top:8px}
+.nl-duecard .fs-nextbtn{margin-top:14px}
+/* billing terms: their own quiet card under the action, not a subtitle */
+.nl-terms{border:1px solid var(--line2);border-radius:6px;padding:11px 14px;font-size:14px;color:var(--mid);background:var(--card)}
+.nl-terms-tight{margin-top:12px;padding:9px 12px}
+/* required-field mark on the billing step */
+.req{color:var(--mid);font-weight:400}
+/* the created-licence banner is a quieter sibling of the impersonation band */
+.gbanner.licnew{margin-bottom:18px}
 .am-duelabel{font-size:14px}
 .am-dueval{font-size:var(--t-h2-fs);font-weight:var(--t-h2-fw);font-variant-numeric:tabular-nums;flex:none}
 .am-success{text-align:center;padding:30px 10px}
@@ -393,6 +406,7 @@ th[aria-label$="ctions"],th.cellact,td.cellact{width:1%;white-space:nowrap;text-
 .am-sumrow{display:flex;justify-content:space-between;gap:16px}
 .am-sumrow.cur{color:var(--mid)}
 .am-total-row{font-weight:700;font-size:14px}
+.am-total-row span:last-child{white-space:nowrap}   /* the amount never breaks across lines */
 .am-total-row .am-chgcount{font-weight:400}
 .am-chgcount{font-size:14px;color:var(--faint)}
 
@@ -429,16 +443,49 @@ th[aria-label$="ctions"],th.cellact,td.cellact{width:1%;white-space:nowrap;text-
 /* ---------- Manage add-ons: large centered modal ---------- */
 /* backdrop: dim + blur the page behind; the modal panel (.fs-box) sits centered on top */
 .fs-screen{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;color:var(--ink);background:rgba(28,28,28,.32);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+/* Licence details in modal mode: the same container, backdrop and blur as the
+   wizard, but one layer below — Change plan, Manage add-ons, Apply coupon and
+   the confirm dialogs all open ABOVE it and return to it when they close. */
+.licmodal{z-index:95}
+.licmodal .fs-body{padding:0}
+.licmodal .content{overflow:visible}   /* .fs-body owns the scrolling here */
+.licmodal .canvas{border:0;border-radius:0}
+body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its place */
+.back[hidden]{display:none}   /* .back sets display:flex, so [hidden] needs help */
+/* no back button in modal mode, so its gutter column goes too — otherwise the
+   content column slides into the 31px gutter the button left behind */
+.licmodal .headgrid{grid-template-columns:1fr}
 .fs-box{display:flex;flex-direction:column;width:min(1200px,90vw);height:90vh;background:var(--bg);border:1px solid var(--line);border-radius:12px;box-shadow:0 24px 64px rgba(0,0,0,.28);overflow:hidden}
 .fs-screen[hidden]{display:none}
 /* one header row: muted label + title on the left, Change plan + close on the right */
-.fs-header{flex:none;display:flex;align-items:center;gap:12px;row-gap:8px;flex-wrap:wrap;padding:13px 24px;background:#fff;border-bottom:1px solid var(--line2)}
+/* one row, always: a wrapping header dropped ✕ below the title once a licence
+   label grew long. The title ellipsizes instead (see .fs-maintitle). */
+.fs-header{flex:none;display:flex;align-items:center;gap:12px;flex-wrap:nowrap;padding:13px 24px;background:#fff;border-bottom:1px solid var(--line2)}
 .fs-header .spacer{flex:1}
-.fs-maintitle{margin:0;font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw);flex:0 1 auto;min-width:0}
+.fs-maintitle{margin:0;font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw);flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}   /* a long licence label must not push ✕ onto a second row */
 .fs-headactions{display:flex;align-items:center;gap:14px;flex:none}
 .fs-close{width:30px;height:30px;flex:none;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--mid);display:inline-flex;align-items:center;justify-content:center;font-size:15px}
 .fs-close:hover{color:var(--ink);background:var(--hover)}
 .fs-nextbtn{width:100%;margin-top:14px}
+/* Customize step: one control per row, so every stepper and toggle lands in the
+   same right-hand column */
+#nlStep2 .am-capgrid,#fsStep1 .am-capgrid{grid-template-columns:1fr}
+/* variant A — what was chosen, stated as read-only facts above the controls */
+/* This card is the anchor of the step, so it carries the left column: its title
+   sits a full type level above the section headings under it (h2 vs the label
+   token), with room to breathe and the entitlements as a calm second line. */
+.fs-panel.nl-plansum{padding:18px 20px;margin-bottom:16px}   /* .fs-panel sits later in this file, so match it on specificity */
+.nl-plansum[hidden]{display:none}
+.nl-plansum-t{font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw);color:var(--ink)}
+.nl-plansum-f{margin-top:6px;font-size:var(--t-small-fs);line-height:1.55;color:var(--mid)}
+/* variant B — the lock rides inside the disabled input, no helper line below */
+.fs-lockfield{position:relative;display:inline-flex;align-items:center;flex:none}
+.fs-lockic{position:absolute;left:9px;width:13px;height:13px;color:var(--faint);pointer-events:none}
+.fs-devinput.locked{padding-left:28px;text-align:left}
+/* add-on rows: the toggle is their right-hand control, level with the steppers */
+.am-cell.am-addon.on{border-color:var(--ink)}
+.am-addon .am-cardprice{margin-top:6px}
+.am-cell[hidden]{display:none}
 /* Back lives in the header on the review step; .fs-close sets display, so it
    needs its own [hidden] rule to stay hidden on the adjust step */
 .fs-headback{flex:none}
@@ -494,7 +541,8 @@ th[aria-label$="ctions"],th.cellact,td.cellact{width:1%;white-space:nowrap;text-
 .nl-progress{width:100%}
 .nl-ptrack{height:3px;background:var(--track);overflow:hidden}
 .nl-pfill{display:block;height:100%;background:var(--ink)}
-.nl-plabel{margin-top:9px;padding:0 24px;font-size:var(--t-small-fs);color:var(--mid)}
+.nl-plabel{margin-top:9px;padding:0 24px;font-size:var(--t-small-fs);color:var(--mid);display:flex;align-items:center;gap:10px}
+.nl-stepback{flex:none}
 .nl-plabel b{color:var(--ink);font-weight:600}
 .nl-foot{flex:none;display:flex;align-items:center;gap:12px;padding:12px 24px;background:#fff;border-top:1px solid var(--line2)}
 .nl-foot[hidden]{display:none}
@@ -538,6 +586,27 @@ th[aria-label$="ctions"],th.cellact,td.cellact{width:1%;white-space:nowrap;text-
 .nl-select:hover{border-color:var(--mid)}
 .nl-select.on{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
 #nlModal .plangrid{margin-top:0}
+/* wizard step 1: three stacked choices — product, billing, then the offers.
+   The first two are selectable cards; selection is the same ink ring the offer
+   cards use, and change-plan mode renders them locked. */
+.nl-level{margin-bottom:18px}
+.nl-flabel{font-size:14px;color:var(--mid)}
+.nl-level .nl-flabel{display:block;margin-bottom:8px}
+.nl-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media(max-width:700px){.nl-choices{grid-template-columns:1fr}}
+.nl-choice{display:block;text-align:left;background:var(--card);border:1px solid var(--line2);border-radius:10px;padding:13px 15px;cursor:pointer;font:inherit}
+.nl-choice:hover{border-color:var(--mid)}
+.nl-choice.is-on{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.nl-choice[disabled]{cursor:default}
+.nl-choice[disabled]:not(.is-on),.nl-choice[disabled]:not(.is-on):hover{border-color:var(--line2)}
+.nl-choice-t{display:block;font-size:14.5px;font-weight:600;color:var(--ink)}
+.nl-choice[disabled]:not(.is-on) .nl-choice-t{color:var(--faint)}
+.nl-choice-d{display:block;margin-top:4px;font-size:14px;line-height:1.5;color:var(--mid)}
+.nl-choice[disabled]:not(.is-on) .nl-choice-d{color:var(--faint)}
+/* the offer count sits right-aligned in its own row above the offer cards */
+.nl-offerhead{display:flex;align-items:center;margin-bottom:10px}
+.nl-offerhead .spacer{flex:1}
+.nl-fcount{font-size:14px;color:var(--faint)}
 
 /* ---------- Dashboard (Overview): full-width top bar, no sidebar, centered column ---------- */
 .app[hidden],.dashview[hidden],.licview[hidden]{display:none}
@@ -810,6 +879,9 @@ body.impersonating .dtopbar-inner{border-bottom-left-radius:0;border-bottom-righ
 .typechip{height:var(--btnH);display:inline-flex;align-items:center;font-size:14px;padding:0 13px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--mid)}
 .typechip:hover{border-color:var(--mid);color:var(--ink)}
 .typechip.is-on{background:var(--ink);border-color:var(--ink);color:#fff}
+/* locked (change-plan mode): the choice is fixed, so drop the affordance */
+.typechip:disabled{cursor:default}
+.typechip:disabled:not(.is-on),.typechip:disabled:not(.is-on):hover{color:var(--faint);border-color:var(--line2)}
 /* a wrapping label makes rows two lines tall, so every cell aligns to the top —
    level with the product name rather than floating in the middle of the row */
 .lic-row > td{vertical-align:top}

@@ -74,6 +74,8 @@ renderHome();
 /* rows behave exactly as on the Licenses page; `home` tells the details page
    which section to highlight and where its back button goes */
 wireLicenseRows('#dashLicTable', { from:'home', rerender: renderHome });
+// modal mode: a change made inside the details modal restates this page too
+if(window.LicenseDetails) LicenseDetails.setRerender(renderHome);
 wireFeedAudit('#dashView');
 
 /* Reaching the end of the feed appends the next batch; the button is the
@@ -88,18 +90,11 @@ wireFeedAudit('#dashView');
   }
 })();
 
-/* one split button for both create flows */
+/* one button for both create flows — the billing type is a switcher in step 1 */
 (function(){
-  var btn = $('#dashNewBtn'), menu = $('#dashNewMenu');
+  var btn = $('#dashNewBtn');
   if(!btn) return;
-  function toggle(open){ menu.hidden = !open; btn.setAttribute('aria-expanded', open ? 'true' : 'false'); }
-  btn.addEventListener('click', function(e){ e.stopPropagation(); toggle(menu.hidden); });
-  menu.addEventListener('click', function(e){ e.stopPropagation(); });
-  document.addEventListener('click', function(){ if(!menu.hidden) toggle(false); });
-  document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && !menu.hidden){ toggle(false); btn.focus(); } });
-  $$('button', menu).forEach(function(b){
-    b.addEventListener('click', function(){ toggle(false); NL.open({ kind: b.getAttribute('data-new') }); });
-  });
+  btn.addEventListener('click', function(){ NL.open({}); });
 })();
 
 /* the grant banner is one-time: dismissing it is remembered */
@@ -107,7 +102,9 @@ wireFeedAudit('#dashView');
   var view = $('#grantViewBtn'), dismissBtn = $('#grantDismissBtn'), learn = $('#grantLearnBtn');
   if(view) view.addEventListener('click', function(){
     var g = DATA().licenses.filter(function(l){ return l.grant; })[0];
-    if(g) location.href = licenseHref(g, 'home');
+    if(!g) return;
+    if(licDetailsMode() === 'modal' && window.LicenseDetails){ LicenseDetails.openModal(g); return; }
+    location.href = licenseHref(g, 'home');
   });
   if(dismissBtn) dismissBtn.addEventListener('click', function(){ dismiss('grantBanner'); $('#grantBanner').hidden = true; });
   if(learn) learn.addEventListener('click', function(){
@@ -136,13 +133,13 @@ if(dashEmptyV && !dashEmptyV.hidden){
     r.addEventListener('change', function(){ if(r.checked){ ecBilling = r.value; renderEcPlans(); } });
   });
   // cards are re-rendered on every switch, so delegate the entry-point action.
-  // Get started opens the New license flow with product + plan preselected,
-  // landing on Customize (steps 1–2 shown completed).
+  // Get started preselects product, billing and plan, so the wizard skips its
+  // chooser and opens on Customize (step 2 of 3).
   dashEmptyV.addEventListener('click', function(e){
     var cta = e.target.closest('.pc-cta');
     if(!cta) return;
     NL.open({ kind: ecBilling === 'perpetual' ? 'perpetual' : 'subscription',
-              product: ecProduct, plan: cta.getAttribute('data-plan'), startStep: 3 });
+              product: ecProduct, plan: cta.getAttribute('data-plan'), startStep: 2 });
   });
   renderEcPlans();
 }

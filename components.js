@@ -99,6 +99,19 @@ function rowHtml(p){
 /* ---------- navigation ---------- */
 /* A licence row is a real link target: details live at license.html?id=…, and
    `from` tells that page which section to highlight and where its back goes. */
+/* The PE feature card. The wizard dropped it when its Subscription card took
+   over that copy, so this now serves ONE surface: the new-user plan screen
+   on Home (#ecPlanExtra). Kept here rather than in wizard.js, which no
+   longer knows about it. */
+function peBlockHTML(intro){
+  return '<div class="nl-pe">'
+    + '<div class="nl-pe-h">What\u2019s included in Professional Edition</div>'
+    + (intro ? '<p class="nl-pe-intro">' + intro + '</p>' : '')
+    + '<div class="nl-pe-body">'
+    + PE_FEATURES.map(function(f){ return '<div class="nl-pe-item"><b>' + f[0] + '</b> — ' + f[1] + '</div>'; }).join('')
+    + '</div></div>';
+}
+
 function licenseHref(p, from){
   return 'license.html?id=' + encodeURIComponent(p.id || '') + (from ? '&from=' + from : '');
 }
@@ -138,9 +151,16 @@ function wireLicenseRows(rootSel, opts){
     if(row && e.target === row){ e.preventDefault(); openRowLink(row, opts.from); }
   });
 }
+/* One navigation point for every licence row, so the presentation setting is
+   honoured everywhere: page mode goes to license.html, modal mode opens the
+   details over the page the row is on (nav highlight and scroll stay put). */
 function openRowLink(row, from){
-  var id = row.getAttribute('data-licid');
-  if(id && licById(id)){ location.href = 'license.html?id=' + encodeURIComponent(id) + (from ? '&from=' + from : ''); return; }
+  var id = row.getAttribute('data-licid'), lic = id && licById(id);
+  if(lic){
+    if(licDetailsMode() === 'modal' && window.LicenseDetails){ LicenseDetails.openModal(lic); return; }
+    location.href = licenseHref(lic, from);
+    return;
+  }
   openModal('License details', '<p>Placeholder — the ' + (row.getAttribute('data-product') || 'product')
     + ' license detail page is not part of this prototype yet.</p>');
 }

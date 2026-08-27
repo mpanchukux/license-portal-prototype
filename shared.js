@@ -197,6 +197,15 @@ function settingsHTML(){
     +     '<a class="sp-opt" href="license.html?tier=perp"><span>Perpetual license details</span></a>'
     +     '<div class="sp-grouphead">Reference</div>'
     +     '<a class="sp-opt" href="styleguide.html"><span>Design system → styleguide</span></a>'
+    +     '<div class="sp-grouphead">Billing data</div>'
+    +     '<label class="sp-opt"><input type="radio" name="billingData" value="saved"' + (billingSaved() ? ' checked' : '') + '><span>saved</span></label>'
+    +     '<label class="sp-opt"><input type="radio" name="billingData" value="none"' + (billingSaved() ? '' : ' checked') + '><span>none</span></label>'
+    +     '<div class="sp-grouphead">License details</div>'
+    +     '<label class="sp-opt"><input type="radio" name="licDetails" value="page"' + (licDetailsMode() === 'page' ? ' checked' : '') + '><span>A — page</span></label>'
+    +     '<label class="sp-opt"><input type="radio" name="licDetails" value="modal"' + (licDetailsMode() === 'modal' ? ' checked' : '') + '><span>B — modal</span></label>'
+    +     '<div class="sp-grouphead">Customize step</div>'
+    +     '<label class="sp-opt"><input type="radio" name="custVariant" value="a"' + (custVariant() === 'a' ? ' checked' : '') + '><span>A — Plan card</span></label>'
+    +     '<label class="sp-opt"><input type="radio" name="custVariant" value="b"' + (custVariant() === 'b' ? ' checked' : '') + '><span>B — Locked inputs</span></label>'
     +     '<div class="sp-grouphead">Dev actions</div>'
     +     '<label class="sp-opt"><button class="link" id="devConfirmEmail" disabled>Confirm email change</button></label>'
     +     '<label class="sp-opt"><button class="link" id="resetDemo">Reset demo data</button></label>'
@@ -406,6 +415,16 @@ function wireTabs(){
 }
 
 /* ---------- prototype settings panel ---------- */
+// Which Customize-step variant the wizard and Manage add-ons render. A stored
+// setting so it survives navigation between pages; both flows read it at render.
+function custVariant(){ return Store.get('custVariant') === 'b' ? 'b' : 'a'; }
+// How a licence row presents its details: its own page (A) or a modal over the
+// page you were on (B). Read by the row wiring in components.js.
+function licDetailsMode(){ return Store.get('licDetails') === 'modal' ? 'modal' : 'page'; }
+// Whether the account already has billing data. With it the wizard commits on
+// Review & pay (3 steps); without it a Billing & payment step is appended and the
+// commit moves there (4 steps). Nothing hardcodes the count — see totalSteps().
+function billingSaved(){ return Store.get('billingData') !== 'none'; }
 function wireSettingsPanel(){
   var gearBtn = $('#gearBtn'), panel = $('#settingsPanel');
   function toggle(open){ panel.hidden = !open; gearBtn.setAttribute('aria-expanded', open ? 'true' : 'false'); }
@@ -421,6 +440,30 @@ function wireSettingsPanel(){
       Store.set('dash', r.value);
       if(document.body.getAttribute('data-page') === 'home') location.reload();
       else location.href = 'index.html';
+    });
+  });
+
+  // billing data drives how many steps the wizard has; re-render it if it is open
+  $$('input[name="billingData"]').forEach(function(r){
+    r.addEventListener('change', function(){
+      if(!r.checked) return;
+      Store.set('billingData', r.value);
+      if(window.NL && NL.refreshOpen) NL.refreshOpen();
+    });
+  });
+
+  // the details presentation is a stored setting; rows read it on click
+  $$('input[name="licDetails"]').forEach(function(r){
+    r.addEventListener('change', function(){ if(r.checked) Store.set('licDetails', r.value); });
+  });
+
+  // switching the Customize variant re-renders whichever flow is open
+  $$('input[name="custVariant"]').forEach(function(r){
+    r.addEventListener('change', function(){
+      if(!r.checked) return;
+      Store.set('custVariant', r.value);
+      if(window.NL && NL.refreshCustomize) NL.refreshCustomize();
+      if(window.AMF && AMF.refresh) AMF.refresh();
     });
   });
 

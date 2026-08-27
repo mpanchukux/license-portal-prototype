@@ -95,7 +95,7 @@
         <div class="sg-cell"><button class="iconbtn ib spinning" aria-label="Refreshing"><svg class="icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg></button><span class="sg-cls">.iconbtn.spinning</span></div>
         <div class="sg-cell"><button class="back" aria-label="Back">←</button><span class="sg-cls">.back</span></div>
         <div class="sg-cell"><span class="menu"><button class="iconbtn ib" aria-haspopup="true" aria-expanded="false" aria-label="More actions"><svg class="icon" viewBox="0 0 24 24" style="fill:currentColor;stroke:none"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button></span><span class="sg-cls">.menu &gt; .iconbtn</span></div>
-        <div class="sg-cell"><div class="dropwrap"><button class="btn" id="sgSplit" aria-haspopup="true" aria-expanded="false">+ New license ▾</button><div class="dropmenu right" hidden><button>New subscription</button><button>New perpetual license</button></div></div><span class="sg-cls">.dropwrap + .dropmenu</span></div>
+        <div class="sg-cell"><div class="dropwrap"><button class="btn sec" id="sgSplit" aria-haspopup="true" aria-expanded="false">All time ▾</button><div class="dropmenu right" hidden><button>All time</button><button>Last 7 days</button><button>Last 30 days</button></div></div><span class="sg-cls">.dropwrap + .dropmenu</span></div>
       </div>
     </div>
   </section>
@@ -192,7 +192,9 @@
     </div>
     <div class="sg-item">
       <h3>Product card</h3>
-      <p class="sg-note"><code class="sg-cls">.nl-prodcard.nl-select</code> — the wizard's first step; selection is an ink ring.</p>
+      <p class="sg-note"><code class="sg-cls">.nl-prodcard.nl-select</code> — the large product card.
+        The wizard no longer uses it (product, billing and plan share one step now); kept here as a
+        specimen of the pattern.</p>
       <div class="nl-prodgrid" id="sgProducts"></div>
     </div>
     <div class="sg-item">
