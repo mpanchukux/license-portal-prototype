@@ -33,7 +33,9 @@ var ENT_EXTRA_KEY = { 'Devices':'devices', 'Production instances':'prod', 'AI cr
 var DATASETS = {
   A: {
     licenses: [
-      { id:'A1', tier:'prototype', product:'ThingsBoard', type:'Subscription', name:'Prototype',      label:'Production', created:'Aug 10 2026', status:'active', event:'Aug 28 2026', price:'$39.00 / mo', billing:'auto-pay' },
+      // a real-world label: it wraps to two lines in the Product column, next to the
+      // short one below it — the case the Home block has to survive
+      { id:'A1', tier:'prototype', product:'ThingsBoard', type:'Subscription', name:'Prototype',      label:'Central Europe manufacturing cluster — building 4, line 2', created:'Aug 10 2026', status:'active', event:'Aug 28 2026', price:'$39.00 / mo', billing:'auto-pay' },
       { id:'A2', tier:'tbmqsub',   product:'TBMQ',        type:'Subscription', name:'PE subscription', label:'Broker',     created:'Jul 22 2026', status:'active', event:'Sep 05 2026', price:'$15.00 / mo', billing:'auto-pay' }
     ],
     users: [
@@ -210,12 +212,9 @@ var FCHECK = '<svg class="icon fmark" viewBox="0 0 24 24"><path d="M4 12.5l5 5L2
 var KEBAB = '<svg class="icon" viewBox="0 0 24 24" style="fill:currentColor;stroke:none"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg>';
 var COPYSVG = '<svg class="icon" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg>';
 var STUB = 'Placeholder — not part of this wireframe spec yet.';
-var FEED_ICONS = {
-  created: '<path d="M12 4v16M4 12h16"/>',
-  updated: '<path d="M4 20h4l10.5-10.5a2 2 0 0 0 0-2.8l-1.2-1.2a2 2 0 0 0-2.8 0L4 16v4Z"/><path d="M14.5 6.5l3 3"/>',
-  status:  '<path d="M5 12h14M13 6l6 6-6 6"/>',
-  info:    '<circle cx="12" cy="12" r="8"/><path d="M12 11.5v5M12 8v.6"/>'
-};
+// Feed items carry no event icon (see feedItem), so there is no icon set here.
+// `kind` stays on each event: it is what the event is, and the next thing that
+// groups or filters activity will want it.
 // newest first; standard sentence order: what was done -> from -> to (if any) -> by whom.
 // `delta` is the plain-text change, kept for the raw audit payload only.
 // Activity now lives per-variant in DATASETS (density datasets block above).

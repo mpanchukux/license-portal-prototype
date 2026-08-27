@@ -31,14 +31,15 @@ function licFromNamed(key){
 // A grant and a perpetual licence share the details layout: nothing recurs, so
 // no renewal, no next charge, no plan to change. One test, used by every caller.
 function isPerpLike(lic){ return !!lic && (lic.type === 'Perpetual' || !!lic.grant); }
+/* The status chip answers one question — is this licence alive? — with the same
+   two values the tables use: Active or Canceled. Attention states (payment
+   failed, updates expiring, no first check-in yet) are NOT statuses: they live
+   in the banner above the content, with the date and the action that clears
+   them (see renderLicenseAlert). A grant is Active like any other licence; that
+   it costs nothing is a licence fact, so it rides in the kicker, not here. */
 function statusChipHTML(lic){
-  var st = lic.status;
-  // a grant states what it is (free) and what it waits for — both quiet, no alarm
-  if(lic.grant) return '<span class="chip">Free</span>'
-    + (st==='awaiting_checkin' ? '<span class="chip">Waiting for first check-in</span>' : '');
-  if(st==='payment_failed')   return '<span class="chip status attn">Payment failed</span>';
-  if(st==='updates_expiring') return '<span class="chip status attn">Updates expiring</span>';
-  if(st==='canceled')         return '<span class="chip status off">Canceled &middot; active until ' + fmtDate(lic.event) + '</span>';
+  if(lic.status === 'canceled')
+    return '<span class="chip status off">Canceled &middot; active until ' + fmtDate(lic.event) + '</span>';
   return '<span class="chip status"><span class="sdot"></span>Active</span>';
 }
 function renderEntitlements(entList, extras){
@@ -67,6 +68,8 @@ function renderLicenseAlert(lic){
   if(st==='payment_failed'){ t.innerHTML = '<b>Payment failed.</b> Update your payment method before ' + fmtDate(lic.event) + ' to keep the subscription active. <button class="link" data-goto="billing" style="margin-left:6px">Update payment method &rarr;</button>'; al.hidden=false; }
   else if(st==='updates_expiring'){ t.innerHTML = '<b>Software updates expire ' + fmtDate(lic.event) + '.</b> Renew to keep receiving updates and support.'; al.hidden=false; }
   else if(st==='canceled'){ t.innerHTML = '<b>Subscription canceled.</b> It stays active until ' + fmtDate(lic.event) + '. After that its instances will stop.'; al.hidden=false; }
+  // the key exists but nothing has used it yet — the one thing left to do is activate
+  else if(st==='awaiting_checkin'){ t.innerHTML = '<b>No instance has checked in yet.</b> The license key was issued ' + fmtDate(lic.created) + ' — activate an instance with it and it appears here. <button class="link" data-stub="Installation instructions" style="margin-left:6px">Installation guide &rarr;</button>'; al.hidden=false; }
   else al.hidden = true;
 }
 function renderLicenseActions(lic){
@@ -93,7 +96,9 @@ function renderLabelSlot(lic){
 function renderGrantChrome(lic){
   var isGrant = !!(lic && lic.grant);
   var kicker = $('#appView .titlekicker[data-page="perp"]');
-  if(kicker) kicker.textContent = isGrant ? 'Grant license' : 'Perpetual license';
+  // 'Free' left the status slot when status became Active/Canceled only — the
+  // kicker is where non-status licence facts live
+  if(kicker) kicker.textContent = isGrant ? 'Grant license · Free' : 'Perpetual license';
   var ph = $('#appView .keycol[data-page="perp"] .periodhead');
   if(ph) ph.textContent = isGrant ? 'Expiry' : 'Software updates';
   var coupon = $('#couponBtn'); if(coupon) coupon.hidden = isGrant;

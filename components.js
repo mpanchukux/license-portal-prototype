@@ -12,11 +12,13 @@ function attnRank(l){ return l.status==='payment_failed' ? 0 : l.status==='updat
    Attention states still live on the licence and still drive the details-page
    alert and the dashboard ordering — the table just does not shout them, and
    their date shows in the Renewal / Updates column instead. */
+/* Status answers one question — is this licence alive? — with two values, on every
+   surface: Active or Canceled. Attention states (payment failed, updates expiring,
+   no first check-in yet) are not statuses; they are the banner on the details page,
+   which carries the date and the action. Same rule as statusChipHTML. */
 function statusPill(l){
   var st = l && typeof l === 'object' ? l.status : l;
-  // the grant is the one exception: no key has been used yet, so it says so quietly
-  if(st==='awaiting_checkin') return '<td><span class="pill soft">Waiting for first check-in</span></td>';
-  if(st==='canceled')         return '<td><span class="pill off">Canceled</span></td>';
+  if(st==='canceled') return '<td><span class="pill off">Canceled</span></td>';
   return '<td><span class="pill">Active</span></td>';
 }
 /* What the next date means depends on the licence: a subscription renews, a
@@ -192,11 +194,13 @@ function auditJson(a){
   if(a.delta) payload.actionData.change = a.delta.replace(/<[^>]+>/g, '');
   return JSON.stringify(payload, null, 2);
 }
+// No event icon: the kind of event is already the first words of the sentence, so
+// the item starts at the container edge with its timestamp.
 function feedItem(a, i){
   return '<div class="fitem">'
     + '<div class="fi-row">'
     +   '<div class="fi-body">'
-    +     '<div class="fi-meta"><span class="fi-ic"><svg class="icon" viewBox="0 0 24 24">' + (FEED_ICONS[a.kind] || FEED_ICONS.info) + '</svg></span>' + a.ts + '</div>'
+    +     '<div class="fi-meta">' + a.ts + '</div>'
     +     '<div class="fi-txt">' + a.txt + '</div>'
     +   '</div>'
     +   '<button class="iconbtn ib" data-audit data-i="' + i + '" aria-expanded="false" aria-label="Show details" title="Show details">' + AUDITSVG + '</button>'

@@ -13,13 +13,13 @@
 <div class="licview" id="profileView">
  <div class="setgrid">
   <div class="setcol">
-  <!-- sticky page header: every action on one line, ordered by escalation toward
-       the primary — Log out (quietest) · Change password · Save. No "all saved"
+  <!-- sticky page header: the page's own actions, escalating toward the primary —
+       Change password · Save. Signing out is a global session action, so it stays
+       in the profile menu ("Sign out") and is not duplicated here. No "all saved"
        text: Save's disabled state already says there is nothing to save. -->
   <div class="pagehead">
     <h1 class="lic-h1">Account</h1>
     <span class="sp"></span>
-    <button class="btn ter" id="profLogoutBtn">Log out</button>
     <a class="btn sec" href="security.html">Change password</a>
     <button class="btn" id="profSaveBtn" disabled>Save</button>
   </div>
@@ -31,15 +31,17 @@
       <div class="field">
         <label>Email</label>
         <input type="email" id="profEmail" value="mpanchuk@thingsboard.io">
-        <div class="help">Used to sign in. Changing it needs confirmation from the new address — this one stays active until then.</div>
-        <!-- pending state: the field keeps showing the current address until the new
-             one confirms. Prototype: clicking the line plays the confirmation. -->
+        <div class="help" id="emailHelp">Used to sign in. Changing it needs confirmation from the new address — this one stays active until then.</div>
+        <!-- Pending change: the input keeps showing the address that actually works,
+             and this one line takes the helper's place — the value that is waiting
+             plus the two ways out. Prototype: clicking the value plays the
+             confirmation that would arrive from the new address. -->
         <div class="emailpend" id="emailPending" hidden>
-          <button class="emailpend-t" id="emailPendingTxt" title="Prototype: click to play the confirmation"></button>
-          <span class="emailpend-a">
-            <button class="link" id="emailResend">Resend</button>
-            <button class="link" id="emailCancel">Cancel change</button>
-          </span>
+          <svg class="icon emailpend-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5l3 2"/></svg>
+          <button class="emailpend-v" id="emailPendingTxt" title="Prototype: click to play the confirmation"></button>
+          <button class="link" id="emailResend">Resend</button>
+          <span class="emailpend-sep" aria-hidden="true">&middot;</span>
+          <button class="link" id="emailCancel">Cancel</button>
         </div>
       </div>
       <div class="field"><label>Language</label><select><option>English</option><option>Українська</option><option>Deutsch</option><option>Español</option></select></div>

@@ -8,6 +8,7 @@
 /* ---------- email change ---------- */
 var EMAIL = (function(){
   var input = $('#profEmail'), pend = $('#emailPending'), txt = $('#emailPendingTxt');
+  var help = $('#emailHelp');
   if(!input) return {};
   var stored = Store.get('pendingEmail');
   var confirmed = Store.get('emailConfirmed');
@@ -17,7 +18,9 @@ var EMAIL = (function(){
   function render(msg){
     input.value = current;
     if(pend) pend.hidden = !pendingTo;
-    if(txt && pendingTo) txt.textContent = msg || ('Verification sent to ' + pendingTo + ' — the change applies once confirmed.');
+    // the pending line explains the state on its own — the helper would repeat it
+    if(help) help.hidden = !!pendingTo;
+    if(txt && pendingTo) txt.textContent = msg || ('Pending: ' + pendingTo);
     var dev = $('#devConfirmEmail'); if(dev) dev.disabled = !pendingTo;
   }
   function onSave(){
@@ -32,7 +35,7 @@ var EMAIL = (function(){
   function cancel(){ pendingTo = null; Store.set('pendingEmail', null); render(); }
   function resend(){
     if(!pendingTo) return;
-    render('Verification re-sent to ' + pendingTo + '…');
+    render('Re-sent to ' + pendingTo + '…');
     clearTimeout(resendTimer);
     resendTimer = setTimeout(function(){ render(); }, 1600);
   }
@@ -48,10 +51,6 @@ if(profSaveBtn) profSaveBtn.addEventListener('click', function(){ if(EMAIL.onSav
 wirePageSave('#profileView', '#profSaveBtn', null);   // no saved-note on Account by design
 guardLinks();
 
-var profLogoutBtn = $('#profLogoutBtn');
-if(profLogoutBtn) profLogoutBtn.addEventListener('click', function(){
-  openModal('Log out', '<p>Placeholder — signing out is not part of this prototype.</p>');
-});
 
 /* Delete account — the page stays calm; this dialog carries the friction. */
 function openDeleteConfirm(){
