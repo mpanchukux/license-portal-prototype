@@ -1,167 +1,16 @@
 /* ============================================================================
-   wizard.js — the two big modals that create and change licences:
-     · AMF  — Manage add-ons, seeded from the licence it was opened on
-     · NL   — the new-licence wizard (subscription 4 steps, perpetual 3, and the
-              same wizard in change-plan mode)
-   Both ride the same .fs-screen / .fs-box chrome, injected here so no page has
-   to carry a copy. Purchases and plan changes write through Store, then hand
-   over with a real navigation.
+   wizard.js — ONE stepped modal (NL) in four modes:
+     · new      — buy a licence (picker → Customize → Review [→ Billing])
+     · change   — Change plan (same screens, product/billing locked)
+     · addons   — Manage add-ons (no picker: opens on Customize, tier pinned)
+   It rides the .fs-screen / .fs-box chrome, injected here so no page carries a
+   copy. Every mode writes through Store, then hands over with a real navigation.
+   Add-ons used to be a second modal (AMF) with its own static markup, constants
+   and step machinery; it was folded into this one so the two cannot drift.
    Loaded on the pages that can start a purchase: Home, Licenses, licence details.
    ============================================================================ */
 
 /* ---------- markup, injected once per page ---------- */
-var ADDONS_HTML = ''
-+ '<div class="fs-screen" id="fsAddons" role="dialog" aria-modal="true" aria-label="Manage add-ons" hidden>'
-+ '  <div class="fs-box">'
-+ '  <div class="fs-header">'
-+ '    <button class="fs-close fs-headback" id="fsBack" aria-label="Back" hidden>←</button>'
-+ '    <h2 class="fs-maintitle" id="fsTitle">Manage ThingsBoard Professional edition · Prototype</h2>'
-+ '    <span class="spacer"></span>'
-+ '    <div class="fs-headactions">'
-+ '      <button class="link" data-modal="change-plan">Change plan →</button>'
-+ '      <button class="fs-close" id="fsCancel" aria-label="Close">✕</button>'
-+ '    </div>'
-+ '  </div>'
-+ '  <div class="fs-body">'
-+ '    <!-- STEP 1 — ADJUST -->'
-+ '    <div id="fsStep1">'
-+ '      <div class="fs-grid">'
-+ '        <div class="fs-col">'
-+ '          <!-- variant A fills and shows this card; variant B shows the Devices row -->'
-+ '          <div class="fs-panel nl-plansum" id="fsPlanSum" hidden></div>'
-+ '          <div class="am-sec fs-panel">'
-+ '            <div class="am-sechead"><h4>Capacity</h4></div>'
-+ '            <div class="am-capgrid">'
-+ '              <div class="am-cell" id="fsDevCell">'
-+ '                <div class="fs-cellhead">'
-+ '                  <div class="fs-celltext">'
-+ '                    <div class="am-celltop">Devices</div>'
-+ '                  </div>'
-+ '                  <span class="fs-lockfield">'
-+ '                    <svg class="icon fs-lockic" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>'
-+ '                    <input class="fs-devinput locked" type="text" value="50" disabled aria-label="Devices — fixed by this plan">'
-+ '                  </span>'
-+ '                </div>'
-+ '              </div>'
-+ '              <div class="am-cell">'
-+ '                <div class="fs-cellhead">'
-+ '                  <div class="fs-celltext">'
-+ '                    <div class="am-celltop">Production instances</div>'
-+ '                    <div class="fs-celldesc">Production compute — 1 included. Enables clustering and HA.</div>'
-+ '                  </div>'
-+ '                  <div class="stepper" data-field="prod">'
-+ '                    <button type="button" data-dir="-1" aria-label="Decrease production instances">−</button>'
-+ '                    <span class="val" id="fsValProd" aria-live="polite">1</span>'
-+ '                    <button type="button" data-dir="1" aria-label="Increase production instances">+</button>'
-+ '                  </div>'
-+ '                </div>'
-+ '                <div class="am-cardprice">+$29.00 / mo each</div>'
-+ '              </div>'
-+ '              <div class="am-cell">'
-+ '                <div class="fs-cellhead">'
-+ '                  <div class="fs-celltext">'
-+ '                    <div class="am-celltop">Development instances</div>'
-+ '                    <div class="fs-celldesc">Dedicated instances for dev, test, and CI/CD — keeps production data clean.</div>'
-+ '                  </div>'
-+ '                  <div class="stepper" data-field="dev">'
-+ '                    <button type="button" data-dir="-1" aria-label="Decrease development instances">−</button>'
-+ '                    <span class="val" id="fsValDev" aria-live="polite">0</span>'
-+ '                    <button type="button" data-dir="1" aria-label="Increase development instances">+</button>'
-+ '                  </div>'
-+ '                </div>'
-+ '                <div class="am-cardprice">+$15.00 / mo each</div>'
-+ '              </div>'
-+ '              <div class="am-cell">'
-+ '                <div class="fs-cellhead">'
-+ '                  <div class="fs-celltext">'
-+ '                    <div class="am-celltop">AI credits</div>'
-+ '                    <div class="fs-celldesc">1 = 1,000,000 credits. Minimum matches your plan — increase to buy more.</div>'
-+ '                  </div>'
-+ '                  <div class="stepper" data-field="ai">'
-+ '                    <button type="button" data-dir="-1" aria-label="Decrease AI credits">−</button>'
-+ '                    <span class="val" id="fsValAi" aria-live="polite">2</span>'
-+ '                    <button type="button" data-dir="1" aria-label="Increase AI credits">+</button>'
-+ '                  </div>'
-+ '                </div>'
-+ '                <div class="am-cardprice">+$5.00 / mo per 1M AI credits</div>'
-+ '              </div>'
-+ '            </div>'
-+ '            <div class="am-sechead am-sechead-sub"><h4>Add-ons</h4></div>'
-+ '            <div class="am-capgrid">'
-+ '              <div class="am-cell am-addon" id="fsCardEdge">'
-+ '                <div class="fs-cellhead">'
-+ '                  <div class="fs-celltext">'
-+ '                    <div class="am-celltop">Edge Computing</div>'
-+ '                    <div class="fs-celldesc">Edge instances at remote sites for offline processing and auto-sync.</div>'
-+ '                    <div class="am-cardprice">+$7.00 /mo</div>'
-+ '                  </div>'
-+ '                  <label class="switch"><input type="checkbox" id="fsEdge" data-addon="edge" aria-label="Add Edge Computing add-on"><span class="track"></span></label>'
-+ '                </div>'
-+ '              </div>'
-+ '              <div class="am-cell am-addon" id="fsCardTrendz">'
-+ '                <div class="fs-cellhead">'
-+ '                  <div class="fs-celltext">'
-+ '                    <div class="am-celltop">Trendz Analytics</div>'
-+ '                    <div class="fs-celldesc">Advanced analytics, custom dashboards, and trend discovery.</div>'
-+ '                    <div class="am-cardprice">+$12.00 /mo</div>'
-+ '                  </div>'
-+ '                  <label class="switch"><input type="checkbox" id="fsTrendz" data-addon="trendz" aria-label="Add Trendz Analytics add-on"><span class="track"></span></label>'
-+ '                </div>'
-+ '              </div>'
-+ '            </div>'
-+ '          </div>'
-+ '        </div>'
-+ '        <div class="am-sec fs-right">'
-+ '          <div class="am-sechead"><h4>Calculation summary</h4></div>'
-+ '          <div class="am-figures">'
-+ '            <div class="am-sumlist" id="fsSumList"></div>'
-+ '            <div class="am-sumrow am-total-row">'
-+ '              <span>New monthly <span class="am-chgcount" id="fsChgCount">· no changes</span></span>'
-+ '              <span id="fsNewMonthly">$39.00 / mo</span>'
-+ '            </div>'
-+ '          </div>'
-+ '          <button class="btn fs-nextbtn" id="fsNext">Review →</button>'
-+ '        </div>'
-+ '      </div>'
-+ '    </div>'
-+ '    <!-- STEP 2 — REVIEW -->'
-+ '    <div id="fsStep2" hidden>'
-+ '      <div class="fs-review">'
-+ '        <h4 class="am-h2">Review your changes</h4>'
-+ '        <p class="am-sub2">Confirm what changes and what you\'ll be charged now.</p>'
-+ '        <div class="am-order">'
-+ '          <div class="am-orow am-planrow">'
-+ '            <div id="fsPlanLine">Prototype · 50 dev · 1 prod · 2M AI credits · White labeling</div>'
-+ '            <div>$39.00 / mo</div>'
-+ '          </div>'
-+ '          <div id="fsOrderLines"></div>'
-+ '          <div class="am-orow am-newmonthly"><div>New monthly · from 2026-08-30</div><div id="fsRecMonthly">$39.00 / mo</div></div>'
-+ '        </div>'
-+ '        <div class="am-due">'
-+ '          <div class="am-duerow">'
-+ '            <div class="am-duelabel">Due today <span class="muted">— prorated change for the current cycle (16 of 31 days, to 2026-08-30)</span></div>'
-+ '            <div class="am-dueval" id="fsDueVal">$0.00</div>'
-+ '          </div>'
-+ '          <div class="am-payrow">Charged to Visa ••4242 · auto-pay · <button class="link" data-modal="manage-payment">Manage payment →</button></div>'
-+ '        </div>'
-+ '        <div class="fs-reviewactions">'
-+ '          <button class="btn fs-confirmbtn" id="fsConfirm">Approve &amp; pay</button>'
-+ '        </div>'
-+ '      </div>'
-+ '    </div>'
-+ '    <!-- SUCCESS (stub) -->'
-+ '    <div id="fsSuccess" hidden>'
-+ '      <div class="am-success" style="max-width:640px;margin:0 auto">'
-+ '        <div class="am-checkbig">✓</div>'
-+ '        <h4 class="am-h2">Changes applied</h4>'
-+ '        <p class="am-sub2">Placeholder confirmation — no real charge was made. <span id="fsSuccessDue"></span></p>'
-+ '        <div style="margin-top:18px"><button class="btn" id="fsDone">Done</button></div>'
-+ '      </div>'
-+ '    </div>'
-+ '  </div>'
-+ '  </div><!-- /fs-box -->'
-+ '</div>';
-
 var WIZARD_HTML = ''
 + '<div class="fs-screen" id="nlModal" role="dialog" aria-modal="true" aria-label="New license" hidden>'
 + '  <div class="fs-box">'
@@ -175,12 +24,14 @@ var WIZARD_HTML = ''
 + '    <!-- the one stepper: a thin progress line + "Step N of M · Label" -->'
 + '    <div class="nl-stepbar" id="nlStepbar"><div id="nlSteps"></div></div>'
 + '    <div class="fs-body" id="nlBody">'
-+ '      <!-- STEP 1 — CHOOSE YOUR PRODUCT AND PLAN: three stacked choices —'
-+ '           product, billing type, then the offers for that pair. Each offer'
-+ '           card carries its own action, so this step needs no footer. -->'
++ '      <!-- STEP 1 — CHOOSE YOUR PRODUCT AND PLAN: three levels, no boxes.'
++ '           #nlChoices holds the centred product pill and, under it, the heading'
++ '           row whose right end carries the billing toggle. #nlOfferHead is the'
++ '           count on its own row, then the offer grid. Each offer card carries'
++ '           its own action, so this step needs no footer. -->'
 + '      <div id="nlStep1">'
 + '        <div id="nlChoices"></div>'
-+ '        <div class="nl-offerhead" id="nlOfferHead"></div>'
++ '        <div class="nl-countrow" id="nlOfferHead"></div>'
 + '        <div class="plangrid" id="nlPlanCards"></div>'
 + '      </div>'
 + '      <!-- STEP 2 — CUSTOMIZE (manage add-ons content, seeded from the chosen plan) -->'
@@ -194,156 +45,15 @@ var WIZARD_HTML = ''
 + '  </div>'
 + '</div>';
 
-/* both modals are injected once per page, so no page carries a copy of them */
-document.body.insertAdjacentHTML('beforeend', ADDONS_HTML + WIZARD_HTML);
+/* one modal per page — Manage add-ons is a mode of this same wizard, not a
+   second surface, so there is nothing else to inject */
+document.body.insertAdjacentHTML('beforeend', WIZARD_HTML);
 
 /* ---------- Manage add-ons ---------- */
-var AMF = (function(){
-  var BASE = 39;                 // reseeded per licence in seed() — Prototype default
-  var PRORATE = 16 / 31;         // 16 of 31 days remain in the cycle (to 2026-08-30)
-  var INCL = { prod:1, dev:0, ai:2 };
-  var MIN  = { prod:1, dev:0, ai:2 };
-  var MAX  = { prod:20, dev:20, ai:99 };
-  // per-tier bases/included for seeding the flow from a licence row
-  var AMF_TIERS = { maker:{base:10,prod:1,ai:1}, prototype:{base:39,prod:1,ai:2}, pilot:{base:99,prod:1,ai:4},
-                    startup:{base:299,prod:2,ai:8}, business:{base:499,prod:3,ai:16}, tbmqsub:{base:15,prod:1,ai:0} };
-  var ADD  = { edge:7, trendz:12 };
-  // PLACEHOLDER per-unit prices (prototype only): prod +$29/mo · dev +$15/mo · AI block +$5/mo per 1M
-  var UNIT = { prod:29, dev:15, ai:5 };
-  var s = { prod:1, dev:0, ai:2, edge:false, trendz:false };
-  var scr = $('#fsAddons');
-  var body = $('.fs-body', scr);
-  var lastFocus = null, lastSeedLic = null;
-
-  function money(n){ return '$' + n.toFixed(2); }
-  function extras(){ return { prod:s.prod-INCL.prod, dev:s.dev-INCL.dev, ai:s.ai-INCL.ai }; }
-  function addonMonthly(){ return (s.edge?ADD.edge:0) + (s.trendz?ADD.trendz:0); }
-  function extrasMonthly(){ var e=extras(); return e.prod*UNIT.prod + e.dev*UNIT.dev + e.ai*UNIT.ai; }
-  function deltaMonthly(){ return addonMonthly() + extrasMonthly(); }
-  function newMonthly(){ return BASE + deltaMonthly(); }
-  function dueToday(){ return deltaMonthly() * PRORATE; }
-
-  function changes(){
-    var out = [], e = extras();
-    if(s.edge)   out.push({ t:'+ Edge Computing',   amt:ADD.edge });
-    if(s.trendz) out.push({ t:'+ Trendz Analytics', amt:ADD.trendz });
-    if(e.prod>0) out.push({ t:'+'+e.prod+' production instance'+(e.prod>1?'s':''), amt:e.prod*UNIT.prod, unit:UNIT.prod });
-    if(e.dev>0)  out.push({ t:'+'+e.dev+' development instance'+(e.dev>1?'s':''),  amt:e.dev*UNIT.dev, unit:UNIT.dev });
-    if(e.ai>0)   out.push({ t:'+'+e.ai+' AI block'+(e.ai>1?'s':'')+' (1M)',         amt:e.ai*UNIT.ai, unit:UNIT.ai });
-    return out;
-  }
-
-  function render(){
-    $('#fsValProd').textContent = s.prod;
-    $('#fsValDev').textContent  = s.dev;
-    $('#fsValAi').textContent   = s.ai;
-    $('#fsEdge').checked   = s.edge;
-    $('#fsTrendz').checked = s.trendz;
-    $('#fsCardEdge').classList.toggle('on', s.edge);
-    $('#fsCardTrendz').classList.toggle('on', s.trendz);
-    $$('.stepper', scr).forEach(function(st){
-      var f = st.getAttribute('data-field');
-      st.querySelector('[data-dir="-1"]').disabled = s[f] <= MIN[f];
-      st.querySelector('[data-dir="1"]').disabled  = s[f] >= MAX[f];
-    });
-    var ch = changes();
-    $('#fsNewMonthly').textContent = money(newMonthly()) + ' / mo';
-    $('#fsChgCount').textContent = ch.length ? ('· '+ch.length+' change'+(ch.length>1?'s':'')) : '· no changes';
-    var html = '<div class="am-sumrow cur"><span>Current</span><span>'+money(BASE)+' / mo</span></div>';
-    ch.forEach(function(c){ var left = c.unit ? (c.t + ' × ' + money(c.unit)) : c.t; html += '<div class="am-sumrow"><span>'+left+'</span><span>'+money(c.amt)+'</span></div>'; });
-    $('#fsSumList').innerHTML = html;
-  }
-
-  function render2(){
-    var ch = changes();
-    var rows = '';
-    ch.forEach(function(c){ var left = c.unit ? (c.t + ' × ' + money(c.unit)) : c.t; rows += '<div class="am-orow"><div>'+left+'</div><div>'+money(c.amt)+'</div></div>'; });
-    $('#fsOrderLines').innerHTML = rows;
-    $('#fsRecMonthly').textContent = money(newMonthly()) + ' / mo';
-    $('#fsDueVal').textContent = money(dueToday());
-    // the amount lives in the Due today block, so the button stays a plain label
-    $('#fsSuccessDue').textContent = 'Prorated charge today: ' + money(dueToday()) + '.';
-  }
-
-  function goStep(n){
-    $('#fsStep1').hidden = n!==1;
-    $('#fsStep2').hidden = n!==2;
-    $('#fsSuccess').hidden = true;
-    $('#fsBack').hidden = n!==2;   // Back sits in the header, review step only
-    if(n===2) render2();
-    if(body) body.scrollTop = 0;
-  }
-
-  function showSuccess(){
-    $('#fsStep1').hidden = true;
-    $('#fsStep2').hidden = true;
-    $('#fsSuccess').hidden = false;
-    $('#fsBack').hidden = true;
-    if(body) body.scrollTop = 0;
-    $('#fsDone').focus();
-  }
-
-  // seed the whole flow from the licence it was opened for (details page or a
-  // table row). Labels in the static markup stay ThingsBoard-worded — noted debt.
-  function seed(lic){
-    var t = lic && AMF_TIERS[lic.tier] ? lic.tier : 'prototype';
-    var d = AMF_TIERS[t], spec = TIER_SPECS[t] || { ent:[] };
-    BASE = d.base;
-    INCL = { prod:d.prod, dev:0, ai:d.ai };
-    MIN  = { prod:d.prod, dev:0, ai:d.ai };
-    var xp = lic && lic.extras ? parseInt(lic.extras.prod || '0', 10) || 0 : 0;
-    var xa = lic && lic.extras ? parseInt(String(lic.extras.ai || '0'), 10) || 0 : 0;
-    s = { prod:d.prod + xp, dev:0, ai:d.ai + xa, edge:!!(lic && lic.edge), trendz:!!(lic && lic.trendz) };
-    var name = (TIER_SPECS[t] && TIER_SPECS[t].name) || 'Prototype';
-    $('#fsTitle').textContent = lic
-      ? ('Manage ' + lic.product + ' ' + lic.name + (lic.label ? ' · ' + lic.label : ''))
-      : 'Manage ThingsBoard Professional edition · Prototype';
-    lastSeedLic = lic || null;
-    // A — the fixed entitlements move into a plan card above the controls;
-    // B — they stay as the Devices row, locked inside its own input
-    var variantA = custVariant() === 'a';
-    var fixed = (spec.ent || []).filter(function(e){ return e[0] !== 'Production instances' && e[0] !== 'AI credits'; });
-    var sum = $('#fsPlanSum'), cell = $('#fsDevCell');
-    if(sum){
-      sum.hidden = !variantA;
-      var facts = fixed.map(function(e){ return e[1] + ' ' + e[0].toLowerCase(); });
-      facts.push('fixed by this plan');
-      var prod = lic ? lic.product : 'ThingsBoard';
-      var typ = lic && lic.type ? lic.type : 'Subscription';
-      sum.innerHTML = '<div class="nl-plansum-t">' + prod + ' ' + name + ' · ' + typ + '</div>'
-        + '<div class="nl-plansum-f">' + facts.join(' · ') + '</div>';
-    }
-    if(cell) cell.hidden = variantA;
-    var devIn = $('#fsAddons .fs-devinput'); if(devIn && fixed[0]) devIn.value = fixed[0][1];
-    var pl = $('#fsPlanLine');
-    if(pl) pl.textContent = name + ' · ' + spec.ent.map(function(en){ return en[1] + ' ' + en[0].toLowerCase(); }).join(' · ');
-  }
-  function open(lic){ lastFocus = document.activeElement; seed(lic || null); render(); goStep(1); scr.hidden = false; $('#fsCancel').focus(); }
-  function close(){ scr.hidden = true; if(lastFocus && lastFocus.focus) lastFocus.focus(); }
-
-  $$('.stepper button', scr).forEach(function(btn){
-    btn.addEventListener('click', function(){
-      var st = btn.closest('.stepper'), f = st.getAttribute('data-field');
-      s[f] = Math.max(MIN[f], Math.min(MAX[f], s[f] + parseInt(btn.getAttribute('data-dir'), 10)));
-      render();
-    });
-  });
-  $$('input[data-addon]', scr).forEach(function(cb){
-    cb.addEventListener('change', function(){ s[cb.getAttribute('data-addon')] = cb.checked; render(); });
-  });
-  $('#fsNext').addEventListener('click', function(){ goStep(2); });
-  $('#fsBack').addEventListener('click', function(){ goStep(1); });
-  $('#fsConfirm').addEventListener('click', showSuccess);
-  $('#fsDone').addEventListener('click', close);
-  $('#fsCancel').addEventListener('click', close);
-  document.addEventListener('keydown', function(e){ if(e.key==='Escape' && !scr.hidden && $('#overlay').hidden) close(); });
-
-  return { open: open,
-           // the settings panel switches the Customize variant while it is open
-           refresh: function(){ if(!scr.hidden){ seed(lastSeedLic); render(); } } };
-})();
-
-function openManageAddons(lic){ AMF.open(lic); }
+/* Manage add-ons runs the purchase wizard in add-ons mode: same shell, header,
+   progress line, Customize and Review steps, guards and success behaviour. The
+   parallel AMF controller and its static markup are gone. */
+function openManageAddons(lic){ NL.open({ mode:'addons', license:lic }); }
 
 
 
@@ -388,15 +98,38 @@ var NL = (function(){
   var MAXQ = { prod:20, dev:20, ai:99 };
 
   function money(n){ return '$' + n.toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 }); }
+  // a modification can lower the bill, so its rows carry an explicit sign
+  function moneySigned(n){ return (n < 0 ? '\u2212' : '+') + money(Math.abs(n)); }
   function isPerp(){ return st.kind === 'perpetual'; }
   function tier(){
+    if(st.fixedTier) return st.fixedTier;   // add-ons: the plan is not up for change
     if(isPerp()) return st.product === 'tbmq' ? 'tbmqperp' : 'tbperp';
     return st.product === 'tbmq' ? 'tbmqsub' : String(st.plan || '').toLowerCase();
   }
   function units(){ return isPerp() ? (st.product === 'tbmq' ? UNITS.perpMQ : UNITS.perpTB) : UNITS.sub; }
   function isChange(){ return st.mode === 'change'; }
-  function oldMonthly(){ return BASE[st.oldTier] || 0; }
-  function confirmLabel(){ return isChange() ? 'Confirm change' : (isPerp() ? 'Buy license' : 'Subscribe'); }
+  function isAddons(){ return st.mode === 'addons'; }
+  // both modes edit an existing licence, so both prorate instead of charging full
+  function isMod(){ return isChange() || isAddons(); }
+  function extrasCostOf(c){
+    var u = units(), i = INCL[tier()] || { prod:1, ai:0 };
+    return Math.max(0, c.prod - i.prod) * u.prod
+      + (hasDev() ? c.dev * u.dev : 0)
+      + (hasAi() ? Math.max(0, c.ai - (i.ai || 0)) * u.ai : 0)
+      + (hasAddons() && c.edge ? ADD.edge : 0)
+      + (hasAddons() && c.trendz ? ADD.trendz : 0);
+  }
+  /* what the licence costs before this flow's edits. Change-plan compares against
+     the OLD plan's base; add-ons keeps the plan and compares against the
+     configuration the licence arrived with (st.baseCust). */
+  function oldMonthly(){
+    if(isAddons()) return (BASE[tier()] || 0) + extrasCostOf(st.baseCust || cust);
+    return BASE[st.oldTier] || 0;
+  }
+  function confirmLabel(){
+    if(isAddons()) return 'Confirm changes';
+    return isChange() ? 'Confirm change' : (isPerp() ? 'Buy license' : 'Subscribe');
+  }
   function currentCardName(){ return st.oldTier === 'tbmqsub' ? 'TBMQ PE subscription' : st.oldName; }
   function hasAddons(){ return !isPerp() && st.product === 'thingsboard'; }
   function hasDev(){ return !isPerp() && st.product === 'thingsboard'; }
@@ -415,6 +148,43 @@ var NL = (function(){
     return out;
   }
   function total(){ return (BASE[tier()] || 0) + deltas().reduce(function(a, c){ return a + c.amt; }, 0); }
+  /* Add-ons reviews a MODIFICATION, so its review states the delta against the
+     configuration the licence arrived with — "from → to" for quantities, added /
+     removed for the two add-ons. deltas() cannot do this: it lists everything
+     above the plan's included amount, which is the whole extras bill rather than
+     what this flow changed. */
+  function changeRows(){
+    var b = st.baseCust, u = units(), out = [];
+    if(!b) return out;
+    function qty(f, label, price, show){
+      if(!show || cust[f] === b[f]) return;
+      out.push({ t:label + ' ' + b[f] + ' \u2192 ' + cust[f], amt:(cust[f] - b[f]) * price });
+    }
+    qty('prod', 'Production instances', u.prod, true);
+    qty('dev', 'Development instances', u.dev, hasDev());
+    qty('ai', 'AI credits (1M blocks)', u.ai, hasAi());
+    if(hasAddons()){
+      if(cust.edge !== b.edge) out.push({ t:(cust.edge ? 'Added' : 'Removed') + ' Edge Computing', amt:(cust.edge ? 1 : -1) * ADD.edge });
+      if(cust.trendz !== b.trendz) out.push({ t:(cust.trendz ? 'Added' : 'Removed') + ' Trendz Analytics', amt:(cust.trendz ? 1 : -1) * ADD.trendz });
+    }
+    return out;
+  }
+  function changeSummary(){
+    var r = changeRows();
+    return r.length ? r.map(function(x){ return x.t; }).join(' \u00b7 ') + '.' : 'License updated.';
+  }
+  /* seed the flow from the licence it was opened on: current = the plan's included
+     amounts plus whatever extras the licence already carries. seededTier is set
+     here so renderStep2 does not reseed over it with the plan minimums. */
+  function seedFromLicense(lic){
+    var t = tier(), i = INCL[t] || { prod:1, ai:0 };
+    var x = lic.extras || {};
+    var n = function(v){ return parseInt(String(v || '0'), 10) || 0; };
+    cust = { prod:i.prod + n(x.prod), dev:n(x.dev), ai:(i.ai || 0) + n(x.ai),
+             edge:!!lic.edge, trendz:!!lic.trendz };
+    st.baseCust = { prod:cust.prod, dev:cust.dev, ai:cust.ai, edge:cust.edge, trendz:cust.trendz };
+    seededTier = t;
+  }
   function entSummary(t){
     var spec = TIER_SPECS[t] || { ent:[] };
     return spec.ent.map(function(e){
@@ -434,61 +204,110 @@ var NL = (function(){
   // a licence you can change already pays for itself, so change-plan never asks
   // for billing data — only a first purchase can land on the billing step
   function needsBilling(){ return !isChange() && !billingSaved(); }
+  /* Internal step ids stay 1..4 (1 picker · 2 Customize · 3 Review · 4 Billing) so
+     one renderStepN serves every mode. Add-ons has no picker, so it starts at 2
+     and the DISPLAYED index is offset by firstStep() — "Step 1 of 2 · Customize".
+     Nothing hardcodes the count; the progress line reads stepLabels(). */
+  function firstStep(){ return isAddons() ? 2 : 1; }
   function stepLabels(){
-    return needsBilling()
-      ? ['Choose your product and plan', 'Customize', 'Review', 'Billing & payment']
-      : ['Choose your product and plan', 'Customize', 'Review & pay'];
+    var tail = needsBilling()
+      ? ['Customize', 'Review', 'Billing & payment']
+      : ['Customize', 'Review & pay'];
+    return isAddons() ? tail : ['Choose your product and plan'].concat(tail);
   }
   function totalSteps(){ return stepLabels().length; }
-  function isLastStep(){ return st.step === totalSteps(); }
+  function lastStep(){ return firstStep() + totalSteps() - 1; }
+  function isLastStep(){ return st.step === lastStep(); }
+  function stepIndex(){ return st.step - firstStep() + 1; }
   function m0(n){ return '$' + n.toLocaleString('en-US'); }
   function renderSteps(){
     var labels = stepLabels();
     // Back is an icon button here, right before the step label — the footer no
     // longer carries it (and the Customize step has no footer at all)
-    var back = st.step > 1
+    var back = st.step > firstStep()
       ? '<button class="iconbtn ib nl-stepback" id="nlStepBack" aria-label="Back" title="Back">'
         + '<svg class="icon" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>'
       : '';
+    var i = stepIndex();
     $('#nlSteps').innerHTML = '<div class="nl-progress">'
-      + '<div class="nl-ptrack"><span class="nl-pfill" style="width:' + (st.step / totalSteps() * 100) + '%"></span></div>'
+      + '<div class="nl-ptrack"><span class="nl-pfill" style="width:' + (i / totalSteps() * 100) + '%"></span></div>'
       + '<div class="nl-plabel">' + back
-      + '<span>Step ' + st.step + ' of ' + totalSteps() + ' · <b>' + labels[st.step - 1] + '</b></span></div></div>';
+      + '<span>Step ' + i + ' of ' + totalSteps() + ' · <b>' + labels[i - 1] + '</b></span></div></div>';
   }
 
 
   /* ---- step 1 — choose your product and plan ------------------------------
-     Three stacked choices on one screen: product, then billing type, then the
-     offers for that pair. The first two are selectable cards that only narrow
-     what is offered below — they never advance the step, because two more
-     choices follow. The offer cards carry their own always-visible action (no
-     hover-reveal: there is no hover on touch, and it hides the action), so the
-     step needs no footer. Change-plan mode renders the first two levels
-     selected-and-locked and marks the current plan as non-selectable. ---- */
+     Three labeled groups stacked on one screen: Product, then Billing, then the
+     Plans for that pair. Each group carries a plain section heading (no step
+     numbers — the stepbar above already counts). The first two hold their two
+     wide cards in a bordered container, and a short connector hangs under each,
+     so the top-down dependency product → billing → plans reads visually; those
+     two only narrow what is offered below and never advance the step, because
+     two more choices follow. The plan row needs no container of its own — the
+     offer cards are already the frames — and each carries its own always-visible
+     action (no hover-reveal: there is no hover on touch, and it hides the
+     action), so the step needs no footer. Change-plan mode renders the first two
+     groups selected-and-locked and marks the current plan as non-selectable. */
   function planCount(set){ var n = set.cards.length; return n + (n === 1 ? ' plan' : ' plans'); }
+
+  /* LEVEL 1 — product: one compact pill-shaped segmented control, centred. It is a
+     picker, not a pitch, so the one-line product descriptions the old cards
+     carried are gone from this step. Glyphs are 16px monochrome: a hub and spokes
+     for the platform, a broadcast arc for the broker. */
   var PRODUCT_CHOICES = [
-    { v:'thingsboard', t:'ThingsBoard', d:'IoT platform — devices, dashboards, rule engine, integrations.' },
-    { v:'tbmq', t:'TBMQ', d:'High-performance MQTT broker for reliable message streaming.' }
+    { v:'thingsboard', t:'ThingsBoard',
+      g:'<circle cx="12" cy="12" r="3"/><circle cx="12" cy="4" r="1.5"/><circle cx="12" cy="20" r="1.5"/>'
+        + '<circle cx="4" cy="12" r="1.5"/><circle cx="20" cy="12" r="1.5"/>'
+        + '<path d="M12 9V5.5M12 15v3.5M9 12H5.5M15 12h3.5"/>' },
+    { v:'tbmq', t:'TBMQ',
+      g:'<circle cx="7" cy="17" r="1.6"/><path d="M7 11.5A5.5 5.5 0 0 1 12.5 17"/>'
+        + '<path d="M7 6A11 11 0 0 1 18 17"/>' }
   ];
+  function productSegHTML(active, locked){
+    return '<div class="nl-prodrow">'
+      + '<div class="nl-prodseg" role="group" aria-label="Product">'
+      + PRODUCT_CHOICES.map(function(o){
+          var on = o.v === active;
+          return '<button type="button" class="nl-prodopt' + (on ? ' is-on' : '') + '"'
+            + ' data-nl-product="' + o.v + '" aria-pressed="' + on + '"' + (locked ? ' disabled' : '') + '>'
+            + '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">' + o.g + '</svg>'
+            + '<span>' + o.t + '</span></button>';
+        }).join('')
+      + '</div></div>';
+  }
+
+  /* LEVEL 2 — a heading that names what the grid below is showing, with the toggle
+     that decides it on the same line at the right. The descriptions that used to
+     fill the two billing cards now ride in the ⓘ tooltips, so the row stays one
+     line. The switch is the real control (off = Subscription, on = Perpetual);
+     the labels are text, as in the reference. */
   var BILLING_CHOICES = [
     { v:'subscription', t:'Subscription',
       d:'Pay every month. Unlimited customers, dashboards, integrations, API calls, data points and messages, and you can change the plan any time.' },
     { v:'perpetual', t:'Perpetual',
       d:'Pay once, run it indefinitely. Includes 12 months of software updates, renewable.' }
   ];
-  function choiceLevel(label, field, opts, active, locked){
-    return '<div class="nl-level">'
-      + '<span class="nl-flabel">' + label + '</span>'
-      + '<div class="nl-choices" role="group" aria-label="' + label + '">'
-      + opts.map(function(o){
-          var on = o.v === active;
-          return '<button type="button" class="nl-choice' + (on ? ' is-on' : '') + '"'
-            + ' data-nl-' + field + '="' + o.v + '" aria-pressed="' + on + '"' + (locked ? ' disabled' : '') + '>'
-            + '<span class="nl-choice-t">' + o.t + '</span>'
-            + '<span class="nl-choice-d">' + o.d + '</span>'
-            + '</button>';
-        }).join('')
-      + '</div></div>';
+  var INFOSVG = '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">'
+    + '<circle cx="12" cy="12" r="9"/><path d="M11.98 8h.04"/><path d="M12 11.5V16"/></svg>';
+  function billRowHTML(locked){
+    var perp = isPerp();
+    function info(o){
+      // .tip is the existing CSS-only tooltip; .wide lets this much copy wrap
+      return '<span class="nl-info tip wide" data-tip="' + esc(o.d) + '" tabindex="0"'
+        + ' role="note" aria-label="' + esc(o.t + '. ' + o.d) + '">' + INFOSVG + '</span>';
+    }
+    var sub = BILLING_CHOICES[0], pp = BILLING_CHOICES[1];
+    return '<div class="nl-billrow">'
+      + '<h3 class="nl-billhead">' + (perp ? 'Perpetual licenses' : 'Subscription plans') + '</h3>'
+      + '<span class="spacer"></span>'
+      + '<div class="nl-billtoggle">'
+      +   '<span class="nl-blabel' + (perp ? '' : ' is-on') + '">' + sub.t + '</span>' + info(sub)
+      +   '<label class="switch nl-billsw"><input type="checkbox" data-nl-billsw'
+      +     (perp ? ' checked' : '') + (locked ? ' disabled' : '')
+      +     ' aria-label="Perpetual billing"><span class="track"></span></label>'
+      +   '<span class="nl-blabel' + (perp ? ' is-on' : '') + '">' + pp.t + '</span>' + info(pp)
+      + '</div>'
+      + '</div>';
   }
   function planPickCard(c, set){
     var current = isChange() && c.name === currentCardName();
@@ -514,11 +333,10 @@ var NL = (function(){
   }
   function renderStep1(){
     var set = EC_PLANS[ecKey()], locked = isChange();
-    $('#nlChoices').innerHTML =
-        choiceLevel('Product', 'product', PRODUCT_CHOICES, st.product, locked)
-      + choiceLevel('Billing', 'billing', BILLING_CHOICES, isPerp() ? 'perpetual' : 'subscription', locked);
-    // the count sits right-aligned above the offers it counts
-    $('#nlOfferHead').innerHTML = '<span class="spacer"></span><span class="nl-fcount">' + planCount(set) + '</span>';
+    $('#nlChoices').innerHTML = productSegHTML(st.product, locked) + billRowHTML(locked);
+    /* the count gets its OWN row under the heading: the heading row's right end
+       belongs to the billing toggle, and the two would collide there */
+    $('#nlOfferHead').innerHTML = '<span class="nl-fcount">' + planCount(set) + '</span>';
     var grid = $('#nlPlanCards');
     grid.className = 'plangrid' + (set.single ? ' one' : '') + (locked ? ' withcur' : '');
     grid.innerHTML = set.cards.map(function(c){ return planPickCard(c, set); }).join('');
@@ -630,11 +448,14 @@ var NL = (function(){
       + '</div>';
   }
   /* ---- step 3: review ---------------------------------------------------------
-     No in-content heading: the step header already says where we are. The action
-     sits inside the Due today card, under the amount — the same pattern as the
-     summary card on step 2 — and it either commits (billing data saved) or leads
-     to the billing step (none). Billing terms get their own quiet card below the
-     Due today card: calmer than crowding the card that now carries the action. */
+     Same two-column grid as step 2 — left column is what is being bought, right
+     column is the sticky summary card that carries the action — so this reads as
+     part of the wizard, not its own screen. No in-content heading: the step
+     header already says where we are. On the left the plan block and the billing
+     terms are one joined unit (see .nl-joined); on the right the commit sits
+     inside the card, in the card's own padding, exactly like step 2's Calculation
+     summary. The button either commits (billing data saved) or leads to the
+     billing step (none). ---- */
   function termsLine(){
     if(isPerp()) return 'One-time payment · includes 12 months of software updates.';
     return 'Billed monthly · auto-pay. Cancel anytime.';
@@ -642,36 +463,55 @@ var NL = (function(){
   function renderStep3(){
     var t = tier();
     var rows = '';
-    deltas().forEach(function(c){
-      var left = c.unit ? (c.t + ' × ' + money(c.unit)) : c.t;
-      rows += '<div class="am-orow"><div>' + left + '</div><div>' + money(c.amt) + '</div></div>';
-    });
-    var due = isChange()
-      ? '<div class="am-duerow"><div class="am-duelabel">Due today <span class="muted">— prorated change for the current cycle (16 of 31 days, to 2026-08-30)</span></div>'
-        + '<div class="am-dueval">' + money(Math.max(0, total() - oldMonthly()) * 16 / 31) + '</div></div>'
-      : '<div class="am-duerow"><div class="am-duelabel">Due today</div><div class="am-dueval">' + money(total()) + '</div></div>';
+    if(isAddons()){
+      // what changed, signed — not the whole extras bill
+      var chg = changeRows();
+      if(!chg.length) rows = '<div class="am-orow"><div class="muted">No changes yet</div><div></div></div>';
+      chg.forEach(function(c){
+        rows += '<div class="am-orow"><div>' + c.t + '</div><div>' + moneySigned(c.amt) + '</div></div>';
+      });
+    } else {
+      deltas().forEach(function(c){
+        var left = c.unit ? (c.t + ' × ' + money(c.unit)) : c.t;
+        rows += '<div class="am-orow"><div>' + left + '</div><div>' + money(c.amt) + '</div></div>';
+      });
+    }
+    var dueLabel = isMod()
+      ? 'Due today <span class="muted">— prorated change for the current cycle (16 of 31 days, to 2026-08-30)</span>'
+      : 'Due today';
+    var dueVal = isMod() ? money(Math.max(0, total() - oldMonthly()) * 16 / 31) : money(total());
     // with a card on file the review commits; without one it leads to the billing step
-    var last = isLastStep();
-    var cta = last ? confirmLabel() : 'Continue to billing';
+    var cta = isLastStep() ? confirmLabel() : 'Continue to billing';
     var payline = billingSaved()
-      ? '<div class="am-payrow">' + (isPerp() ? 'Charged once to' : 'Charged to') + ' Visa ••4242'
-        + (isPerp() ? '' : ' · auto-pay') + ' · <button class="link" id="nlPayChange">Change → Billing &amp; payment</button></div>'
-      : '<div class="am-payrow">You\u2019ll add billing and payment details on the next step.</div>';
+      ? (isPerp() ? 'Charged once to' : 'Charged to') + ' Visa ••4242'
+        + (isPerp() ? '' : ' · auto-pay') + ' · <button class="link" id="nlPayChange">Change → Billing &amp; payment</button>'
+      : 'You’ll add billing and payment details on the next step.';
     $('#nlStep3').innerHTML =
-      '<div class="fs-review">'
-      + '<div class="am-order">'
-      +   '<div class="am-orow am-planrow nl-mainline"><div>' + (st.product === 'tbmq' ? 'TBMQ' : 'ThingsBoard') + ' '
-      +     (isChange() ? (st.oldName + ' \u2192 ' + (NAME[t] || st.plan)) : (NAME[t] || st.plan))
-      +     '</div><div>' + money(BASE[t] || 0) + perSuffix() + '</div></div>'
-      +   '<div class="am-orow nl-entline"><div>' + entSummary(t) + '</div><div></div></div>'
-      +   rows
-      +   '<div class="am-orow am-newmonthly"><div>' + (isChange() ? 'New monthly' : (isPerp() ? 'One-time total' : 'Monthly total'))
-      +     '</div><div>' + money(total()) + perSuffix() + '</div></div>'
+      '<div class="fs-grid">'
+      + '<div class="fs-col">'
+      /* the plan block and the terms card are one joined unit: no gap between
+         them and no radius where they meet, so a single line divides them */
+      +   '<div class="nl-joined">'
+      +     '<div class="am-order">'
+      +       '<div class="am-orow am-planrow nl-mainline"><div>' + (st.product === 'tbmq' ? 'TBMQ' : 'ThingsBoard') + ' '
+      +         (isChange() ? (st.oldName + ' → ' + (NAME[t] || st.plan)) : (NAME[t] || st.plan))
+      +         '</div><div>' + money(BASE[t] || 0) + perSuffix() + '</div></div>'
+      +       '<div class="am-orow nl-entline"><div>' + entSummary(t) + '</div><div></div></div>'
+      +       rows
+      +       '<div class="am-orow am-newmonthly"><div>' + (isMod() ? 'New monthly' : (isPerp() ? 'One-time total' : 'Monthly total'))
+      +         '</div><div>' + money(total()) + perSuffix() + '</div></div>'
+      +     '</div>'
+      +     '<div class="nl-terms">' + termsLine() + '</div>'
+      +   '</div>'
       + '</div>'
-      + '<div class="am-due nl-duecard">' + due + payline
+      /* right: Due today, the payment context, then the commit — all sitting in
+         .fs-right's own padding, the same internal spacing step 2 uses */
+      + '<div class="am-sec fs-right">'
+      +   '<div class="nl-duerow"><div class="am-duelabel">' + dueLabel + '</div>'
+      +     '<div class="am-dueval">' + dueVal + '</div></div>'
+      +   '<div class="nl-payline">' + payline + '</div>'
       +   '<button class="btn fs-nextbtn" id="nlCommit">' + cta + '</button>'
       + '</div>'
-      + '<div class="nl-terms">' + termsLine() + '</div>'
       + '</div>';
   }
 
@@ -740,10 +580,8 @@ var NL = (function(){
       +   '</div>'
       +   '<div class="am-sec fs-panel">'
       +     '<div class="am-sechead"><h4>Payment method</h4></div>'
-      +     '<div class="field2">'
-      +       fld('cardName', 'Cardholder name', true)
-      +       fld('cardCountry', 'Country', true, { select:true })
-      +     '</div>'
+      /* card number leads: it is the field the panel is about, and the name and
+         country below it are the details that qualify it */
       +     '<div class="field"><label for="nlb-num">Card number <span class="req" aria-hidden="true">*</span></label>'
       +       '<div class="paystripe">'
       +         '<svg class="icon paystripe-glyph" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>'
@@ -751,6 +589,10 @@ var NL = (function(){
       +         '<input class="ps-exp" data-nlb="exp" type="text" inputmode="numeric" autocomplete="cc-exp" placeholder="MM / YY" aria-label="Expiry date" maxlength="7" value="' + bill.exp + '">'
       +         '<input class="ps-cvc" data-nlb="cvc" type="text" inputmode="numeric" autocomplete="cc-csc" placeholder="CVC" aria-label="Security code" maxlength="4" value="' + bill.cvc + '">'
       +       '</div></div>'
+      +     '<div class="field2">'
+      +       fld('cardName', 'Cardholder name', true)
+      +       fld('cardCountry', 'Country', true, { select:true })
+      +     '</div>'
       +     '<div class="paystripe-note">Powered by <b>Stripe</b></div>'
       +   '</div>'
       + '</div>'
@@ -781,7 +623,7 @@ var NL = (function(){
   /* ---- confirm: loading on the button (~1.5s), then a success modal with the
      licence key; Done lands on Licenses where the new row is visible ---- */
   function commitPurchase(){
-    if(isChange()){ commitChange(); return; }
+    if(isMod()){ commitChange(); return; }
     var t = tier(), e = extras(), tot = total();
     var seq = storeNextSeq();          // persisted, so ids stay unique across reloads
     var lic = { id:'N' + seq, tier:t,
@@ -808,6 +650,8 @@ var NL = (function(){
   }
   function commitChange(){
     var lic = st.changeLic, t = tier(), e = extras();
+    // add-ons keeps the plan: only the entitlements and the price move
+    var summary = isAddons() ? changeSummary() : null;
     lic.tier = t;
     lic.name = NAME[t] || st.plan;
     lic.price = money(total()) + ' / mo';
@@ -820,9 +664,13 @@ var NL = (function(){
     Store.save();                      // the licence object was mutated in place
     st.dirty = false;
     scr.hidden = true;
+    /* no success modal in either mode: the licence page is the destination. Add-ons
+       leaves a one-time banner there saying what changed, next to the updated
+       entitlements it produced (see syncChangedBanner in license-details.js). */
+    if(summary) Store.set('justChanged', { id:lic.id, text:summary });
     // modal mode: the details are already open underneath — restate them there
     if(window.LicenseDetails && LicenseDetails.isOpen()){ LicenseDetails.reopen(lic); return; }
-    location.href = licenseHref(lic);  // land on the licence details, now on the new plan
+    location.href = licenseHref(lic);  // land on the licence details, now updated
   }
   function startPurchase(btn){
     if(!btn || btn.disabled) return;
@@ -837,8 +685,13 @@ var NL = (function(){
   function forceClose(){ st.dirty = false; scr.hidden = true; if(lastFocus && lastFocus.focus) lastFocus.focus(); }
   function attemptClose(afterFn){
     if(!st.dirty){ forceClose(); if(afterFn) afterFn(); return; }
+    // a full sentence per mode: "add-on changes" is plural and will not agree
+    // with a shared "hasn’t" tail
+    var what = isAddons() ? 'Your add-on changes haven’t been completed yet.'
+      : isChange() ? 'Your plan change hasn’t been completed yet.'
+      : 'Your new-license setup hasn’t been completed yet.';
     openModal('You have unsaved changes.',
-      '<p>Your ' + (isChange() ? 'plan change' : 'new-license setup') + ' hasn’t been completed yet. If you leave now, your selections will be lost.</p>');
+      '<p>' + what + ' If you leave now, your selections will be lost.</p>');
     var foot = $('#overlay .mf');
     var leave = document.createElement('button');
     leave.type = 'button'; leave.className = 'btn ter'; leave.id = 'nlLeaveBtn'; leave.textContent = 'Leave without saving';
@@ -850,15 +703,30 @@ var NL = (function(){
   function open(opts){
     opts = opts || {};
     lastFocus = document.activeElement;
-    st.mode = opts.mode === 'change' ? 'change' : 'new';
+    st.mode = (opts.mode === 'change' || opts.mode === 'addons') ? opts.mode : 'new';
     st.changeLic = opts.license || null;
+    st.fixedTier = null; st.baseCust = null;
     st.kind = opts.kind === 'perpetual' ? 'perpetual' : 'subscription';
     st.product = opts.product || 'thingsboard';   // the filter bar always shows a selection
     st.plan = opts.plan || null;
     st.dirty = !!(opts.product || opts.plan);   // preselected entry counts as selections made
     seededTier = null;
     cust = { prod:1, dev:0, ai:0, edge:false, trendz:false };
-    if(st.mode === 'change' && st.changeLic){
+    if(st.mode === 'addons' && st.changeLic){
+      /* Manage add-ons: the plan is settled, so there is no picker step — the flow
+         opens on Customize, seeded from the licence, and the tier is pinned. */
+      var al = st.changeLic;
+      st.fixedTier = al.tier;
+      st.kind = al.type === 'Perpetual' ? 'perpetual' : 'subscription';
+      st.product = al.product === 'TBMQ' ? 'tbmq' : 'thingsboard';
+      st.plan = al.name;
+      st.oldTier = al.tier; st.oldName = al.name;
+      st.dirty = false;
+      seedFromLicense(al);
+      $('#nlTitle').textContent = 'Manage add-ons · ' + al.product + ' ' + al.name
+        + (al.label ? ' · ' + al.label : '');
+      gotoStep(2);
+    } else if(st.mode === 'change' && st.changeLic){
       // change-plan mode: Product and Billing are locked to the licence, and the
       // chooser opens with the current plan marked as such
       var cl = st.changeLic;
@@ -881,20 +749,19 @@ var NL = (function(){
   /* ---- events (step content re-renders, so everything is delegated) ---- */
   // the step header is re-rendered on every step, so delegate its back button
   $('#nlStepbar').addEventListener('click', function(e){
-    if(e.target.closest('#nlStepBack') && st.step > 1) gotoStep(st.step - 1);
+    if(e.target.closest('#nlStepBack') && st.step > firstStep()) gotoStep(st.step - 1);
   });
 
   body.addEventListener('click', function(e){
-    // the two switchers only change what the grid offers — they select nothing
-    var seg = e.target.closest('#nlChoices [data-nl-product], #nlChoices [data-nl-billing]');
+    // the product pill only changes what the grid offers — it selects nothing
+    var seg = e.target.closest('#nlChoices [data-nl-product]');
     if(seg && !seg.disabled){
-      if(seg.hasAttribute('data-nl-product')) st.product = seg.getAttribute('data-nl-product');
-      else st.kind = seg.getAttribute('data-nl-billing') === 'perpetual' ? 'perpetual' : 'subscription';
+      st.product = seg.getAttribute('data-nl-product');
       st.plan = null; seededTier = null;
       renderStep1(); return;
     }
     // every step acts from the card that carries its total
-    if(e.target.closest('#nlSumNext')){ if(st.step < totalSteps()) gotoStep(st.step + 1); return; }
+    if(e.target.closest('#nlSumNext')){ if(st.step < lastStep()) gotoStep(st.step + 1); return; }
     var commit = e.target.closest('#nlCommit');
     if(commit){
       if(isLastStep()) startPurchase(commit);   // billing data on file: commit here
@@ -919,6 +786,13 @@ var NL = (function(){
     if(e.target.closest('#nlPayChange')){ attemptClose(function(){ location.href = 'billing.html'; }); }
   });
   body.addEventListener('change', function(e){
+    // billing is a switch now, so it arrives as a change, not a click
+    var bsw = e.target.closest('[data-nl-billsw]');
+    if(bsw){
+      st.kind = bsw.checked ? 'perpetual' : 'subscription';
+      st.plan = null; seededTier = null;
+      renderStep1(); return;
+    }
     var cb = e.target.closest('input[data-nl-addon]');
     if(cb){ cust[cb.getAttribute('data-nl-addon')] = cb.checked; st.dirty = true; renderStep2(); return; }
     var selField = e.target.closest('[data-nlb]');

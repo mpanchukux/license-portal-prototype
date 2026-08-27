@@ -193,6 +193,9 @@ a{color:inherit}
 .actions{display:flex;gap:9px;margin-top:14px;flex-wrap:wrap;align-items:center}
 .btn{font-size:14px;height:var(--btnH);display:inline-flex;align-items:center;justify-content:center;padding:0 13px;border-radius:5px;border:1px solid var(--ink);background:var(--ink);color:#fff}
 .btn:hover{background:#000}
+/* one size up from the --btnH control band: for a primary that stands beside a
+   page h1 instead of inside a toolbar, where the 31px band is not in play */
+.btn.lg{height:37px;font-size:15px;padding:0 18px}
 .btn.sec{background:#fff;color:var(--ink);border-color:var(--line)}
 .btn.sec:hover{border-color:var(--ink);background:var(--hover)}
 .btn.ter{background:transparent;color:var(--mid);border-color:transparent;text-decoration:underline;text-underline-offset:2px}
@@ -270,6 +273,11 @@ th.num,td.num{text-align:right}
   content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);right:0;
   background:var(--ink);color:#fff;font-size:14px;white-space:nowrap;
   padding:5px 9px;border-radius:5px;pointer-events:none;z-index:20}
+/* .wide: the base tooltip is a nowrap one-liner, which a sentence would stretch
+   to ~900px. Wraps at a readable measure instead; still right-anchored, so an
+   icon near the modal's right edge keeps the bubble inside. */
+.tip.wide:hover::after,.tip.wide:focus-visible::after,.tip.wide.show::after{
+  white-space:normal;width:300px;line-height:1.45;text-align:left;padding:8px 10px}
 .tip:hover::before,.tip:focus-visible::before,.tip.show::before{
   content:"";position:absolute;bottom:calc(100% + 3px);right:14px;
   border:5px solid transparent;border-top-color:var(--ink);z-index:20}
@@ -349,14 +357,9 @@ th[aria-label$="ctions"],th.cellact,td.cellact{width:1%;white-space:nowrap;text-
 .am-cell{border:1px solid var(--line2);border-radius:6px;padding:12px;display:flex;flex-direction:column}
 .am-celltop{font-size:14.5px;font-weight:600;color:var(--ink);margin-bottom:9px}
 
-.am-cardgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
-.am-card{border:1px solid var(--line2);border-radius:6px;padding:12px}
-.am-card.on{border-color:var(--ink)}
 .am-cardtop{display:flex;align-items:flex-start;gap:10px}
 .am-cardtop>div{flex:1}
 .am-cardtop .am-addcheck{margin-top:1px}
-.am-cardname{font-weight:600;font-size:14.5px;color:var(--ink)}
-.am-carddesc{font-size:14px;color:var(--faint);margin-top:2px}
 .am-cardprice{margin-top:10px;font-size:14px;color:var(--mid);font-variant-numeric:tabular-nums;display:flex;align-items:center;gap:6px}
 .am-cardprice::before{content:"";width:14px;height:14px;flex:none;background:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b6b6b' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='9'/><path d='M14.5 9.3c-.6-.7-1.5-1.1-2.5-1.1-1.5 0-2.7.8-2.7 2s1.2 1.8 2.7 2 2.7.8 2.7 2-1.2 2-2.7 2c-1 0-1.9-.4-2.5-1.1M12 6.4v11.2'/></svg>") center/contain no-repeat}
 .am-cardprice.locked::before{background-image:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b6b6b' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'><rect x='5' y='11' width='14' height='9' rx='2'/><path d='M8 11V8a4 4 0 0 1 8 0v3'/></svg>")}
@@ -375,31 +378,34 @@ th[aria-label$="ctions"],th.cellact,td.cellact{width:1%;white-space:nowrap;text-
 .switch input:checked + .track::after{transform:translateX(18px);background:#fff}
 .switch input:focus-visible + .track{outline:2px solid var(--ink);outline-offset:2px}
 
-.am-h2{margin:0 0 4px;font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw)}
-.am-sub2{margin:0 0 14px;font-size:14px;color:var(--mid)}
 .am-order{border:1px solid var(--line2);border-radius:6px;padding:2px 14px;margin-bottom:16px}
 .am-orow{display:flex;justify-content:space-between;gap:16px;padding:10px 0;border-bottom:1px dashed var(--line2);font-size:14px}
 .am-orow:last-child{border-bottom:0}
 .am-planrow{font-weight:600}
 .am-newmonthly{font-weight:700;font-size:14px}
-.am-due{display:flex;justify-content:space-between;align-items:center;gap:16px;border:1px solid var(--line);border-radius:6px;padding:12px 14px;margin-bottom:14px;background:#fafafa}
-/* the Due today card carries the commit now, so it stacks instead of sitting in
-   one row: amount row, the payment line, then the action full-width */
-.nl-duecard{display:block}
-.nl-duecard .am-duerow{display:flex;justify-content:space-between;align-items:center;gap:16px}
-.nl-duecard .am-payrow{margin-top:8px}
-.nl-duecard .fs-nextbtn{margin-top:14px}
-/* billing terms: their own quiet card under the action, not a subtitle */
+/* billing terms: their own quiet card, not a subtitle */
 .nl-terms{border:1px solid var(--line2);border-radius:6px;padding:11px 14px;font-size:14px;color:var(--mid);background:var(--card)}
 .nl-terms-tight{margin-top:12px;padding:9px 12px}
+/* Review (step 3), left column: the plan block and the terms card read as ONE
+   joined unit divided by a line — no gap between them, no radius on the edges
+   where they meet, and the terms card pulled up 1px so the two 1px borders land
+   on top of each other instead of drawing a 2px seam. */
+.nl-joined{min-width:0}
+.nl-joined > .am-order{border-radius:6px 6px 0 0;margin-bottom:0}
+.nl-joined > .nl-terms{border-radius:0 0 6px 6px;margin-top:-1px}
+/* Review, right column: Due today, the payment context, then the commit — all
+   inside .fs-right's own 16px padding, so the button is neither flush to the
+   card edge nor full-bleed (same internal spacing as step 2's summary card).
+   Baseline alignment keeps the amount on the label's first line when the
+   change-plan proration note wraps. */
+.nl-duerow{display:flex;justify-content:space-between;align-items:baseline;gap:16px}
+.nl-payline{margin-top:9px;font-size:14px;color:var(--mid)}
 /* required-field mark on the billing step */
 .req{color:var(--mid);font-weight:400}
 /* the created-licence banner is a quieter sibling of the impersonation band */
 .gbanner.licnew{margin-bottom:18px}
 .am-duelabel{font-size:14px}
 .am-dueval{font-size:var(--t-h2-fs);font-weight:var(--t-h2-fw);font-variant-numeric:tabular-nums;flex:none}
-.am-success{text-align:center;padding:30px 10px}
-.am-checkbig{width:52px;height:52px;border-radius:50%;border:2px solid var(--ink);color:var(--ink);font-size:26px;display:inline-flex;align-items:center;justify-content:center;margin-bottom:14px}
 .am-figures{margin-top:8px;border:1px solid var(--line2);border-radius:6px;padding:10px 12px;font-size:14px;font-variant-numeric:tabular-nums}
 .am-sumlist{display:flex;flex-direction:column;gap:7px;padding-bottom:8px;margin-bottom:8px;border-bottom:1px dashed var(--line2)}
 .am-sumlist[hidden]{display:none}
@@ -408,7 +414,6 @@ th[aria-label$="ctions"],th.cellact,td.cellact{width:1%;white-space:nowrap;text-
 .am-total-row{font-weight:700;font-size:14px}
 .am-total-row span:last-child{white-space:nowrap}   /* the amount never breaks across lines */
 .am-total-row .am-chgcount{font-weight:400}
-.am-chgcount{font-size:14px;color:var(--faint)}
 
 /* the generic stub overlay sits above the add-ons and wizard modals */
 #overlay{z-index:400}
@@ -447,9 +452,18 @@ th[aria-label$="ctions"],th.cellact,td.cellact{width:1%;white-space:nowrap;text-
    wizard, but one layer below — Change plan, Manage add-ons, Apply coupon and
    the confirm dialogs all open ABOVE it and return to it when they close. */
 .licmodal{z-index:95}
+/* ONE surface. The details content used to arrive as a card on a card: the modal
+   box carried the gray page ground, and .canvas laid a second white slab inside
+   it. Here the modal box itself carries the white the content was built for, and
+   .canvas stops being a layer — no inner container, no second background, no
+   double borders. */
+.licmodal .fs-box{background:var(--card)}
 .licmodal .fs-body{padding:0}
 .licmodal .content{overflow:visible}   /* .fs-body owns the scrolling here */
-.licmodal .canvas{border:0;border-radius:0}
+.licmodal .canvas{background:transparent;border:0;border-radius:0;overflow:visible}
+/* the content spans the modal rather than the page container (--pageW capped it
+   60px narrower than the box): normal side padding, modest offset under the header */
+.licmodal .sheet{max-width:none;padding:18px 24px 34px}
 body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its place */
 .back[hidden]{display:none}   /* .back sets display:flex, so [hidden] needs help */
 /* no back button in modal mode, so its gutter column goes too — otherwise the
@@ -492,18 +506,12 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
 .fs-headback[hidden]{display:none}
 /* review step: white itemised card, Due today carries the payment line */
 .fs-screen .am-order{background:var(--card)}
-.fs-screen .am-due{display:block;padding:0}
-.fs-screen .am-duerow{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:12px 14px}
-.fs-screen .am-payrow{padding:10px 14px;border-top:1px solid var(--line2);font-size:14px;color:var(--mid)}
-.fs-reviewactions{display:flex;align-items:center;margin-top:20px;padding-top:16px;border-top:1px solid var(--line2)}
-.fs-confirmbtn{width:100%}
 .fs-body{padding:24px;width:100%;max-width:1180px;margin:0 auto;flex:1;min-height:0;overflow:auto;overscroll-behavior:contain}
 .fs-grid{display:grid;grid-template-columns:2fr 1fr;gap:24px;align-items:start}
 .fs-col{min-width:0}
-.fs-screen .am-cell,.fs-screen .am-card{background:#fff;border:0;padding:0}
-.fs-screen .am-card.on{background:transparent}
+.fs-screen .am-cell{background:#fff;border:0;padding:0}
 /* item subheads sit clearly below the "Plan" / "Add-ons" block titles */
-.fs-screen .am-celltop,.fs-screen .am-cardname{font-size:14px}
+.fs-screen .am-celltop{font-size:14px}
 /* "Plan" / "Add-ons" read as quiet section labels, not headings */
 .fs-screen .fs-col .am-sechead h4{color:var(--mid)}
 /* divider between the Plan and Add-ons sections, full-bleed inside the panel */
@@ -511,11 +519,8 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
 /* each item is one tight unit: title+control / description / price, with a
    generous gap to the next item */
 .fs-screen .am-capgrid{grid-template-columns:1fr;gap:26px}
-.fs-screen .am-cardgrid{grid-template-columns:1fr;gap:26px}
 .fs-screen .am-cardprice{margin-top:4px}
-.fs-screen .am-carddesc{margin-top:4px}
 /* add-on price lines up with the title and description, past the checkbox */
-.fs-screen .am-card .am-cardprice{margin-left:27px}
 .fs-panel{background:#fff;border:1px solid var(--line2);border-radius:8px;padding:16px}
 .fs-devinput{height:calc(var(--btnH) + 2px);width:110px;border:1px solid var(--line);border-radius:6px;background:var(--track);color:var(--ink);-webkit-text-fill-color:var(--ink);opacity:1;font:inherit;font-size:14px;text-align:center;font-variant-numeric:tabular-nums;padding:0 8px;cursor:not-allowed}
 /* title + description as one text block, control to its right on the top line */
@@ -528,9 +533,6 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
    positive value pushes the panel below the left panel's top line even at rest */
 .fs-right{position:sticky;top:0;background:#fff;border:1px solid var(--line2);border-radius:8px;padding:16px}
 .fs-right .am-figures{border:0;padding:0;margin-top:10px}
-.fs-review{max-width:640px;margin:0 auto}
-/* the wizard is left-aligned on every step — Review included */
-#nlModal .fs-review{margin:0}
 .am-addcheck{width:17px;height:17px;flex:none;accent-color:var(--ink);margin:0;cursor:pointer}
 .fs-screen .am-addcheck{width:17px;height:17px}
 @media(max-width:900px){.fs-grid{grid-template-columns:1fr}.fs-right{position:static}}
@@ -586,26 +588,34 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
 .nl-select:hover{border-color:var(--mid)}
 .nl-select.on{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
 #nlModal .plangrid{margin-top:0}
-/* wizard step 1: three stacked choices — product, billing, then the offers.
-   The first two are selectable cards; selection is the same ink ring the offer
-   cards use, and change-plan mode renders them locked. */
-.nl-level{margin-bottom:18px}
-.nl-flabel{font-size:14px;color:var(--mid)}
-.nl-level .nl-flabel{display:block;margin-bottom:8px}
-.nl-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-@media(max-width:700px){.nl-choices{grid-template-columns:1fr}}
-.nl-choice{display:block;text-align:left;background:var(--card);border:1px solid var(--line2);border-radius:10px;padding:13px 15px;cursor:pointer;font:inherit}
-.nl-choice:hover{border-color:var(--mid)}
-.nl-choice.is-on{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
-.nl-choice[disabled]{cursor:default}
-.nl-choice[disabled]:not(.is-on),.nl-choice[disabled]:not(.is-on):hover{border-color:var(--line2)}
-.nl-choice-t{display:block;font-size:14.5px;font-weight:600;color:var(--ink)}
-.nl-choice[disabled]:not(.is-on) .nl-choice-t{color:var(--faint)}
-.nl-choice-d{display:block;margin-top:4px;font-size:14px;line-height:1.5;color:var(--mid)}
-.nl-choice[disabled]:not(.is-on) .nl-choice-d{color:var(--faint)}
-/* the offer count sits right-aligned in its own row above the offer cards */
-.nl-offerhead{display:flex;align-items:center;margin-bottom:10px}
-.nl-offerhead .spacer{flex:1}
+/* wizard step 1 — three levels, no boxes and no section labels:
+     1. the product picker: one compact pill segmented control, centred;
+     2. a heading naming what the grid shows, with the billing toggle on its right;
+     3. the offer cards.
+   Borders live only on the two controls and on the offer cards themselves. */
+.nl-prodrow{display:flex;justify-content:center;margin-bottom:26px}
+.nl-prodseg{display:inline-flex;gap:2px;padding:4px;border:1px solid var(--line2);border-radius:999px;background:var(--card)}
+.nl-prodopt{display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 18px;border:0;border-radius:999px;background:transparent;color:var(--mid);font:inherit;font-size:15px;font-weight:500;cursor:pointer}
+.nl-prodopt:hover{color:var(--ink)}
+.nl-prodopt.is-on{background:var(--ink);color:#fff}      /* active = a filled pill inside the container */
+.nl-prodopt:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.nl-prodopt[disabled]{cursor:default}                     /* change-plan: locked to the licence */
+.nl-prodopt[disabled]:not(.is-on),.nl-prodopt[disabled]:not(.is-on):hover{color:var(--faint)}
+/* heading + billing toggle on one line; they wrap rather than crush on narrow boxes */
+.nl-billrow{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.nl-billrow .spacer{flex:1}
+.nl-billhead{margin:0;font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw)}
+.nl-billtoggle{display:inline-flex;align-items:center;gap:8px}
+.nl-blabel{font-size:14px;color:var(--faint)}
+.nl-blabel.is-on{color:var(--ink);font-weight:500}        /* the active side is the emphasized one */
+.nl-billsw{margin:0 4px}
+.switch input[disabled] + .track{opacity:.45;cursor:default}
+.nl-info{display:inline-flex;color:var(--faint);cursor:help}
+.nl-info:hover,.nl-info:focus-visible{color:var(--mid)}
+.nl-info .icon{width:14px;height:14px}
+/* the count on its own row under the heading — the heading row's right end is the
+   toggle's, so the two would collide up there */
+.nl-countrow{display:flex;justify-content:flex-end;margin-top:10px}
 .nl-fcount{font-size:14px;color:var(--faint)}
 
 /* ---------- Dashboard (Overview): full-width top bar, no sidebar, centered column ---------- */

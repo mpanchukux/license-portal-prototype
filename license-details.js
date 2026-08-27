@@ -30,6 +30,14 @@ var DETAILS_HTML = ''
 + '          <button class="gb-act" data-stub="Installation instructions">Installation instructions</button>'
 + '          <button class="gb-x" id="licNewDismiss" aria-label="Dismiss">\u2715</button>'
 + '        </div>'
++ '        <!-- one-time banner after Manage add-ons: states what changed, right'
++ '             above the entitlements the change produced -->'
++ '        <div class="gbanner licnew" id="licChgBanner" role="status" hidden>'
++ '          <svg class="icon gb-ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.4l2.4 2.4 4.6-5"/></svg>'
++ '          <span class="gb-txt" id="licChgTxt"></span>'
++ '          <span class="sp"></span>'
++ '          <button class="gb-x" id="licChgDismiss" aria-label="Dismiss">\u2715</button>'
++ '        </div>'
 + '        <div class="canvas">'
 + ''
 + '          <!-- header: back button in its own gutter, everything else in the content column -->'
@@ -676,7 +684,8 @@ var LicenseDetails = (function(){
   + '    <div class="fs-body" id="licModalBody"></div>'
   + '  </div>'
   + '</div>';
-  var NESTED = ['#nlModal', '#fsAddons', '#couponOverlay', '#payOverlay', '#overlay', '#addUserOverlay'];
+  // #nlModal covers Manage add-ons too now — it is a mode of the same wizard
+  var NESTED = ['#nlModal', '#couponOverlay', '#payOverlay', '#overlay', '#addUserOverlay'];
   var mountedIn = null, wired = false, modal = null, opener = null;
   // modal mode only: the page underneath keeps its rows on screen, so a change
   // made inside the modal has to be restated there too
@@ -692,6 +701,7 @@ var LicenseDetails = (function(){
     renderLicenseDetails(lic);
     if(!wired){ wireDetailsOnce(); wired = true; }
     syncNewBanner(lic);
+    syncChangedBanner(lic);
   }
   /* The wizard sets Store.justCreated to the new licence id and lands here, so
      the page states it once: the licence exists, its key is on this page, and
@@ -705,6 +715,21 @@ var LicenseDetails = (function(){
     if(x && !x.getAttribute('data-wired')){
       x.setAttribute('data-wired', '1');
       x.addEventListener('click', function(){ Store.set('justCreated', null); b.hidden = true; });
+    }
+  }
+  /* Manage add-ons commits and lands here (no success modal, same as a purchase),
+     so the page states the change once. Store.justChanged carries {id,text}; the
+     ✕ clears it for good. */
+  function syncChangedBanner(lic){
+    var b = $('#licChgBanner'); if(!b) return;
+    var c = Store.get('justChanged');
+    b.hidden = !(lic && c && c.id === lic.id && c.text);
+    if(b.hidden) return;
+    $('#licChgTxt').textContent = 'License updated. ' + c.text;
+    var x = $('#licChgDismiss');
+    if(x && !x.getAttribute('data-wired')){
+      x.setAttribute('data-wired', '1');
+      x.addEventListener('click', function(){ Store.set('justChanged', null); b.hidden = true; });
     }
   }
   function nestedOpen(){
@@ -726,7 +751,15 @@ var LicenseDetails = (function(){
     }, true);
     // no backdrop-to-close here: an open editor inside the details would lose work
   }
-  function titleFor(lic){ return lic.name + (lic.label ? ' \u00b7 ' + lic.label : ''); }
+  /* The header names the kind of licence, nothing more. It used to repeat the
+     licence name and its label, but both already stand in the content right
+     below \u2014 so the header was a long duplicate of the first two lines under it.
+     Wording matches the content kicker (.titlekicker), minus the grant's
+     "\u00b7 Free": that is a price fact, and this is a title. */
+  function titleFor(lic){
+    if(lic.grant) return 'Grant license';
+    return isPerpLike(lic) ? 'Perpetual license' : 'Subscription plan';
+  }
   function openModal(lic){
     if(!lic) return;
     if(!modal) buildModal();

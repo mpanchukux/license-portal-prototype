@@ -463,7 +463,6 @@ function wireSettingsPanel(){
       if(!r.checked) return;
       Store.set('custVariant', r.value);
       if(window.NL && NL.refreshCustomize) NL.refreshCustomize();
-      if(window.AMF && AMF.refresh) AMF.refresh();
     });
   });
 
