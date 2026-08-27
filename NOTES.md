@@ -28,6 +28,10 @@
   cancel-модалка, period-контрол, sticky-Save з guard'ом;
 - `wizard.js` — Manage add-ons (`AMF`) і майстер нової ліцензії (`NL`) разом із їхньою
   розміткою; підключається на Home, Licenses і деталях;
+- **`license-details.js`** — **вся поверхня деталей ліцензії в одному місці**: розмітка
+  (`DETAILS_HTML`), рендер-шар і всі внутрішні поведінки. Її монтують **два хости**, і
+  жоден не тримає копії: `LicenseDetails.mountPage(hostSel, lic, {back})` — сторінка
+  `license.html`; `LicenseDetails.openModal(lic)` — модалка над Home/Licenses.
 - `page-*.js` — логіка конкретної сторінки (`page-home`, `page-licenses`, `page-license`,
   `page-invoices`, `page-activity`, `page-users`, `page-account`, `page-security`,
   `page-billing`), `styleguide.js` — наповнення дизайн-системи.
@@ -258,6 +262,49 @@ HEAD. Діагностика/відновлення — див. пам'ять `d
 `currentProducts()` для variant 3 читає `DATA().licenses`.
 Дати — `Mon DD YYYY` (`dateKey`/`fmtDate`). today = **Aug 19 2026**.
 
+### Деталі ліцензії — дві презентації (A — page / B — modal)
+Перемикач у ⚙-панелі, група **License details**; стан у Store (`licDetails`, дефолт
+**page**), хелпер `licDetailsMode()` у `shared.js`. Контент і функціональність в обох
+режимах **однакові** — різниця лише в тому, де поверхня живе.
+- **Одне джерело**: після рефакторингу вся поверхня в `license-details.js` (див. «Файли»).
+  `page-license.js` схуднув до **23 рядків** — читає URL і кличе `mountPage`;
+  `license.html` — до **24 рядків** (лишився `<div id="licDetailsHost">` і скрипти).
+  Що переїхало: розмітка `#appView` з `license.html`; `licFromNamed`, `isPerpLike`,
+  `statusChipHTML`, `renderEntitlements/Features/Alert/Actions/LabelSlot/GrantChrome/
+  LicenseDetails`, `meterRow` і хелпери, контролер мітки, reveal/copy ключа, купон,
+  Instances-таб, `MODALS`, header-дії — з `page-license.js`.
+  Прибрано по дорозі: **легасі-хром** (`.sidebar`/`.topbar` — вони й так були
+  `display:none`), **дубль `var MODALS`** і мертві хуки `showDashAlert/clearDashAlert`
+  (елемента `#dashAlert` не існує). Демо-хуки `showSubAlert/clearSubAlert/setFeature`
+  тепер шукають вузли **при виклику** (розмітка монтується після завантаження файлу).
+  ⚠️ Контролер мітки мусить лежати на топ-левелі: `renderLabelSlot` кличе `reset()`,
+  тож обидва не можуть бути всередині `wireDetailsOnce()` — і `#labelSlot` шукається
+  лениво. Перша спроба з ним усередині ламала рендер на пів-дорозі (ReferenceError).
+- **Modal mode (B)**: клік по рядку (Home або Licenses) відкриває деталі у великій
+  центрованій модалці **над** поточною сторінкою — той самий контейнер, бекдроп і блюр,
+  що у візарда (`.fs-screen` + клас `.licmodal`), ~90% ширини до 1180, ~90vh, внутрішній
+  скрол. Сторінка під нею лишається на місці: **nav-підсвітка не змінюється** (Home лишає
+  Home), скрол і фільтри зберігаються (`body.licmodal-open #shellMain{overflow:hidden}`).
+  Хедер модалки: назва ліцензії + мітка ліворуч, **✕ праворуч**. **Back-кнопки немає**
+  (закриття — єдиний вихід; `#backBtn` ховається, а `.licmodal .headgrid` втрачає
+  31px-канавку, інакше контент з’їжджав у неї). **Клік по бекдропу нічого не робить**
+  (деталі можуть тримати відкриті редактори), **Esc закриває**.
+- **Вкладені флоу** (Change plan, Manage add-ons, Apply coupon, Cancel subscription)
+  відкриваються **над** модалкою деталей і по закриттю вертають **у неї**, не на сторінку:
+  `.licmodal{z-index:95}` проти 100 у `.fs-screen`/`.payoverlay` і 400 у `#overlay`.
+  Третього рівня немає. ⚠️ Esc-хендлер модалки деталей висить у **capture-фазі**: власні
+  хендлери вкладених флоу спрацьовують у bubble і встигають закритись, тож у bubble ми б
+  побачили «нічого не відкрито» і закрили б і деталі теж.
+- **Зміна, зроблена в модалці, оновлює і сторінку під нею**: `LicenseDetails.setRerender(fn)`
+  (хости передають `renderHome` / `renderProducts`), `afterChange()` для cancel і
+  `reopen(lic)` для Change plan — `commitChange` у візарді більше не робить
+  `location.href`, якщо модалка відкрита.
+- ⚠️ **Modal mode втрачає deep-link `?id=`**: у режимі B у деталей немає власної URL —
+  не можна ні поділитись посиланням на ліцензію, ні відкрити її в новому табі, ні
+  повернутись на неї через історію браузера (кнопка «назад» браузера вийде зі сторінки,
+  а не з модалки). Page mode (A) цю адресу має (`license.html?id=…&from=…`). Це головний
+  аргумент у виборі між A і B — врахувати при рішенні.
+
 ### Деталі ліцензії керуються рядком (`openLicense` / `renderLicenseDetails`)
 `#appView` більше **не** статичний per-plan — він наповнюється з **об'єкта ліцензії**
 (рядок датасету). Кожен рядок несе `data-licid`; `openRow` → `openLicense(licById(id))`
@@ -284,6 +331,39 @@ HEAD. Діагностика/відновлення — див. пам'ять `d
 той самий `.labeltext` + маленький `.labelx` ✕ поруч, тож обидва шляхи дають однаковий
 вигляд. Афорданс «+ Add label» лишається для ліцензій без мітки. У таблиці мітка живе
 у Product-колонці (див. «Таблиці») — це два різні місця з однією суттю.
+
+### Крок 3 (Review) і крок 4 (Billing & payment)
+**Review** (`renderStep3`): жодного заголовка в контенті — його вже каже хедер кроку
+(`.am-h2`/`.am-sub2` звідти прибрані). Порядок: картка ордера → **картка Due today, яка
+несе дію** (`.nl-duecard`: рядок суми, рядок оплати, під ними full-width primary) →
+**умови білінгу окремою тихою карткою** (`.nl-terms`): «Billed monthly · auto-pay. Cancel
+anytime.» / для перпетуала «One-time payment · includes 12 months of software updates.»
+Вибрано саму картку, а не рядок усередині Due today — та вже несе суму й кнопку, і третій
+сенс її б перевантажив. Кнопка Due today — `confirmLabel()` на останньому кроці або
+**«Continue to billing»**, якщо далі є крок 4; рядок оплати в режимі без білінгу каже
+«You’ll add billing and payment details on the next step.» замість вигаданої картки.
+
+**Billing & payment** (`renderStep4`) — власний монохром, не копія рефсу: ліворуч дві
+панелі — **Billing information** (Company name*, Billing email*, Phone із хінтом E.164,
+Country*, City*, State / Province, ZIP*, Address*, Address line 2) і **Payment method**
+(Cardholder name*, Country*, номер картки з exp/CVC **в одному полі** — той самий
+`.paystripe`, що в модалці Update payment method, плюс тиха нота «Powered by Stripe»).
+Праворуч — **Order summary** (компактний recap + Due today), тиха картка умов і **коміт,
+disabled поки форма невалідна** (`billValid()`; обовʼязкові позначені `.req`). Значення
+живуть у `bill`, тому крок назад-вперед їх не губить.
+
+### Успіх — сторінка ліцензії, не модалка
+**Success-модалку з ключем видалено** (`WIZARD_SUCCESS_HTML`, `showSuccess`,
+`finishSuccess`, `#nlKeyCopy` — усе прибрано). `commitPurchase` пише
+`Store.set('justCreated', lic.id)` і робить `location.href = licenseHref(lic)`.
+На сторінці деталей `syncNewBanner()` показує **одноразовий банер** (`#licNewBanner`,
+вигляд `.gbanner`, всередині `.sheet`, тому кромки збігаються з контентом): «License
+created. Your license key is on this page — reveal and copy it below.» + дія
+«Installation instructions» (стаб) + ✕, який чистить прапорець назавжди. Ключ копіюється
+зі звичайного блока License key на сторінці — окремої копії в банері немає.
+⚠️ **У режимі licDetails = modal це єдиний випадок, коли застосунок таки покидає сторінку**:
+після купівлі ми відкриваємо повну сторінку ліцензії (там живе ключ і працює deep-link),
+а не модалку. Back на ній веде на Licenses (без `&from`).
 
 ### Cancel subscription (`openCancelModal`)
 Кебаб деталей (`[data-cancel-active]` → `activeLicense`) і меню рядка (`[data-cancel]`
@@ -512,6 +592,11 @@ Activity, Users та Instances-табі.
 - **Plan details** — посилання на `license.html?tier=…` (Maker…Business,
   Prototype + add-ons, Perpetual): синтезовані план-сторінки, яких немає в датасетах.
 - **Reference** — «Design system → styleguide».
+- **Billing data** — `saved` / `none`: перше дає візарду 3 кроки з комітом на
+  Review & pay, друге додає 4-й крок Billing & payment (`Store.billingData`).
+- **License details** — `A — page` / `B — modal`: сторінка `license.html` чи модалка
+  над Home/Licenses (`Store.licDetails`).
+- **Customize step** — `A — Plan card` / `B — Locked inputs` (`Store.custVariant`).
 - **Dev actions** — «Confirm email change» (активна, лише коли є pending; сам pending
   лежить у сторі, тому підтвердити можна з будь-якої сторінки) і **«Reset demo data»**.
   Групу «Account», яка не вела нікуди, прибрано — дев-дії тепер разом.
@@ -709,36 +794,121 @@ perp $2,999 — 10,000 sessions · 1,000 msg/sec · 1 prod · WL.
 Створення ліцензії тепер **робочий степовий флоу** на chrome великої Manage-модалки
 (`.fs-screen`/`.fs-box`, бекдроп, sticky footer). Вибір — **видимі картки, ніколи
 селекти**.
-- **Входи**: «+ New license ▾» (Home, Licenses) → subscription /
-  perpetual, `NL.open({kind})`; «Get started» на плані нового користувача →
-  `NL.open({kind, product, plan, startStep})` — `open()` сам приземляє на Customize
-  відповідного шляху (sub → крок 3, perp → крок 2), попередні кроки ✓.
+- **Входи**: **один** «+ New license» (Home, Licenses) → `NL.open({})`; дропдауна
+  subscription/perpetual більше немає — тип білінгу вибирається **всередині кроку 1**,
+  тож розвилка на вході його лише дублювала (`#dashNewMenu`/`#licNewMenu` видалені).
+  «Get started» на плані нового користувача → `NL.open({kind, product, plan, startStep:2})`
+  — вибір уже зроблений, тому візард відкривається одразу на **Customize**.
 - **Степер — один: Progress line.** Тонкий (3px) трек **на всю ширину модалки**
   одразу під hairline хедера (`.nl-stepbar`, паддінг `0 0 10px`), fill = step/totalSteps;
   нижче один рядок з лівим паддінгом «Step 2 of 4 · **Plan**» (muted + bold назва,
   `.nl-plabel`). Без окремих пунктів, без часткових треків. Рендерить `renderSteps()`
   у `#nlSteps`. Варіанти A (summary rail) і C (numbered steps) **видалено** разом із
-  перемикачем «Wizard stepper»; клікнути пройдений крок, щоб повернутись, більше не
+  перемикачем «Wizard stepper» (обидва прибрані ще до розбиття на файли); клікнути
+  пройдений крок, щоб повернутись, більше не
   можна — назад лише кнопкою Back.
-  Кроки: sub — **4** (Product → Plan → Customize → Review & pay); perp — **3**
-  (**Product & Plan** злиті → Customize → Review & pay, бо на продукт рівно один
-  пакет). Механіка: `totalSteps()` (3/4) + `panelFor(n)` мапить wizard-крок на
-  панель (`perp: 2→#nlStep3, 3→#nlStep4`; `#nlStep2` на perp-шляху не існує).
-  На perp-кроці 1 картки несуть **повний пакет** (назва пакета, value-line, ціна
-  «$4,999 · one-time», термін апдейтів, ліміти з `EC_PLANS` без «All …»-рядка) +
-  PE-блок нижче (`#nlProdExtra`); клік ставить product **і** plan → одразу Customize.
-  На perp-шляху степер каже «Step N of 3», fill N/3. Футер `.nl-foot`: **на кроці 1 схований
-  повністю** (клік по картці = перехід);
-  далі Back / Continue (disabled без вибору; на останньому кроці —
-  «Subscribe» / «Buy license» / «Confirm change» via `confirmLabel()`).
-  ⚠️ `.btn` ставить display → правила `.nl-foot[hidden]`/`.nl-foot .btn[hidden]`.
-- **Крок 1 (sub)**: 2 **великі** product-картки (`.nl-prodcard`, ~половина модалки,
-  grid max-width 960): назва + value-line («Build your IoT solution. On your terms.» /
-  «Scale your messaging. On demand.») + sub-line + для TB група **Unlimited**
-  (Customers · Users · Dashboards · Messages · API calls · Integrations).
-  **Клік одразу веде на крок 2** — Continue на цьому кроці немає. На perp-шляху
-  крок 1 — **злиті Product & Plan картки** (див. блок про кроки вище).
-- **Крок 2 (sub)**: план-картки з **`EC_PLANS`** — name/price/**повні feats**
+  **Кроків три або чотири — залежно від того, чи є білінг-дані** (нічого не захардкоджено:
+  `stepLabels()` → масив, `totalSteps()` = його довжина, прогрес-лінія читає їх):
+  - **білінг збережений** (`billingSaved()`, дефолт): **Choose your product and plan →
+    Customize → Review & pay**, коміт на кроці 3;
+  - **білінгу немає**: **… → Review → Billing & payment**, коміт на кроці 4.
+  Перемикач у ⚙-панелі — група **Billing data: saved / none** (Store `billingData`);
+  зміна перемальовує відкритий візард (`NL.refreshOpen()`). ⚠️ У режимі **change-plan**
+  білінг-крок не додається ніколи (`needsBilling()` = `!isChange() && !billingSaved()`):
+  ліцензію, яку змінюють, вже хтось оплачує, отже дані є.
+  **Нижнього футера у візарді немає взагалі** — розмітку `.nl-foot` разом із `#nlBack`/
+  `#nlNext` і `renderFooter()` видалено. Кожен крок діє **з тієї картки, що несе його
+  тотал**: крок 1 — кнопки на офер-картках, крок 2 — «Review order» у Calculation summary,
+  крок 3 — коміт у картці Due today, крок 4 — коміт у картці Order summary. Back — icon-
+  кнопка в хедері кроку.
+- **Крок 1 — «Choose your product and plan»**: **три рівні вибору стосом** на одному
+  екрані (рендерить `renderStep1`, контейнери `#nlChoices` / `#nlOfferHead` /
+  `#nlPlanCards`):
+  1. **Product — картки** (`.nl-choice`, дві в ряд, `PRODUCT_CHOICES`): ThingsBoard
+     «IoT platform — devices, dashboards, rule engine, integrations.» і TBMQ
+     «High-performance MQTT broker for reliable message streaming.»
+  2. **Billing — картки** (`BILLING_CHOICES`): Subscription «Pay every month. Unlimited
+     customers, dashboards, integrations, API calls, data points and messages, and you
+     can change the plan any time.» і Perpetual «Pay once, run it indefinitely. Includes
+     12 months of software updates, renewable.»
+  3. **Offers** — план/пакет-картки для поточної пари з `EC_PLANS`: TB+Sub → 5 карток,
+     решта → одна (`.plangrid.one` центрує її, **не** розтягує). Над ґрідом окремий
+     рядок `.nl-offerhead` із **лічильником праворуч** («5 plans» / «1 plan»).
+  Вибір на рівнях 1–2 **не переводить крок** (далі ще два вибори) — лише звужує
+  пропозицію нижче і скидає `st.plan`; вибрана картка лишається видимо вибраною
+  (той самий ink-ring, що на offer-картках). Картки — справжні `<button>`, тож
+  клавіатура працює без додаткового коду. Попередній сегментед-фільтр-бар
+  (`.nl-filterbar`, `segHTML`) прибраний.
+  **Блоку «What’s included in Professional Edition» у візарді більше немає** — його
+  копію тепер несе опис картки Subscription. На екрані нового користувача блок
+  лишився без змін; `peBlockHTML` переїхав із `wizard.js` у `components.js`, бо
+  обслуговує тепер лише одну поверхню (`#ecPlanExtra`).
+  **CTA переїхав на картки**: у кожної свій **завжди видимий** `.pc-cta` «Select»
+  (без hover-reveal — на тач-екрані hover не існує і ховає дію), **primary на Popular
+  (Pilot)**, secondary на решті, а коли картка одна — вона primary. Клік по кнопці **або
+  будь-де по картці** → крок 2 з обраним product/billing/plan. Футера на кроці немає.
+  Великі product-картки (`.nl-prodcard`) **більше не використовуються** — лишились як
+  специмен у стайлгайді (`PRODUCT_CARDS` + `productCardHTML`), дубль масиву у `wizard.js`
+  прибрано.
+- **Крок 1 у режимі change-plan**: `NL.openChange(lic)` відкриває **той самий** екран,
+  але картки Product і Billing рендеряться **вибраними-і-залоченими** (`<button disabled>`;
+  невибрані стають faint, клік нічого не робить),
+  а картка поточного плану несе стрип **«Current plan»**, без CTA і не клікається
+  (`tabindex="-1"`, `aria-disabled`). ⚠️ Відомий тупик: change-plan для TBMQ-підписки
+  показує єдину картку, і вона ж поточна — переходити нікуди (було так і раніше).
+- **Крок 2 — Customize: два варіанти** (перемикач у ⚙-панелі, група «Customize step»,
+  стан у Store `custVariant`, дефолт **A**; `custVariant()` живе в `shared.js`, бо його
+  читають і візард, і Manage add-ons; обидва флоу мають хук перемалювання —
+  `NL.refreshCustomize()` / `AMF.refresh()`, тож перемикати можна з відкритою модалкою):
+  - **A — Plan card**: над контролами картка `.nl-plansum` — тайтл «{Product} {Plan} ·
+    {Subscription|Perpetual}» і під ним фіксовані ентайтлменти як факти
+    («100 devices · 100 assets · fixed by this plan»). Картка — **якір кроку**, тому
+    читається як хедер лівої колонки, а не як ще одна рівна картка: тайтл на **h2**
+    (20/500 — рівнем вище за label-заголовки під ним), паддінг `18px 20px`, факти
+    другим рядком (`--t-small`, `--mid`, line-height 1.55). ⚠️ Паддінг заданий як
+    `.fs-panel.nl-plansum`, бо `.fs-panel` лежить у файлі нижче й на рівній
+    специфічності перебивав `.nl-plansum`. Devices/Assets **прибрані зі
+    списку контролів** — вони не редаговані, тож живуть у картці. У списку лишається
+    лише те, що змінюється: Production instances, AI credits, Development instances, Add-ons.
+  - **B — Locked inputs**: Devices/Assets лишаються рядками, але helper «fixed by {plan}
+    plan» під ними прибраний — замість нього **замок усередині** disabled-інпута
+    (`.fs-lockfield` + `.fs-lockic`, `.fs-devinput.locked` з лівим паддінгом),
+    disabled-стилістика та сама.
+  Фіксовані ентайтлменти беруться з `TIER_SPECS.ent` мінус редаговані
+  (`fixedEnt()`), тому працює й на перпетуалі (5,000 devices / 5,000 assets) і на
+  TBMQ (sessions / messages / sec).
+- **Крок 2 — переїзд дій** (спільне для обох варіантів):
+  - **Кнопка в картці Calculation summary** — full-width primary під тоталом
+    (`#nlSumNext`, клас `.fs-nextbtn`, той самий патерн, що вже мав AMF), підписана
+    **«Review order»** (не «Continue») — вона називає, куди веде: Review & pay. На
+    перпетуал-шляху та сама назва. ⚠️ У AMF власна кнопка лишилась **«Review →»** —
+    два різні підписи для одного жесту; якщо вирівнювати, то на «Review order».
+    Картка
+    **sticky** у межах кроку (`.fs-right{position:sticky;top:0}`), тож тотал і дія
+    видні під час скролу лівої колонки.
+  - **Back став icon-кнопкою в хедері кроку**, одразу перед «Step N of M · …»
+    (`#nlStepBack` у `.nl-plabel`, який тепер flex). Рендериться на кожному кроці > 1,
+    делегований хендлер на `#nlStepbar`.
+  - **Нижнього футера на цьому кроці немає** (`renderFooter`: `#nlFoot` схований, поки
+    крок < останнього; `#nlBack` схований завжди). Футер лишився тільки на Review & pay
+    і несе один primary — Subscribe / Buy license / Confirm change.
+  - **Заголовок блока контролів — «Capacity»** (був «PLAN {назва}» / «PACKAGE {назва}»):
+    рядки — це те, чого можна докупити (production instances, AI credits, development
+    instances), а не налаштування плану; назва плану вже стоїть у картці вище, тому
+    `.am-cap` із цього хедера прибраний. Те саме перейменування в AMF. ⚠️ У режимі
+    change-plan цей хедер більше не показує перехід «Prototype → Startup» — його видно
+    в картці плану (нова назва), у рядку summary «Current · {old}» і на кроці Review.
+    «Add-ons» нижче — без змін.
+  - **Add-ons — тогли, вирівняні праворуч**: замість чекбокс-карток `.am-card` тепер
+    ті самі рядки `.am-cell` + `.fs-cellhead`, що й степери: назва + опис + ціна ліворуч,
+    `.switch` на правому краю. `#nlStep2 .am-capgrid` і `#fsStep1 .am-capgrid` зведені
+    в **одну колонку**, тож усі контролі (степери + тогли) стоять одним правим стовпцем.
+- **Manage add-ons (AMF) успадкував усе те саме**: `#fsPlanSum` (варіант A) / `#fsDevCell`
+  із замком (варіант B) перемикає `seed()`, тогли замінили чекбокси, Review уже був у
+  картці. ⚠️ Розмітка AMF статична, тому варіант там перемикається показом/схованням
+  вузлів, а не перерендером — якщо AMF колись переїде на JS-рендер, ці дві гілки треба
+  звести в одну з візардом.
+- **План-картки кроку 1** (детально): з **`EC_PLANS`** — name/price/**повні feats**
   (capacity + support-tier + WL, див. нижче). Під ґрідом — **одна самодостатня картка**
   «What's included in Professional Edition» (`peBlockHTML(intro)`, `.nl-pe`): титул =
   хедер картки (h2), під ним muted-інтро **«All plans include unlimited customers…»**
@@ -747,9 +917,9 @@ perp $2,999 — 10,000 sessions · 1,000 msg/sec · 1 prod · WL.
   HTML-`TODO: confirm with product…` біля `#nlPlanExtra`). Окремого плавучого
   рядка між ґрідом і карткою **немає** (`#nlPlanNote` видалено) — ґрід → один
   20px-гап → картка, вирівняна по лівому/правому краю ґріда на всю його ширину.
-  `peBlockHTML` живе на топ-левелі (не в NL-IIFE) — той самий рендер на **трьох
-  поверхнях**: крок 2 візарда, perp-крок 1 (`#nlProdExtra`, центрована до 960),
-  екран нового користувача (`#ecPlanExtra`). **Лише продукт ThingsBoard** (фічі TB PE,
+  `peBlockHTML` живе на топ-левелі (не в NL-IIFE) — той самий рендер на **двох
+  поверхнях**: крок 1 візарда (`#nlPlanExtra`) і екран нового користувача
+  (`#ecPlanExtra`); `#nlProdExtra` зник разом із product-кроком. **Лише продукт ThingsBoard** (фічі TB PE,
   для TBMQ не показуємо — inferred); на single-сетах (perp / TBMQ) картки немає,
   `#ecNote` лишає тільки `EC_SINGLE_NOTE`.
   Вибір картки **не** авто-продовжує. TBMQ sub — одна картка preselected.
@@ -777,16 +947,13 @@ perp $2,999 — 10,000 sessions · 1,000 msg/sec · 1 prod · WL.
   «100 devices · 100 assets · …» (`.nl-entline`); далі дельти → total → Due today,
   платіжний рядок Visa ••4242 (+auto-pay для sub) з лінком «Change → Billing &
   payment» (веде на Billing через guard).
-- **Subscribe / Buy license → loading + success**: клік → кнопка в loading
-  (`.nl-spin`, disabled, **ширина зафіксована** JS-ом) ~1.5s (`startPurchase`) →
-  `commitPurchase` пушить ліцензію в **поточний** `DATA().licenses` (id `N1…`,
-  created **Aug 19 2026**, sub renews Sep 19 2026 / perp updates до Aug 19 2027,
-  extras/edge/trendz зберігаються), рендерить усе і ховає візард → **success-модалка**
-  `#nlSuccess` (свіжий монохром, не копія порталу: ✓-коло, «Thank you for purchasing
-  {ThingsBoard|TBMQ} Professional Edition {subscription|perpetual license}», «Use this
-  license key to activate your instance:», **mono-key** у `.nl-keybox` + copy-iconbtn,
-  лінк «installation page» (stub), full-width **Done**). Done/Esc → **Licenses**, де
-  новий рядок видно (і в dashboard-блоці). Ключ детермінований від `nlSeq`.
+- **Subscribe / Buy license → loading → сторінка ліцензії**: клік по кнопці **в картці**
+  (Due today на кроці 3 або Order summary на кроці 4) → `startPurchase(btn)` ставить у неї
+  спінер (`.nl-spin`, ширина зафіксована JS-ом) на ~1.5s → `commitPurchase` пушить ліцензію
+  в **поточний** `DATA().licenses` (id `N1…`, created **Aug 19 2026**, sub renews
+  Sep 19 2026 / perp updates до Aug 19 2027, extras/edge/trendz зберігаються), ставить
+  `Store.justCreated` і **переходить на сторінку нової ліцензії** (див. «Успіх — сторінка
+  ліцензії, не модалка»). Спінер не відновлюється — ми йдемо зі сторінки.
 - **Закриття mid-flow** (✕/Esc) з зробленим вибором → та сама unsaved-changes
   модалка (Stay / Leave without saving); preselected-вхід (Get started) теж рахується
   як «selections made». Контент кроків повністю рендериться JS — усі події делеговані.
@@ -818,7 +985,7 @@ perp $2,999 — 10,000 sessions · 1,000 msg/sec · 1 prod · WL.
 - **Licenses-фільтр без «All»**: два чипи Subscription/Perpetual. ⚠️ Спочатку тоглились
   незалежно (`licTypes{}`) — тепер **взаємовиключні** (`licType`), див. «Таблиці».
 - **Change plan = режим візарда** (`NL.openChange(lic)`, `st.mode='change'`):
-  продукт залочений (крок 1 done, **не клікабельний**), старт із Plan; поточний
+  Product і Billing залочені у фільтр-барі кроку 1, старт **із кроку 1**; поточний
   план — **стрип «CURRENT PLAN»** на верхній кромці картки (`.pc-strip`, поза тілом
   картки, накриває її верхній бордер), а не чіп усередині. Висота стрипа
   **зарезервована над кожною карткою** (`.plangrid.withcur{--stripH}` +
@@ -931,7 +1098,7 @@ index.html licenses.html license.html invoices.html activity.html users.html
 account.html security.html billing.html privacy.html terms.html
 license-agreement.html styleguide.html
 styles.css  fonts/ubuntu-{400,500,700}-{latin,latin-ext}.woff2  fonts/ubuntu-mono-400-latin.woff2
-data.js  shared.js  components.js  wizard.js
+data.js  shared.js  components.js  wizard.js  license-details.js
 page-home.js page-licenses.js page-license.js page-invoices.js page-activity.js
 page-users.js page-account.js page-security.js page-billing.js  styleguide.js
 NOTES.md  README.md
