@@ -45,7 +45,15 @@ body{
 /* the feed's one emphasis style: .em, and <b> inside feed text maps onto it */
 .em,.fi-txt b{font-weight:var(--t-em-fw)}
 /* the shared shell: the top bar (.dtopbar) stays put; every page's view scrolls here */
-#shellMain{flex:1;min-height:0;overflow:auto;background:var(--bg)}
+/* The scroll region is a column so the footer can be pushed to its bottom edge:
+   short pages end with the footer sitting on the bottom of the screen instead of
+   floating up under the content, long pages keep the page's own bottom padding
+   (44px) plus the footer's 6px as the gap before it. */
+#shellMain{flex:1;min-height:0;overflow:auto;background:var(--bg);display:flex;flex-direction:column}
+/* page nodes keep their natural height — as flex items they would otherwise shrink
+   to fit the viewport and clip the content that should scroll */
+#shellMain > *{flex:none}
+#shellMain > .shellfoot{margin-top:auto}
 /* global footer: quiet, muted, one line, aligned to the content container */
 .shellfoot{background:var(--bg);padding:6px 24px 22px}
 .shellfoot-in{max-width:var(--pageW);margin:0 auto;padding:0 var(--pageX);display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:14px;color:var(--faint)}
@@ -57,6 +65,11 @@ body{
 .dwrap,.licview,.sheet{width:100%;max-width:var(--pageW);margin:0 auto;padding:var(--pageY) var(--pageX) 44px}
 button{font:inherit;cursor:pointer}
 a{color:inherit}
+/* Chrome links are controls, not prose. The top bar, the profile menu and the
+   settings panel became real <a> elements when the prototype split into pages;
+   without this they pick up the browser's underline. Prose links keep .link,
+   which underlines on purpose. */
+.dtopbar a,.dprofmenu a,.settings-panel a{text-decoration:none;font-style:normal}
 :focus-visible{outline:2px solid var(--ink);outline-offset:2px;border-radius:3px}
 .icon{width:16px;height:16px;flex:none;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 .icon[hidden]{display:none}
@@ -551,8 +564,8 @@ button.dbrand{background:none;border:0;padding:0;color:inherit;font:inherit;curs
 .dprofbtn:hover{border-color:var(--mid);background:var(--hover)}
 .dprofmenu{position:absolute;right:0;top:calc(100% + 6px);min-width:232px;background:#fff;border:1px solid var(--line);border-radius:8px;box-shadow:0 12px 32px rgba(0,0,0,.16);padding:6px;z-index:60}
 .dprofmenu[hidden]{display:none}
-.dprofmenu button{display:flex;align-items:baseline;gap:8px;width:100%;text-align:left;padding:8px 10px;border:0;background:transparent;border-radius:6px;font:inherit;font-size:14px;color:var(--ink)}
-.dprofmenu button:hover{background:var(--hover)}
+.dprofmenu button,.dprofmenu a{display:flex;align-items:baseline;gap:8px;width:100%;text-align:left;padding:8px 10px;border:0;background:transparent;border-radius:6px;font:inherit;font-size:14px;color:var(--ink)}
+.dprofmenu button:hover,.dprofmenu a:hover{background:var(--hover)}
 .dprofmenu button .who{font-size:14px;color:var(--faint)}
 .dprofmenu .sep{height:1px;background:var(--line2);margin:6px 4px}
 

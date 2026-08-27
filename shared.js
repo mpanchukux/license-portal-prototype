@@ -191,12 +191,14 @@ function settingsHTML(){
     +   '<div class="sp-note">Prototype-only — not part of the product UI.</div>'
     +   '<div class="sp-label" style="margin-top:14px">Dashboard (Home)</div>'
     +   '<div class="sp-pick" role="radiogroup" aria-label="Dashboard">' + dash
+    +     '<div class="sp-grouphead">Products</div>'
+    +     '<a class="sp-opt" href="licenses.html"><span>Product-first (neutral)</span></a>'
     +     '<div class="sp-grouphead">Plan details</div>' + plans
     +     '<a class="sp-opt" href="license.html?tier=perp"><span>Perpetual license details</span></a>'
-    +     '<div class="sp-grouphead">Account</div>'
-    +     '<label class="sp-opt"><button class="link" id="devConfirmEmail" disabled>Confirm email change</button></label>'
     +     '<div class="sp-grouphead">Reference</div>'
     +     '<a class="sp-opt" href="styleguide.html"><span>Design system → styleguide</span></a>'
+    +     '<div class="sp-grouphead">Dev actions</div>'
+    +     '<label class="sp-opt"><button class="link" id="devConfirmEmail" disabled>Confirm email change</button></label>'
     +     '<label class="sp-opt"><button class="link" id="resetDemo">Reset demo data</button></label>'
     +   '</div>'
     + '</div>';
