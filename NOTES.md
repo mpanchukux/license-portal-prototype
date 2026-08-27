@@ -221,6 +221,13 @@ HEAD. Діагностика/відновлення — див. пам'ять `d
 `dash` (populated) тепер має **два датасети густини**, обидва kind `dash`, DOM `#dashView`:
 - **A — small account** (`PAGES.dashboard`, `variant:'A'`): 2 ліцензії (TB + TBMQ sub),
   2 users, 3 invoices. Licenses-блок показує **всі** рядки (нема чого тримати).
+  Мітка A1 — свідомо довга («Central Europe manufacturing cluster — building 4, line 2»),
+  щоб **на Home** у першому рядку одразу було видно перенос мітки на два рядки, а під ним
+  короткий («Broker»). Рядки різної висоти, і всі клітинки вирівняні по **верху**
+  (`.lic-row > td{vertical-align:top}`) — на рівні назви продукту, а не по центру рядка.
+  ⚠️ Датасети **знімкуються у Store** при першому завантаженні, тому правка в `data.js`
+  видна лише після «Reset demo data» в панелі налаштувань (або очистки ключа
+  `tb-license-portal-demo-v1`).
 - **B — large account** (`PAGES.dashB`, `variant:'B'`): **14 ліцензій** (`id` B1–B14,
   кожна з `tier`), 8 users, 7 invoices, **15 подій активності** (стільки, щоб було що
   доливати лези-лоудом на Home). Мікс TB (maker/prototype/pilot/startup/business),
@@ -238,7 +245,8 @@ HEAD. Діагностика/відновлення — див. пам'ять `d
   (`noInvoicesNote` → рядок-emptybox замість таблиці), 1 подія активності
   («Community Grant issued»). Рядок у Licenses — звичайний: `rowHtml` має grant-гілку
   (мітка `—` · Free · muted «No expiry», другий meta-рядок — ліміти `p.limits`),
-  статус — **тихий** `.pill.soft` «Waiting for first check-in» (`statusPill`),
+  статус — **`Active`**, як у будь-якої живої ліцензії (стан «ще не було чек-іну»
+  живе в банері на деталях, не в статусі),
   а `actionsCell` для гранту віддає лише copy-key **без кебаба** (грант нічого
   не змінює й не скасовує — inferred).
 
@@ -292,7 +300,10 @@ HEAD. Діагностика/відновлення — див. пам'ять `d
 range…) на **Activity-сторінці** й у **details Activity-табі**. **Усе живе в одній
 панелі дропдауна**: Custom range розкриває date-поля + Apply **всередині** `.permenu`
 (панель лишається відкритою; toolbar ніколи не змінює склад). Apply закриває панель,
-тригер читає «Period: 12.08 – 19.08» (`fmtDM`, dd.mm; один край → «from/until dd.mm»).
+тригер читає **лише вибране значення** — «All time» / «Last 7 days» / «12.08 – 19.08»
+(`fmtDM`, dd.mm; один край → «from/until dd.mm»), плюс каретка. Префікса «Period:» немає
+(лейбл переїхав у `aria-label="Period"`, а `.perbtn b` став weight 400 — тригер це
+значення, а не підписане поле). Панель дропдауна лишилась без змін.
 Повторне відкриття з активним custom тримає поля видимими. ⚠️ Generic `.dropmenu button`
 стриптить хром — для Apply є явний override `.percustom .perapply` (вид secondary-кнопки).
 Стан `actPeriod` / `licPeriod`; фільтр по днях через `epochDay` (days-from-civil — бо
@@ -381,8 +392,9 @@ dataset-driven); рядки строяться **тими самими** `headHt
   («An instance appears here after it connects using this license key.»).
   Ентайтлменти — `TIER_SPECS.grant` (Devices 6,050 / Production servers 2).
   `licenseActivity` для гранту віддає одну подію «Community Grant issued».
-  Хедер-чіпи: `statusChipHTML` для гранту — **два тихі чіпи** «Free» +
-  «Waiting for first check-in» (`#statusSlot` тепер inline-flex із gap).
+  Хедер: статус — **`Active`**; «Free» переїхало в кікер («Grant license · Free»),
+  бо це факт ліцензії, а не статус; стан першого чек-іну — банер над контентом
+  («No instance has checked in yet…» + дата видачі ключа + стаб «Installation guide →»).
   ⚠️ Дві латентні CSS-пастки, знайдені тут: `.btn` і `.insttoolbar` задають
   `display`, тому плейн-`[hidden]` їх не ховав — додано `.headactions .btn[hidden]`
   і `.insttoolbar[hidden]` (у `[data-page]`-вузлів це працювало через
@@ -411,10 +423,12 @@ dataset-driven); рядки строяться **тими самими** `headHt
 (attention-банер), не фід.
 Події живуть **per-variant** у `DATASETS[..].activity` (`DATA().activity`);
 `feedItem()` рендерить сторінку Activity, блок на дашборді (3 останні) і details-таб
-(`licenseActivity`). Елемент: **іконка типу inline в мета-рядку** (`.fi-ic`,
-16px, заливка `--track`, у розмір тексту мети) — таймстемп поруч праворуч, **фраза
-нижче** на всю ширину (раніше іконка була окремим блоком 24px зліва). muted-мета =
-**лише таймстемп**, фраза в порядку **що зроблено → from/to → ким** (виділені сутності).
+(`licenseActivity`). Елемент: **без іконки події** — перший рядок це muted-таймстемп,
+під ним фраза на всю ширину; обидва починаються **від краю контейнера** (колонки під
+іконку немає). `.fi-ic` і набір `FEED_ICONS` видалені як мертвий код; поле `kind`
+у подіях лишилось — це те, чим подія є, і воно знадобиться першому ж групуванню
+чи фільтру. Причина: тип події вже стоїть першими словами речення, іконка його
+лише дублювала. Фраза в порядку **що зроблено → from/to → ким** (виділені сутності).
 Кнопка «details» **розгортає raw-JSON payload на місці** (`.fi-audit`, capped 300px зі
 скролом, кілька разом) і **тримає pressed-стан** поки payload відкритий
 (`.iconbtn[data-audit][aria-expanded="true"]` — рамка/заливка ink) — модалки
@@ -429,11 +443,14 @@ Created · actions. (Колонку перейменовано з «Renewal / Up
   розрізняє рядки, тому вона отримала місце, де може розгорнутись на два рядки. Немітковані
   рядки тримають muted `—` (справжній «+ Add label» лишається на деталях). Старий
   label-first-режим для варіанта B прибраний — мітка тепер завжди в Product.
-- **Status має лише два значення** — `Active` / `Canceled` (`statusPill`). `payment_failed`
-  і `updates_expiring` **лишаються в даних** і далі керують алертом на деталях та
-  attention-first сортуванням дашборда — таблиця їх просто не викрикує. Дата тепер у своїй
-  колонці, тому з canceled-пілюлі знято «· until {date}» (більше не дублюється).
-  Виняток — грант: тихий `Waiting for first check-in` (його стан, замовлений окремо).
+- **Status має лише два значення** — `Active` / `Canceled`, і **на всіх поверхнях**:
+  `statusPill` (таблиці) і `statusChipHTML` (хедер деталей) тримають те саме правило,
+  **без винятків** (грант теж `Active`). `payment_failed`, `updates_expiring` і
+  `awaiting_checkin` **лишаються в даних** — вони керують **банером** на деталях
+  (конкретна дата + дія) та attention-first сортуванням дашборда, але статусами не є.
+  Розподіл свідомий: **статус каже, чи ліцензія жива; банер — що потребує уваги.**
+  Дата тепер у колонці State, тому з canceled-пілюлі знято «· until {date}»
+  (на деталях чіп лишає «Canceled · active until {date}» + muted-трактування).
 - **`renewCell(p)`** формулює дату за суттю ліцензії: `Renews {date}` (підписка) /
   `Updates until {date}` (перпетуал) / `Active until {date}` (canceled) / muted `No expiry`
   (грант) / muted `—` (без `event`). `.lic-num` отримав `white-space:nowrap`, щоб дати
@@ -583,16 +600,17 @@ Body/контроли/клітинки, що вже були 14px (= підло�
 - **Сторінка тепер «Account»** (не «Profile settings»): H1, пункт профіль-меню і
   `AREA_TITLES.profile` — усі три. Картки: **Personal details** (First/Last/Email/Language)
   і **Company details**.
-- **Усі дії Account — в одному sticky-хедері** (`.pagehead`), праворуч, у порядку
-  наростання до primary: **Log out** (`.btn.ter` — найтихіша, підкреслений текст) ·
-  **Change password** (`.btn.sec`, `data-goto="security"`) · **Save** (primary).
-  Блок `.pdactions` у Personal details прибрано. **Тексту «All changes saved» на Account
-  немає** — disabled-стан Save сам каже, що зберігати нічого (`wirePageSave(…, null)`;
+- **Дії Account — в одному sticky-хедері** (`.pagehead`), праворуч, у порядку
+  наростання до primary: **Change password** (`.btn.sec`, лінк на `security.html`) ·
+  **Save** (primary). Блок `.pdactions` у Personal details прибрано. **«Log out» з хедера
+  прибрано** — вихід із сесії глобальний, його дім — профіль-меню, і дублювати його на
+  сторінці не треба; назва одна всюди — **«Sign out»**. **Тексту «All changes saved» на
+  Account немає** — disabled-стан Save сам каже, що зберігати нічого (`wirePageSave(…, null)`;
   третій аргумент опційний). ⚠️ На **Billing** і **Security** нотатка ще є — свідомо
   не чіпала, бо просили тільки Account.
 - **Security — окрема внутрішня сторінка** (`#securityView`, `PAGES.security`,
-  `kind:'security'`): картку Security з Account прибрано, замість неї в Personal details
-  два `.btn.sec` — **Change password** (`data-goto="security"`) і **Log out** (стаб-модалка).
+  `kind:'security'`): картку Security з Account прибрано, вхід — кнопка **Change password**
+  у хедері Account.
   Сторінка має **власну back-канавку** (`.secgrid` = ті самі `--backW`/`--backGap`, що
   `.headgrid` деталей; `#secBackBtn` → `goToPage('profile')` через unsaved-guard) і **власний
   Save** (`wirePageSave('#securityView', …)`). Три поля пароля стоять **вертикально**
@@ -601,13 +619,16 @@ Body/контроли/клітинки, що вже були 14px (= підло�
   зі своїм `max-width:800px` специфічніший за `.pwstack`. `overlayLevel` для `security` —
   `deep` (back ≠ close).
 - **Зміна email — verify-then-switch** (контролер `EMAIL`): Save з новою адресою **не**
-  міняє акаунтний email. Поле відкатується на поточну адресу, під ним — pending-чіп
-  «Verification sent to {new} — the change applies once confirmed.» + текстові дії
-  **Resend** (тимчасово підмінює текст на «re-sent…») і **Cancel change**. Опис поля
-  попереджає, що зміна потребує підтвердження з нової адреси, а поточна працює доти.
-  Підтвердження в прототипі — **клік по чіпу** або дев-кнопка **Confirm email change**
-  у Settings-табі пікера (enabled лише коли є pending). Невалідний email на Save просто
-  відкатується без pending.
+  міняє акаунтний email — інпут і далі показує адресу, яка реально працює.
+  Pending — **один компактний рядок-значення** під інпутом (`.emailpend`): іконка-годинник,
+  **«Pending: {new email}»**, далі інлайн-дії **Resend** і **Cancel**, розділені `·`.
+  Ні пунктирної «пілюлі», ні другого абзацу — і поки pending активний, **статичний
+  helper («Used to sign in…») ховається** (`#emailHelp`), бо рядок сам пояснює стан;
+  helper вертається, коли pending знято. Resend на ~1.6s підміняє значення на
+  «Re-sent to {new}…» у тому ж слоті. Підтвердження в прототипі — **клік по значенню**
+  або дев-кнопка **Confirm email change** у Settings-табі пікера (enabled лише коли є
+  pending). Pending живе у Store, тому переживає перезавантаження. Невалідний email
+  на Save просто відкатується без pending.
 - **Billing → Payment method**: кнопка «Update» замінена на **icon-btn олівець**
   (`.iconbtn.ib`, `#payUpdateBtn`) — відкриває ту саму Update-payment-method модалку.
 - **Activity шрифти**: увесь фід (meta / речення / raw-JSON) уже ≥14px (з type-pass);
