@@ -6,26 +6,54 @@
 
 ## Що це і де воно
 
-Основний артефакт — **`subscription-details-prototype.html`** у корені: один
-self-contained клікабельний low-fi wireframe порталу ThingsBoard License Portal.
-Всередині — **багато «поверхонь» (views)**, що перемикаються ран-тайм одним
-механізмом (`PAGES` + `applyDetailsPage`, див. «Архітектура»). Немає збірки,
-немає роутів — усе в одному файлі.
+Прототип ThingsBoard License Portal — **статичний багатосторінковий сайт** у корені
+репозиторію. Без збірки: звичайні HTML/CSS/JS, відносні шляхи, віддається будь-яким
+статичним сервером (локально — live server, далі GitHub Pages з підпапки).
 
-⚠️ **Рефакторинг на `index.html` + `styles.css` + `app.js` + `data.js` у цій робочій копії
-відсутній** (2026-08-26): таких файлів немає, git-історія їх не знає, кореневий `index.html` —
-це скелет Vite. Правки з цієї сесії лежать у **єдиному** `subscription-details-prototype.html`.
-Якщо розділені файли існують на іншій машині — їх треба спершу довезти сюди (див. пастку
-Drive+git нижче), інакше зміни розійдуться.
+**Сторінки** (кожна — окремий файл, навігація справжніми посиланнями):
+`index.html` (Home/дашборд) · `licenses.html` · `license.html` (деталі, керується
+`?id={licenseId}`) · `invoices.html` · `activity.html` · `users.html` ·
+`account.html` · `security.html` · `billing.html` · `privacy.html` · `terms.html` ·
+`license-agreement.html` · **`styleguide.html`** (дизайн-система).
 
-Vite/React-скелет у `src/` — окрема історія, до прототипу відношення не має.
-(`subscription-details-wireframe.html` — колишній драфт-референс — видалено як
-сміття; за потреби він є в git-історії.)
+**Спільне** — по одному джерелу на кожен предмет:
+- `styles.css` — уся стилістика, включно з `styleguide.html`; шрифти в `fonts/*.woff2`
+  (раніше були base64 всередині HTML — тепер 7 файлів, CSS важить 66 KB замість 391 KB);
+- `data.js` — усі мокові дані (`DATASETS`, `TIER_SPECS`, `EC_PLANS`, `PRODUCT_CARDS`…);
+- `shared.js` — **стор** (localStorage) + хром (топбар, банер імперсонації, футер,
+  панель налаштувань) + спільні модалки + глобальні поведінки. Хром рендериться
+  звідси в кожну сторінку — жодна сторінка не тримає його копії;
+- `components.js` — рендерери, які потрібні більш ніж одній сторінці: таблиця
+  ліцензій, рядки інвойсів/юзерів, фід активності, картки планів і продуктів,
+  cancel-модалка, period-контрол, sticky-Save з guard'ом;
+- `wizard.js` — Manage add-ons (`AMF`) і майстер нової ліцензії (`NL`) разом із їхньою
+  розміткою; підключається на Home, Licenses і деталях;
+- `page-*.js` — логіка конкретної сторінки (`page-home`, `page-licenses`, `page-license`,
+  `page-invoices`, `page-activity`, `page-users`, `page-account`, `page-security`,
+  `page-billing`), `styleguide.js` — наповнення дизайн-системи.
+
+Порядок підключення на кожній сторінці: `data.js → shared.js → components.js →
+[wizard.js] → page-*.js`, усі в кінці `<body>`. Скрипти ділять глобальну область —
+namespace'ів немає навмисно, це прототип.
+
+**Стару односторінкову версію `subscription-details-prototype.html` видалено** —
+з неї все витягнуто, і два джерела правди в одній теці лише плутали б. Вона є
+в git-історії (востаннє — у коміті чистки перед реструктуризацією).
+
+**Vite/React-скелет `src/` теж видалено**: він ніколи не був частиною прототипу
+(окремий React-застосунок), нічого на нього не посилалося, а його точкою входу був
+кореневий `index.html`, який тепер Home прототипу. У git він лишається.
+⚠️ У корені ще лежать **`package.json`, `vite.config.ts`, `tsconfig*.json`,
+`node_modules/`, `package-lock.json`** і конфіг `dev` у `.claude/launch.json` —
+це решта тієї ж збірки, зараз ні до чого не прив'язана. Прибирати чи ні — рішення
+користувачки (нічого в прототипі їх не читає).
 
 ## Жорсткі константи прототипу (не порушувати)
 
-- **Один self-contained HTML**: inline CSS + vanilla JS, без фреймворків,
-  без зовнішніх запитів, **без localStorage/sessionStorage** (стан лише в JS-змінних).
+- **Статика без збірки**: vanilla JS, без фреймворків і бандлерів, без зовнішніх
+  запитів (шрифти локальні), **тільки відносні шляхи** — сайт має працювати з підпапки.
+- **Стан — у localStorage** (див. «Стор»): усі ран-тайм мутації переживають перехід
+  між сторінками й перезавантаження. Один ключ, одна кнопка «Reset demo data».
 - **Тільки монохром** — чорний/білий/сірі, усе через CSS-змінні (`--ink`, `--mid`,
   `--faint`, `--line`, `--line2`, `--bg`, `--card`). Жодних брендових/акцентних
   кольорів. Стан передаємо вагою, рамками, заливкою сірого — не кольором.
@@ -43,19 +71,27 @@ Vite/React-скелет у `src/` — окрема історія, до прот
 ## Як запускати і перевіряти (кілька пасток)
 
 **Node/npm у середовищі немає** — конфіг `dev` у `.claude/launch.json` не стартує.
-Прототип збірки не потребує; є другий конфіг **`prototype`**: `python3` +
+Збірка не потрібна взагалі: це статика. Конфіг **`prototype`** піднімає `python3` +
 `serve_prototype.py` на порт 5500.
 
 **Сервер не має доступу macOS (TCC) до теки Google Drive**, де лежить репозиторій
 (`listdir` → `Operation not permitted`), хоча Bash-інструмент читає її нормально.
-Тому сервер віддає **дзеркальну копію** з scratchpad-теки сесії (`www/index.html`),
-а не сам файл:
-- `serve_prototype.py` і тека `www/` живуть у **scratchpad поточної сесії**; шлях
+Тому сервер віддає **дзеркальну копію** з scratchpad-теки сесії:
+- дзеркало лежить у `www/site/` — тобто сайт відкривається як
+  **`http://localhost:5500/site/`**. Підпапка навмисна: так перевіряється те саме
+  розташування, що й на GitHub Pages (`username.github.io/repo/`);
+- `serve_prototype.py` і `www/` живуть у **scratchpad поточної сесії**; шлях
   у `.claude/launch.json` — **сесійний**, у новій сесії його доведеться переписати
   під свій scratchpad (скрипт при цьому перестворити — scratchpad чиститься);
-- **після кожної правки прототип треба перекопіювати в `www/index.html`**:
-  `cp "<repo>/subscription-details-prototype.html" "<scratchpad>/www/index.html"`,
-  інакше браузер покаже стару версію.
+- **після кожної правки треба перекопіювати файли в дзеркало**:
+  `cp *.html *.js *.css "<scratchpad>/www/site/"` (і `cp -R fonts` за потреби),
+  інакше браузер покаже стару версію;
+- у `launch.json` **не можна** ставити `url` з шляхом (harness приймає лише origin) —
+  на підпапку переходимо через `navigate`.
+
+**Перевірка всіх сторінок одним заходом**: зручний трюк — з відкритої сторінки
+завантажити кожну в прихований `<iframe>` і зібрати `contentWindow.onerror`; так
+видно синтаксичні й рантайм-помилки на всіх 13 сторінках за один виклик.
 
 ⚠️ **Іноді вся тека Drive віддає `Operation not permitted` навіть Bash/Read-тулам**
 (не лише серверу; `listdir` теж падає, з sandbox і без). Це TCC-локаут File Provider,
@@ -91,31 +127,58 @@ Vite/React-скелет у `src/` — окрема історія, до прот
 ставали dangling — контент лишався в робочому файлі, я перекомічував поверх поточного
 HEAD. Діагностика/відновлення — див. пам'ять `drive-git-hazard`.
 
-## Архітектура: сторінки окремо, презентація окремо
+## Архітектура: сторінка = файл, спільне = один модуль
 
-Головний принцип: **один вузол контенту на сторінку**, і тонкий шар презентації,
-який вирішує, *що* показати. Копій сторінок немає — рівно один вузол на поверхню.
+Головний принцип не змінився, змінилася його реалізація: **одна поверхня — одне
+місце**, тільки тепер це окремий HTML-файл, а не вузол, який показує/ховає JS.
+Перехід між сторінками — справжня навігація браузера, без роутера.
 
-- **`PAGES`** — реєстр сторінок; ключ = значення radio в пікері, `kind` каже, який
-  вузол показувати. Плани/перпетуал несуть ще `name/price/devices/prod/dev/ai/…`
-  (звідси `renderPlanRows`/`renderFeatures`).
-- **`PAGE_NODES`** (kind → `#id`) — вузол контенту сторінки.
-  `sub` і `perp` свідомо ділять `#appView` (один шаблон деталей).
-- **`presentPage(kind)`** ховає все, крім цільового вузла, і монтує його
-  в `#shellMain` (`appendChild`), тримаючи футер останнім.
-- **`applyDetailsPage()`** готує дані сторінки й делегує показ у `presentPage`.
-- **`goToPage(key)`** — програмна навігація (тримає radio в пікері синхронним).
-- Деталі (`#appView`) розрізняють моделі атрибутом `data-page="sub"|"perp"`.
+- **Хром** (`shared.js` → `chromeHTML()`, `footerHTML()`, `settingsHTML()`,
+  `modalsHTML()`) вставляється в кожну сторінку на завантаженні: топбар із
+  nav-посиланнями, банер імперсонації, футер, ⚙-панель, спільні модалки.
+  Активний nav-пункт бере з `document.body[data-nav]` (`syncTopNav`).
+- **Деталі ліцензії** — `license.html?id={licenseId}` (+ `&from=home`, щоб знати,
+  яку секцію підсвітити й куди веде back). Фолбек `?tier=maker|…|perp` дає
+  синтезовану план-сторінку для пікера — рядка з такими даними в датасетах немає.
+- **Порядок скриптів** фіксований (data → shared → components → wizard → page).
+  Кожен файл оголошує глобальні функції; page-скрипт лише збирає сторінку.
+
+### Стор — мок-бекенд на localStorage
+`shared.js` → `Store`. Один ключ **`tb-license-portal-demo-v1`**. На першому
+завантаженні туди пишеться **глибока копія `DATASETS`** із data.js, і далі вся
+робота йде з цією копією — тобто «бекенд» має власний стан, а data.js лишається
+незмінним сідом.
+
+Що там лежить: `dash` (обраний стан дашборда), `datasets` (робоча копія всіх
+трьох акаунтів), `pendingEmail`, `impersonating`, `dismissed` (одноразові банери),
+`seq` (лічильник id/ключів нових ліцензій).
+
+Мутації **тільки** через хелпери, кожен із них зберігає: `storeCancelLicense`,
+`storeAddLicense`, `storeAddUser`, `storeDeleteUser`, `storeNextSeq`, `dismiss`,
+`Store.set`. Читання — `DATA()` (повертає датасет обраного стану) і `licById(id)`
+(шукає по **всіх** датасетах, бо посилання на деталі може пережити зміну стану).
+
+**«Reset demo data»** в ⚙-панелі чистить ключ і перезавантажує сторінку.
+
+### Дизайн-система — `styleguide.html`
+Живий інвентар: та сама `styles.css`, ті самі класи, а таблиця, картки планів,
+картки продуктів і фід рендеряться **тими самими білдерами**, що й продукт
+(`headHtml`/`rowHtml`, `planCard`, `productCardHTML`, `feedItem`). Токени
+(кольори, тайп-шкала, спейсинг) читаються з живого CSS через `getComputedStyle`,
+тому розійтися з продуктом не можуть. Посилання — в ⚙-панелі, не в nav порталу.
+Правило: якщо елемент стилізований ad hoc, його спершу підіймають у клас
+(так з'явилися `.tablescroll`, `.paymodal.narrow`, `.paymodal.tight`), і вже цей
+клас використовують обидві сторони.
 
 ### Навігація — top-bar (єдиний флоу)
-У топбарі nav-пункти **Home · Licenses · Invoices · Activity · Users**, відцентровані
-по самому бару (`position:absolute; left:50%`), активний підсвічений (`NAV_FOR_KIND`).
-Сторінки рендеряться під баром у `#shellMain`. Деталі належать тій секції, звідки їх
-відкрили: ліцензія з Home лишає підсвіченим Home, зі списку — Licenses (`licenseOrigin`,
-той самий орієнтир, що й у back-кнопки).
+У топбарі nav-пункти **Home · Licenses · Invoices · Activity · Users** — це `<a>`
+з відносними href, відцентровані по самому бару (`position:absolute; left:50%`).
+Активний визначає `document.body[data-nav]` (`syncTopNav`). Деталі належать тій
+секції, звідки їх відкрили: `?from=home` лишає підсвіченим Home, інакше Licenses —
+той самий орієнтир, що й у back-кнопки.
 
-Альтернативний флоу full-screen overlays (`#pageOverlay`, `flowMode`, `FLOW_HOSTS`,
-`AREA_TITLES`) **видалено з коду** разом з архівом — не «приховано», а знято.
+Альтернативний флоу full-screen overlays знято ще в пасі чистки; у багатосторінковій
+структурі його місце зайняла звичайна навігація.
 
 ### Back-кнопка: лише там, де вона робить не те саме
 - **Списки під nav-табами** (Licenses, Invoices, Activity, Users) back **не мають** —
@@ -198,9 +261,11 @@ HEAD. Діагностика/відновлення — див. пам'ять `d
 Кебаб деталей (`[data-cancel-active]` → `activeLicense`) і меню рядка (`[data-cancel]`
 → `cancelFromRow` → `licById`) відкривають confirm-модалку (назва+мітка, наслідок,
 **Keep subscription** secondary+focus / **Cancel subscription** destructive). Confirm:
-`lic.status='canceled'` → `renderDatasetViews()` + `renderProducts()` + (якщо відкрита)
-`renderLicenseDetails`. Статус пропагується скрізь (muted pill `Canceled · until {date}`,
-рядок `.off`; хедер деталей — muted чіп + Renew-плейсхолдер).
+`storeCancelLicense(id)` (запис у стор) → колбек `after`, яким сторінка перемальовує
+себе. Статус пропагується скрізь (muted pill `Canceled · until {date}`, рядок `.off`;
+хедер деталей — muted чіп + Renew-плейсхолдер) і переживає перезавантаження.
+⚠️ У таблиці Licenses скасовану ліцензію видно **лише** при увімкненому перемикачі
+«Display canceled licenses» (див. нижче); на Home-блоці вона показується завжди.
 
 ### Період-фільтр активності (`filterFeedByPeriod`)
 Компактний контрол `.perctl` (Period-дропдаун: All time / Last 24h / 7d / 30d / Custom
@@ -258,8 +323,9 @@ dataset-driven); рядки строяться **тими самими** `headHt
 яка ховається, коли долито все. Лічильник `dashFeedShown` **скидається при зміні датасету**
 (в `applyDetailsPage`, гілка `dash`), але не при кожному `renderDatasetViews`.
 
-### Список поверхонь (kinds)
-- `dash` — **Dashboard (Home)**, стартова сторінка (варіанти A/B — див. вище).
+### Список поверхонь (сторінка → що на ній)
+*(Історична назва «kinds» лишилась у тексті нижче; тепер кожна поверхня — окремий файл.)*
+- `index.html` — **Dashboard (Home)**, п'ять станів (варіанти A/B — див. вище).
 - **Community Grant states** (обидва в пікері поруч з рештою dash-варіантів):
   - `dashgrantpending` (`kind:'dashempty'`, `grant:'pending'`) — **той самий**
     new-user дашборд плюс статус-картка `#grantPending` (`.gstatus`: icon + h2
@@ -304,11 +370,13 @@ dataset-driven); рядки строяться **тими самими** `headHt
 - `sub` / `perp` — деталі (спільний `#appView`). Головний вхід — **`licenseView`**
   (row-driven, з `activeLicense`); іменовані plan-сторінки пікера (`maker`…`business`,
   `prototypeaddons`, `perp`) — той самий рендер через `licFromNamed`.
-- `products3` — **сторінка Licenses** (product-first neutral), єдиний макет списку:
+- `licenses.html` — **сторінка Licenses** (product-first neutral), єдиний макет списку:
   таблиця рендериться з поточного датасету, без варіантів. Back із деталей веде на
   `licenseOrigin` (звідки відкрили), із фолбеком `products3`.
-- `invoices` / `activity` / `users` / `profile` (**Account**) / `billing` — повні сторінки.
-- `security` — внутрішня сторінка Account (Change password), із власною back-канавкою.
+- `invoices.html` / `activity.html` / `users.html` / `account.html` / `billing.html` — повні сторінки.
+- `security.html` — внутрішня сторінка Account (Change password), із власною back-канавкою.
+- `privacy.html` / `terms.html` / `license-agreement.html` — легальні сторінки з футера.
+- `styleguide.html` — дизайн-система (посилання лише з ⚙-панелі).
 
 ### Активність — фід, не таблиця
 **Що акцентуємо** (пас по всіх 25 семплах + синтезованих `licenseActivity`): **лише об'єкт
@@ -382,6 +450,14 @@ JS більше **не свопає** ▲/▼ текстом, лише пере�
 точно з текстом сторінок; біла кромка бенда — на ширині pageW-боксу (трохи ширша за
 текст). `.tnav` абсолютно центрується в inner.
 
+### Перемикач «Display canceled licenses» (Licenses)
+**OFF за замовчуванням** — скасовані ліцензії в таблицю не потрапляють; ON — вони
+з'являються зі своїм статусом `Canceled` (рядок muted, `.off`, у колонці State
+«Active until {date}»). Стан — **збережене налаштування** (`Store.showCanceled`,
+сідиться як `false`), тому переживає перехід між сторінками й refresh; чекбокс на
+завантаженні відображає збережене значення. Лічильник пейджера рахує **видимі**
+рядки. Раніше перемикач був підписаний «Display canceled products» і нічого не робив.
+
 ### Стандартний тулбар (усі list-сторінки однаково)
 Зліва направо: **`.searchbox`** (persistent input ~280px, лупа всередині, page-
 placeholder) → фільтри (якщо є) → `.spacer` → refresh (outlined icon-btn) →
@@ -390,16 +466,16 @@ placeholder) → фільтри (якщо є) → `.spacer` → refresh (outline
 Activity, Users та Instances-табі.
 
 ### Пікер сторінок (тимчасовий, контекстний)
-⚙ внизу праворуч → «Prototype settings». Ні перемикача Flow, ні табів — **один список**
-(таб Archive і все, що в ньому жило, видалено).
-- «Dashboard (Home)» — п'ять опцій: **small account (A)** / **large account (B)** /
-  **new user (empty)** / **grant pending** / **grant approved**.
-- **Products** → «Product-first (neutral)» (`products3`) — єдиний макет списку Licenses.
-- **Account** — дев-кнопка «Confirm email change» (грає підтвердження з нової адреси;
-  disabled, коли pending немає).
-- Варіанти планів (Maker…Business, Prototype + add-ons) і «Perpetual license details»
-  показуються **лише** коли відкрита сторінка деталей (`syncSettingsContext`).
-- Стан у JS-змінних (`detailsPage`, `dashVariant`, `homeKey`), без persist.
+⚙ внизу праворуч → «Prototype settings», однаковий на всіх сторінках (його вставляє
+`shared.js`). Вміст:
+- **Dashboard (Home)** — п'ять станів (`small account (A)` / `large account (B)` /
+  `new user (empty)` / `grant pending` / `grant approved`). Вибір **зберігається**
+  (`Store.dash`); якщо ти не на Home — перекидає на Home з обраним станом.
+- **Plan details** — посилання на `license.html?tier=…` (Maker…Business,
+  Prototype + add-ons, Perpetual): синтезовані план-сторінки, яких немає в датасетах.
+- **Account** — дев-кнопка «Confirm email change» (активна, лише коли є pending;
+  сам pending лежить у сторі, тому підтвердити можна з будь-якої сторінки).
+- **Reference** — «Design system → styleguide» і **«Reset demo data»**.
 
 ### Демо-хуки
 - `window.showSubAlert('…')` / `clearSubAlert()` — банер на деталях.
@@ -752,6 +828,20 @@ perp $2,999 — 10,000 sessions · 1,000 msg/sec · 1 prod · WL.
   класом у розмітці не лишилось після розділення Profile на картки).
 Файл: 5 461 → 4 526 рядків (−935). Поведінка не змінювалась — лише видалення.
 
+## Реструктуризація на багатосторінковий сайт (2026-08-26)
+Один HTML розібрано на 13 сторінок + 5 спільних модулів; поведінка не змінювалась,
+крім того, що вимагала багатосторінковість:
+- навігація — справжні посилання (`data-goto`-кнопки стали `<a href>`), деталі
+  ліцензії — `license.html?id=…&from=…`, back і підсвітка nav читають `from`;
+- стан переїхав у localStorage (див. «Стор»), бо між сторінками JS-змінні не живуть:
+  cancel, покупка з майстра, add/delete user, pending email, згорнутий банер,
+  обраний стан дашборда;
+- шрифти витягнуто з base64 у `fonts/*.woff2`, CSS — у `styles.css`;
+- `planCard` і картка продукту стали спільними білдерами (`components.js`), бо тепер
+  їх викликають і сторінки, і `styleguide.html`;
+- дії рядків інвойсів (View invoice / Download PDF) переїхали в `components.js` —
+  вони потрібні і на Home, і на Invoices.
+
 ## Відкриті питання / борг
 - ~~Превʼю Invoices і Users на дашборді — статичні копії~~ **виправлено**: дашборд
   і повні сторінки Invoices/Users/Activity/Licenses тепер усі з `DATASETS[dashVariant]`
@@ -777,9 +867,27 @@ perp $2,999 — 10,000 sessions · 1,000 msg/sec · 1 prod · WL.
   і дати нових ліцензій (renews Sep 19 2026 / updates Aug 19 2027) — плейсхолдери.
   «Renew subscription» на canceled-деталях — TODO-стаб.
 - `.claude/launch.json` містить сесійний scratchpad-шлях (див. «Як запускати»).
+- **Три варіанти степера в дизайн-системі** ТЗ просило показати всі три; варіанти
+  A (summary rail) і C (numbered steps) видалені в пасі чистки, тому `styleguide.html`
+  показує єдиний наявний — progress line — і **прямо про це каже** в блоці степера.
+  Відновлювати видалене заради інвентаря не стали: сторінка описує те, що є.
+- **Залишки Vite-збірки** (`package.json`, `vite.config.ts`, `tsconfig*.json`,
+  `node_modules/`, `package-lock.json`, конфіг `dev` у `launch.json`) лишились у корені
+  після видалення `src/`. Прототипу вони не потрібні; прибрати — окреме рішення.
+- **GitHub Pages**: усі шляхи відносні, перевірено з підпапки `/site/`. Що ще
+  знадобиться при публікації — `.nojekyll` (файли з підкресленням тут не використовуються,
+  тож поки не критично) і вибір гілки/теки в налаштуваннях репозиторію.
 
 ## Файли
-- `subscription-details-prototype.html` — **єдиний активний файл** прототипу
-  (розділених `styles.css`/`app.js`/`data.js` тут немає — див. попередження вгорі).
-- `serve_prototype.py` (у scratchpad сесії) — статичний сервер + `www/`-дзеркало.
-- `NOTES.md` — цей файл.
+```
+index.html licenses.html license.html invoices.html activity.html users.html
+account.html security.html billing.html privacy.html terms.html
+license-agreement.html styleguide.html
+styles.css  fonts/ubuntu-{400,500,700}-{latin,latin-ext}.woff2  fonts/ubuntu-mono-400-latin.woff2
+data.js  shared.js  components.js  wizard.js
+page-home.js page-licenses.js page-license.js page-invoices.js page-activity.js
+page-users.js page-account.js page-security.js page-billing.js  styleguide.js
+NOTES.md  README.md
+serve_prototype.py + www/site/        ← у scratchpad сесії: статичний сервер і дзеркало
+(залишки Vite: package.json, vite.config.ts, tsconfig*.json, node_modules/ — не використовуються)
+```
