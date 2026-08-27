@@ -26,8 +26,9 @@
 - `components.js` — рендерери, які потрібні більш ніж одній сторінці: таблиця
   ліцензій, рядки інвойсів/юзерів, фід активності, картки планів і продуктів,
   cancel-модалка, period-контрол, sticky-Save з guard'ом;
-- `wizard.js` — Manage add-ons (`AMF`) і майстер нової ліцензії (`NL`) разом із їхньою
-  розміткою; підключається на Home, Licenses і деталях;
+- `wizard.js` — **один** степовий візард (`NL`) у трьох режимах: нова ліцензія ·
+  Change plan · Manage add-ons — разом із розміткою; підключається на Home,
+  Licenses і деталях;
 - **`license-details.js`** — **вся поверхня деталей ліцензії в одному місці**: розмітка
   (`DETAILS_HTML`), рендер-шар і всі внутрішні поведінки. Її монтують **два хости**, і
   жоден не тримає копії: `LicenseDetails.mountPage(hostSel, lic, {back})` — сторінка
@@ -67,6 +68,9 @@ namespace'ів немає навмисно, це прототип.
 - Wireframe-фіделіті: структура/інтеракції важливіші за візуал.
 - Спільна висота контролів через `--btnH` (31px): кнопки, іконки-кнопки, чипи,
   дропдауни, search-інпут, поля форм — усе 31px, щоб тулбар читався одним бендом.
+  Виняток — **`.btn.lg`** (37px / 15px / padding 0 18px): для праймері, який стоїть
+  **поруч із h1**, а не в контрольному рядку (наразі одна поверхня — «Buy a license»
+  на Home; варіант є в інвентарі `styleguide.html`). У тулбарах бенд непорушний.
 - Клавіатурна доступність + видимі hover/focus стани.
 - **Комітимо тільки коли користувачка явно попросить.** Кожну ітерацію вона
   спершу переглядає. Мова спілкування — українська.
@@ -282,10 +286,30 @@ HEAD. Діагностика/відновлення — див. пам'ять `d
   лениво. Перша спроба з ним усередині ламала рендер на пів-дорозі (ReferenceError).
 - **Modal mode (B)**: клік по рядку (Home або Licenses) відкриває деталі у великій
   центрованій модалці **над** поточною сторінкою — той самий контейнер, бекдроп і блюр,
-  що у візарда (`.fs-screen` + клас `.licmodal`), ~90% ширини до 1180, ~90vh, внутрішній
+  що у візарда (`.fs-screen` + клас `.licmodal`), ~90% ширини до 1200, ~90vh, внутрішній
   скрол. Сторінка під нею лишається на місці: **nav-підсвітка не змінюється** (Home лишає
   Home), скрол і фільтри зберігаються (`body.licmodal-open #shellMain{overflow:hidden}`).
-  Хедер модалки: назва ліцензії + мітка ліворуч, **✕ праворуч**. **Back-кнопки немає**
+  **Одна поверхня, без вкладеної рамки.** Раніше контент приїзджав як картка-на-картці:
+  `.fs-box` несла сірий фон сторінки (`--bg`), а `.canvas` кладала **другий** білий слеб
+  усередині. Тепер **біле несе сама модалка** (`.licmodal .fs-box{background:var(--card)}`),
+  а `.canvas` перестає бути шаром (`background:transparent`, `border:0`, `radius:0`,
+  `overflow:visible`) — жодного внутрішнього контейнера, жодного другого фону, жодних
+  подвійних бордерів. Контент іде **на ширину модалки, не сторінкового контейнера**:
+  `.licmodal .sheet{max-width:none;padding:18px 24px 34px}` — `--pageW` капав його на
+  1072px, тепер 1132px, з нормальним боковим паддінгом і **скромним 18px-відступом
+  під хедером**. ⚠️ Правило скоупнуте на `.licmodal`, тому в `#nlModal` (візард) `.fs-box`
+  лишається сірою — перевірено на вкладеному флоу: візард над деталями тримає свій фон.
+  **Page mode не зачеплений** — там `.canvas` і далі біла картка з бордером на сірій
+  сторінці (перевірено після правки).
+  Хедер модалки: **тип ліцензії** ліворуч, **✕ праворуч**. Заголовок каже **лише вид**
+  ліцензії — `Subscription plan` / `Perpetual license` / `Grant license` (`titleFor`,
+  та сама формулювання, що в контентному кікері `.titlekicker`, мінус грантове «· Free»:
+  це факт ціни, а не титул). Раніше він повторював назву+мітку
+  («Prototype · Central Europe manufacturing cluster — building 4, line 2») — але обидві
+  вже стоять першими двома рядками контенту одразу під ним, тож хедер був довгим дублем.
+  ⚠️ Грантова гілка — **моє додавання** (ТЗ називало лише два значення): `isPerpLike`
+  вважає грант перпетуалом, тож без неї грант отримав би «Perpetual license», що
+  неправда. **Back-кнопки немає**
   (закриття — єдиний вихід; `#backBtn` ховається, а `.licmodal .headgrid` втрачає
   31px-канавку, інакше контент з’їжджав у неї). **Клік по бекдропу нічого не робить**
   (деталі можуть тримати відкриті редактори), **Esc закриває**.
@@ -333,21 +357,43 @@ HEAD. Діагностика/відновлення — див. пам'ять `d
 у Product-колонці (див. «Таблиці») — це два різні місця з однією суттю.
 
 ### Крок 3 (Review) і крок 4 (Billing & payment)
-**Review** (`renderStep3`): жодного заголовка в контенті — його вже каже хедер кроку
-(`.am-h2`/`.am-sub2` звідти прибрані). Порядок: картка ордера → **картка Due today, яка
-несе дію** (`.nl-duecard`: рядок суми, рядок оплати, під ними full-width primary) →
-**умови білінгу окремою тихою карткою** (`.nl-terms`): «Billed monthly · auto-pay. Cancel
-anytime.» / для перпетуала «One-time payment · includes 12 months of software updates.»
-Вибрано саму картку, а не рядок усередині Due today — та вже несе суму й кнопку, і третій
-сенс її б перевантажив. Кнопка Due today — `confirmLabel()` на останньому кроці або
-**«Continue to billing»**, якщо далі є крок 4; рядок оплати в режимі без білінгу каже
-«You’ll add billing and payment details on the next step.» замість вигаданої картки.
+**Review** (`renderStep3`) — **той самий двоколонковий `.fs-grid`, що на кроці 2**
+(2fr / 1fr, gap 24). Раніше крок стояв одноколонковим `.fs-review` на всю ширину й через
+це читався як інший екран; тепер сітка спільна, тож Review виглядає частиною візарда.
+Заголовка в контенті немає — його каже хедер кроку (`.am-h2`/`.am-sub2` прибрані).
+- **Ліва колонка — план-блок, зшитий із карткою умов** (`.nl-joined`): зверху
+  `.am-order` (назва плану + ціна, рядок ентайтлментів, лайн-айтеми, monthly total),
+  **впритул під ним** `.nl-terms` («Billed monthly · auto-pay. Cancel anytime.» / для
+  перпетуала «One-time payment · includes 12 months of software updates.»). Два окремі
+  контейнери **без зазору** й **без радіуса на кромках, де сходяться**
+  (`6px 6px 0 0` + `0 0 6px 6px`), а картка умов підтягнута `margin-top:-1px`, щоб два
+  1px-бордери легли один на одного й дали **одну лінію**, а не 2px-шов. Читається як
+  один блок, поділений лінією.
+- **Права колонка — sticky-картка з дією всередині** (`.am-sec.fs-right`): рядок
+  **Due today** + сума (`.nl-duerow` + `.am-duelabel`/`.am-dueval`), під ним
+  **контекст оплати** (`.nl-payline`: «Charged to Visa ••4242 · auto-pay · Change →
+  Billing & payment» або «You’ll add billing and payment details on the next step.»),
+  далі **primary** (`#nlCommit`: `confirmLabel()` на останньому кроці або
+  **«Continue to billing»**, якщо далі є крок 4). Кнопка стоїть **у власному паддінгу
+  картки** — `.fs-right{padding:16px}` + `.fs-nextbtn{margin-top:14px}`, тобто рівно та
+  сама внутрішня метрика, що в Calculation summary на кроці 2: 17px до низу картки,
+  ширина 335 при внутрішніх 337 — не впритул до кромки й не full-bleed.
+  `.nl-duerow` вирівняний по **baseline**: у change-plan лейбл несе довгу prorate-ноту
+  на 3 рядки, і сума лишається на першому рядку, а не з'їжджає в центр блоку.
+- ⚠️ **Класи навмисно нові** (`.nl-duerow`, `.nl-payline`, а не `.am-duerow`/`.am-payrow`):
+  ті два несли `.fs-screen`-паддінги для статичного рев'ю AMF (уже видаленого разом
+  із ним), і перевикористання затягло б чужі відступи. Мертві `.nl-duecard`-правила прибрані, `#nlModal .fs-review`
+  теж. `.fs-review` після видалення AMF став мертвим і **прибраний** — див. розділ
+  про консолідацію Manage add-ons.
 
 **Billing & payment** (`renderStep4`) — власний монохром, не копія рефсу: ліворуч дві
 панелі — **Billing information** (Company name*, Billing email*, Phone із хінтом E.164,
-Country*, City*, State / Province, ZIP*, Address*, Address line 2) і **Payment method**
-(Cardholder name*, Country*, номер картки з exp/CVC **в одному полі** — той самий
-`.paystripe`, що в модалці Update payment method, плюс тиха нота «Powered by Stripe»).
+Country*, City*, State / Province, ZIP*, Address*, Address line 2) і **Payment method**.
+У Payment method порядок полів — **номер картки перший** (з exp/CVC **в одному полі** —
+той самий `.paystripe`, що в модалці Update payment method), **під ним рядок Cardholder
+name* | Country***, і в підвалі панелі тиха нота «Powered by Stripe». Номер веде, бо
+він і є те, про що панель; ім'я та країна нижче — реквізити, які його уточнюють. Нота
+лишилась останнім елементом панелі (вона про панель, не про одне поле).
 Праворуч — **Order summary** (компактний recap + Due today), тиха картка умов і **коміт,
 disabled поки форма невалідна** (`billValid()`; обовʼязкові позначені `.req`). Значення
 живуть у `bill`, тому крок назад-вперед їх не губить.
@@ -780,22 +826,83 @@ perp $2,999 — 10,000 sessions · 1,000 msg/sec · 1 prod · WL.
 `19 Aug 2026, 13:13`, ISO в деяких таблицях. Єдиний датасет (today = **Aug 19, 2026**)
 і одна renewal-дата — теж §2, ще не зведені.
 
-## Manage add-ons (`#fsAddons`, контролер `AMF`)
-Одна поверхня — **велика центрована модалка**: `.fs-screen` = бекдроп (dim +
-`backdrop-filter:blur`), `.fs-box` = панель (~90vw до 1200px × 90vh, rounded, shadow),
-`.fs-body` скролиться всередині. Клік по бекдропу — no-op; закриття лише ✕ / Cancel / Esc.
-Відкривається засіяною з ліцензії (`AMF.open(lic)` через `openManageAddons`) — і з рядка
-списку, і з деталей, тому дані відповідають плану, а не зашитому Prototype.
-Архівна компактна двокрокова модалка (`#addonsOverlay`, контролер `AM`) **видалена**;
-класи `.am-*`, що лишились, обслуговують цю модалку і візард.
-Проратація фіксована **16 з 31 дня** (картка Next charge каже «in 16 days»).
+## Manage add-ons — **режим того самого візарда**, не друга модалка (2026-08-27)
+Раніше це була **паралельна реалізація**: окрема модалка `#fsAddons`, контролер `AMF`
+із власними константами (`BASE`/`INCL`/`MIN`/`MAX`/`UNIT`/`ADD`/`AMF_TIERS`), власними
+`money`/`extras`/`changes`/`newMonthly`/`dueToday`, **статичною розміткою на 152 рядки**,
+власним степером, success-модалкою і **без unsaved-changes guard'а**. Підписи розходились
+(«Review →» проти «Review order», «Approve & pay» проти коміт-лейблів візарда).
+
+Тепер **`AMF` і `ADDONS_HTML` видалені цілком**, а Manage add-ons — це
+**`NL.open({mode:'addons', license:lic})`**. `wizard.js`: 1119 → **822 рядки** (−297).
+Що на що зійшлося:
+
+| було в AMF | тепер |
+|---|---|
+| `ADDONS_HTML` (152 рядки статики) | `WIZARD_HTML` + `renderStep2/3/4` |
+| `BASE`/`INCL`/`MIN`/`MAX`/`UNIT`/`ADD`/`AMF_TIERS` | `BASE`/`INCL`/`MAXQ`/`UNITS`/`ADD` візарда |
+| `money`/`extras`/`changes`/`newMonthly`/`dueToday` | `money`/`extras`/`changeRows`/`total`/проратація в `renderStep3` |
+| `render`/`render2`/`goStep`/`seed` | `renderStep2`/`renderStep3`/`gotoStep`/`seedFromLicense` |
+| `showSuccess` + `#fsSuccess` | нічого — success-модалки немає в жодному режимі |
+| «Review →» · «Approve & pay» | **«Review order»** · **«Confirm changes»** |
+| Esc без guard'а | спільний `attemptClose()` |
+| `AMF.refresh()` (хук у shared.js) | `NL.refreshCustomize()` |
+
+**Три режими одного контролера** (`st.mode`): `new` · `change` · `addons`.
+- **Внутрішні id кроків лишились 1..4** (1 пікер · 2 Customize · 3 Review · 4 Billing),
+  щоб один `renderStepN` обслуговував усі режими. Add-ons пікера не має, тож
+  **стартує з 2**, а **показуваний** індекс зсунутий: `firstStep()` / `stepIndex()` /
+  `lastStep()`. Тому «Step 1 of 2 · Customize» при `st.step === 2`.
+- **Кроків 2 або 3**: `Customize → Review & pay` (білінг є, коміт там) або
+  `Customize → Review → Billing & payment` (білінгу немає, коміт на 3-му).
+  Прогрес-лінія читає `stepLabels()`, нічого не захардкоджено.
+  ⚠️ **Асиметрія з change-plan**: `needsBilling()` = `!isChange() && !billingSaved()`,
+  тобто add-ons білінг-крок отримує, а change-plan — ніколи (аргумент був «ліцензію,
+  яку змінюють, вже хтось оплачує»). Add-ons просили саме так; якщо вирівнювати —
+  рішення користувачки.
+- **Tier пінується**: `st.fixedTier = lic.tier`, тож `tier()` не намагається вивести
+  план із `st.plan`. `seedFromLicense(lic)` ставить `cust` = включене планом + наявні
+  `lic.extras` + `edge`/`trendz`, і **знімкує це у `st.baseCust`**; воно ж виставляє
+  `seededTier`, інакше `renderStep2` перезасіяв би мінімумами плану.
+- **Review показує дельту, а не рахунок**: `changeRows()` порівнює `cust` із
+  `st.baseCust` — «Production instances 1 → 2», «Added / Removed Edge Computing», суми
+  зі знаком (`moneySigned`, бо зміна може й зменшити рахунок). ⚠️ `deltas()` для цього
+  не годиться: він перелічує **все понад включене планом**, тобто весь extras-рахунок,
+  а не те, що змінив цей флоу. Порожньо → тихий рядок «No changes yet».
+  `oldMonthly()` для add-ons = база плану + вартість `st.baseCust` (для change-plan —
+  база **старого** плану). Due today прорейтиться в обох (`isMod()`), 16/31.
+- **Коміт**: `commitPurchase` → `commitChange` для обох мод-режимів. Add-ons додатково
+  пише `Store.set('justChanged', {id, text})`, і сторінка деталей показує **одноразовий
+  банер** `#licChgBanner` («License updated. Production instances 1 → 2 · Added Trendz
+  Analytics.») поруч з уже оновленими ентайтлментами (`syncChangedBanner`, ✕ чистить
+  прапорець назавжди). У modal-режимі деталей коміт **не покидає сторінку** —
+  `LicenseDetails.reopen(lic)` перемальовує деталі під собою (перевірено).
+- **Коміт-лейбли**: `confirmLabel()` → add-ons **«Confirm changes»**, change-plan
+  «Confirm change», нова ліцензія «Subscribe» / «Buy license». ⚠️ Однина/множина між
+  двома мод-режимами розходиться — так просили; якщо вирівнювати, то на одному з двох.
+- **Guard**: спільний `attemptClose()`; текст per-режим **цілим реченням**, бо
+  «add-on changes» не узгоджується зі спільним хвостом «hasn’t».
+- Бекдроп — no-op, Esc → `attemptClose()`, нижнього футера немає (як у решти візарда).
+- Проратація фіксована **16 з 31 дня** (картка Next charge каже «in 16 days»).
+- **Мертвий CSS прибраний** (21 правило): `.am-card*`/`.am-cardgrid`, `.am-h2`,
+  `.am-sub2`, `.am-due`, `.fs-screen .am-due/.am-duerow/.am-payrow`, `.am-success`,
+  `.am-checkbig`, `.am-chgcount`, `.fs-review`, `.fs-reviewactions`, `.fs-confirmbtn`.
+  `.am-duelabel`/`.am-dueval`/`.am-order`/`.am-orow`/`.am-newmonthly` **лишились** —
+  ними користується `renderStep3`. `styles.css`: 1008 → 987.
+- `#fsAddons` прибраний зі списку `NESTED` у `license-details.js` — `#nlModal` тепер
+  покриває і add-ons.
 
 ## New license flow (`#nlModal`, контролер `NL`)
 Створення ліцензії тепер **робочий степовий флоу** на chrome великої Manage-модалки
 (`.fs-screen`/`.fs-box`, бекдроп, sticky footer). Вибір — **видимі картки, ніколи
 селекти**.
-- **Входи**: **один** «+ New license» (Home, Licenses) → `NL.open({})`; дропдауна
-  subscription/perpetual більше немає — тип білінгу вибирається **всередині кроку 1**,
+- **Входи**: **один** праймері на кожній поверхні → `NL.open({})`. На **Home** він
+  підписаний **«Buy a license»** і на розмір більший за бенд (`.btn.lg`: 37px / 15px /
+  padding 0 18px) — стоїть у `.dwelcome` **поруч із h1**, а не в тулбарі, тож константа
+  `--btnH` (31px) на нього не діє. На **Licenses** кнопка лишилась «+ New license»
+  у 31px — вона **в тулбарі**, де бенд тримати обов'язково. ⚠️ Два різні підписи для
+  одного жесту — свідомо (просили тільки Home); якщо вирівнювати, то на «Buy a license».
+  Дропдауна subscription/perpetual більше немає — тип білінгу вибирається **всередині кроку 1**,
   тож розвилка на вході його лише дублювала (`#dashNewMenu`/`#licNewMenu` видалені).
   «Get started» на плані нового користувача → `NL.open({kind, product, plan, startStep:2})`
   — вибір уже зроблений, тому візард відкривається одразу на **Customize**.
@@ -821,26 +928,48 @@ perp $2,999 — 10,000 sessions · 1,000 msg/sec · 1 prod · WL.
   тотал**: крок 1 — кнопки на офер-картках, крок 2 — «Review order» у Calculation summary,
   крок 3 — коміт у картці Due today, крок 4 — коміт у картці Order summary. Back — icon-
   кнопка в хедері кроку.
-- **Крок 1 — «Choose your product and plan»**: **три рівні вибору стосом** на одному
-  екрані (рендерить `renderStep1`, контейнери `#nlChoices` / `#nlOfferHead` /
-  `#nlPlanCards`):
-  1. **Product — картки** (`.nl-choice`, дві в ряд, `PRODUCT_CHOICES`): ThingsBoard
-     «IoT platform — devices, dashboards, rule engine, integrations.» і TBMQ
-     «High-performance MQTT broker for reliable message streaming.»
-  2. **Billing — картки** (`BILLING_CHOICES`): Subscription «Pay every month. Unlimited
-     customers, dashboards, integrations, API calls, data points and messages, and you
-     can change the plan any time.» і Perpetual «Pay once, run it indefinitely. Includes
-     12 months of software updates, renewable.»
-  3. **Offers** — план/пакет-картки для поточної пари з `EC_PLANS`: TB+Sub → 5 карток,
-     решта → одна (`.plangrid.one` центрує її, **не** розтягує). Над ґрідом окремий
-     рядок `.nl-offerhead` із **лічильником праворуч** («5 plans» / «1 plan»).
-  Вибір на рівнях 1–2 **не переводить крок** (далі ще два вибори) — лише звужує
-  пропозицію нижче і скидає `st.plan`; вибрана картка лишається видимо вибраною
-  (той самий ink-ring, що на offer-картках). Картки — справжні `<button>`, тож
-  клавіатура працює без додаткового коду. Попередній сегментед-фільтр-бар
-  (`.nl-filterbar`, `segHTML`) прибраний.
+- **Крок 1 — «Choose your product and plan»**: **три рівні, без жодних боксів і без
+  секційних підписів** (рендерить `renderStep1`; хости — `#nlChoices` для рівнів 1–2,
+  `#nlOfferHead` для лічильника, `#nlPlanCards` для ґріда):
+  1. **Product — один компактний pill-сегментед, центрований** (`.nl-prodrow` центрує,
+     `.nl-prodseg` = контейнер `border-radius:999px` з паддінгом 4px, `.nl-prodopt` =
+     опція): гліф + назва, **активна опція — залита ink-пілюля всередині контейнера**,
+     неактивна muted. Гліфи — 16px монохром через `.icon`: **хаб зі спицями** для
+     платформи, **дуга броадкасту** для брокера (лежать у `PRODUCT_CHOICES[].g`).
+     ⚠️ **Описів у контролі немає** — це пікер, не пітч, тому два однорядкові описи
+     продуктів («IoT platform — devices…» / «High-performance MQTT broker…») **зникли
+     з візарда зовсім**. Багатша копія на продукти лишилась у `PRODUCT_CARDS` (data.js,
+     специмен у стайлгайді).
+  2. **Рядок заголовка + білінг-тогл праворуч** (`.nl-billrow`, `align-items:center`):
+     ліворуч заголовок, який **називає те, що показує ґрід** — **«Subscription plans»**
+     або **«Perpetual licenses»** (`.nl-billhead`, h2-токен); праворуч на тій самій лінії
+     тогл (`.nl-billtoggle`): **Subscription ⓘ — switch — Perpetual ⓘ**. Активна сторона
+     ink+500, неактивна faint. **Switch — справжній контрол** (`input[data-nl-billsw]`,
+     off = Subscription, on = Perpetual), лейбли — просто текст; тому білінг тепер
+     приходить у **`change`-хендлер**, а не в `click` (у `click` лишився тільки
+     `[data-nl-product]`).
+     **Описи білінгу переїхали в ⓘ-тултіпи** (`.nl-info` + наявний CSS-only `.tip`
+     через `data-tip`): «Pay every month. Unlimited customers, dashboards, integrations,
+     API calls, data points and messages, and you can change the plan any time.» /
+     «Pay once, run it indefinitely. Includes 12 months of software updates, renewable.»
+     ⚠️ Базовий `.tip` — **nowrap-однорядковик**, і речення розтягло б його на ~900px,
+     тому додано модифікатор **`.tip.wide`** (`white-space:normal; width:300px`).
+     Тултіп right-anchored, тож ⓘ біля правої кромки модалки тримає бабл усередині
+     (заміряно). ⓘ мають `tabindex="0"`, тож тултіп відкривається і з клавіатури
+     (`:focus-visible`). Термін **«Pay-as-you-go» не використовуємо ніде** — тільки
+     «Subscription» (перевірено грепом по всіх файлах).
+  3. **Plans** — офер-картки поточної пари, **без змін**: TB+Sub → 5 карток, решта →
+     одна (`.plangrid.one` центрує 380px). CTA, primary-правила й вибраний стан ті самі.
+  **Лічильник** («5 plans» / «1 plan») — **на власному рядку під заголовком**,
+  right-aligned (`.nl-countrow`). Це свідомий вибір із двох, які пропонувало ТЗ:
+  правий кінець рядка заголовка належить тоглу, і там вони б колідували.
+  **Прибрано з кроку**: секційні підписи PRODUCT/BILLING/PLANS і їхні лінійки
+  (`.nl-ghead`), картки вибору з описами (`.nl-choice*`), а раніше — group-контейнери
+  (`.nl-gbox`/`.nl-plansbox`), конектори (`.nl-connect`), `.nl-group` і вся
+  legend-механіка. Бордери на кроці лишились **тільки** на `.nl-prodseg`, `.switch`
+  і на офер-картках.
   **Блоку «What’s included in Professional Edition» у візарді більше немає** — його
-  копію тепер несе опис картки Subscription. На екрані нового користувача блок
+  копію тепер несе ⓘ-тултіп Subscription у білінг-тоглі. На екрані нового користувача блок
   лишився без змін; `peBlockHTML` переїхав із `wizard.js` у `components.js`, бо
   обслуговує тепер лише одну поверхню (`#ecPlanExtra`).
   **CTA переїхав на картки**: у кожної свій **завжди видимий** `.pc-cta` «Select»
@@ -850,16 +979,19 @@ perp $2,999 — 10,000 sessions · 1,000 msg/sec · 1 prod · WL.
   Великі product-картки (`.nl-prodcard`) **більше не використовуються** — лишились як
   специмен у стайлгайді (`PRODUCT_CARDS` + `productCardHTML`), дубль масиву у `wizard.js`
   прибрано.
-- **Крок 1 у режимі change-plan**: `NL.openChange(lic)` відкриває **той самий** екран,
-  але картки Product і Billing рендеряться **вибраними-і-залоченими** (`<button disabled>`;
-  невибрані стають faint, клік нічого не робить),
-  а картка поточного плану несе стрип **«Current plan»**, без CTA і не клікається
-  (`tabindex="-1"`, `aria-disabled`). ⚠️ Відомий тупик: change-plan для TBMQ-підписки
+- **Крок 1 у режимі change-plan**: `NL.openChange(lic)` відкриває **той самий** екран
+  (ті самі три рівні), але **обидва контроли залочені під значення ліцензії**:
+  `.nl-prodopt` — `<button disabled>` (невибрана опція faint, клік нічого не робить,
+  перевірено), switch — `disabled` із `opacity:.45` на треку. Заголовок і ґрід так само
+  показують поточну пару. Картка поточного плану несе стрип **«Current plan»**, без CTA і не
+  клікається (`tabindex="-1"`, `aria-disabled`). Висота стрипа зарезервована над
+  кожною карткою (`.plangrid.withcur`), тому назви планів стоять на одній горизонталі
+  (заміряно: усі `.pc-head h2` на одному top). ⚠️ Відомий тупик: change-plan для TBMQ-підписки
   показує єдину картку, і вона ж поточна — переходити нікуди (було так і раніше).
 - **Крок 2 — Customize: два варіанти** (перемикач у ⚙-панелі, група «Customize step»,
   стан у Store `custVariant`, дефолт **A**; `custVariant()` живе в `shared.js`, бо його
-  читають і візард, і Manage add-ons; обидва флоу мають хук перемалювання —
-  `NL.refreshCustomize()` / `AMF.refresh()`, тож перемикати можна з відкритою модалкою):
+  читає візард у всіх режимах; хук перемалювання один — `NL.refreshCustomize()`,
+  тож перемикати можна з відкритою модалкою):
   - **A — Plan card**: над контролами картка `.nl-plansum` — тайтл «{Product} {Plan} ·
     {Subscription|Perpetual}» і під ним фіксовані ентайтлменти як факти
     («100 devices · 100 assets · fixed by this plan»). Картка — **якір кроку**, тому
@@ -879,10 +1011,10 @@ perp $2,999 — 10,000 sessions · 1,000 msg/sec · 1 prod · WL.
   TBMQ (sessions / messages / sec).
 - **Крок 2 — переїзд дій** (спільне для обох варіантів):
   - **Кнопка в картці Calculation summary** — full-width primary під тоталом
-    (`#nlSumNext`, клас `.fs-nextbtn`, той самий патерн, що вже мав AMF), підписана
+    (`#nlSumNext`, клас `.fs-nextbtn`), підписана
     **«Review order»** (не «Continue») — вона називає, куди веде: Review & pay. На
-    перпетуал-шляху та сама назва. ⚠️ У AMF власна кнопка лишилась **«Review →»** —
-    два різні підписи для одного жесту; якщо вирівнювати, то на «Review order».
+    перпетуал-шляху та сама назва — і в режимі Manage add-ons теж (його власна
+    «Review →» пішла разом з AMF).
     Картка
     **sticky** у межах кроку (`.fs-right{position:sticky;top:0}`), тож тотал і дія
     видні під час скролу лівої колонки.
@@ -895,7 +1027,7 @@ perp $2,999 — 10,000 sessions · 1,000 msg/sec · 1 prod · WL.
   - **Заголовок блока контролів — «Capacity»** (був «PLAN {назва}» / «PACKAGE {назва}»):
     рядки — це те, чого можна докупити (production instances, AI credits, development
     instances), а не налаштування плану; назва плану вже стоїть у картці вище, тому
-    `.am-cap` із цього хедера прибраний. Те саме перейменування в AMF. ⚠️ У режимі
+    `.am-cap` із цього хедера прибраний. ⚠️ У режимі
     change-plan цей хедер більше не показує перехід «Prototype → Startup» — його видно
     в картці плану (нова назва), у рядку summary «Current · {old}» і на кроці Review.
     «Add-ons» нижче — без змін.
@@ -903,11 +1035,9 @@ perp $2,999 — 10,000 sessions · 1,000 msg/sec · 1 prod · WL.
     ті самі рядки `.am-cell` + `.fs-cellhead`, що й степери: назва + опис + ціна ліворуч,
     `.switch` на правому краю. `#nlStep2 .am-capgrid` і `#fsStep1 .am-capgrid` зведені
     в **одну колонку**, тож усі контролі (степери + тогли) стоять одним правим стовпцем.
-- **Manage add-ons (AMF) успадкував усе те саме**: `#fsPlanSum` (варіант A) / `#fsDevCell`
-  із замком (варіант B) перемикає `seed()`, тогли замінили чекбокси, Review уже був у
-  картці. ⚠️ Розмітка AMF статична, тому варіант там перемикається показом/схованням
-  вузлів, а не перерендером — якщо AMF колись переїде на JS-рендер, ці дві гілки треба
-  звести в одну з візардом.
+- **Manage add-ons отримує це автоматично** — він тепер режим цього ж візарда й
+  ходить через той самий `renderStep2`. ~~Дві гілки варіанта A/B (статична розмітка
+  AMF проти JS-рендера)~~ **зведені**: гілка одна.
 - **План-картки кроку 1** (детально): з **`EC_PLANS`** — name/price/**повні feats**
   (capacity + support-tier + WL, див. нижче). Під ґрідом — **одна самодостатня картка**
   «What's included in Professional Edition» (`peBlockHTML(intro)`, `.nl-pe`): титул =
@@ -937,11 +1067,10 @@ perp $2,999 — 10,000 sessions · 1,000 msg/sec · 1 prod · WL.
   (Devices/Assets): «fixed by {plan} plan» лежить у **description-слоті**
   (`.fs-celldesc`) — один 4px-токен title→desc на всі рядки PLAN-секції.
   Праворуч calc summary: base + дельти + «New monthly» / «One-time total».
-  **Review-крок вирівняний вліво** (`#nlModal .fs-review{margin:0}`; AMF-рев'ю
-  лишився центрованим). **Топи вирівняні**:
+  **Review-крок вирівняний вліво** (переїхав на `.fs-grid`, див. розділ про крок 3). **Топи вирівняні**:
   `.fs-right{top:0}` — ⚠️ sticky-інсет резолвиться від **padding box** скролпорта
   (fs-body має padding 24), тож будь-який позитивний top зсував панель нижче лівої
-  навіть у спокої (старі 57px → 57px зсуву; стосувалось і AMF — виправлено спільно).
+  навіть у спокої (старі 57px → 57px зсуву).
 - **Крок 4 Review & pay**: головний рядок **розбитий**: жирний «ThingsBoard Pilot»
   зліва + жирна ціна справа (`.nl-mainline`), під ним regular-рядок ентайтлментів
   «100 devices · 100 assets · …» (`.nl-entline`); далі дельти → total → Due today,
@@ -1063,11 +1192,10 @@ perp $2,999 — 10,000 sessions · 1,000 msg/sec · 1 prod · WL.
 - **`prototypeaddons` не має лінка у флоу**: у датасетах такого рядка немає, тож
   сторінка досяжна лише через контекстний список у налаштуваннях — так вирішено
   свідомо («хай там і лежить»).
-- ~~`AMF` не знає про плани~~ **виправлено**: `AMF.open(lic)` сідиться з ліцензії
-  (`AMF_TIERS` + `TIER_SPECS`: base/incl/extras/addons, титул `#fsTitle`, devices-поле,
-  «fixed by {plan} plan», рядок review `#fsPlanLine`). Вхід: details (activeLicense)
-  і **меню рядка** (`[data-manageaddons]` → `licById`). Лишилось: статичні лейбли
-  markup TB-словами (для TBMQ «Devices» ≠ Sessions).
+- ~~`AMF` не знає про плани~~ / ~~статичні лейбли markup TB-словами~~ **знято разом
+  із `AMF`**: Manage add-ons тепер режим візарда й сідиться через `seedFromLicense`
+  із `TIER_SPECS`, тому TBMQ отримує Sessions / Messages-sec, а не «Devices».
+  Входи ті самі: деталі (`activeLicense`) і меню рядка (`[data-manageaddons]`).
 - ~~TBMQ не має детальних сторінок~~ **виправлено**: TBMQ-рядки (sub і perp) відкривають
   повноцінну TBMQ-наповнену сторінку (`TIER_SPECS.tbmqsub`/`tbmqperp`). Немає dead rows.
 - **Дані рядка → деталі зведені**: деталі тепер керуються об'єктом ліцензії (не `PAGES`) —
