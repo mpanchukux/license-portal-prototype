@@ -1,0 +1,886 @@
+/* ============================================================================
+ ThingsBoard License Portal — prototype stylesheet (single source for every
+ page and for styleguide.html). No build step: plain CSS, relative font paths.
+ ============================================================================ */
+
+/* Ubuntu, self-hosted (woff2, latin + latin-ext, weights 400/500/700).
+ 600/800 map to 700 via CSS weight-matching. */
+@font-face{font-family:'Ubuntu';font-style:normal;font-weight:400;font-display:swap;src:url('fonts/ubuntu-400-latin-ext.woff2') format('woff2');unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;}
+@font-face{font-family:'Ubuntu';font-style:normal;font-weight:400;font-display:swap;src:url('fonts/ubuntu-400-latin.woff2') format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;}
+@font-face{font-family:'Ubuntu';font-style:normal;font-weight:500;font-display:swap;src:url('fonts/ubuntu-500-latin-ext.woff2') format('woff2');unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;}
+@font-face{font-family:'Ubuntu';font-style:normal;font-weight:500;font-display:swap;src:url('fonts/ubuntu-500-latin.woff2') format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;}
+@font-face{font-family:'Ubuntu';font-style:normal;font-weight:700;font-display:swap;src:url('fonts/ubuntu-700-latin-ext.woff2') format('woff2');unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;}
+@font-face{font-family:'Ubuntu';font-style:normal;font-weight:700;font-display:swap;src:url('fonts/ubuntu-700-latin.woff2') format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;}
+/* Ubuntu Mono, embedded (base64 woff2) — license keys / IDs / copyable tokens. */
+@font-face{font-family:'Ubuntu Mono';font-style:normal;font-weight:400;font-display:swap;src:url('fonts/ubuntu-mono-400-latin.woff2') format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;}
+:root{
+  --ink:#1c1c1c; --mid:#6b6b6b; --faint:#9a9a9a;
+  --line:#c9c9c9; --line2:#e2e2e2; --bg:#f4f4f2; --card:#ffffff;
+  --fill:#3d3d3d; --track:#e6e6e6;
+  --chrome:#efefec; --chromeLine:#dcdcd8; --hover:#f0f0ee; --sel:#e4e4e0;
+  --btnH:31px;
+  --backW:31px; --backGap:12px; --contentX:65px;  /* 22px head padding + 31 + 12 */
+  /* one shared page container: same width, same side padding, centred */
+  --pageW:1120px; --pageX:24px; --pageY:28px;
+  /* ---- Type scale: the only text levels. 14px floor. Weight grows with size; 700 only for display/h1. ---- */
+  --font-ui:'Ubuntu',ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --font-mono:'Ubuntu Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  --t-display-fs:64px; --t-display-lh:1.00; --t-display-ls:-0.035em; --t-display-fw:700;
+  --t-h1-fs:36px;      --t-h1-lh:1.08;      --t-h1-ls:-0.025em;      --t-h1-fw:700;
+  --t-h2-fs:20px;      --t-h2-lh:1.30;      --t-h2-ls:-0.008em;      --t-h2-fw:500;
+  --t-body-fs:16px;    --t-body-lh:1.50;    --t-body-ls:0;           --t-body-fw:400;
+  --t-small-fs:14px;   --t-small-lh:1.45;   --t-small-ls:0;          --t-small-fw:400;
+  --t-label-fs:14px;   --t-label-lh:1.20;   --t-label-ls:0.10em;     --t-label-fw:500;
+  /* in-sentence emphasis (the activity feed): lifts the object of an action out of
+     the sentence without reading as a heading. 400 body → 500 emphasis, never 700. */
+  --t-em-fw:500;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font:14px/1.45 Ubuntu,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  display:flex; flex-direction:column;   /* persistent top bar + one scrolling content region */
+}
+/* the feed's one emphasis style: .em, and <b> inside feed text maps onto it */
+.em,.fi-txt b{font-weight:var(--t-em-fw)}
+/* the shared shell: the top bar (.dtopbar) stays put; every page's view scrolls here */
+#shellMain{flex:1;min-height:0;overflow:auto;background:var(--bg)}
+/* global footer: quiet, muted, one line, aligned to the content container */
+.shellfoot{background:var(--bg);padding:6px 24px 22px}
+.shellfoot-in{max-width:var(--pageW);margin:0 auto;padding:0 var(--pageX);display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:14px;color:var(--faint)}
+.shellfoot-in .link{color:var(--faint)}
+.shellfoot-in .link:hover{color:var(--ink)}
+/* every page renders inside the same container: one max-width, centred, same
+   side padding — so nothing shifts horizontally when navigating between pages.
+   .dwrap = dashboards, .licview = list/settings pages, .sheet = details page. */
+.dwrap,.licview,.sheet{width:100%;max-width:var(--pageW);margin:0 auto;padding:var(--pageY) var(--pageX) 44px}
+button{font:inherit;cursor:pointer}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px;border-radius:3px}
+.icon{width:16px;height:16px;flex:none;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.icon[hidden]{display:none}
+
+/* ---------- app shell ---------- */
+.app{display:grid;grid-template-columns:1fr;min-height:100%}
+
+.sidebar{background:var(--chrome);border-right:1px solid var(--chromeLine);display:flex;flex-direction:column}
+.brand{display:flex;align-items:center;gap:9px;padding:16px 16px;border-bottom:1px solid var(--chromeLine)}
+.brand .mark{width:26px;height:26px;border:1px solid var(--line);border-radius:6px;display:flex;align-items:center;justify-content:center;background:#fff;color:var(--ink)}
+.brand .bt{font-size:14px;font-weight:700;line-height:1.1}
+.brand .bs{font-size:14px;color:var(--faint);letter-spacing:.04em;text-transform:uppercase}
+.nav{padding:10px 8px;display:flex;flex-direction:column;gap:2px}
+.nav a{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:6px;color:var(--mid);text-decoration:none;font-size:14px;border:1px solid transparent}
+.nav a:hover{background:var(--hover);color:var(--ink)}
+.nav a.on{background:var(--sel);color:var(--ink);font-weight:600;border-color:var(--chromeLine)}
+.nav a.on .icon{stroke-width:1.9}
+
+.main{display:flex;flex-direction:column;min-width:0}
+.topbar{height:52px;flex:none;display:flex;align-items:center;gap:14px;padding:0 18px;background:var(--chrome);border-bottom:1px solid var(--chromeLine)}
+/* side + top navigation hidden for now so it doesn't distract */
+.sidebar,.topbar{display:none}
+.topbar .pt{font-size:14px;font-weight:600}
+.topbar .sp{flex:1}
+.iconbutton{width:30px;height:30px;border:1px solid transparent;border-radius:6px;background:transparent;color:var(--mid);display:flex;align-items:center;justify-content:center}
+.iconbutton:hover{background:var(--hover);color:var(--ink);border-color:var(--chromeLine)}
+.user{display:flex;align-items:center;gap:8px;padding:3px 6px;border-radius:6px;border:1px solid transparent}
+.user:hover{background:var(--hover);border-color:var(--chromeLine)}
+.avatar{width:24px;height:24px;border-radius:50%;background:#fff;border:1px solid var(--line);color:var(--ink);font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.user .un{font-size:14px;color:var(--ink)}
+.kebab{font-size:18px;line-height:1;color:var(--mid)}
+.menu{position:relative}
+.menu .pop{position:absolute;right:0;top:36px;background:#fff;border:1px solid var(--line);border-radius:6px;min-width:160px;padding:5px;box-shadow:0 6px 20px rgba(0,0,0,.08);z-index:40}
+.menu .pop[hidden]{display:none}
+.menu .pop button{display:block;width:100%;text-align:left;padding:7px 9px;border:0;background:transparent;border-radius:5px;font-size:14px;color:var(--ink)}
+.menu .pop button:hover{background:var(--hover)}
+
+.content{padding:0;overflow:auto}
+/* the shared page container; .sheet is the details page's instance */
+.sheet{width:100%}
+
+/* ---------- canvas ---------- */
+.canvas{background:var(--card);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.head{padding:22px 22px 20px;border-bottom:1px solid var(--line2);background:#fafafa}
+/* the back button sits alone in a narrow left gutter; every content block
+   below aligns to one vertical line at --contentX from the canvas edge
+   (head padding-left + gutter + gap) */
+.headgrid{display:grid;grid-template-columns:var(--backW) 1fr;column-gap:var(--backGap);align-items:start}
+.headcol{min-width:0}
+/* row 1: back · status · title on the left, actions on the right.
+   Wraps instead of letting the title collide with the actions when narrow. */
+.head .top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;row-gap:12px}
+.idline{display:flex;align-items:center;gap:10px;min-width:0;flex:1 1 auto}
+.idline .title{min-width:0}
+/* same box as the ⋮ overflow button in the header actions */
+.back{width:var(--btnH);height:var(--btnH);font-size:15px;line-height:1;border:1px solid var(--line);border-radius:5px;display:flex;align-items:center;justify-content:center;color:var(--mid);background:#fff;flex:none}
+.back:hover{background:var(--hover);color:var(--ink)}
+/* plan identity: small grey subhead over the plan name + status chip */
+.titleblock{min-width:0}
+.titlekicker{font-size:14px;color:var(--mid);line-height:1.2}
+.titlerow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:3px}
+/* optical centring: align-items:center centres the chip on the title's line
+   box, which sits ~3px above the ink of a word with descenders ("Prototype").
+   The margin shifts it down by half its value, so the chip's box lands on the
+   word's ink band (cap top to descender bottom). */
+.titlerow .chip.status{margin-top:6px}
+.planname{margin:0;font-family:var(--font-ui);font-size:var(--t-h1-fs);line-height:var(--t-h1-lh);letter-spacing:var(--t-h1-ls);font-weight:var(--t-h1-fw)}
+.sub{color:var(--mid);font-size:14px;margin-top:2px}
+/* one-time price + updates term, sits under the licence name */
+/* muted qualifier under an entitlement name */
+.itemnote{font-size:14px;color:var(--faint);margin-top:3px;line-height:1.4}
+/* Features: boolean entitlements as chips — no columns, no dashes */
+.featureblock{margin-top:20px}
+.featureblock[hidden]{display:none}
+.fhead{font-size:14px;color:var(--mid);margin-bottom:9px}
+.features{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.fchip{display:inline-flex;align-items:center;gap:7px;font-size:14px;padding:4px 11px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--ink)}
+.fchip .fmark{width:13px;height:13px;flex:none}
+/* row 2: the label affordance on its own */
+.metarow{display:flex;gap:12px;margin-top:14px;flex-wrap:wrap;align-items:center}
+/* the licence label as description: muted body text right under the title */
+.metarow #labelSlot{display:inline-flex;align-items:center;gap:8px}
+.labeltext{font-size:var(--t-small-fs);line-height:var(--t-small-lh);letter-spacing:var(--t-small-ls);color:var(--mid)}
+.labelx{border:0;background:none;padding:0;font-size:13px;line-height:1;color:var(--faint);cursor:pointer}
+.labelx:hover{color:var(--ink)}
+.period{font-size:14px;color:var(--ink);font-variant-numeric:tabular-nums}
+/* thin divider between the meta row and the license key row */
+.hairline{height:1px;background:var(--line2);margin-top:12px}
+/* license key (left) and subscription period (right) as a symmetric pair */
+.keygrid{display:flex;justify-content:space-between;gap:24px;margin-top:14px;flex-wrap:wrap}
+.keycol{min-width:0}
+.keycol.right{text-align:right}
+.minihead{margin:0 0 8px;font-family:var(--font-ui);font-size:var(--t-label-fs);line-height:var(--t-label-lh);letter-spacing:var(--t-label-ls);font-weight:var(--t-label-fw);text-transform:uppercase;color:var(--ink)}
+/* the subscription-period label matches the "Subscription plan" subhead */
+.periodhead{margin:0 0 6px;font-family:var(--font-ui);font-size:var(--t-label-fs);line-height:var(--t-label-lh);letter-spacing:var(--t-label-ls);font-weight:var(--t-label-fw);text-transform:uppercase;color:var(--ink)}
+.chip{font-size:14px;padding:2px 9px;border:1px solid var(--line);border-radius:999px;color:var(--mid);background:#fafafa;display:inline-flex;align-items:center;gap:6px}
+.chip.status{border-color:var(--ink);color:var(--ink);font-weight:600;background:#fff}
+.chip .sdot{width:7px;height:7px;border-radius:50%;background:var(--ink);flex:none}
+.chip.ghost{border-style:dashed;color:var(--faint);background:transparent}
+.chip.ghost:hover{color:var(--ink);border-color:var(--mid)}
+.chip.label{border-color:var(--line);color:var(--ink);background:#fff}
+.chip .x{margin-left:2px;color:var(--faint);border:0;background:transparent;padding:0 2px;font-size:14px}
+.chip .x:hover{color:var(--ink)}
+.labelinput{font:inherit;font-size:14px;padding:2px 8px;border:1px solid var(--ink);border-radius:999px;width:130px;outline:none}
+
+.muted{color:var(--faint)}
+
+/* equal spacing between every header action, including the ⋮ overflow button */
+.headactions{margin-left:auto;flex:none;align-self:center;display:flex;gap:9px;align-items:center}
+/* .btn sets display, so a plain [hidden] on a header action would not hide it
+   (the data-page buttons get away with it through [data-page][hidden]) */
+.headactions .btn[hidden]{display:none}
+.kebab-btn{width:var(--btnH);padding:0;font-size:15px;line-height:1}
+
+/* conditional attention alert (hidden in healthy state) */
+.alert{margin-top:12px;display:flex;align-items:center;gap:9px;font-size:14px;color:var(--ink);background:#f4f4f2;border:1px solid var(--line);border-left:3px solid var(--ink);border-radius:5px;padding:9px 12px}
+.alert[hidden]{display:none}
+.alert .icon{width:17px;height:17px;flex:none}
+.alert .atxt b{font-weight:600}
+
+.actions{display:flex;gap:9px;margin-top:14px;flex-wrap:wrap;align-items:center}
+.btn{font-size:14px;height:var(--btnH);display:inline-flex;align-items:center;justify-content:center;padding:0 13px;border-radius:5px;border:1px solid var(--ink);background:var(--ink);color:#fff}
+.btn:hover{background:#000}
+.btn.sec{background:#fff;color:var(--ink);border-color:var(--line)}
+.btn.sec:hover{border-color:var(--ink);background:var(--hover)}
+.btn.ter{background:transparent;color:var(--mid);border-color:transparent;text-decoration:underline;text-underline-offset:2px}
+.btn.ter:hover{color:var(--ink)}
+.spacer{flex:1}
+
+.tabs{display:flex;gap:2px;padding:0 18px 0 var(--contentX);border-bottom:1px solid var(--line2)}
+.tab{padding:11px 12px;font-family:var(--font-ui);font-size:var(--t-label-fs);line-height:var(--t-label-lh);letter-spacing:var(--t-label-ls);font-weight:var(--t-label-fw);text-transform:uppercase;color:var(--mid);border:0;border-bottom:2px solid transparent;margin-bottom:-1px;background:transparent}
+.tab:hover{color:var(--ink)}
+.tab[aria-selected="true"]{color:var(--ink);font-weight:600;border-color:var(--ink)}
+
+.panel[hidden]{display:none}
+/* subscription-only vs perpetual-only bits; needed because .btn and table
+   elements set their own display, which would beat the plain [hidden] rule */
+[data-page][hidden]{display:none}
+.section{padding:16px 18px 16px var(--contentX);border-bottom:1px solid var(--line2)}
+.section:last-child{border-bottom:0}
+/* Plan & add-ons is separated from the tab bar by whitespace, not a rule */
+.section.planblock{border-bottom:0;margin-bottom:22px}
+/* the Plan & add-ons usage table stays narrower than the page */
+.plantable{width:69%}
+@media(max-width:900px){.plantable{width:100%}}
+/* light-grey sub-cards (Billing / Invoices / Production instances) */
+.billcard{background:#f6f6f4;border:1px solid var(--line2);border-radius:8px;padding:14px 16px;margin-top:12px}
+.billcard-h{margin:0 0 10px;font-family:var(--font-ui);font-size:var(--t-label-fs);line-height:var(--t-label-lh);letter-spacing:var(--t-label-ls);font-weight:var(--t-label-fw);text-transform:uppercase;color:var(--ink)}
+/* two fixed tracks so the single Next charge card keeps its half-width size */
+.billgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:12px}
+@media(max-width:700px){.billgrid{grid-template-columns:1fr}}
+.billgrid .billcard{margin-top:0}
+/* Next charge card — when / how much / how, top to bottom */
+.nc-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.nextcharge .billcard-h{margin:0}
+.nc-when{font-size:14px;color:var(--mid);font-variant-numeric:tabular-nums}
+/* the amount is the hero: its own line, nothing beside it */
+.nc-amount{margin-top:10px}
+.nextcharge .big{display:block;font-size:var(--t-h2-fs);line-height:1.15;letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw);font-variant-numeric:tabular-nums}
+.nextcharge .hairline{margin:14px 0}
+.nc-foot{font-size:14px;color:var(--mid)}
+.nc-pay{font-size:14px;color:var(--mid)}
+.sh{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.sh .n{width:20px;height:20px;border-radius:50%;background:var(--ink);color:#fff;font-size:14px;display:flex;align-items:center;justify-content:center;flex:none}
+.sh h3{margin:0;font-family:var(--font-ui);font-size:var(--t-label-fs);line-height:var(--t-label-lh);letter-spacing:var(--t-label-ls);font-weight:var(--t-label-fw);text-transform:uppercase;color:var(--ink)}
+.sh .spacer{flex:1}
+
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.iconbtn{display:inline-flex;align-items:center;gap:5px;height:var(--btnH);font-size:14px;color:var(--mid);border:1px solid var(--line);border-radius:5px;padding:0 10px;background:#fff}
+.iconbtn:hover{color:var(--ink);border-color:var(--mid);background:var(--hover)}
+.iconbtn.ib{padding:0;width:var(--btnH);justify-content:center}
+.iconbtn .icon{width:15px;height:15px}
+.iconbtn.copied{border-color:var(--ink);color:var(--ink)}
+/* refresh feedback: brief icon spin + a muted "updated" note beside the button */
+@keyframes refspin{to{transform:rotate(360deg)}}
+.iconbtn.spinning .icon{animation:refspin .6s linear;transform-origin:center}
+/* ghost icon button: no fill, no stroke — hover only darkens the glyph */
+.iconbtn.ghost{border-color:transparent;background:transparent}
+.iconbtn.ghost:hover{border-color:transparent;background:transparent;color:var(--ink)}
+.link{color:var(--ink);text-decoration:underline;text-underline-offset:2px;font-size:14px;background:transparent;border:0;padding:0}
+.link:hover{color:#000}
+
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;color:var(--faint);font-family:var(--font-ui);font-size:var(--t-label-fs);line-height:var(--t-label-lh);letter-spacing:var(--t-label-ls);font-weight:400;text-transform:uppercase;padding:8px;border-bottom:1px solid var(--line2)}
+td{padding:13px 8px;border-bottom:1px dashed var(--line2);vertical-align:middle}
+/* breathing room around tables and before their pagination */
+.section > table{margin-top:16px}
+tr:last-child td{border-bottom:0}
+th.num,td.num{text-align:right}
+.meter{height:8px;background:var(--track);border-radius:999px;overflow:hidden;min-width:120px;border:1px solid var(--line2)}
+.meter>span{display:block;height:100%;background:var(--fill)}
+/* fixed text column so every meter starts at the same x and is the same width;
+   wide enough for the largest plan's "0 / 1,000" without wrapping */
+.usecell{display:grid;grid-template-columns:58px 120px;align-items:center;gap:8px;position:relative}
+.usetxt{font-variant-numeric:tabular-nums;color:var(--mid);font-size:14px;text-align:left;white-space:nowrap}
+.tip{position:relative}
+.tip:hover::after,.tip:focus-visible::after,.tip.show::after{
+  content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);right:0;
+  background:var(--ink);color:#fff;font-size:14px;white-space:nowrap;
+  padding:5px 9px;border-radius:5px;pointer-events:none;z-index:20}
+.tip:hover::before,.tip:focus-visible::before,.tip.show::before{
+  content:"";position:absolute;bottom:calc(100% + 3px);right:14px;
+  border:5px solid transparent;border-top-color:var(--ink);z-index:20}
+
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px dashed var(--line2)}
+.row:first-child{padding-top:0}
+.row:last-child{border-bottom:0;padding-bottom:0}
+.row .l{color:var(--mid);font-size:14px}
+.row .r{text-align:right;display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.big{font-size:var(--t-h2-fs);font-weight:var(--t-h2-fw);font-variant-numeric:tabular-nums}
+.pill{font-size:14px;padding:1px 8px;border:1px solid var(--ink);color:var(--ink);background:#fff;border-radius:999px}
+.pill.soft{border-color:var(--line);color:var(--mid)}
+
+.inline{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.inline[hidden]{display:none}
+.inline input{font:inherit;font-size:14px;padding:6px 10px;border:1px solid var(--ink);border-radius:5px;width:180px;outline:none}
+
+.stub{color:var(--faint);font-size:14px;padding:18px;text-align:center;border:1px dashed var(--line);border-radius:5px;background:#fafafa}
+
+/* license key in header */
+.keyline{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.keyline .mono{font-size:14px}
+
+/* data grid (production instances) */
+th.sortable{cursor:pointer;user-select:none;white-space:nowrap}
+th.sortable:hover{color:var(--mid)}
+th .arrow{display:inline-flex;align-items:center;margin-left:5px;color:var(--faint)}
+th .arrow svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:block}
+th[aria-sort="ascending"] .arrow{transform:rotate(180deg)}
+th.chk,td.chk{width:34px;text-align:center;padding-left:8px;padding-right:0}
+input[type=checkbox]{accent-color:var(--ink);width:14px;height:14px;margin:0}
+.emptybox{padding:34px 0;text-align:center;color:var(--faint);font-size:14px}
+/* Instances tab: type switcher toolbar + generous air before pagination */
+.insttoolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.insttoolbar[hidden]{display:none}   /* display:flex above would defeat a plain [hidden] */
+.insttoolbar .spacer{flex:1}
+.insttype[hidden]{display:none}
+.pager.instpager{margin-top:40px}
+.rowactions{display:inline-flex;align-items:center;gap:16px;white-space:nowrap}
+/* action columns shrink to their content, so row actions sit at the table's right
+   edge instead of floating in the middle of an over-wide last column */
+th[aria-label$="ctions"],th.cellact,td.cellact{width:1%;white-space:nowrap;text-align:right}
+/* invoices: fixed proportional columns so the row fills the width evenly and the
+   actions sit at the right edge instead of floating with a gap */
+.invtable{table-layout:fixed}
+.invtable th:nth-child(1),.invtable td:nth-child(1){width:18%}
+.invtable th:nth-child(2),.invtable td:nth-child(2){width:16%}
+.invtable th:nth-child(3),.invtable td:nth-child(3){width:20%}
+.invtable th:nth-child(4),.invtable td:nth-child(4){width:14%}
+.invtable th:nth-child(5),.invtable td:nth-child(5){width:32%;text-align:right}
+.pager{display:flex;align-items:center;gap:14px;margin-top:22px;padding-bottom:4px;flex-wrap:wrap;font-size:14px;color:var(--mid)}
+.pager .spacer{flex:1}
+.pager select{font:inherit;font-size:14px;height:var(--btnH);border:1px solid var(--line);border-radius:5px;padding:0 6px;background:#fff;color:var(--ink);margin-left:4px}
+.pager .range{font-variant-numeric:tabular-nums}
+.pagebtns{display:flex;gap:4px}
+.pagebtns button{width:var(--btnH);height:var(--btnH);border:1px solid var(--line);border-radius:5px;background:#fff;color:var(--mid);display:inline-flex;align-items:center;justify-content:center;font-size:14px;line-height:1}
+.pagebtns button:not([disabled]):hover{color:var(--ink);border-color:var(--mid);background:var(--hover)}
+.pagebtns button[disabled]{color:var(--line);cursor:not-allowed}
+
+/* ---------- modal ---------- */
+.overlay{position:fixed;inset:0;background:rgba(28,28,28,.32);display:flex;align-items:center;justify-content:center;padding:20px;z-index:100}
+.overlay[hidden]{display:none}
+.modal{background:#fff;border:1px solid var(--line);border-radius:8px;max-width:460px;width:100%;box-shadow:0 14px 44px rgba(0,0,0,.18)}
+.modal .mh{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line2)}
+.modal .mh h3{margin:0;font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw)}
+.modal .mh .spacer{flex:1}
+.modal .mclose{width:26px;height:26px;border:1px solid var(--line);border-radius:5px;background:#fff;color:var(--mid);display:flex;align-items:center;justify-content:center;font-size:15px}
+.modal .mclose:hover{color:var(--ink);background:var(--hover)}
+.modal .mb{padding:16px;font-size:14px;color:var(--mid);line-height:1.5}
+.modal .mf{padding:12px 16px;border-top:1px solid var(--line2);display:flex;justify-content:flex-end;gap:8px}
+.am-sec{margin-bottom:22px}
+.am-sec:last-child{margin-bottom:0}
+.am-sechead{display:flex;align-items:baseline;gap:10px;margin-bottom:12px}
+.am-sechead h4{margin:0;font-family:var(--font-ui);font-size:var(--t-label-fs);line-height:var(--t-label-lh);letter-spacing:var(--t-label-ls);font-weight:var(--t-label-fw);text-transform:uppercase}
+.am-cap{font-size:14px;color:var(--faint)}
+.am-capgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+.am-cell{border:1px solid var(--line2);border-radius:6px;padding:12px;display:flex;flex-direction:column}
+.am-celltop{font-size:14.5px;font-weight:600;color:var(--ink);margin-bottom:9px}
+
+.am-cardgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
+.am-card{border:1px solid var(--line2);border-radius:6px;padding:12px}
+.am-card.on{border-color:var(--ink)}
+.am-cardtop{display:flex;align-items:flex-start;gap:10px}
+.am-cardtop>div{flex:1}
+.am-cardtop .am-addcheck{margin-top:1px}
+.am-cardname{font-weight:600;font-size:14.5px;color:var(--ink)}
+.am-carddesc{font-size:14px;color:var(--faint);margin-top:2px}
+.am-cardprice{margin-top:10px;font-size:14px;color:var(--mid);font-variant-numeric:tabular-nums;display:flex;align-items:center;gap:6px}
+.am-cardprice::before{content:"";width:14px;height:14px;flex:none;background:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b6b6b' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='9'/><path d='M14.5 9.3c-.6-.7-1.5-1.1-2.5-1.1-1.5 0-2.7.8-2.7 2s1.2 1.8 2.7 2 2.7.8 2.7 2-1.2 2-2.7 2c-1 0-1.9-.4-2.5-1.1M12 6.4v11.2'/></svg>") center/contain no-repeat}
+.am-cardprice.locked::before{background-image:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b6b6b' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'><rect x='5' y='11' width='14' height='9' rx='2'/><path d='M8 11V8a4 4 0 0 1 8 0v3'/></svg>")}
+
+.stepper{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:6px;overflow:hidden;width:max-content}
+.stepper button{width:var(--btnH);height:var(--btnH);border:0;background:#fff;color:var(--ink);font-size:16px;line-height:1;display:inline-flex;align-items:center;justify-content:center}
+.stepper button:hover{background:var(--hover)}
+.stepper button[disabled]{color:var(--line);cursor:not-allowed;background:#fff}
+.stepper .val{min-width:46px;height:var(--btnH);display:inline-flex;align-items:center;justify-content:center;border-left:1px solid var(--line);border-right:1px solid var(--line);font-variant-numeric:tabular-nums;font-size:14px}
+
+.switch{position:relative;display:inline-flex;width:40px;height:22px;flex:none}
+.switch input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer;z-index:1}
+.switch .track{width:40px;height:22px;border-radius:999px;background:#fff;border:1px solid var(--line);position:relative;transition:.15s}
+.switch .track::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:var(--mid);transition:.15s}
+.switch input:checked + .track{background:var(--ink);border-color:var(--ink)}
+.switch input:checked + .track::after{transform:translateX(18px);background:#fff}
+.switch input:focus-visible + .track{outline:2px solid var(--ink);outline-offset:2px}
+
+.am-h2{margin:0 0 4px;font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw)}
+.am-sub2{margin:0 0 14px;font-size:14px;color:var(--mid)}
+.am-order{border:1px solid var(--line2);border-radius:6px;padding:2px 14px;margin-bottom:16px}
+.am-orow{display:flex;justify-content:space-between;gap:16px;padding:10px 0;border-bottom:1px dashed var(--line2);font-size:14px}
+.am-orow:last-child{border-bottom:0}
+.am-planrow{font-weight:600}
+.am-newmonthly{font-weight:700;font-size:14px}
+.am-due{display:flex;justify-content:space-between;align-items:center;gap:16px;border:1px solid var(--line);border-radius:6px;padding:12px 14px;margin-bottom:14px;background:#fafafa}
+.am-duelabel{font-size:14px}
+.am-dueval{font-size:var(--t-h2-fs);font-weight:var(--t-h2-fw);font-variant-numeric:tabular-nums;flex:none}
+.am-success{text-align:center;padding:30px 10px}
+.am-checkbig{width:52px;height:52px;border-radius:50%;border:2px solid var(--ink);color:var(--ink);font-size:26px;display:inline-flex;align-items:center;justify-content:center;margin-bottom:14px}
+.am-figures{margin-top:8px;border:1px solid var(--line2);border-radius:6px;padding:10px 12px;font-size:14px;font-variant-numeric:tabular-nums}
+.am-sumlist{display:flex;flex-direction:column;gap:7px;padding-bottom:8px;margin-bottom:8px;border-bottom:1px dashed var(--line2)}
+.am-sumlist[hidden]{display:none}
+.am-sumrow{display:flex;justify-content:space-between;gap:16px}
+.am-sumrow.cur{color:var(--mid)}
+.am-total-row{font-weight:700;font-size:14px}
+.am-total-row .am-chgcount{font-weight:400}
+.am-chgcount{font-size:14px;color:var(--faint)}
+
+/* the generic stub overlay sits above the add-ons and wizard modals */
+#overlay{z-index:400}
+
+/* ---------- prototype settings gear (prototype-only) ---------- */
+.gearfab{position:fixed;right:16px;bottom:16px;width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:#fff;color:var(--mid);display:flex;align-items:center;justify-content:center;z-index:90;box-shadow:0 3px 12px rgba(0,0,0,.14)}
+.gearfab:hover{color:var(--ink);border-color:var(--mid)}
+.settings-panel{position:fixed;right:16px;bottom:66px;width:256px;background:#fff;border:1px solid var(--line);border-radius:8px;box-shadow:0 12px 32px rgba(0,0,0,.18);z-index:96;padding:14px}
+.settings-panel[hidden]{display:none}
+.settings-panel h4{margin:0 0 3px;font-size:14px}
+.settings-panel .sp-note{font-size:14px;color:var(--faint);margin-bottom:12px}
+.settings-panel .sp-label{font-size:14px;color:var(--mid);margin-bottom:8px}
+/* grouped page picker in the settings panel */
+.sp-pick{display:flex;flex-direction:column;gap:1px}
+.sp-grouphead{font-size:14px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin:6px 0 3px}
+.sp-grouphead:first-child{margin-top:0}
+.sp-opt{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink);padding:3px 4px;border-radius:5px;cursor:pointer}
+.sp-opt:hover{background:var(--hover)}
+.sp-opt input{accent-color:var(--ink);margin:0;flex:none}
+/* page-specific variant group, shown only in that page's context */
+.sp-ctx{display:flex;flex-direction:column;gap:1px}
+.sp-opt input:disabled + span{color:var(--faint)}
+.sp-ctx[hidden]{display:none}
+.seg{display:flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg label{flex:1;position:relative;margin:0}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg span{display:block;text-align:center;padding:7px 6px;font-size:14px;color:var(--mid);cursor:pointer;background:#fff}
+.seg label:first-child span{border-right:1px solid var(--line)}
+.seg input:checked + span{background:var(--ink);color:#fff}
+.seg input:focus-visible + span{outline:2px solid var(--ink);outline-offset:-2px}
+
+/* ---------- Manage add-ons: large centered modal ---------- */
+/* backdrop: dim + blur the page behind; the modal panel (.fs-box) sits centered on top */
+.fs-screen{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;color:var(--ink);background:rgba(28,28,28,.32);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+.fs-box{display:flex;flex-direction:column;width:min(1200px,90vw);height:90vh;background:var(--bg);border:1px solid var(--line);border-radius:12px;box-shadow:0 24px 64px rgba(0,0,0,.28);overflow:hidden}
+.fs-screen[hidden]{display:none}
+/* one header row: muted label + title on the left, Change plan + close on the right */
+.fs-header{flex:none;display:flex;align-items:center;gap:12px;row-gap:8px;flex-wrap:wrap;padding:13px 24px;background:#fff;border-bottom:1px solid var(--line2)}
+.fs-header .spacer{flex:1}
+.fs-maintitle{margin:0;font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw);flex:0 1 auto;min-width:0}
+.fs-headactions{display:flex;align-items:center;gap:14px;flex:none}
+.fs-close{width:30px;height:30px;flex:none;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--mid);display:inline-flex;align-items:center;justify-content:center;font-size:15px}
+.fs-close:hover{color:var(--ink);background:var(--hover)}
+.fs-nextbtn{width:100%;margin-top:14px}
+/* Back lives in the header on the review step; .fs-close sets display, so it
+   needs its own [hidden] rule to stay hidden on the adjust step */
+.fs-headback{flex:none}
+.fs-headback[hidden]{display:none}
+/* review step: white itemised card, Due today carries the payment line */
+.fs-screen .am-order{background:var(--card)}
+.fs-screen .am-due{display:block;padding:0}
+.fs-screen .am-duerow{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:12px 14px}
+.fs-screen .am-payrow{padding:10px 14px;border-top:1px solid var(--line2);font-size:14px;color:var(--mid)}
+.fs-reviewactions{display:flex;align-items:center;margin-top:20px;padding-top:16px;border-top:1px solid var(--line2)}
+.fs-confirmbtn{width:100%}
+.fs-body{padding:24px;width:100%;max-width:1180px;margin:0 auto;flex:1;min-height:0;overflow:auto;overscroll-behavior:contain}
+.fs-grid{display:grid;grid-template-columns:2fr 1fr;gap:24px;align-items:start}
+.fs-col{min-width:0}
+.fs-screen .am-cell,.fs-screen .am-card{background:#fff;border:0;padding:0}
+.fs-screen .am-card.on{background:transparent}
+/* item subheads sit clearly below the "Plan" / "Add-ons" block titles */
+.fs-screen .am-celltop,.fs-screen .am-cardname{font-size:14px}
+/* "Plan" / "Add-ons" read as quiet section labels, not headings */
+.fs-screen .fs-col .am-sechead h4{color:var(--mid)}
+/* divider between the Plan and Add-ons sections, full-bleed inside the panel */
+.fs-screen .am-sechead-sub{margin:22px -16px 12px;padding:22px 16px 0;border-top:1px solid var(--line2)}
+/* each item is one tight unit: title+control / description / price, with a
+   generous gap to the next item */
+.fs-screen .am-capgrid{grid-template-columns:1fr;gap:26px}
+.fs-screen .am-cardgrid{grid-template-columns:1fr;gap:26px}
+.fs-screen .am-cardprice{margin-top:4px}
+.fs-screen .am-carddesc{margin-top:4px}
+/* add-on price lines up with the title and description, past the checkbox */
+.fs-screen .am-card .am-cardprice{margin-left:27px}
+.fs-panel{background:#fff;border:1px solid var(--line2);border-radius:8px;padding:16px}
+.fs-devinput{height:calc(var(--btnH) + 2px);width:110px;border:1px solid var(--line);border-radius:6px;background:var(--track);color:var(--ink);-webkit-text-fill-color:var(--ink);opacity:1;font:inherit;font-size:14px;text-align:center;font-variant-numeric:tabular-nums;padding:0 8px;cursor:not-allowed}
+/* title + description as one text block, control to its right on the top line */
+.fs-cellhead{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+.fs-celltext{flex:1;min-width:0}
+.fs-cellhead .am-celltop{margin-bottom:0}
+.fs-celldesc{margin-top:4px;font-size:14px;color:var(--faint);line-height:1.55}
+/* pins right under the sticky header row (57px tall) */
+/* top:0 — the sticky inset resolves against the scrollport's padding box, so any
+   positive value pushes the panel below the left panel's top line even at rest */
+.fs-right{position:sticky;top:0;background:#fff;border:1px solid var(--line2);border-radius:8px;padding:16px}
+.fs-right .am-figures{border:0;padding:0;margin-top:10px}
+.fs-review{max-width:640px;margin:0 auto}
+/* the wizard is left-aligned on every step — Review included */
+#nlModal .fs-review{margin:0}
+.am-addcheck{width:17px;height:17px;flex:none;accent-color:var(--ink);margin:0;cursor:pointer}
+.fs-screen .am-addcheck{width:17px;height:17px}
+@media(max-width:900px){.fs-grid{grid-template-columns:1fr}.fs-right{position:static}}
+/* ---------- New license flow (stepped; rides the manage-modal chrome) ---------- */
+/* the stepper: a thin full-width track directly under the header hairline,
+   then one padded label row — "Step N of 4 · Plan" */
+.nl-stepbar{flex:none;padding:0 0 10px;background:#fff;border-bottom:1px solid var(--line2)}
+.nl-progress{width:100%}
+.nl-ptrack{height:3px;background:var(--track);overflow:hidden}
+.nl-pfill{display:block;height:100%;background:var(--ink)}
+.nl-plabel{margin-top:9px;padding:0 24px;font-size:var(--t-small-fs);color:var(--mid)}
+.nl-plabel b{color:var(--ink);font-weight:600}
+.nl-foot{flex:none;display:flex;align-items:center;gap:12px;padding:12px 24px;background:#fff;border-top:1px solid var(--line2)}
+.nl-foot[hidden]{display:none}
+.nl-foot .btn[hidden]{display:none}   /* .btn sets display, so [hidden] needs help */
+/* step 1 — two large product cards, half the modal width each */
+.nl-prodgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;max-width:960px;margin:0 auto}
+@media(max-width:700px){.nl-prodgrid{grid-template-columns:1fr}}
+.nl-prodcard{padding:28px 30px}
+.nl-vline{margin-top:10px;font-size:var(--t-body-fs);font-weight:600;color:var(--ink)}
+.nl-sline{margin-top:8px;font-size:var(--t-small-fs);line-height:1.55;color:var(--mid)}
+.nl-unl{margin-top:16px;padding-top:14px;border-top:1px dashed var(--line2)}
+.nl-unl-k{font-family:var(--font-ui);font-size:var(--t-label-fs);line-height:var(--t-label-lh);letter-spacing:var(--t-label-ls);font-weight:var(--t-label-fw);text-transform:uppercase;color:var(--faint)}
+.nl-unl-v{margin-top:6px;font-size:14px;line-height:1.6;color:var(--ink)}
+/* step 2 — the shared PE card under the plan grid: the title is the card's
+   header, the "All plans include…" line its muted intro; the card spans the
+   plan grid width and nothing floats between the grid and the card */
+.nl-pe{margin:20px 0 0;border:1px solid var(--line2);border-radius:10px;background:var(--card);padding:16px 18px}
+.nl-pe-h{font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw);color:var(--ink)}
+.nl-pe-intro{margin:6px 0 0;font-size:14px;color:var(--faint)}
+.nl-pe-body{margin-top:6px}
+#nlProdExtra .nl-pe{max-width:960px;margin-left:auto;margin-right:auto}   /* spans the centered perp product grid */
+.nl-pe-item{padding:8px 0;border-bottom:1px dashed var(--line2);font-size:14px;line-height:1.5;color:var(--mid)}
+.nl-pe-item:last-child{border-bottom:0}
+.nl-pe-item b{color:var(--ink);font-weight:600}
+/* step 4 — bold main line, regular entitlement line beneath */
+.nl-mainline{border-bottom:0;padding-bottom:2px}
+.nl-entline{padding-top:0;color:var(--mid)}
+/* purchase loading spinner (button keeps its width via JS) */
+.nl-spin{display:inline-block;width:15px;height:15px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:refspin .7s linear infinite}
+/* success modal — fresh monochrome design */
+.nl-success{width:min(560px,96vw);text-align:center}
+.nl-success-b{padding:38px 40px 32px;display:flex;flex-direction:column;align-items:center}
+.nl-success-h{margin:16px 0 0;font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw)}
+.nl-success-p{margin:10px 0 0;font-size:var(--t-small-fs);line-height:1.5;color:var(--mid)}
+.nl-keybox{display:flex;align-items:center;gap:10px;margin-top:14px;border:1px solid var(--line2);border-radius:6px;background:#fafafa;padding:9px 10px 9px 14px}
+.nl-keybox code{font-family:var(--font-mono);font-size:15px;letter-spacing:.02em;color:var(--ink)}
+.nl-success-f{margin-top:24px;width:100%}
+.nl-success-f .btn{width:100%}
+/* selectable cards: choices stay visible, selection = ink ring (no dropdowns) */
+.nl-select{cursor:pointer}
+.nl-select:hover{border-color:var(--mid)}
+.nl-select.on{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+#nlModal .plangrid{margin-top:0}
+
+/* ---------- Dashboard (Overview): full-width top bar, no sidebar, centered column ---------- */
+.app[hidden],.dashview[hidden],.licview[hidden]{display:none}
+.dashview{display:flex;flex-direction:column;min-height:100%;background:var(--bg)}
+.dtopbar{display:flex;flex:none;padding:12px 24px 0;background:var(--bg)}
+/* the bar is a contained band: white backdrop capped at the container width,
+   centered and rounded — the page background stays visible on both sides */
+.dtopbar-inner{position:relative;display:flex;align-items:center;gap:14px;height:56px;width:100%;max-width:var(--pageW);margin:0 auto;padding:0 var(--pageX);background:var(--card);border:1px solid var(--line2);border-radius:10px}
+.dtopbar .sp{flex:1}
+.dbrand{display:flex;align-items:center;gap:10px}
+/* the logo doubles as a Home link — reset it to look identical as a <button> */
+button.dbrand{background:none;border:0;padding:0;color:inherit;font:inherit;cursor:pointer}
+.dbrand .mark{width:26px;height:26px;border:1px solid var(--line);border-radius:6px;display:flex;align-items:center;justify-content:center;background:#fff;color:var(--ink)}
+.dbrand .bt{font-size:14px;font-weight:700;line-height:1.1}
+.dbrand .bt .bsep{color:var(--faint);font-weight:400;margin:0 6px}
+/* top-bar nav — same treatment as the old sidebar items, laid out horizontally */
+/* centred on the bar itself, so the logo/profile widths don't shift it */
+.tnav{position:absolute;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:2px}
+.tnav-item{padding:7px 11px;border:1px solid transparent;border-radius:6px;background:transparent;color:var(--mid);font:inherit;font-size:14px}
+.tnav-item:hover{background:var(--hover);color:var(--ink)}
+.tnav-item.on{background:var(--sel);border-color:var(--chromeLine);color:var(--ink);font-weight:600}
+.dprofile{position:relative}
+.dprofbtn{display:inline-flex;align-items:center;gap:9px;padding:4px 12px 4px 4px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--ink);font:inherit;font-size:14px}
+.dprofbtn:hover{border-color:var(--mid);background:var(--hover)}
+.dprofmenu{position:absolute;right:0;top:calc(100% + 6px);min-width:232px;background:#fff;border:1px solid var(--line);border-radius:8px;box-shadow:0 12px 32px rgba(0,0,0,.16);padding:6px;z-index:60}
+.dprofmenu[hidden]{display:none}
+.dprofmenu button{display:flex;align-items:baseline;gap:8px;width:100%;text-align:left;padding:8px 10px;border:0;background:transparent;border-radius:6px;font:inherit;font-size:14px;color:var(--ink)}
+.dprofmenu button:hover{background:var(--hover)}
+.dprofmenu button .who{font-size:14px;color:var(--faint)}
+.dprofmenu .sep{height:1px;background:var(--line2);margin:6px 4px}
+
+/* impersonation banner: black band directly under the top-bar band, same width */
+.imp-wrap{flex:none;padding:0 24px;background:var(--bg)}
+.imp-wrap[hidden]{display:none}
+.imp-banner{display:flex;align-items:center;gap:12px;width:100%;max-width:var(--pageW);margin:0 auto;padding:9px var(--pageX);background:var(--ink);color:#fff;border-radius:0 0 10px 10px;font-size:14px}
+.imp-banner b{font-weight:600}
+.imp-banner .sp{flex:1}
+.imp-return{height:26px;padding:0 12px;border:0;border-radius:5px;background:#fff;color:var(--ink);font:inherit;font-size:14px;cursor:pointer;flex:none}
+.imp-return:hover{background:var(--hover)}
+body.impersonating .dtopbar-inner{border-bottom-left-radius:0;border-bottom-right-radius:0}
+/* legal pages: long-form reading */
+.legal{max-width:800px}
+.legal p{margin:0 0 14px;font-size:var(--t-body-fs);line-height:1.6;color:var(--ink)}
+.legal h2{margin:24px 0 10px;font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw)}
+.legal .lic-sub{margin-bottom:24px}
+/* add-user modal steps */
+.paymodal-b[hidden],.paymodal-f[hidden]{display:none}
+/* change-plan wizard: unselectable current-plan card */
+.nl-current{cursor:default;opacity:.75}
+.dmain{flex:1;overflow:visible;padding:0}
+/* welcome text and the page-level action sit on one row */
+.dwelcome{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.dwelcome .dw-txt{flex:1;min-width:0}
+.dwelcome h1{margin:0;font-family:var(--font-ui);font-size:var(--t-h1-fs);line-height:var(--t-h1-lh);letter-spacing:var(--t-h1-ls);font-weight:var(--t-h1-fw)}
+.dwelcome p{margin:5px 0 0;font-family:var(--font-ui);font-size:var(--t-small-fs);line-height:var(--t-small-lh);letter-spacing:var(--t-small-ls);font-weight:var(--t-small-fw);color:var(--mid)}
+
+.dblock{background:var(--card);border:1px solid var(--line2);border-radius:10px;padding:15px 18px;margin-top:20px}
+/* Home feed lazy load: a sentinel the observer watches, plus a quiet fallback */
+.feedmore{display:flex;justify-content:center;padding:10px 0 2px}
+.feedmore[hidden]{display:none}
+.feedsentinel{display:block;width:1px;height:1px}
+.dblock-head{display:flex;align-items:baseline;gap:12px;margin-bottom:4px}
+.dblock-head h2{margin:0;font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw)}
+.dblock-head .sp{flex:1}
+
+.dprodrow{cursor:pointer;border-radius:6px}
+.dprodrow:hover{background:var(--hover)}
+/* Recent invoices preview: spread the columns across the full row width */
+/* Recent activity preview: muted timestamp on the right (replaces the status chip) */
+/* preview tables inside a dashboard block */
+.dblock table{margin-top:10px}
+.dblock table td{padding:11px 8px}
+
+/* New-user empty state: plan structure. Switchers reuse the .seg segmented
+   control; cards reuse .dblock + .pill + .btn — no new colors or components. */
+/* ---------- Community Grant states (pending / approved) ----------
+   Both reuse the shared shell. "Grant pending" is the new-user dashboard with a
+   status card above the plan cards — it states where the application stands and
+   blocks nothing: the switchers and plan cards below stay fully live. "Grant
+   approved" is a populated dashboard whose single licence is the grant, plus a
+   one-time banner. Quiet monochrome — neither surface is an alert. */
+.gstatus{display:flex;align-items:flex-start;gap:14px;margin-top:20px;border:1px solid var(--line2);border-radius:10px;background:var(--card);padding:16px 18px}
+.gstatus[hidden]{display:none}
+.gstatus .gs-ic{width:22px;height:22px;margin-top:2px;color:var(--mid)}
+.gs-h{font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw);color:var(--ink)}
+.gs-b{margin:6px 0 0;max-width:720px;font-size:14px;line-height:1.6;color:var(--mid)}
+.gs-f{margin-top:10px}
+/* The approved banner wears the impersonation banner's clothes (.imp-banner):
+   ink band, white text, white pill action — a statement across the top of the
+   dashboard rather than another card in the stack. It sits inside the content
+   column, so it keeps all four corners and clears the content below it.
+   One-time: dismissing removes it for the session. */
+.gbanner{display:flex;align-items:center;gap:12px;margin:0 0 26px;border-radius:10px;background:var(--ink);color:#fff;padding:10px 10px 10px 16px;font-size:14px}
+.gbanner[hidden]{display:none}
+.gbanner .sp{flex:1}
+.gbanner .gb-ic{width:18px;height:18px;color:#fff}
+.gb-txt{font-size:14px;color:#fff}
+.gb-act{height:26px;padding:0 12px;border:0;border-radius:5px;background:#fff;color:var(--ink);font:inherit;font-size:14px;cursor:pointer;flex:none}
+.gb-act:hover{background:var(--hover)}
+.gb-x{flex:none;border:0;background:none;cursor:pointer;color:rgba(255,255,255,.72);font-size:15px;line-height:1;padding:5px 8px;border-radius:5px}
+.gb-x:hover{color:#fff;background:rgba(255,255,255,.14)}
+#statusSlot{display:inline-flex;align-items:center;gap:8px}   /* a grant carries two quiet chips */
+.planpick{display:flex;flex-direction:column;align-items:flex-start;gap:12px;margin-top:20px}
+.planpick-row{display:flex;align-items:center;gap:12px}
+.planpick .pp-label{font-size:14px;color:var(--mid);min-width:56px}
+.planpick .seg{flex:none}
+.planpick .seg label{flex:none}
+.planpick .seg span{padding:7px 14px}
+.plangrid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;margin-top:20px;align-items:stretch}
+@media(max-width:1080px){.plangrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:760px){.plangrid{grid-template-columns:1fr}}
+/* single-plan states: centered card, not stretched */
+.plangrid.one{grid-template-columns:minmax(0,380px);justify-content:center}
+.plancard{position:relative;display:flex;flex-direction:column;margin-top:0;padding:16px 18px}
+/* Change plan: "Current plan" is a strip on the current card's top edge; its
+   height is reserved above EVERY card (empty elsewhere) so card heights match
+   and the plan names stay on one horizontal line */
+.plangrid.withcur{--stripH:24px}
+.plangrid.withcur .plancard{margin-top:var(--stripH)}
+.pc-strip{position:absolute;bottom:calc(100% - 1px);left:12px;display:inline-flex;align-items:center;height:calc(var(--stripH) + 1px);padding:0 10px;background:var(--card);border:1px solid var(--line2);border-bottom:0;border-radius:8px 8px 0 0;font-family:var(--font-ui);font-size:var(--t-label-fs);letter-spacing:var(--t-label-ls);font-weight:var(--t-label-fw);text-transform:uppercase;color:var(--mid);white-space:nowrap}
+.pc-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-height:22px}
+.pc-head h2{margin:0;font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw)}
+.pc-price{margin-top:9px;font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw);font-variant-numeric:tabular-nums}
+.pc-per{font-size:14px;font-weight:400;color:var(--faint);letter-spacing:0}
+.pc-term{margin-top:5px;font-size:14px;color:var(--mid)}
+.pc-feats{margin-top:13px;flex:1}
+.pc-feat{font-size:14px;color:var(--mid);padding:7px 0;border-bottom:1px dashed var(--line2)}
+.pc-feat:last-child{border-bottom:0}
+.pc-cta{width:100%;margin-top:14px}
+.pc-note{margin-top:12px;font-size:14px;color:var(--faint)}
+.pc-note.center{text-align:center}
+.pc-note:empty{display:none}
+
+@media(max-width:820px){
+  .app{grid-template-columns:1fr}
+  .sidebar{flex-direction:row;overflow-x:auto}
+  .brand{border-bottom:0;border-right:1px solid var(--chromeLine)}
+  .nav{flex-direction:row}
+}
+/* ---------- Licenses (unified list): inner content only, no chrome ---------- */
+
+.pager.air{margin-top:40px}
+/* list pages framed like the dashboard blocks: white card, gray border, rounded */
+.listcard{background:var(--card);border:1px solid var(--line2);border-radius:10px;padding:15px 18px;margin-top:16px}
+.listcard .lic-controls,.listcard .insttoolbar{margin:0}
+.listcard .pager{margin-top:18px;padding-bottom:0}
+.listcard .feed{margin-top:0}
+/* activity feed: chronological history (newest first) — replaces the table on
+   both the Activity page and the dashboard block. Icon frame matches .iconbtn.ib,
+   rows use the same dashed dividers as .drow — no new colors or components. */
+.feed{margin-top:8px}
+.fitem{padding:14px 2px;border-bottom:1px dashed var(--line2)}
+.fitem:last-child{border-bottom:0}
+.fi-row{display:flex;align-items:flex-start;gap:12px}
+.fi-ic{width:16px;height:16px;flex:none;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;color:var(--mid);background:var(--track)}
+.fi-ic .icon{width:11px;height:11px}
+.fi-body{flex:1;min-width:0}
+.fi-meta{display:flex;align-items:center;gap:7px;font-size:14px;color:var(--faint);font-variant-numeric:tabular-nums}
+.fi-txt{margin-top:4px;font-size:14px;color:var(--ink);line-height:1.5}
+.fi-row > .iconbtn{flex:none;margin-top:0}
+/* audit payload expands in place under the entry — capped height, own scroll */
+.fi-audit{margin:10px 0 2px 0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:14px;line-height:1.5;color:var(--ink);background:#fafafa;border:1px solid var(--line2);border-radius:6px;padding:12px 14px;max-height:300px;overflow:auto;white-space:pre}
+.fi-audit[hidden]{display:none}
+/* expand button stays visibly pressed while its payload is open */
+.iconbtn[data-audit][aria-expanded="true"]{border-color:var(--ink);color:var(--ink);background:var(--sel)}
+.lic-h1{margin:0 0 4px;font-family:var(--font-ui);font-size:var(--t-h1-fs);line-height:var(--t-h1-lh);letter-spacing:var(--t-h1-ls);font-weight:var(--t-h1-fw)}
+.lic-sub{margin:0 0 20px;font-size:var(--t-small-fs);line-height:var(--t-small-lh);letter-spacing:var(--t-small-ls);font-weight:var(--t-small-fw);color:var(--mid)}
+/* ---------- Settings pages (Profile / Billing): forms, section cards, save footers ---------- */
+/* back button in its own left gutter; the content column aligns to one vertical
+   line to its right — same gutter mechanic as the details header (.headgrid). */
+/* settings pages span the shared 1120 container; header + cards align with every
+   other page — only the form cards keep their own comfortable max-width */
+.setgrid{width:100%}
+/* cards span the shared container; the form grid inside stays comfortable */
+.setcard{background:var(--card);border:1px solid var(--line2);border-radius:8px;padding:18px 20px;margin-top:16px}
+.setcard > *:not(.setcard-h){max-width:800px}
+.setcard-h{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.setcard-h h2{margin:0;font-family:var(--font-ui);font-size:var(--t-label-fs);line-height:var(--t-label-lh);letter-spacing:var(--t-label-ls);font-weight:var(--t-label-fw);text-transform:uppercase}
+.setcard-hint{font-size:var(--t-small-fs);line-height:var(--t-small-lh);letter-spacing:var(--t-small-ls);font-weight:var(--t-small-fw);color:var(--faint)}
+.field{margin-bottom:14px}
+.field:last-child{margin-bottom:0}
+.field > label{display:block;font-size:var(--t-small-fs);line-height:var(--t-small-lh);letter-spacing:var(--t-small-ls);font-weight:var(--t-small-fw);color:var(--mid);margin-bottom:6px}
+.field input,.field select,.field textarea{font-family:var(--font-ui);font-size:var(--t-body-fs);line-height:var(--t-body-lh);letter-spacing:var(--t-body-ls);font-weight:var(--t-body-fw);width:100%;height:var(--btnH);border:1px solid var(--line);border-radius:5px;padding:0 10px;background:#fff;color:var(--ink);outline:none}
+.field textarea{height:auto;min-height:62px;padding:8px 10px;resize:vertical;line-height:1.5}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--ink)}
+.field.ro input{background:var(--bg);color:var(--mid);cursor:default}
+.field .help{font-size:var(--t-small-fs);line-height:var(--t-small-lh);letter-spacing:var(--t-small-ls);color:var(--faint);margin-top:5px}
+.field2{display:grid;grid-template-columns:1fr 1fr;gap:12px 14px}
+.field2 .field{margin-bottom:0}   /* the grid gap spaces rows — no double margin */
+@media(max-width:640px){.field2{grid-template-columns:1fr}}
+.cardhelp{font-size:var(--t-small-fs);line-height:var(--t-small-lh);letter-spacing:var(--t-small-ls);color:var(--faint);margin-top:12px}
+.paycard{display:flex;align-items:center;gap:14px;flex-wrap:wrap;border:1px solid var(--line2);border-radius:8px;padding:12px 14px}
+.paycard .sp{flex:1}
+.brandbadge{font-size:14px;font-weight:800;letter-spacing:.08em;border:1px solid var(--line);border-radius:4px;padding:3px 7px;background:#fff;color:var(--ink)}
+.pc-num{font-variant-numeric:tabular-nums;font-size:14px;letter-spacing:.06em}
+.pc-exp{font-size:14px;color:var(--mid)}
+/* readonly billing address: half the card width; billing email on top, then a divider,
+   then the address; the "edit in company profile" affordance is an icon top-right */
+/* quiet delete action + disabled confirm button in the delete dialog (reuses the savebar's opacity treatment) */
+/* Account → Personal details: the two account-level actions sit under the fields */
+/* Email change is pending until the new address confirms: a muted chip carrying
+   the target address, with the two text actions beside it */
+.emailpend{margin-top:7px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px}
+.emailpend[hidden]{display:none}
+.emailpend-t{font:inherit;font-size:14px;text-align:left;color:var(--mid);background:#fff;border:1px dashed var(--line);border-radius:999px;padding:3px 11px;cursor:pointer}
+.emailpend-t:hover{border-color:var(--mid);color:var(--ink)}
+.emailpend-a{display:inline-flex;gap:12px}
+/* Security page: back button in its own gutter, aligned with the H1 row */
+.secgrid{display:grid;grid-template-columns:var(--backW) 1fr;column-gap:var(--backGap);align-items:start}
+.secgrid > .back{margin-top:19px}
+/* the three password fields stack, each the width of one .field2 cell
+   (the 800px card body minus the 14px column gap, halved). The cap sits on the
+   inputs: .setcard > *:not(.setcard-h) already claims max-width:800px here. */
+.pwstack{display:grid;gap:12px}
+.pwstack .field input{max-width:393px}
+.setdelete{margin-top:14px}
+.setdelete .btn.ter{padding:0}
+.modal .mf .btn[disabled]{opacity:.45;cursor:not-allowed}
+/* sticky page header carrying a single page-level Save (Profile / Billing settings) */
+.pagehead{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:12px;background:var(--bg);padding:14px 0 12px}
+.pagehead .lic-h1{margin:0}
+.pagehead .sp{flex:1}
+.pagehead .saved{font-size:14px;color:var(--faint)}
+.pagehead .saved[hidden]{display:none}
+.pagehead .btn[disabled]{opacity:.45;cursor:not-allowed}
+/* muted caption under a section title (e.g. billing address prefill note) */
+/* ---------- Update payment method: bespoke monochrome modal (NOT the generic .modal) ---------- */
+.payoverlay{position:fixed;inset:0;z-index:100;background:rgba(28,28,28,.32);display:flex;align-items:center;justify-content:center;padding:20px}
+.payoverlay[hidden]{display:none}
+/* modal widths: the two narrower dialogs that ride the payment-modal chrome */
+.paymodal.narrow{width:min(480px,96vw)}
+.paymodal.tight{width:min(420px,96vw)}
+/* a table that can outgrow its card scrolls inside its own wrapper — the card
+   itself must not clip (it would cut off the row menus) */
+.tablescroll{overflow-x:auto}
+.paymodal{background:#fff;border:1px solid var(--line);border-radius:10px;width:min(560px,96vw);box-shadow:0 18px 48px rgba(0,0,0,.20);display:flex;flex-direction:column}
+.paymodal-h{display:flex;align-items:center;gap:12px;padding:20px 24px;border-bottom:1px solid var(--line2)}
+.paymodal-h h3{margin:0;font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw)}
+.paymodal-h .sp{flex:1}
+.paymodal-x{width:28px;height:28px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--mid);display:flex;align-items:center;justify-content:center;font-size:15px}
+.paymodal-x:hover{color:var(--ink);background:var(--hover)}
+.paymodal-b{padding:24px;display:flex;flex-direction:column;gap:18px}
+.paymodal-f{display:flex;align-items:center;gap:12px;padding:16px 24px;border-top:1px solid var(--line2)}
+.paymodal-f .sp{flex:1}
+.paymodal-f .btn[disabled]{opacity:.45;cursor:not-allowed}
+.paystripe-note{font-size:14px;color:var(--faint)}
+.paystripe-note b{color:var(--mid);font-weight:700}
+/* composed card field (Stripe Elements style): glyph + number + expiry + CVC in one box */
+.paystripe{display:flex;align-items:center;gap:10px;height:var(--btnH);border:1px solid var(--line);border-radius:5px;padding:0 10px;background:#fff}
+.paystripe:focus-within{border-color:var(--ink)}
+.paystripe-glyph{color:var(--faint);flex:none;width:16px;height:16px}
+.paystripe input{border:0;outline:0;background:transparent;font:inherit;font-size:14px;color:var(--ink);padding:0;height:100%;font-variant-numeric:tabular-nums}
+.paystripe .ps-num{flex:1;min-width:0}
+.paystripe .ps-exp{width:62px;flex:none}
+.paystripe .ps-cvc{width:48px;flex:none;border-left:1px solid var(--line2);padding-left:10px}
+.lic-controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.lic-controls .spacer{flex:1}
+/* persistent search input (always-visible, magnifier inside) — standard toolbar element */
+.searchbox{position:relative;flex:none;width:280px;max-width:100%}
+.searchbox .searchglyph{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:var(--faint);pointer-events:none}
+.searchbox input{font:inherit;font-size:14px;width:100%;height:var(--btnH);border:1px solid var(--line);border-radius:5px;padding:0 10px 0 32px;background:#fff;color:var(--ink);outline:none}
+.searchbox input:focus{border-color:var(--ink)}
+.searchbox input::placeholder{color:var(--faint)}
+.lic-toggle{display:inline-flex;align-items:center;gap:9px;font-size:14px;color:var(--mid);cursor:pointer;margin-left:12px}
+/* Type filter: segmented chips, mutually exclusive */
+.lic-typeseg{display:inline-flex;align-items:center;gap:8px}
+.typechip{height:var(--btnH);display:inline-flex;align-items:center;font-size:14px;padding:0 13px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--mid)}
+.typechip:hover{border-color:var(--mid);color:var(--ink)}
+.typechip.is-on{background:var(--ink);border-color:var(--ink);color:#fff}
+.lic-row{cursor:pointer}
+.lic-row:hover{background:var(--hover)}
+.lic-row[hidden]{display:none}
+/* trailing row actions: inline Copy license key + ⋮ overflow */
+.lic-actions{display:inline-flex;align-items:center;gap:6px;justify-content:flex-end}
+.lp-name{color:var(--ink)}
+.lp-meta{font-size:14px;color:var(--faint);margin-top:2px}
+/* The label is the field that tells rows apart, so it rides in the Product
+   column under the product name. The column is wide enough that a real-world
+   label ("Production — Central Europe manufacturing cluster, building 4")
+   wraps onto a second line instead of stretching the table. */
+th.lic-prodhead{min-width:230px}
+td.lic-prodcell{min-width:230px}
+.lic-prodlabel{font-size:14px;color:var(--faint);margin-top:2px;white-space:normal}
+.lic-num{font-variant-numeric:tabular-nums;white-space:nowrap}   /* dates stay on one line now that Product takes the width */
+/* lightweight dropdowns for Type filter and + New license */
+.dropwrap{position:relative}
+.dropwrap[hidden]{display:none}
+/* dropdown panels never scroll internally and are elevated to a fixed layer on
+   open (see elevateOpenPops) so no ancestor overflow can clip them */
+.dropmenu{position:absolute;left:0;top:calc(100% + 4px);background:#fff;border:1px solid var(--line);border-radius:6px;min-width:180px;padding:5px;box-shadow:0 6px 20px rgba(0,0,0,.10);z-index:40;overflow:visible;max-height:none}
+.dropmenu.right{left:auto;right:0}
+.dropmenu[hidden]{display:none}
+.dropmenu button{display:block;width:100%;text-align:left;padding:8px 10px;border:0;background:transparent;border-radius:5px;font-size:14px;color:var(--ink)}
+.dropmenu button:hover{background:var(--hover)}
+.pill.attn{background:var(--ink);color:#fff;border-color:var(--ink);font-weight:600}
+/* inactive (canceled) status: muted, not attention */
+.pill.off{border-color:var(--line);color:var(--faint);background:#fff}
+.lic-row.off .lp-name{color:var(--faint)}
+.chip.status.attn{background:var(--ink);color:#fff;border-color:var(--ink)}
+.chip.status.attn .sdot{display:none}
+.chip.status.off{border-color:var(--line);color:var(--faint);background:#fff}
+.chip.status.off .sdot{display:none}
+/* period filter control (Activity page + licence Activity tab) */
+.perctl{display:inline-flex;align-items:center;gap:8px}
+.perbtn b{font-weight:600}
+/* custom range expands INSIDE the dropdown panel — the toolbar never changes */
+.permenu{min-width:252px}
+.permenu [data-period].is-sel{color:var(--ink);font-weight:600}
+.permenu [data-period].is-sel::after{content:"\2713";float:right;margin-left:14px}
+.percustom{display:none;margin-top:6px;padding:8px 5px 2px;border-top:1px solid var(--line2)}
+.percustom.show{display:block}
+.percustom .perrow{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.percustom input[type=date]{flex:1;min-width:0}
+/* .dropmenu button strips chrome — restore the secondary-button look for Apply */
+.percustom .perapply{display:flex;align-items:center;justify-content:center;text-align:center;width:100%;height:var(--btnH);border:1px solid var(--line);border-radius:5px;background:#fff;color:var(--ink)}
+.percustom .perapply:hover{border-color:var(--ink);background:var(--hover)}
+.percustom input[type=date]{height:var(--btnH);border:1px solid var(--line);border-radius:5px;padding:0 8px;font:inherit;font-size:var(--t-small-fs);color:var(--ink);background:#fff}
+.percustom input[type=date]:focus{border-color:var(--ink);outline:none}
+.permid{color:var(--mid);font-size:var(--t-small-fs)}
+
+/* ============================================================================
+   styleguide.html — scaffolding for the component inventory. Only the page's own
+   frame lives here; every specimen on it uses the product classes above.
+   ========================================================================== */
+.sg-wrap{width:100%;max-width:var(--pageW);margin:0 auto;padding:var(--pageY) var(--pageX) 80px}
+.sg-head{padding:22px 0 6px}
+.sg-lead{font-size:var(--t-body-fs);line-height:var(--t-body-lh);color:var(--mid);max-width:70ch;margin:8px 0 0}
+.sg-toc{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 0}
+.sg-toc a{font-size:14px;color:var(--ink);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:4px 12px;background:#fff}
+.sg-toc a:hover{border-color:var(--ink)}
+.sg-sec{margin-top:34px}
+.sg-sec > h2{font-family:var(--font-ui);font-size:var(--t-h1-fs);line-height:var(--t-h1-lh);letter-spacing:var(--t-h1-ls);font-weight:var(--t-h1-fw);margin:0 0 4px}
+.sg-sec > p{font-size:14px;color:var(--mid);margin:0 0 16px;max-width:70ch}
+/* one specimen: a label naming the class, then the live component */
+.sg-item{background:var(--card);border:1px solid var(--line2);border-radius:10px;padding:16px 18px;margin-top:12px}
+.sg-item > h3{font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);font-weight:var(--t-h2-fw);margin:0 0 2px}
+.sg-note{font-size:14px;color:var(--faint);margin:0 0 14px}
+.sg-row{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end}
+.sg-cell{display:flex;flex-direction:column;gap:7px;min-width:0}
+.sg-cls{font-family:var(--font-mono);font-size:13px;color:var(--mid);white-space:nowrap}
+.sg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px}
+.sg-swatch{border:1px solid var(--line2);border-radius:8px;overflow:hidden;background:#fff}
+.sg-swatch .chip-fill{height:56px;border-bottom:1px solid var(--line2)}
+.sg-swatch .sg-meta{padding:8px 10px}
+.sg-swatch .sg-meta b{display:block;font-family:var(--font-mono);font-size:13px;font-weight:400;color:var(--ink)}
+.sg-swatch .sg-meta span{font-size:13px;color:var(--faint)}
+.sg-type td:first-child{white-space:nowrap;vertical-align:middle}
+.sg-space{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.sg-space i{display:block;height:14px;background:var(--track);border:1px solid var(--line2)}
+.sg-space span{font-family:var(--font-mono);font-size:13px;color:var(--mid)}
+.sg-radii{display:flex;gap:14px;flex-wrap:wrap}
+.sg-radii div{width:92px;height:60px;background:#fff;border:1px solid var(--line);display:flex;align-items:flex-end;justify-content:center;font-family:var(--font-mono);font-size:12px;color:var(--mid);padding-bottom:5px}
+.sg-shadow{display:flex;gap:20px;flex-wrap:wrap}
+.sg-shadow div{width:150px;height:74px;background:#fff;border:1px solid var(--line2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:12px;color:var(--mid)}
+.sg-static{position:relative;min-height:120px;border:1px dashed var(--line);border-radius:8px;padding:14px;background:var(--bg)}
+.sg-static .overlay,.sg-static .payoverlay,.sg-static .fs-screen{position:static;background:none;backdrop-filter:none;-webkit-backdrop-filter:none;padding:0;display:block}
+.sg-static .fs-box{width:100%;height:auto;max-height:none}
+.sg-static .fs-body{max-height:230px}
+.sg-flag{border-left:3px solid var(--ink);background:#fff;padding:10px 14px;font-size:14px;color:var(--mid);margin-top:12px}

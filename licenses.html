@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Licenses — ThingsBoard License Portal</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="licenses" data-nav="licenses">
+
+<div id="shellMain">
+<div class="licview" id="licensesView">
+  <h1 class="lic-h1">Licenses</h1>
+
+  <div class="listcard">
+
+  <div class="lic-controls">
+    <div class="searchbox"><svg class="icon searchglyph" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input type="text" placeholder="Search licenses" aria-label="Search licenses"></div>
+    <div class="lic-typeseg" role="group" aria-label="Filter by product type">
+      <button class="typechip" data-type="Subscription" aria-pressed="false">Subscription</button>
+      <button class="typechip" data-type="Perpetual" aria-pressed="false">Perpetual</button>
+    </div>
+    <label class="lic-toggle"><span class="switch"><input type="checkbox" id="licCanceled"><span class="track"></span></span> Display canceled licenses</label>
+    <span class="spacer"></span>
+    <button class="iconbtn ib" data-refresh aria-label="Refresh" title="Refresh"><svg class="icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg></button>
+    <div class="dropwrap">
+      <button class="btn" id="licNewBtn" aria-haspopup="true" aria-expanded="false">+ New license ▾</button>
+      <div class="dropmenu right" id="licNewMenu" hidden>
+        <button data-new="subscription">Subscription</button>
+        <button data-new="perpetual">Perpetual license</button>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <div class="listcard">
+  <div class="tablescroll">
+    <table id="prodTable">
+      <thead id="prodHead"></thead>
+      <tbody id="prodBody"></tbody>
+    </table>
+  </div>
+
+  <div class="pager">
+    <span class="spacer"></span>
+    <span>Items per page<select aria-label="Items per page"><option>10</option><option>20</option><option>50</option></select></span>
+    <span class="range" id="licRange">1–4 of 4</span>
+    <span class="pagebtns">
+      <button disabled aria-label="First page">«</button>
+      <button disabled aria-label="Previous page">‹</button>
+      <button disabled aria-label="Next page">›</button>
+      <button disabled aria-label="Last page">»</button>
+    </span>
+  </div>
+  </div>
+</div>
+</div><!-- /#shellMain -->
+
+<script src="data.js"></script>
+<script src="shared.js"></script>
+<script src="components.js"></script>
+<script src="wizard.js"></script>
+<script src="page-licenses.js"></script>
+</body>
+</html>

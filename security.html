@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Security — ThingsBoard License Portal</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="security" data-nav="">
+
+<div id="shellMain">
+<div class="licview" id="securityView">
+ <div class="setgrid secgrid">
+  <button class="back" id="secBackBtn" aria-label="Back to Account" title="Back to Account">&larr;</button>
+  <div class="setcol">
+  <div class="pagehead">
+    <h1 class="lic-h1">Security</h1>
+    <span class="sp"></span>
+    <span class="saved" id="secSavedNote">All changes saved</span>
+    <button class="btn" id="secSaveBtn" disabled>Save</button>
+  </div>
+  <div class="setcard">
+    <div class="setcard-h"><h2>Password</h2><span class="setcard-hint">Signs out your other sessions</span></div>
+    <!-- one column: the three fields stack, each as wide as a single .field2 cell -->
+    <div class="pwstack">
+      <div class="field"><label>Current password</label><input type="password" placeholder="••••••••"></div>
+      <div class="field"><label>New password</label><input type="password" placeholder="••••••••"></div>
+      <div class="field"><label>Confirm new password</label><input type="password" placeholder="••••••••"></div>
+    </div>
+  </div>
+  </div><!-- /setcol -->
+ </div><!-- /setgrid -->
+</div>
+</div><!-- /#shellMain -->
+
+<script src="data.js"></script>
+<script src="shared.js"></script>
+<script src="components.js"></script>
+<script src="page-security.js"></script>
+</body>
+</html>

@@ -1,13 +1,172 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>License Portal</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Home — ThingsBoard License Portal</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="home" data-nav="home">
+
+<div id="shellMain">
+<div class="dashview" id="dashView">
+  <div class="dmain">
+    <div class="dwrap">
+      <!-- Community Grant approved: one-time success banner, shown only in the
+           grant state and only until dismissed (see syncGrantChrome) -->
+      <div class="gbanner" id="grantBanner" role="status" hidden>
+        <svg class="icon gb-ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.4l2.4 2.4 4.6-5"/></svg>
+        <span class="gb-txt">Your Community Grant is ready &mdash; the license key has been issued.</span>
+        <span class="sp"></span>
+        <button class="gb-act" id="grantViewBtn">View license</button>
+        <button class="gb-x" id="grantDismissBtn" aria-label="Dismiss">&#10005;</button>
+      </div>
+
+      <!-- welcome text and the create action share one row -->
+      <div class="dwelcome">
+        <div class="dw-txt">
+          <h1 id="dashGreeting">Good morning, Mariia</h1>
+        </div>
+        <div class="dropwrap">
+          <button class="btn" id="dashNewBtn" aria-haspopup="true" aria-expanded="false">+ New license ▾</button>
+          <div class="dropmenu right" id="dashNewMenu" hidden>
+            <button data-new="subscription">New subscription</button>
+            <button data-new="perpetual">New perpetual license</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Licenses: full width, rendered with the same head/row builders as the
+           Products page "Product-first (neutral)" variant, capped at the three
+           newest rows that have a real details page (see renderDashLicenses). -->
+      <div class="dblock">
+        <!-- the link sits with the title, not across the block (see .dblock-head) -->
+        <div class="dblock-head"><h2>Licenses</h2>
+          <a class="link" href="licenses.html">Show all</a>
+          <span class="sp"></span>
+        </div>
+        <div class="tablescroll">
+          <table id="dashLicTable">
+            <thead id="dashLicHead"></thead>
+            <tbody id="dashLicBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Recent invoices — same columns and order as the Invoices page -->
+      <div class="dblock">
+        <div class="dblock-head"><h2>Recent invoices</h2>
+          <a class="link" href="invoices.html">Show all</a>
+          <span class="sp"></span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Invoice #</th>
+              <th class="sortable" aria-sort="descending" tabindex="0">Date <span class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></span></th>
+              <th class="num">Amount</th>
+              <th>Status</th>
+              <th>Payment type</th>
+              <th aria-label="Invoice actions"></th>
+            </tr>
+          </thead>
+          <tbody id="dashInvBody">
+            <tr><td class="mono">NAWE49WG-0007</td><td>Aug 18 2026</td><td class="num">$166.46</td><td><span class="pill">Paid</span></td><td>Auto-pay</td><td class="cellact"><span class="rowactions"><button class="link" data-dlinv>Download PDF</button><a class="link" data-viewinv target="_blank" rel="noopener" href="#">View invoice</a></span></td></tr>
+            <tr><td class="mono">NAWE49WG-0006</td><td>Aug 18 2026</td><td class="num">$2,999.00</td><td><span class="pill">Paid</span></td><td>Auto-pay</td><td class="cellact"><span class="rowactions"><button class="link" data-dlinv>Download PDF</button><a class="link" data-viewinv target="_blank" rel="noopener" href="#">View invoice</a></span></td></tr>
+            <tr><td class="mono">NAWE49WG-0005</td><td>Aug 18 2026</td><td class="num">$15.00</td><td><span class="pill">Paid</span></td><td>Auto-pay</td><td class="cellact"><span class="rowactions"><button class="link" data-dlinv>Download PDF</button><a class="link" data-viewinv target="_blank" rel="noopener" href="#">View invoice</a></span></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Recent activity — the last block on Home. Users are not previewed here:
+           they live on their own page (nav → Users). The feed shows the latest few
+           and grows in place as you reach its end (see renderDashFeed). -->
+      <div class="dblock" id="dashActBlock">
+        <div class="dblock-head"><h2>Recent activity</h2>
+          <a class="link" href="activity.html">Show all</a>
+          <span class="sp"></span>
+        </div>
+        <div class="feed" id="dashFeed"></div>
+        <!-- lazy load: the sentinel appends the next batch when it scrolls into
+             view; the button is the fallback (and the keyboard path) -->
+        <div class="feedmore" id="dashFeedMore" hidden>
+          <span class="feedsentinel" id="dashFeedSentinel" aria-hidden="true"></span>
+          <button class="link" id="dashFeedMoreBtn">Load more</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="dashview" id="dashEmptyView">
+  <div class="dmain">
+    <div class="dwrap">
+      <div class="dwelcome">
+        <h1>Welcome, Mariia</h1>
+        <p>ThingsBoard · you don't have any licenses yet. Start with one of these.</p>
+      </div>
+
+      <!-- Community Grant under review. Shown only in the "grant pending" state.
+           It reports status and asks for nothing: the switchers and plan cards
+           below stay fully live, so buying is never blocked by an application. -->
+      <div class="gstatus" id="grantPending" role="status" hidden>
+        <svg class="icon gs-ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5l3 2"/></svg>
+        <div>
+          <div class="gs-h">Your Community Grant is almost ready</div>
+          <p class="gs-b">The automatic checks are done. A deployment this size is confirmed by someone on our team &mdash; you'll hear from us within five working days. A copy was sent to mpanchuk@thingsboard.io. Your deployment keeps running as is until then.</p>
+          <div class="gs-f"><button class="link" id="grantLearnBtn">Learn more</button></div>
+        </div>
+      </div>
+
+      <!-- Product × Billing switchers. No deployment switcher: the portal is
+           self-managed only, so Community/Public/Private are implicit context. -->
+      <div class="planpick">
+        <!-- interdependent: product first, then billing (dependency reads top-down) -->
+        <div class="planpick-row">
+          <span class="pp-label">Product</span>
+          <div class="seg" role="radiogroup" aria-label="Product">
+            <label><input type="radio" name="ecProduct" value="thingsboard" checked><span>ThingsBoard</span></label>
+            <label><input type="radio" name="ecProduct" value="tbmq"><span>TBMQ</span></label>
+          </div>
+        </div>
+        <div class="planpick-row">
+          <span class="pp-label">Billing</span>
+          <div class="seg" role="radiogroup" aria-label="Billing">
+            <label><input type="radio" name="ecBilling" value="payg" checked><span>Subscription</span></label>
+            <label><input type="radio" name="ecBilling" value="perpetual"><span>Perpetual</span></label>
+          </div>
+        </div>
+      </div>
+
+      <!-- plan area: rendered from EC_PLANS for the current Product × Billing pair -->
+      <div class="plangrid" id="ecPlans"></div>
+      <div class="pc-note" id="ecNote"></div>
+      <div id="ecPlanExtra"></div>
+
+    </div>
+  </div>
+</div>
+<!-- global footer: one quiet line on every page, capped to the content container.
+     presentPage re-appends it after mounting a page node so it stays last. -->
+<footer class="shellfoot" id="shellFoot">
+  <div class="shellfoot-in">
+    <span>&copy; 2026 ThingsBoard</span>
+    <span aria-hidden="true">&middot;</span>
+    <a class="link" href="privacy.html">Privacy policy</a>
+    <span aria-hidden="true">&middot;</span>
+    <a class="link" href="terms.html">Terms of service</a>
+    <span aria-hidden="true">&middot;</span>
+    <a class="link" href="license-agreement.html">License agreement</a>
+  </div>
+</footer>
+</div><!-- /#shellMain -->
+</div><!-- /#shellMain -->
+
+<script src="data.js"></script>
+<script src="shared.js"></script>
+<script src="components.js"></script>
+<script src="wizard.js"></script>
+<script src="page-home.js"></script>
+</body>
 </html>

@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Activity — ThingsBoard License Portal</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="activity" data-nav="activity">
+
+<div id="shellMain">
+<div class="licview" id="activityView">
+  <h1 class="lic-h1">Activity</h1>
+  <div class="listcard">
+  <div class="insttoolbar">
+    <div class="searchbox"><svg class="icon searchglyph" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input type="text" placeholder="Search activity" aria-label="Search activity"></div>
+    <div class="dropwrap perctl">
+      <button class="btn sec perbtn" aria-haspopup="true" aria-expanded="false">Period: <b class="perlabel">All time</b> <span aria-hidden="true">&#9662;</span></button>
+      <div class="dropmenu permenu" hidden>
+                    <button data-period="all">All time</button>
+                    <button data-period="24h">Last 24 hours</button>
+                    <button data-period="7d">Last 7 days</button>
+                    <button data-period="30d">Last 30 days</button>
+                    <button data-period="custom">Custom range&hellip;</button>
+                    <div class="percustom">
+                      <div class="perrow">
+                        <input type="date" class="perfrom" aria-label="From date">
+                        <span class="permid">to</span>
+                        <input type="date" class="perto" aria-label="To date">
+                      </div>
+                      <button class="btn sec perapply">Apply</button>
+                    </div>
+                  </div>
+    </div>
+    <span class="spacer"></span>
+    <button class="iconbtn ib" data-refresh aria-label="Refresh" title="Refresh"><svg class="icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg></button>
+  </div>
+  </div>
+
+  <div class="listcard">
+  <!-- chronological feed, rendered from ACTIVITY (newest first) -->
+  <div class="feed" id="actFeed"></div>
+  <div class="pager air">
+    <span class="spacer"></span>
+    <span>Items per page<select aria-label="Items per page"><option>10</option><option>20</option><option>50</option><option>100</option></select></span>
+    <span class="range" id="actRange">1–5 of 5</span>
+    <span class="pagebtns">
+      <button disabled aria-label="First page">«</button><button disabled aria-label="Previous page">‹</button><button disabled aria-label="Next page">›</button><button disabled aria-label="Last page">»</button>
+    </span>
+  </div>
+  </div>
+</div>
+</div><!-- /#shellMain -->
+
+<script src="data.js"></script>
+<script src="shared.js"></script>
+<script src="components.js"></script>
+<script src="page-activity.js"></script>
+</body>
+</html>

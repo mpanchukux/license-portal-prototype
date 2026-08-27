@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Styleguide — ThingsBoard License Portal</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="styleguide" data-nav="">
+
+<div id="shellMain">
+<div class="sg-wrap">
+
+  <div class="sg-head">
+    <h1 class="lic-h1">Design system</h1>
+    <p class="sg-lead">Every token and component the portal is built from, rendered from the same
+      <code class="sg-cls">styles.css</code> the pages load — nothing here is a copy or a screenshot.
+      Change a rule and this page changes with the product. Each specimen is labelled with the class
+      you write to get it.</p>
+    <nav class="sg-toc">
+      <a href="#tokens">Tokens</a><a href="#buttons">Buttons</a><a href="#inputs">Inputs</a>
+      <a href="#chips">Status chips</a><a href="#table">Table</a><a href="#cards">Cards</a>
+      <a href="#modals">Modals</a><a href="#stepper">Wizard stepper</a><a href="#banners">Banners</a>
+      <a href="#feed">Feed entry</a><a href="#tooltip">Tooltips</a><a href="#empty">Empty states</a>
+      <a href="index.html">← back to the portal</a>
+    </nav>
+  </div>
+
+  <!-- ============================ TOKENS ============================ -->
+  <section class="sg-sec" id="tokens">
+    <h2>Tokens</h2>
+    <p>The variables on <code class="sg-cls">:root</code>. Swatches and sizes are read from the live
+      stylesheet at load, so they cannot drift from the values the product uses.</p>
+
+    <div class="sg-item">
+      <h3>Colour</h3>
+      <p class="sg-note">Monochrome by constraint: state is carried by weight, border and fill — never by hue.</p>
+      <div class="sg-grid" id="sgColors"></div>
+    </div>
+
+    <div class="sg-item">
+      <h3>Type scale</h3>
+      <p class="sg-note">Six levels, a 14px floor, and weight that grows with size (700 only on display and h1).</p>
+      <div class="tablescroll"><table class="sg-type"><thead>
+        <tr><th>Level</th><th>Token</th><th>Size / line / tracking / weight</th><th>Specimen</th></tr>
+      </thead><tbody id="sgType"></tbody></table></div>
+    </div>
+
+    <div class="sg-item">
+      <h3>Spacing &amp; layout</h3>
+      <p class="sg-note">The page container and the one control height every toolbar aligns to.</p>
+      <div id="sgSpace"></div>
+    </div>
+
+    <div class="sg-item">
+      <h3>Radii</h3>
+      <div class="sg-radii">
+        <div style="border-radius:5px">5px · controls</div>
+        <div style="border-radius:6px">6px · inputs</div>
+        <div style="border-radius:8px">8px · cards</div>
+        <div style="border-radius:10px">10px · blocks</div>
+        <div style="border-radius:12px">12px · modal</div>
+        <div style="border-radius:999px">999px · chips</div>
+      </div>
+    </div>
+
+    <div class="sg-item">
+      <h3>Shadows</h3>
+      <p class="sg-note">Elevation appears only on things that float: menus, dialogs, the settings panel.</p>
+      <div class="sg-shadow">
+        <div style="box-shadow:0 3px 12px rgba(0,0,0,.14)">fab</div>
+        <div style="box-shadow:0 12px 32px rgba(0,0,0,.16)">menu</div>
+        <div style="box-shadow:0 14px 44px rgba(0,0,0,.18)">dialog</div>
+        <div style="box-shadow:0 24px 64px rgba(0,0,0,.28)">wizard</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ BUTTONS ============================ -->
+  <section class="sg-sec" id="buttons">
+    <h2>Buttons</h2>
+    <p>One height (<code class="sg-cls">--btnH</code>, 31px) across every variant, so a toolbar reads as one band.</p>
+    <div class="sg-item">
+      <div class="sg-row">
+        <div class="sg-cell"><button class="btn">Primary</button><span class="sg-cls">.btn</span></div>
+        <div class="sg-cell"><button class="btn sec">Secondary</button><span class="sg-cls">.btn.sec</span></div>
+        <div class="sg-cell"><button class="btn ter">Destructive</button><span class="sg-cls">.btn.ter</span></div>
+        <div class="sg-cell"><button class="link">Text link</button><span class="sg-cls">.link</span></div>
+        <div class="sg-cell"><button class="btn" disabled>Disabled</button><span class="sg-cls">.btn[disabled]</span></div>
+        <div class="sg-cell"><button class="btn" id="sgLoading"><span class="nl-spin" aria-hidden="true"></span></button><span class="sg-cls">.btn &gt; .nl-spin</span></div>
+      </div>
+      <div class="sg-row" style="margin-top:18px">
+        <div class="sg-cell"><button class="iconbtn ib" aria-label="Refresh"><svg class="icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg></button><span class="sg-cls">.iconbtn.ib</span></div>
+        <div class="sg-cell"><button class="iconbtn ib spinning" aria-label="Refreshing"><svg class="icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg></button><span class="sg-cls">.iconbtn.spinning</span></div>
+        <div class="sg-cell"><button class="back" aria-label="Back">←</button><span class="sg-cls">.back</span></div>
+        <div class="sg-cell"><span class="menu"><button class="iconbtn ib" aria-haspopup="true" aria-expanded="false" aria-label="More actions"><svg class="icon" viewBox="0 0 24 24" style="fill:currentColor;stroke:none"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button></span><span class="sg-cls">.menu &gt; .iconbtn</span></div>
+        <div class="sg-cell"><div class="dropwrap"><button class="btn" id="sgSplit" aria-haspopup="true" aria-expanded="false">+ New license ▾</button><div class="dropmenu right" hidden><button>New subscription</button><button>New perpetual license</button></div></div><span class="sg-cls">.dropwrap + .dropmenu</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ INPUTS ============================ -->
+  <section class="sg-sec" id="inputs">
+    <h2>Inputs</h2>
+    <p>Form controls share the control height and the same focus treatment: the border goes to ink.</p>
+    <div class="sg-item">
+      <div class="setcard" style="margin-top:0">
+        <div class="field"><label for="sgIn1">Default</label><input id="sgIn1" type="text" value="Mariia"><span class="sg-cls">.field &gt; label + input</span></div>
+        <div class="field"><label for="sgIn2">With description</label><input id="sgIn2" type="email" value="mpanchuk@thingsboard.io"><div class="help">Your sign-in email — changing it requires confirmation.</div><span class="sg-cls">.field .help</span></div>
+        <div class="field ro"><label for="sgIn3">Read-only</label><input id="sgIn3" type="text" value="ThingsBoard" readonly><div class="help">No page uses this state today — it is kept as a system state.</div><span class="sg-cls">.field.ro</span></div>
+        <div class="field2">
+          <div class="field"><label for="sgSel">Dropdown</label><select id="sgSel"><option>Display activation link</option><option>Send activation email</option></select><span class="sg-cls">.field &gt; select</span></div>
+          <div class="field"><label for="sgTa">Textarea</label><textarea id="sgTa" rows="2">Free-form description</textarea><span class="sg-cls">.field &gt; textarea</span></div>
+        </div>
+      </div>
+      <div class="sg-row" style="margin-top:18px">
+        <div class="sg-cell">
+          <div class="searchbox"><svg class="icon searchglyph" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input type="text" placeholder="Search licenses" aria-label="Search licenses"></div>
+          <span class="sg-cls">.searchbox</span>
+        </div>
+        <div class="sg-cell"><label class="lic-toggle"><span class="switch"><input type="checkbox" checked><span class="track"></span></span> Display canceled products</label><span class="sg-cls">.switch</span></div>
+        <div class="sg-cell"><label class="sp-opt"><input type="checkbox" checked><span>Checkbox option</span></label><span class="sg-cls">.sp-opt &gt; input</span></div>
+        <div class="sg-cell">
+          <div class="stepper"><button aria-label="Decrease">−</button><input type="text" value="2" aria-label="Amount"><button aria-label="Increase">+</button></div>
+          <span class="sg-cls">.stepper</span>
+        </div>
+        <div class="sg-cell">
+          <div class="lic-typeseg"><button class="typechip is-on" aria-pressed="true">Subscription</button><button class="typechip" aria-pressed="false">Perpetual</button></div>
+          <span class="sg-cls">.typechip / .is-on</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ CHIPS ============================ -->
+  <section class="sg-sec" id="chips">
+    <h2>Status chips</h2>
+    <p>Status reads by weight and border, not colour. Attention states get the ink fill; quiet states stay outlined.</p>
+    <div class="sg-item">
+      <div class="sg-row">
+        <div class="sg-cell"><span class="chip status"><span class="sdot"></span>Active</span><span class="sg-cls">.chip.status</span></div>
+        <div class="sg-cell"><span class="chip">Free</span><span class="sg-cls">.chip</span></div>
+        <div class="sg-cell"><span class="pill soft">Waiting for first check-in</span><span class="sg-cls">.pill.soft</span></div>
+        <div class="sg-cell"><span class="chip ghost">+ Add label</span><span class="sg-cls">.chip.ghost</span></div>
+        <div class="sg-cell"><span class="pill">Active</span><span class="sg-cls">.pill</span></div>
+        <div class="sg-cell"><span class="pill off">Canceled</span><span class="sg-cls">.pill.off</span></div>
+        <div class="sg-cell"><span class="fchip"><svg class="icon fmark" viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5"/></svg>White labeling</span><span class="sg-cls">.fchip</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ TABLE ============================ -->
+  <section class="sg-sec" id="table">
+    <h2>Table</h2>
+    <p>The licence table, rendered by the same builders the Licenses page calls
+      (<code class="sg-cls">headHtml()</code> / <code class="sg-cls">rowHtml()</code>) — header, sortable column,
+      a row with its actions, and the pager.</p>
+    <div class="sg-item">
+      <div class="listcard">
+        <div class="tablescroll"><table><thead id="sgTableHead"></thead><tbody id="sgTableBody"></tbody></table></div>
+        <div class="pager">
+          <span>Items per page</span>
+          <select aria-label="Items per page"><option>10</option><option>25</option></select>
+          <span class="spacer"></span>
+          <span class="range">1–2 of 2</span>
+          <span class="pagebtns"><button aria-label="First page" disabled>«</button><button aria-label="Previous page" disabled>‹</button><button aria-label="Next page">›</button><button aria-label="Last page">»</button></span>
+        </div>
+      </div>
+      <p class="sg-note" style="margin-top:12px">Sortable header: <code class="sg-cls">th.sortable[aria-sort]</code> ·
+        row actions: <code class="sg-cls">.cellact .lic-actions</code> · pager: <code class="sg-cls">.pager</code></p>
+    </div>
+  </section>
+
+  <!-- ============================ CARDS ============================ -->
+  <section class="sg-sec" id="cards">
+    <h2>Cards</h2>
+    <div class="sg-item">
+      <h3>Section card</h3>
+      <p class="sg-note"><code class="sg-cls">.setcard</code> — the settings-page container, with its header row.</p>
+      <div class="setcard" style="margin-top:0">
+        <div class="setcard-h"><h2>Payment method</h2><span class="setcard-hint">Charged automatically for recurring plans</span></div>
+        <div class="paycard"><span class="brandbadge">VISA</span><span class="pc-num">•••• •••• •••• 4242</span><span class="pc-exp">Expires 12 / 2028</span></div>
+      </div>
+    </div>
+    <div class="sg-item">
+      <h3>Plan card</h3>
+      <p class="sg-note"><code class="sg-cls">.plancard</code> in the plan grid, with the
+        <code class="sg-cls">.pc-current</code> strip the current plan wears; the strip's height is reserved on every
+        card so plan names stay on one line.</p>
+      <div class="plangrid" id="sgPlans"></div>
+    </div>
+    <div class="sg-item">
+      <h3>Product card</h3>
+      <p class="sg-note"><code class="sg-cls">.nl-prodcard.nl-select</code> — the wizard's first step; selection is an ink ring.</p>
+      <div class="nl-prodgrid" id="sgProducts"></div>
+    </div>
+    <div class="sg-item">
+      <h3>Dashboard block</h3>
+      <p class="sg-note"><code class="sg-cls">.dblock</code> with <code class="sg-cls">.dblock-head</code> — the Home page's section container.</p>
+      <div class="dblock">
+        <div class="dblock-head"><h2>Licenses</h2><a class="link" href="licenses.html">Show all</a></div>
+        <p class="sg-note" style="margin:0">Block body.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ MODALS ============================ -->
+  <section class="sg-sec" id="modals">
+    <h2>Modals</h2>
+    <p>Three chromes: the generic dialog, the payment-style dialog for focused forms, and the large
+      wizard box. Shown here in place (the real ones sit on a dimmed backdrop).</p>
+    <div class="sg-item">
+      <h3>Standard dialog <span class="sg-cls">.overlay &gt; .modal</span></h3>
+      <div class="sg-static">
+        <div class="overlay"><div class="modal">
+          <div class="mh"><h3>Add capacity</h3><span class="spacer"></span><button class="mclose" aria-label="Close">✕</button></div>
+          <div class="mb"><p>Placeholder — one-time purchase of extra devices, instances, or AI credits.</p></div>
+          <div class="mf"><button class="btn sec">Close</button></div>
+        </div></div>
+      </div>
+    </div>
+    <div class="sg-item">
+      <h3>Confirmation <span class="sg-cls">.modal + .btn.ter</span></h3>
+      <p class="sg-note">The destructive action is the added button; the safe one keeps the default focus.</p>
+      <div class="sg-static">
+        <div class="overlay"><div class="modal">
+          <div class="mh"><h3>Cancel subscription</h3><span class="spacer"></span><button class="mclose" aria-label="Close">✕</button></div>
+          <div class="mb"><p>Cancel <b>Prototype · Production</b>?</p><p>The subscription stays active until <b>Aug 28, 2026</b>. After that its instances will stop.</p></div>
+          <div class="mf"><button class="btn sec">Keep subscription</button><button class="btn ter">Cancel subscription</button></div>
+        </div></div>
+      </div>
+    </div>
+    <div class="sg-item">
+      <h3>Focused form dialog <span class="sg-cls">.payoverlay &gt; .paymodal.tight</span></h3>
+      <div class="sg-static">
+        <div class="payoverlay"><div class="paymodal tight">
+          <div class="paymodal-h"><h3>Apply coupon</h3><span class="sp"></span><button class="paymodal-x" aria-label="Close">✕</button></div>
+          <div class="paymodal-b"><div class="field"><label>Coupon code</label><input type="text" placeholder="Enter coupon code"></div></div>
+          <div class="paymodal-f"><span class="sp"></span><button class="btn sec">Cancel</button><button class="btn" disabled>Apply</button></div>
+        </div></div>
+      </div>
+    </div>
+    <div class="sg-item">
+      <h3>Large wizard box <span class="sg-cls">.fs-screen &gt; .fs-box</span></h3>
+      <p class="sg-note">Header, stepper, scrolling body, sticky footer. Manage add-ons and the new-licence wizard share it.</p>
+      <div class="sg-static">
+        <div class="fs-screen"><div class="fs-box">
+          <div class="fs-header"><h2 class="fs-maintitle">New subscription</h2><span class="spacer"></span><div class="fs-headactions"><button class="fs-close" aria-label="Close">✕</button></div></div>
+          <div class="nl-stepbar"><div id="sgWizStep"></div></div>
+          <div class="fs-body"><p class="sg-note" style="margin:0">Step content renders here.</p></div>
+          <div class="nl-foot"><button class="btn sec">Back</button><span class="spacer"></span><button class="btn">Continue</button></div>
+        </div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ STEPPER ============================ -->
+  <section class="sg-sec" id="stepper">
+    <h2>Wizard stepper</h2>
+    <p>One stepper: the progress line. A 3px track directly under the header hairline, then a single
+      “Step N of M · Label” row.</p>
+    <div class="sg-item">
+      <h3>Progress line <span class="sg-cls">.nl-stepbar &gt; .nl-progress</span></h3>
+      <div class="sg-static" style="padding:0">
+        <div class="nl-stepbar"><div class="nl-progress">
+          <div class="nl-ptrack"><span class="nl-pfill" style="width:50%"></span></div>
+          <div class="nl-plabel">Step 2 of 4 · <b>Plan</b></div>
+        </div></div>
+      </div>
+      <div class="sg-flag"><b>Deviation from the brief:</b> the brief asked for all three stepper variants.
+        The summary rail (A) and numbered steps (C) were deleted in the pre-restructure cleanup, so only the
+        progress line exists to show. Rebuilding them for the inventory would make this page describe
+        components the product does not have.</div>
+    </div>
+  </section>
+
+  <!-- ============================ BANNERS ============================ -->
+  <section class="sg-sec" id="banners">
+    <h2>Banners &amp; alerts</h2>
+    <div class="sg-item">
+      <h3>Page alert <span class="sg-cls">.alert</span></h3>
+      <p class="sg-note">Sits in a reserved slot on licence details; hidden while nothing needs attention.</p>
+      <div class="alert"><svg class="icon" viewBox="0 0 24 24"><path d="M12 8v5M12 16.5v.5"/><circle cx="12" cy="12" r="9"/></svg><span class="atxt"><b>Payment failed.</b> We could not charge Visa ••4242. Update your payment method to keep the subscription active.</span></div>
+    </div>
+    <div class="sg-item">
+      <h3>Impersonation <span class="sg-cls">.imp-wrap &gt; .imp-banner</span></h3>
+      <p class="sg-note">Chrome, not content: it is glued under the top bar and persists across pages.</p>
+      <div class="imp-wrap" style="position:static"><div class="imp-banner" role="status"><span>You are logged in as <b>a.admin@thingsboard.io</b></span><span class="sp"></span><button class="imp-return">Return to my account</button></div></div>
+    </div>
+    <div class="sg-item">
+      <h3>Dismissible success <span class="sg-cls">.gbanner</span></h3>
+      <p class="sg-note">Same clothes as impersonation, but it lives in the content column and can be closed once.</p>
+      <div class="gbanner" role="status"><svg class="icon gb-ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.4l2.4 2.4 4.6-5"/></svg><span class="gb-txt">Your Community Grant is ready — the license key has been issued.</span><span class="sp"></span><button class="gb-act">View license</button><button class="gb-x" aria-label="Dismiss">✕</button></div>
+    </div>
+  </section>
+
+  <!-- ============================ FEED ============================ -->
+  <section class="sg-sec" id="feed">
+    <h2>Feed entry</h2>
+    <p>The activity feed is a list of sentences, not a table. Emphasis falls only on the object of the
+      action and on changed values; the actor's email stays plain.</p>
+    <div class="sg-item">
+      <div class="listcard" style="padding:6px 16px"><div id="sgFeed"></div></div>
+      <p class="sg-note" style="margin-top:12px"><code class="sg-cls">.fitem</code> · icon + timestamp
+        <code class="sg-cls">.fi-meta</code> · sentence <code class="sg-cls">.fi-txt</code> ·
+        payload <code class="sg-cls">.fi-audit</code> (toggled by the row's icon button)</p>
+    </div>
+  </section>
+
+  <!-- ============================ TOOLTIPS ============================ -->
+  <section class="sg-sec" id="tooltip">
+    <h2>Tooltips</h2>
+    <p>A tooltip is an attribute, not a component: <code class="sg-cls">.tip[data-tip]</code>. It shows on hover
+      and focus; adding <code class="sg-cls">.show</code> pins it (that is how “Copied” is confirmed).</p>
+    <div class="sg-item">
+      <div class="sg-row">
+        <div class="sg-cell"><button class="iconbtn ib tip" data-tip="Copy license key" aria-label="Copy license key"><svg class="icon" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg></button><span class="sg-cls">.tip (hover me)</span></div>
+        <div class="sg-cell"><button class="iconbtn ib tip show copied" data-tip="Copied" aria-label="Copied"><svg class="icon" viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5"/></svg></button><span class="sg-cls">.tip.show.copied</span></div>
+        <div class="sg-cell"><span class="usecell tip" tabindex="0" data-tip="0 used / 50 limit"><span class="usetxt">0 / 50</span><span class="meter"><span style="width:0%"></span></span></span><span class="sg-cls">.usecell + .meter</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ EMPTY ============================ -->
+  <section class="sg-sec" id="empty">
+    <h2>Empty states</h2>
+    <p>An empty state says why it is empty and, where there is one, what would fill it.</p>
+    <div class="sg-item">
+      <div class="sg-row" style="align-items:stretch">
+        <div class="sg-cell" style="flex:1;min-width:280px">
+          <div class="listcard"><div class="tablescroll"><table><tbody><tr><td colspan="6" class="emptybox">This license is free — the Community Grant is not invoiced.</td></tr></tbody></table></div></div>
+          <span class="sg-cls">td.emptybox (in a table)</span>
+        </div>
+        <div class="sg-cell" style="flex:1;min-width:280px">
+          <div class="emptybox">No events in the selected period.</div>
+          <span class="sg-cls">.emptybox (in a feed)</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+</div><!-- /#shellMain -->
+
+<script src="data.js"></script>
+<script src="shared.js"></script>
+<script src="components.js"></script>
+<script src="styleguide.js"></script>
+</body>
+</html>
