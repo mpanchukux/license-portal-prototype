@@ -153,8 +153,13 @@ a{color:inherit}
 /* the licence label as description: muted body text right under the title */
 .metarow #labelSlot{display:inline-flex;align-items:center;gap:8px}
 .labeltext{font-size:var(--t-small-fs);line-height:var(--t-small-lh);letter-spacing:var(--t-small-ls);color:var(--mid)}
-.labelx{border:0;background:none;padding:0;font-size:13px;line-height:1;color:var(--faint);cursor:pointer}
-.labelx:hover{color:var(--ink)}
+/* the label sits with a pencil beside it; the button stays quiet until hovered */
+.labeledit{width:24px;height:24px;padding:0;border-color:transparent;color:var(--faint)}
+.labeledit .icon{width:14px;height:14px}
+.labeledit:hover{color:var(--ink);border-color:var(--line)}
+/* editing state: the input and its Save read as one control pair */
+.labeledit-row{display:inline-flex;align-items:center;gap:8px}
+.labelsave{height:26px;padding:0 10px;font-size:14px}
 .period{font-size:14px;color:var(--ink);font-variant-numeric:tabular-nums}
 /* thin divider between the meta row and the license key row */
 .hairline{height:1px;background:var(--line2);margin-top:12px}
@@ -173,7 +178,11 @@ a{color:inherit}
 .chip.label{border-color:var(--line);color:var(--ink);background:#fff}
 .chip .x{margin-left:2px;color:var(--faint);border:0;background:transparent;padding:0 2px;font-size:14px}
 .chip .x:hover{color:var(--ink)}
-.labelinput{font:inherit;font-size:14px;padding:2px 8px;border:1px solid var(--ink);border-radius:999px;width:130px;outline:none}
+/* editing takes the width the row has: a label is a sentence, and the field has
+   to show all of it rather than clip at a fixed size */
+.metarow #labelSlot:has(.labeledit-row){flex:1;min-width:0}
+.labeledit-row{display:flex;flex:1;align-items:center;gap:8px;min-width:0}
+.labelinput{font:inherit;font-size:14px;padding:3px 12px;border:1px solid var(--ink);border-radius:999px;flex:1;min-width:0;max-width:640px;outline:none}
 
 .muted{color:var(--faint)}
 
@@ -496,6 +505,13 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
 .fs-lockfield{position:relative;display:inline-flex;align-items:center;flex:none}
 .fs-lockic{position:absolute;left:9px;width:13px;height:13px;color:var(--faint);pointer-events:none}
 .fs-devinput.locked{padding-left:28px;text-align:left}
+/* a typed capacity field (Business devices): same box as the locked one, but it
+   reads as editable — white, a caret, and its own error line underneath */
+.fs-devinput.numfield{background:#fff;border-color:var(--line);cursor:text;text-align:center}
+.fs-devinput.numfield:focus{border-color:var(--ink);outline:none}
+.fs-devinput.numfield.is-bad{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.numerr{width:100%;margin-top:6px;font-size:14px;color:var(--ink);font-weight:500}
+.numerr[hidden]{display:none}
 /* add-on rows: the toggle is their right-hand control, level with the steppers */
 .am-cell.am-addon.on{border-color:var(--ink)}
 .am-addon .am-cardprice{margin-top:6px}
@@ -621,10 +637,12 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
 /* ---------- Dashboard (Overview): full-width top bar, no sidebar, centered column ---------- */
 .app[hidden],.dashview[hidden],.licview[hidden]{display:none}
 .dashview{display:flex;flex-direction:column;min-height:100%;background:var(--bg)}
-.dtopbar{display:flex;flex:none;padding:12px 24px 0;background:var(--bg)}
-/* the bar is a contained band: white backdrop capped at the container width,
-   centered and rounded — the page background stays visible on both sides */
-.dtopbar-inner{position:relative;display:flex;align-items:center;gap:14px;height:56px;width:100%;max-width:var(--pageW);margin:0 auto;padding:0 var(--pageX);background:var(--card);border:1px solid var(--line2);border-radius:10px}
+.dtopbar{display:flex;flex:none;padding:0 24px;background:var(--bg)}
+/* the bar is a contained band: white backdrop capped at the container width and
+   centered, so the page background stays visible on both sides. It meets the top
+   edge of the window — no gap above it, square top corners, and the rounding only
+   on the bottom, where the band actually ends. */
+.dtopbar-inner{position:relative;display:flex;align-items:center;gap:14px;height:56px;width:100%;max-width:var(--pageW);margin:0 auto;padding:0 var(--pageX);background:var(--card);border:1px solid var(--line2);border-top:0;border-radius:0 0 10px 10px}
 .dtopbar .sp{flex:1}
 .dbrand{display:flex;align-items:center;gap:10px}
 /* the logo doubles as a Home link — reset it to look identical as a <button> */
@@ -842,8 +860,6 @@ body.impersonating .dtopbar-inner{border-bottom-left-radius:0;border-bottom-righ
 .pagehead{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:12px;background:var(--bg);padding:14px 0 12px}
 .pagehead .lic-h1{margin:0}
 .pagehead .sp{flex:1}
-.pagehead .saved{font-size:14px;color:var(--faint)}
-.pagehead .saved[hidden]{display:none}
 .pagehead .btn[disabled]{opacity:.45;cursor:not-allowed}
 /* muted caption under a section title (e.g. billing address prefill note) */
 /* ---------- Update payment method: bespoke monochrome modal (NOT the generic .modal) ---------- */

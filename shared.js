@@ -108,6 +108,21 @@ function storeDeleteUser(email){
   });
   Store.save();
 }
+/* A label is the one field the demo lets you edit, from three places: the pencil
+   on the details surface, that surface's ⋮, and a row's ⋮ in the table. It writes
+   through the store, then every surface that renders a label is repainted, so the
+   table, the dashboard block and the details page never disagree. */
+function setLicenseLabel(lic, val){
+  if(!lic) return;
+  lic.label = String(val || '').trim();
+  Store.save();                        // the object came out of the store, so this persists it
+  repaintLabelSurfaces();
+}
+function repaintLabelSurfaces(){
+  if(typeof renderProducts === 'function' && $('#prodBody')) renderProducts();
+  if(typeof renderDashLicenses === 'function' && $('#dashLicBody')) renderDashLicenses();
+}
+
 function storeNextSeq(){ var n = Store.get('seq') + 1; Store.set('seq', n); return n; }
 function isDismissed(k){ return !!Store.get('dismissed')[k]; }
 function dismiss(k){ Store.get('dismissed')[k] = true; Store.save(); }
@@ -390,27 +405,39 @@ function elevateOpenPops(){
   });
 }
 
+/* Tabs are delegated, not bound at boot. The licence details surface is mounted
+   long after shared.js runs — and in modal mode it is mounted again on every
+   open — so binding to the .tab elements that happen to exist at load time left
+   Instances and Activity dead (only the default-selected Invoices panel showed).
+   Delegation also keeps a page and an open modal independent: a tab acts on the
+   tablist it belongs to, never on every tablist on the page. */
+function tabsIn(tab){
+  var list = tab.closest('[role="tablist"]') || tab.parentNode;
+  return $$('.tab', list);
+}
+function selectTab(tab){
+  var scope = tab.closest('.canvas, .fs-box, #shellMain') || document;
+  tabsIn(tab).forEach(function(t){
+    var sel = t === tab;
+    t.setAttribute('aria-selected', sel ? 'true' : 'false');
+    t.tabIndex = sel ? 0 : -1;
+    var panel = $('#' + t.getAttribute('aria-controls'), scope) || $('#' + t.getAttribute('aria-controls'));
+    if(panel) panel.hidden = !sel;
+  });
+}
 function wireTabs(){
-  var tabs = $$('.tab');
-  if(!tabs.length) return;
-  function selectTab(tab){
-    tabs.forEach(function(t){
-      var sel = t === tab;
-      t.setAttribute('aria-selected', sel ? 'true' : 'false');
-      t.tabIndex = sel ? 0 : -1;
-      var panel = $('#' + t.getAttribute('aria-controls'));
-      if(panel) panel.hidden = !sel;
-    });
-  }
-  tabs.forEach(function(t, i){
-    t.addEventListener('click', function(){ selectTab(t); });
-    t.addEventListener('keydown', function(e){
-      if(e.key === 'ArrowRight' || e.key === 'ArrowLeft'){
-        e.preventDefault();
-        var next = tabs[(i + (e.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length];
-        selectTab(next); next.focus();
-      }
-    });
+  document.addEventListener('click', function(e){
+    var tab = e.target.closest('.tab');
+    if(tab) selectTab(tab);
+  });
+  document.addEventListener('keydown', function(e){
+    if(e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+    var tab = e.target.closest('.tab');
+    if(!tab) return;
+    e.preventDefault();
+    var list = tabsIn(tab), i = list.indexOf(tab);
+    var next = list[(i + (e.key === 'ArrowRight' ? 1 : -1) + list.length) % list.length];
+    selectTab(next); next.focus();
   });
 }
 

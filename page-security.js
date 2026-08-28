@@ -3,7 +3,7 @@
    as Account, and a back gutter that goes up one level.
    ============================================================================ */
 
-wirePageSave('#securityView', '#secSaveBtn', '#secSavedNote');
+wirePageSave('#securityView', '#secSaveBtn');
 guardLinks();
 
 var secBackBtn = $('#secBackBtn');

@@ -96,6 +96,14 @@ var NL = (function(){
   var NAME = { maker:'Maker', prototype:'Prototype', pilot:'Pilot', startup:'Startup', business:'Business',
                tbmqsub:'PE subscription', tbperp:'PE Perpetual License', tbmqperp:'PE license' };
   var MAXQ = { prod:20, dev:20, ai:99 };
+  /* Business is the one plan whose device count is not fixed: extra devices are
+     sold at $0.10 each. A stepper is the wrong control at this scale — you do not
+     click your way from 1,000 to 4,500 — so devices are typed, and the field
+     refuses anything below what the plan already includes. */
+  var DEVICE_UNIT = 0.10;
+  var DEVICE_TIERS = { business:1000 };
+  function devicesIncluded(){ return DEVICE_TIERS[tier()] || 0; }
+  function hasDevices(){ return !isPerp() && !!DEVICE_TIERS[tier()]; }
 
   function money(n){ return '$' + n.toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 }); }
   // a modification can lower the bill, so its rows carry an explicit sign
@@ -114,6 +122,7 @@ var NL = (function(){
   function extrasCostOf(c){
     var u = units(), i = INCL[tier()] || { prod:1, ai:0 };
     return Math.max(0, c.prod - i.prod) * u.prod
+      + (hasDevices() ? Math.max(0, (c.devices || 0) - devicesIncluded()) * DEVICE_UNIT : 0)
       + (hasDev() ? c.dev * u.dev : 0)
       + (hasAi() ? Math.max(0, c.ai - (i.ai || 0)) * u.ai : 0)
       + (hasAddons() && c.edge ? ADD.edge : 0)
@@ -137,9 +146,14 @@ var NL = (function(){
   function ecKey(){ return (st.product || 'thingsboard') + '|' + (isPerp() ? 'perpetual' : 'payg'); }
   function perSuffix(){ return isPerp() ? '' : ' / mo'; }
 
-  function extras(){ var i = INCL[tier()] || { prod:1, ai:0 }; return { prod:Math.max(0, cust.prod - i.prod), dev:cust.dev, ai:Math.max(0, cust.ai - i.ai) }; }
+  function extras(){
+    var i = INCL[tier()] || { prod:1, ai:0 };
+    return { prod:Math.max(0, cust.prod - i.prod), dev:cust.dev, ai:Math.max(0, cust.ai - i.ai),
+             devices:hasDevices() ? Math.max(0, (cust.devices || 0) - devicesIncluded()) : 0 };
+  }
   function deltas(){
     var u = units(), e = extras(), out = [];
+    if(e.devices > 0) out.push({ t:'+' + e.devices.toLocaleString('en-US') + ' devices', amt:e.devices * DEVICE_UNIT, unit:DEVICE_UNIT });
     if(e.prod > 0) out.push({ t:'+' + e.prod + ' production instance' + (e.prod > 1 ? 's' : ''), amt:e.prod * u.prod, unit:u.prod });
     if(hasDev() && e.dev > 0) out.push({ t:'+' + e.dev + ' development instance' + (e.dev > 1 ? 's' : ''), amt:e.dev * u.dev, unit:u.dev });
     if(hasAi() && e.ai > 0) out.push({ t:'+' + e.ai + ' AI block' + (e.ai > 1 ? 's' : '') + ' (1M)', amt:e.ai * u.ai, unit:u.ai });
@@ -158,8 +172,10 @@ var NL = (function(){
     if(!b) return out;
     function qty(f, label, price, show){
       if(!show || cust[f] === b[f]) return;
-      out.push({ t:label + ' ' + b[f] + ' \u2192 ' + cust[f], amt:(cust[f] - b[f]) * price });
+      var from = (b[f] || 0).toLocaleString('en-US'), to = (cust[f] || 0).toLocaleString('en-US');
+      out.push({ t:label + ' ' + from + ' \u2192 ' + to, amt:(cust[f] - b[f]) * price });
     }
+    qty('devices', 'Devices', DEVICE_UNIT, hasDevices());
     qty('prod', 'Production instances', u.prod, true);
     qty('dev', 'Development instances', u.dev, hasDev());
     qty('ai', 'AI credits (1M blocks)', u.ai, hasAi());
@@ -181,8 +197,9 @@ var NL = (function(){
     var x = lic.extras || {};
     var n = function(v){ return parseInt(String(v || '0'), 10) || 0; };
     cust = { prod:i.prod + n(x.prod), dev:n(x.dev), ai:(i.ai || 0) + n(x.ai),
+             devices:(DEVICE_TIERS[t] || 0) + n(x.devices),
              edge:!!lic.edge, trendz:!!lic.trendz };
-    st.baseCust = { prod:cust.prod, dev:cust.dev, ai:cust.ai, edge:cust.edge, trendz:cust.trendz };
+    st.baseCust = { prod:cust.prod, dev:cust.dev, ai:cust.ai, devices:cust.devices, edge:cust.edge, trendz:cust.trendz };
     seededTier = t;
   }
   function entSummary(t){
@@ -373,6 +390,20 @@ var NL = (function(){
       + '<input class="fs-devinput locked" type="text" value="' + val + '" disabled aria-label="' + lbl + ' — fixed by this plan"></span>'
       + '</div></div>';
   }
+  /* Devices: typed, not stepped. The error lives under the field and the commit
+     is held while the value is below the plan's own allowance — a licence cannot
+     carry fewer devices than the plan it is on. */
+  function numberCell(field, label, desc, priceNote, val, min){
+    return '<div class="am-cell"><div class="fs-cellhead"><div class="fs-celltext">'
+      + '<div class="am-celltop">' + label + '</div>'
+      + (desc ? '<div class="fs-celldesc">' + desc + '</div>' : '') + '</div>'
+      + '<input class="fs-devinput numfield" type="text" inputmode="numeric" autocomplete="off"'
+      +   ' data-nl-num="' + field + '" data-nl-min="' + min + '" value="' + val.toLocaleString('en-US') + '"'
+      +   ' aria-label="' + label + '"></div>'
+      + '<div class="am-cardprice">' + priceNote + '</div>'
+      + '<div class="numerr" data-nl-err="' + field + '" hidden>Minimum for this plan is '
+      +   min.toLocaleString('en-US') + '.</div></div>';
+  }
   function stepCell(field, label, desc, priceNote, val, min){
     var minus = val <= min ? ' disabled' : '', plus = val >= MAXQ[field] ? ' disabled' : '';
     return '<div class="am-cell"><div class="fs-cellhead"><div class="fs-celltext">'
@@ -380,7 +411,7 @@ var NL = (function(){
       + (desc ? '<div class="fs-celldesc">' + desc + '</div>' : '') + '</div>'
       + '<div class="stepper" data-nl-field="' + field + '">'
       + '<button type="button" data-dir="-1"' + minus + ' aria-label="Decrease ' + label + '">−</button>'
-      + '<span class="val" aria-live="polite">' + val + '</span>'
+      + '<span class="val" aria-live="polite">' + val.toLocaleString('en-US') + '</span>'
       + '<button type="button" data-dir="1"' + plus + ' aria-label="Increase ' + label + '">+</button></div></div>'
       + '<div class="am-cardprice">' + priceNote + '</div></div>';
   }
@@ -404,15 +435,29 @@ var NL = (function(){
     });
     return html;
   }
+  /* Typing in the devices field must not re-render the step — that would throw the
+     caret away mid-number — so only the summary card is repainted. */
+  function refreshSummary(){
+    var list = $('#nlStep2 .am-sumlist');
+    if(!list) return;
+    list.innerHTML = summaryHTML();
+    var totalRow = $('#nlStep2 .am-total-row');
+    if(totalRow) totalRow.innerHTML = '<span>' + (isPerp() ? 'One-time total' : 'New monthly')
+      + '</span><span>' + money(total()) + perSuffix() + '</span>';
+  }
   function renderStep2(){
     var t = tier(), i = INCL[t] || { prod:1, ai:0 }, u = units(), spec = TIER_SPECS[t] || { ent:[] };
-    if(seededTier !== t){ cust = { prod:i.prod, dev:0, ai:i.ai, edge:false, trendz:false }; seededTier = t; }
+    if(seededTier !== t){ cust = { prod:i.prod, dev:0, ai:i.ai, devices:DEVICE_TIERS[t] || 0, edge:false, trendz:false }; seededTier = t; }
     var per = isPerp() ? ' one-time' : ' / mo';
     var variantA = custVariant() === 'a';
     var cells = '';
     spec.ent.forEach(function(e){
       var lbl = e[0], val = e[1];
-      if(lbl === 'Production instances'){
+      if(lbl === 'Devices' && hasDevices()){
+        cells += numberCell('devices', 'Devices', devicesIncluded().toLocaleString('en-US')
+          + ' included with this plan — enter the total you need.',
+          '+$0.10 / mo per extra device', cust.devices, devicesIncluded());
+      } else if(lbl === 'Production instances'){
         cells += stepCell('prod', 'Production instances', 'Production compute — ' + i.prod + ' included. Enables clustering and HA.', '+' + money(u.prod) + per + ' each', cust.prod, i.prod);
       } else if(lbl === 'AI credits'){
         cells += stepCell('ai', 'AI credits', '1 = 1,000,000 credits. Minimum matches your plan — increase to buy more.', '+' + money(u.ai) + per + ' per 1M AI credits', cust.ai, i.ai);
@@ -635,6 +680,7 @@ var NL = (function(){
       price: isPerp() ? 'one-time' : (money(tot) + ' / mo'),
       billing: isPerp() ? 'paid' : 'auto-pay' };
     var x = {};
+    if(e.devices > 0) x.devices = String(e.devices);
     if(e.prod > 0) x.prod = String(e.prod);
     if(hasDev() && e.dev > 0) x.dev = String(e.dev);
     if(hasAi() && e.ai > 0) x.ai = e.ai + 'M';
@@ -656,6 +702,7 @@ var NL = (function(){
     lic.name = NAME[t] || st.plan;
     lic.price = money(total()) + ' / mo';
     var x = {};
+    if(e.devices > 0) x.devices = String(e.devices);
     if(e.prod > 0) x.prod = String(e.prod);
     if(hasDev() && e.dev > 0) x.dev = String(e.dev);
     if(hasAi() && e.ai > 0) x.ai = e.ai + 'M';
@@ -801,11 +848,32 @@ var NL = (function(){
   // billing inputs keep their values in `bill`, so stepping back and forward on the
   // billing step never loses what was typed; each keystroke only re-gates the commit
   body.addEventListener('input', function(e){
+    var num = e.target.closest('[data-nl-num]');
+    if(num){
+      var field = num.getAttribute('data-nl-num'), min = parseInt(num.getAttribute('data-nl-min'), 10) || 0;
+      var raw = num.value.replace(/[^0-9]/g, '');
+      var n = raw === '' ? NaN : parseInt(raw, 10);
+      var bad = !(n >= min);
+      var err = $('#nlStep2 [data-nl-err="' + field + '"]');
+      if(err) err.hidden = !bad;
+      num.classList.toggle('is-bad', bad);
+      var next = $('#nlSumNext');
+      if(next) next.disabled = bad;
+      if(!bad){ cust[field] = n; st.dirty = true; refreshSummary(); }
+      return;
+    }
     var f = e.target.closest('[data-nlb]');
     if(!f) return;
     bill[f.getAttribute('data-nlb')] = f.value;
     st.dirty = true;
     syncPayBtn();
+  });
+  body.addEventListener('focusout', function(e){
+    var num = e.target.closest('[data-nl-num]');
+    if(!num) return;
+    var min = parseInt(num.getAttribute('data-nl-min'), 10) || 0;
+    var n = parseInt(num.value.replace(/[^0-9]/g, ''), 10);
+    if(n >= min) num.value = n.toLocaleString('en-US');   // an invalid value stays put, with its error
   });
   body.addEventListener('keydown', function(e){
     if((e.key === 'Enter' || e.key === ' ') && e.target.classList && e.target.classList.contains('nl-select')){ e.preventDefault(); e.target.click(); }

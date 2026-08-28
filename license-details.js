@@ -68,6 +68,7 @@ var DETAILS_HTML = ''
 + '                <div class="menu" data-page="sub" id="headKebabMenu">'
 + '                  <button class="btn sec kebab-btn" id="headKebabBtn" aria-haspopup="true" aria-expanded="false" aria-label="More actions">⋮</button>'
 + '                  <div class="pop" id="headKebabPop" role="menu" hidden>'
++ '                    <button role="menuitem" data-editlabel>Edit label</button>'
 + '                    <button role="menuitem" data-cancel-active>Cancel subscription</button>'
 + '                  </div>'
 + '                </div>'
@@ -268,7 +269,6 @@ var DETAILS_HTML = ''
 + '                      <th class="chk"><input type="checkbox" aria-label="Select all production instances"></th>'
 + '                      <th>Instance ID</th>'
 + '                      <th>Label</th>'
-+ '                      <th>Status</th>'
 + '                      <th>Last activity time</th>'
 + '                      <th class="sortable" aria-sort="descending" tabindex="0">Created time <span class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></span></th>'
 + '                    </tr>'
@@ -278,7 +278,6 @@ var DETAILS_HTML = ''
 + '                      <td class="chk"><input type="checkbox" aria-label="Select instance a1b2c3d4…e5f"></td>'
 + '                      <td class="mono">a1b2c3d4…e5f</td>'
 + '                      <td class="muted">—</td>'
-+ '                      <td><span class="pill">Online</span></td>'
 + '                      <td>Aug 18 2026</td>'
 + '                      <td>Aug 14 2026</td>'
 + '                    </tr>'
@@ -286,7 +285,6 @@ var DETAILS_HTML = ''
 + '                      <td class="chk"><input type="checkbox" aria-label="Select instance 7e5f9a2b…c3d"></td>'
 + '                      <td class="mono">7e5f9a2b…c3d</td>'
 + '                      <td class="muted">—</td>'
-+ '                      <td><span class="pill soft">Offline</span></td>'
 + '                      <td>Aug 16 2026</td>'
 + '                      <td>Aug 13 2026</td>'
 + '                    </tr>'
@@ -353,44 +351,48 @@ var DETAILS_HTML = ''
 + '  </div>'
 + '</div>';
 
-/* ---------- add label ----------
-   Lives at top level because the render layer calls into it (renderLabelSlot →
-   reset), and it resolves #labelSlot on call — the markup mounts after load. */
+/* ---------- the label ----------
+   A licence is created without a label; it is named afterwards, here or from a
+   row's ⋮ menu. Editing is inline: the text becomes an input, Enter or Save
+   commits, Esc cancels. What commits goes through the store, so the new label
+   shows up in the table and the dashboard block too — not just on this surface.
+
+   Lives at top level because the render layer calls into it, and it resolves
+   #labelSlot on call: the markup mounts long after this file loads. */
+var PENCIL = '<svg class="icon" viewBox="0 0 24 24"><path d="M4 20h4L18.5 9.5a2 2 0 0 0 0-2.8l-1.2-1.2a2 2 0 0 0-2.8 0L4 16v4Z"/><path d="M14.5 6.5l3 3"/></svg>';
 function labelSlot(){ return $('#labelSlot'); }
-function bindAdd(){
+
+/* the resting state: the label with a pencil beside it, or the quiet add affordance */
+function renderLabelSlot(lic){
   var slot = labelSlot(); if(!slot) return;
-  var btn = $('#addLabel', slot);
-  if(btn) btn.addEventListener('click', showInput);
+  if(lic && lic.label){
+    slot.innerHTML = '<span class="labeltext">' + esc(lic.label) + '</span>'
+      + '<button class="iconbtn ib labeledit" data-editlabel aria-label="Edit label" title="Edit label">' + PENCIL + '</button>';
+  } else {
+    slot.innerHTML = '<button class="chip ghost" data-editlabel>+ Add label</button>';
+  }
 }
-function showInput(){
-  var slot = labelSlot(); if(!slot) return;
-  slot.innerHTML = '<input class="labelinput" id="labelInput" placeholder="Label…" aria-label="Label">';
+/* the editing state */
+function editLabel(){
+  var slot = labelSlot(), lic = activeLicense;
+  if(!slot || !lic) return;
+  slot.innerHTML = '<span class="labeledit-row">'
+    + '<input class="labelinput" id="labelInput" placeholder="Label…" aria-label="Label" value="' + esc(lic.label || '') + '">'
+    + '<button class="btn sec labelsave" id="labelSave">Save</button></span>';
   var inp = $('#labelInput', slot);
   inp.focus();
+  inp.select();
   inp.addEventListener('keydown', function(e){
-    if(e.key==='Enter'){ commit(inp.value.trim()); }
-    else if(e.key==='Escape'){ reset(); }
+    if(e.key === 'Enter'){ e.preventDefault(); commitLabel(inp.value); }
+    else if(e.key === 'Escape'){ renderLabelSlot(lic); }
   });
-  inp.addEventListener('blur', function(){ if(!inp.value.trim()) reset(); });
+  $('#labelSave', slot).addEventListener('click', function(){ commitLabel(inp.value); });
 }
-function commit(val){
-  var slot = labelSlot(); if(!slot) return;
-  if(!val){ reset(); return; }
-  slot.innerHTML = '';
-  // same muted description the row-driven render produces, plus a way back out
-  var text = document.createElement('span');
-  text.className = 'labeltext';
-  text.textContent = val;
-  var x = document.createElement('button');
-  x.className = 'labelx'; x.setAttribute('aria-label','Remove label'); x.textContent='✕';
-  x.addEventListener('click', reset);
-  slot.appendChild(text);
-  slot.appendChild(x);
-}
-function reset(){
-  var slot = labelSlot(); if(!slot) return;
-  slot.innerHTML = '<button class="chip ghost" id="addLabel">+ Add label</button>';
-  bindAdd();
+function commitLabel(val){
+  var lic = activeLicense;
+  if(!lic) return;
+  setLicenseLabel(lic, val);          // persists, and repaints the surfaces underneath
+  renderLabelSlot(lic);
 }
 
 /* ---------- render layer ---------- */
@@ -459,14 +461,6 @@ function renderLicenseActions(lic){
     if(kebab)  kebab.hidden  = canceled;
     if(renew)  renew.hidden  = !canceled;
   }
-}
-/* A label describes the deployment, so on details it reads as a muted sub-line
-   under the title — not a chip. The "+ Add label" affordance stays for licences
-   that have none. */
-function renderLabelSlot(lic){
-  var slot = labelSlot(); if(!slot) return;
-  if(lic.label){ slot.innerHTML = '<span class="labeltext">' + esc(lic.label) + '</span>'; }
-  else { reset(); }   // restores the interactive "+ Add label" affordance
 }
 /* A grant rides the perpetual details layout, with the few things that differ
    switched over: what the dated block means (nothing expires), no coupon or
@@ -578,7 +572,13 @@ function wireDetailsOnce(){
     }
   });
 
-  bindAdd();   // the label controller itself lives at top level (see below)
+  /* the pencil, the "+ Add label" chip and the menu item all open the same inline
+     edit; delegated, because the slot's contents are replaced on every render */
+  document.addEventListener('click', function(e){
+    if(!e.target.closest('[data-editlabel]')) return;
+    closeAllMenus();
+    editLabel();
+  });
 
   /* ---------- coupon ---------- */
   (function(){

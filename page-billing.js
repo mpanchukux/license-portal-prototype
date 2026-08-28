@@ -4,7 +4,7 @@
    generic dialog).
    ============================================================================ */
 
-wirePageSave('#billingView', '#billSaveBtn', '#billSavedNote');
+wirePageSave('#billingView', '#billSaveBtn');
 guardLinks();
 
 /* ---------- update payment method ---------- */

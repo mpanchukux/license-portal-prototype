@@ -54,11 +54,31 @@ function userRow(u){
 // "Show all" is a plain link — the count lives on the page it opens
 function menuItems(p){
   var type = p && typeof p === 'object' ? p.type : p;
-  if(type === 'Perpetual') return '<button role="menuitem" data-stub="Add capacity">Add capacity</button><button role="menuitem" data-stub="Renew software updates">Renew software updates</button>';
+  // naming a licence is the one thing every type allows, so it leads every menu
+  var label = '<button role="menuitem" data-editlabel>Edit label</button>';
+  if(type === 'Perpetual') return label + '<button role="menuitem" data-stub="Add capacity">Add capacity</button><button role="menuitem" data-stub="Renew software updates">Renew software updates</button>';
   var last = (p && p.status==='canceled')
     ? '<button role="menuitem" data-stub="Renew subscription">Renew subscription</button>'
     : '<button role="menuitem" data-cancel>Cancel subscription</button>';
-  return '<button role="menuitem" data-manageaddons>Manage add-ons</button><button role="menuitem" data-changeplan>Change plan</button>' + last;
+  return label + '<button role="menuitem" data-manageaddons>Manage add-ons</button><button role="menuitem" data-changeplan>Change plan</button>' + last;
+}
+
+/* From a row there is no inline slot to edit in, so the label gets a small
+   dialog of its own. Same writer as the details surface. */
+function openLabelModal(lic){
+  if(!lic) return;
+  openModal('Edit label', '<div class="field"><label for="labelModalInput">Label</label>'
+    + '<input id="labelModalInput" type="text" autocomplete="off" placeholder="e.g. Production" value="' + esc(lic.label || '') + '">'
+    + '<div class="help">A label tells this licence apart from the others — usually the deployment it runs.</div></div>');
+  $('#modalCloseBtn').textContent = 'Cancel';
+  var inp = $('#labelModalInput');
+  var save = modalAction('Save', function(){
+    setLicenseLabel(lic, inp.value);
+    closeModal();
+  });
+  inp.addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); save.click(); } });
+  inp.focus();
+  inp.select();
 }
 function actionsCell(p){
   // a grant cannot be changed, cancelled or topped up — the key is all there is,
@@ -135,6 +155,8 @@ function wireLicenseRows(rootSel, opts){
       return;
     }
     var licOf = function(el){ var r = el.closest('.lic-row'); return r && licById(r.getAttribute('data-licid')); };
+    var labelItem = e.target.closest('[data-editlabel]');
+    if(labelItem){ e.stopPropagation(); closeAllMenus(); openLabelModal(licOf(labelItem)); return; }
     var cancelItem = e.target.closest('[data-cancel]');
     if(cancelItem){ e.stopPropagation(); closeAllMenus(); cancelFromRow(cancelItem, rerender); return; }
     var cpItem = e.target.closest('[data-changeplan]');
@@ -341,9 +363,9 @@ function wirePeriod(sel, st, rerender){
 }
 
 /* ---------- settings pages: sticky Save + leave guard ---------- */
-/* One sticky page-level Save: any change anywhere on the page enables it and
-   hides "All changes saved"; saving resets both. `dirty` is also what the
-   leave-guard checks. */
+/* One sticky page-level Save: any change anywhere on the page enables it, saving
+   disables it again. There is no "all saved" note — the disabled button says that
+   by itself. `dirty` is also what the leave-guard checks. */
 var pageDirty = false;
 function wirePageSave(viewSel, btnSel, noteSel){
   var view = $(viewSel), btn = $(btnSel), note = $(noteSel);
