@@ -48,8 +48,8 @@ var DETAILS_HTML = ''
 + '            <div class="top">'
 + '              <div class="idline">'
 + '                <div class="titleblock">'
-+ '                  <div class="titlekicker" data-page="sub">Subscription plan</div>'
-+ '                  <div class="titlekicker" data-page="perp">Perpetual license</div>'
++ '                  <div class="titlekicker" data-page="sub" id="kickerSub">ThingsBoard &middot; Subscription</div>'
++ '                  <div class="titlekicker" data-page="perp" id="kickerPerp">ThingsBoard &middot; Perpetual</div>'
 + '                  <div class="titlerow">'
 + '                    <h1 class="planname" data-page="sub" id="planName">Prototype</h1>'
 + '                    <h1 class="planname" data-page="perp" id="planNamePerp">ThingsBoard PE Perpetual License</h1>'
@@ -462,16 +462,24 @@ function renderLicenseActions(lic){
     if(renew)  renew.hidden  = !canceled;
   }
 }
+/* The eyebrow above the title says what this licence IS — its product and its
+   type — while the title says which plan or package it carries. Neither repeats
+   the other, and neither repeats the modal's own header ("License"). */
+function renderKicker(lic, pk){
+  var el = $('#appView .titlekicker[data-page="' + pk + '"]');
+  if(!el) return;
+  var product = lic.product || 'ThingsBoard';
+  // a grant is free and has no billing type of its own — that is the fact worth stating
+  var type = lic.grant ? 'Grant · Free' : (isPerpLike(lic) ? 'Perpetual' : 'Subscription');
+  el.textContent = product + ' · ' + type;
+}
+
 /* A grant rides the perpetual details layout, with the few things that differ
    switched over: what the dated block means (nothing expires), no coupon or
    capacity purchase, no invoices, and no instance until the deployment checks
    in with the new key. Every non-grant licence restores the same nodes. */
 function renderGrantChrome(lic){
   var isGrant = !!(lic && lic.grant);
-  var kicker = $('#appView .titlekicker[data-page="perp"]');
-  // 'Free' left the status slot when status became Active/Canceled only — the
-  // kicker is where non-status licence facts live
-  if(kicker) kicker.textContent = isGrant ? 'Grant license · Free' : 'Perpetual license';
   var ph = $('#appView .keycol[data-page="perp"] .periodhead');
   if(ph) ph.textContent = isGrant ? 'Expiry' : 'Software updates';
   var coupon = $('#couponBtn'); if(coupon) coupon.hidden = isGrant;
@@ -490,7 +498,8 @@ function renderLicenseDetails(lic){
   var spec = TIER_SPECS[lic.tier] || {}, isPerp = isPerpLike(lic), pk = isPerp ? 'perp' : 'sub';
   $$('#appView [data-page]').forEach(function(el){ el.hidden = el.getAttribute('data-page') !== pk; });
   var nameEl = isPerp ? $('#planNamePerp') : $('#planName');
-  if(nameEl) nameEl.textContent = lic.name;
+  if(nameEl) nameEl.textContent = lic.name;   // the title is the plan or package
+  renderKicker(lic, pk);
   $('#statusSlot').innerHTML = statusChipHTML(lic);
   renderLabelSlot(lic);
   renderGrantChrome(lic);
@@ -751,15 +760,10 @@ var LicenseDetails = (function(){
     }, true);
     // no backdrop-to-close here: an open editor inside the details would lose work
   }
-  /* The header names the kind of licence, nothing more. It used to repeat the
-     licence name and its label, but both already stand in the content right
-     below \u2014 so the header was a long duplicate of the first two lines under it.
-     Wording matches the content kicker (.titlekicker), minus the grant's
-     "\u00b7 Free": that is a price fact, and this is a title. */
-  function titleFor(lic){
-    if(lic.grant) return 'Grant license';
-    return isPerpLike(lic) ? 'Perpetual license' : 'Subscription plan';
-  }
+  /* The header names the entity, and the entity is a licence. What kind of licence
+     it is (product and type) is the eyebrow above the title, and which plan or
+     package it carries is the title itself — so nothing is said twice. */
+  function titleFor(){ return 'License'; }
   function openModal(lic){
     if(!lic) return;
     if(!modal) buildModal();
@@ -767,7 +771,7 @@ var LicenseDetails = (function(){
     mount($('#licModalBody'));
     show(lic);
     var back = $('#backBtn'); if(back) back.hidden = true;   // close is the only exit
-    $('#licModalTitle').textContent = titleFor(lic);
+    $('#licModalTitle').textContent = titleFor();
     modal.hidden = false;
     document.body.classList.add('licmodal-open');            // the page behind stops scrolling
     $('#licModalClose').focus();

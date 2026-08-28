@@ -466,13 +466,22 @@ th[aria-label$="ctions"],th.cellact,td.cellact{width:1%;white-space:nowrap;text-
    it. Here the modal box itself carries the white the content was built for, and
    .canvas stops being a layer — no inner container, no second background, no
    double borders. */
-.licmodal .fs-box{background:var(--card)}
+/* No border on this one: the grey summary band runs to the very edge of the
+   modal, and a 1px line plus the rounded corner left a pale sliver down both
+   sides of it. The shadow already separates the modal from the page. */
+.licmodal .fs-box{background:var(--card);border:0}
 .licmodal .fs-body{padding:0}
 .licmodal .content{overflow:visible}   /* .fs-body owns the scrolling here */
 .licmodal .canvas{background:transparent;border:0;border-radius:0;overflow:visible}
 /* the content spans the modal rather than the page container (--pageW capped it
    60px narrower than the box): normal side padding, modest offset under the header */
-.licmodal .sheet{max-width:none;padding:18px 24px 34px}
+/* The grey summary block spans the modal edge to edge — one surface, no card
+   inside a card — so the sheet adds no side padding of its own. Everything below
+   it lines up on the head's own inset (22px), which is where the title sits once
+   the back gutter is gone: title, "Plan & add-ons", the table and the tabs all
+   start on the same vertical line, and end on the same one. */
+.licmodal .sheet{max-width:none;padding:0 0 34px}
+.licmodal .section,.licmodal .tabs{padding-left:22px;padding-right:22px}
 body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its place */
 .back[hidden]{display:none}   /* .back sets display:flex, so [hidden] needs help */
 /* no back button in modal mode, so its gutter column goes too — otherwise the

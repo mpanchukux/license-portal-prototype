@@ -51,6 +51,7 @@ var Store = (function(){
       impersonating: null,        // email of the user being impersonated
       dismissed: {},              // one-time banners the viewer closed
       showCanceled: false,        // Licenses table: cancelled rows are hidden until asked for
+      licDetails: 'modal',        // licence details open over the list; 'page' is the comparison
       seq: 0                      // counter behind generated licence ids and keys
     };
   }
@@ -216,8 +217,8 @@ function settingsHTML(){
     +     '<label class="sp-opt"><input type="radio" name="billingData" value="saved"' + (billingSaved() ? ' checked' : '') + '><span>saved</span></label>'
     +     '<label class="sp-opt"><input type="radio" name="billingData" value="none"' + (billingSaved() ? '' : ' checked') + '><span>none</span></label>'
     +     '<div class="sp-grouphead">License details</div>'
-    +     '<label class="sp-opt"><input type="radio" name="licDetails" value="page"' + (licDetailsMode() === 'page' ? ' checked' : '') + '><span>A — page</span></label>'
-    +     '<label class="sp-opt"><input type="radio" name="licDetails" value="modal"' + (licDetailsMode() === 'modal' ? ' checked' : '') + '><span>B — modal</span></label>'
+    +     '<label class="sp-opt"><input type="radio" name="licDetails" value="modal"' + (licDetailsMode() === 'modal' ? ' checked' : '') + '><span>Modal (default)</span></label>'
+    +     '<label class="sp-opt"><input type="radio" name="licDetails" value="page"' + (licDetailsMode() === 'page' ? ' checked' : '') + '><span>Full page</span></label>'
     +     '<div class="sp-grouphead">Customize step</div>'
     +     '<label class="sp-opt"><input type="radio" name="custVariant" value="a"' + (custVariant() === 'a' ? ' checked' : '') + '><span>A — Plan card</span></label>'
     +     '<label class="sp-opt"><input type="radio" name="custVariant" value="b"' + (custVariant() === 'b' ? ' checked' : '') + '><span>B — Locked inputs</span></label>'
@@ -447,7 +448,9 @@ function wireTabs(){
 function custVariant(){ return Store.get('custVariant') === 'b' ? 'b' : 'a'; }
 // How a licence row presents its details: its own page (A) or a modal over the
 // page you were on (B). Read by the row wiring in components.js.
-function licDetailsMode(){ return Store.get('licDetails') === 'modal' ? 'modal' : 'page'; }
+/* The modal is the default presentation; the page variant stays in the settings
+   panel for comparison. Only an explicit 'page' choice opts out. */
+function licDetailsMode(){ return Store.get('licDetails') === 'page' ? 'page' : 'modal'; }
 // Whether the account already has billing data. With it the wizard commits on
 // Review & pay (3 steps); without it a Billing & payment step is appended and the
 // commit moves there (4 steps). Nothing hardcodes the count — see totalSteps().
