@@ -7,7 +7,7 @@
 function renderInvoicesPage(){
   var b = $('#invoicesView tbody'); if(!b) return;
   var inv = DATA().invoices;
-  b.innerHTML = inv.length ? inv.map(invRow).join('') : invEmptyRow();
+  b.innerHTML = inv.length ? inv.map(function(v){ return invRow(v); }).join('') : invEmptyRow();
   var r = $('#invoicesView .pager .range');
   if(r) r.textContent = inv.length ? ('1–' + inv.length + ' of ' + inv.length) : '0 of 0';
 }

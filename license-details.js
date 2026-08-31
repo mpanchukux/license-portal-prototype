@@ -22,14 +22,6 @@ var DETAILS_HTML = ''
 + '    <!-- content -->'
 + '    <div class="content">'
 + '      <div class="sheet">'
-+ '        <!-- one-time banner after a purchase: the key lives on this page -->'
-+ '        <div class="gbanner licnew" id="licNewBanner" role="status" hidden>'
-+ '          <svg class="icon gb-ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.4l2.4 2.4 4.6-5"/></svg>'
-+ '          <span class="gb-txt">License created. Your license key is on this page — reveal and copy it below.</span>'
-+ '          <span class="sp"></span>'
-+ '          <button class="gb-act" data-stub="Installation instructions">Installation instructions</button>'
-+ '          <button class="gb-x" id="licNewDismiss" aria-label="Dismiss">\u2715</button>'
-+ '        </div>'
 + '        <!-- one-time banner after Manage add-ons: states what changed, right'
 + '             above the entitlements the change produced -->'
 + '        <div class="gbanner licnew" id="licChgBanner" role="status" hidden>'
@@ -68,6 +60,11 @@ var DETAILS_HTML = ''
 + '                <div class="menu" data-page="sub" id="headKebabMenu">'
 + '                  <button class="btn sec kebab-btn" id="headKebabBtn" aria-haspopup="true" aria-expanded="false" aria-label="More actions">⋮</button>'
 + '                  <div class="pop" id="headKebabPop" role="menu" hidden>'
++ '                    <!-- mobile only: on a phone the header keeps just the primary'
++ '                         action, and Apply coupon moves in here (see the ≤600px'
++ '                         block in styles.css). It defers to the real button, so'
++ '                         there is one coupon controller, not two. -->'
++ '                    <button role="menuitem" class="mob-only" data-couponmenu>Apply coupon</button>'
 + '                    <button role="menuitem" data-editlabel>Edit label</button>'
 + '                    <button role="menuitem" data-cancel-active>Cancel subscription</button>'
 + '                  </div>'
@@ -95,6 +92,20 @@ var DETAILS_HTML = ''
 + '                  <button class="iconbtn ib tip" id="copyBtn" aria-label="Copy license key" data-tip="Copy">'
 + '                    <svg class="icon" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg>'
 + '                  </button>'
++ '                  <!-- what to do with the key, next to the actions that get you the'
++ '                       key. It used to be a button inside the post-purchase banner,'
++ '                       which meant it disappeared the moment that banner was dismissed. -->'
++ '                  <button class="iconbtn ib tip" id="installBtn" aria-label="Installation instructions" data-tip="Installation instructions" data-stub="Installation instructions">'
++ '                    <svg class="icon" viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4"/><path d="M9 12h6M9 16h6"/></svg>'
++ '                  </button>'
++ '                </div>'
++ '                <!-- one-time note after a purchase. It belongs under the key it is'
++ '                     about, and quiet: an ink-filled banner over the key would shout'
++ '                     louder than the thing it points at. -->'
++ '                <div class="keynote" id="licNewBanner" role="status" hidden>'
++ '                  <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.4l2.4 2.4 4.6-5"/></svg>'
++ '                  <span>License created &mdash; your license key is ready.</span>'
++ '                  <button class="kn-x" id="licNewDismiss" aria-label="Dismiss">\u2715</button>'
 + '                </div>'
 + '              </div>'
 + '              <div class="keycol right" data-page="sub">'
@@ -131,7 +142,11 @@ var DETAILS_HTML = ''
 + '              </div>'
 + '              <table class="plantable">'
 + '                <thead>'
-+ '                  <tr><th>Item</th><th>Usage</th><th class="num">Included</th><th class="num">Extra</th><th class="num">Limit</th></tr>'
++ '                  <!-- Usage is hidden in the UI, not removed: the cells are still'
++ '                       rendered and the data still flows through meterRow. One CSS'
++ '                       rule (.plantable .usecol) does the hiding — delete it and the'
++ '                       column is back. -->'
++ '                  <tr><th>Item</th><th class="usecol">Usage</th><th class="num">Included</th><th class="num">Extra</th><th class="num">Limit</th></tr>'
 + '                </thead>'
 + '                <!-- quantified capacity only; rendered from the selected page\'s'
 + '                     entitlements (see PAGES in JS) -->'
@@ -159,87 +174,59 @@ var DETAILS_HTML = ''
 + '            <div class="section">'
 + '              <!-- recurring billing: subscription only -->'
 + '              <div class="billgrid" data-page="sub">'
++ '                <!-- One full-width row, left to right: what is charged and when,'
++ '                     the card it goes to, then the way to change it. -->'
 + '                <div class="billcard nextcharge">'
-+ '                  <div class="nc-row">'
-+ '                    <h4 class="billcard-h">Next charge</h4>'
-+ '                    <!-- 16 days matches the 16-of-31-days remaining that the add-ons'
-+ '                         flow prorates against (today ~Aug 14, cycle ends Aug 30). -->'
-+ '                    <span class="nc-when" id="ncWhen">in 16 days · Aug 30 2026</span>'
-+ '                  </div>'
-+ '                  <div class="nc-amount"><span class="big" id="ncAmount">$39.00</span></div>'
-+ '                  <div class="hairline"></div>'
-+ '                  <!-- the payment method is account-level, so this routes to Billing'
-+ '                       rather than pretending to be an inline edit -->'
-+ '                  <div class="nc-row nc-foot">'
-+ '                    <span class="nc-pay">Auto-pay · Visa ••4242</span>'
-+ '                    <a class="link" href="billing.html">Billing &amp; payment &rarr;</a>'
++ '                  <div class="nc-main">'
++ '                    <div class="nc-left">'
++ '                      <div class="nc-row">'
++ '                        <h4 class="billcard-h">Next charge</h4>'
++ '                        <!-- 16 days matches the 16-of-31-days remaining that the add-ons'
++ '                             flow prorates against (today ~Aug 14, cycle ends Aug 30). -->'
++ '                        <span class="nc-when" id="ncWhen">in 16 days · Aug 30 2026</span>'
++ '                      </div>'
++ '                      <div class="nc-amount"><span class="big" id="ncAmount">$39.00</span></div>'
++ '                    </div>'
++ '                    <span class="sp"></span>'
++ '                    <!-- the same three parts, same classes, as Payment method on'
++ '                         Billing & payment: one source (paymentMethodHTML in'
++ '                         components.js, loaded before this file). No border of its'
++ '                         own — a framed card inside this one would read as a card'
++ '                         on a card. -->'
++ '                    <div class="nc-method">' + paymentMethodHTML({ expiry:false }) + '</div>'
++ '                    <!-- the payment method is account-level, so the edit action routes'
++ '                         to Billing rather than pretending to be an inline edit. Same'
++ '                         pencil, same icon-button, as Payment method there. -->'
++ '                    <a class="iconbtn ib tip" id="ncEditPay" href="billing.html" aria-label="Billing and payment" data-tip="Billing &amp; payment">'
++ '                      <svg class="icon" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>'
++ '                    </a>'
 + '                  </div>'
 + '                </div>'
 + '              </div>'
-+ '              <table class="invtable" style="margin-top:18px" data-page="sub">'
++ '              <!-- The licence\'s own invoices, rendered by the same invRow as the'
++ '                   Invoices page and the Home block — so the auto-charge mark and the'
++ '                   row actions behave identically here. No Product column: every row'
++ '                   on this tab belongs to the licence already on screen. One table for'
++ '                   both subscriptions and perpetuals; an invoice is an invoice, and the'
++ '                   rows come from the dataset (see renderLicInvoices). -->'
++ '              <div id="licInvBlock">'
++ '              <table class="invtable" style="margin-top:18px">'
 + '                <thead>'
 + '                  <tr><th>Invoice #</th><th>Date</th><th class="num">Amount</th><th>Status</th><th aria-label="Invoice actions"></th></tr>'
 + '                </thead>'
-+ '                <tbody>'
-+ '                  <tr>'
-+ '                    <td class="mono">INV-2026-07</td><td>2026-07-30</td><td class="num" id="invAmount">$39.00</td>'
-+ '                    <td><span class="pill">Paid</span></td>'
-+ '                    <td class="cellact"><span class="rowactions">'
-+ '                      <button class="link" data-dlinv>Download PDF</button>'
-+ '                      <a class="link" data-viewinv target="_blank" rel="noopener" href="#">View invoice</a>'
-+ '                    </span></td>'
-+ '                  </tr>'
-+ '                </tbody>'
++ '                <tbody id="licInvBody"></tbody>'
 + '              </table>'
-+ '              <div class="pager" data-page="sub">'
++ '              <div class="pager">'
 + '                <span class="spacer"></span>'
 + '                <span>Items per page<select aria-label="Items per page"><option>10</option><option>20</option><option>50</option><option>100</option></select></span>'
-+ '                <span class="range">1 of 1</span>'
++ '                <span class="range" id="licInvRange">0 of 0</span>'
 + '                <span class="pagebtns">'
-+ '                  <button disabled aria-label="First page">«</button>'
-+ '                  <button disabled aria-label="Previous page">‹</button>'
-+ '                  <button disabled aria-label="Next page">›</button>'
-+ '                  <button disabled aria-label="Last page">»</button>'
++ '                  <button disabled aria-label="First page">&laquo;</button>'
++ '                  <button disabled aria-label="Previous page">&lsaquo;</button>'
++ '                  <button disabled aria-label="Next page">&rsaquo;</button>'
++ '                  <button disabled aria-label="Last page">&raquo;</button>'
 + '                </span>'
 + '              </div>'
-+ ''
-+ '              <!-- Perpetual: one-time purchases only — the initial license and any'
-+ '                   Add capacity purchase. No upcoming row, no next charge, no auto-pay. -->'
-+ '              <table class="invtable" data-page="perp">'
-+ '                <thead>'
-+ '                  <tr><th>Invoice #</th><th>Date</th><th class="num">Amount</th><th>Status</th><th aria-label="Invoice actions"></th></tr>'
-+ '                </thead>'
-+ '                <tbody>'
-+ '                  <tr>'
-+ '                    <!-- inferred date: a capacity purchase made after the licence was issued -->'
-+ '                    <td class="mono">INV-2026-08</td><td>2026-08-20</td><td class="num">$1,999.00</td>'
-+ '                    <td><span class="pill">Paid</span></td>'
-+ '                    <td class="cellact"><span class="rowactions">'
-+ '                      <button class="link" data-dlinv>Download PDF</button>'
-+ '                      <a class="link" data-viewinv target="_blank" rel="noopener" href="#">View invoice</a>'
-+ '                    </span></td>'
-+ '                  </tr>'
-+ '                  <tr>'
-+ '                    <!-- the initial licence purchase: confirmed one-time price -->'
-+ '                    <td class="mono">INV-2026-08A</td><td>2026-08-13</td><td class="num">$4,999.00</td>'
-+ '                    <td><span class="pill">Paid</span></td>'
-+ '                    <td class="cellact"><span class="rowactions">'
-+ '                      <button class="link" data-dlinv>Download PDF</button>'
-+ '                      <a class="link" data-viewinv target="_blank" rel="noopener" href="#">View invoice</a>'
-+ '                    </span></td>'
-+ '                  </tr>'
-+ '                </tbody>'
-+ '              </table>'
-+ '              <div class="pager" data-page="perp">'
-+ '                <span class="spacer"></span>'
-+ '                <span>Items per page<select aria-label="Items per page"><option>10</option><option>20</option><option>50</option><option>100</option></select></span>'
-+ '                <span class="range">1 of 1</span>'
-+ '                <span class="pagebtns">'
-+ '                  <button disabled aria-label="First page">«</button>'
-+ '                  <button disabled aria-label="Previous page">‹</button>'
-+ '                  <button disabled aria-label="Next page">›</button>'
-+ '                  <button disabled aria-label="Last page">»</button>'
-+ '                </span>'
 + '              </div>'
 + ''
 + '              <!-- inferred: a grant is free, so it has no invoices at all -->'
@@ -276,16 +263,18 @@ var DETAILS_HTML = ''
 + '                  <tbody>'
 + '                    <tr>'
 + '                      <td class="chk"><input type="checkbox" aria-label="Select instance a1b2c3d4…e5f"></td>'
-+ '                      <td class="mono">a1b2c3d4…e5f</td>'
++ '                      <td class="mono">' + 'a1b2c3d4…e5f'
++ '                        <button class="iconbtn ib mob-only inst-copy" aria-label="Copy instance ID">' + COPYSVG + '</button></td>'
 + '                      <td class="muted">—</td>'
-+ '                      <td>Aug 18 2026</td>'
++ '                      <td>Aug 18 <span class="yr">2026</span></td>'
 + '                      <td>Aug 14 2026</td>'
 + '                    </tr>'
 + '                    <tr>'
 + '                      <td class="chk"><input type="checkbox" aria-label="Select instance 7e5f9a2b…c3d"></td>'
-+ '                      <td class="mono">7e5f9a2b…c3d</td>'
++ '                      <td class="mono">' + '7e5f9a2b…c3d'
++ '                        <button class="iconbtn ib mob-only inst-copy" aria-label="Copy instance ID">' + COPYSVG + '</button></td>'
 + '                      <td class="muted">—</td>'
-+ '                      <td>Aug 16 2026</td>'
++ '                      <td>Aug 16 <span class="yr">2026</span></td>'
 + '                      <td>Aug 13 2026</td>'
 + '                    </tr>'
 + '                  </tbody>'
@@ -432,12 +421,27 @@ function renderEntitlements(entList, extras){
     return meterRow(lab, inc, ex);
   }).join('');
 }
+/* The invoices this licence produced, from the dataset (an invoice names its licence
+   through `licId`). Same builder as every other invoice table, minus the Product
+   column — see invRow. */
+function renderLicInvoices(lic){
+  var body = $('#licInvBody'); if(!body) return;
+  var opts = { noProduct:true };
+  var list = DATA().invoices.filter(function(v){ return v.licId === lic.id; });
+  body.innerHTML = list.length
+    ? list.map(function(v){ return invRow(v, opts); }).join('')
+    : '<tr><td colspan="' + invCols(opts) + '" class="emptybox">No invoices for this license yet.</td></tr>';
+  var r = $('#licInvRange');
+  if(r) r.textContent = list.length ? ('1–' + list.length + ' of ' + list.length) : '0 of 0';
+}
 function renderLicenseFeatures(lic, spec){
   var wl = (lic.whitelabel != null ? lic.whitelabel : spec.wl);
   var active = [];
   if(wl) active.push('White labeling');
   if(lic.edge) active.push('Edge Computing');
   if(lic.trendz) active.push('Trendz Analytics');
+  // bought on a perpetual licence in the wizard's add-ons block (see hasOffline)
+  if(lic.offline) active.push('Offline Mode');
   var chips = $('#featureChips'); if(!chips) return;
   chips.innerHTML = active.map(function(n){ return '<span class="fchip">'+FCHECK+n+'</span>'; }).join('');
   $('#featureBlock').hidden = active.length === 0;
@@ -487,6 +491,9 @@ function renderGrantChrome(lic){
   // so a grant only has to take them back out
   if(isGrant) $$('#appView [data-modal="add-capacity"]').forEach(function(b){ b.hidden = true; });
   var invEmpty = $('#grantInvEmpty'); if(invEmpty) invEmpty.hidden = !isGrant;
+  // the invoice block is no longer keyed by data-page (one table serves sub and perp),
+  // so the grant hides it by id
+  var invBlock = $('#licInvBlock'); if(invBlock) invBlock.hidden = isGrant;
   if(isGrant) $$('#panel-invoices [data-page]').forEach(function(el){ el.hidden = true; });
   var instEmpty = $('#grantInstEmpty'); if(instEmpty) instEmpty.hidden = !isGrant;
   var instBar = $('#panel-prod .insttoolbar'); if(instBar) instBar.hidden = isGrant;
@@ -512,11 +519,11 @@ function renderLicenseDetails(lic){
     var ps = $('#periodSub');
     if(ps) ps.textContent = (lic.status==='canceled' ? 'Active until ' : 'Renews ') + fmtDate(lic.event);
     var price = String(lic.price).replace(/\s*\/\s*mo/i,'');
-    var nc=$('#ncAmount'), inv=$('#invAmount'), when=$('#ncWhen');
+    var nc=$('#ncAmount'), when=$('#ncWhen');
     if(lic.status==='canceled'){ if(nc) nc.textContent='—'; if(when) when.textContent='No upcoming charge · active until '+fmtDate(lic.event); }
     else { if(nc) nc.textContent=price; if(when) when.textContent='on '+fmtDate(lic.event); }
-    if(inv) inv.textContent = price;
   }
+  renderLicInvoices(lic);
   renderEntitlements(spec.ent, lic.extras);
   renderLicenseFeatures(lic, spec);
   renderLicenseAlert(lic);
@@ -537,10 +544,16 @@ function meterRow(item, included, extra){
   var extraCell = ex.n > 0
     ? '<td class="num">+' + fmtUnit(ex.n, ex.m) + '</td>'
     : '<td class="num muted">0</td>';
+  /* The delta pill exists for the phone, where Included and Extra are dropped and the
+     row is just name + limit: without it "2" would hide the fact that one of the two
+     was bought. Desktop has the Extra column and hides the pill. */
+  var deltaPill = ex.n > 0 ? '<span class="entdelta mob-only">+' + fmtUnit(ex.n, ex.m) + '</span>' : '';
   return '<tr><td>' + item + '</td>' +
-    '<td><div class="usecell tip" tabindex="0" data-tip="0 used / ' + limitDisp + ' limit">' +
+    // .usecol — hidden by CSS, still rendered (see the thead comment in DETAILS_HTML)
+    '<td class="usecol"><div class="usecell tip" tabindex="0" data-tip="0 used / ' + limitDisp + ' limit">' +
     '<span class="usetxt">0 / ' + limitDisp + '</span><div class="meter"><span style="width:0%"></span></div></div></td>' +
-    '<td class="num">' + incDisp + '</td>' + extraCell + '<td class="num">' + limitDisp + '</td></tr>';
+    '<td class="num">' + incDisp + '</td>' + extraCell +
+    '<td class="num entlimit">' + limitDisp + deltaPill + '</td></tr>';
 }
 
 /* ---------- in-surface behaviours ----------
@@ -587,6 +600,15 @@ function wireDetailsOnce(){
     if(!e.target.closest('[data-editlabel]')) return;
     closeAllMenus();
     editLabel();
+  });
+  /* The ⋮ entry that mobile uses for Apply coupon just presses the real button, so
+     the coupon modal keeps one controller. The button is display:none on a phone —
+     a programmatic click still fires its handler. */
+  document.addEventListener('click', function(e){
+    if(!e.target.closest('[data-couponmenu]')) return;
+    closeAllMenus();
+    var btn = $('#couponBtn');
+    if(btn) btn.click();
   });
 
   /* ---------- coupon ---------- */

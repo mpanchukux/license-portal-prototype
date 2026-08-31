@@ -30,12 +30,32 @@ function dashLicList(){
 function renderDashLicenses(){
   var head=$('#dashLicHead'), body=$('#dashLicBody'); if(!head||!body) return;
   head.innerHTML = headHtml();
-  body.innerHTML = dashLicList().map(rowHtml).join('');
+  // no Edit label in the row menu here: this block is a summary, and renaming a
+  // licence belongs on the Licenses page and its details, where it is the subject.
+  // Explicit callback — rowHtml takes options second, and .map would pass the index.
+  body.innerHTML = dashLicList().map(function(p){ return rowHtml(p, { noLabelEdit:true }); }).join('');
 }
 // a dataset may legitimately have no invoices (the grant is free) — say so
 function renderDashInvoices(){
   var b=$('#dashInvBody'); if(!b) return;
-  b.innerHTML = DATA().invoices.length ? DATA().invoices.slice(0, 3).map(invRow).join('') : invEmptyRow();
+  var inv = DATA().invoices;
+  // bareProduct: in a three-row preview the licence only has to be named — the mark
+  // and the label line belong to the Invoices page, where the table is the subject
+  var opts = { bareProduct:true };
+  b.innerHTML = inv.length
+    ? inv.slice(0, 3).map(function(v){ return invRow(v, opts); }).join('')
+    : invEmptyRow(opts);
+}
+/* Each block ends with the way out of it: one button naming how much is behind it.
+   The count is everything in the section, which is what the block is a preview of —
+   licences include cancelled ones, exactly as the block itself does. */
+function renderBlockFooters(){
+  var lic = $('#dashLicOpenAll'), inv = $('#dashInvOpenAll');
+  if(lic) lic.textContent = 'Open all (' + DATA().licenses.length + ')';
+  if(inv){
+    inv.textContent = 'Open all (' + DATA().invoices.length + ')';
+    inv.closest('.dblock-foot').hidden = !DATA().invoices.length;
+  }
 }
 /* Home greeting follows the viewer's own clock — the one place the prototype
    reads real time (dataset dates stay pinned to Aug 19 2026).
@@ -67,6 +87,7 @@ function renderHome(){
   renderGreeting();
   renderDashLicenses();
   renderDashInvoices();
+  renderBlockFooters();
   renderDashFeed();
 }
 renderHome();
@@ -97,14 +118,50 @@ wireFeedAudit('#dashView');
   btn.addEventListener('click', function(){ NL.open({}); });
 })();
 
+/* The primary action never scrolls out of reach: as the hero button leaves the
+   top of the scroll region, the same action fades into the top-bar band, and
+   fades back out on the way up. One hand-off, driven by how far the hero's bottom
+   edge still is from the top of #shellMain — so the two never both read as live.
+
+   The copy in the bar takes the plain 31px .btn: the top bar is a control band,
+   and --btnH is not negotiable there. Only the hero is oversized (.btn.xl).
+
+   Not installed on the new-user or grant-pending screens: #dashView is hidden
+   there, its button measures 0, and the bar would hold an action for a dashboard
+   that is not on screen. */
+(function(){
+  var hero = $('#dashNewBtn'), slot = $('#topbarAction'), shell = $('#shellMain');
+  if(!hero || !slot || !shell || dashV.hidden) return;
+  /* Both labels ship; CSS picks one. On a phone the bar is tight (logo · action ·
+     profile on one row), so the copy collapses to an icon plus "Buy". */
+  slot.innerHTML = '<button class="btn" id="topbarNewBtn">'
+    + '<svg class="icon tb-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>'
+    + '<span class="tb-full">Buy a license</span><span class="tb-short">Buy</span></button>';
+  $('#topbarNewBtn').addEventListener('click', function(){ NL.open({}); });
+  var BAND = 48;                       // px the crossfade takes
+  function syncStickyAction(){
+    var d = hero.getBoundingClientRect().bottom - shell.getBoundingClientRect().top;
+    var t = Math.max(0, Math.min(1, d / BAND));   // 1 = hero in place · 0 = handed over
+    // opacity is driven here, so the CSS transition covers only the slide
+    hero.style.opacity = t;
+    hero.style.pointerEvents = t < 0.05 ? 'none' : '';
+    slot.style.opacity = 1 - t;
+    slot.classList.toggle('on', t < 0.5);
+  }
+  // a plain scroll listener: two style writes, and rAF does not fire in a hidden
+  // tab or an embedded panel (the same trap the feed's fallback exists for)
+  shell.addEventListener('scroll', syncStickyAction);
+  window.addEventListener('resize', syncStickyAction);
+  syncStickyAction();
+})();
+
 /* the grant banner is one-time: dismissing it is remembered */
 (function(){
   var view = $('#grantViewBtn'), dismissBtn = $('#grantDismissBtn'), learn = $('#grantLearnBtn');
   if(view) view.addEventListener('click', function(){
     var g = DATA().licenses.filter(function(l){ return l.grant; })[0];
     if(!g) return;
-    if(licDetailsMode() === 'modal' && window.LicenseDetails){ LicenseDetails.openModal(g); return; }
-    location.href = licenseHref(g, 'home');
+    openLicenseDetails(g, 'home');
   });
   if(dismissBtn) dismissBtn.addEventListener('click', function(){ dismiss('grantBanner'); $('#grantBanner').hidden = true; });
   if(learn) learn.addEventListener('click', function(){

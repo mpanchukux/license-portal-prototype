@@ -86,7 +86,7 @@
         <div class="sg-cell"><button class="btn">Primary</button><span class="sg-cls">.btn</span></div>
         <div class="sg-cell"><button class="btn sec">Secondary</button><span class="sg-cls">.btn.sec</span></div>
         <div class="sg-cell"><button class="btn ter">Destructive</button><span class="sg-cls">.btn.ter</span></div>
-        <div class="sg-cell"><button class="btn lg">Large primary</button><span class="sg-cls">.btn.lg</span></div>
+        <div class="sg-cell"><button class="btn xl">Page primary</button><span class="sg-cls">.btn.xl</span></div>
         <div class="sg-cell"><button class="link">Text link</button><span class="sg-cls">.link</span></div>
         <div class="sg-cell"><button class="btn" disabled>Disabled</button><span class="sg-cls">.btn[disabled]</span></div>
         <div class="sg-cell"><button class="btn" id="sgLoading"><span class="nl-spin" aria-hidden="true"></span></button><span class="sg-cls">.btn &gt; .nl-spin</span></div>
@@ -121,6 +121,7 @@
           <span class="sg-cls">.searchbox</span>
         </div>
         <div class="sg-cell"><label class="lic-toggle"><span class="switch"><input type="checkbox" checked><span class="track"></span></span> Display canceled products</label><span class="sg-cls">.switch</span></div>
+        <div class="sg-cell"><span class="switch lg"><input type="checkbox" checked><span class="track"></span></span><span class="sg-cls">.switch.lg</span></div>
         <div class="sg-cell"><label class="sp-opt"><input type="checkbox" checked><span>Checkbox option</span></label><span class="sg-cls">.sp-opt &gt; input</span></div>
         <div class="sg-cell">
           <div class="stepper"><button aria-label="Decrease">−</button><input type="text" value="2" aria-label="Amount"><button aria-label="Increase">+</button></div>
@@ -181,7 +182,7 @@
       <p class="sg-note"><code class="sg-cls">.setcard</code> — the settings-page container, with its header row.</p>
       <div class="setcard" style="margin-top:0">
         <div class="setcard-h"><h2>Payment method</h2><span class="setcard-hint">Charged automatically for recurring plans</span></div>
-        <div class="paycard"><span class="brandbadge">VISA</span><span class="pc-num">•••• •••• •••• 4242</span><span class="pc-exp">Expires 12 / 2028</span></div>
+        <div class="paycard" id="sgPayCard"></div>
       </div>
     </div>
     <div class="sg-item">

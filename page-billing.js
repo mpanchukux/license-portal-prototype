@@ -4,6 +4,13 @@
    generic dialog).
    ============================================================================ */
 
+// the card is rendered, not written twice — one source for every surface (see
+// paymentMethodHTML). afterbegin keeps the flex order: parts, spacer, edit button.
+(function(){
+  var card = $('#payCard');
+  if(card) card.insertAdjacentHTML('afterbegin', paymentMethodHTML());
+})();
+
 wirePageSave('#billingView', '#billSaveBtn');
 guardLinks();
 

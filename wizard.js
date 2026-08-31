@@ -81,7 +81,7 @@ var NL = (function(){
   var scr = $('#nlModal'), body = $('#nlBody');
   var lastFocus = null;
   var st = { kind:'subscription', product:null, plan:null, step:1, dirty:false };
-  var cust = { prod:1, dev:0, ai:0, edge:false, trendz:false };
+  var cust = { prod:1, dev:0, ai:0, edge:false, trendz:false, offline:false };
   var seededTier = null;
 
 
@@ -93,6 +93,14 @@ var NL = (function(){
   // anchored to the $1,999 Add-capacity invoice; the rest are inferred.
   var UNITS = { sub:{prod:29,dev:15,ai:5}, perpTB:{prod:1999,ai:500}, perpMQ:{prod:999,ai:0} };
   var ADD = { edge:7, trendz:12 };
+  /* Copy that belongs to a capacity row rather than to a tooltip: the wizard has room
+     for the sentence, so it reads as the row's description. */
+  var DEVICES_DESC = 'Total number of IoT devices that will connect to your ThingsBoard platform.';
+  var OFFLINE_DESC = 'Full functionality without internet.';
+  /* ⚠️ Offline Mode has no price yet — TODO: confirm with product whether it is a
+     one-time amount on top of the perpetual licence. Until it does, the toggle carries
+     no figure and contributes nothing to the total; the review lists it without an
+     amount rather than showing a made-up $0.00. */
   var NAME = { maker:'Maker', prototype:'Prototype', pilot:'Pilot', startup:'Startup', business:'Business',
                tbmqsub:'PE subscription', tbperp:'PE Perpetual License', tbmqperp:'PE license' };
   var MAXQ = { prod:20, dev:20, ai:99 };
@@ -141,6 +149,11 @@ var NL = (function(){
   }
   function currentCardName(){ return st.oldTier === 'tbmqsub' ? 'TBMQ PE subscription' : st.oldName; }
   function hasAddons(){ return !isPerp() && st.product === 'thingsboard'; }
+  /* Offline Mode is the perpetual counterpart of the add-ons block: a perpetual licence
+     runs where there is no internet, which is exactly what it enables (inferred: offered
+     for both perpetual products, since the option is a property of running offline, not
+     of the product). */
+  function hasOffline(){ return isPerp(); }
   function hasDev(){ return !isPerp() && st.product === 'thingsboard'; }
   function hasAi(){ var i = INCL[tier()]; return !!(i && i.ai > 0); }
   function ecKey(){ return (st.product || 'thingsboard') + '|' + (isPerp() ? 'perpetual' : 'payg'); }
@@ -159,9 +172,10 @@ var NL = (function(){
     if(hasAi() && e.ai > 0) out.push({ t:'+' + e.ai + ' AI block' + (e.ai > 1 ? 's' : '') + ' (1M)', amt:e.ai * u.ai, unit:u.ai });
     if(hasAddons() && cust.edge)   out.push({ t:'+ Edge Computing',   amt:ADD.edge });
     if(hasAddons() && cust.trendz) out.push({ t:'+ Trendz Analytics', amt:ADD.trendz });
+    if(hasOffline() && cust.offline) out.push({ t:'+ Offline Mode', amt:null });
     return out;
   }
-  function total(){ return (BASE[tier()] || 0) + deltas().reduce(function(a, c){ return a + c.amt; }, 0); }
+  function total(){ return (BASE[tier()] || 0) + deltas().reduce(function(a, c){ return a + (c.amt || 0); }, 0); }
   /* Add-ons reviews a MODIFICATION, so its review states the delta against the
      configuration the licence arrived with — "from → to" for quantities, added /
      removed for the two add-ons. deltas() cannot do this: it lists everything
@@ -183,6 +197,9 @@ var NL = (function(){
       if(cust.edge !== b.edge) out.push({ t:(cust.edge ? 'Added' : 'Removed') + ' Edge Computing', amt:(cust.edge ? 1 : -1) * ADD.edge });
       if(cust.trendz !== b.trendz) out.push({ t:(cust.trendz ? 'Added' : 'Removed') + ' Trendz Analytics', amt:(cust.trendz ? 1 : -1) * ADD.trendz });
     }
+    if(hasOffline()){
+      if(cust.offline !== b.offline) out.push({ t:(cust.offline ? 'Added' : 'Removed') + ' Offline Mode', amt:null });
+    }
     return out;
   }
   function changeSummary(){
@@ -198,13 +215,15 @@ var NL = (function(){
     var n = function(v){ return parseInt(String(v || '0'), 10) || 0; };
     cust = { prod:i.prod + n(x.prod), dev:n(x.dev), ai:(i.ai || 0) + n(x.ai),
              devices:(DEVICE_TIERS[t] || 0) + n(x.devices),
-             edge:!!lic.edge, trendz:!!lic.trendz };
-    st.baseCust = { prod:cust.prod, dev:cust.dev, ai:cust.ai, devices:cust.devices, edge:cust.edge, trendz:cust.trendz };
+             edge:!!lic.edge, trendz:!!lic.trendz, offline:!!lic.offline };
+    st.baseCust = { prod:cust.prod, dev:cust.dev, ai:cust.ai, devices:cust.devices,
+                    edge:cust.edge, trendz:cust.trendz, offline:cust.offline };
     seededTier = t;
   }
   function entSummary(t){
     var spec = TIER_SPECS[t] || { ent:[] };
-    return spec.ent.map(function(e){
+    // same exclusion as the capacity list: Assets is out of the wizard (see skipEnt)
+    return spec.ent.filter(function(e){ return !skipEnt(e[0]); }).map(function(e){
       var lbl = e[0] === 'AI credits' ? 'AI credits' : e[0].toLowerCase();
       if(e[1] === '1') lbl = lbl.replace(/s$/, '');
       return e[1] + ' ' + lbl;
@@ -272,11 +291,11 @@ var NL = (function(){
      carried are gone from this step. Glyphs are 16px monochrome: a hub and spokes
      for the platform, a broadcast arc for the broker. */
   var PRODUCT_CHOICES = [
-    { v:'thingsboard', t:'ThingsBoard',
+    { v:'thingsboard', t:'ThingsBoard', d:'IoT platform — devices, dashboards, rule engine',
       g:'<circle cx="12" cy="12" r="3"/><circle cx="12" cy="4" r="1.5"/><circle cx="12" cy="20" r="1.5"/>'
         + '<circle cx="4" cy="12" r="1.5"/><circle cx="20" cy="12" r="1.5"/>'
         + '<path d="M12 9V5.5M12 15v3.5M9 12H5.5M15 12h3.5"/>' },
-    { v:'tbmq', t:'TBMQ',
+    { v:'tbmq', t:'TBMQ', d:'MQTT broker for reliable message streaming',
       g:'<circle cx="7" cy="17" r="1.6"/><path d="M7 11.5A5.5 5.5 0 0 1 12.5 17"/>'
         + '<path d="M7 6A11 11 0 0 1 18 17"/>' }
   ];
@@ -288,7 +307,8 @@ var NL = (function(){
           return '<button type="button" class="nl-prodopt' + (on ? ' is-on' : '') + '"'
             + ' data-nl-product="' + o.v + '" aria-pressed="' + on + '"' + (locked ? ' disabled' : '') + '>'
             + '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">' + o.g + '</svg>'
-            + '<span>' + o.t + '</span></button>';
+            + '<span class="nl-prodtxt"><span class="nl-prodname">' + o.t + '</span>'
+            + '<span class="nl-proddesc">' + o.d + '</span></span></button>';
         }).join('')
       + '</div></div>';
   }
@@ -319,7 +339,7 @@ var NL = (function(){
       + '<span class="spacer"></span>'
       + '<div class="nl-billtoggle">'
       +   '<span class="nl-blabel' + (perp ? '' : ' is-on') + '">' + sub.t + '</span>' + info(sub)
-      +   '<label class="switch nl-billsw"><input type="checkbox" data-nl-billsw'
+      +   '<label class="switch lg nl-billsw"><input type="checkbox" data-nl-billsw'
       +     (perp ? ' checked' : '') + (locked ? ' disabled' : '')
       +     ' aria-label="Perpetual billing"><span class="track"></span></label>'
       +   '<span class="nl-blabel' + (perp ? ' is-on' : '') + '">' + pp.t + '</span>' + info(pp)
@@ -371,21 +391,36 @@ var NL = (function(){
      header, so this step has no bottom footer at all. ---- */
   var LOCKSVG = '<svg class="icon fs-lockic" viewBox="0 0 24 24" aria-hidden="true">'
     + '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
-  // entitlements the plan fixes — everything the controls below cannot change
-  function fixedEnt(spec){ return (spec.ent || []).filter(function(e){ return e[0] !== 'Production instances' && e[0] !== 'AI credits'; }); }
-  function planSummaryHTML(t, spec){
+  /* Entitlements the plan fixes — everything the controls below cannot change.
+     ⚠️ Assets is dropped from the wizard entirely (not relevant any more). It still
+     lives in TIER_SPECS, so the licence details page and the plan cards still list it;
+     purging it there is a separate decision. */
+  function skipEnt(label){ return label === 'Assets'; }
+  function fixedEnt(spec){
+    return (spec.ent || []).filter(function(e){
+      return e[0] !== 'Production instances' && e[0] !== 'AI credits' && !skipEnt(e[0]);
+    });
+  }
+  /* The anchor of the step: what is being bought, named once. Variant A also lists
+     the entitlements the plan fixes, because A drops those rows from the controls;
+     variant B keeps them as locked cards below, so its banner is the title alone. */
+  function planSummaryHTML(t, spec, withFacts){
     var product = st.product === 'tbmq' ? 'TBMQ' : 'ThingsBoard';
     var facts = fixedEnt(spec).map(function(e){ return e[1] + ' ' + e[0].toLowerCase(); });
     facts.push('fixed by this plan');
     return '<div class="fs-panel nl-plansum">'
       + '<div class="nl-plansum-t">' + product + ' ' + (NAME[t] || st.plan) + ' · ' + (isPerp() ? 'Perpetual' : 'Subscription') + '</div>'
-      + '<div class="nl-plansum-f">' + facts.join(' · ') + '</div>'
+      + (withFacts ? '<div class="nl-plansum-f">' + facts.join(' · ') + '</div>' : '')
       + '</div>';
   }
-  // variant B: same disabled styling, but the lock rides inside the field
-  function lockedCell(lbl, val){
-    return '<div class="am-cell"><div class="fs-cellhead"><div class="fs-celltext">'
-      + '<div class="am-celltop">' + lbl + '</div></div>'
+  /* Variant B: same row as every other card in the stack — label left, control right.
+     Same disabled styling as before, with the lock riding inside the field. `.am-locked`
+     is only a hook for the field's width (see styles.css); nothing about the card's
+     own layout differs from its neighbours. */
+  function lockedCell(lbl, val, desc){
+    return '<div class="am-cell am-locked"><div class="fs-cellhead"><div class="fs-celltext">'
+      + '<div class="am-celltop">' + lbl + '</div>'
+      + (desc ? '<div class="fs-celldesc">' + desc + '</div>' : '') + '</div>'
       + '<span class="fs-lockfield">' + LOCKSVG
       + '<input class="fs-devinput locked" type="text" value="' + val + '" disabled aria-label="' + lbl + ' — fixed by this plan"></span>'
       + '</div></div>';
@@ -415,15 +450,22 @@ var NL = (function(){
       + '<button type="button" data-dir="1"' + plus + ' aria-label="Increase ' + label + '">+</button></div></div>'
       + '<div class="am-cardprice">' + priceNote + '</div></div>';
   }
-  // add-ons sit in the same rows as the steppers: text left, control on the right edge
+  /* Add-ons sit in the same rows as the steppers: text left, control on the right
+     edge. The whole block is the control, though — the element IS the <label> that
+     owns the checkbox, so a click on the name, the description or the price toggles
+     it natively, with no handler of its own. The switch stays right-aligned as the
+     indicator; the hover state on the block says it is all clickable.
+     ⚠️ The switch markup is a <span> here, not a <label>: a label inside a label is
+     invalid, and it is the outer one that has to cover the whole block. */
   function addonRow(key, name, desc, price, on){
-    return '<div class="am-cell am-addon' + (on ? ' on' : '') + '"><div class="fs-cellhead"><div class="fs-celltext">'
+    return '<label class="am-cell am-addon' + (on ? ' on' : '') + '"><div class="fs-cellhead"><div class="fs-celltext">'
       + '<div class="am-celltop">' + name + '</div>'
       + '<div class="fs-celldesc">' + desc + '</div>'
-      + '<div class="am-cardprice">+' + money(price) + ' /mo</div></div>'
-      + '<label class="switch"><input type="checkbox" data-nl-addon="' + key + '"' + (on ? ' checked' : '')
-      + ' aria-label="Add ' + name + ' add-on"><span class="track"></span></label>'
-      + '</div></div>';
+      // price == null: not settled yet (Offline Mode) — the row simply has no figure
+      + (price == null ? '' : '<div class="am-cardprice">+' + money(price) + ' /mo</div>') + '</div>'
+      + '<span class="switch lg"><input type="checkbox" data-nl-addon="' + key + '"' + (on ? ' checked' : '')
+      + ' aria-label="Add ' + name + ' add-on"><span class="track"></span></span>'
+      + '</div></label>';
   }
   function summaryHTML(){
     var html = '';
@@ -431,7 +473,9 @@ var NL = (function(){
     html += '<div class="am-sumrow cur"><span>' + (NAME[tier()] || st.plan) + ' base</span><span>' + money(BASE[tier()] || 0) + perSuffix() + '</span></div>';
     deltas().forEach(function(c){
       var left = c.unit ? (c.t + ' × ' + money(c.unit)) : c.t;
-      html += '<div class="am-sumrow"><span>' + left + '</span><span>' + money(c.amt) + '</span></div>';
+      // amt == null: a toggle whose price is not settled yet (see ADD / Offline Mode)
+      html += '<div class="am-sumrow"><span>' + left + '</span><span>'
+        + (c.amt == null ? '' : money(c.amt)) + '</span></div>';
     });
     return html;
   }
@@ -453,8 +497,10 @@ var NL = (function(){
     var cells = '';
     spec.ent.forEach(function(e){
       var lbl = e[0], val = e[1];
+      if(skipEnt(lbl)) return;                       // Assets is out of the wizard
       if(lbl === 'Devices' && hasDevices()){
-        cells += numberCell('devices', 'Devices', devicesIncluded().toLocaleString('en-US')
+        cells += numberCell('devices', 'Devices', DEVICES_DESC + ' '
+          + devicesIncluded().toLocaleString('en-US')
           + ' included with this plan — enter the total you need.',
           '+$0.10 / mo per extra device', cust.devices, devicesIncluded());
       } else if(lbl === 'Production instances'){
@@ -462,27 +508,34 @@ var NL = (function(){
       } else if(lbl === 'AI credits'){
         cells += stepCell('ai', 'AI credits', '1 = 1,000,000 credits. Minimum matches your plan — increase to buy more.', '+' + money(u.ai) + per + ' per 1M AI credits', cust.ai, i.ai);
       } else if(!variantA){
-        cells += lockedCell(lbl, val);   // variant A shows these in the plan card instead
+        // variant A shows these in the plan card instead
+        cells += lockedCell(lbl, val, lbl === 'Devices' ? DEVICES_DESC : '');
       }
     });
     if(hasDev()) cells += stepCell('dev', 'Development instances', 'Dedicated instances for dev, test, and CI/CD — keeps production data clean.', '+' + money(u.dev) + per + ' each', cust.dev, 0);
-    var addons = '';
+    var addonCells = '';
     if(hasAddons()){
-      addons = '<div class="am-sechead am-sechead-sub"><h4>Add-ons</h4></div><div class="am-capgrid">'
-        + addonRow('edge', 'Edge Computing', 'Edge instances at remote sites for offline processing and auto-sync.', ADD.edge, cust.edge)
-        + addonRow('trendz', 'Trendz Analytics', 'Advanced analytics, custom dashboards, and trend discovery.', ADD.trendz, cust.trendz)
-        + '</div>';
+      addonCells += addonRow('edge', 'Edge Computing', 'Edge instances at remote sites for offline processing and auto-sync.', ADD.edge, cust.edge)
+        + addonRow('trendz', 'Trendz Analytics', 'Advanced analytics, custom dashboards, and trend discovery.', ADD.trendz, cust.trendz);
     }
+    // a perpetual licence gets one add-on of its own: running without internet
+    if(hasOffline()) addonCells += addonRow('offline', 'Offline Mode', OFFLINE_DESC, null, cust.offline);
+    /* Variant A — one panel, two named sections inside it.
+       Variant B — no section headers at all: the plan banner, then every item as its
+       own card in a single vertical stack (capacity rows and add-ons alike), so each
+       piece of information separates on its own edge instead of by a heading. */
+    var left = variantA
+      ? planSummaryHTML(t, spec, true)
+        + '<div class="am-sec fs-panel">'
+        +   '<div class="am-sechead"><h4>Capacity</h4></div>'   // what you can buy more of; the plan is named in the card above
+        +   '<div class="am-capgrid">' + cells + '</div>'
+        +   (addonCells ? '<div class="am-sechead am-sechead-sub"><h4>Add-ons</h4></div><div class="am-capgrid">' + addonCells + '</div>' : '')
+        + '</div>'
+      : planSummaryHTML(t, spec, false)
+        + '<div class="am-sec nl-cardstack">' + cells + addonCells + '</div>';
     $('#nlStep2').innerHTML =
       '<div class="fs-grid">'
-      + '<div class="fs-col">'
-      +   (variantA ? planSummaryHTML(t, spec) : '')
-      +   '<div class="am-sec fs-panel">'
-      +     '<div class="am-sechead"><h4>Capacity</h4></div>'   // what you can buy more of; the plan is named in the card above
-      +     '<div class="am-capgrid">' + cells + '</div>'
-      +     addons
-      +   '</div>'
-      + '</div>'
+      + '<div class="fs-col">' + left + '</div>'
       + '<div class="am-sec fs-right">'
       +   '<div class="am-sechead"><h4>Calculation summary</h4></div>'
       +   '<div class="am-figures"><div class="am-sumlist">' + summaryHTML() + '</div>'
@@ -513,12 +566,14 @@ var NL = (function(){
       var chg = changeRows();
       if(!chg.length) rows = '<div class="am-orow"><div class="muted">No changes yet</div><div></div></div>';
       chg.forEach(function(c){
-        rows += '<div class="am-orow"><div>' + c.t + '</div><div>' + moneySigned(c.amt) + '</div></div>';
+        rows += '<div class="am-orow"><div>' + c.t + '</div><div>'
+          + (c.amt == null ? '' : moneySigned(c.amt)) + '</div></div>';
       });
     } else {
       deltas().forEach(function(c){
         var left = c.unit ? (c.t + ' × ' + money(c.unit)) : c.t;
-        rows += '<div class="am-orow"><div>' + left + '</div><div>' + money(c.amt) + '</div></div>';
+        rows += '<div class="am-orow"><div>' + left + '</div><div>'
+          + (c.amt == null ? '' : money(c.amt)) + '</div></div>';
       });
     }
     var dueLabel = isMod()
@@ -686,13 +741,16 @@ var NL = (function(){
     if(hasAi() && e.ai > 0) x.ai = e.ai + 'M';
     if(Object.keys(x).length) lic.extras = x;
     if(hasAddons()){ lic.edge = cust.edge; lic.trendz = cust.trendz; }
+    if(hasOffline()) lic.offline = cust.offline;
     storeAddLicense(lic);              // straight into the mock backend
     st.dirty = false;
     scr.hidden = true;
-    // no success modal: the licence page is where the key lives, so go there and
-    // let it show the one-time "created" banner (see license-details.js)
+    /* No success modal: the details surface is where the key lives, so open it and
+       let it show the one-time "created" banner (see license-details.js). Modal is
+       the default, so a purchase no longer leaves the page it was made from — the
+       new licence opens over it, and the list underneath is restated. */
     Store.set('justCreated', lic.id);
-    location.href = licenseHref(lic);
+    openLicenseDetails(lic, null, { refreshHost:true });
   }
   function commitChange(){
     var lic = st.changeLic, t = tier(), e = extras();
@@ -708,6 +766,7 @@ var NL = (function(){
     if(hasAi() && e.ai > 0) x.ai = e.ai + 'M';
     if(Object.keys(x).length){ lic.extras = x; } else { delete lic.extras; }
     if(hasAddons()){ lic.edge = cust.edge; lic.trendz = cust.trendz; }
+    if(hasOffline()) lic.offline = cust.offline;
     Store.save();                      // the licence object was mutated in place
     st.dirty = false;
     scr.hidden = true;
@@ -715,16 +774,17 @@ var NL = (function(){
        leaves a one-time banner there saying what changed, next to the updated
        entitlements it produced (see syncChangedBanner in license-details.js). */
     if(summary) Store.set('justChanged', { id:lic.id, text:summary });
-    // modal mode: the details are already open underneath — restate them there
+    // the details may already be open underneath (Change plan from inside them) —
+    // restate them in place; otherwise open them the one way there is
     if(window.LicenseDetails && LicenseDetails.isOpen()){ LicenseDetails.reopen(lic); return; }
-    location.href = licenseHref(lic);  // land on the licence details, now updated
+    openLicenseDetails(lic, null, { refreshHost:true });
   }
   function startPurchase(btn){
     if(!btn || btn.disabled) return;
     btn.style.width = Math.ceil(btn.getBoundingClientRect().width) + 'px';   // label keeps width
     btn.disabled = true;
     btn.innerHTML = '<span class="nl-spin" aria-hidden="true"></span>';
-    // no restore: committing navigates to the new licence page
+    // no restore: committing replaces this surface with the licence details
     setTimeout(commitPurchase, 1500);
   }
 

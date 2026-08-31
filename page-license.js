@@ -9,15 +9,21 @@
    ============================================================================ */
 
 var params = new URLSearchParams(location.search);
-var fromHome = params.get('from') === 'home';
 var pageLic = params.get('id') ? licById(params.get('id')) : null;
 if(!pageLic) pageLic = licFromNamed(params.get('tier') || 'prototype');
 
-// the details page belongs to the section it was opened from
-document.body.setAttribute('data-nav', fromHome ? 'home' : 'licenses');
+/* The details page belongs to the section it was opened from — that one origin
+   decides both the highlighted nav item and where back goes. Invoices is a real
+   origin now: an invoice's Product cell links here. */
+var ORIGINS = {
+  home:     { nav:'home',     href:'index.html',    label:'Back to Home' },
+  invoices: { nav:'invoices', href:'invoices.html', label:'Back to Invoices' }
+};
+var origin = ORIGINS[params.get('from')] || { nav:'licenses', href:'licenses.html', label:'Back to Licenses' };
+
+document.body.setAttribute('data-nav', origin.nav);
 syncTopNav();
 
 LicenseDetails.mountPage('#licDetailsHost', pageLic, {
-  back: fromHome ? { href:'index.html', label:'Back to Home' }
-                 : { href:'licenses.html', label:'Back to Licenses' }
+  back: { href: origin.href, label: origin.label }
 });

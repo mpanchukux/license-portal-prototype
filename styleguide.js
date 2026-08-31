@@ -67,12 +67,17 @@ $('#sgSpace').innerHTML = SPACE.map(function(s){
     + '<span>' + s[0] + ' = ' + v + '</span><span style="color:var(--faint)">' + s[1] + '</span></div>';
 }).join('');
 
+/* the payment method specimen renders from the same builder the product uses */
+(function(){ var c = $('#sgPayCard'); if(c) c.innerHTML = paymentMethodHTML(); })();
+
 /* ---------- the licence table, from the product's own builders ---------- */
 (function(){
   var sample = Store.get('datasets').B.licenses.slice(0, 2);
-  $('#sgTableHead').innerHTML = headHtml().replace('<th>Created</th>',
-    '<th class="sortable" aria-sort="descending" tabindex="0">Created</th>');
-  $('#sgTableBody').innerHTML = sample.map(rowHtml).join('');
+  $('#sgTableHead').innerHTML = headHtml().replace('<th>Updated</th>',
+    '<th class="sortable" aria-sort="descending" tabindex="0">Updated</th>');
+  // explicit callback: rowHtml takes options as its second argument, and .map
+  // would hand it the index instead
+  $('#sgTableBody').innerHTML = sample.map(function(p){ return rowHtml(p); }).join('');
 })();
 
 /* ---------- plan cards, including the Current plan strip ---------- */

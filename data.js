@@ -9,8 +9,19 @@
 var FEATURES = [
   { key:'whitelabel', label:'White labeling' },
   { key:'edge',       label:'Edge Computing' },
-  { key:'trendz',     label:'Trendz Analytics' }
+  { key:'trendz',     label:'Trendz Analytics' },
+  /* Bought in the wizard's add-ons block, perpetual only. ⚠️ Not the old "Offline"
+     licence TYPE that the content audit removed — that was a billing kind; this is a
+     capability the licence can carry. */
+  { key:'offline',    label:'Offline Mode' }
 ];
+
+/* ---------- the account's payment method ----------
+   One card, one place. Every surface that shows the card itself renders from
+   this (see paymentMethodHTML): Payment method on Billing & payment, the Next
+   charge card on licence details, the styleguide specimen. Prose mentions of
+   "Visa ••4242" (activity feed, invoice mock, wizard) are sentences, not this. */
+var PAYMENT_METHOD = { brand:'VISA', num:'•••• •••• •••• 4242', exp:'Expires 12 / 2028' };
 
 /* ---------- per-tier specs: what a licence of each tier includes ---------- */
 var TIER_SPECS = {
@@ -35,47 +46,55 @@ var DATASETS = {
     licenses: [
       // a real-world label: it wraps to two lines in the Product column, next to the
       // short one below it — the case the Home block has to survive
-      { id:'A1', tier:'prototype', product:'ThingsBoard', type:'Subscription', name:'Prototype',      label:'Central Europe manufacturing cluster — building 4, line 2', created:'Aug 10 2026', status:'active', event:'Aug 28 2026', price:'$39.00 / mo', billing:'auto-pay' },
-      { id:'A2', tier:'tbmqsub',   product:'TBMQ',        type:'Subscription', name:'PE subscription', label:'Broker',     created:'Jul 22 2026', status:'active', event:'Sep 05 2026', price:'$15.00 / mo', billing:'auto-pay' }
+      { id:'A1', tier:'prototype', product:'ThingsBoard', type:'Subscription', name:'Prototype',      label:'Central Europe manufacturing cluster — building 4, line 2', created:'Aug 10 2026', updated:'Aug 14 2026', status:'active', event:'Aug 28 2026', price:'$39.00 / mo', billing:'auto-pay' },
+      { id:'A2', tier:'tbmqsub',   product:'TBMQ',        type:'Subscription', name:'PE subscription', label:'Broker',     created:'Jul 22 2026', updated:'Aug 03 2026', status:'active', event:'Sep 05 2026', price:'$15.00 / mo', billing:'auto-pay' },
+      // bought two days ago and not named yet — the third label case (none at all),
+      // so this account shows the same range the large one does
+      { id:'A3', tier:'maker',     product:'ThingsBoard', type:'Subscription', name:'Maker',           label:'',           created:'Aug 17 2026', updated:'Aug 17 2026', status:'active', event:'Sep 17 2026', price:'$10.00 / mo', billing:'auto-pay' }
     ],
     users: [
       { name:'Mariia Panchuk', email:'mpanchuk@thingsboard.io', created:'Jul 17 2026' },
       { name:'A. Admin',       email:'a.admin@thingsboard.io',  created:'Jul 20 2026' }
     ],
     invoices: [
-      { num:'NAWE49WG-0003', date:'Aug 03 2026', amount:'$39.00', status:'Paid', payment:'Auto-pay' },
-      { num:'NAWE49WG-0002', date:'Jul 30 2026', amount:'$15.00', status:'Paid', payment:'Auto-pay' },
-      { num:'NAWE49WG-0001', date:'Jul 22 2026', amount:'$15.00', status:'Paid', payment:'Auto-pay' }
+      // the purchase of A3 — a manual one, so no auto-charge icon
+      { num:'NAWE49WG-0004', licId:'A3', date:'Aug 17 2026', amount:'$10.00', status:'Paid', payment:'Card',     auto:false },
+      { num:'NAWE49WG-0003', licId:'A1', date:'Aug 03 2026', amount:'$39.00', status:'Paid', payment:'Auto-pay', auto:true  },
+      { num:'NAWE49WG-0002', licId:'A2', date:'Jul 30 2026', amount:'$15.00', status:'Paid', payment:'Auto-pay', auto:true  },
+      // the first charge of A2, on the day it was bought — also manual
+      { num:'NAWE49WG-0001', licId:'A2', date:'Jul 22 2026', amount:'$15.00', status:'Paid', payment:'Card',     auto:false }
     ],
     activity: [
+      { kind:'created', ts:'17 Aug 2026, 16:20', entityType:'Subscription', entityName:'Maker', actor:'mpanchuk@thingsboard.io', action:'ADDED',
+        txt:'Subscription <b>Maker</b> was created by mpanchuk@thingsboard.io.' },
       { kind:'created', ts:'10 Aug 2026, 09:14', entityType:'Subscription', entityName:'Prototype', actor:'mpanchuk@thingsboard.io', action:'ADDED',
         txt:'Subscription <b>Prototype</b> was created by mpanchuk@thingsboard.io.' },
       { kind:'updated', ts:'28 Jul 2026, 15:02', entityType:'Payment method', entityName:'Visa ••4242', actor:'mpanchuk@thingsboard.io', action:'UPDATED',
         txt:'Payment method was added by mpanchuk@thingsboard.io.' },
       { kind:'created', ts:'22 Jul 2026, 11:40', entityType:'Subscription', entityName:'TBMQ PE', actor:'mpanchuk@thingsboard.io', action:'ADDED',
         txt:'Subscription <b>TBMQ PE</b> was created by mpanchuk@thingsboard.io.' },
-      { kind:'info', ts:'22 Jul 2026, 11:41', entityType:'Invoice', entityName:'NAWE49WG-0001', actor:'System', action:'PAID',
-        txt:'Invoice <b>NAWE49WG-0001</b> was paid by System.' }
+      { kind:'info', ts:'22 Jul 2026, 11:41', entityType:'Invoice', entityName:'NAWE49WG-0001', actor:'mpanchuk@thingsboard.io', action:'PAID',
+        txt:'Invoice <b>NAWE49WG-0001</b> was paid by mpanchuk@thingsboard.io.' }
     ]
   },
   B: {
     licenses: [
-      { id:'B1',  tier:'business', product:'ThingsBoard', type:'Subscription', name:'Business',  label:'Global',       created:'May 02 2026', status:'active',         event:'Sep 13 2026', price:'$499.00 / mo', billing:'auto-pay' },
-      { id:'B2',  tier:'startup',  product:'ThingsBoard', type:'Subscription', name:'Startup',   label:'Production',   created:'Jun 06 2026', status:'active',         event:'Sep 20 2026', price:'$299.00 / mo', billing:'auto-pay' },
-      { id:'B3',  tier:'startup',  product:'ThingsBoard', type:'Subscription', name:'Startup',   label:'Factory A',    created:'Jun 20 2026', status:'payment_failed', event:'Sep 02 2026', price:'$299.00 / mo', billing:'auto-pay' },
-      { id:'B4',  tier:'pilot',    product:'ThingsBoard', type:'Subscription', name:'Pilot',     label:'EU pilot',     created:'Jul 01 2026', status:'active',         event:'Sep 06 2026', price:'$99.00 / mo',  billing:'auto-pay' },
-      { id:'B5',  tier:'prototype',product:'ThingsBoard', type:'Subscription', name:'Prototype', label:'Sandbox',      created:'Jul 10 2026', status:'canceled',       event:'Sep 05 2026', price:'$39.00 / mo',  billing:'auto-pay' },
-      { id:'B6',  tier:'maker',    product:'ThingsBoard', type:'Subscription', name:'Maker',     label:'R&D lab',      created:'Jul 15 2026', status:'active',         event:'Aug 30 2026', price:'$10.00 / mo',  billing:'auto-pay' },
-      { id:'B7',  tier:'prototype',product:'ThingsBoard', type:'Subscription', name:'Prototype', label:'Demo',         created:'Jul 20 2026', status:'active',         event:'Sep 03 2026', price:'$39.00 / mo',  billing:'auto-pay' },
-      { id:'B8',  tier:'tbmqsub',  product:'TBMQ',        type:'Subscription', name:'PE subscription', label:'MQTT prod',    created:'Jun 30 2026', status:'active',   event:'Sep 10 2026', price:'$15.00 / mo', billing:'auto-pay' },
-      { id:'B9',  tier:'tbmqsub',  product:'TBMQ',        type:'Subscription', name:'PE subscription', label:'MQTT staging', created:'Jul 05 2026', status:'active',   event:'Sep 10 2026', price:'$15.00 / mo', billing:'auto-pay' },
-      { id:'B10', tier:'tbperp',   product:'ThingsBoard', type:'Perpetual',    name:'PE Perpetual License', label:'On-prem HQ',    created:'Aug 28 2025', status:'active',           event:'Jul 27 2027', price:'one-time', billing:'paid' },
-      { id:'B11', tier:'tbperp',   product:'ThingsBoard', type:'Perpetual',    name:'PE Perpetual License', label:'Plant B',       created:'Mar 15 2026', status:'updates_expiring', event:'Sep 01 2026', price:'one-time', billing:'paid' },
-      { id:'B12', tier:'tbmqperp', product:'TBMQ',        type:'Perpetual',    name:'PE license',           label:'Broker on-prem',created:'Apr 10 2026', status:'active',           event:'Aug 13 2027', price:'one-time', billing:'paid' },
+      { id:'B1',  tier:'business', product:'ThingsBoard', type:'Subscription', name:'Business',  label:'Global',       created:'May 02 2026', updated:'Aug 12 2026', status:'active',         event:'Sep 13 2026', price:'$499.00 / mo', billing:'auto-pay' },
+      { id:'B2',  tier:'startup',  product:'ThingsBoard', type:'Subscription', name:'Startup',   label:'Production',   created:'Jun 06 2026', updated:'Aug 02 2026', status:'active',         event:'Sep 20 2026', price:'$299.00 / mo', billing:'auto-pay' },
+      { id:'B3',  tier:'startup',  product:'ThingsBoard', type:'Subscription', name:'Startup',   label:'Factory A',    created:'Jun 20 2026', updated:'Aug 18 2026', status:'payment_failed', event:'Sep 02 2026', price:'$299.00 / mo', billing:'auto-pay' },
+      { id:'B4',  tier:'pilot',    product:'ThingsBoard', type:'Subscription', name:'Pilot',     label:'EU pilot',     created:'Jul 01 2026', updated:'Aug 15 2026', status:'active',         event:'Sep 06 2026', price:'$99.00 / mo',  billing:'auto-pay' },
+      { id:'B5',  tier:'prototype',product:'ThingsBoard', type:'Subscription', name:'Prototype', label:'Sandbox',      created:'Jul 10 2026', updated:'Jul 28 2026', status:'canceled',       event:'Sep 05 2026', price:'$39.00 / mo',  billing:'auto-pay' },
+      { id:'B6',  tier:'maker',    product:'ThingsBoard', type:'Subscription', name:'Maker',     label:'',             created:'Jul 15 2026', updated:'Jul 15 2026', status:'active',         event:'Aug 30 2026', price:'$10.00 / mo',  billing:'auto-pay' },
+      { id:'B7',  tier:'prototype',product:'ThingsBoard', type:'Subscription', name:'Prototype', label:'Demo',         created:'Jul 20 2026', updated:'Jul 30 2026', status:'active',         event:'Sep 03 2026', price:'$39.00 / mo',  billing:'auto-pay' },
+      { id:'B8',  tier:'tbmqsub',  product:'TBMQ',        type:'Subscription', name:'PE subscription', label:'MQTT prod',    created:'Jun 30 2026', updated:'Jul 12 2026', status:'active',   event:'Sep 10 2026', price:'$15.00 / mo', billing:'auto-pay' },
+      { id:'B9',  tier:'tbmqsub',  product:'TBMQ',        type:'Subscription', name:'PE subscription', label:'MQTT staging', created:'Jul 05 2026', updated:'Jul 05 2026', status:'active',   event:'Sep 10 2026', price:'$15.00 / mo', billing:'auto-pay' },
+      { id:'B10', tier:'tbperp',   product:'ThingsBoard', type:'Perpetual',    name:'PE Perpetual License', label:'On-prem HQ',    created:'Aug 28 2025', updated:'Jun 10 2026', status:'active',           event:'Jul 27 2027', price:'one-time', billing:'paid' },
+      { id:'B11', tier:'tbperp',   product:'ThingsBoard', type:'Perpetual',    name:'PE Perpetual License', label:'Plant B',       created:'Mar 15 2026', updated:'Aug 05 2026', status:'updates_expiring', event:'Sep 01 2026', price:'one-time', billing:'paid' },
+      { id:'B12', tier:'tbmqperp', product:'TBMQ',        type:'Perpetual',    name:'PE license',           label:'Broker on-prem',created:'Apr 10 2026', updated:'Apr 10 2026', status:'active',           event:'Aug 13 2027', price:'one-time', billing:'paid' },
       // two deliberately long labels: real deployments name themselves like this,
       // and the Product column has to wrap them rather than stretch the table
-      { id:'B13', tier:'business', product:'ThingsBoard', type:'Subscription', name:'Business',  label:'Production — Central Europe manufacturing cluster, building 4', created:'Feb 18 2026', status:'active', event:'Sep 18 2026', price:'$499.00 / mo', billing:'auto-pay' },
-      { id:'B14', tier:'pilot',    product:'ThingsBoard', type:'Subscription', name:'Pilot',     label:'Long-term evaluation environment for the Munich pilot',          created:'May 24 2026', status:'active', event:'Sep 24 2026', price:'$99.00 / mo',  billing:'auto-pay' }
+      { id:'B13', tier:'business', product:'ThingsBoard', type:'Subscription', name:'Business',  label:'Production — Central Europe manufacturing cluster, building 4', created:'Feb 18 2026', updated:'Aug 04 2026', status:'active', event:'Aug 27 2026', price:'$499.00 / mo', billing:'auto-pay' },
+      { id:'B14', tier:'pilot',    product:'ThingsBoard', type:'Subscription', name:'Pilot',     label:'Long-term evaluation environment for the Munich pilot',          created:'May 24 2026', updated:'Jun 02 2026', status:'active', event:'Sep 24 2026', price:'$99.00 / mo',  billing:'auto-pay' }
     ],
     users: [
       { name:'Mariia Panchuk', email:'mpanchuk@thingsboard.io',  created:'Jul 17 2026' },
@@ -88,13 +107,17 @@ var DATASETS = {
       { name:'Nina Rossi',     email:'n.rossi@thingsboard.io',   created:'Aug 18 2026' }
     ],
     invoices: [
-      { num:'NAWE49WG-0021', date:'Aug 18 2026', amount:'$299.00', status:'Paid', payment:'Auto-pay' },
-      { num:'NAWE49WG-0020', date:'Aug 15 2026', amount:'$15.00',  status:'Paid', payment:'Auto-pay' },
-      { num:'NAWE49WG-0019', date:'Aug 12 2026', amount:'$99.00',  status:'Paid', payment:'Auto-pay' },
-      { num:'NAWE49WG-0018', date:'Aug 08 2026', amount:'$499.00', status:'Paid', payment:'Auto-pay' },
-      { num:'NAWE49WG-0017', date:'Aug 05 2026', amount:'$39.00',  status:'Paid', payment:'Auto-pay' },
-      { num:'NAWE49WG-0016', date:'Aug 02 2026', amount:'$10.00',  status:'Paid', payment:'Auto-pay' },
-      { num:'NAWE49WG-0015', date:'Jul 28 2026', amount:'$299.00', status:'Paid', payment:'Auto-pay' }
+      { num:'NAWE49WG-0021', licId:'B13', date:'Aug 18 2026', amount:'$499.00',   status:'Paid', payment:'Auto-pay', auto:true  },
+      // Add capacity on the perpetual: a one-time purchase the viewer made, so no
+      // auto-charge icon — and it sits in Home's three-row preview next to the
+      // renewals, which is where the difference has to be visible
+      { num:'NAWE49WG-0022', licId:'B11', date:'Aug 16 2026', amount:'$1,999.00', status:'Paid', payment:'Card',     auto:false },
+      { num:'NAWE49WG-0020', licId:'B6',  date:'Aug 15 2026', amount:'$10.00',    status:'Paid', payment:'Auto-pay', auto:true  },
+      { num:'NAWE49WG-0019', licId:'B8',  date:'Aug 12 2026', amount:'$15.00',    status:'Paid', payment:'Auto-pay', auto:true  },
+      { num:'NAWE49WG-0018', licId:'B1',  date:'Aug 08 2026', amount:'$499.00',   status:'Paid', payment:'Auto-pay', auto:true  },
+      { num:'NAWE49WG-0017', licId:'B7',  date:'Aug 05 2026', amount:'$39.00',    status:'Paid', payment:'Auto-pay', auto:true  },
+      { num:'NAWE49WG-0016', licId:'B2',  date:'Aug 02 2026', amount:'$299.00',   status:'Paid', payment:'Auto-pay', auto:true  },
+      { num:'NAWE49WG-0015', licId:'B3',  date:'Jul 28 2026', amount:'$299.00',   status:'Paid', payment:'Auto-pay', auto:true  }
     ],
     activity: [
       { kind:'status',  ts:'18 Aug 2026, 07:12', entityType:'Subscription', entityName:'Startup', actor:'System', action:'PAYMENT_FAILED',
@@ -105,8 +128,8 @@ var DATASETS = {
         txt:'Plan was changed from <b>Prototype</b> to <b>Pilot</b> on <b>Factory A</b> by i.petrenko@thingsboard.io.', delta:'Plan changed from Prototype to Pilot' },
       { kind:'updated', ts:'12 Aug 2026, 09:31', entityType:'Subscription', entityName:'Business', actor:'o.kravets@thingsboard.io', action:'UPDATED',
         txt:'Add-on <b>Edge Computing</b> was enabled on <b>Business</b> (Global) by o.kravets@thingsboard.io.' },
-      { kind:'info',    ts:'08 Aug 2026, 00:05', entityType:'Invoice', entityName:'NAWE49WG-0018', actor:'System', action:'PAID',
-        txt:'Invoice <b>NAWE49WG-0018</b> was paid by System.' },
+      { kind:'info',    ts:'08 Aug 2026, 00:05', entityType:'Invoice', entityName:'NAWE49WG-0018', actor:'Auto-pay', action:'PAID',
+        txt:'Invoice <b>NAWE49WG-0018</b> was paid, charged automatically.' },
       { kind:'status',  ts:'05 Aug 2026, 08:00', entityType:'License', entityName:'ThingsBoard PE Perpetual License', actor:'System', action:'UPDATES_EXPIRING',
         txt:'Software updates for the <b>On-prem</b> perpetual license expire on <b>Aug 28, 2026</b>.', delta:'Updates term ends Aug 28 2026' },
       // a large account keeps producing events — enough of them that the Home feed
@@ -115,8 +138,8 @@ var DATASETS = {
         txt:'Label <b>Production — Central Europe manufacturing cluster, building 4</b> was set on <b>Business</b> by o.kravets@thingsboard.io.', delta:'label = Production — Central Europe manufacturing cluster, building 4' },
       { kind:'created', ts:'02 Aug 2026, 11:05', entityType:'User', entityName:'Dev User', actor:'mpanchuk@thingsboard.io', action:'ADDED',
         txt:'User <b>Dev User</b> was invited by mpanchuk@thingsboard.io.' },
-      { kind:'info',    ts:'02 Aug 2026, 00:05', entityType:'Invoice', entityName:'NAWE49WG-0016', actor:'System', action:'PAID',
-        txt:'Invoice <b>NAWE49WG-0016</b> was paid by System.' },
+      { kind:'info',    ts:'02 Aug 2026, 00:05', entityType:'Invoice', entityName:'NAWE49WG-0016', actor:'Auto-pay', action:'PAID',
+        txt:'Invoice <b>NAWE49WG-0016</b> was paid, charged automatically.' },
       { kind:'updated', ts:'30 Jul 2026, 13:22', entityType:'Subscription', entityName:'Prototype', actor:'i.petrenko@thingsboard.io', action:'UPDATED',
         txt:'Add-on <b>Trendz Analytics</b> was enabled on <b>Prototype</b> (Demo) by i.petrenko@thingsboard.io.' },
       { kind:'status',  ts:'28 Jul 2026, 09:10', entityType:'Subscription', entityName:'Prototype', actor:'mpanchuk@thingsboard.io', action:'CANCELED',
@@ -127,8 +150,8 @@ var DATASETS = {
         txt:'Payment method was updated by mpanchuk@thingsboard.io.' },
       { kind:'created', ts:'15 Jul 2026, 10:12', entityType:'Subscription', entityName:'Maker', actor:'i.petrenko@thingsboard.io', action:'ADDED',
         txt:'Subscription <b>Maker</b> was created by i.petrenko@thingsboard.io.' },
-      { kind:'info',    ts:'12 Jul 2026, 00:05', entityType:'Invoice', entityName:'NAWE49WG-0012', actor:'System', action:'PAID',
-        txt:'Invoice <b>NAWE49WG-0012</b> was paid by System.' }
+      { kind:'info',    ts:'12 Jul 2026, 00:05', entityType:'Invoice', entityName:'NAWE49WG-0012', actor:'Auto-pay', action:'PAID',
+        txt:'Invoice <b>NAWE49WG-0012</b> was paid, charged automatically.' }
     ]
   },
   /* G — Community Grant approved. One licence, and it is an ordinary row: the
@@ -137,7 +160,7 @@ var DATASETS = {
   G: {
     noInvoicesNote: 'No invoices &mdash; the Community Grant is free.',
     licenses: [
-      { id:'G1', tier:'grant', product:'ThingsBoard', type:'Grant', name:'Community Grant', label:'', created:'Aug 19 2026',
+      { id:'G1', tier:'grant', product:'ThingsBoard', type:'Grant', name:'Community Grant', label:'', created:'Aug 19 2026', updated:'Aug 19 2026',
         status:'awaiting_checkin', event:'', price:'Free', billing:'—', grant:true, limits:'6,050 devices &middot; 2 production servers' }
     ],
     users: [

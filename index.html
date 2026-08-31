@@ -13,6 +13,19 @@
 <div class="dashview" id="dashView">
   <div class="dmain">
     <div class="dwrap">
+      <!-- welcome text and the create action share one row -->
+      <div class="dwelcome">
+        <div class="dw-txt">
+          <h1 id="dashGreeting">Good morning, Mariia</h1>
+        </div>
+        <!-- one button: the billing type is chosen inside step 1 of the wizard.
+             .xl because this primary stands beside the h1, not in a control row,
+             so the --btnH toolbar band does not apply to it — and because it is
+             the page's primary action, it takes the largest size we have.
+             As it scrolls away, page-home.js hands the same action to the top bar. -->
+        <button class="btn xl" id="dashNewBtn">Buy a license</button>
+      </div>
+
       <!-- Community Grant approved: one-time success banner, shown only in the
            grant state and only until dismissed (see syncGrantChrome) -->
       <div class="gbanner" id="grantBanner" role="status" hidden>
@@ -23,25 +36,12 @@
         <button class="gb-x" id="grantDismissBtn" aria-label="Dismiss">&#10005;</button>
       </div>
 
-      <!-- welcome text and the create action share one row -->
-      <div class="dwelcome">
-        <div class="dw-txt">
-          <h1 id="dashGreeting">Good morning, Mariia</h1>
-        </div>
-        <!-- one button: the billing type is chosen inside step 1 of the wizard.
-             .lg because this primary stands beside the h1, not in a control row,
-             so the --btnH toolbar band does not apply to it. -->
-        <button class="btn lg" id="dashNewBtn">Buy a license</button>
-      </div>
-
       <!-- Licenses: full width, rendered with the same head/row builders as the
-           Products page "Product-first (neutral)" variant, capped at the three
-           newest rows that have a real details page (see renderDashLicenses). -->
+           Licenses page, capped at the top five attention-first for the large
+           account and showing every row for the small one (renderDashLicenses). -->
       <div class="dblock">
-        <!-- the link sits with the title, not across the block (see .dblock-head) -->
-        <div class="dblock-head"><h2>Licenses</h2>
-          <a class="link" href="licenses.html">Show all</a>
-          <span class="sp"></span>
+        <!-- the heading itself navigates: one target per block, no separate link -->
+        <div class="dblock-head"><h2><a class="dblock-link" href="licenses.html">Licenses<span class="dbh-chev" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span></a></h2>
         </div>
         <div class="tablescroll">
           <table id="dashLicTable">
@@ -49,13 +49,14 @@
             <tbody id="dashLicBody"></tbody>
           </table>
         </div>
+        <!-- the count comes from the dataset, so the button says how much is behind
+             it (see renderBlockFooters) -->
+        <div class="dblock-foot"><a class="btn sec dblock-open" id="dashLicOpenAll" href="licenses.html">Open all</a></div>
       </div>
 
       <!-- Recent invoices — same columns and order as the Invoices page -->
       <div class="dblock">
-        <div class="dblock-head"><h2>Recent invoices</h2>
-          <a class="link" href="invoices.html">Show all</a>
-          <span class="sp"></span>
+        <div class="dblock-head"><h2><a class="dblock-link" href="invoices.html">Recent invoices<span class="dbh-chev" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span></a></h2>
         </div>
         <table>
           <thead>
@@ -64,25 +65,25 @@
               <th class="sortable" aria-sort="descending" tabindex="0">Date <span class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></span></th>
               <th class="num">Amount</th>
               <th>Status</th>
-              <th>Payment type</th>
+              <!-- Status carries the auto-charge icon for invoices the system charged
+                   on its own; Product is the very same cell the Licenses table uses and
+                   links to the licence this invoice bills. Both invoice tables are
+                   identical now — the Invoices page dropped Payment type too. -->
+              <th class="lic-prodhead">Product</th>
               <th aria-label="Invoice actions"></th>
             </tr>
           </thead>
-          <tbody id="dashInvBody">
-            <tr><td class="mono">NAWE49WG-0007</td><td>Aug 18 2026</td><td class="num">$166.46</td><td><span class="pill">Paid</span></td><td>Auto-pay</td><td class="cellact"><span class="rowactions"><button class="link" data-dlinv>Download PDF</button><a class="link" data-viewinv target="_blank" rel="noopener" href="#">View invoice</a></span></td></tr>
-            <tr><td class="mono">NAWE49WG-0006</td><td>Aug 18 2026</td><td class="num">$2,999.00</td><td><span class="pill">Paid</span></td><td>Auto-pay</td><td class="cellact"><span class="rowactions"><button class="link" data-dlinv>Download PDF</button><a class="link" data-viewinv target="_blank" rel="noopener" href="#">View invoice</a></span></td></tr>
-            <tr><td class="mono">NAWE49WG-0005</td><td>Aug 18 2026</td><td class="num">$15.00</td><td><span class="pill">Paid</span></td><td>Auto-pay</td><td class="cellact"><span class="rowactions"><button class="link" data-dlinv>Download PDF</button><a class="link" data-viewinv target="_blank" rel="noopener" href="#">View invoice</a></span></td></tr>
-          </tbody>
+          <!-- rows come from the dataset — see renderDashInvoices -->
+          <tbody id="dashInvBody"></tbody>
         </table>
+        <div class="dblock-foot"><a class="btn sec dblock-open" id="dashInvOpenAll" href="invoices.html">Open all</a></div>
       </div>
 
       <!-- Recent activity — the last block on Home. Users are not previewed here:
            they live on their own page (nav → Users). The feed shows the latest few
            and grows in place as you reach its end (see renderDashFeed). -->
       <div class="dblock" id="dashActBlock">
-        <div class="dblock-head"><h2>Recent activity</h2>
-          <a class="link" href="activity.html">Show all</a>
-          <span class="sp"></span>
+        <div class="dblock-head"><h2><a class="dblock-link" href="activity.html">Recent activity<span class="dbh-chev" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span></a></h2>
         </div>
         <div class="feed" id="dashFeed"></div>
         <!-- lazy load: the sentinel appends the next batch when it scrolls into
@@ -144,7 +145,6 @@
     </div>
   </div>
 </div>
-</div><!-- /#shellMain -->
 </div><!-- /#shellMain -->
 
 <script src="data.js"></script>

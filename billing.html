@@ -21,10 +21,9 @@
   </div>
   <div class="setcard">
     <div class="setcard-h"><h2>Payment method</h2><span class="setcard-hint">Charged automatically for recurring plans</span></div>
-    <div class="paycard">
-      <span class="brandbadge">VISA</span>
-      <span class="pc-num">•••• •••• •••• 4242</span>
-      <span class="pc-exp">Expires 12 / 2028</span>
+    <!-- the card itself comes from PAYMENT_METHOD via paymentMethodHTML(), the same
+         source the Next charge card on licence details renders from -->
+    <div class="paycard" id="payCard">
       <span class="sp"></span>
       <button class="iconbtn ib" id="payUpdateBtn" aria-label="Update payment method" title="Update payment method"><svg class="icon" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
     </div>

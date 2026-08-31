@@ -18,8 +18,8 @@
   --line:#c9c9c9; --line2:#e2e2e2; --bg:#f4f4f2; --card:#ffffff;
   --fill:#3d3d3d; --track:#e6e6e6;
   --chrome:#efefec; --chromeLine:#dcdcd8; --hover:#f0f0ee; --sel:#e4e4e0;
-  --btnH:31px;
-  --backW:31px; --backGap:12px; --contentX:65px;  /* 22px head padding + 31 + 12 */
+  --btnH:40px;
+  --backW:40px; --backGap:12px; --contentX:74px;  /* 22px head padding + 40 + 12 — the gutter is one --btnH wide */
   /* one shared page container: same width, same side padding, centred */
   --pageW:1120px; --pageX:24px; --pageY:28px;
   /* ---- Type scale: the only text levels. 14px floor. Weight grows with size; 700 only for display/h1. ---- */
@@ -104,7 +104,7 @@ a{color:inherit}
 .menu{position:relative}
 .menu .pop{position:absolute;right:0;top:36px;background:#fff;border:1px solid var(--line);border-radius:6px;min-width:160px;padding:5px;box-shadow:0 6px 20px rgba(0,0,0,.08);z-index:40}
 .menu .pop[hidden]{display:none}
-.menu .pop button{display:block;width:100%;text-align:left;padding:7px 9px;border:0;background:transparent;border-radius:5px;font-size:14px;color:var(--ink)}
+.menu .pop button{display:block;width:100%;text-align:left;padding:7px 9px;border:0;background:transparent;border-radius:6px;font-size:14px;color:var(--ink)}
 .menu .pop button:hover{background:var(--hover)}
 
 .content{padding:0;overflow:auto}
@@ -125,7 +125,7 @@ a{color:inherit}
 .idline{display:flex;align-items:center;gap:10px;min-width:0;flex:1 1 auto}
 .idline .title{min-width:0}
 /* same box as the ⋮ overflow button in the header actions */
-.back{width:var(--btnH);height:var(--btnH);font-size:15px;line-height:1;border:1px solid var(--line);border-radius:5px;display:flex;align-items:center;justify-content:center;color:var(--mid);background:#fff;flex:none}
+.back{width:var(--btnH);height:var(--btnH);font-size:15px;line-height:1;border:1px solid var(--line);border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--mid);background:#fff;flex:none}
 .back:hover{background:var(--hover);color:var(--ink)}
 /* plan identity: small grey subhead over the plan name + status chip */
 .titleblock{min-width:0}
@@ -166,6 +166,9 @@ a{color:inherit}
 /* license key (left) and subscription period (right) as a symmetric pair */
 .keygrid{display:flex;justify-content:space-between;gap:24px;margin-top:14px;flex-wrap:wrap}
 .keycol{min-width:0}
+/* the key column takes the space the period column does not, so anything full-width
+   inside it (the created note) spans the block instead of hugging the key value */
+.keygrid > .keycol:not(.right){flex:1}
 .keycol.right{text-align:right}
 .minihead{margin:0 0 8px;font-family:var(--font-ui);font-size:var(--t-label-fs);line-height:var(--t-label-lh);letter-spacing:var(--t-label-ls);font-weight:var(--t-label-fw);text-transform:uppercase;color:var(--ink)}
 /* the subscription-period label matches the "Subscription plan" subhead */
@@ -194,17 +197,19 @@ a{color:inherit}
 .kebab-btn{width:var(--btnH);padding:0;font-size:15px;line-height:1}
 
 /* conditional attention alert (hidden in healthy state) */
-.alert{margin-top:12px;display:flex;align-items:center;gap:9px;font-size:14px;color:var(--ink);background:#f4f4f2;border:1px solid var(--line);border-left:3px solid var(--ink);border-radius:5px;padding:9px 12px}
+.alert{margin-top:12px;display:flex;align-items:center;gap:9px;font-size:14px;color:var(--ink);background:#f4f4f2;border:1px solid var(--line);border-left:3px solid var(--ink);border-radius:6px;padding:9px 12px}
 .alert[hidden]{display:none}
 .alert .icon{width:17px;height:17px;flex:none}
 .alert .atxt b{font-weight:600}
 
 .actions{display:flex;gap:9px;margin-top:14px;flex-wrap:wrap;align-items:center}
-.btn{font-size:14px;height:var(--btnH);display:inline-flex;align-items:center;justify-content:center;padding:0 13px;border-radius:5px;border:1px solid var(--ink);background:var(--ink);color:#fff}
+.btn{font-size:14px;height:var(--btnH);display:inline-flex;align-items:center;justify-content:center;padding:0 13px;border-radius:6px;border:1px solid var(--ink);background:var(--ink);color:#fff}
 .btn:hover{background:#000}
-/* one size up from the --btnH control band: for a primary that stands beside a
-   page h1 instead of inside a toolbar, where the 31px band is not in play */
-.btn.lg{height:37px;font-size:15px;padding:0 18px}
+/* the page's primary action, standing beside its h1 — the largest button we have.
+   16px is the body token: bigger than the rest without reaching a heading size. */
+.btn.xl{height:48px;font-size:16px;padding:0 22px}
+/* No height of their own: primary, secondary and destructive are all the band (--btnH,
+   40px). One height for every button that is not the page's own primary action. */
 .btn.sec{background:#fff;color:var(--ink);border-color:var(--line)}
 .btn.sec:hover{border-color:var(--ink);background:var(--hover)}
 .btn.ter{background:transparent;color:var(--mid);border-color:transparent;text-decoration:underline;text-underline-offset:2px}
@@ -231,26 +236,34 @@ a{color:inherit}
 .billcard{background:#f6f6f4;border:1px solid var(--line2);border-radius:8px;padding:14px 16px;margin-top:12px}
 .billcard-h{margin:0 0 10px;font-family:var(--font-ui);font-size:var(--t-label-fs);line-height:var(--t-label-lh);letter-spacing:var(--t-label-ls);font-weight:var(--t-label-fw);text-transform:uppercase;color:var(--ink)}
 /* two fixed tracks so the single Next charge card keeps its half-width size */
-.billgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:12px}
-@media(max-width:700px){.billgrid{grid-template-columns:1fr}}
+/* Next charge spans the whole content area. This grid once held two cards side by
+   side; only Next charge is left, so it is a single full-width column. */
+.billgrid{display:grid;grid-template-columns:1fr;gap:12px;margin-top:12px}
 .billgrid .billcard{margin-top:0}
 /* Next charge card — when / how much / how, top to bottom */
 .nc-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .nextcharge .billcard-h{margin:0}
+/* one row, left to right: amount + date · payment method · link on the right edge */
+.nc-main{display:flex;align-items:center;gap:32px;flex-wrap:wrap}
+.nc-main .sp{flex:1}
+.nc-left{min-width:0}
+/* inside the wide row the label and the date sit together, instead of being pushed
+   to opposite ends of a card that is now much wider than either of them */
+.nc-left .nc-row{justify-content:flex-start;gap:10px}
+/* the payment method: same parts and same classes as the Payment method block on
+   Billing & payment, laid out inline — no frame of its own inside this card */
+.nc-method{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
 .nc-when{font-size:14px;color:var(--mid);font-variant-numeric:tabular-nums}
 /* the amount is the hero: its own line, nothing beside it */
 .nc-amount{margin-top:10px}
 .nextcharge .big{display:block;font-size:var(--t-h2-fs);line-height:1.15;letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw);font-variant-numeric:tabular-nums}
-.nextcharge .hairline{margin:14px 0}
-.nc-foot{font-size:14px;color:var(--mid)}
-.nc-pay{font-size:14px;color:var(--mid)}
 .sh{display:flex;align-items:center;gap:8px;margin-bottom:12px}
 .sh .n{width:20px;height:20px;border-radius:50%;background:var(--ink);color:#fff;font-size:14px;display:flex;align-items:center;justify-content:center;flex:none}
 .sh h3{margin:0;font-family:var(--font-ui);font-size:var(--t-label-fs);line-height:var(--t-label-lh);letter-spacing:var(--t-label-ls);font-weight:var(--t-label-fw);text-transform:uppercase;color:var(--ink)}
 .sh .spacer{flex:1}
 
 .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
-.iconbtn{display:inline-flex;align-items:center;gap:5px;height:var(--btnH);font-size:14px;color:var(--mid);border:1px solid var(--line);border-radius:5px;padding:0 10px;background:#fff}
+.iconbtn{display:inline-flex;align-items:center;gap:5px;height:var(--btnH);font-size:14px;color:var(--mid);border:1px solid var(--line);border-radius:6px;padding:0 10px;background:#fff}
 .iconbtn:hover{color:var(--ink);border-color:var(--mid);background:var(--hover)}
 .iconbtn.ib{padding:0;width:var(--btnH);justify-content:center}
 .iconbtn .icon{width:15px;height:15px}
@@ -281,7 +294,7 @@ th.num,td.num{text-align:right}
 .tip:hover::after,.tip:focus-visible::after,.tip.show::after{
   content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);right:0;
   background:var(--ink);color:#fff;font-size:14px;white-space:nowrap;
-  padding:5px 9px;border-radius:5px;pointer-events:none;z-index:20}
+  padding:5px 9px;border-radius:6px;pointer-events:none;z-index:20}
 /* .wide: the base tooltip is a nowrap one-liner, which a sentence would stretch
    to ~900px. Wraps at a readable measure instead; still right-anchored, so an
    icon near the modal's right edge keeps the bubble inside. */
@@ -302,13 +315,21 @@ th.num,td.num{text-align:right}
 
 .inline{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .inline[hidden]{display:none}
-.inline input{font:inherit;font-size:14px;padding:6px 10px;border:1px solid var(--ink);border-radius:5px;width:180px;outline:none}
+.inline input{font:inherit;font-size:14px;padding:6px 10px;border:1px solid var(--ink);border-radius:6px;width:180px;outline:none}
 
-.stub{color:var(--faint);font-size:14px;padding:18px;text-align:center;border:1px dashed var(--line);border-radius:5px;background:#fafafa}
+.stub{color:var(--faint);font-size:14px;padding:18px;text-align:center;border:1px dashed var(--line);border-radius:6px;background:#fafafa}
 
 /* license key in header */
-.keyline{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.keyline .mono{font-size:14px}
+/* The key is what this block is for, so the value stays prominent — one step below
+   the title rather than level with it. Mono stays weight 400: 700 is for headings,
+   not for a value.
+   The LICENSE KEY label above is untouched.
+   ⚠️ 28px is deliberately off the type scale — it sits between h1 (36) and h2 (20),
+   and the brief was "a step down from the title, still prominent". The on-scale
+   alternative is h2/20px, which reads as a step and a half. */
+.keyline{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.keyline .mono{font-size:28px;line-height:1.15;letter-spacing:-0.01em}
+/* the key actions stay on the control band (--btnH) like every other icon button */
 
 /* data grid (production instances) */
 th.sortable{cursor:pointer;user-select:none;white-space:nowrap}
@@ -339,10 +360,10 @@ th[aria-label$="ctions"],th.cellact,td.cellact{width:1%;white-space:nowrap;text-
 .invtable th:nth-child(5),.invtable td:nth-child(5){width:32%;text-align:right}
 .pager{display:flex;align-items:center;gap:14px;margin-top:22px;padding-bottom:4px;flex-wrap:wrap;font-size:14px;color:var(--mid)}
 .pager .spacer{flex:1}
-.pager select{font:inherit;font-size:14px;height:var(--btnH);border:1px solid var(--line);border-radius:5px;padding:0 6px;background:#fff;color:var(--ink);margin-left:4px}
+.pager select{font:inherit;font-size:14px;height:var(--btnH);border:1px solid var(--line);border-radius:6px;padding:0 6px;background:#fff;color:var(--ink);margin-left:4px}
 .pager .range{font-variant-numeric:tabular-nums}
 .pagebtns{display:flex;gap:4px}
-.pagebtns button{width:var(--btnH);height:var(--btnH);border:1px solid var(--line);border-radius:5px;background:#fff;color:var(--mid);display:inline-flex;align-items:center;justify-content:center;font-size:14px;line-height:1}
+.pagebtns button{width:var(--btnH);height:var(--btnH);border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--mid);display:inline-flex;align-items:center;justify-content:center;font-size:14px;line-height:1}
 .pagebtns button:not([disabled]):hover{color:var(--ink);border-color:var(--mid);background:var(--hover)}
 .pagebtns button[disabled]{color:var(--line);cursor:not-allowed}
 
@@ -353,8 +374,6 @@ th[aria-label$="ctions"],th.cellact,td.cellact{width:1%;white-space:nowrap;text-
 .modal .mh{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line2)}
 .modal .mh h3{margin:0;font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw)}
 .modal .mh .spacer{flex:1}
-.modal .mclose{width:26px;height:26px;border:1px solid var(--line);border-radius:5px;background:#fff;color:var(--mid);display:flex;align-items:center;justify-content:center;font-size:15px}
-.modal .mclose:hover{color:var(--ink);background:var(--hover)}
 .modal .mb{padding:16px;font-size:14px;color:var(--mid);line-height:1.5}
 .modal .mf{padding:12px 16px;border-top:1px solid var(--line2);display:flex;justify-content:flex-end;gap:8px}
 .am-sec{margin-bottom:22px}
@@ -386,6 +405,12 @@ th[aria-label$="ctions"],th.cellact,td.cellact{width:1%;white-space:nowrap;text-
 .switch input:checked + .track{background:var(--ink);border-color:var(--ink)}
 .switch input:checked + .track::after{transform:translateX(18px);background:#fff}
 .switch input:focus-visible + .track{outline:2px solid var(--ink);outline-offset:2px}
+/* The large switch: the billing toggle on step 1 and the add-on blocks on step 2 —
+   controls that carry a decision, not a quiet list setting. The base size stays for
+   the latter (e.g. "Display canceled licenses" in the Licenses toolbar). */
+.switch.lg,.switch.lg .track{width:56px;height:30px}
+.switch.lg .track::after{width:24px;height:24px}
+.switch.lg input:checked + .track::after{transform:translateX(26px)}
 
 .am-order{border:1px solid var(--line2);border-radius:6px;padding:2px 14px;margin-bottom:16px}
 .am-orow{display:flex;justify-content:space-between;gap:16px;padding:10px 0;border-bottom:1px dashed var(--line2);font-size:14px}
@@ -413,6 +438,19 @@ th[aria-label$="ctions"],th.cellact,td.cellact{width:1%;white-space:nowrap;text-
 .req{color:var(--mid);font-weight:400}
 /* the created-licence banner is a quieter sibling of the impersonation band */
 .gbanner.licnew{margin-bottom:18px}
+/* The one-time note after a purchase, directly under the key it is about. A filled
+   band spanning the block, with real padding around its three parts — it has to be
+   noticed once, so it reads as a notification rather than as helper text. Still not
+   the ink banner it replaced: that shouted louder than the key itself. */
+.keynote{display:flex;align-items:center;gap:10px;width:100%;margin-top:12px;
+  padding:11px 12px 11px 14px;background:var(--track);border-radius:8px;
+  font-size:14px;line-height:1.4;color:var(--ink)}
+.keynote[hidden]{display:none}
+.keynote .icon{width:17px;height:17px;flex:none;color:var(--mid)}
+.keynote > span{flex:1;min-width:0}
+.kn-x{flex:none;width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;
+  border:0;background:transparent;border-radius:6px;color:var(--faint);font-size:13px;line-height:1;padding:0}
+.kn-x:hover{color:var(--ink);background:rgba(0,0,0,.05)}
 .am-duelabel{font-size:14px}
 .am-dueval{font-size:var(--t-h2-fs);font-weight:var(--t-h2-fw);font-variant-numeric:tabular-nums;flex:none}
 .am-figures{margin-top:8px;border:1px solid var(--line2);border-radius:6px;padding:10px 12px;font-size:14px;font-variant-numeric:tabular-nums}
@@ -439,7 +477,7 @@ th[aria-label$="ctions"],th.cellact,td.cellact{width:1%;white-space:nowrap;text-
 .sp-pick{display:flex;flex-direction:column;gap:1px}
 .sp-grouphead{font-size:14px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin:6px 0 3px}
 .sp-grouphead:first-child{margin-top:0}
-.sp-opt{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink);padding:3px 4px;border-radius:5px;cursor:pointer}
+.sp-opt{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink);padding:3px 4px;border-radius:6px;cursor:pointer}
 .sp-opt:hover{background:var(--hover)}
 .sp-opt input{accent-color:var(--ink);margin:0;flex:none}
 /* page-specific variant group, shown only in that page's context */
@@ -496,8 +534,13 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
 .fs-header .spacer{flex:1}
 .fs-maintitle{margin:0;font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw);flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}   /* a long licence label must not push ✕ onto a second row */
 .fs-headactions{display:flex;align-items:center;gap:14px;flex:none}
-.fs-close{width:30px;height:30px;flex:none;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--mid);display:inline-flex;align-items:center;justify-content:center;font-size:15px}
-.fs-close:hover{color:var(--ink);background:var(--hover)}
+/* ONE close control, for every surface that has one. The licence-details modal set
+   the spec and the rest follow it — the generic dialog, the payment modal and the
+   banners each used to carry their own ✕ (30 / 28 / 26 / 25px), which was four
+   accidents rather than four decisions. Only the colour is contextual: the ink
+   banner cannot wear a white box, so .gb-x keeps its own fill below. */
+.fs-close,.modal .mclose,.paymodal-x,.gb-x{width:30px;height:30px;flex:none;padding:0;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--mid);display:inline-flex;align-items:center;justify-content:center;font-size:15px;line-height:1;cursor:pointer}
+.fs-close:hover,.modal .mclose:hover,.paymodal-x:hover{color:var(--ink);background:var(--hover)}
 .fs-nextbtn{width:100%;margin-top:14px}
 /* Customize step: one control per row, so every stepper and toggle lands in the
    same right-hand column */
@@ -513,7 +556,10 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
 /* variant B — the lock rides inside the disabled input, no helper line below */
 .fs-lockfield{position:relative;display:inline-flex;align-items:center;flex:none}
 .fs-lockic{position:absolute;left:9px;width:13px;height:13px;color:var(--faint);pointer-events:none}
-.fs-devinput.locked{padding-left:28px;text-align:left}
+/* the lock sits absolutely in the left inset (see .fs-lockic), and the padding is
+   symmetric so the value centres on the field itself rather than on the space the
+   lock leaves over */
+.fs-devinput.locked{padding:0 28px;text-align:center}
 /* a typed capacity field (Business devices): same box as the locked one, but it
    reads as editable — white, a caret, and its own error line underneath */
 .fs-devinput.numfield{background:#fff;border-color:var(--line);cursor:text;text-align:center}
@@ -522,7 +568,6 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
 .numerr{width:100%;margin-top:6px;font-size:14px;color:var(--ink);font-weight:500}
 .numerr[hidden]{display:none}
 /* add-on rows: the toggle is their right-hand control, level with the steppers */
-.am-cell.am-addon.on{border-color:var(--ink)}
 .am-addon .am-cardprice{margin-top:6px}
 .am-cell[hidden]{display:none}
 /* Back lives in the header on the review step; .fs-close sets display, so it
@@ -544,6 +589,28 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
 /* each item is one tight unit: title+control / description / price, with a
    generous gap to the next item */
 .fs-screen .am-capgrid{grid-template-columns:1fr;gap:26px}
+/* An add-on block is the control: the element is the <label> that owns the checkbox,
+   so the hover has to cover the whole thing and say so. Inside variant A's panel it
+   reads by its hover alone — a border here would be a card inside a card — and the
+   negative inset lets the hover span the panel's content width. */
+.fs-screen .am-addon{cursor:pointer;padding:12px 14px;margin:0 -14px;border-radius:8px}
+.fs-screen .am-addon:hover{background:var(--hover)}
+/* Variant B: no section headers — every item is its own white card in one vertical
+   stack (capacity rows and add-ons alike), so each piece separates on its own edge.
+   The stack rule beats .fs-screen .am-cell, which strips box and padding for A. */
+.nl-cardstack{display:flex;flex-direction:column;gap:12px}
+.fs-screen .nl-cardstack .am-cell{background:#fff;border:1px solid var(--line2);border-radius:8px;padding:16px;margin:0}
+/* Variant B, Devices and Assets: **the same layout as every other card in the stack**
+   — name on the left, control on the right, first text line and control on one line.
+   They simply have no description and no price line. The only thing that makes them
+   different is that their control cannot be operated.
+   The locked field matches the steppers' width so the right-hand column of the stack
+   lines up: two --btnH buttons + the 46px value cell + the two 1px borders. Expressed
+   as a calc rather than a number so it follows the band if that ever moves. */
+.fs-screen .nl-cardstack .am-locked .fs-devinput.locked{
+  width:calc(var(--btnH) * 2 + 48px)}
+.fs-screen .nl-cardstack .am-addon:hover{background:var(--hover)}
+.fs-screen .nl-cardstack .am-addon.on{border-color:var(--ink)}
 .fs-screen .am-cardprice{margin-top:4px}
 /* add-on price lines up with the title and description, past the checkbox */
 .fs-panel{background:#fff;border:1px solid var(--line2);border-radius:8px;padding:16px}
@@ -619,8 +686,27 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
      3. the offer cards.
    Borders live only on the two controls and on the offer cards themselves. */
 .nl-prodrow{display:flex;justify-content:center;margin-bottom:26px}
-.nl-prodseg{display:inline-flex;gap:2px;padding:4px;border:1px solid var(--line2);border-radius:999px;background:var(--card)}
-.nl-prodopt{display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 18px;border:0;border-radius:999px;background:transparent;color:var(--mid);font:inherit;font-size:15px;font-weight:500;cursor:pointer}
+.nl-prodseg{display:inline-flex;gap:2px;padding:5px;border:1px solid var(--line2);border-radius:999px;background:var(--card)}
+/* The first choice on the step, so it carries the weight of one: each option names
+   its product and says what it is, with the glyph leading. Both take the same
+   generous width, so the control reads noticeably wider and taller without the two
+   halves disagreeing. .nl-prodrow keeps the whole thing centred.
+   ⚠️ It must still read as ONE segmented switch, not two cards: the rounded container
+   (.nl-prodseg) is the only box, the options carry no border of their own, and the
+   active one is a filled pill inside it. Nothing here may add a border or a shadow. */
+/* flex:1 with a shared floor, so BOTH halves are exactly the same width whatever
+   their description says — a segmented switch with unequal halves reads as two cards,
+   which is the one thing this control must not do. The floor is set to fit the longer
+   description on a single line. */
+.nl-prodopt{display:inline-flex;align-items:center;justify-content:flex-start;gap:14px;
+  flex:1 1 0;min-height:76px;min-width:420px;padding:14px 26px;border:0;border-radius:999px;
+  background:transparent;color:var(--mid);font:inherit;text-align:left;cursor:pointer}
+.nl-prodopt .icon{width:24px;height:24px;flex:none}
+.nl-prodtxt{display:flex;flex-direction:column;gap:3px;min-width:0}
+.nl-prodname{font-size:16px;font-weight:500;line-height:1.2}
+/* opacity, not a colour: the description stays legible on white and on the filled
+   ink pill without a second rule per state */
+.nl-proddesc{font-size:14px;font-weight:400;line-height:1.35;opacity:.72}
 .nl-prodopt:hover{color:var(--ink)}
 .nl-prodopt.is-on{background:var(--ink);color:#fff}      /* active = a filled pill inside the container */
 .nl-prodopt:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
@@ -630,14 +716,14 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
 .nl-billrow{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
 .nl-billrow .spacer{flex:1}
 .nl-billhead{margin:0;font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw)}
-.nl-billtoggle{display:inline-flex;align-items:center;gap:8px}
-.nl-blabel{font-size:14px;color:var(--faint)}
+.nl-billtoggle{display:inline-flex;align-items:center;gap:10px}
+.nl-blabel{font-size:16px;color:var(--faint)}
 .nl-blabel.is-on{color:var(--ink);font-weight:500}        /* the active side is the emphasized one */
 .nl-billsw{margin:0 4px}
 .switch input[disabled] + .track{opacity:.45;cursor:default}
 .nl-info{display:inline-flex;color:var(--faint);cursor:help}
 .nl-info:hover,.nl-info:focus-visible{color:var(--mid)}
-.nl-info .icon{width:14px;height:14px}
+.nl-info .icon{width:18px;height:18px}
 /* the count on its own row under the heading — the heading row's right end is the
    toggle's, so the two would collide up there */
 .nl-countrow{display:flex;justify-content:flex-end;margin-top:10px}
@@ -665,8 +751,37 @@ button.dbrand{background:none;border:0;padding:0;color:inherit;font:inherit;curs
 .tnav-item{padding:7px 11px;border:1px solid transparent;border-radius:6px;background:transparent;color:var(--mid);font:inherit;font-size:14px}
 .tnav-item:hover{background:var(--hover);color:var(--ink)}
 .tnav-item.on{background:var(--sel);border-color:var(--chromeLine);color:var(--ink);font-weight:600}
+/* Mobile-only pieces, hidden by default. ⚠️ The menu selector needs three classes:
+   `.menu .pop button` sets display:block at (0,2,1), so a plainer `.mob-only` rule
+   would lose to it and the item would show on desktop. */
+.mob-only,.menu .pop .mob-only{display:none}
+/* the purchased-capacity delta beside a limit — phone only (see meterRow) */
+/* ⚠️ no `display` here on purpose: the pill is .mob-only, and declaring display in
+   this rule would outrank that (same specificity, later in the file) and leak the
+   pill onto desktop, where the Extra column already says the same thing. The phone
+   block is what turns it on. */
+.entdelta{align-items:center;height:20px;padding:0 7px;margin-left:8px;
+  border:1px solid var(--line);border-radius:999px;background:#fff;
+  font-size:14px;font-variant-numeric:tabular-nums;color:var(--ink)}
+/* the profile button's phone form: a user glyph instead of the name */
+.dprof-ic{display:none}
+/* burger, phone menu panel and the scroll-to-top button: below the breakpoint only */
+.navburger,.navsheet,.totop{display:none}
+/* row actions ship a glyph and a label; desktop reads the label */
+.ra-act .ra-ic{display:none}
+/* the sticky action ships both labels and an icon; desktop shows the words only */
+.tb-short,.tb-ic{display:none}
+
+/* The slot a page hands its primary action to when the page's own copy scrolls
+   away (see page-home.js). Empty on every page that has no such action, and
+   collapsed so the bar keeps its spacing. The button inside is a plain .btn: the
+   bar is a control band, where the --btnH height holds.
+   Opacity is set inline by the hand-off — the transition here covers the slide. */
+.tb-act{display:flex;align-items:center;opacity:0;transform:translateY(-5px);pointer-events:none;transition:transform .18s ease}
+.tb-act:empty{display:none}
+.tb-act.on{transform:none;pointer-events:auto}
 .dprofile{position:relative}
-.dprofbtn{display:inline-flex;align-items:center;gap:9px;padding:4px 12px 4px 4px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--ink);font:inherit;font-size:14px}
+.dprofbtn{display:inline-flex;align-items:center;gap:9px;padding:4px 12px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--ink);font:inherit;font-size:14px}
 .dprofbtn:hover{border-color:var(--mid);background:var(--hover)}
 .dprofmenu{position:absolute;right:0;top:calc(100% + 6px);min-width:232px;background:#fff;border:1px solid var(--line);border-radius:8px;box-shadow:0 12px 32px rgba(0,0,0,.16);padding:6px;z-index:60}
 .dprofmenu[hidden]{display:none}
@@ -681,7 +796,7 @@ button.dbrand{background:none;border:0;padding:0;color:inherit;font:inherit;curs
 .imp-banner{display:flex;align-items:center;gap:12px;width:100%;max-width:var(--pageW);margin:0 auto;padding:9px var(--pageX);background:var(--ink);color:#fff;border-radius:0 0 10px 10px;font-size:14px}
 .imp-banner b{font-weight:600}
 .imp-banner .sp{flex:1}
-.imp-return{height:26px;padding:0 12px;border:0;border-radius:5px;background:#fff;color:var(--ink);font:inherit;font-size:14px;cursor:pointer;flex:none}
+.imp-return{height:26px;padding:0 12px;border:0;border-radius:6px;background:#fff;color:var(--ink);font:inherit;font-size:14px;cursor:pointer;flex:none}
 .imp-return:hover{background:var(--hover)}
 body.impersonating .dtopbar-inner{border-bottom-left-radius:0;border-bottom-right-radius:0}
 /* legal pages: long-form reading */
@@ -694,6 +809,9 @@ body.impersonating .dtopbar-inner{border-bottom-left-radius:0;border-bottom-righ
 /* change-plan wizard: unselectable current-plan card */
 .nl-current{cursor:default;opacity:.75}
 .dmain{flex:1;overflow:visible;padding:0}
+/* Home opens with the greeting line, so it gets more room under the top-bar band
+   than the shared --pageY gives the list pages */
+body[data-page="home"] .dwrap{padding-top:48px}
 /* welcome text and the page-level action sit on one row */
 .dwelcome{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
 .dwelcome .dw-txt{flex:1;min-width:0}
@@ -705,9 +823,30 @@ body.impersonating .dtopbar-inner{border-bottom-left-radius:0;border-bottom-righ
 .feedmore{display:flex;justify-content:center;padding:10px 0 2px}
 .feedmore[hidden]{display:none}
 .feedsentinel{display:block;width:1px;height:1px}
+/* A Home banner belongs under the greeting: the heading is the page's opening
+   line, and a banner above it pushed everything down. The block below supplies
+   the gap with its own margin-top. */
+.dwelcome + .gbanner{margin:24px 0 0}
 .dblock-head{display:flex;align-items:baseline;gap:12px;margin-bottom:4px}
 .dblock-head h2{margin:0;font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw)}
 .dblock-head .sp{flex:1}
+/* The block heading IS the navigation — there is no second "Show all" link. It is
+   a heading first, so no underline at rest; the chevron carries the affordance and
+   leans into the direction it goes on hover. */
+.dblock-link{display:inline-flex;align-items:center;gap:5px;color:inherit;text-decoration:none}
+.dblock-link:hover{text-decoration:underline;text-underline-offset:3px}
+.dbh-chev{display:inline-flex;align-items:center;color:var(--faint);transition:transform .15s ease,color .15s ease}
+.dbh-chev svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:block}
+.dblock-link:hover .dbh-chev{transform:translateX(2px);color:var(--mid)}
+/* Every preview block ends with the way into its full page, and the button says
+   how much is behind it. Centred, like the feed's own Load more. */
+.dblock-foot{display:flex;justify-content:flex-start;margin-top:12px}
+.dblock-foot[hidden]{display:none}
+.dblock-open{text-decoration:none}
+/* Home column heads are quieter than a list page's: the blocks are previews, and
+   their heads should not compete with the block heading above them. 14px is the
+   type floor, so what comes down is the tracking and the height of the row. */
+.dblock th{letter-spacing:0.04em;padding-top:4px;padding-bottom:7px}
 
 .dprodrow{cursor:pointer;border-radius:6px}
 .dprodrow:hover{background:var(--hover)}
@@ -741,9 +880,10 @@ body.impersonating .dtopbar-inner{border-bottom-left-radius:0;border-bottom-righ
 .gbanner .sp{flex:1}
 .gbanner .gb-ic{width:18px;height:18px;color:#fff}
 .gb-txt{font-size:14px;color:#fff}
-.gb-act{height:26px;padding:0 12px;border:0;border-radius:5px;background:#fff;color:var(--ink);font:inherit;font-size:14px;cursor:pointer;flex:none}
+.gb-act{height:26px;padding:0 12px;border:0;border-radius:6px;background:#fff;color:var(--ink);font:inherit;font-size:14px;cursor:pointer;flex:none}
 .gb-act:hover{background:var(--hover)}
-.gb-x{flex:none;border:0;background:none;cursor:pointer;color:rgba(255,255,255,.72);font-size:15px;line-height:1;padding:5px 8px;border-radius:5px}
+/* same box as every other ✕ (above); on an ink banner only the colour changes */
+.gb-x{border-color:transparent;background:none;color:rgba(255,255,255,.72)}
 .gb-x:hover{color:#fff;background:rgba(255,255,255,.14)}
 #statusSlot{display:inline-flex;align-items:center;gap:8px}   /* a grant carries two quiet chips */
 .planpick{display:flex;flex-direction:column;align-items:flex-start;gap:12px;margin-top:20px}
@@ -825,7 +965,7 @@ body.impersonating .dtopbar-inner{border-bottom-left-radius:0;border-bottom-righ
 .field{margin-bottom:14px}
 .field:last-child{margin-bottom:0}
 .field > label{display:block;font-size:var(--t-small-fs);line-height:var(--t-small-lh);letter-spacing:var(--t-small-ls);font-weight:var(--t-small-fw);color:var(--mid);margin-bottom:6px}
-.field input,.field select,.field textarea{font-family:var(--font-ui);font-size:var(--t-body-fs);line-height:var(--t-body-lh);letter-spacing:var(--t-body-ls);font-weight:var(--t-body-fw);width:100%;height:var(--btnH);border:1px solid var(--line);border-radius:5px;padding:0 10px;background:#fff;color:var(--ink);outline:none}
+.field input,.field select,.field textarea{font-family:var(--font-ui);font-size:var(--t-body-fs);line-height:var(--t-body-lh);letter-spacing:var(--t-body-ls);font-weight:var(--t-body-fw);width:100%;height:var(--btnH);border:1px solid var(--line);border-radius:6px;padding:0 10px;background:#fff;color:var(--ink);outline:none}
 .field textarea{height:auto;min-height:62px;padding:8px 10px;resize:vertical;line-height:1.5}
 .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--ink)}
 .field.ro input{background:var(--bg);color:var(--mid);cursor:default}
@@ -879,13 +1019,16 @@ body.impersonating .dtopbar-inner{border-bottom-left-radius:0;border-bottom-righ
 .paymodal.tight{width:min(420px,96vw)}
 /* a table that can outgrow its card scrolls inside its own wrapper — the card
    itself must not clip (it would cut off the row menus) */
+/* Usage is hidden in the UI only — the header and cells are still rendered and the
+   data still flows (see meterRow / DETAILS_HTML). Delete this one rule to bring the
+   column back; nothing else has to change. */
+.plantable .usecol{display:none}
 .tablescroll{overflow-x:auto}
 .paymodal{background:#fff;border:1px solid var(--line);border-radius:10px;width:min(560px,96vw);box-shadow:0 18px 48px rgba(0,0,0,.20);display:flex;flex-direction:column}
 .paymodal-h{display:flex;align-items:center;gap:12px;padding:20px 24px;border-bottom:1px solid var(--line2)}
 .paymodal-h h3{margin:0;font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw)}
 .paymodal-h .sp{flex:1}
-.paymodal-x{width:28px;height:28px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--mid);display:flex;align-items:center;justify-content:center;font-size:15px}
-.paymodal-x:hover{color:var(--ink);background:var(--hover)}
+
 .paymodal-b{padding:24px;display:flex;flex-direction:column;gap:18px}
 .paymodal-f{display:flex;align-items:center;gap:12px;padding:16px 24px;border-top:1px solid var(--line2)}
 .paymodal-f .sp{flex:1}
@@ -893,7 +1036,7 @@ body.impersonating .dtopbar-inner{border-bottom-left-radius:0;border-bottom-righ
 .paystripe-note{font-size:14px;color:var(--faint)}
 .paystripe-note b{color:var(--mid);font-weight:700}
 /* composed card field (Stripe Elements style): glyph + number + expiry + CVC in one box */
-.paystripe{display:flex;align-items:center;gap:10px;height:var(--btnH);border:1px solid var(--line);border-radius:5px;padding:0 10px;background:#fff}
+.paystripe{display:flex;align-items:center;gap:10px;height:var(--btnH);border:1px solid var(--line);border-radius:6px;padding:0 10px;background:#fff}
 .paystripe:focus-within{border-color:var(--ink)}
 .paystripe-glyph{color:var(--faint);flex:none;width:16px;height:16px}
 .paystripe input{border:0;outline:0;background:transparent;font:inherit;font-size:14px;color:var(--ink);padding:0;height:100%;font-variant-numeric:tabular-nums}
@@ -905,10 +1048,10 @@ body.impersonating .dtopbar-inner{border-bottom-left-radius:0;border-bottom-righ
 /* persistent search input (always-visible, magnifier inside) — standard toolbar element */
 .searchbox{position:relative;flex:none;width:280px;max-width:100%}
 .searchbox .searchglyph{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:var(--faint);pointer-events:none}
-.searchbox input{font:inherit;font-size:14px;width:100%;height:var(--btnH);border:1px solid var(--line);border-radius:5px;padding:0 10px 0 32px;background:#fff;color:var(--ink);outline:none}
+.searchbox input{font:inherit;font-size:14px;width:100%;height:var(--btnH);border:1px solid var(--line);border-radius:6px;padding:0 10px 0 32px;background:#fff;color:var(--ink);outline:none}
 .searchbox input:focus{border-color:var(--ink)}
 .searchbox input::placeholder{color:var(--faint)}
-.lic-toggle{display:inline-flex;align-items:center;gap:9px;font-size:14px;color:var(--mid);cursor:pointer;margin-left:12px}
+.lic-toggle{display:inline-flex;align-items:center;height:var(--btnH);gap:9px;font-size:14px;color:var(--mid);cursor:pointer;margin-left:12px}
 /* Type filter: segmented chips, mutually exclusive */
 .lic-typeseg{display:inline-flex;align-items:center;gap:8px}
 .typechip{height:var(--btnH);display:inline-flex;align-items:center;font-size:14px;padding:0 13px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--mid)}
@@ -931,8 +1074,32 @@ body.impersonating .dtopbar-inner{border-bottom-left-radius:0;border-bottom-righ
    column under the product name. The column is wide enough that a real-world
    label ("Production — Central Europe manufacturing cluster, building 4")
    wraps onto a second line instead of stretching the table. */
-th.lic-prodhead{min-width:230px}
-td.lic-prodcell{min-width:230px}
+th.lic-prodhead{min-width:250px}
+td.lic-prodcell{min-width:250px}
+/* Top-aligned, not centred. The mark is as tall as two text lines, so against a
+   two-line cell it already reads as centred — and a third line (a long label wrapping
+   further) must not push it down: it stays exactly where the two-line case puts it.
+   Top alignment is also what keeps the first text line of THIS column level with the
+   first line of every other column in the row. */
+.lp-cell{display:flex;align-items:flex-start;gap:10px}
+/* In an invoice table the cell is the link to the licence. It is a link, not a
+   heading, so it carries no underline at rest — hover underlines the product line
+   only (the label under it is a description, not part of the target's name). */
+a.lp-cell{text-decoration:none;color:inherit}
+a.lp-cell:hover .lp-name{text-decoration:underline;text-underline-offset:2px}
+a.lp-cell:hover .lp-ic{background:var(--line2)}
+/* TBD: placeholder for the product / edition mark — a plain filled square, no
+   outline: the dashed border read as a control rather than as a waiting slot.
+   Two text lines tall, top-aligned by .lp-cell. */
+.lp-ic{width:40px;height:40px;flex:none;background:var(--track);border-radius:6px}
+/* The cell has a floor (min-width above) and the text a ceiling: auto table layout
+   hands a column with long content as much width as it likes, and a label is meant
+   to wrap onto a second line rather than stretch the table. 230px keeps
+   "ThingsBoard · Subscription" on one line and folds anything longer. */
+.lp-txt{min-width:0;max-width:230px}
+/* the type used to be a chip in a column of its own; folded into this line it
+   steps back so the product name still leads */
+.lp-type{color:var(--mid)}
 .lic-prodlabel{font-size:14px;color:var(--faint);margin-top:2px;white-space:normal}
 .lic-num{font-variant-numeric:tabular-nums;white-space:nowrap}   /* dates stay on one line now that Product takes the width */
 /* lightweight dropdowns for Type filter and + New license */
@@ -943,18 +1110,29 @@ td.lic-prodcell{min-width:230px}
 .dropmenu{position:absolute;left:0;top:calc(100% + 4px);background:#fff;border:1px solid var(--line);border-radius:6px;min-width:180px;padding:5px;box-shadow:0 6px 20px rgba(0,0,0,.10);z-index:40;overflow:visible;max-height:none}
 .dropmenu.right{left:auto;right:0}
 .dropmenu[hidden]{display:none}
-.dropmenu button{display:block;width:100%;text-align:left;padding:8px 10px;border:0;background:transparent;border-radius:5px;font-size:14px;color:var(--ink)}
+.dropmenu button{display:block;width:100%;text-align:left;padding:8px 10px;border:0;background:transparent;border-radius:6px;font-size:14px;color:var(--ink)}
 .dropmenu button:hover{background:var(--hover)}
+/* status chip plus, when there is one, the auto-charge mark beside it */
+.statwrap{display:inline-flex;align-items:center;gap:8px}
+/* Quiet by design: it marks the ordinary case (the charge went out on its own), so it
+   sits at --faint and only firms up when pointed at. A manual purchase shows nothing. */
+.autoic{display:inline-flex;align-items:center;color:var(--faint)}
+.autoic:hover,.autoic:focus-visible{color:var(--mid)}
+.autoic .icon{width:14px;height:14px;stroke-width:1.8}
 .pill.attn{background:var(--ink);color:#fff;border-color:var(--ink);font-weight:600}
 /* inactive (canceled) status: muted, not attention */
 .pill.off{border-color:var(--line);color:var(--faint);background:#fff}
+/* Status carries the state beneath the chip — one column now answers both "is this
+   licence alive" and "until when". Left-aligned to the chip, and the date never wraps. */
+.licstat{display:flex;flex-direction:column;align-items:flex-start;gap:5px}
+.licstat-txt{font-size:14px;color:var(--mid);font-variant-numeric:tabular-nums;white-space:nowrap}
 .lic-row.off .lp-name{color:var(--faint)}
 .chip.status.attn{background:var(--ink);color:#fff;border-color:var(--ink)}
 .chip.status.attn .sdot{display:none}
 .chip.status.off{border-color:var(--line);color:var(--faint);background:#fff}
 .chip.status.off .sdot{display:none}
 /* period filter control (Activity page + licence Activity tab) */
-.perctl{display:inline-flex;align-items:center;gap:8px}
+.perctl{display:inline-flex;align-items:center;height:var(--btnH);gap:8px}
 .perbtn b{font-weight:400}   /* the trigger is the value itself, not a labelled field */
 /* custom range expands INSIDE the dropdown panel — the toolbar never changes */
 .permenu{min-width:252px}
@@ -965,9 +1143,9 @@ td.lic-prodcell{min-width:230px}
 .percustom .perrow{display:flex;align-items:center;gap:8px;margin-bottom:8px}
 .percustom input[type=date]{flex:1;min-width:0}
 /* .dropmenu button strips chrome — restore the secondary-button look for Apply */
-.percustom .perapply{display:flex;align-items:center;justify-content:center;text-align:center;width:100%;height:var(--btnH);border:1px solid var(--line);border-radius:5px;background:#fff;color:var(--ink)}
+.percustom .perapply{display:flex;align-items:center;justify-content:center;text-align:center;width:100%;height:var(--btnH);border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink)}
 .percustom .perapply:hover{border-color:var(--ink);background:var(--hover)}
-.percustom input[type=date]{height:var(--btnH);border:1px solid var(--line);border-radius:5px;padding:0 8px;font:inherit;font-size:var(--t-small-fs);color:var(--ink);background:#fff}
+.percustom input[type=date]{height:var(--btnH);border:1px solid var(--line);border-radius:6px;padding:0 8px;font:inherit;font-size:var(--t-small-fs);color:var(--ink);background:#fff}
 .percustom input[type=date]:focus{border-color:var(--ink);outline:none}
 .permid{color:var(--mid);font-size:var(--t-small-fs)}
 
@@ -1010,3 +1188,431 @@ td.lic-prodcell{min-width:230px}
 .sg-static .fs-box{width:100%;height:auto;max-height:none}
 .sg-static .fs-body{max-height:230px}
 .sg-flag{border-left:3px solid var(--ink);background:#fff;padding:10px 14px;font-size:14px;color:var(--mid);margin-top:12px}
+
+/* ============================================================================
+   MOBILE — one breakpoint, ≤600px (phone)
+   ----------------------------------------------------------------------------
+   Scope: the shared chrome, Home, and the licence-details modal. Everything else
+   stays desktop-only for now; the rules that touch shared components (the licence
+   row, the invoice row, the tap-target height) reach those pages too, and that is
+   deliberate — a six-column table on a 390px screen is not "unadapted", it is
+   broken. Between 601px and desktop the existing fluid layout copes; there is no
+   tablet design yet, on purpose.
+   ========================================================================== */
+@media (max-width:600px){
+
+  /* ---------- tap targets and page gutter ---------- */
+  /* The band carries every control, so raising it once gives the whole prototype
+     44px targets. Type never goes below 14px anywhere, so nothing to do there. */
+  :root{--btnH:44px; --pageX:16px; --pageY:20px; --backW:44px; --contentX:22px}
+
+  /* ---------- top bar: logo + profile on one row, nav a scrollable strip ---------- */
+  /* The band stays contained to the content width and keeps its rounded bottom. */
+  .dtopbar{padding:8px 16px 0}
+  .dtopbar-inner{display:grid;grid-template-columns:auto 1fr auto;
+    grid-template-areas:"brand act prof" "nav nav nav";
+    height:auto;row-gap:8px;column-gap:10px;padding:9px 12px}
+  .dtopbar .sp{display:none}                 /* the grid does the spacing now */
+  .dbrand{grid-area:brand}
+  .dbrand .bt{display:none}                  /* the mark alone: the row is tight */
+  .tb-act{grid-area:act;justify-self:end}
+  .dprofile{grid-area:prof}
+  /* the five items stay visible and scroll sideways — no hamburger. The active one
+     is scrolled into view by revealActiveNav() in shared.js. */
+  .tnav{grid-area:nav;position:static;left:auto;transform:none;
+    overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none;-ms-overflow-style:none;
+    margin:0 -12px;padding:0 12px}
+  .tnav::-webkit-scrollbar{display:none}
+  .tnav-item{flex:none;height:44px;display:inline-flex;align-items:center;white-space:nowrap}
+  .dprofbtn{height:44px;max-width:46vw}
+  .dprofbtn span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+  /* The bar carries the burger and the logo mark on the left and the user icon on the
+     right — nothing else. The primary action lives full-width in the page under the
+     greeting, and only scrolling brings it into the bar, as an icon-only +. */
+  .tb-full,.tb-short{display:none}
+  #topbarNewBtn{width:44px;padding:0;gap:0}
+  #topbarNewBtn .tb-ic{display:block;width:20px;height:20px}
+  /* the profile control becomes a user glyph: the name stays in the accessibility
+     tree (clipped, not display:none) so the button keeps its accessible name */
+  .dprofbtn{position:relative;width:44px;padding:0;justify-content:center}
+  .dprof-ic{display:block;width:22px;height:22px}
+  .dprof-caret{display:none}
+  .dprofbtn .dprof-name{position:absolute;width:1px;height:1px;overflow:hidden;
+    clip-path:inset(50%);white-space:nowrap}
+  /* Apply coupon joins the ⋮ menu here (the header keeps the primary action only) */
+  .menu .pop .mob-only{display:block}
+
+  /* ---------- profile menu: a bottom sheet, not a dropdown ---------- */
+  .dprofmenu{position:fixed;left:0;right:0;bottom:0;top:auto;width:100%;min-width:0;
+    border-radius:12px 12px 0 0;border-left:0;border-right:0;border-bottom:0;
+    padding:8px 8px calc(8px + env(safe-area-inset-bottom));
+    box-shadow:0 -12px 40px rgba(0,0,0,.22);z-index:120}
+  .dprofmenu button,.dprofmenu a{min-height:44px;align-items:center;font-size:15px}
+  .dprofmenu .sep{margin:8px 4px}
+
+  /* ---------- impersonation banner keeps the same contained band ---------- */
+  .imp-wrap{padding:0 16px}
+  .imp-banner{flex-wrap:wrap}
+  .imp-return{height:44px}
+
+  /* ---------- Home: single column, full width ---------- */
+  body[data-page="home"] .dwrap{padding-top:24px}
+  /* greeting, then the banner, then the blocks — the action goes full width under
+     the greeting instead of sitting beside it */
+  .dwelcome{flex-direction:column;align-items:stretch;gap:14px}
+  .dwelcome h1{font-size:28px;line-height:1.15}
+  .dwelcome .btn.xl{width:100%}
+  .dblock{padding:14px 14px;margin-top:14px}
+  .dblock-head h2{font-size:18px}
+  /* the way out of a block spans it */
+  .dblock-foot{display:block}
+  .dblock-open{width:100%}
+  .feedmore .link{min-height:44px;display:inline-flex;align-items:center}
+
+  /* ---------- tables become stacked row cards ---------- */
+  /* No sideways scrolling for the main lists: each row is a card, and the column
+     heads go away with the columns. Applies to the licence row and the invoice row
+     wherever they render — same component, same treatment. */
+  .tablescroll{overflow-x:visible}
+  table:has(.lic-row) thead,table:has(.inv-row) thead{display:none}
+  .lic-row,.inv-row{display:block;position:relative;
+    border:1px solid var(--line2);border-radius:10px;padding:12px;
+    margin-bottom:10px;background:var(--card)}
+  .lic-row:last-child,.inv-row:last-child{margin-bottom:0}
+  /* ⚠️ `tr.` on the front is load-bearing: .dblock table td sets an 11px cell
+     padding at the same specificity, and without the extra type selector every
+     line of the card keeps a 22px band of dead space (measured: 42px lines). */
+  tr.lic-row > td,tr.inv-row > td{display:block;width:auto;padding:0;border:0;
+    white-space:normal;text-align:left}
+  /* The licence card's actions ride in its top-right corner — they are two icon
+     buttons, so the card reserves exactly their width (2 × --btnH + gap + inset)
+     and the product line stops short of them instead of running underneath. */
+  /* 2 × --btnH + the 2px gap + a 6px inset — exactly what the two icon buttons
+     need, so "ThingsBoard · Subscription" still lands on one line beside them */
+  .lic-row{padding-right:96px}
+  tr.lic-row > td.cellact{position:absolute;top:8px;right:8px;
+    width:auto;margin:0;padding:0;text-align:right}
+  .lic-row > td.cellact .lic-actions{gap:2px}
+  /* An invoice card's actions are two text links, not icons: pinning those to a
+     corner would either wrap them into a column or eat the whole card width, so
+     they stay in the flow as the card's last line. */
+  tr.inv-row > td.cellact{padding:0}
+  .inv-row .rowactions{gap:18px}
+  /* The invoice card reads in the order it was asked for — number, product, then
+     amount · status · date on one line, actions last — which is not the column
+     order of the table, so the cells are re-ordered rather than re-rendered. */
+  tr.inv-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
+  tr.inv-row > td.mono{order:1;flex:0 0 100%;font-size:15px}
+  tr.inv-row > td.lic-prodcell{order:2;flex:0 0 100%}
+  tr.inv-row > td.num{order:3}
+  tr.inv-row > td:nth-child(4){order:4}
+  tr.inv-row > td:nth-child(2){order:5}
+  tr.inv-row > td.cellact{order:6;flex:0 0 100%}
+  /* the product cell is free of its desktop column width here, and the mark steps
+     down so the type line still fits beside it */
+  .lic-row td.lic-prodcell,.inv-row td.lic-prodcell{min-width:0}
+  .lp-txt{max-width:none}
+  .lic-row .lp-ic{width:28px;height:28px}
+  .lic-row .lp-cell{gap:8px}
+  /* quiet meta: the Updated date on a licence card, the date on an invoice card */
+  tr.lic-row > td.lic-num,tr.inv-row > td:nth-child(2){color:var(--faint);font-size:14px}
+  .lic-row .licstat{flex-direction:row;align-items:center;gap:10px;flex-wrap:wrap}
+  tr.inv-row > td.num{text-align:left;font-weight:500}
+  /* the pager under a card list says the count and nothing else */
+  .pager{flex-wrap:wrap;gap:10px}
+  .pager select{height:44px}
+
+  /* ---------- Activity feed: one column, sentences wrap ---------- */
+  .fi-txt{overflow-wrap:anywhere}
+  .fi-audit{max-height:220px;overflow:auto}
+
+  /* ---------- licence details modal: a full-screen sheet ---------- */
+  .fs-screen{padding:0;align-items:stretch;justify-content:stretch}
+  .fs-box{width:100vw;height:100vh;max-height:none;border:0;border-radius:0;box-shadow:none}
+  /* header sticks, content scrolls beneath it */
+  .fs-header{position:sticky;top:0;z-index:5;padding:10px 16px}
+  .fs-headactions{gap:8px}
+  .fs-body{padding:16px}
+  /* ⚠️ `.licmodal .fs-body{padding:0}` outranks the line above (two classes beats
+     one), so inside the details modal the inset is not the body's — it belongs to
+     .head and .section, exactly as on desktop. Both come down to the mobile gutter
+     so every row of the sheet starts on the same left edge. */
+  .licmodal .sheet{padding:0 0 28px}
+  .licmodal .head{padding:16px}
+  .licmodal .section,.licmodal .tabs{padding-left:16px;padding-right:16px}
+  /* summary block stacks: title + status, label, key, then the period */
+  .licmodal .headgrid{grid-template-columns:1fr}
+  .planname,.dwelcome h1{font-size:28px}
+  .titlerow{flex-wrap:wrap;gap:8px}
+  /* Header order on a phone: title, then the label that names this licence, then the
+     actions. .headactions lives inside .top, so .top dissolves (display:contents) and
+     its children join .headcol's own column — only then can order put the label
+     between them. Desktop keeps the single header row with the actions on the right. */
+  .headcol{display:flex;flex-direction:column}
+  .head .top{display:contents}
+  .idline{order:1}
+  .metarow{order:2;margin-top:10px}
+  .headactions{order:3;width:100%;margin:14px 0 0;flex-wrap:wrap}
+  /* the header keeps its primary action; the rest moves into the ⋮ menu */
+  .headactions #couponBtn{display:none}
+  .keygrid{flex-direction:column;gap:16px}
+  .keycol.right{text-align:left}
+  /* the key value sizes down so the revealed key fits on one line, and its action
+     icons wrap to a second row when they no longer fit beside it */
+  .keyline .mono{font-size:18px}
+  .keyline{gap:8px;row-gap:10px}
+  /* the three tabs scroll sideways rather than squeezing */
+  .tabs{overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none}
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{flex:none;white-space:nowrap}
+  /* Next charge stacks: amount + date, payment method beneath, edit on the right */
+  .nc-main{gap:14px}
+  .nc-left{flex:0 0 100%}
+  .nc-main .sp{display:none}
+  .nc-method{flex:1;min-width:0;gap:10px}
+  /* the invoice table inside the modal is card rows like every other one */
+  .invtable{width:100%}
+
+  /* ---------- touch targets the band does not reach ---------- */
+  /* the one ✕ grows with everything else — it is the only way out of a full-screen
+     sheet, so it cannot be the smallest thing on it */
+  .fs-close,.modal .mclose,.paymodal-x,.gb-x{width:44px;height:44px}
+  .tab{min-height:44px}
+  .chip.ghost{min-height:44px;padding:0 14px}
+  .kn-x{width:44px;height:44px}
+  /* the two-line product options stack instead of overflowing — still one container,
+     still one filled pill for the active side */
+  .nl-prodseg{flex-direction:column;width:100%;border-radius:16px}
+  .nl-prodopt{min-width:0;width:100%;border-radius:12px}
+  .gearfab{width:44px;height:44px}
+  /* a row's text actions are its primary controls, so they get a tappable band even
+     though the text itself stays 14px */
+  .rowactions .link{min-height:44px;display:inline-flex;align-items:center}
+
+  /* the prototype's own gear sits bottom-left on a phone: bottom-right is exactly
+     where the licence cards keep their ⋮, and a fixed button there would cover it */
+  .gearfab{right:auto;left:16px}
+
+  /* ---------- other pages: keep them usable, not adapted ---------- */
+  /* list pages keep their toolbars; they wrap instead of overflowing */
+  .lic-controls,.insttoolbar{gap:10px}
+  .searchbox{width:100%;min-width:0}
+  .lic-toggle{margin-left:0}
+  /* wide settings forms fall to one column */
+  .field2{grid-template-columns:1fr}
+  .setcard > *:not(.setcard-h){max-width:none}
+  .pwstack .field input{max-width:none}
+  /* Any table NOT turned into cards (Users, Instances, the styleguide's own
+     reference tables) scrolls inside its card instead of being clipped by it. Safe
+     for menus: dropdowns are lifted to position:fixed when they open
+     (elevateOpenPops), so an overflow container cannot cut them off. */
+  .listcard{overflow-x:auto}
+  .sg-item{overflow-x:auto}
+}
+
+/* ============================================================================
+   MOBILE, second pass (≤600px): burger nav, backgroundless Home blocks, and the
+   two row cards rebuilt as stacked sections divided by hairlines.
+   ========================================================================== */
+@media (max-width:600px){
+
+  /* ---------- top bar: burger · logo · [action] · profile, all on one row ---------- */
+  /* The scrollable strip is gone: five items that scroll sideways read as three.
+     .tnav stays in the DOM (desktop uses it) and the panel renders the same items. */
+  .tnav{display:none}
+  .dtopbar-inner{grid-template-columns:auto auto 1fr auto;
+    grid-template-areas:"burger brand act prof";row-gap:0}
+  .navburger{grid-area:burger;display:inline-flex;align-items:center;justify-content:center;
+    width:44px;height:44px;flex:none;border:1px solid var(--line);border-radius:6px;
+    background:#fff;color:var(--mid);padding:0}
+  .navburger:hover{color:var(--ink);border-color:var(--mid)}
+  .navburger .icon{width:20px;height:20px}
+
+  /* the panel: full height, from the side the burger is on, over a backdrop */
+  .navsheet{display:block;position:fixed;inset:0;z-index:130}
+  .navsheet[hidden]{display:none}
+  .nsh-back{position:absolute;inset:0;background:rgba(28,28,28,.32);
+    -webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
+  .nsh-panel{position:absolute;top:0;bottom:0;left:0;width:min(320px,86vw);
+    display:flex;flex-direction:column;background:#fff;border-right:1px solid var(--line2);
+    box-shadow:12px 0 40px rgba(0,0,0,.18)}
+  .nsh-head{flex:none;display:flex;align-items:center;gap:12px;padding:10px 12px 10px 16px;
+    border-bottom:1px solid var(--line2)}
+  .nsh-title{flex:1;font-family:var(--font-ui);font-size:var(--t-label-fs);
+    line-height:var(--t-label-lh);letter-spacing:var(--t-label-ls);
+    font-weight:var(--t-label-fw);text-transform:uppercase;color:var(--faint)}
+  .nsh-items{padding:8px;overflow-y:auto}
+  /* the sheet item overrides the bar's own nav-item metrics */
+  .nsh-item{display:flex;align-items:center;width:100%;min-height:48px;
+    padding:0 12px;border-radius:8px;font-size:16px;color:var(--ink)}
+  .nsh-item:hover{background:var(--hover)}
+  .nsh-item.on{background:var(--sel);border-color:var(--chromeLine);font-weight:600}
+  body.navsheet-open{overflow:hidden}
+
+  /* ---------- Home: the two list blocks have no card of their own ---------- */
+  /* the heading and the row cards sit on the page; Recent activity keeps its card,
+     because its feed is not a set of cards and would have nothing to sit in */
+  .dwrap .dblock:not(#dashActBlock){background:transparent;border:0;border-radius:0;
+    padding:0;margin-top:22px}
+  .dwrap .dblock:not(#dashActBlock) .dblock-head{margin-bottom:10px}
+  .dwrap .dblock:not(#dashActBlock) table{margin-top:0}
+
+  /* ---------- licence card: two parts, separated by space ----------
+     No hairlines inside the card: the row gaps do the separating. The chip moves up
+     beside product · type, and the state text moves up beside the plan name, so each
+     line pairs a subject on the left with its value on the right.
+     display:contents on the status cell (and on .licstat) is what makes that possible:
+     it lifts the chip and the state text into the card's own grid, where they can be
+     placed on different rows. */
+  tr.lic-row{display:grid;grid-template-columns:1fr auto;align-items:start;
+    grid-template-areas:"prod chip" "plan plan" "acts acts";
+    padding:12px;row-gap:10px;column-gap:12px;margin-bottom:12px}
+  tr.lic-row > td{padding:0;margin:0}
+  /* part 1 — the mark, product · type, and the label on the line beneath */
+  tr.lic-row > td.lic-prodcell{grid-area:prod}
+  tr.lic-row > td:nth-child(3){display:contents}
+  tr.lic-row .licstat{display:contents}
+  /* the chip sits on the first text line of the cell beside it, not centred against
+     the whole (one- or two-line) block */
+  tr.lic-row .licstat > .pill{grid-area:chip;justify-self:end;align-self:start;margin:-2px 0 0}
+  /* part 2 — plan name and its state on one line. They SHARE row 2 across both
+     columns rather than taking a column each: a track sized by "Renews Sep 02, 2026"
+     would steal ~134px from the row above and push "ThingsBoard · Subscription" onto
+     a second line. This way the auto column is sized by the chip alone. */
+  tr.lic-row > td:nth-child(2){grid-area:plan;justify-self:start;font-weight:500}
+  tr.lic-row .licstat-txt{grid-row:2;grid-column:1 / -1;justify-self:end;
+    text-align:right;margin-top:0;white-space:normal}
+  /* the Updated date has no place in this card — it stays in the table for the
+     desktop column and is simply not shown here */
+  tr.lic-row > td.lic-num{display:none}
+  /* part 3 — the row actions */
+  tr.lic-row > td.cellact{grid-area:acts;position:static;padding:0;text-align:left}
+  tr.lic-row > td.cellact .lic-actions{justify-content:flex-start;gap:4px}
+
+  /* ---------- invoice card: two bands, divided by a hairline ---------- */
+  tr.inv-row{display:grid;grid-template-columns:1fr auto;align-items:center;
+    grid-template-areas:"num stat" "prod prod" "amt date" "acts acts";
+    gap:0;padding:0;margin-bottom:12px}
+  tr.inv-row > td{padding:0;margin:0}
+  tr.inv-row > td.mono{grid-area:num;padding:12px 0 12px 12px;font-size:15px}
+  tr.inv-row > td:nth-child(4){grid-area:stat;justify-self:end;padding:12px 12px 12px 0}
+  /* the auto-charge mark comes before the chip here, so the pair reads
+     "charged automatically · Paid" from the left */
+  tr.inv-row .statwrap{flex-direction:row-reverse}
+  /* band 2 opens with the product line, and its top border is the divider */
+  tr.inv-row > td.lic-prodcell{grid-area:prod;padding:12px 12px 0;
+    border-top:1px solid var(--line2)}
+  /* the licence's own Invoices tab has no product cell, so the divider moves down */
+  tr.inv-row:not(:has(.lic-prodcell)) > td.num{border-top:1px solid var(--line2);padding-top:12px}
+  tr.inv-row > td.num{grid-area:amt;padding:6px 0 0 12px;font-weight:500;font-size:15px}
+  tr.inv-row > td:nth-child(2){grid-area:date;justify-self:end;padding:6px 12px 0 0}
+  tr.inv-row > td.cellact{grid-area:acts;padding:8px}
+  /* three icon-buttons: download and view on the left, open-license on the right */
+  tr.inv-row .rowactions{display:flex;width:100%;gap:6px;align-items:center}
+  .rowactions .ra-act{width:44px;height:44px;display:inline-flex;align-items:center;
+    justify-content:center;border:1px solid var(--line);border-radius:6px;
+    background:#fff;color:var(--mid);text-decoration:none}
+  .rowactions .ra-act:hover{color:var(--ink);border-color:var(--mid);background:var(--hover)}
+  .ra-act .ra-ic{display:block;width:18px;height:18px}
+  .ra-act .ra-txt{display:none}
+  .rowactions .mob-only{display:inline-flex}
+  .rowactions .ra-open{margin-left:auto}
+  /* except on the licence's own Invoices tab: every row there belongs to the licence
+     already on screen, so a way to open it would point at itself */
+  #licInvBody .ra-open{display:none}
+}
+
+/* ============================================================================
+   MOBILE, third pass (≤600px): Plan & add-ons as limit-first rows, the Instances
+   tab as compact two-line rows, and a pager reduced to count + prev/next.
+   ========================================================================== */
+@media (max-width:600px){
+
+  /* ---------- Plan & add-ons: one card, one row per item, limit on the right ----------
+     Included / Extra / Limit is three numbers to answer one question on a phone —
+     what is the ceiling. So the row says name + limit, and when capacity was bought
+     the delta rides beside it as a pill (see meterRow). No column labels at all. */
+  .plantable{display:block;width:100%;background:#fff;border:1px solid var(--line2);
+    border-radius:8px;padding:0 12px}
+  .plantable thead{display:none}
+  .plantable tbody{display:block}
+  .plantable tbody tr{display:flex;align-items:center;justify-content:space-between;
+    gap:12px;padding:13px 0;border-bottom:1px dashed var(--line2)}
+  .plantable tbody tr:last-child{border-bottom:0}
+  .plantable tbody td{display:block;padding:0;border:0;text-align:left}
+  .plantable tbody td:first-child{flex:1;min-width:0}
+  /* Included and Extra are the two the phone drops; Limit stays and carries the pill */
+  .plantable tbody td:nth-child(3),.plantable tbody td:nth-child(4){display:none}
+  .plantable tbody td.entlimit{display:flex;align-items:center;flex:none;
+    font-variant-numeric:tabular-nums;text-align:right}
+  .plantable tbody td.entlimit .mob-only{display:inline-flex}
+  /* the Features chips keep their quiet label and their place under the card */
+  .featureblock{margin-top:16px}
+
+  /* ---------- Instances: one card of compact two-line rows ---------- */
+  /* the toolbar stacks — search takes the width, then the chips with refresh pushed
+     to the right by the spacer that is already in the markup */
+  .insttoolbar{flex-wrap:wrap;row-gap:10px}
+  .insttoolbar .searchbox{flex:0 0 100%}
+  .insttable{display:block;width:100%;background:#fff;border:1px solid var(--line2);
+    border-radius:8px;padding:0 12px}
+  .insttable thead{display:none}
+  .insttable tbody{display:block}
+  .insttable tbody tr{display:flex;flex-wrap:wrap;align-items:center;gap:0 5px;
+    padding:10px 0;border-bottom:1px solid var(--line2)}
+  .insttable tbody tr:last-child{border-bottom:0}
+  .insttable tbody td{display:block;padding:0;border:0}
+  /* no select-all and no bulk actions on a phone, and the Label column is empty here */
+  .insttable tbody td.chk,.insttable tbody td:nth-child(3){display:none}
+  /* line 1 — the id, with its copy action on the right edge */
+  .insttable tbody td.mono{flex:0 0 100%;display:flex;align-items:center;gap:10px;
+    min-width:0;font-size:14px}
+  /* .mob-only is display:none by default, so each phone-only control has to be let
+     back in by a selector that outranks it */
+  .insttable .mob-only{display:inline-flex}
+  .insttable .inst-copy{margin-left:auto;flex:none}
+  /* line 2 — one muted meta line; the labels are spelled out through ::before, which
+     is also why the two dates stay separate cells (the desktop columns need them) */
+  .insttable tbody td:nth-child(4),.insttable tbody td:nth-child(5){
+    margin-top:2px;font-size:14px;color:var(--faint)}
+  .insttable tbody td:nth-child(4)::before{content:"Last activity "}
+  /* a literal middot, not \00b7: a hex escape eats the space that follows it, so
+     the label came out as "·created" */
+  .insttable tbody td:nth-child(5)::before{content:"· created "}
+  /* the meta line has to be ONE line, and at the narrowest content width (page mode,
+     which keeps the back gutter) the two dates together overflowed it. The year on
+     the first date is the least useful token there, so it drops out on a phone —
+     "Last activity Aug 18 · created Aug 14 2026". */
+  .insttable .yr{display:none}
+
+  /* ---------- pager: the count, and the two steps that matter ---------- */
+  /* Items per page and first/last are desktop affordances: on a phone the pager is
+     "where am I" plus one step either way. */
+  .pager{gap:10px;flex-wrap:nowrap}
+  .pager .spacer{display:none}
+  .pager > span:has(select){display:none}
+  .pager .range{flex:1;min-width:0}
+  .pagebtns button[aria-label="First page"],
+  .pagebtns button[aria-label="Last page"]{display:none}
+}
+
+/* ============================================================================
+   MOBILE, fourth pass (≤600px): the scroll-to-top button.
+   ========================================================================== */
+@media (max-width:600px){
+  /* Floating, bottom-right, over the content — the prototype's own gear sits in the
+     opposite corner, so the two never meet. 48px is above the 44px tap minimum and
+     reads as a control rather than a dot; 16px from both edges matches --pageX, so it
+     lines up with the page's own gutter.
+     z-index 88 is deliberately BELOW the modal layers (.licmodal 95, .fs-screen 100,
+     the phone nav panel 130): while any of those is open the page behind is not the
+     thing being scrolled, so the button has no business floating over them. */
+  .totop{display:inline-flex;position:fixed;right:16px;bottom:16px;z-index:88;
+    width:48px;height:48px;align-items:center;justify-content:center;padding:0;
+    border:1px solid var(--line);border-radius:50%;background:#fff;color:var(--mid);
+    box-shadow:0 3px 14px rgba(0,0,0,.16)}
+  .totop[hidden]{display:none}
+  .totop:hover{color:var(--ink);border-color:var(--mid)}
+  .totop .icon{width:20px;height:20px}
+}

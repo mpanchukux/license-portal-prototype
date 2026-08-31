@@ -41,11 +41,17 @@ function fmtDate(sv){ var q = String(sv).split(' '); return q.length === 3 ? (q[
    so each one persists; "Reset demo data" drops the key and reseeds from data.js.
    ========================================================================== */
 var Store = (function(){
-  var KEY = 'tb-license-portal-demo-v1';
+  /* The key carries a version, and the version is the way a change to data.js
+     actually reaches anyone. The store snapshots DATASETS on first load and works
+     from that copy ever after, so editing the seed changes nothing for a browser
+     that already has a snapshot — it would need "Reset demo data" pressed by hand,
+     which is not something a reviewer should have to know. Bump this whenever the
+     seed changes in a way that has to be seen; the old key is simply abandoned. */
+  var KEY = 'tb-license-portal-demo-v2';
   function clone(o){ return JSON.parse(JSON.stringify(o)); }
   function seed(){
     return {
-      dash: 'dashboard',          // which dashboard state the settings panel selected
+      dash: 'dashB',              // which dashboard state the settings panel selected — the large account
       datasets: clone(DATASETS),  // the account as the demo has mutated it
       pendingEmail: null,         // { from, to } while an email change awaits confirmation
       impersonating: null,        // email of the user being impersonated
@@ -139,22 +145,48 @@ var NAV_ITEMS = [
   { key:'users',    href:'users.html',    label:'Users' }
 ];
 
-function chromeHTML(){
-  var nav = NAV_ITEMS.map(function(n){
-    return '<a class="tnav-item" data-nav="' + n.key + '" href="' + n.href + '">' + n.label + '</a>';
+function navItemsHTML(extraClass){
+  return NAV_ITEMS.map(function(n){
+    return '<a class="tnav-item' + (extraClass ? ' ' + extraClass : '') + '" data-nav="' + n.key
+      + '" href="' + n.href + '">' + n.label + '</a>';
   }).join('');
+}
+/* The phone menu. Same items, same `data-nav`, same `.tnav-item` class — so
+   syncTopNav marks the current page here too, without a second source of truth.
+   Hidden above 600px by CSS; the bar's own nav is hidden below it. */
+function navSheetHTML(){
+  return '<div class="navsheet" id="navSheet" hidden>'
+    + '<div class="nsh-back" data-navclose></div>'
+    + '<nav class="nsh-panel" aria-label="Primary">'
+    +   '<div class="nsh-head">'
+    +     '<span class="nsh-title">Menu</span>'
+    +     '<button class="fs-close" id="navSheetClose" aria-label="Close menu">\u2715</button>'
+    +   '</div>'
+    +   '<div class="nsh-items">' + navItemsHTML('nsh-item') + '</div>'
+    + '</nav>'
+    + '</div>';
+}
+function chromeHTML(){
+  var nav = navItemsHTML();
   return ''
   + '<header class="dtopbar">'
   +   '<div class="dtopbar-inner">'
+  +   '<button class="navburger" id="navBurger" aria-label="Open menu" aria-expanded="false" aria-controls="navSheet">'
+  +     '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>'
+  +   '</button>'
   +   '<a class="dbrand" href="index.html" aria-label="ThingsBoard License Portal — home" title="Home">'
   +     '<div class="mark"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4v16M4 12h16"/></svg></div>'
   +     '<div class="bt">ThingsBoard<span class="bsep">·</span>License Portal</div>'
   +   '</a>'
   +   '<nav class="tnav" aria-label="Primary">' + nav + '</nav>'
   +   '<span class="sp"></span>'
+  +   '<div class="tb-act" id="topbarAction"></div>'
   +   '<div class="dprofile">'
   +     '<button class="dprofbtn" id="dashProfBtn" aria-haspopup="true" aria-expanded="false">'
-  +       '<span>Mariia Panchuk</span><span aria-hidden="true">▾</span>'
+  +       '<svg class="icon dprof-ic" viewBox="0 0 24 24" aria-hidden="true">'
+  +         '<circle cx="12" cy="8.5" r="3.5"/><path d="M5 20c0-3.6 3.1-5.5 7-5.5s7 1.9 7 5.5"/></svg>'
+  +       '<span class="dprof-name">Mariia Panchuk</span>'
+  +       '<span class="dprof-caret" aria-hidden="true">▾</span>'
   +     '</button>'
   +     '<div class="dprofmenu" id="dashProfMenu" role="menu" hidden>'
   +       '<a role="menuitem" href="account.html">Account</a>'
@@ -165,6 +197,14 @@ function chromeHTML(){
   +   '</div>'
   +   '</div>'
   + '</header>'
+  + navSheetHTML()
+  /* Scroll-to-top, phone only (CSS hides it above the breakpoint). A floating button
+     rather than a header action: the bar is already down to burger + mark + user, and
+     "back to the top" is a page gesture, not a piece of chrome. Bottom-right, opposite
+     the prototype's own gear. */
+  + '<button class="totop" id="toTopBtn" aria-label="Scroll to top" hidden>'
+  +   '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5"/><path d="M6 11l6-6 6 6"/></svg>'
+  + '</button>'
   // impersonation banner: persists across pages until Return is clicked
   + '<div class="imp-wrap" id="impBanner" hidden>'
   +   '<div class="imp-banner" role="status">'
@@ -324,6 +364,47 @@ function wireGlobal(){
     btn.classList.add('spinning');
     setTimeout(function(){ btn.classList.remove('spinning'); }, 600);
   });
+
+  // phone menu: the burger opens a full-height panel; anything that means "done"
+  // closes it (✕, the backdrop, Esc, or picking an item — the link navigates anyway)
+  (function(){
+    var b = $('#navBurger'), sheet = $('#navSheet');
+    if(!b || !sheet) return;
+    function setOpen(on){
+      sheet.hidden = !on;
+      b.setAttribute('aria-expanded', on ? 'true' : 'false');
+      document.body.classList.toggle('navsheet-open', on);
+    }
+    b.addEventListener('click', function(){ setOpen(true); var c = $('#navSheetClose'); if(c) c.focus(); });
+    sheet.addEventListener('click', function(e){
+      if(e.target.closest('[data-navclose]') || e.target.closest('#navSheetClose') || e.target.closest('.nsh-item')) setOpen(false);
+    });
+    document.addEventListener('keydown', function(e){
+      if(e.key === 'Escape' && !sheet.hidden){ setOpen(false); b.focus(); }
+    });
+  })();
+
+  /* Scroll-to-top: appears once the page has actually been scrolled, hides again at
+     the top. A plain scroll listener, not rAF — that does not fire in a hidden tab or
+     an embedded panel (same trap the feed's lazy load works around). */
+  (function(){
+    var btn = $('#toTopBtn'), main = $('#shellMain');
+    if(!btn || !main) return;
+    var SHOW_AFTER = 200;                       // px: past a nudge, into a real scroll
+    function sync(){ btn.hidden = main.scrollTop <= SHOW_AFTER; }
+    main.addEventListener('scroll', sync);
+    btn.addEventListener('click', function(){
+      if(!main.scrollTo){ main.scrollTop = 0; return; }
+      var from = main.scrollTop;
+      main.scrollTo({ top:0, behavior:'smooth' });
+      /* ⚠️ A smooth scroll is animated by the compositor, and the embedded preview
+         panel throttles rendering — there the animation never advances and the button
+         looks dead (measured: scrollTop stayed put for 1.8s). If nothing has moved by
+         the time a real animation would be well under way, snap instead. */
+      setTimeout(function(){ if(main.scrollTop === from) main.scrollTop = 0; }, 400);
+    });
+    sync();
+  })();
 
   // profile hub
   var pb = $('#dashProfBtn'), pm = $('#dashProfMenu');
