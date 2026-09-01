@@ -146,7 +146,7 @@ var DETAILS_HTML = ''
 + '                       rendered and the data still flows through meterRow. One CSS'
 + '                       rule (.plantable .usecol) does the hiding — delete it and the'
 + '                       column is back. -->'
-+ '                  <tr><th>Item</th><th class="usecol">Usage</th><th class="num">Included</th><th class="num">Extra</th><th class="num">Limit</th></tr>'
++ '                  <tr><th>Resource</th><th class="usecol">Usage</th><th class="num">Included</th><th class="num">Purchased</th><th class="num">Limit</th></tr>'
 + '                </thead>'
 + '                <!-- quantified capacity only; rendered from the selected page\'s'
 + '                     entitlements (see PAGES in JS) -->'
@@ -294,7 +294,7 @@ var DETAILS_HTML = ''
 + ''
 + '              <!-- DEVELOPMENT instances — seeded empty to show the empty-state -->'
 + '              <div class="insttype" data-insttype="dev" hidden>'
-+ '                <div class="emptybox">No instances found · Instances appear automatically when a deployment is activated with the license.</div>'
++ '                <div class="emptybox">Instances appear here automatically when a deployment is activated with this license.</div>'
 + '              </div>'
 + ''
 + '              <!-- Community Grant: nothing has connected with the new key yet, so the'
@@ -537,20 +537,20 @@ function renderLicenseDetails(lic){
 function parseUnit(v){ v = String(v == null ? '0' : v); var m = /M$/i.test(v); var n = parseFloat(v.replace(/,/g, '').replace(/M$/i, '')) || 0; return { n:n, m:m }; }
 function fmtUnit(n, m){ return m ? (n + 'M') : n.toLocaleString('en-US'); }
 // usage stays a placeholder (0 used) under the limit. `extra` = purchased add-ons:
-// it lifts the limit and fills the Extra column so the row shows what was bought.
+// it lifts the limit and fills the Purchased column so the row shows what was bought.
 function meterRow(item, included, extra){
   var inc = parseUnit(included), ex = parseUnit(extra || '0');
   var incDisp = fmtUnit(inc.n, inc.m), limitDisp = fmtUnit(inc.n + ex.n, inc.m || ex.m);
   var extraCell = ex.n > 0
     ? '<td class="num">+' + fmtUnit(ex.n, ex.m) + '</td>'
     : '<td class="num muted">0</td>';
-  /* The delta pill exists for the phone, where Included and Extra are dropped and the
+  /* The delta pill exists for the phone, where Included and Purchased are dropped and the
      row is just name + limit: without it "2" would hide the fact that one of the two
-     was bought. Desktop has the Extra column and hides the pill. */
+     was bought. Desktop has the Purchased column and hides the pill. */
   var deltaPill = ex.n > 0 ? '<span class="entdelta mob-only">+' + fmtUnit(ex.n, ex.m) + '</span>' : '';
   return '<tr><td>' + item + '</td>' +
     // .usecol — hidden by CSS, still rendered (see the thead comment in DETAILS_HTML)
-    '<td class="usecol"><div class="usecell tip" tabindex="0" data-tip="0 used / ' + limitDisp + ' limit">' +
+    '<td class="usecol"><div class="usecell">' +
     '<span class="usetxt">0 / ' + limitDisp + '</span><div class="meter"><span style="width:0%"></span></div></div></td>' +
     '<td class="num">' + incDisp + '</td>' + extraCell +
     '<td class="num entlimit">' + limitDisp + deltaPill + '</td></tr>';

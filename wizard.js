@@ -85,7 +85,7 @@ var NL = (function(){
   var seededTier = null;
 
 
-  // included quantities per tier (production instances / AI blocks of 1M)
+  // included quantities per tier (production instances / AI in blocks of 1M)
   var INCL = { maker:{prod:1,ai:1}, prototype:{prod:1,ai:2}, pilot:{prod:1,ai:4}, startup:{prod:2,ai:8}, business:{prod:3,ai:16},
                tbmqsub:{prod:1,ai:0}, tbperp:{prod:1,ai:5}, tbmqperp:{prod:1,ai:0} };
   var BASE = { maker:10, prototype:39, pilot:99, startup:299, business:499, tbmqsub:15, tbperp:4999, tbmqperp:2999 };
@@ -112,6 +112,13 @@ var NL = (function(){
   var DEVICE_TIERS = { business:1000 };
   function devicesIncluded(){ return DEVICE_TIERS[tier()] || 0; }
   function hasDevices(){ return !isPerp() && !!DEVICE_TIERS[tier()]; }
+
+  /* AI is counted in blocks of 1,000,000 credits, and the product's unit is
+     "{N}M AI credits" — so every figure for it carries the M. A bare "2" next to
+     "Devices 1,000" would read as two credits. One suffix table, so the stepper,
+     the change rows and the delta list cannot drift apart again. */
+  var FIELD_SUFFIX = { ai:'M' };
+  function qtyLabel(field, v){ return (v || 0).toLocaleString('en-US') + (FIELD_SUFFIX[field] || ''); }
 
   function money(n){ return '$' + n.toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 }); }
   // a modification can lower the bill, so its rows carry an explicit sign
@@ -169,7 +176,7 @@ var NL = (function(){
     if(e.devices > 0) out.push({ t:'+' + e.devices.toLocaleString('en-US') + ' devices', amt:e.devices * DEVICE_UNIT, unit:DEVICE_UNIT });
     if(e.prod > 0) out.push({ t:'+' + e.prod + ' production instance' + (e.prod > 1 ? 's' : ''), amt:e.prod * u.prod, unit:u.prod });
     if(hasDev() && e.dev > 0) out.push({ t:'+' + e.dev + ' development instance' + (e.dev > 1 ? 's' : ''), amt:e.dev * u.dev, unit:u.dev });
-    if(hasAi() && e.ai > 0) out.push({ t:'+' + e.ai + ' AI block' + (e.ai > 1 ? 's' : '') + ' (1M)', amt:e.ai * u.ai, unit:u.ai });
+    if(hasAi() && e.ai > 0) out.push({ t:'+' + e.ai + 'M AI credits', amt:e.ai * u.ai, unit:u.ai });
     if(hasAddons() && cust.edge)   out.push({ t:'+ Edge Computing',   amt:ADD.edge });
     if(hasAddons() && cust.trendz) out.push({ t:'+ Trendz Analytics', amt:ADD.trendz });
     if(hasOffline() && cust.offline) out.push({ t:'+ Offline Mode', amt:null });
@@ -186,13 +193,13 @@ var NL = (function(){
     if(!b) return out;
     function qty(f, label, price, show){
       if(!show || cust[f] === b[f]) return;
-      var from = (b[f] || 0).toLocaleString('en-US'), to = (cust[f] || 0).toLocaleString('en-US');
-      out.push({ t:label + ' ' + from + ' \u2192 ' + to, amt:(cust[f] - b[f]) * price });
+      out.push({ t:label + ' ' + qtyLabel(f, b[f]) + ' \u2192 ' + qtyLabel(f, cust[f]),
+                 amt:(cust[f] - b[f]) * price });
     }
     qty('devices', 'Devices', DEVICE_UNIT, hasDevices());
     qty('prod', 'Production instances', u.prod, true);
     qty('dev', 'Development instances', u.dev, hasDev());
-    qty('ai', 'AI credits (1M blocks)', u.ai, hasAi());
+    qty('ai', 'AI credits', u.ai, hasAi());
     if(hasAddons()){
       if(cust.edge !== b.edge) out.push({ t:(cust.edge ? 'Added' : 'Removed') + ' Edge Computing', amt:(cust.edge ? 1 : -1) * ADD.edge });
       if(cust.trendz !== b.trendz) out.push({ t:(cust.trendz ? 'Added' : 'Removed') + ' Trendz Analytics', amt:(cust.trendz ? 1 : -1) * ADD.trendz });
@@ -255,7 +262,6 @@ var NL = (function(){
   function lastStep(){ return firstStep() + totalSteps() - 1; }
   function isLastStep(){ return st.step === lastStep(); }
   function stepIndex(){ return st.step - firstStep() + 1; }
-  function m0(n){ return '$' + n.toLocaleString('en-US'); }
   function renderSteps(){
     var labels = stepLabels();
     // Back is an icon button here, right before the step label — the footer no
@@ -446,7 +452,7 @@ var NL = (function(){
       + (desc ? '<div class="fs-celldesc">' + desc + '</div>' : '') + '</div>'
       + '<div class="stepper" data-nl-field="' + field + '">'
       + '<button type="button" data-dir="-1"' + minus + ' aria-label="Decrease ' + label + '">−</button>'
-      + '<span class="val" aria-live="polite">' + val.toLocaleString('en-US') + '</span>'
+      + '<span class="val" aria-live="polite">' + qtyLabel(field, val) + '</span>'
       + '<button type="button" data-dir="1"' + plus + ' aria-label="Increase ' + label + '">+</button></div></div>'
       + '<div class="am-cardprice">' + priceNote + '</div></div>';
   }
@@ -506,7 +512,7 @@ var NL = (function(){
       } else if(lbl === 'Production instances'){
         cells += stepCell('prod', 'Production instances', 'Production compute — ' + i.prod + ' included. Enables clustering and HA.', '+' + money(u.prod) + per + ' each', cust.prod, i.prod);
       } else if(lbl === 'AI credits'){
-        cells += stepCell('ai', 'AI credits', '1 = 1,000,000 credits. Minimum matches your plan — increase to buy more.', '+' + money(u.ai) + per + ' per 1M AI credits', cust.ai, i.ai);
+        cells += stepCell('ai', 'AI credits', 'Monthly allowance, in blocks of 1M credits. Minimum matches your plan — increase to buy more.', '+' + money(u.ai) + per + ' per 1M AI credits', cust.ai, i.ai);
       } else if(!variantA){
         // variant A shows these in the plan card instead
         cells += lockedCell(lbl, val, lbl === 'Devices' ? DEVICES_DESC : '');
@@ -576,10 +582,16 @@ var NL = (function(){
           + (c.amt == null ? '' : money(c.amt)) + '</div></div>';
       });
     }
-    var dueLabel = isMod()
-      ? 'Due today <span class="muted">— prorated change for the current cycle (16 of 31 days, to 2026-08-30)</span>'
-      : 'Due today';
-    var dueVal = isMod() ? money(Math.max(0, total() - oldMonthly()) * 16 / 31) : money(total());
+    /* A modification is prorated over what is left of THIS licence's cycle, read
+       from its own renewal date — not one hardcoded fraction for every licence.
+       Without a renewal date to read (a grant) the parenthetical is dropped and
+       the delta is charged whole. */
+    var pr = isMod() ? prorate(st.changeLic && st.changeLic.event) : null;
+    var dueLabel = !isMod() ? 'Due today'
+      : 'Due today <span class="muted">— prorated change for the current cycle'
+        + (pr ? ' (' + pr.left + ' of ' + pr.cycle + ' days, to ' + pr.end + ')' : '') + '</span>';
+    var delta = Math.max(0, total() - oldMonthly());
+    var dueVal = isMod() ? money(delta * (pr ? pr.fraction : 1)) : money(total());
     // with a card on file the review commits; without one it leads to the billing step
     var cta = isLastStep() ? confirmLabel() : 'Continue to billing';
     var payline = billingSaved()
@@ -768,6 +780,17 @@ var NL = (function(){
     if(hasAddons()){ lic.edge = cust.edge; lic.trendz = cust.trendz; }
     if(hasOffline()) lic.offline = cust.offline;
     Store.save();                      // the licence object was mutated in place
+    /* Both modification modes land here, and they are different events: add-ons
+       changed the capacity, change-plan moved the licence to another plan. */
+    if(isAddons()){
+      logActivity({ kind:'updated', entityType:'Add-on', entityName:lic.name, action:'UPDATED',
+        txt:'Capacity was changed on <b>' + esc(lic.name) + '</b> by ' + PORTAL_ACTOR + '.',
+        delta: summary });
+    } else {
+      logActivity({ kind:'updated', entityType:'Plan', entityName:lic.name, action:'UPDATED',
+        txt:'Plan was changed from <b>' + esc(st.oldName) + '</b> to <b>' + esc(lic.name)
+          + '</b> on <b>' + esc(lic.label || lic.name) + '</b> by ' + PORTAL_ACTOR + '.' });
+    }
     st.dirty = false;
     scr.hidden = true;
     /* no success modal in either mode: the licence page is the destination. Add-ons

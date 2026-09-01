@@ -32,6 +32,44 @@ function epochDay(y, m, d){
 var TODAY_DAY = epochDay(2026, 8, 19);
 function dateKey(sv){ var q = String(sv).split(' '); return (+q[2]) * 10000 + (MONF[q[0]] || 0) * 100 + (+q[1]); }
 function fmtDate(sv){ var q = String(sv).split(' '); return q.length === 3 ? (q[0] + ' ' + q[1] + ', ' + q[2]) : sv; }
+/* One display format for a date-time: "Aug 17, 2026, 16:20". Timestamps are stored
+   in the same month-first order as every plain date ("Aug 17 2026, 16:20"), so one
+   parse rule covers both and fmtDate does the date half. */
+function fmtDateTime(sv){
+  var q = String(sv).split(', ');
+  return q.length === 2 ? (fmtDate(q[0]) + ', ' + q[1]) : fmtDate(sv);
+}
+/* ISO belongs in exactly ONE place — the raw audit payload, which is meant to read
+   like what the API returns. Every date a person reads goes through fmtDate or
+   fmtDateTime; if ISO shows up anywhere else on screen, that is the bug. */
+function isoFromTs(sv){
+  var q = String(sv).split(', '), d = String(q[0]).split(' ');
+  if(d.length !== 3 || !MONF[d[0]]) return String(sv);
+  var p2 = function(n){ return ('0' + n).slice(-2); };
+  return d[2] + '-' + p2(MONF[d[0]]) + '-' + p2(d[1]) + 'T' + (q[1] || '00:00') + ':00Z';
+}
+/* Proration for a mid-cycle change, computed from the licence's OWN renewal date
+   rather than one hardcoded fraction: a licence renewing Sep 20 must not be told
+   its cycle ends Aug 30. The cycle is the calendar month that ends on `event`, so
+   its length is 28–31 days depending on the month — the honest basis for a bill
+   described as "billed monthly". Returns null when there is no renewal date to
+   read (a grant never expires), and the caller then omits the parenthetical. */
+function prorate(eventStr){
+  var q = String(eventStr || '').split(' ');
+  if(q.length !== 3 || !MONF[q[0]]) return null;
+  var y = +q[2], m = MONF[q[0]], d = +q[1];
+  var end = epochDay(y, m, d);
+  var pm = m === 1 ? 12 : m - 1, py = m === 1 ? y - 1 : y;   // same day, one month back
+  var cycle = end - epochDay(py, pm, d);
+  var left = end - TODAY_DAY;
+  if(cycle <= 0 || left <= 0) return null;                    // already past: nothing to prorate
+  /* A monthly subscription renews at the end of the current cycle, so `left` can
+     never exceed `cycle` in valid data. Clamp anyway: a renewal date further out
+     than one cycle would otherwise give a fraction above 1 and charge MORE than
+     the full delta. Clamped, such a date reads as "the whole cycle is ahead". */
+  if(left > cycle) left = cycle;
+  return { left:left, cycle:cycle, fraction:left / cycle, end:fmtDate(eventStr) };
+}
 
 /* ============================================================================
    Store — the mock backend
@@ -47,7 +85,7 @@ var Store = (function(){
      that already has a snapshot — it would need "Reset demo data" pressed by hand,
      which is not something a reviewer should have to know. Bump this whenever the
      seed changes in a way that has to be seen; the old key is simply abandoned. */
-  var KEY = 'tb-license-portal-demo-v2';
+  var KEY = 'tb-license-portal-demo-v5';
   function clone(o){ return JSON.parse(JSON.stringify(o)); }
   function seed(){
     return {
@@ -101,19 +139,67 @@ function licById(id){
   });
   return found;
 }
+/* ---------- the activity feed is written, not only seeded ----------
+   Until now DATA().activity was seed-only: you could add a user, cancel a
+   subscription or buy a licence and the feed would not notice. Every mutation
+   below logs through this one helper, so the feed reads as what actually
+   happened in this session — and an audit trail that misses actions is worse
+   than none, because it looks complete.
+   The entry shape matches the seed exactly (see data.js), so feedItem and the
+   raw payload need no special case. Date stays the pinned Aug 19 2026; the TIME
+   is the real clock, which is the same exception the greeting already makes —
+   without it every session event would collide at one minute. */
+var PORTAL_ACTOR = 'mpanchuk@thingsboard.io';
+function nowTs(){
+  var d = new Date(), p2 = function(n){ return ('0' + n).slice(-2); };
+  return 'Aug 19 2026, ' + p2(d.getHours()) + ':' + p2(d.getMinutes());
+}
+function logActivity(e){
+  var a = {
+    kind: e.kind, ts: nowTs(),
+    entityType: e.entityType, entityName: e.entityName,
+    actor: e.actor || PORTAL_ACTOR, action: e.action, txt: e.txt
+  };
+  if(e.delta) a.delta = e.delta;
+  DATA().activity.unshift(a);          // newest first, the order the feed reads in
+  Store.save();
+  // the feed is on screen on Home and on the Activity page — repaint if we are there
+  if(typeof renderDashFeed === 'function' && $('#dashFeed')) renderDashFeed();
+  if(typeof renderActFeed === 'function' && $('#actFeed')) renderActFeed();
+  return a;
+}
+
 function storeCancelLicense(id){
   var l = licById(id);
-  if(l){ l.status = 'canceled'; Store.save(); }
+  if(l){
+    l.status = 'canceled';
+    Store.save();
+    logActivity({ kind:'canceled', entityType:'Subscription', entityName:l.name, action:'CANCELED',
+      txt:'Subscription <b>' + esc(l.name) + '</b>' + (l.label ? ' (' + esc(l.label) + ')' : '')
+        + ' was canceled by ' + PORTAL_ACTOR + ' — active until <b>' + fmtDate(l.event) + '</b>.' });
+  }
   return l;
 }
-function storeAddLicense(lic){ DATA().licenses.unshift(lic); Store.save(); }
-function storeAddUser(u){ DATA().users.push(u); Store.save(); }
+function storeAddLicense(lic){
+  DATA().licenses.unshift(lic);
+  Store.save();
+  logActivity({ kind:'created', entityType:lic.type, entityName:lic.name, action:'ADDED',
+    txt:esc(lic.type) + ' <b>' + esc(lic.name) + '</b> was created by ' + PORTAL_ACTOR + '.' });
+}
+function storeAddUser(u){
+  DATA().users.push(u);
+  Store.save();
+  logActivity({ kind:'user', entityType:'User', entityName:u.name || u.email, action:'INVITED',
+    txt:'User <b>' + esc(u.name || u.email) + '</b> was invited by ' + PORTAL_ACTOR + '.' });
+}
 function storeDeleteUser(email){
   var ds = Store.get('datasets');
   Object.keys(ds).forEach(function(k){
     ds[k].users = ds[k].users.filter(function(u){ return u.email !== email; });
   });
   Store.save();
+  logActivity({ kind:'user', entityType:'User', entityName:email, action:'DELETED',
+    txt:'User <b>' + esc(email) + '</b> was removed by ' + PORTAL_ACTOR + '.' });
 }
 /* A label is the one field the demo lets you edit, from three places: the pencil
    on the details surface, that surface's ⋮, and a row's ⋮ in the table. It writes
@@ -121,8 +207,15 @@ function storeDeleteUser(email){
    table, the dashboard block and the details page never disagree. */
 function setLicenseLabel(lic, val){
   if(!lic) return;
+  var was = lic.label;
   lic.label = String(val || '').trim();
   Store.save();                        // the object came out of the store, so this persists it
+  if(lic.label !== was){
+    logActivity({ kind:'updated', entityType:'Label', entityName:lic.name, action:'UPDATED',
+      txt: lic.label
+        ? ('Label <b>' + esc(lic.label) + '</b> was set on <b>' + esc(lic.name) + '</b> by ' + PORTAL_ACTOR + '.')
+        : ('Label was cleared on <b>' + esc(lic.name) + '</b> by ' + PORTAL_ACTOR + '.') });
+  }
   repaintLabelSurfaces();
 }
 function repaintLabelSurfaces(){
@@ -424,7 +517,10 @@ function wireGlobal(){
   var imp = Store.get('impersonating');
   if(imp){ $('#impEmail').textContent = imp; $('#impBanner').hidden = false; document.body.classList.add('impersonating'); }
   $('#impReturn').addEventListener('click', function(){
+    var was = Store.get('impersonating');
     Store.set('impersonating', null);
+    if(was) logActivity({ kind:'user', entityType:'Session', entityName:was, action:'LOGIN_AS_END',
+      txt:'Session as <b>' + esc(was) + '</b> was ended by ' + PORTAL_ACTOR + '.' });
     $('#impBanner').hidden = true;
     document.body.classList.remove('impersonating');
   });

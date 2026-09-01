@@ -31,11 +31,11 @@ var TIER_SPECS = {
   startup:  { name:'Startup',   price:'$299.00', wl:true,  ent:[['Devices','500'],['Assets','500'],['Production instances','2'],['AI credits','8M','/ month']] },
   business: { name:'Business',  price:'$499.00', wl:true,  ent:[['Devices','1,000'],['Assets','1,000'],['Production instances','3'],['AI credits','16M','/ month']] },
   tbmqsub:  { name:'PE subscription', price:'$15.00', wl:false, ent:[['Sessions','100'],['Messages / sec','100'],['Production instances','1']] },
-  tbperp:   { name:'PE Perpetual License', price:'one-time', perp:true, wl:true, ent:[['Devices','5,000'],['Assets','5,000'],['Production instances','1'],['AI credits','5M']] },
+  tbperp:   { name:'PE Perpetual License', price:'one-time', perp:true, wl:true, ent:[['Devices','5,000'],['Assets','5,000'],['Production instances','1'],['AI credits','5M','/ month']] },
   tbmqperp: { name:'PE license', price:'one-time', perp:true, wl:true, ent:[['Sessions','10,000'],['Messages / sec','1,000'],['Production instances','1']] },
   // Community Grant — free, no expiry, nothing recurring. perp:true puts it on the
   // perpetual-style details layout (no renewal, no next charge, no add-ons).
-  grant:    { name:'Community Grant', price:'Free', perp:true, grant:true, wl:false, ent:[['Devices','6,050'],['Production servers','2']] }
+  grant:    { name:'Community Grant', price:'Free', perp:true, grant:true, wl:false, ent:[['Devices','6,050'],['Production instances','2']] }
 };
 var NAMED_TIER = { maker:'maker', prototype:'prototype', pilot:'pilot', startup:'startup', business:'business', perp:'tbperp', prototypeaddons:'prototype' };
 var ENT_EXTRA_KEY = { 'Devices':'devices', 'Production instances':'prod', 'AI credits':'ai' };
@@ -65,16 +65,16 @@ var DATASETS = {
       { num:'NAWE49WG-0001', licId:'A2', date:'Jul 22 2026', amount:'$15.00', status:'Paid', payment:'Card',     auto:false }
     ],
     activity: [
-      { kind:'created', ts:'17 Aug 2026, 16:20', entityType:'Subscription', entityName:'Maker', actor:'mpanchuk@thingsboard.io', action:'ADDED',
+      { kind:'created', ts:'Aug 17 2026, 16:20', entityType:'Subscription', entityName:'Maker', actor:'mpanchuk@thingsboard.io', action:'ADDED',
         txt:'Subscription <b>Maker</b> was created by mpanchuk@thingsboard.io.' },
-      { kind:'created', ts:'10 Aug 2026, 09:14', entityType:'Subscription', entityName:'Prototype', actor:'mpanchuk@thingsboard.io', action:'ADDED',
+      { kind:'created', ts:'Aug 10 2026, 09:14', entityType:'Subscription', entityName:'Prototype', actor:'mpanchuk@thingsboard.io', action:'ADDED',
         txt:'Subscription <b>Prototype</b> was created by mpanchuk@thingsboard.io.' },
-      { kind:'updated', ts:'28 Jul 2026, 15:02', entityType:'Payment method', entityName:'Visa ••4242', actor:'mpanchuk@thingsboard.io', action:'UPDATED',
+      { kind:'updated', ts:'Jul 28 2026, 15:02', entityType:'Payment method', entityName:'Visa ••4242', actor:'mpanchuk@thingsboard.io', action:'UPDATED',
         txt:'Payment method was added by mpanchuk@thingsboard.io.' },
-      { kind:'created', ts:'22 Jul 2026, 11:40', entityType:'Subscription', entityName:'TBMQ PE', actor:'mpanchuk@thingsboard.io', action:'ADDED',
-        txt:'Subscription <b>TBMQ PE</b> was created by mpanchuk@thingsboard.io.' },
-      { kind:'info', ts:'22 Jul 2026, 11:41', entityType:'Invoice', entityName:'NAWE49WG-0001', actor:'mpanchuk@thingsboard.io', action:'PAID',
-        txt:'Invoice <b>NAWE49WG-0001</b> was paid by mpanchuk@thingsboard.io.' }
+      { kind:'info', ts:'Jul 22 2026, 11:41', entityType:'Invoice', entityName:'NAWE49WG-0001', actor:'mpanchuk@thingsboard.io', action:'PAID',
+        txt:'Invoice <b>NAWE49WG-0001</b> was paid by mpanchuk@thingsboard.io.' },
+      { kind:'created', ts:'Jul 22 2026, 11:40', entityType:'Subscription', entityName:'TBMQ PE', actor:'mpanchuk@thingsboard.io', action:'ADDED',
+        txt:'Subscription <b>TBMQ PE</b> was created by mpanchuk@thingsboard.io.' }
     ]
   },
   B: {
@@ -88,9 +88,9 @@ var DATASETS = {
       { id:'B7',  tier:'prototype',product:'ThingsBoard', type:'Subscription', name:'Prototype', label:'Demo',         created:'Jul 20 2026', updated:'Jul 30 2026', status:'active',         event:'Sep 03 2026', price:'$39.00 / mo',  billing:'auto-pay' },
       { id:'B8',  tier:'tbmqsub',  product:'TBMQ',        type:'Subscription', name:'PE subscription', label:'MQTT prod',    created:'Jun 30 2026', updated:'Jul 12 2026', status:'active',   event:'Sep 10 2026', price:'$15.00 / mo', billing:'auto-pay' },
       { id:'B9',  tier:'tbmqsub',  product:'TBMQ',        type:'Subscription', name:'PE subscription', label:'MQTT staging', created:'Jul 05 2026', updated:'Jul 05 2026', status:'active',   event:'Sep 10 2026', price:'$15.00 / mo', billing:'auto-pay' },
-      { id:'B10', tier:'tbperp',   product:'ThingsBoard', type:'Perpetual',    name:'PE Perpetual License', label:'On-prem HQ',    created:'Aug 28 2025', updated:'Jun 10 2026', status:'active',           event:'Jul 27 2027', price:'one-time', billing:'paid' },
-      { id:'B11', tier:'tbperp',   product:'ThingsBoard', type:'Perpetual',    name:'PE Perpetual License', label:'Plant B',       created:'Mar 15 2026', updated:'Aug 05 2026', status:'updates_expiring', event:'Sep 01 2026', price:'one-time', billing:'paid' },
-      { id:'B12', tier:'tbmqperp', product:'TBMQ',        type:'Perpetual',    name:'PE license',           label:'Broker on-prem',created:'Apr 10 2026', updated:'Apr 10 2026', status:'active',           event:'Aug 13 2027', price:'one-time', billing:'paid' },
+      { id:'B10', tier:'tbperp',   product:'ThingsBoard', type:'Perpetual',    name:'PE Perpetual License', label:'On-prem HQ',    created:'Jul 27 2026', updated:'Jul 27 2026', status:'active',           event:'Jul 27 2027', price:'one-time', billing:'paid' },
+      { id:'B11', tier:'tbperp',   product:'ThingsBoard', type:'Perpetual',    name:'PE Perpetual License', label:'Plant B',       created:'Sep 01 2025', updated:'Aug 05 2026', status:'updates_expiring', event:'Sep 01 2026', price:'one-time', billing:'paid' },
+      { id:'B12', tier:'tbmqperp', product:'TBMQ',        type:'Perpetual',    name:'PE license',           label:'Broker on-prem',created:'Aug 13 2026', updated:'Aug 13 2026', status:'active',           event:'Aug 13 2027', price:'one-time', billing:'paid' },
       // two deliberately long labels: real deployments name themselves like this,
       // and the Product column has to wrap them rather than stretch the table
       { id:'B13', tier:'business', product:'ThingsBoard', type:'Subscription', name:'Business',  label:'Production — Central Europe manufacturing cluster, building 4', created:'Feb 18 2026', updated:'Aug 04 2026', status:'active', event:'Aug 27 2026', price:'$499.00 / mo', billing:'auto-pay' },
@@ -120,37 +120,37 @@ var DATASETS = {
       { num:'NAWE49WG-0015', licId:'B3',  date:'Jul 28 2026', amount:'$299.00',   status:'Paid', payment:'Auto-pay', auto:true  }
     ],
     activity: [
-      { kind:'status',  ts:'18 Aug 2026, 07:12', entityType:'Subscription', entityName:'Startup', actor:'System', action:'PAYMENT_FAILED',
-        txt:'Payment failed for <b>Startup</b> (Production) — card Visa ••4242 was declined.', delta:'Auto-pay charge of $299.00 failed' },
-      { kind:'created', ts:'18 Aug 2026, 10:26', entityType:'User', entityName:'Nina Rossi', actor:'mpanchuk@thingsboard.io', action:'ADDED',
+      { kind:'created', ts:'Aug 18 2026, 10:26', entityType:'User', entityName:'Nina Rossi', actor:'mpanchuk@thingsboard.io', action:'ADDED',
         txt:'User <b>Nina Rossi</b> was invited by mpanchuk@thingsboard.io.' },
-      { kind:'status',  ts:'15 Aug 2026, 14:03', entityType:'Subscription', entityName:'Pilot', actor:'i.petrenko@thingsboard.io', action:'UPDATED',
+      { kind:'status',  ts:'Aug 18 2026, 07:12', entityType:'Subscription', entityName:'Startup', actor:'System', action:'PAYMENT_FAILED',
+        txt:'Payment failed for <b>Startup</b> (Production) — card Visa ••4242 was declined.', delta:'Auto-pay charge of $299.00 failed' },
+      { kind:'status',  ts:'Aug 15 2026, 14:03', entityType:'Subscription', entityName:'Pilot', actor:'i.petrenko@thingsboard.io', action:'UPDATED',
         txt:'Plan was changed from <b>Prototype</b> to <b>Pilot</b> on <b>Factory A</b> by i.petrenko@thingsboard.io.', delta:'Plan changed from Prototype to Pilot' },
-      { kind:'updated', ts:'12 Aug 2026, 09:31', entityType:'Subscription', entityName:'Business', actor:'o.kravets@thingsboard.io', action:'UPDATED',
+      { kind:'updated', ts:'Aug 12 2026, 09:31', entityType:'Subscription', entityName:'Business', actor:'o.kravets@thingsboard.io', action:'UPDATED',
         txt:'Add-on <b>Edge Computing</b> was enabled on <b>Business</b> (Global) by o.kravets@thingsboard.io.' },
-      { kind:'info',    ts:'08 Aug 2026, 00:05', entityType:'Invoice', entityName:'NAWE49WG-0018', actor:'Auto-pay', action:'PAID',
+      { kind:'info',    ts:'Aug 08 2026, 00:05', entityType:'Invoice', entityName:'NAWE49WG-0018', actor:'Auto-pay', action:'PAID',
         txt:'Invoice <b>NAWE49WG-0018</b> was paid, charged automatically.' },
-      { kind:'status',  ts:'05 Aug 2026, 08:00', entityType:'License', entityName:'ThingsBoard PE Perpetual License', actor:'System', action:'UPDATES_EXPIRING',
+      { kind:'status',  ts:'Aug 05 2026, 08:00', entityType:'License', entityName:'ThingsBoard PE Perpetual License', actor:'System', action:'UPDATES_EXPIRING',
         txt:'Software updates for the <b>On-prem</b> perpetual license expire on <b>Aug 28, 2026</b>.', delta:'Updates term ends Aug 28 2026' },
       // a large account keeps producing events — enough of them that the Home feed
       // has a second and third batch to load
-      { kind:'updated', ts:'04 Aug 2026, 16:48', entityType:'License', entityName:'Business', actor:'o.kravets@thingsboard.io', action:'UPDATED',
+      { kind:'updated', ts:'Aug 04 2026, 16:48', entityType:'License', entityName:'Business', actor:'o.kravets@thingsboard.io', action:'UPDATED',
         txt:'Label <b>Production — Central Europe manufacturing cluster, building 4</b> was set on <b>Business</b> by o.kravets@thingsboard.io.', delta:'label = Production — Central Europe manufacturing cluster, building 4' },
-      { kind:'created', ts:'02 Aug 2026, 11:05', entityType:'User', entityName:'Dev User', actor:'mpanchuk@thingsboard.io', action:'ADDED',
+      { kind:'created', ts:'Aug 02 2026, 11:05', entityType:'User', entityName:'Dev User', actor:'mpanchuk@thingsboard.io', action:'ADDED',
         txt:'User <b>Dev User</b> was invited by mpanchuk@thingsboard.io.' },
-      { kind:'info',    ts:'02 Aug 2026, 00:05', entityType:'Invoice', entityName:'NAWE49WG-0016', actor:'Auto-pay', action:'PAID',
+      { kind:'info',    ts:'Aug 02 2026, 00:05', entityType:'Invoice', entityName:'NAWE49WG-0016', actor:'Auto-pay', action:'PAID',
         txt:'Invoice <b>NAWE49WG-0016</b> was paid, charged automatically.' },
-      { kind:'updated', ts:'30 Jul 2026, 13:22', entityType:'Subscription', entityName:'Prototype', actor:'i.petrenko@thingsboard.io', action:'UPDATED',
+      { kind:'updated', ts:'Jul 30 2026, 13:22', entityType:'Subscription', entityName:'Prototype', actor:'i.petrenko@thingsboard.io', action:'UPDATED',
         txt:'Add-on <b>Trendz Analytics</b> was enabled on <b>Prototype</b> (Demo) by i.petrenko@thingsboard.io.' },
-      { kind:'status',  ts:'28 Jul 2026, 09:10', entityType:'Subscription', entityName:'Prototype', actor:'mpanchuk@thingsboard.io', action:'CANCELED',
+      { kind:'status',  ts:'Jul 28 2026, 09:10', entityType:'Subscription', entityName:'Prototype', actor:'mpanchuk@thingsboard.io', action:'CANCELED',
         txt:'Subscription <b>Prototype</b> (Sandbox) was canceled by mpanchuk@thingsboard.io — active until <b>Sep 05, 2026</b>.', delta:'Canceled; active until Sep 05 2026' },
-      { kind:'created', ts:'24 Jul 2026, 15:40', entityType:'Subscription', entityName:'Pilot', actor:'mpanchuk@thingsboard.io', action:'ADDED',
+      { kind:'created', ts:'Jul 24 2026, 15:40', entityType:'Subscription', entityName:'Pilot', actor:'mpanchuk@thingsboard.io', action:'ADDED',
         txt:'Subscription <b>Pilot</b> was created by mpanchuk@thingsboard.io.' },
-      { kind:'updated', ts:'20 Jul 2026, 08:57', entityType:'Payment method', entityName:'Visa ••4242', actor:'mpanchuk@thingsboard.io', action:'UPDATED',
+      { kind:'updated', ts:'Jul 20 2026, 08:57', entityType:'Payment method', entityName:'Visa ••4242', actor:'mpanchuk@thingsboard.io', action:'UPDATED',
         txt:'Payment method was updated by mpanchuk@thingsboard.io.' },
-      { kind:'created', ts:'15 Jul 2026, 10:12', entityType:'Subscription', entityName:'Maker', actor:'i.petrenko@thingsboard.io', action:'ADDED',
+      { kind:'created', ts:'Jul 15 2026, 10:12', entityType:'Subscription', entityName:'Maker', actor:'i.petrenko@thingsboard.io', action:'ADDED',
         txt:'Subscription <b>Maker</b> was created by i.petrenko@thingsboard.io.' },
-      { kind:'info',    ts:'12 Jul 2026, 00:05', entityType:'Invoice', entityName:'NAWE49WG-0012', actor:'Auto-pay', action:'PAID',
+      { kind:'info',    ts:'Jul 12 2026, 00:05', entityType:'Invoice', entityName:'NAWE49WG-0012', actor:'Auto-pay', action:'PAID',
         txt:'Invoice <b>NAWE49WG-0012</b> was paid, charged automatically.' }
     ]
   },
@@ -168,7 +168,7 @@ var DATASETS = {
     ],
     invoices: [],
     activity: [
-      { kind:'created', ts:'19 Aug 2026, 09:02', entityType:'License', entityName:'Community Grant', actor:'System', action:'GRANT_ISSUED',
+      { kind:'created', ts:'Aug 19 2026, 09:02', entityType:'License', entityName:'Community Grant', actor:'System', action:'GRANT_ISSUED',
         txt:'<b>Community Grant</b> was issued to mpanchuk@thingsboard.io — license key created.', delta:'Community Grant issued' }
     ]
   }
@@ -178,18 +178,18 @@ var DATASETS = {
 var EC_PLANS = {
   'thingsboard|payg': {
     cards: [
-      { name:'Maker',     price:'$10',  per:'/ month', feats:['10 devices', '10 assets', '1 production instance', 'Community support'],
+      { name:'Maker',     price:'$10',  per:'/ month', feats:['10 devices', '10 assets', '1 production instance', '1M AI credits / month', 'Community support'],
         foot:'Includes Trendz Analytics & Edge Computing for testing.' },
-      { name:'Prototype', price:'$39',  per:'/ month', feats:['50 devices', '50 assets', '1 production instance', 'Community support'] },
-      { name:'Pilot',     price:'$99',  per:'/ month', badge:'Popular', feats:['100 devices', '100 assets', '1 production instance', 'Help desk', 'White labeling'] },
-      { name:'Startup',   price:'$299', per:'/ month', feats:['500 devices', '500 assets', '2 production instances', 'Priority help desk', 'White labeling'] },
-      { name:'Business',  price:'$499', per:'/ month', feats:['1,000 devices', '1,000 assets', '3 production instances', 'Priority help desk', 'White labeling', '+$0.10 per extra device'] }
+      { name:'Prototype', price:'$39',  per:'/ month', feats:['50 devices', '50 assets', '1 production instance', '2M AI credits / month', 'Community support'] },
+      { name:'Pilot',     price:'$99',  per:'/ month', badge:'Popular', feats:['100 devices', '100 assets', '1 production instance', '4M AI credits / month', 'Help desk', 'White labeling'] },
+      { name:'Startup',   price:'$299', per:'/ month', feats:['500 devices', '500 assets', '2 production instances', '8M AI credits / month', 'Priority help desk', 'White labeling'] },
+      { name:'Business',  price:'$499', per:'/ month', feats:['1,000 devices', '1,000 assets', '3 production instances', '16M AI credits / month', 'Priority help desk', 'White labeling', '+$0.10 per extra device'] }
     ]
   },
   'thingsboard|perpetual': {
     single: true,
     cards: [ { name:'ThingsBoard PE Perpetual License', price:'$4,999', per:'· one-time', term:'Including 1 year of software updates',
-               feats:['5,000 devices', '5,000 assets', '1 production instance', '5M AI credits', 'White labeling', 'All ThingsBoard PE features'] } ]
+               feats:['5,000 devices', '5,000 assets', '1 production instance', '5M AI credits / month', 'White labeling', 'All ThingsBoard PE features'] } ]
   },
   'tbmq|payg': {
     single: true,

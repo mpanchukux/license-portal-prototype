@@ -657,7 +657,6 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
 .nl-pe-h{font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw);color:var(--ink)}
 .nl-pe-intro{margin:6px 0 0;font-size:14px;color:var(--faint)}
 .nl-pe-body{margin-top:6px}
-#nlProdExtra .nl-pe{max-width:960px;margin-left:auto;margin-right:auto}   /* spans the centered perp product grid */
 .nl-pe-item{padding:8px 0;border-bottom:1px dashed var(--line2);font-size:14px;line-height:1.5;color:var(--mid)}
 .nl-pe-item:last-child{border-bottom:0}
 .nl-pe-item b{color:var(--ink);font-weight:600}
@@ -758,7 +757,7 @@ button.dbrand{background:none;border:0;padding:0;color:inherit;font:inherit;curs
 /* the purchased-capacity delta beside a limit — phone only (see meterRow) */
 /* ⚠️ no `display` here on purpose: the pill is .mob-only, and declaring display in
    this rule would outrank that (same specificity, later in the file) and leak the
-   pill onto desktop, where the Extra column already says the same thing. The phone
+   pill onto desktop, where the Purchased column already says the same thing. The phone
    block is what turns it on. */
 .entdelta{align-items:center;height:20px;padding:0 7px;margin-left:8px;
   border:1px solid var(--line);border-radius:999px;background:#fff;
@@ -1530,7 +1529,7 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
 @media (max-width:600px){
 
   /* ---------- Plan & add-ons: one card, one row per item, limit on the right ----------
-     Included / Extra / Limit is three numbers to answer one question on a phone —
+     Included / Purchased / Limit is three numbers to answer one question on a phone —
      what is the ceiling. So the row says name + limit, and when capacity was bought
      the delta rides beside it as a pill (see meterRow). No column labels at all. */
   .plantable{display:block;width:100%;background:#fff;border:1px solid var(--line2);
@@ -1542,7 +1541,7 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
   .plantable tbody tr:last-child{border-bottom:0}
   .plantable tbody td{display:block;padding:0;border:0;text-align:left}
   .plantable tbody td:first-child{flex:1;min-width:0}
-  /* Included and Extra are the two the phone drops; Limit stays and carries the pill */
+  /* Included and Purchased are the two the phone drops; Limit stays and carries the pill */
   .plantable tbody td:nth-child(3),.plantable tbody td:nth-child(4){display:none}
   .plantable tbody td.entlimit{display:flex;align-items:center;flex:none;
     font-variant-numeric:tabular-nums;text-align:right}

@@ -76,7 +76,7 @@ function invOpenLicenseAction(v){
 function invRow(v, opts){
   opts = opts || {};
   var pill = v.status==='Past due' ? '<span class="pill attn">Past due</span>' : '<span class="pill">'+(v.status||'Paid')+'</span>';
-  return '<tr class="inv-row"><td class="mono">'+v.num+'</td><td>'+v.date+'</td><td class="num">'+v.amount+'</td>'
+  return '<tr class="inv-row"><td class="mono">'+v.num+'</td><td>'+fmtDate(v.date)+'</td><td class="num">'+v.amount+'</td>'
     + '<td><span class="statwrap">'+pill+autoChargeIcon(v)+'</span></td>'
     + (opts.noProduct ? '' : invProductCell(v, opts))
     + '<td class="cellact"><span class="rowactions">'
@@ -99,7 +99,7 @@ function invProductCell(v, opts){
              : '<td class="lic-prodcell"><span class="muted">—</span></td>';
 }
 function userRow(u){
-  return '<tr><td>'+u.name+'</td><td>'+u.email+'</td><td>'+u.created+'</td>'
+  return '<tr><td>'+u.name+'</td><td>'+u.email+'</td><td>'+fmtDate(u.created)+'</td>'
     + '<td class="cellact"><span class="rowactions"><button class="link" data-loginas="'+u.email+'">Login as →</button><button class="link" data-deluser="'+u.email+'">Delete</button></span></td></tr>';
 }
 function menuItems(p, opts){
@@ -195,7 +195,7 @@ function rowHtml(p, opts){
   var lic = '<td><div class="lp-name">' + p.name + '</div>'
     + (p.grant ? '<div class="lp-meta">Free &middot; ' + p.limits + '</div>' : '') + '</td>';
   // when the licence last changed — plan, add-ons, label or payment state
-  var updatedCell = '<td class="lic-num">' + (p.updated || p.created) + '</td>';
+  var updatedCell = '<td class="lic-num">' + fmtDate(p.updated || p.created) + '</td>';
   return rowOpen(p) + productCell(p) + lic + statusCell(p) + updatedCell + actionsCell(p, opts) + '</tr>';
 }
 
@@ -336,7 +336,7 @@ function cancelFromRow(btn, after){
 function auditJson(a){
   var et = a.entityType.toUpperCase().replace(/ /g, '_');
   var payload = {
-    createdTime: a.ts,
+    createdTime: isoFromTs(a.ts),
     entityType: et,
     entityName: a.entityName,
     userName: a.actor,
@@ -360,7 +360,7 @@ function feedItem(a, i){
   return '<div class="fitem">'
     + '<div class="fi-row">'
     +   '<div class="fi-body">'
-    +     '<div class="fi-meta">' + a.ts + '</div>'
+    +     '<div class="fi-meta">' + fmtDateTime(a.ts) + '</div>'
     +     '<div class="fi-txt">' + a.txt + '</div>'
     +   '</div>'
     +   '<button class="iconbtn ib" data-audit data-i="' + i + '" aria-expanded="false" aria-label="Show details" title="Show details">' + AUDITSVG + '</button>'
@@ -378,7 +378,14 @@ function renderFeed(sel, limit){
 /* ---------- period filter (Activity page + the licence's Activity tab) ---------- */
 var actPeriod = { mode:'all', from:null, to:null };
 var licPeriod = { mode:'all', from:null, to:null };
-function feedDay(a){ var q=String(a.ts).split(/[ ,]+/); return epochDay(+q[2], MONF[q[1]]||1, +q[0]); }
+function feedDay(a){ var q=String(a.ts).split(/[ ,]+/); return epochDay(+q[2], MONF[q[0]]||1, +q[1]); }
+/* Sorting a newest-first feed by DAY alone leaves two events that share a day in
+   whatever order they were pushed — which for the synthesised licence events is
+   ascending time, i.e. backwards. Minute precision fixes that. */
+function feedMinute(a){
+  var t = String(a.ts).split(', ')[1] || '00:00', hm = t.split(':');
+  return feedDay(a) * 1440 + (+hm[0] || 0) * 60 + (+hm[1] || 0);
+}
 function isoDay(v){ var q=String(v).split('-'); return epochDay(+q[0], +q[1], +q[2]); }
 function filterFeedByPeriod(list, per){
   if(!per || per.mode==='all') return list;
@@ -391,7 +398,7 @@ function filterFeedByPeriod(list, per){
     return true;
   });
 }
-function tsFrom(created, time){ var q=String(created).split(' '); return (q[1]||'01')+' '+q[0]+' '+q[2]+', '+time; }
+function tsFrom(created, time){ return String(created) + ', ' + time; }
 function licenseActivity(lic){
   var who='mpanchuk@thingsboard.io', noun = lic.type==='Perpetual' ? 'License' : 'Subscription';
   // the grant has exactly one event of its own: it was issued
@@ -419,7 +426,7 @@ function licenseActivity(lic){
   });
   // newest first, like every other feed: the pushes and unshifts above are built by
   // kind, not by date, and the paid events land last however old they are
-  acts.sort(function(a,b){ return feedDay(b)-feedDay(a); });
+  acts.sort(function(a,b){ return feedMinute(b)-feedMinute(a); });
   return acts;
 }
 function renderLicFeed(lic){

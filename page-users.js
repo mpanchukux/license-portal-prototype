@@ -33,6 +33,12 @@ function impersonate(email){
   $('#impEmail').textContent = email;
   $('#impBanner').hidden = false;
   document.body.classList.add('impersonating');
+  /* An impersonation session is the one action here that most needs a trail:
+     everything done inside it happens under someone else's name. Both ends are
+     logged (see the Return handler in shared.js) — a start without an end leaves
+     "how long did this last" unanswered. */
+  logActivity({ kind:'user', entityType:'Session', entityName:email, action:'LOGIN_AS',
+    txt:'Session was started as <b>' + esc(email) + '</b> by ' + PORTAL_ACTOR + '.' });
 }
 function openLoginAs(email){
   openModal('Log in as', '<p>Log in as <b>' + email + '</b>? You will see and manage the portal on their behalf until you return to your own account.</p>');
