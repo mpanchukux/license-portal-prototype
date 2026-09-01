@@ -366,10 +366,11 @@ modal-режимі монтується **заново на кожне відк�
   усередині. Тепер **біле несе сама модалка** (`.licmodal .fs-box{background:var(--card)}`),
   а `.canvas` перестає бути шаром (`background:transparent`, `border:0`, `radius:0`,
   `overflow:visible`) — жодного внутрішнього контейнера, жодного другого фону, жодних
-  подвійних бордерів. Контент іде **на ширину модалки, не сторінкового контейнера**:
-  `.licmodal .sheet{max-width:none;padding:18px 24px 34px}` — `--pageW` капав його на
-  1072px, тепер 1132px, з нормальним боковим паддінгом і **скромним 18px-відступом
-  під хедером**. ⚠️ Правило скоупнуте на `.licmodal`, тому в `#nlModal` (візард) `.fs-box`
+  подвійних бордерів. Контент іде **на ширину модалки, не сторінкового контейнера**
+  (`--pageW` капав його на 1072px) — конкретні відступи `.licmodal .sheet` задає
+  **пас вирівнювання, описаний вище**: боковий паддінг звідси знято зовсім, щоб сірий
+  блок ішов від краю до краю, а інсет тримають `.head` і `.section`.
+  ⚠️ Правило скоупнуте на `.licmodal`, тому в `#nlModal` (візард) `.fs-box`
   лишається сірою — перевірено на вкладеному флоу: візард над деталями тримає свій фон.
   **Page mode не зачеплений** — там `.canvas` і далі біла картка з бордером на сірій
   сторінці (перевірено після правки).
@@ -403,12 +404,17 @@ modal-режимі монтується **заново на кожне відк�
   а не з модалки). Page mode (A) цю адресу має (`license.html?id=…&from=…`). Це головний
   аргумент у виборі між A і B — врахувати при рішенні.
 
-### Деталі ліцензії керуються рядком (`openLicense` / `renderLicenseDetails`)
+### Деталі ліцензії керуються рядком (`renderLicenseDetails`)
 `#appView` більше **не** статичний per-plan — він наповнюється з **об'єкта ліцензії**
-(рядок датасету). Кожен рядок несе `data-licid`; `openRow` → `openLicense(licById(id))`
-→ `activeLicense` + `PAGES.licenseView={kind:sub|perp}` + `goToPage('licenseView')`.
-`applyDetailsPage` для licenseView кличе `renderLicenseDetails(activeLicense)`; для
-іменованих plan-сторінок пікера — `licFromNamed(key)` (той самий рендер).
+(рядок датасету). Кожен рядок несе `data-licid`; клік по рядку йде через
+**`openRowLink(row, from)`** → **`openLicenseDetails(lic, from, opts)`**
+(`components.js`), який залежно від `licDetailsMode()` або відкриває модалку
+(`LicenseDetails.openModal`), або переходить на **`licenseHref(lic, from)`**. Далі
+рендерить `renderLicenseDetails(lic)`; для іменованих plan-сторінок пікера —
+`licFromNamed(key)` (той самий рендер).
+⚠️ `openLicense` / `PAGES.licenseView` / `goToPage('licenseView')` / `applyDetailsPage`
+— **назви односторінкової епохи, їх більше немає**: після розбиття на файли перехід це
+справжнє посилання, а не зміна вузла.
 - **Колонка Usage у Plan & add-ons — схована, не видалена.** `<th>` і `<td>` далі
   рендеряться (клас **`.usecol`**), `meterRow` далі рахує `0 / {limit}` і тултіп, дані
   в датасетах на місці. Ховає **одне правило** `.plantable .usecol{display:none}` —
@@ -579,12 +585,13 @@ range…) на **Activity-сторінці** й у **details Activity-табі**
 `licenseOrigin` — ліцензія, відкрита з Home, тримає підсвіченим **Home**; відкрита зі
 списку — **Licenses**. Тобто back-кнопка й активний nav-пункт завжди кажуть одне й те саме.
 
-**Origin-aware back на деталях**: `openLicense(lic, origin)` запам'ятовує, звідки відкрито
-ліцензію (`licenseOrigin`): рядок на Home → back веде на `homeKey`, рядок зі сторінки
-Licenses → на `products3` (стан списку живе в JS-змінних, тому фільтри/варіант вертаються
-самі). `#backBtn` більше **не** захардкоджений на `products3`; `syncBackTarget()` (кличеться
-з `renderLicenseDetails`) переписує його `aria-label`/`title` на «Back to Home» / «Back to
-Licenses».
+**Origin-aware back на деталях**: `from` у `licenseHref(lic, from)` запам'ятовує, звідки
+відкрито ліцензію. Розкладає це **мапа `ORIGINS` у `page-license.js`**: `home` →
+`index.html` / «Back to Home», `invoices` → `invoices.html` / «Back to Invoices», фолбек
+→ `licenses.html` / «Back to Licenses». Один запис задає одразу три речі — куди веде
+`#backBtn`, який у нього `label`, і який nav-пункт підсвічений.
+⚠️ `syncBackTarget()`, `homeKey` і `products3` — **назви односторінкової епохи, їх немає**:
+тоді стан списку жив у JS-змінних, тепер back це звичайний href.
 
 **`homeKey`**: nav Home / лого / overlay-close / Escape ведуть на `homeKey` (останній
 вибраний dash-варіант: dashboard/dashB/dashempty), а не жорстко на A — тому вибраний
@@ -594,7 +601,8 @@ Licenses».
 dataset-driven); рядки строяться **тими самими** `headHtml`/`rowHtml` (variant 3), що
 сторінка Licenses. Recent invoices — не статична копія, а з `DATA()` (`#dashInvBody`).
 Стуб-кнопки в перерендерених таблицях працюють через делегування на persistent `<tbody>`
-(не per-element). Рядки-ліцензії дашборда клікаються через `openRow` → `openLicense`.
+(не per-element). Рядки-ліцензії дашборда клікаються через **`openRowLink(row, from)`**
+(`components.js`), тобто тим самим шляхом, що й на сторінці Licenses.
 
 **Блоки Home** (у цьому порядку): Licenses → Recent invoices → **Recent activity**.
 
@@ -655,8 +663,12 @@ Opacity обох ставиться інлайн (тому CSS-перехід у
     Product/Billing, план-картки й «Get started» → NL-візард працюють як завжди.
   - `dashgrant` (`kind:'dash'`, `variant:'G'`) — populated дашборд датасету G
     плюс **одноразовий** банер `#grantBanner` першим елементом `.dwrap`:
-    «Your Community Grant is ready…» + «View license» (`openLicense(licById('G1'))`)
-    + ✕ (`grantBannerDismissed` — на сесію, без persist). Вигляд — **як банер
+    «Your Community Grant is ready…» + «View license» (`#grantViewBtn` → знаходить
+    грантову ліцензію в `DATA()` і кличе `openLicenseDetails(g, 'home')`, тому шанує
+    вибраний режим показу деталей) + ✕. Згортання **персистить** —
+    `dismiss('grantBanner')` / `isDismissed('grantBanner')` пишуть у `Store.dismissed`,
+    тобто банер не вертається й після перезавантаження (раніше тут було записано
+    «на сесію, без persist» — це вже не так). Вигляд — **як банер
     імперсонації** (`.imp-banner`): заливка ink, білий текст, біла пілюля-дія,
     напівпрозорий ✕. Відмінність лише в посадці: імперсонаційний живе в chrome
     і приклеєний до топ-бар-бенда (скруглення тільки знизу), а grant-банер стоїть
@@ -672,9 +684,9 @@ Opacity обох ставиться інлайн (тому CSS-перехід у
   Deployment-перемикача немає (портал self-managed).
 - **Деталі гранту** — той самий `#appView` на **perp-гілці**: рішення «як перпетуал»
   зведено в один хелпер **`isPerpLike(lic)`** (`type==='Perpetual' || lic.grant`),
-  який тепер використовують `renderLicenseDetails`, `renderLicenseActions` і
-  `openLicense` (раніше `renderLicenseActions` мав власну перевірку типу й тому
-  показував грантові Apply coupon). Відмінності гранту складає
+  який використовують `renderLicenseDetails`, `renderLicenseActions` і `renderKicker`
+  (раніше `renderLicenseActions` мав власну перевірку типу й тому показував грантові
+  Apply coupon). Відмінності гранту складає
   **`renderGrantChrome(lic)`**: кікер «Grant license», `.periodhead` → «Expiry»
   + `#periodPerp` → muted «No expiry», ховає Apply coupon і **Add capacity**,
   Invoices-таб → `#grantInvEmpty` (грант безплатний, тому інвойсів немає — inferred),
@@ -787,17 +799,19 @@ Opacity обох ставиться інлайн (тому CSS-перехід у
 - **Мітка живе в Product-колонці** другим рядком (`.lic-prodlabel`, перенос дозволений) —
   саме вона розрізняє рядки. Старий label-first-режим для варіанта B прибраний.
 - **Status має лише два значення** — `Active` / `Canceled`, і **на всіх поверхнях**:
-  `statusPill` (таблиці) і `statusChipHTML` (хедер деталей) тримають те саме правило,
-  **без винятків** (грант теж `Active`). `payment_failed`, `updates_expiring` і
-  `awaiting_checkin` **лишаються в даних** — вони керують **банером** на деталях
-  (конкретна дата + дія) та attention-first сортуванням дашборда, але статусами не є.
-  Розподіл свідомий: **статус каже, чи ліцензія жива; банер — що потребує уваги.**
-  Дата тепер у колонці State, тому з canceled-пілюлі знято «· until {date}»
-  (на деталях чіп лишає «Canceled · active until {date}» + muted-трактування).
-- **`renewCell(p)`** формулює дату за суттю ліцензії: `Renews {date}` (підписка) /
+  `statusChip(l)` (таблиці, `components.js`) і `statusChipHTML(lic)` (хедер деталей,
+  `license-details.js`) тримають те саме правило, **без винятків** (грант теж `Active`).
+  `payment_failed`, `updates_expiring` і `awaiting_checkin` **лишаються в даних** — вони
+  керують **банером** на деталях (конкретна дата + дія) та attention-first сортуванням
+  дашборда, але статусами не є. Розподіл свідомий: **статус каже, чи ліцензія жива;
+  банер — що потребує уваги.** Дата стоїть **другим рядком тієї самої клітинки**
+  (див. `statusCell` вище), тому з canceled-пілюлі знято «· until {date}» (на деталях
+  чіп лишає «Canceled · active until {date}» + muted-трактування).
+- **`stateText(p)`** формулює дату за суттю ліцензії: `Renews {date}` (підписка) /
   `Updates until {date}` (перпетуал) / `Active until {date}` (canceled) / muted `No expiry`
-  (грант) / muted `—` (без `event`). `.lic-num` отримав `white-space:nowrap`, щоб дати
-  не ламались на два рядки після того, як Product забрав ширину.
+  (грант) / muted `—` (без `event`). Nowrap тримають обидва носії дат:
+  `.licstat-txt` (рядок стану під чіпом) і `.lic-num` (колонка Updated) — щоб дати не
+  ламались на два рядки після того, як Product забрав ширину.
 
 **Три таблиці інвойсів — один білдер** (`invRow(v, opts)`): Invoice # · Date · Amount ·
 **Status (+ іконка авто-списання)** · Product · actions.
@@ -881,22 +895,20 @@ JS більше **не свопає** ▲/▼ текстом, лише пере�
 тепер **симетричний** (`4px 12px`): лівий був 4px під те саме коло, і без нього ім'я
 стояло майже на рамці.
 
-**Топ-бар торкається верху екрана**: `.dtopbar{padding:0 24px}` (без верхнього
-відступу), `.dtopbar-inner` — без верхнього бордера й зі скругленням **лише знизу**
-(`border-radius:0 0 10px 10px`), бо саме там бенд і закінчується.
-
 **Слот дії сторінки в топбарі** (`.tb-act` / `#topbarAction`, у `chromeHTML`): порожній
 на всіх сторінках, які своєї праймері-дії не мають, і `:empty` його схлопує, щоб бенд
 не тримав фантомного зазору. Наповнює його сторінка — наразі одна, Home (див.
 «Sticky-праймері на Home»).
 
-**Топ-бар — contained band**: білий фон **не** тягнеться edge-to-edge. Зовнішній
-`.dtopbar` — прозорий (bg сторінки, `padding:12px 24px 0`); **сам бенд** —
-`.dtopbar-inner` (`max-width:var(--pageW)`, центрований, `background:var(--card)`,
-`border:--line2`, `border-radius:10`) — «плаваючий» бар, сірий фон видно з боків.
-Контент бару (лого/nav/профіль) через внутрішній `padding:0 var(--pageX)` вирівняний
-точно з текстом сторінок; біла кромка бенда — на ширині pageW-боксу (трохи ширша за
-текст). `.tnav` абсолютно центрується в inner.
+**Топ-бар — contained band, що звисає з верхньої кромки**: білий фон **не** тягнеться
+edge-to-edge. Зовнішній `.dtopbar` — прозорий (bg сторінки, `padding:0 24px` — **без
+верхнього відступу**, бенд торкається верху екрана); **сам бенд** — `.dtopbar-inner`
+(`max-width:var(--pageW)`, центрований, `background:var(--card)`, `border:1px solid
+var(--line2)` але **`border-top:0`**, і скруглення **лише знизу**
+`border-radius:0 0 10px 10px` — бо саме там бенд і закінчується). Сірий фон сторінки
+видно з боків. Контент бару (лого/nav/профіль) через внутрішній
+`padding:0 var(--pageX)` вирівняний точно з текстом сторінок; біла кромка бенда — на
+ширині pageW-боксу (трохи ширша за текст). `.tnav` абсолютно центрується в inner.
 
 ### Save на сторінках налаштувань — без «All changes saved»
 `wirePageSave(viewSel, btnSel)` більше не приймає третій аргумент: напису «All changes
@@ -958,11 +970,15 @@ Activity, Users та Instances-табі.
 body 400 → акцент 500, **ніколи 700** — фрагмент має підніматись із речення, а не читатись
 як заголовок у ньому. Стара локальна `.fi-txt b{font-weight:600}` прибрана.
 
-**Шкала** — CSS custom properties у `:root` (одне місце) + утиліти `.t-*`:
-`--t-display 64` · `--t-h1 36/700` · `--t-h2 20/500` · `--t-body 16/400` ·
-`--t-small 14/400` · `--t-label 14/500 uppercase +0.10em`. Правила: **14px — підлога**,
-вага росте з розміром, **bold 700 лише для display/h1**; `--t-small` і `--t-label` —
-один розмір, різняться регістром+трекінгом. Числа — `.tnum`; mono — `.t-mono` (ls:0).
+**Шкала — CSS custom properties у `:root`, і тільки вони**: `--t-display 64` ·
+`--t-h1 36/700` · `--t-h2 20/500` · `--t-body 16/400` · `--t-small 14/400` ·
+`--t-label 14/500 uppercase +0.10em`. Правила: **14px — підлога**, вага росте з
+розміром, **bold 700 лише для display/h1**; `--t-small` і `--t-label` — один розмір,
+різняться регістром+трекінгом.
+⚠️ **Утиліт-класів немає** — ні `.t-*`, ні `.tnum`: їх знесло пасом чистки (див.
+«Пас чистки»), і компоненти читають токени напряму. Табличні числа ставляться
+`font-variant-numeric:tabular-nums` у правилі самого компонента, mono — через
+`font-family:var(--font-mono)`.
 
 **Застосовано на всіх сторінках.** Ієрархію зведено на 6 рівнів шкали (рев'ю в
 браузері по кожній поверхні: dashboard, деталі sub/perp, Licenses, Users,
@@ -970,15 +986,17 @@ body 400 → акцент 500, **ніколи 700** — фрагмент має 
 - **page-titles → h1** (36/700): `.lic-h1` (Profile/Billing/списки), `.planname`
   (деталі), `.dwelcome h1` (дашборд). Прибрано ad-hoc 30/800.
 - **блок/картка/модалка-титули → h2** (20/500, sentence): `.dblock-head h2`,
-  `.pc-head h2` (plan cards), `.am-h2`, `.am-titlebar h3`, `.modal .mh h3`,
-  `.paymodal-h h3`, `.fs-maintitle`. Прибрано 16–18/700.
+  `.pc-head h2` (plan cards), `.modal .mh h3`, `.paymodal-h h3`, `.fs-maintitle`.
+  Прибрано 16–18/700.
 - **тихі маркери/колонки/груп-лейбли → label** (14/500 UPPERCASE +0.10em):
-  `th`, `.sh h3`, `.am-sechead h4`, `.pf-gname`, `.pf-tile .k`, `.dprofmenu .grp`,
-  `.setcard-h h2`, `.minihead`, і **`.billcard-h`** (тепер теж uppercase-кікер).
-- **hero/stat-числа → h2 size, weight 500, `.tnum`**: `.nextcharge .big` (сума
-  next-charge), `.am-cellval`, `.am-dueval`, `.pf-tile .v`, `.pc-price`, `.big`.
-  Свідомо weight **500, не 700** — правило «bold 700 лише для display/h1» тримаємо
-  навіть на числах.
+  `th`, `.sh h3`, `.am-sechead h4`, `.setcard-h h2`, `.minihead`, і **`.billcard-h`**
+  (тепер теж uppercase-кікер).
+- **hero/stat-числа → h2 size, weight 500, табличні цифри**: `.nextcharge .big` (сума
+  next-charge), `.am-dueval`, `.pc-price`, `.big`. Свідомо weight **500, не 700** —
+  правило «bold 700 лише для display/h1» тримаємо навіть на числах.
+⚠️ Зі списків вище прибрані адресати, яких **уже не існує** (жили в архівній
+Manage-модалці й на старій сторінці Profile): `.am-h2`, `.am-titlebar h3`,
+`.am-cellval`, `.pf-gname`, `.pf-tile .k` / `.v`, `.dprofmenu .grp`.
 - **subtitle → small**: `.dwelcome p` (як `.lic-sub`).
 Body/контроли/клітинки, що вже були 14px (= підлога small), лишили літералами —
 не churn'или. Прото-gear-панель (`.settings-panel`, `.sp-*`) свідомо не чіпали.
@@ -1019,16 +1037,20 @@ Body/контроли/клітинки, що вже були 14px (= підло�
   payment-modal (`.payoverlay/.paymodal`, вужча — inline `width:min(420px,96vw)`).
   Один інпут + placeholder, Cancel/✕/Esc/бекдроп закривають, **Apply disabled поки
   інпут порожній**. Раніше був inline-експандер у хедері (`#couponInline`) — прибрано.
-- **Unsaved-changes guard** (Profile + Billing): `goToPage` обгорнуто —
-  `goToPage` перевіряє `anyDirty()` і, якщо є незбережені правки, кличе `confirmLeave`
-  (реальна навігація в `_goToPage`). Через це guard ловить **усі** переходи одним
-  місцем: nav-таби, лого, профіль-меню, in-page `[data-goto]`-лінки. `dirtyViews` +
-  `settingsClean` веде `wirePageSave`; Save чистить прапорець (guard не спрацює).
+- **Unsaved-changes guard** (Account + Billing + Security) — усе в `components.js`:
+  один модульний прапорець **`pageDirty`**, який ставить `wirePageSave(viewSel, btnSel
+  [, noteSel])` (будь-який `input`/`change` у межах сторінки → dirty, клік по Save →
+  clean), і **`guardLinks()`**, що слухає клік по **будь-якому `a[href]`** у
+  **capture-фазі** на `document`. Тому guard ловить усі переходи одним місцем — nav,
+  лого, профіль-меню, in-page лінки — і саме тому це вже не потребує обгортки навколо
+  навігації: після переходу на багатосторінковість навігація і є посилання.
+  Пропускаються `target="_blank"` і якорі (`#…`).
   Модалка — generic `openModal` з ін'єктованими кнопками (як delete-confirm):
-  **Stay** (`.btn.sec`, справа) / **Leave without saving** (`.btn.ter`, зліва).
-  Leave кличе всі `settingsClean` (скидає прапорці; значення полів у прототипі **не**
-  відкочуються — свідомо, це wireframe). Прото-gear-перемикання сторінок guard оминає
-  (кличе `applyDetailsPage`, не `goToPage`).
+  **Stay** (`.btn.sec`, справа) / **Leave without saving** (`.btn.ter`, зліва); Leave
+  скидає `pageDirty` і робить реальний перехід. Значення полів у прототипі **не**
+  відкочуються — свідомо, це wireframe.
+  ⚠️ Механізм **не** називається `goToPage`/`anyDirty`/`confirmLeave`/`dirtyViews`/
+  `settingsClean` — то були назви односторінкової епохи, їх немає.
 - **Profile / Billing без back-кнопки**: `#profBackBtn`/`#billBackBtn` прибрано.
   `.setgrid{width:100%}` — сторінки займають **весь спільний контейнер** (1120).
   **Картки (`.setcard`) теж full-width** (та сама кромка, що таблиці/дашборд-блоки);
@@ -1371,9 +1393,9 @@ perp $2,999 — 10,000 sessions · 1,000 msg/sec · 1 prod · WL.
   - **Back став icon-кнопкою в хедері кроку**, одразу перед «Step N of M · …»
     (`#nlStepBack` у `.nl-plabel`, який тепер flex). Рендериться на кожному кроці > 1,
     делегований хендлер на `#nlStepbar`.
-  - **Нижнього футера на цьому кроці немає** (`renderFooter`: `#nlFoot` схований, поки
-    крок < останнього; `#nlBack` схований завжди). Футер лишився тільки на Review & pay
-    і несе один primary — Subscribe / Buy license / Confirm change.
+  - **Нижнього футера немає ні на цьому кроці, ні на жодному іншому** — `renderFooter`,
+    `#nlFoot`, `#nlBack` і `#nlNext` видалені (див. вище). Коміт живе в картці, яка несе
+    тотал кроку: Subscribe / Buy license / Confirm change / Confirm changes.
   - **Заголовок блока контролів — «Capacity»** (був «PLAN {назва}» / «PACKAGE {назва}»):
     рядки — це те, чого можна докупити (production instances, AI credits, development
     instances), а не налаштування плану; назва плану вже стоїть у картці вище, тому
