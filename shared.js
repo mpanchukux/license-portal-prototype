@@ -230,12 +230,21 @@ function dismiss(k){ Store.get('dismissed')[k] = true; Store.save(); }
 /* ============================================================================
    Chrome — one definition, injected into every page
    ========================================================================== */
+/* The five destinations, in one place. `ic` is only read by the phone's bottom
+   navigation bar — the desktop strip is text-only — but it lives here so the
+   destination list stays a single source. */
 var NAV_ITEMS = [
-  { key:'home',     href:'index.html',    label:'Home' },
-  { key:'licenses', href:'licenses.html', label:'Licenses' },
-  { key:'invoices', href:'invoices.html', label:'Invoices' },
-  { key:'activity', href:'activity.html', label:'Activity' },
-  { key:'users',    href:'users.html',    label:'Users' }
+  { key:'home',     href:'index.html',    label:'Home',
+    ic:'<path d="M4 10.5L12 4l8 6.5V20h-5.5v-6h-5v6H4z"/>' },
+  { key:'licenses', href:'licenses.html', label:'Licenses',
+    ic:'<circle cx="9" cy="15" r="3"/><path d="M11.2 12.8L19 5"/><path d="M15.5 5H19v3.5"/>' },
+  { key:'invoices', href:'invoices.html', label:'Invoices',
+    ic:'<path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9.5 8.5h5M9.5 12.5h5"/>' },
+  { key:'activity', href:'activity.html', label:'Activity',
+    ic:'<path d="M3 12h4l2.5-6 3 12 2.5-6h6"/>' },
+  { key:'users',    href:'users.html',    label:'Users',
+    ic:'<circle cx="9" cy="8.5" r="3"/><path d="M3 19c0-3.2 2.7-4.8 6-4.8s6 1.6 6 4.8"/>'
+      + '<path d="M16 6.2a3 3 0 0 1 0 5.6"/><path d="M17.6 19c0-2.4-.9-3.9-2.4-4.6"/>' }
 ];
 
 function navItemsHTML(extraClass){
@@ -244,29 +253,35 @@ function navItemsHTML(extraClass){
       + '" href="' + n.href + '">' + n.label + '</a>';
   }).join('');
 }
-/* The phone menu. Same items, same `data-nav`, same `.tnav-item` class — so
-   syncTopNav marks the current page here too, without a second source of truth.
-   Hidden above 600px by CSS; the bar's own nav is hidden below it. */
-function navSheetHTML(){
-  return '<div class="navsheet" id="navSheet" hidden>'
-    + '<div class="nsh-back" data-navclose></div>'
-    + '<nav class="nsh-panel" aria-label="Primary">'
-    +   '<div class="nsh-head">'
-    +     '<span class="nsh-title">Menu</span>'
-    +     '<button class="fs-close" id="navSheetClose" aria-label="Close menu">\u2715</button>'
-    +   '</div>'
-    +   '<div class="nsh-items">' + navItemsHTML('nsh-item') + '</div>'
-    + '</nav>'
-    + '</div>';
+/* The phone's primary navigation: a bottom bar, not a drawer. Five destinations
+   at the same level are what a bottom bar is for — a drawer hid all five behind a
+   press and put "Users" out of sight. Same items, same `data-nav`, same
+   `.tnav-item` class, so syncTopNav marks the current one here too and there is
+   still one source of truth. Hidden above 600px by CSS; the desktop strip is
+   hidden below it. */
+function bottomNavHTML(){
+  return '<nav class="bnav" id="bottomNav" aria-label="Primary">'
+    + NAV_ITEMS.map(function(n){
+        return '<a class="tnav-item bnav-item" data-nav="' + n.key + '" href="' + n.href + '">'
+          + '<span class="bn-ic"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true">'
+          + n.ic + '</svg></span>'
+          + '<span class="bn-lb">' + n.label + '</span></a>';
+      }).join('')
+    + '</nav>';
 }
 function chromeHTML(){
   var nav = navItemsHTML();
   return ''
   + '<header class="dtopbar">'
   +   '<div class="dtopbar-inner">'
-  +   '<button class="navburger" id="navBurger" aria-label="Open menu" aria-expanded="false" aria-controls="navSheet">'
-  +     '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>'
-  +   '</button>'
+  /* Phone only (CSS hides both above the breakpoint): the app bar's leading slot
+     and its title. The slot is empty on a top-level destination and holds a back
+     arrow on a detail page — see syncAppBar, which fills both from the body's
+     data-title / data-back. */
+  +   '<a class="tb-back" id="tbBack" aria-label="Back" hidden>'
+  +     '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>'
+  +   '</a>'
+  +   '<h2 class="tb-title" id="tbTitle"></h2>'
   +   '<a class="dbrand" href="index.html" aria-label="ThingsBoard License Portal — home" title="Home">'
   +     '<div class="mark"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4v16M4 12h16"/></svg></div>'
   +     '<div class="bt">ThingsBoard<span class="bsep">·</span>License Portal</div>'
@@ -290,11 +305,11 @@ function chromeHTML(){
   +   '</div>'
   +   '</div>'
   + '</header>'
-  + navSheetHTML()
+  + bottomNavHTML()
   /* Scroll-to-top, phone only (CSS hides it above the breakpoint). A floating button
-     rather than a header action: the bar is already down to burger + mark + user, and
-     "back to the top" is a page gesture, not a piece of chrome. Bottom-right, opposite
-     the prototype's own gear. */
+     rather than a header action: the app bar is down to title + user, and "back to the
+     top" is a page gesture, not a piece of chrome. Bottom-right, opposite the
+     prototype's own gear, and lifted clear of the bottom navigation bar. */
   + '<button class="totop" id="toTopBtn" aria-label="Scroll to top" hidden>'
   +   '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5"/><path d="M6 11l6-6 6 6"/></svg>'
   + '</button>'
@@ -389,6 +404,32 @@ function injectChrome(){
 /* ---------- nav highlight ---------- */
 /* `data-nav` on <body> names the section; details pages set it from where the
    licence was opened, the same origin their back button uses. */
+/* The phone app bar carries the page name, so orientation survives scrolling —
+   the bottom bar shows where you are among the five destinations, the title says
+   which page you are on when it is not one of them (Account, Billing, Security).
+   Both come off the body: data-title is explicit per page rather than read from
+   the H1, because Home's H1 is a greeting and the bar must still say "Home".
+   data-back turns the leading slot into a back arrow; without it the slot stays
+   empty, which is what a top-level destination should show. */
+var TB_CHEVRON = '<path d="M15 5l-7 7 7 7"/>';
+var TB_CLOSE   = '<path d="M6 6l12 12M18 6L6 18"/>';
+function syncAppBar(){
+  var t = $('#tbTitle'), b = $('#tbBack');
+  if(t) t.textContent = document.body.getAttribute('data-title') || '';
+  if(b){
+    var href = document.body.getAttribute('data-back');
+    b.hidden = !href;
+    if(href) b.setAttribute('href', href);
+    /* Two leading treatments, declared by the page: a chevron for a surface you step
+       back through (Security → Account), an ✕ for a detail surface you leave. The
+       details modal already closes with an ✕, so the full-page presentation of the
+       same screen says the same thing rather than inventing a second gesture. */
+    var close = document.body.getAttribute('data-backicon') === 'close';
+    var svg = $('svg', b);
+    if(svg) svg.innerHTML = close ? TB_CLOSE : TB_CHEVRON;
+    b.setAttribute('aria-label', close ? 'Close' : 'Back');
+  }
+}
 function syncTopNav(){
   var active = document.body.getAttribute('data-nav') || '';
   $$('.tnav-item').forEach(function(a){
@@ -457,25 +498,6 @@ function wireGlobal(){
     btn.classList.add('spinning');
     setTimeout(function(){ btn.classList.remove('spinning'); }, 600);
   });
-
-  // phone menu: the burger opens a full-height panel; anything that means "done"
-  // closes it (✕, the backdrop, Esc, or picking an item — the link navigates anyway)
-  (function(){
-    var b = $('#navBurger'), sheet = $('#navSheet');
-    if(!b || !sheet) return;
-    function setOpen(on){
-      sheet.hidden = !on;
-      b.setAttribute('aria-expanded', on ? 'true' : 'false');
-      document.body.classList.toggle('navsheet-open', on);
-    }
-    b.addEventListener('click', function(){ setOpen(true); var c = $('#navSheetClose'); if(c) c.focus(); });
-    sheet.addEventListener('click', function(e){
-      if(e.target.closest('[data-navclose]') || e.target.closest('#navSheetClose') || e.target.closest('.nsh-item')) setOpen(false);
-    });
-    document.addEventListener('keydown', function(e){
-      if(e.key === 'Escape' && !sheet.hidden){ setOpen(false); b.focus(); }
-    });
-  })();
 
   /* Scroll-to-top: appears once the page has actually been scrolled, hides again at
      the top. A plain scroll listener, not rAF — that does not fire in a hidden tab or
@@ -553,6 +575,7 @@ function wireGlobal(){
 
   wireSettingsPanel();
   syncTopNav();
+  syncAppBar();
 }
 
 function closeAllMenus(){
@@ -566,7 +589,14 @@ function closeAllMenus(){
 /* Every open menu is re-anchored as position:fixed on a top layer, so no
    ancestor's overflow can clip it. */
 function elevateOpenPops(){
+  var phone = window.matchMedia('(max-width:600px)').matches;
   $$('.dropmenu:not([hidden]), .menu .pop:not([hidden])').forEach(function(pop){
+    /* ⚠️ A pop that CSS turns into a bottom sheet must be left alone: this helper
+       writes position/top/left inline, and inline beats the stylesheet — the
+       details overflow ended up a 44px-wide dropdown pinned under its own button
+       instead of a full-width sheet. The relocated header overflow is the one
+       case (see placeOverflow in license-details.js). */
+    if(phone && pop.closest('.fs-headactions, #topbarAction')) return;
     var anchor = pop.parentNode ? pop.parentNode.querySelector('[aria-haspopup]') : null;
     if(!anchor) return;
     var r = anchor.getBoundingClientRect();

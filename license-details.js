@@ -39,6 +39,10 @@ var DETAILS_HTML = ''
 + '            <div class="headcol">'
 + '            <div class="top">'
 + '              <div class="idline">'
++ '                <!-- same placeholder square as the Home / Licenses product cell'
++ '                     (.lp-ic): solid light fill, no border. Desktop only — the'
++ '                     phone identity block was specced without it. -->'
++ '                <span class="hd-ic lp-ic" aria-hidden="true"></span>'
 + '                <div class="titleblock">'
 + '                  <div class="titlekicker" data-page="sub" id="kickerSub">ThingsBoard &middot; Subscription</div>'
 + '                  <div class="titlekicker" data-page="perp" id="kickerPerp">ThingsBoard &middot; Perpetual</div>'
@@ -65,6 +69,8 @@ var DETAILS_HTML = ''
 + '                         block in styles.css). It defers to the real button, so'
 + '                         there is one coupon controller, not two. -->'
 + '                    <button role="menuitem" class="mob-only" data-couponmenu>Apply coupon</button>'
++ '                    <button role="menuitem" class="mob-only" data-revealmenu>Reveal key</button>'
++ '                    <button role="menuitem" class="mob-only" data-installmenu>Installation instructions</button>'
 + '                    <button role="menuitem" data-editlabel>Edit label</button>'
 + '                    <button role="menuitem" data-cancel-active>Cancel subscription</button>'
 + '                  </div>'
@@ -75,6 +81,10 @@ var DETAILS_HTML = ''
 + '            <!-- row 2: the label — a muted description line under the title -->'
 + '            <div class="metarow">'
 + '              <span id="labelSlot"><button class="chip ghost" id="addLabel">+ Add label</button></span>'
++ '              <!-- phone: status and label merged into one calm supporting line'
++ '                   ("Active · Factory A"). The chip and the pencil step aside there —'
++ '                   see renderSupportLine and the ≤600px block. -->'
++ '              <div class="supportline mob-only" id="supportMob"></div>'
 + '            </div>'
 + ''
 + '            <div class="hairline"></div>'
@@ -84,6 +94,7 @@ var DETAILS_HTML = ''
 + '              <div class="keycol">'
 + '                <h3 class="minihead">License key</h3>'
 + '                <div class="keyline">'
++ '                  <span class="rowic mob-only" id="keyIc"></span>'
 + '                  <span class="mono" id="keyText" data-masked="••••••••••••3f2a" data-full="d41d-8cd9-8f00-b204-e980-3f2a">••••••••••••3f2a</span>'
 + '                  <button class="iconbtn ib" id="revealBtn" aria-pressed="false" aria-label="Reveal license key" title="Reveal">'
 + '                    <svg class="icon eye" viewBox="0 0 24 24"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z"/><circle cx="12" cy="12" r="2.5"/></svg>'
@@ -111,12 +122,19 @@ var DETAILS_HTML = ''
 + '              <div class="keycol right" data-page="sub">'
 + '                <h3 class="periodhead">Subscription period</h3>'
 + '                <div class="period" id="periodSub">Aug 13 2026 to Sep 13 2026</div>'
++ '                <!-- phone: the same fact as a list row — the word moves up into the'
++ '                     label and the value is the bare date. Desktop keeps its caps'
++ '                     header with the word inside the value, so both are emitted. -->'
++ '                <h3 class="rowlabel mob-only" id="periodLabelSub"></h3>'
++ '                <div class="rowvalue mob-only" id="periodValueSub"></div>'
 + '              </div>'
 + '              <!-- the license itself never expires; what is dated here is the'
 + '                   software-updates term -->'
 + '              <div class="keycol right" data-page="perp">'
 + '                <h3 class="periodhead">Software updates</h3>'
 + '                <div class="period" id="periodPerp">1 year · until Aug 13 2027</div>'
++ '                <h3 class="rowlabel mob-only" id="periodLabelPerp"></h3>'
++ '                <div class="rowvalue mob-only" id="periodValuePerp"></div>'
 + '              </div>'
 + '            </div>'
 + ''
@@ -131,10 +149,11 @@ var DETAILS_HTML = ''
 + '           </div><!-- /headgrid -->'
 + '          </div>'
 + ''
-+ '          <!-- Plan & add-ons — always visible, above the tab bar -->'
++ '          <!-- Plan — always visible, above the tab bar. Add-ons are the block'
++ '               below it now, so this heading says only what it is. -->'
 + '          <div class="section planblock">'
-+ '              <div class="sh"><h3>Plan &amp; add-ons</h3><span class="spacer"></span>'
-+ '                <button class="btn sec" data-modal="add-ons" data-page="sub">Manage add-ons</button>'
++ '              <div class="sh"><h3>Plan</h3><span class="spacer"></span>'
++ '                <button class="btn sec" data-modal="add-ons" data-page="sub">Manage</button>'
 + '                <!-- inferred: capacity is bought once, so this opens a one-time'
 + '                     purchase flow — not the recurring Manage add-ons flow, which'
 + '                     computes proration and a new monthly total. -->'
@@ -157,7 +176,7 @@ var DETAILS_HTML = ''
 + '              <!-- boolean entitlements live here instead of as empty table rows.'
 + '                   Demo hook: window.setFeature(\'edge\'|\'trendz\'|\'whitelabel\', true) -->'
 + '              <div class="featureblock" id="featureBlock">'
-+ '                <div class="fhead">Features</div>'
++ '                <div class="sh"><h3 class="fhead">Add-ons</h3></div>'
 + '                <div class="features" id="featureChips"></div>'
 + '              </div>'
 + '          </div>'
@@ -406,6 +425,41 @@ function isPerpLike(lic){ return !!lic && (lic.type === 'Perpetual' || !!lic.gra
    in the banner above the content, with the date and the action that clears
    them (see renderLicenseAlert). A grant is Active like any other licence; that
    it costs nothing is a licence fact, so it rides in the kicker, not here. */
+/* Third line of the identity block on the phone, and it carries ONE thing: the
+   label, muted. The status used to share it as a dot indicator; it has moved up to
+   the overline (see renderKicker), which leaves this line to the one fact that is
+   the user's own words. No label, no line — `hidden` rather than an empty box, so
+   the spacing scale above and below closes up (the ≤600px rule reads
+   `:not([hidden])` for exactly this reason). */
+function renderSupportLine(lic){
+  var el = $('#supportMob'); if(!el) return;
+  el.hidden = !lic.label;
+  el.textContent = lic.label || '';
+}
+/* The dated fact as ONE line with a leading glyph: a cycle arrow for a subscription
+   that renews, a download arrow for a perpetual's software-updates term — the same
+   two glyphs the licence cards use, so the icon means the same thing on both
+   surfaces. The word rides back inside the value ("Renews Sep 02, 2026"), because a
+   caps label above a single date was two lines spent on one fact. `#periodLabel*`
+   stays in the markup and hidden: desktop still needs its own caps header, and the
+   node is cheap insurance if the row goes two-line again. */
+function renderPeriodRow(lic, pk){
+  var lab = $('#periodLabel' + (pk === 'perp' ? 'Perp' : 'Sub'));
+  var val = $('#periodValue' + (pk === 'perp' ? 'Perp' : 'Sub'));
+  if(!lab || !val) return;
+  var perp = pk === 'perp';
+  var ic = '<span class="rowic">' + (perp ? UPDSVG : CYCLESVG) + '</span>';
+  if(lic.grant){
+    lab.textContent = 'Expiry';
+    val.innerHTML = ic + '<span class="rowtxt muted">No expiry</span>';
+    return;
+  }
+  var word = perp
+    ? (lic.status === 'updates_expiring' ? 'Updates expire' : 'Updates until')
+    : (lic.status === 'canceled' ? 'Active until' : 'Renews');
+  lab.textContent = word;
+  val.innerHTML = ic + '<span class="rowtxt">' + word + ' ' + fmtDate(lic.event) + '</span>';
+}
 function statusChipHTML(lic){
   if(lic.status === 'canceled')
     return '<span class="chip status off">Canceled &middot; active until ' + fmtDate(lic.event) + '</span>';
@@ -446,14 +500,60 @@ function renderLicenseFeatures(lic, spec){
   chips.innerHTML = active.map(function(n){ return '<span class="fchip">'+FCHECK+n+'</span>'; }).join('');
   $('#featureBlock').hidden = active.length === 0;
 }
+/* One helper for every banner action, because the phone and the desktop want
+   different words for the same button. The band on the phone is one row —
+   message left, action right, vertically centred — so its label has to be a short
+   verb ("Update"); the desktop has the width for the full phrase and must not
+   change. Both are emitted and CSS picks, which also keeps the accessible name
+   right: `display:none` drops a label out of the a11y tree, so the button is
+   named "Update" on the phone and "Update payment method" on the desktop.
+   `mobact` marks an action the desktop never had — it stays hidden there rather
+   than appearing as a new control on a surface that was not in scope. */
+function alertAction(short, long, attrs, mobOnly){
+  return '<button class="btn ter aact' + (mobOnly ? ' mobact' : '') + '" ' + attrs + '>'
+    + '<span class="aact-long">' + long + '</span>'
+    + '<span class="aact-short">' + short + '</span>'
+    + '</button>';
+}
 function renderLicenseAlert(lic){
   var al = $('#subAlert'); if(!al) return;
   var t = $('.atxt', al), st = lic.status;
-  if(st==='payment_failed'){ t.innerHTML = '<b>Payment failed.</b> Update your payment method before ' + fmtDate(lic.event) + ' to keep the subscription active. <button class="link" data-goto="billing" style="margin-left:6px">Update payment method &rarr;</button>'; al.hidden=false; }
-  else if(st==='updates_expiring'){ t.innerHTML = '<b>Software updates expire ' + fmtDate(lic.event) + '.</b> Renew to keep receiving updates and support.'; al.hidden=false; }
-  else if(st==='canceled'){ t.innerHTML = '<b>Subscription canceled.</b> It stays active until ' + fmtDate(lic.event) + '. After that its instances will stop.'; al.hidden=false; }
+  /* M3 banner: leading icon, the message with its concrete date, and the action as a
+     text button — on the phone the two sit side by side on ONE row, the action
+     vertically centred against the message; on the desktop the band stays the single
+     line it always was. This is zone 1, directly under the app bar.
+     ⚠️ EVERY branch must wrap its prose in a single `.amsg` span. On the phone
+     `.atxt` is `display:contents`, so a bare `<b>` + text node become TWO grid
+     items and land in different cells — the canceled banner printed its bold lead
+     right-aligned on its own line until all four branches were made consistent. */
+  if(st==='payment_failed'){
+    t.innerHTML = '<span class="amsg"><b>Payment failed.</b> Update your payment method before '
+      + fmtDate(lic.event) + ' to keep the subscription active.</span>'
+      + alertAction('Update', 'Update payment method', 'data-goto="billing"');
+    al.hidden=false;
+  }
+  else if(st==='updates_expiring'){
+    t.innerHTML = '<span class="amsg"><b>Software updates expire ' + fmtDate(lic.event)
+      + '.</b> Renew to keep receiving updates and support.</span>'
+      + alertAction('Renew', 'Renew updates', 'data-stub="Renew software updates"', true);
+    al.hidden=false;
+  }
+  /* A cancelled subscription's banner states a fact and has no action of its own:
+     the one thing to do about it is `Renew subscription`, which is already the
+     full-width primary in zone 4. Two buttons for one intent is noise. */
+  else if(st==='canceled'){
+    t.innerHTML = '<span class="amsg"><b>Subscription canceled.</b> It stays active until '
+      + fmtDate(lic.event) + '. After that its instances will stop.</span>';
+    al.hidden=false;
+  }
   // the key exists but nothing has used it yet — the one thing left to do is activate
-  else if(st==='awaiting_checkin'){ t.innerHTML = '<b>No instance has checked in yet.</b> The license key was issued ' + fmtDate(lic.created) + ' — activate an instance with it and it appears here. <button class="link" data-stub="Installation instructions" style="margin-left:6px">Installation guide &rarr;</button>'; al.hidden=false; }
+  else if(st==='awaiting_checkin'){
+    t.innerHTML = '<span class="amsg"><b>No instance has checked in yet.</b> The license key was issued '
+      + fmtDate(lic.created) + ' \u2014 activate an instance with it and it appears here. '
+      + '<button class="link inlineact" data-stub="Installation instructions" style="margin-left:6px">Installation guide &rarr;</button></span>'
+      + alertAction('Set up', 'Installation guide', 'data-stub="Installation instructions"', true);
+    al.hidden=false;
+  }
   else al.hidden = true;
 }
 function renderLicenseActions(lic){
@@ -462,8 +562,31 @@ function renderLicenseActions(lic){
   if(!isPerp){
     if(coupon) coupon.hidden = canceled;
     if(change) change.hidden = canceled;
-    if(kebab)  kebab.hidden  = canceled;
     if(renew)  renew.hidden  = !canceled;
+  }
+  /* The overflow carries data-page="sub", and desktop wants exactly that: a
+     perpetual licence shows Reveal key, Installation instructions and the label
+     pencil as its own inline controls, so a ⋮ there would duplicate them.
+     On the phone every one of those inline controls is suppressed (see the
+     ≤600px block), which leaves the overflow as their ONLY home — so a
+     perpetual or cancelled licence has to keep it, with just the items that no
+     longer apply taken out. */
+  if(kebab){
+    var phone = window.matchMedia('(max-width:600px)').matches;
+    var cancelItem = $('[data-cancel-active]', kebab);
+    var couponItem = $('[data-couponmenu]', kebab);
+    if(cancelItem) cancelItem.hidden = isPerp || canceled;
+    if(couponItem) couponItem.hidden = canceled || !!lic.grant;
+    kebab.hidden = phone ? false : (isPerp || canceled);
+  }
+  /* zone 4 owns the hairline that closes the header block, so a licence with no
+     primary action (a grant) must drop the whole row, rule included. */
+  var zone4 = $('#appView .headactions');
+  if(zone4){
+    var live = $$('.btn', zone4).some(function(b){
+      return !b.hidden && b.id !== 'headKebabBtn' && getComputedStyle(b).display !== 'none';
+    });
+    zone4.classList.toggle('empty', !live);
   }
 }
 /* The eyebrow above the title says what this licence IS — its product and its
@@ -475,7 +598,18 @@ function renderKicker(lic, pk){
   var product = lic.product || 'ThingsBoard';
   // a grant is free and has no billing type of its own — that is the fact worth stating
   var type = lic.grant ? 'Grant · Free' : (isPerpLike(lic) ? 'Perpetual' : 'Subscription');
-  el.textContent = product + ' · ' + type;
+  /* On the phone the status chip rides the OVERLINE, right-aligned, so the headline
+     below it stands alone. It cannot be moved there by CSS — `#statusSlot` lives in
+     `.titlerow` beside the h1, and `order` does not carry a child across parents —
+     so the eyebrow emits its own short chip and the desktop one steps aside there.
+     Short on purpose: the desktop chip spells out "Canceled · active until <date>",
+     and that date is already the renewal row two lines further down. */
+  el.innerHTML = esc(product + ' · ' + type)
+    + '<span class="kickchip mob-only">'
+    +   '<span class="chip status' + (lic.status === 'canceled' ? ' off' : '') + '">'
+    +     (lic.status === 'canceled' ? 'Canceled' : '<span class="sdot"></span>Active')
+    +   '</span>'
+    + '</span>';
 }
 
 /* A grant rides the perpetual details layout, with the few things that differ
@@ -509,6 +643,9 @@ function renderLicenseDetails(lic){
   renderKicker(lic, pk);
   $('#statusSlot').innerHTML = statusChipHTML(lic);
   renderLabelSlot(lic);
+  renderSupportLine(lic);
+  renderPeriodRow(lic, pk);
+  var kic = $('#keyIc'); if(kic && !kic.innerHTML) kic.innerHTML = KEYSVG;
   renderGrantChrome(lic);
   if(isPerp){
     var pp = $('#periodPerp');
@@ -604,11 +741,18 @@ function wireDetailsOnce(){
   /* The ⋮ entry that mobile uses for Apply coupon just presses the real button, so
      the coupon modal keeps one controller. The button is display:none on a phone —
      a programmatic click still fires its handler. */
-  document.addEventListener('click', function(e){
-    if(!e.target.closest('[data-couponmenu]')) return;
-    closeAllMenus();
-    var btn = $('#couponBtn');
-    if(btn) btn.click();
+  /* Three ⋮ entries the phone needs — coupon, reveal, install — and each just
+     presses the real button, so every one of them keeps a single controller. The
+     buttons are display:none on a phone; a programmatic click still fires. */
+  [['[data-couponmenu]', '#couponBtn'],
+   ['[data-revealmenu]', '#revealBtn'],
+   ['[data-installmenu]', '#installBtn']].forEach(function(pair){
+    document.addEventListener('click', function(e){
+      if(!e.target.closest(pair[0])) return;
+      closeAllMenus();
+      var btn = $(pair[1]);
+      if(btn) btn.click();
+    });
   });
 
   /* ---------- coupon ---------- */
@@ -733,7 +877,48 @@ var LicenseDetails = (function(){
     if(!wired){ wireDetailsOnce(); wired = true; }
     syncNewBanner(lic);
     syncChangedBanner(lic);
+    placeOverflow();
   }
+  /* ---------- the overflow menu belongs to the header on a phone ----------
+     M3: one primary action in the content, everything else behind a single
+     overflow in the app bar's trailing slot. A mid-block ⋮ beside the primary is
+     what we had, and on a 390px card it read as a second, equal action.
+     CSS cannot move a node across subtrees, so the button is relocated here — into
+     the sheet's own header in modal mode, or the app bar's action slot in page
+     mode — and put back beside the primary above the breakpoint. The menu itself
+     becomes a bottom sheet in CSS, not an anchored dropdown. */
+  var overflowHome = null;
+  function placeOverflow(){
+    var menu = $('#headKebabMenu'); if(!menu) return;
+    if(!overflowHome) overflowHome = menu.parentNode;      // .headactions, where it lives on desktop
+    var phone = window.matchMedia('(max-width:600px)').matches;
+    /* ⚠️ Decide by WHERE the surface is mounted, not by modal.hidden: openModal calls
+       show() (and so this) BEFORE it unhides the modal, so a hidden-flag test sent
+       the overflow to the page's app bar while the surface was in the sheet. */
+    var inModal = !!$('#licModal #appView');
+    var host = !phone ? overflowHome
+      : (inModal ? $('#licModal .fs-headactions') : $('#topbarAction'));
+    if(!host || menu.parentNode === host) return;
+    // in the sheet header it sits BEFORE the close control, so ✕ stays the last thing
+    if(host.id === 'topbarAction') host.appendChild(menu);
+    else host.insertBefore(menu, host.firstChild);
+    /* ⚠️ .tb-act is Home's animated slot: opacity:0, pointer-events:none and a
+       translateY until it gets .on. Without the class the overflow sat there
+       invisible and unclickable — and worse, the transform made the slot a
+       containing block for position:fixed, so the bottom sheet was trapped inside
+       a 44px box instead of spanning the viewport. .on clears all three. */
+    var slot = $('#topbarAction');
+    if(slot){
+      var hosting = slot.contains(menu);
+      slot.classList.toggle('on', hosting);
+      /* ⚠️ .on is not enough: on Home the slot's OPACITY is driven inline by JS
+         (page-home.js crossfades it against the hero button) and CSS only carries
+         the slide. Reusing the slot means honouring that contract — otherwise the
+         overflow sits there at opacity 0. */
+      slot.style.opacity = hosting ? '1' : '';
+    }
+  }
+  window.addEventListener('resize', placeOverflow);
   /* The wizard sets Store.justCreated to the new licence id and lands here, so
      the page states it once: the licence exists, its key is on this page, and
      where the installation instructions are. Dismissing clears the flag. */

@@ -29,12 +29,38 @@ function stateText(p){
        : p.type === 'Perpetual'  ? ('Updates until ' + d)
        : ('Renews ' + d);
 }
+/* The same date without its prefix, for the phone card's third line: there the
+   meaning is carried by an icon instead of words — a cycle arrow for a subscription
+   that renews, a download arrow for a perpetual's software-updates term. */
+/* TWO arrows chasing each other, not one arrow around a circle: a single 300° arc
+   with one head reads as "refresh this once", while the paired half-arcs read as
+   "this repeats" — which is what a renewal cycle is. Each arc is ~160° of r=8.5 so
+   the two leave a visible gap, and each head is an L-corner whose barbs trail back
+   along its own travel direction. */
+var CYCLESVG = '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">'
+  + '<path d="M3.5 12a8.5 8.5 0 0 1 14.5-6"/><path d="M18 2.5V6h-3.5"/>'
+  + '<path d="M20.5 12a8.5 8.5 0 0 1-14.5 6"/><path d="M6 21.5V18h3.5"/></svg>';
+var UPDSVG = '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">'
+  + '<path d="M12 3v11"/><path d="M8 10.5l4 4 4-4"/><path d="M4 20h16"/></svg>';
+/* the licence-details header uses the same two glyphs for its renewal row, plus a
+   key for the row above it — leading icons instead of caps labels (see the ≤600px
+   details-header block). */
+var KEYSVG = '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">'
+  + '<circle cx="8" cy="15" r="4"/><path d="M11 12l8-8"/><path d="M17 4h3v3"/></svg>';
+function stateMobile(p){
+  if(p.grant)  return '<span class="muted">No expiry</span>';
+  if(!p.event) return '<span class="muted">&mdash;</span>';
+  return (p.type === 'Perpetual' ? UPDSVG : CYCLESVG) + '<span>' + fmtDate(p.event) + '</span>';
+}
 /* Status and State were two columns asking one question between them — is this
    licence alive, and until when. Folded into one cell: the chip on the first line,
-   the date underneath. The State column is gone. */
+   the date underneath. The State column is gone.
+   On the phone the chip goes too — the card's left stripe carries the status — and
+   only the date line survives, in its icon form. */
 function statusCell(p){
   return '<td><div class="licstat">' + statusChip(p)
-    + '<div class="licstat-txt">' + stateText(p) + '</div></div></td>';
+    + '<div class="licstat-txt">' + stateText(p) + '</div>'
+    + '<div class="licstat-mob mob-only">' + stateMobile(p) + '</div></div></td>';
 }
 function nextCharge(ds){
   var subs = ds.licenses.filter(function(l){ return l.type==='Subscription' && l.status==='active'; });
@@ -66,13 +92,11 @@ function autoChargeIcon(v){
    cell, which is a link already. */
 var DLSVG   = '<svg class="icon ra-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11"/><path d="M8 12l4 4 4-4"/><path d="M5 20h14"/></svg>';
 var VIEWSVG = '<svg class="icon ra-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 4h7v7"/><path d="M20 4l-9 9"/><path d="M18 13v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h5"/></svg>';
-var GOSVG   = '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13"/><path d="M13 6l6 6-6 6"/></svg>';
-function invOpenLicenseAction(v){
-  var lic = v.licId && licById(v.licId);
-  if(!lic) return '';
-  return '<a class="iconbtn ib tip mob-only ra-open" data-invlic="' + lic.id + '" href="'
-    + licenseHref(lic, 'invoices') + '" aria-label="Open license" data-tip="Open license">' + GOSVG + '</a>';
-}
+/* ~~invOpenLicenseAction~~ removed: the phone card's third action was a way to the
+   licence, and the card's product line is now that link on both breakpoints — the
+   desktop Product cell always was. Two ways to the same place on one card is noise.
+   To bring it back: an <a class="iconbtn ib tip ra-open"> to licenseHref(lic,
+   'invoices'), appended in invRow's .rowactions. */
 function invRow(v, opts){
   opts = opts || {};
   var pill = v.status==='Past due' ? '<span class="pill attn">Past due</span>' : '<span class="pill">'+(v.status||'Paid')+'</span>';
@@ -82,7 +106,6 @@ function invRow(v, opts){
     + '<td class="cellact"><span class="rowactions">'
     +   '<button class="link ra-act" data-dlinv aria-label="Download PDF">' + DLSVG + '<span class="ra-txt">Download PDF</span></button>'
     +   '<a class="link ra-act" data-viewinv target="_blank" rel="noopener" href="#" aria-label="View invoice">' + VIEWSVG + '<span class="ra-txt">View invoice</span></a>'
-    +   invOpenLicenseAction(v)
     + '</span></td></tr>';
 }
 // how many columns invRow produces — the empty-state row has to span them
@@ -143,9 +166,18 @@ function actionsCell(p, opts){
     + '<div class="pop" role="menu" hidden>' + menuItems(p, opts) + '</div></div></div></td>';
 }
 function rowOpen(p){
+  /* The phone card drops the status chip and lets a stripe down its left edge carry
+     the status instead. A stripe is a single visual channel, so the status is also
+     stated in words in the card's accessible name — that is what a screen reader
+     and a high-contrast mode read.
+     ⚠️ FOR THE UI PHASE: a tone-only stripe is not a sufficient carrier on its own.
+     Pair it with a second, non-colour signal — a shape, an icon, a text marker, or
+     a hairline pattern — before this ships to anyone. The aria-label covers assistive
+     tech; it does nothing for a sighted user who cannot separate the two tones. */
+  var alive = p.status === 'canceled' ? 'Canceled' : 'Active';
   return '<tr class="lic-row' + (p.status==='canceled' ? ' off' : '') + '" '
     + (p.id ? 'data-licid="' + p.id + '" ' : '')
-    + 'data-goto="' + (p.goto || '') + '" data-product="' + (p.product || '') + '" data-type="' + p.type + '" data-status="' + (p.status || 'active') + '" tabindex="0" aria-label="Open ' + (p.product ? p.product + ' ' : '') + p.name + ' details">';
+    + 'data-goto="' + (p.goto || '') + '" data-product="' + (p.product || '') + '" data-type="' + p.type + '" data-status="' + (p.status || 'active') + '" tabindex="0" aria-label="' + (p.product ? p.product + ' ' : '') + p.name + ', status: ' + alive + '. Open details">';
 }
 /* Product-first, product-neutral: no product-specific columns. Type and the label
    both live inside Product (see productCell); the next date has its own State
@@ -168,8 +200,15 @@ function productCell(p, opts){
      licence only has to be named, not described. The Invoices page keeps the full
      cell. */
   var bare = opts && opts.bare;
+  /* The phone card wants one line — "ThingsBoard · Subscription · Startup" — but the
+     plan lives in its own <td> for the desktop License column, and CSS cannot pour
+     text from one element into another's inline flow. So the plan is emitted twice
+     and each side picks: this .lp-plan is .mob-only, the <td> is hidden on the phone.
+     Same trade the invoice actions already make (glyph + label, CSS chooses). */
   var txt = '<div class="lp-txt">'
-    +   '<div class="lp-name">' + (p.product || '') + '<span class="lp-type"> &middot; ' + p.type + '</span></div>'
+    +   '<div class="lp-name">' + (p.product || '') + '<span class="lp-type"> &middot; ' + p.type + '</span>'
+    +     (bare ? '' : '<span class="lp-plan mob-only"> &middot; ' + p.name + '</span>')
+    +   '</div>'
     +   (p.label && !bare ? '<div class="lic-prodlabel">' + esc(p.label) + '</div>' : '')
     + '</div>';
   // TBD: the product / edition mark goes here. A plain filled square until we have

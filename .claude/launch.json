@@ -2,15 +2,11 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "dev",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
-      "port": 5173
-    },
-    {
       "name": "prototype",
       "runtimeExecutable": "python3",
-      "runtimeArgs": ["/private/tmp/claude-501/-Users-panchukmariia-Library-CloudStorage-GoogleDrive-mpanchuk-thingsboard-io----------License-Portal/c97016b9-c494-4263-b639-1efab20bae3f/scratchpad/serve_prototype.py"],
+      "runtimeArgs": [
+        "/private/tmp/claude-501/-Users-mariiapanchuk-Library-CloudStorage-GoogleDrive-mpanchuk-thingsboard-io-My-Drive-License-Portal/cfa44ec1-639e-4617-b289-071727edd966/scratchpad/serve_prototype.py"
+      ],
       "port": 5500
     }
   ]

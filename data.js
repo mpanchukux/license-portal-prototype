@@ -176,11 +176,15 @@ var DATASETS = {
 
 /* ---------- plan cards for the new-user screen and the wizard ---------- */
 var EC_PLANS = {
+  /* ⚠️ Maker ($10) and Prototype ($39) were REMOVED from the offer (2026-09-01) —
+     they are no longer sold. Only these purchase CARDS went: `TIER_SPECS.maker` and
+     `TIER_SPECS.prototype` stay, because licences already on those plans still have
+     to render their entitlements on the details page. Do not "clean up" the specs
+     to match this list — the offer and the installed base are two different sets.
+     The Maker-only footnote about Trendz / Edge for testing went with its card; it
+     was never shown on any other plan. */
   'thingsboard|payg': {
     cards: [
-      { name:'Maker',     price:'$10',  per:'/ month', feats:['10 devices', '10 assets', '1 production instance', '1M AI credits / month', 'Community support'],
-        foot:'Includes Trendz Analytics & Edge Computing for testing.' },
-      { name:'Prototype', price:'$39',  per:'/ month', feats:['50 devices', '50 assets', '1 production instance', '2M AI credits / month', 'Community support'] },
       { name:'Pilot',     price:'$99',  per:'/ month', badge:'Popular', feats:['100 devices', '100 assets', '1 production instance', '4M AI credits / month', 'Help desk', 'White labeling'] },
       { name:'Startup',   price:'$299', per:'/ month', feats:['500 devices', '500 assets', '2 production instances', '8M AI credits / month', 'Priority help desk', 'White labeling'] },
       { name:'Business',  price:'$499', per:'/ month', feats:['1,000 devices', '1,000 assets', '3 production instances', '16M AI credits / month', 'Priority help desk', 'White labeling', '+$0.10 per extra device'] }

@@ -26,12 +26,10 @@ var WIZARD_HTML = ''
 + '    <div class="fs-body" id="nlBody">'
 + '      <!-- STEP 1 — CHOOSE YOUR PRODUCT AND PLAN: three levels, no boxes.'
 + '           #nlChoices holds the centred product pill and, under it, the heading'
-+ '           row whose right end carries the billing toggle. #nlOfferHead is the'
-+ '           count on its own row, then the offer grid. Each offer card carries'
-+ '           its own action, so this step needs no footer. -->'
++ '           row whose right end carries the billing toggle, then the offer grid.'
++ '           Each offer card carries its own action, so this step needs no footer. -->'
 + '      <div id="nlStep1">'
 + '        <div id="nlChoices"></div>'
-+ '        <div class="nl-countrow" id="nlOfferHead"></div>'
 + '        <div class="plangrid" id="nlPlanCards"></div>'
 + '      </div>'
 + '      <!-- STEP 2 — CUSTOMIZE (manage add-ons content, seeded from the chosen plan) -->'
@@ -290,7 +288,6 @@ var NL = (function(){
      action (no hover-reveal: there is no hover on touch, and it hides the
      action), so the step needs no footer. Change-plan mode renders the first two
      groups selected-and-locked and marks the current plan as non-selectable. */
-  function planCount(set){ var n = set.cards.length; return n + (n === 1 ? ' plan' : ' plans'); }
 
   /* LEVEL 1 — product: one compact pill-shaped segmented control, centred. It is a
      picker, not a pitch, so the one-line product descriptions the old cards
@@ -379,9 +376,15 @@ var NL = (function(){
     $('#nlChoices').innerHTML = productSegHTML(st.product, locked) + billRowHTML(locked);
     /* the count gets its OWN row under the heading: the heading row's right end
        belongs to the billing toggle, and the two would collide there */
-    $('#nlOfferHead').innerHTML = '<span class="nl-fcount">' + planCount(set) + '</span>';
     var grid = $('#nlPlanCards');
-    grid.className = 'plangrid' + (set.single ? ' one' : '') + (locked ? ' withcur' : '');
+    /* ⚠️ `withcur` reserves a 24px lane above every card for the "Current plan"
+       strip, so it may only go on when a card actually IS the current one. A licence
+       on a plan that is no longer offered (Maker, Prototype — dropped 2026-09-01)
+       matches nothing in the grid, and the class then held an empty gap open above
+       three cards. Note this only removes the empty lane: such a licence still has
+       NO anchor on this step saying where it is now — see the debt list. */
+    var hasCur = locked && set.cards.some(function(c){ return c.name === currentCardName(); });
+    grid.className = 'plangrid' + (set.single ? ' one' : '') + (hasCur ? ' withcur' : '');
     grid.innerHTML = set.cards.map(function(c){ return planPickCard(c, set); }).join('');
     // No "What's included in Professional Edition" block here any more: the
     // Subscription card above already says what every plan includes. The block
