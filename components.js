@@ -7,7 +7,18 @@
    ============================================================================ */
 
 /* ---------- licence rows ---------- */
-function attnRank(l){ return l.status==='payment_failed' ? 0 : l.status==='updates_expiring' ? 1 : l.status==='canceled' ? 3 : 2; }
+/* ⚠️ `awaiting_checkin` was missing from this ranking while the comment right below
+   listed it as an attention state — so the one licence that shows an attention
+   banner on its own details page did not rank as needing attention on Home. Exposed
+   by adding the Community Grant row: it never surfaced in Home's top five. Order is
+   most-urgent first; `active` and `canceled` keep their relative places. */
+function attnRank(l){
+  return l.status==='payment_failed'   ? 0
+       : l.status==='updates_expiring' ? 1
+       : l.status==='awaiting_checkin' ? 2
+       : l.status==='canceled'         ? 4
+       : 3;
+}
 /* The chip answers one question — is this licence alive? — with two values, on every
    surface: Active or Canceled. Attention states (payment failed, updates expiring,
    no first check-in yet) are not statuses; they are the banner on the details page,
@@ -22,35 +33,54 @@ function statusChip(l){
    perpetual stops receiving updates, a cancelled subscription runs out, and a
    grant never expires. Attention states keep their date here. */
 function stateText(p){
-  if(p.grant)  return '<span class="muted">No expiry</span>';
+  /* ⚠️ No `.muted` wrapper. `.muted` is --faint, while every other state ("Renews
+     Sep 02, 2026", "Updates until …") inherits --mid from .licstat-txt/.licstat-mob
+     — so the grant's line was a shade lighter than its neighbours for no reason.
+     It is the same kind of fact; it gets the same tone. */
+  if(p.grant)  return 'No expiry';
   if(!p.event) return '<span class="muted">—</span>';
   var d = fmtDate(p.event);
   return p.status === 'canceled' ? ('Active until ' + d)
        : p.type === 'Perpetual'  ? ('Updates until ' + d)
        : ('Renews ' + d);
 }
-/* The same date without its prefix, for the phone card's third line: there the
-   meaning is carried by an icon instead of words — a cycle arrow for a subscription
-   that renews, a download arrow for a perpetual's software-updates term. */
-/* TWO arrows chasing each other, not one arrow around a circle: a single 300° arc
-   with one head reads as "refresh this once", while the paired half-arcs read as
-   "this repeats" — which is what a renewal cycle is. Each arc is ~160° of r=8.5 so
-   the two leave a visible gap, and each head is an L-corner whose barbs trail back
-   along its own travel direction. */
-var CYCLESVG = '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">'
-  + '<path d="M3.5 12a8.5 8.5 0 0 1 14.5-6"/><path d="M18 2.5V6h-3.5"/>'
-  + '<path d="M20.5 12a8.5 8.5 0 0 1-14.5 6"/><path d="M6 21.5V18h3.5"/></svg>';
+/* The two glyphs that lead the licence card's bottom line and the details renewal
+   row. The MEANING is always written next to the date as well ("Renews …" /
+   "Updates until …") — the icon is a marker, never the only carrier.
+
+   ⚠️ Subscription reuses AUTOSVG, the very same mark the invoice tables use for
+   "charged automatically". That is deliberate: a subscription renewing and an
+   invoice being charged automatically are the same recurring fact seen from two
+   places, so one glyph should mean it everywhere. (This replaced a bespoke
+   two-arrow cycle drawn for the card alone — two glyphs for one idea.)
+
+   ⚠️ Perpetual is a SHIELD-CHECK, not a download arrow. A download arrow says
+   "fetch a file", which is not what the date means: the date is how long the
+   licence is COVERED for updates and support. A shield with a check reads as
+   coverage, and it cannot be confused with the subscription mark at 18px. */
+/* ⚠️ Declared HERE, above its first use, not down beside autoChargeIcon(). `var`
+   hoists the name but not the value, so with the declaration below this line
+   CYCLESVG was assigned `undefined` and every licence card lost its glyph. */
+var AUTOSVG = '<svg class="icon" viewBox="0 0 24 24"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>';
+var CYCLESVG = AUTOSVG;
 var UPDSVG = '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">'
-  + '<path d="M12 3v11"/><path d="M8 10.5l4 4 4-4"/><path d="M4 20h16"/></svg>';
+  + '<path d="M12 3l7.5 3v6c0 4.2-3 7.4-7.5 9-4.5-1.6-7.5-4.8-7.5-9V6z"/>'
+  + '<path d="M8.75 11.75l2.4 2.4 4.1-4.6"/></svg>';
 /* the licence-details header uses the same two glyphs for its renewal row, plus a
    key for the row above it — leading icons instead of caps labels (see the ≤600px
    details-header block). */
 var KEYSVG = '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">'
   + '<circle cx="8" cy="15" r="4"/><path d="M11 12l8-8"/><path d="M17 4h3v3"/></svg>';
+/* The phone card's bottom line: glyph, then the meaning AND the date in words.
+   ⚠️ It used to print the bare date and let the icon carry the meaning alone —
+   which asked the reader to know the glyph vocabulary, and left "Sep 02, 2026"
+   ambiguous between a renewal and an expiry. `stateText` already words this
+   exactly right for the desktop column, so the phone reuses it rather than
+   keeping a second phrasing that can drift. */
 function stateMobile(p){
-  if(p.grant)  return '<span class="muted">No expiry</span>';
+  if(p.grant)  return 'No expiry';                    // same tone as every other state
   if(!p.event) return '<span class="muted">&mdash;</span>';
-  return (p.type === 'Perpetual' ? UPDSVG : CYCLESVG) + '<span>' + fmtDate(p.event) + '</span>';
+  return (p.type === 'Perpetual' ? UPDSVG : CYCLESVG) + '<span>' + stateText(p) + '</span>';
 }
 /* Status and State were two columns asking one question between them — is this
    licence alive, and until when. Folded into one cell: the chip on the first line,
@@ -75,7 +105,6 @@ function invEmptyRow(opts){
    purchase the viewer actually made (auto:false) carries no icon — the absence is the
    signal, so there is nothing to say for it. This is what replaced the Payment type
    column, which said the same thing in a word and spent a whole column doing it. */
-var AUTOSVG = '<svg class="icon" viewBox="0 0 24 24"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>';
 function autoChargeIcon(v){
   if(!v || !v.auto) return '';
   return '<span class="autoic tip" tabindex="0" role="img" aria-label="Charged automatically" data-tip="Charged automatically">' + AUTOSVG + '</span>';
@@ -200,15 +229,17 @@ function productCell(p, opts){
      licence only has to be named, not described. The Invoices page keeps the full
      cell. */
   var bare = opts && opts.bare;
-  /* The phone card wants one line — "ThingsBoard · Subscription · Startup" — but the
-     plan lives in its own <td> for the desktop License column, and CSS cannot pour
-     text from one element into another's inline flow. So the plan is emitted twice
-     and each side picks: this .lp-plan is .mob-only, the <td> is hidden on the phone.
-     Same trade the invoice actions already make (glyph + label, CSS chooses). */
+  /* ⚠️ The phone card and the desktop cell split the SAME three facts differently,
+     and CSS cannot repour inline text from one element into another's flow — so
+     both arrangements are emitted and each breakpoint hides the other:
+       desktop  ·  one line: "ThingsBoard · Subscription", plan in its own column
+       phone    ·  eyebrow "Subscription", headline "ThingsBoard · Startup"
+     That is why `.lp-name` (desktop) and `.lp-eyebrow`/`.lp-head` (phone) carry the
+     same words twice. Editing one without the other is how they drift. */
   var txt = '<div class="lp-txt">'
-    +   '<div class="lp-name">' + (p.product || '') + '<span class="lp-type"> &middot; ' + p.type + '</span>'
-    +     (bare ? '' : '<span class="lp-plan mob-only"> &middot; ' + p.name + '</span>')
-    +   '</div>'
+    +   '<div class="lp-name">' + (p.product || '') + '<span class="lp-type"> &middot; ' + p.type + '</span></div>'
+    +   (bare ? '' : '<div class="lp-eyebrow mob-only">' + p.type + '</div>')
+    +   (bare ? '' : '<div class="lp-head mob-only">' + (p.product || '') + ' &middot; ' + p.name + '</div>')
     +   (p.label && !bare ? '<div class="lic-prodlabel">' + esc(p.label) + '</div>' : '')
     + '</div>';
   // TBD: the product / edition mark goes here. A plain filled square until we have
@@ -230,9 +261,13 @@ function productCell(p, opts){
     + '</td>';
 }
 function rowHtml(p, opts){
-  // the licence column is the plan/package; a grant adds what it has instead of a price
-  var lic = '<td><div class="lp-name">' + p.name + '</div>'
-    + (p.grant ? '<div class="lp-meta">Free &middot; ' + p.limits + '</div>' : '') + '</td>';
+  /* The licence column is the plan or package — nothing else.
+     ⚠️ A grant used to add a second line here ("Free · 6,050 devices · 2 production
+     servers"). Removed: the price is already implied by the Grant type in the
+     Product column, and the limits are the entitlement table on the details page —
+     no other row explains its allowances in the list, so this one should not
+     either. `p.limits` is still used by the details surface. */
+  var lic = '<td><div class="lp-name">' + p.name + '</div></td>';
   // when the licence last changed — plan, add-ons, label or payment state
   var updatedCell = '<td class="lic-num">' + fmtDate(p.updated || p.created) + '</td>';
   return rowOpen(p) + productCell(p) + lic + statusCell(p) + updatedCell + actionsCell(p, opts) + '</tr>';

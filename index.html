@@ -39,7 +39,10 @@
       <!-- Licenses: full width, rendered with the same head/row builders as the
            Licenses page, capped at the top five attention-first for the large
            account and showing every row for the small one (renderDashLicenses). -->
-      <div class="dblock">
+      <!-- band/noband name Home's alternating surfaces on the phone (see the ≤600px
+           block). Named rather than counted, because #dashActBlock is absent in some
+           dash states and :nth-of-type would then flip the colours. Inert on desktop. -->
+      <div class="dblock band">
         <!-- the heading itself navigates: one target per block, no separate link -->
         <div class="dblock-head"><h2><a class="dblock-link" href="licenses.html">Licenses<span class="dbh-chev" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span></a></h2>
         </div>
@@ -55,7 +58,7 @@
       </div>
 
       <!-- Recent invoices — same columns and order as the Invoices page -->
-      <div class="dblock">
+      <div class="dblock noband">
         <div class="dblock-head"><h2><a class="dblock-link" href="invoices.html">Recent invoices<span class="dbh-chev" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span></a></h2>
         </div>
         <table>
@@ -82,7 +85,7 @@
       <!-- Recent activity — the last block on Home. Users are not previewed here:
            they live on their own page (nav → Users). The feed shows the latest few
            and grows in place as you reach its end (see renderDashFeed). -->
-      <div class="dblock" id="dashActBlock">
+      <div class="dblock band" id="dashActBlock">
         <div class="dblock-head"><h2><a class="dblock-link" href="activity.html">Recent activity<span class="dbh-chev" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span></a></h2>
         </div>
         <div class="feed" id="dashFeed"></div>

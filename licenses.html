@@ -20,12 +20,26 @@
     <div class="lic-typeseg" role="group" aria-label="Filter by product type">
       <button class="typechip" data-type="Subscription" aria-pressed="false">Subscription</button>
       <button class="typechip" data-type="Perpetual" aria-pressed="false">Perpetual</button>
+      <!-- Phone: the canceled switch becomes a filter chip in this same row, so all
+           three filters read as one set of chips instead of two kinds of control.
+           NOT .typechip — that class is the mutually-exclusive product group, and
+           this one is an independent on/off. It mirrors #licCanceled either way, so
+           the stored state and the desktop switch stay the single source. -->
+      <!-- a hairline between the two KINDS of filter: the pair above is one
+           mutually-exclusive group, this one is an independent toggle. Identical
+           chips side by side implied they behaved the same way. -->
+      <span class="chipdiv mob-only" aria-hidden="true"></span>
+      <button class="filterchip cancelchip mob-only" id="licCanceledChip" aria-pressed="false">
+        <svg class="icon cc-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5"/></svg>
+        <span>Canceled</span></button>
     </div>
     <label class="lic-toggle"><span class="switch"><input type="checkbox" id="licCanceled"><span class="track"></span></span> Display canceled licenses</label>
     <span class="spacer"></span>
     <button class="iconbtn ib" data-refresh aria-label="Refresh" title="Refresh"><svg class="icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg></button>
     <!-- one button: the billing type is chosen inside step 1 of the wizard -->
-    <button class="btn" id="licNewBtn">+ New license</button>
+    <!-- Phone: this moves onto the title's line and shows only the +
+         (see syncTitleRow and the ≤600px block). The words stay for the desktop. -->
+    <button class="btn" id="licNewBtn"><span class="lnb-plus" aria-hidden="true">+</span><span class="lnb-txt"> New license</span></button>
   </div>
   </div>
 

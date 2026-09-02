@@ -85,7 +85,7 @@ var Store = (function(){
      that already has a snapshot — it would need "Reset demo data" pressed by hand,
      which is not something a reviewer should have to know. Bump this whenever the
      seed changes in a way that has to be seen; the old key is simply abandoned. */
-  var KEY = 'tb-license-portal-demo-v5';
+  var KEY = 'tb-license-portal-demo-v6';
   function clone(o){ return JSON.parse(JSON.stringify(o)); }
   function seed(){
     return {
@@ -233,6 +233,15 @@ function dismiss(k){ Store.get('dismissed')[k] = true; Store.save(); }
 /* The five destinations, in one place. `ic` is only read by the phone's bottom
    navigation bar — the desktop strip is text-only — but it lives here so the
    destination list stays a single source. */
+/* ---------- navigation ----------
+   The logo leads the bar, the page title lives ON the page directly under the
+   header, and Users is NOT a destination — it is a nested level inside the profile
+   menu, where "who can get in" belongs with the account. Four destinations, on both
+   breakpoints.
+   ⚠️ This was a switchable variant ('v1' put Users in the nav and the title in the
+   bar). The alternative is gone — array, getters, body class, CSS branches, stored
+   key and settings group all removed. If a comparison is ever needed again it is a
+   new decision, not a flag to re-enable. */
 var NAV_ITEMS = [
   { key:'home',     href:'index.html',    label:'Home',
     ic:'<path d="M4 10.5L12 4l8 6.5V20h-5.5v-6h-5v6H4z"/>' },
@@ -242,9 +251,6 @@ var NAV_ITEMS = [
     ic:'<path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9.5 8.5h5M9.5 12.5h5"/>' },
   { key:'activity', href:'activity.html', label:'Activity',
     ic:'<path d="M3 12h4l2.5-6 3 12 2.5-6h6"/>' },
-  { key:'users',    href:'users.html',    label:'Users',
-    ic:'<circle cx="9" cy="8.5" r="3"/><path d="M3 19c0-3.2 2.7-4.8 6-4.8s6 1.6 6 4.8"/>'
-      + '<path d="M16 6.2a3 3 0 0 1 0 5.6"/><path d="M17.6 19c0-2.4-.9-3.9-2.4-4.6"/>' }
 ];
 
 function navItemsHTML(extraClass){
@@ -289,6 +295,17 @@ function chromeHTML(){
   +   '<nav class="tnav" aria-label="Primary">' + nav + '</nav>'
   +   '<span class="sp"></span>'
   +   '<div class="tb-act" id="topbarAction"></div>'
+  /* Refresh, as a trailing app-bar action beside the avatar — phone only, and only
+     on the list pages (CSS decides from body[data-page]; see the ≤600px block).
+     ⚠️ Driven purely by CSS `display`, with NO `hidden` attribute: an author
+     `display` beats `[hidden]` at any specificity, and this file has already been
+     bitten by that six times. It carries `data-refresh`, so the existing delegated
+     spinner handler picks it up with no extra wiring, and the page's own in-content
+     refresh button is hidden at this width instead of being moved. */
+  +   '<button class="tb-refresh" id="topbarRefresh" data-refresh aria-label="Refresh" title="Refresh">'
+  +     '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">'
+  +       '<path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg>'
+  +   '</button>'
   +   '<div class="dprofile">'
   +     '<button class="dprofbtn" id="dashProfBtn" aria-haspopup="true" aria-expanded="false">'
   +       '<svg class="icon dprof-ic" viewBox="0 0 24 24" aria-hidden="true">'
@@ -299,6 +316,29 @@ function chromeHTML(){
   +     '<div class="dprofmenu" id="dashProfMenu" role="menu" hidden>'
   +       '<a role="menuitem" href="account.html">Account</a>'
   +       '<a role="menuitem" href="billing.html">Billing &amp; payment</a>'
+  /* Users, as a nested level: who can get into the account is an account fact, so
+     it belongs beside Account and Billing rather than in the destination strip.
+     ⚠️ The submenu is FILLED at open time by syncUsersSubmenu(), not here — the
+     user list lives in the dataset and the chrome is built once per page load,
+     long before a user is added or deleted. */
+  +       '<div class="dprofsub" id="dashUsersSub">'
+  +         '<button class="dprofsub-t" id="dashUsersBtn" role="menuitem"'
+  +           ' aria-haspopup="true" aria-expanded="false">'
+  +           '<span>Users</span>'
+  +           '<svg class="icon dprofsub-caret" viewBox="0 0 24 24" aria-hidden="true">'
+  +             '<path d="M9 5l7 7-7 7"/></svg>'
+  +         '</button>'
+  +         '<div class="dprofsub-p" id="dashUsersPanel" role="menu" aria-label="Users" hidden>'
+  +           '<button class="dprofsub-back" id="dashUsersBack" hidden>'
+  +             '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>'
+  +             '<span>Users</span></button>'
+  +           '<button class="dprofsub-add" role="menuitem" data-modal="add-user">'
+  +             '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">'
+  +               '<path d="M12 5v14M5 12h14"/></svg>'
+  +             '<span>Add user</span></button>'
+  +           '<div class="dprofsub-list" id="dashUsersList"></div>'
+  +         '</div>'
+  +       '</div>'
   +       '<div class="sep"></div>'
   +       '<button role="menuitem" data-stub="Sign out">Sign out</button>'
   +     '</div>'
@@ -338,42 +378,99 @@ function footerHTML(){
 
 /* The settings panel is prototype-only scaffolding: it picks the dashboard state,
    plays the email-confirmation click, opens the styleguide and resets the store. */
+/* ---------- prototype settings: context-aware ----------------------------------
+   The panel shows only what applies to what is on screen. Everything else is
+   HIDDEN, not disabled: a disabled control still asks the reader to work out why
+   it is there, and none of these belong to the page they are not about.
+   ⚠️ The body is rebuilt on every OPEN, not once at inject time — the context
+   changes underneath it (a wizard opens, a modal opens) while the panel is closed,
+   and a stale panel is worse than no panel. See wireGlobal's gear handler. */
+function settingsContext(){
+  var page = document.body.getAttribute('data-page') || '';
+  var nl   = $('#nlModal'), lic = $('#licModal');
+  return {
+    page: page,
+    home: page === 'home',
+    licenses: page === 'licenses',
+    billing: page === 'billing',
+    /* the details surface counts in either presentation: the full page, or the
+       modal mounted over any list */
+    details: page === 'license' || !!(lic && !lic.hidden && $('#licModal #appView')),
+    wizard: !!(nl && !nl.hidden)
+  };
+}
+function settingsBodyHTML(){
+  var c = settingsContext(), out = '';
+  function group(head, body){ return body ? '<div class="sp-grouphead">' + head + '</div>' + body : ''; }
+
+  // ---- Home: which dashboard state the page renders
+  if(c.home){
+    out += group('Dashboard state', Object.keys(DASH_STATES).map(function(k){
+      return '<label class="sp-opt"><input type="radio" name="dashState" value="' + k + '"'
+        + (Store.get('dash') === k ? ' checked' : '') + '><span>'
+        + DASH_STATES[k].label.replace(/^Dashboard — /, '') + '</span></label>';
+    }).join(''));
+  }
+
+  // ---- License details: how it presents, plus a way into each tier's details
+  if(c.details){
+    out += group('Details presentation',
+      '<label class="sp-opt"><input type="radio" name="licDetails" value="modal"' + (licDetailsMode() === 'modal' ? ' checked' : '') + '><span>Modal (default)</span></label>'
+      + '<label class="sp-opt"><input type="radio" name="licDetails" value="page"' + (licDetailsMode() === 'page' ? ' checked' : '') + '><span>Full page</span></label>');
+    out += group('Open another tier',
+      [['maker','Maker'],['prototype','Prototype'],['pilot','Pilot'],['startup','Startup'],
+       ['business','Business'],['prototypeaddons','Prototype + add-ons'],['perp','Perpetual']]
+      .map(function(t){ return '<a class="sp-opt" href="license.html?tier=' + t[0] + '"><span>' + t[1] + '</span></a>'; }).join(''));
+  }
+
+  // ---- Licenses page: the only variant scoped to it is the layout it already uses
+  if(c.licenses){
+    out += group('List layout',
+      '<a class="sp-opt" href="licenses.html"><span>Product-first (neutral)</span></a>');
+  }
+
+  /* ---- the wizard's own options. `Billing data` decides whether the flow has a
+     billing step at all, so it belongs to the wizard — and it also drives the
+     Billing & payment page, which is why it appears in both contexts. */
+  if(c.wizard){
+    out += group('Customize step',
+      '<label class="sp-opt"><input type="radio" name="custVariant" value="a"' + (custVariant() === 'a' ? ' checked' : '') + '><span>A — Plan card</span></label>'
+      + '<label class="sp-opt"><input type="radio" name="custVariant" value="b"' + (custVariant() === 'b' ? ' checked' : '') + '><span>B — Locked inputs</span></label>');
+  }
+  if(c.wizard || c.billing){
+    out += group('Billing data',
+      '<label class="sp-opt"><input type="radio" name="billingData" value="saved"' + (billingSaved() ? ' checked' : '') + '><span>Saved</span></label>'
+      + '<label class="sp-opt"><input type="radio" name="billingData" value="none"' + (billingSaved() ? '' : ' checked') + '><span>None</span></label>');
+  }
+
+  // ---- always: chrome-wide variant, dev actions, and the reference page
+  out += group('Reference',
+    '<a class="sp-opt" href="styleguide.html"><span>Design system → styleguide</span></a>');
+  /* ⚠️ `Confirm email change` is RENDERED ONLY while a change is pending — not
+     rendered-and-disabled. It used to be a permanent disabled button, which is the
+     same mistake the whole panel just stopped making: a control that is always there
+     but almost never usable makes the reader work out why. The body is rebuilt on
+     every open, so it appears the moment Account starts a change and is gone again
+     the moment it is confirmed or cancelled. */
+  out += group('Dev actions',
+    (Store.get('pendingEmail')
+      ? '<label class="sp-opt"><button class="link" id="devConfirmEmail">Confirm email change</button></label>'
+      : '')
+    + '<label class="sp-opt"><button class="link" id="resetDemo">Reset demo data</button></label>');
+  return out;
+}
 function settingsHTML(){
-  var dash = Object.keys(DASH_STATES).map(function(k){
-    return '<label class="sp-opt"><input type="radio" name="dashState" value="' + k + '"'
-      + (Store.get('dash') === k ? ' checked' : '') + '><span>' + DASH_STATES[k].label + '</span></label>';
-  }).join('');
-  var plans = [['maker','Maker'],['prototype','Prototype'],['pilot','Pilot'],['startup','Startup'],
-               ['business','Business'],['prototypeaddons','Prototype + add-ons']].map(function(p){
-    return '<a class="sp-opt" href="license.html?tier=' + p[0] + '"><span>' + p[1] + '</span></a>';
-  }).join('');
   return '<button class="gearfab" id="gearBtn" aria-haspopup="dialog" aria-expanded="false" aria-label="Prototype settings" title="Prototype settings">'
-    + '<svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.2 5.2l2.1 2.1M16.7 16.7l2.1 2.1M18.8 5.2l-2.1 2.1M7.3 16.7l-2.1 2.1"/></svg>'
+    /* a real gear: a toothed ring around a hub, not a sun of spokes */
+    + '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">'
+    +   '<circle cx="12" cy="12" r="3"/>'
+    +   '<path d="M12 2.6l1.3 2.2 2.5-.5.5 2.5 2.2 1.3-1.4 2.1 1.4 2.1-2.2 1.3-.5 2.5-2.5-.5L12 21.4l-1.3-2.2-2.5.5-.5-2.5-2.2-1.3 1.4-2.1-1.4-2.1 2.2-1.3.5-2.5 2.5.5z"/>'
+    + '</svg>'
     + '</button>'
     + '<div class="settings-panel" id="settingsPanel" role="dialog" aria-label="Prototype settings" hidden>'
     +   '<h4>Prototype settings</h4>'
     +   '<div class="sp-note">Prototype-only — not part of the product UI.</div>'
-    +   '<div class="sp-label" style="margin-top:14px">Dashboard (Home)</div>'
-    +   '<div class="sp-pick" role="radiogroup" aria-label="Dashboard">' + dash
-    +     '<div class="sp-grouphead">Products</div>'
-    +     '<a class="sp-opt" href="licenses.html"><span>Product-first (neutral)</span></a>'
-    +     '<div class="sp-grouphead">Plan details</div>' + plans
-    +     '<a class="sp-opt" href="license.html?tier=perp"><span>Perpetual license details</span></a>'
-    +     '<div class="sp-grouphead">Reference</div>'
-    +     '<a class="sp-opt" href="styleguide.html"><span>Design system → styleguide</span></a>'
-    +     '<div class="sp-grouphead">Billing data</div>'
-    +     '<label class="sp-opt"><input type="radio" name="billingData" value="saved"' + (billingSaved() ? ' checked' : '') + '><span>saved</span></label>'
-    +     '<label class="sp-opt"><input type="radio" name="billingData" value="none"' + (billingSaved() ? '' : ' checked') + '><span>none</span></label>'
-    +     '<div class="sp-grouphead">License details</div>'
-    +     '<label class="sp-opt"><input type="radio" name="licDetails" value="modal"' + (licDetailsMode() === 'modal' ? ' checked' : '') + '><span>Modal (default)</span></label>'
-    +     '<label class="sp-opt"><input type="radio" name="licDetails" value="page"' + (licDetailsMode() === 'page' ? ' checked' : '') + '><span>Full page</span></label>'
-    +     '<div class="sp-grouphead">Customize step</div>'
-    +     '<label class="sp-opt"><input type="radio" name="custVariant" value="a"' + (custVariant() === 'a' ? ' checked' : '') + '><span>A — Plan card</span></label>'
-    +     '<label class="sp-opt"><input type="radio" name="custVariant" value="b"' + (custVariant() === 'b' ? ' checked' : '') + '><span>B — Locked inputs</span></label>'
-    +     '<div class="sp-grouphead">Dev actions</div>'
-    +     '<label class="sp-opt"><button class="link" id="devConfirmEmail" disabled>Confirm email change</button></label>'
-    +     '<label class="sp-opt"><button class="link" id="resetDemo">Reset demo data</button></label>'
-    +   '</div>'
+    +   '<div class="sp-pick" id="settingsBody"></div>'
     + '</div>';
 }
 
@@ -415,7 +512,11 @@ var TB_CHEVRON = '<path d="M15 5l-7 7 7 7"/>';
 var TB_CLOSE   = '<path d="M6 6l12 12M18 6L6 18"/>';
 function syncAppBar(){
   var t = $('#tbTitle'), b = $('#tbBack');
-  if(t) t.textContent = document.body.getAttribute('data-title') || '';
+  /* ⚠️ The bar carries NO page title — the page does, right under the header. The
+     node stays and is emptied rather than removed: `.tb-title` is a named grid area
+     in the bar's layout, and dropping it collapses the row. `data-title` on <body>
+     is still read by the licence page's own chrome. */
+  if(t) t.textContent = '';
   if(b){
     var href = document.body.getAttribute('data-back');
     b.hidden = !href;
@@ -430,6 +531,37 @@ function syncAppBar(){
     b.setAttribute('aria-label', close ? 'Close' : 'Back');
   }
 }
+/* The user list inside the profile submenu. Each row is the two-line list item the
+   spec asks for — name with the email beneath on the left, icon actions on the
+   right — and it reads the SAME dataset the Users page does, so adding or deleting
+   a user shows up in both without a second source.
+   ⚠️ Rendered on every open, not once at inject time: the chrome is built on page
+   load and the list changes underneath it. */
+function syncUsersSubmenu(){
+  var host = $('#dashUsersList');
+  if(!host) return;
+  var us = (DATA().users || []);
+  host.innerHTML = us.map(function(u){
+    return '<div class="dprofuser">'
+      + '<span class="dpu-txt">'
+      +   '<span class="dpu-name">' + esc(u.name) + '</span>'
+      +   '<span class="dpu-mail">' + esc(u.email) + '</span>'
+      + '</span>'
+      + '<span class="dpu-act">'
+      +   '<button class="iconbtn ib tip" data-loginas="' + esc(u.email) + '"'
+      +     ' aria-label="Log in as ' + esc(u.name) + '" data-tip="Log in as">'
+      +     '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">'
+      +       '<path d="M14 3h5a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-5"/>'
+      +       '<path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg></button>'
+      +   '<button class="iconbtn ib tip" data-deluser="' + esc(u.email) + '"'
+      +     ' aria-label="Delete ' + esc(u.name) + '" data-tip="Delete">'
+      +     '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">'
+      +       '<path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M6 7l1 13h10l1-13"/></svg></button>'
+      + '</span>'
+      + '</div>';
+  }).join('') || '<div class="dprofsub-empty">No users yet.</div>';
+}
+
 function syncTopNav(){
   var active = document.body.getAttribute('data-nav') || '';
   $$('.tnav-item').forEach(function(a){
@@ -523,16 +655,71 @@ function wireGlobal(){
 
   // profile hub
   var pb = $('#dashProfBtn'), pm = $('#dashProfMenu');
+  /* The nested Users level. Desktop: the submenu opens beside its row on hover or
+     click. Phone: the profile menu is already a bottom sheet, so this becomes a
+     SECOND-level sheet — it covers the first one and offers a back row, which is
+     the M3 pattern for a nested sheet (a submenu flying out sideways off a sheet
+     has nowhere to go at 390px). */
+  function closeUsersSub(){
+    var panel = $('#dashUsersPanel'), btn = $('#dashUsersBtn');
+    if(panel){ panel.hidden = true; panel.classList.remove('on'); }
+    if(btn) btn.setAttribute('aria-expanded', 'false');
+  }
+  function openUsersSub(){
+    var panel = $('#dashUsersPanel'), btn = $('#dashUsersBtn');
+    if(!panel) return;
+    syncUsersSubmenu();
+    panel.hidden = false; panel.classList.add('on');
+    if(btn) btn.setAttribute('aria-expanded', 'true');
+  }
   if(pb){
     pb.addEventListener('click', function(e){
       e.stopPropagation();
       var open = pm.hidden;
       pm.hidden = !open;
+      if(!open) closeUsersSub();          // reopening starts at the first level
       pb.setAttribute('aria-expanded', open ? 'true' : 'false');
     });
     pm.addEventListener('click', function(e){ e.stopPropagation(); });
-    document.addEventListener('click', function(){ if(!pm.hidden){ pm.hidden = true; pb.setAttribute('aria-expanded', 'false'); } });
-    document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && !pm.hidden){ pm.hidden = true; pb.setAttribute('aria-expanded', 'false'); pb.focus(); } });
+    document.addEventListener('click', function(){ if(!pm.hidden){ pm.hidden = true; closeUsersSub(); pb.setAttribute('aria-expanded', 'false'); } });
+    document.addEventListener('keydown', function(e){
+      if(e.key !== 'Escape') return;
+      var panel = $('#dashUsersPanel');
+      // Escape peels one level at a time, deepest first
+      if(panel && !panel.hidden){ closeUsersSub(); var ub = $('#dashUsersBtn'); if(ub) ub.focus(); return; }
+      if(!pm.hidden){ pm.hidden = true; pb.setAttribute('aria-expanded', 'false'); pb.focus(); }
+    });
+    var sub = $('#dashUsersSub');
+    if(sub){
+      $('#dashUsersBtn').addEventListener('click', function(e){
+        e.stopPropagation();
+        var panel = $('#dashUsersPanel');
+        if(panel.hidden) openUsersSub(); else closeUsersSub();
+      });
+      $('#dashUsersBack').addEventListener('click', function(e){ e.stopPropagation(); closeUsersSub(); });
+      /* ⚠️ The panel needs its OWN handler. `#dashProfMenu` stops propagation on
+         click (so a click inside the menu does not reach the document listener that
+         closes it) — which also means the document-level delegation for
+         [data-loginas] / [data-deluser] / [data-modal="add-user"] never fires here.
+         Both buttons were dead on every page until this listener existed.
+         `openLoginAs` / `openDeleteUser` are hoisted function declarations from the
+         block at the end of this file; `openAddUser` is exposed by its IIFE. */
+      $('#dashUsersPanel').addEventListener('click', function(e){
+        var add = e.target.closest('[data-modal="add-user"]');
+        if(add){ pm.hidden = true; closeUsersSub(); if(window.openAddUser) window.openAddUser(); return; }
+        var la = e.target.closest('[data-loginas]');
+        if(la){ pm.hidden = true; closeUsersSub(); openLoginAs(la.getAttribute('data-loginas')); return; }
+        var du = e.target.closest('[data-deluser]');
+        if(du){ pm.hidden = true; closeUsersSub(); openDeleteUser(du.getAttribute('data-deluser')); return; }
+      });
+      // hover opens it on a pointer device only — a touch tap must not need a hover
+      sub.addEventListener('mouseenter', function(){
+        if(window.matchMedia('(hover:hover)').matches) openUsersSub();
+      });
+      sub.addEventListener('mouseleave', function(){
+        if(window.matchMedia('(hover:hover)').matches) closeUsersSub();
+      });
+    }
   }
 
   // impersonation banner (persisted, so it survives navigation)
@@ -594,9 +781,10 @@ function elevateOpenPops(){
     /* ⚠️ A pop that CSS turns into a bottom sheet must be left alone: this helper
        writes position/top/left inline, and inline beats the stylesheet — the
        details overflow ended up a 44px-wide dropdown pinned under its own button
-       instead of a full-width sheet. The relocated header overflow is the one
-       case (see placeOverflow in license-details.js). */
-    if(phone && pop.closest('.fs-headactions, #topbarAction')) return;
+       instead of a full-width sheet. The relocated header overflow was the first
+       case (see placeOverflow in license-details.js); Activity's period menu is
+       the second — it is a .dropmenu, so it lands in this selector by default. */
+    if(phone && (pop.closest('.fs-headactions, #topbarAction') || pop.classList.contains('permenu'))) return;
     var anchor = pop.parentNode ? pop.parentNode.querySelector('[aria-haspopup]') : null;
     if(!anchor) return;
     var r = anchor.getBoundingClientRect();
@@ -664,57 +852,62 @@ function licDetailsMode(){ return Store.get('licDetails') === 'page' ? 'page' : 
 function billingSaved(){ return Store.get('billingData') !== 'none'; }
 function wireSettingsPanel(){
   var gearBtn = $('#gearBtn'), panel = $('#settingsPanel');
-  function toggle(open){ panel.hidden = !open; gearBtn.setAttribute('aria-expanded', open ? 'true' : 'false'); }
+  /* ⚠️ Rebuilt on every open. The context (wizard open? details mounted?) changes
+     while the panel is closed, and the radios' checked state changes from other
+     surfaces too — rendering once at boot showed a panel that was right only for
+     the moment the page loaded. Cheap: it is a handful of labels. */
+  function toggle(open){
+    if(open) $('#settingsBody').innerHTML = settingsBodyHTML();
+    panel.hidden = !open;
+    gearBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
   gearBtn.addEventListener('click', function(e){ e.stopPropagation(); toggle(panel.hidden); });
   panel.addEventListener('click', function(e){ e.stopPropagation(); });
   document.addEventListener('click', function(){ if(!panel.hidden) toggle(false); });
   document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && !panel.hidden) toggle(false); });
 
-  // the dashboard state is a stored setting: pick it anywhere, land on Home with it
-  $$('input[name="dashState"]').forEach(function(r){
-    r.addEventListener('change', function(){
-      if(!r.checked) return;
-      Store.set('dash', r.value);
-      if(document.body.getAttribute('data-page') === 'home') location.reload();
-      else location.href = 'index.html';
-    });
+  /* ⚠️ DELEGATED on the panel, not bound to the inputs. The panel body is rebuilt
+     on every open, so a handler attached to the radios at boot would be attached to
+     nodes that no longer exist — every setting would silently stop working. One
+     listener on the container survives any number of rebuilds. */
+  panel.addEventListener('change', function(e){
+    var r = e.target.closest('input[type="radio"]');
+    if(!r || !r.checked) return;
+    switch(r.name){
+      // the dashboard state is a stored setting: pick it anywhere, land on Home with it
+      case 'dashState':
+        Store.set('dash', r.value);
+        if(document.body.getAttribute('data-page') === 'home') location.reload();
+        else location.href = 'index.html';
+        return;
+      // billing data drives how many steps the wizard has; re-render it if it is open
+      case 'billingData':
+        Store.set('billingData', r.value);
+        if(window.NL && NL.refreshOpen) NL.refreshOpen();
+        return;
+      // the details presentation is a stored setting; rows read it on click
+      case 'licDetails':
+        Store.set('licDetails', r.value);
+        return;
+      // switching the Customize variant re-renders whichever flow is open
+      case 'custVariant':
+        Store.set('custVariant', r.value);
+        if(window.NL && NL.refreshCustomize) NL.refreshCustomize();
+        return;
+    }
   });
 
-  // billing data drives how many steps the wizard has; re-render it if it is open
-  $$('input[name="billingData"]').forEach(function(r){
-    r.addEventListener('change', function(){
-      if(!r.checked) return;
-      Store.set('billingData', r.value);
-      if(window.NL && NL.refreshOpen) NL.refreshOpen();
-    });
-  });
-
-  // the details presentation is a stored setting; rows read it on click
-  $$('input[name="licDetails"]').forEach(function(r){
-    r.addEventListener('change', function(){ if(r.checked) Store.set('licDetails', r.value); });
-  });
-
-  // switching the Customize variant re-renders whichever flow is open
-  $$('input[name="custVariant"]').forEach(function(r){
-    r.addEventListener('change', function(){
-      if(!r.checked) return;
-      Store.set('custVariant', r.value);
-      if(window.NL && NL.refreshCustomize) NL.refreshCustomize();
-    });
-  });
-
-  var reset = $('#resetDemo');
-  reset.addEventListener('click', function(){ Store.reset(); location.reload(); });
-
-  // dev affordance: play the confirmation click that would arrive by email
-  var dev = $('#devConfirmEmail'), pending = Store.get('pendingEmail');
-  dev.disabled = !pending;
-  dev.addEventListener('click', function(){
-    var p = Store.get('pendingEmail');
-    if(!p) return;
-    Store.set('pendingEmail', null);
-    Store.set('emailConfirmed', p.to);
-    location.reload();
+  // the two dev actions, delegated for the same reason
+  panel.addEventListener('click', function(e){
+    if(e.target.closest('#resetDemo')){ Store.reset(); location.reload(); return; }
+    // dev affordance: play the confirmation click that would arrive by email
+    if(e.target.closest('#devConfirmEmail')){
+      var pend = Store.get('pendingEmail');
+      if(!pend) return;
+      Store.set('pendingEmail', null);
+      Store.set('emailConfirmed', pend.to);
+      location.reload();
+    }
   });
 }
 
@@ -813,3 +1006,195 @@ var COUPON_MODAL_HTML = ''
 /* ---------- boot ---------- */
 injectChrome();
 wireGlobal();
+syncTitleRow();
+
+/* ---------- the page title row (phone) ----------------------------------------
+   Title on the left, the page's own actions on the right, on ONE line. Replaces
+   three different arrangements: a full-width primary above the list, a refresh
+   button floating in the toolbar, and a back arrow in the app bar.
+   ⚠️ It has to be JS, not CSS: the buttons live inside the toolbar and the back
+   arrow inside the settings grid, and no `order` carries a child across a parent.
+   The nodes are MOVED, not cloned — one control, one handler, wherever it sits.
+   ⚠️ Idempotent and reversible: called on load and on resize, it rebuilds above the
+   breakpoint by putting every node back where it came from, so the desktop keeps
+   its own arrangement byte for byte. */
+function syncTitleRow(){
+  var h1 = $('#shellMain .lic-h1');
+  if(!h1) return;
+  var phone = window.matchMedia('(max-width:600px)').matches;
+  var row = $('#pageTitleRow');
+
+  if(!phone){
+    if(!row) return;
+    // put everything back exactly where it was, then drop the row
+    $$('[data-homed]', row).forEach(function(el){
+      var home = document.querySelector(el.getAttribute('data-homed'));
+      if(home) home.appendChild(el);
+      el.removeAttribute('data-homed');
+    });
+    if(row.classList.contains('pagehead')){
+      row.classList.remove('pagetitlerow');   // markup row: only the class was ours
+      row.removeAttribute('id');
+    } else {
+      row.parentNode.insertBefore(h1, row);
+      row.remove();
+    }
+    return;
+  }
+  if(row) return;                       // already built
+
+  /* ⚠️ ONE header row per page, never a row inside a row. The settings pages ship
+     their own `.pagehead` (sticky, holding the H1 and Save) in markup; inserting a
+     second row around the H1 nested them, and the two flex contexts disagreed —
+     measured, the title's centre sat 7px above the buttons'. So when a `.pagehead`
+     already exists it IS the header row: it gets the class and keeps its children,
+     and the back control is moved into it. Otherwise one is created. */
+  var existing = h1.closest('.pagehead');
+  if(existing){
+    row = existing;
+    row.id = 'pageTitleRow';
+    row.classList.add('pagetitlerow');
+  } else {
+    row = document.createElement('div');
+    row.className = 'pagetitlerow';
+    row.id = 'pageTitleRow';
+    h1.parentNode.insertBefore(row, h1);
+  }
+
+  /* a back control leads the row when the page declares one — the same data-back
+     the app bar used to read, so there is still one source for "where does back go" */
+  var backHref = document.body.getAttribute('data-back');
+  var back = $('#secBackBtn');
+  if(backHref && back){
+    back.setAttribute('data-homed', '.secgrid');
+    if(!existing) row.appendChild(back);
+  }
+  if(!existing){
+    row.appendChild(h1);
+    var sp = document.createElement('span');
+    sp.className = 'ptr-sp';
+    row.appendChild(sp);
+  } else if(back && row.firstChild !== back){
+    row.insertBefore(back, row.firstChild);   // back leads the row it already had
+  }
+
+  /* refresh first, then the primary — so the destructive-free, always-present
+     action keeps one position across every list page and the page-specific one
+     sits on the outside */
+  [['[data-refresh]', '.lic-controls, .insttoolbar'], ['#licNewBtn', '.lic-controls']]
+    .forEach(function(pair){
+      var host = $('#shellMain ' + pair[1].split(',')[0]) || $('#shellMain ' + (pair[1].split(',')[1] || '').trim());
+      var el = host ? $(pair[0], host) : null;
+      if(!el) return;
+      el.setAttribute('data-homed', '#shellMain ' + (el.closest('.lic-controls') ? '.lic-controls' : '.insttoolbar'));
+      row.appendChild(el);
+    });
+}
+window.addEventListener('resize', syncTitleRow);
+
+/* ---------- users: the actions, shared by every surface that lists them ----------
+   Users is a nested level inside the profile menu, which is chrome — so add,
+   delete and log-in-as live here rather than in page-users.js. */
+function refreshUsersSurfaces(){
+  if(typeof renderUsersPage === 'function') renderUsersPage();   // only on users.html
+  syncUsersSubmenu();                                            // only when the submenu exists
+}
+
+function openDeleteUser(email){
+  openModal('Delete user', '<p>Delete <b>' + email + '</b>? They will lose access to this portal.</p>');
+  var foot = $('#overlay .mf');
+  var del = document.createElement('button');
+  del.type = 'button'; del.className = 'btn ter'; del.id = 'delUserBtn'; del.textContent = 'Delete';
+  foot.appendChild(del);
+  $('#modalCloseBtn').textContent = 'Cancel';
+  del.addEventListener('click', function(){
+    storeDeleteUser(email);      // removed from every dataset, and persisted
+    refreshUsersSurfaces();
+    closeModal();
+  });
+  $('#modalCloseBtn').focus();
+}
+function impersonate(email){
+  Store.set('impersonating', email);   // survives navigation
+  $('#impEmail').textContent = email;
+  $('#impBanner').hidden = false;
+  document.body.classList.add('impersonating');
+  /* An impersonation session is the one action here that most needs a trail:
+     everything done inside it happens under someone else's name. Both ends are
+     logged (see the Return handler in shared.js) — a start without an end leaves
+     "how long did this last" unanswered. */
+  logActivity({ kind:'user', entityType:'Session', entityName:email, action:'LOGIN_AS',
+    txt:'Session was started as <b>' + esc(email) + '</b> by ' + PORTAL_ACTOR + '.' });
+}
+function openLoginAs(email){
+  openModal('Log in as', '<p>Log in as <b>' + email + '</b>? You will see and manage the portal on their behalf until you return to your own account.</p>');
+  var foot = $('#overlay .mf');
+  var go = document.createElement('button');
+  go.type = 'button'; go.className = 'btn'; go.id = 'loginAsBtn'; go.textContent = 'Log in';
+  foot.appendChild(go);
+  $('#modalCloseBtn').textContent = 'Cancel';
+  go.addEventListener('click', function(){ impersonate(email); closeModal(); });
+  $('#modalCloseBtn').focus();
+}
+
+document.addEventListener('click', function(e){
+  var du = e.target.closest('[data-deluser]');
+  if(du){ openDeleteUser(du.getAttribute('data-deluser')); return; }
+  var la = e.target.closest('[data-loginas]');
+  if(la){ openLoginAs(la.getAttribute('data-loginas')); return; }
+});
+
+/* ---------- add user ---------- */
+(function(){
+  var ov = $('#addUserOverlay'); if(!ov) return;
+  var email = $('#auEmail'), addBtn = $('#auAdd');
+  var auSeq = 1;
+  function valid(){ return /.+@.+\..+/.test(email.value.trim()); }
+  function refresh(){ addBtn.disabled = !valid(); }
+  function showStep(n){
+    $('#auStep1').hidden = n !== 1; $('#auFoot1').hidden = n !== 1;
+    $('#auStep2').hidden = n !== 2; $('#auFoot2').hidden = n !== 2;
+  }
+  function open(){
+    email.value = ''; $('#auFirst').value = ''; $('#auLast').value = ''; $('#auDesc').value = ''; $('#auMethod').value = 'link';
+    refresh(); showStep(1); ov.hidden = false; email.focus();
+  }
+  function close(){ ov.hidden = true; }
+  /* two entry points now: the Users page's own button, and the "Add user" row at
+     the top of the profile submenu (on every page). Both open the same modal —
+     the submenu reaches it through window.openAddUser, because the profile menu
+     swallows clicks before any document-level delegation can see them. */
+  var trigger = $('#addUserBtn');
+  if(trigger) trigger.addEventListener('click', open);
+  window.openAddUser = open;
+  email.addEventListener('input', refresh);
+  $('#auClose').addEventListener('click', close);
+  $('#auCancel').addEventListener('click', close);
+  $('#auDone').addEventListener('click', close);
+  ov.addEventListener('click', function(e){ if(e.target === ov) close(); });
+  document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && !ov.hidden) close(); });
+  addBtn.addEventListener('click', function(){
+    if(addBtn.disabled) return;
+    var em = email.value.trim();
+    var name = ($('#auFirst').value.trim() + ' ' + $('#auLast').value.trim()).trim() || em;
+    storeAddUser({ name:name, email:em, created:'Aug 19 2026' });   // persisted
+    refreshUsersSurfaces();
+    if($('#auMethod').value === 'link'){
+      $('#auStep2').innerHTML = '<p class="nl-success-p" style="margin:0">Share this activation link with the user:</p>'
+        + '<div class="nl-keybox" style="margin-top:2px"><code id="auLink">https://portal.thingsboard.io/activate?token=au-' + (1000 + auSeq++) + '-9f2c</code>'
+        + '<button class="iconbtn ib tip" id="auCopy" data-tip="Copy" aria-label="Copy activation link"><svg class="icon" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg></button></div>';
+    } else {
+      $('#auStep2').innerHTML = '<p class="nl-success-p" style="margin:0">Activation email sent to <b>' + em + '</b>.</p>';
+    }
+    showStep(2);
+    $('#auDone').focus();
+  });
+  ov.addEventListener('click', function(e){
+    var c = e.target.closest('#auCopy'); if(!c) return;
+    var flash = function(){
+      c.setAttribute('data-tip', 'Copied'); c.classList.add('show', 'copied');
+      setTimeout(function(){ c.classList.remove('show', 'copied'); c.setAttribute('data-tip', 'Copy'); }, 1200);
+    };
+    if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText($('#auLink').textContent).then(flash, flash); } else { flash(); }
+  });
+})();

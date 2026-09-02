@@ -43,13 +43,26 @@ $$('#licensesView .typechip').forEach(function(chip){
     renderProducts();
   });
 });
-var licCanceledBox = $('#licCanceled');
-licCanceledBox.checked = licShowCanceled;          // reflect the stored choice on load
-licCanceledBox.addEventListener('change', function(){
-  licShowCanceled = this.checked;
+/* Two controls, one state: the desktop switch and the phone's Canceled chip. Both
+   write through the same setter so whichever the viewer used, the other agrees the
+   moment the breakpoint changes. */
+var licCanceledBox = $('#licCanceled'), licCanceledChip = $('#licCanceledChip');
+function syncCanceledControls(){
+  licCanceledBox.checked = licShowCanceled;
+  if(licCanceledChip){
+    licCanceledChip.classList.toggle('is-on', licShowCanceled);
+    licCanceledChip.setAttribute('aria-pressed', licShowCanceled ? 'true' : 'false');
+  }
+}
+function setShowCanceled(v){
+  licShowCanceled = !!v;
   Store.set('showCanceled', licShowCanceled);
+  syncCanceledControls();
   renderProducts();
-});
+}
+syncCanceledControls();                            // reflect the stored choice on load
+licCanceledBox.addEventListener('change', function(){ setShowCanceled(this.checked); });
+if(licCanceledChip) licCanceledChip.addEventListener('click', function(){ setShowCanceled(!licShowCanceled); });
 
 // + New license → the wizard; product and billing type are chosen on its step 1
 var licNewBtn = $('#licNewBtn');

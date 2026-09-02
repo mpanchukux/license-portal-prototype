@@ -289,10 +289,14 @@ var NL = (function(){
      action), so the step needs no footer. Change-plan mode renders the first two
      groups selected-and-locked and marks the current plan as non-selectable. */
 
-  /* LEVEL 1 — product: one compact pill-shaped segmented control, centred. It is a
-     picker, not a pitch, so the one-line product descriptions the old cards
-     carried are gone from this step. Glyphs are 16px monochrome: a hub and spokes
-     for the platform, a broadcast arc for the broker. */
+  /* LEVEL 1 — product: two wide CARDS, and still a switcher. Exactly one is
+     selected; the selected one is marked with a dark outline (`.nl-select.on`
+     gives border + inset ring), NOT a black fill — a filled card reads as a
+     pressed button and outshouts the plan cards below it, which are the actual
+     offer. Each card carries the product's one-line description, so the step
+     says what the two products are instead of assuming you know.
+     Glyphs stay monochrome: a hub and spokes for the platform, a broadcast arc
+     for the broker. */
   var PRODUCT_CHOICES = [
     { v:'thingsboard', t:'ThingsBoard', d:'IoT platform — devices, dashboards, rule engine',
       g:'<circle cx="12" cy="12" r="3"/><circle cx="12" cy="4" r="1.5"/><circle cx="12" cy="20" r="1.5"/>'
@@ -304,49 +308,58 @@ var NL = (function(){
   ];
   function productSegHTML(active, locked){
     return '<div class="nl-prodrow">'
-      + '<div class="nl-prodseg" role="group" aria-label="Product">'
+      + '<div class="nl-prodcards" role="radiogroup" aria-label="Product">'
       + PRODUCT_CHOICES.map(function(o){
           var on = o.v === active;
-          return '<button type="button" class="nl-prodopt' + (on ? ' is-on' : '') + '"'
-            + ' data-nl-product="' + o.v + '" aria-pressed="' + on + '"' + (locked ? ' disabled' : '') + '>'
-            + '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">' + o.g + '</svg>'
+          /* a real button, not a div with role=button: it is one of two mutually
+             exclusive choices — see the radio note below for the contract. */
+          /* ⚠️ `role="radio"` + `aria-checked`, not `aria-pressed`. It is exactly-one-of-N,
+             and aria-pressed describes an independent toggle — the wrong contract for
+             a group where choosing one unchooses the other. The leading indicator is
+             drawn (`.nl-prodradio`), so what a sighted user sees and what a screen
+             reader is told finally say the same thing. */
+          return '<button type="button" role="radio" class="dblock nl-prodcard nl-select' + (on ? ' on' : '') + '"'
+            + ' data-nl-product="' + o.v + '" aria-checked="' + on + '"' + (locked ? ' disabled' : '') + '>'
+            + '<span class="nl-prodradio" aria-hidden="true"></span>'
+            + '<span class="nl-prodic"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true">' + o.g + '</svg></span>'
             + '<span class="nl-prodtxt"><span class="nl-prodname">' + o.t + '</span>'
             + '<span class="nl-proddesc">' + o.d + '</span></span></button>';
         }).join('')
       + '</div></div>';
   }
 
-  /* LEVEL 2 — a heading that names what the grid below is showing, with the toggle
-     that decides it on the same line at the right. The descriptions that used to
-     fill the two billing cards now ride in the ⓘ tooltips, so the row stays one
-     line. The switch is the real control (off = Subscription, on = Perpetual);
-     the labels are text, as in the reference. */
+  /* LEVEL 2 — billing as TABS, left-aligned, standing where the heading used to.
+     The heading ("Subscription plans" / "Perpetual licenses") is gone: it said the
+     same thing the active tab says, and the switch + ⓘ pair made one decision look
+     like two controls (a toggle whose labels were also clickable-looking text).
+     Two tabs, the active one carrying the indicator, is what a two-way switch
+     between two sets of content actually is — and it reuses the `.tabs`/`.tab`
+     pattern the details page already has.
+     ⚠️ The descriptions moved to a SHORT LINE BENEATH the active tab, not into the
+     tab's ⓘ. Reason: on the one step whose entire job is this choice, the
+     difference between paying monthly and paying once has to be readable without a
+     gesture — and a tooltip is a hover affordance, which does not exist on touch
+     (the same reason the plan cards' CTA stopped being hover-revealed). The line
+     swaps with the tab, so only the active choice is explained. */
   var BILLING_CHOICES = [
     { v:'subscription', t:'Subscription',
       d:'Pay every month. Unlimited customers, dashboards, integrations, API calls, data points and messages, and you can change the plan any time.' },
     { v:'perpetual', t:'Perpetual',
       d:'Pay once, run it indefinitely. Includes 12 months of software updates, renewable.' }
   ];
-  var INFOSVG = '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">'
-    + '<circle cx="12" cy="12" r="9"/><path d="M11.98 8h.04"/><path d="M12 11.5V16"/></svg>';
   function billRowHTML(locked){
     var perp = isPerp();
-    function info(o){
-      // .tip is the existing CSS-only tooltip; .wide lets this much copy wrap
-      return '<span class="nl-info tip wide" data-tip="' + esc(o.d) + '" tabindex="0"'
-        + ' role="note" aria-label="' + esc(o.t + '. ' + o.d) + '">' + INFOSVG + '</span>';
-    }
-    var sub = BILLING_CHOICES[0], pp = BILLING_CHOICES[1];
+    var active = perp ? BILLING_CHOICES[1] : BILLING_CHOICES[0];
     return '<div class="nl-billrow">'
-      + '<h3 class="nl-billhead">' + (perp ? 'Perpetual licenses' : 'Subscription plans') + '</h3>'
-      + '<span class="spacer"></span>'
-      + '<div class="nl-billtoggle">'
-      +   '<span class="nl-blabel' + (perp ? '' : ' is-on') + '">' + sub.t + '</span>' + info(sub)
-      +   '<label class="switch lg nl-billsw"><input type="checkbox" data-nl-billsw'
-      +     (perp ? ' checked' : '') + (locked ? ' disabled' : '')
-      +     ' aria-label="Perpetual billing"><span class="track"></span></label>'
-      +   '<span class="nl-blabel' + (perp ? ' is-on' : '') + '">' + pp.t + '</span>' + info(pp)
+      + '<div class="tabs nl-billtabs" role="tablist" aria-label="Billing">'
+      + BILLING_CHOICES.map(function(o){
+          var on = (o.v === 'perpetual') === perp;
+          return '<button type="button" class="tab nl-billtab' + (on ? ' on' : '') + '"'
+            + ' role="tab" aria-selected="' + on + '" data-nl-bill="' + o.v + '"'
+            + (locked ? ' disabled' : '') + '>' + o.t + '</button>';
+        }).join('')
       + '</div>'
+      + '<div class="nl-billdesc">' + active.d + '</div>'
       + '</div>';
   }
   function planPickCard(c, set){
@@ -413,13 +426,34 @@ var NL = (function(){
   /* The anchor of the step: what is being bought, named once. Variant A also lists
      the entitlements the plan fixes, because A drops those rows from the controls;
      variant B keeps them as locked cards below, so its banner is the title alone. */
-  function planSummaryHTML(t, spec, withFacts){
+  /* The card that names what is being bought. ONE definition, rendered unchanged at
+     the top of BOTH step 2 (Customize) and step 3 (Review) — same markup, same
+     content, same styling. It used to exist twice: a `.nl-plansum` panel on step 2
+     (with the facts line on variant A and without it on variant B) and, on step 3,
+     a row inside the order table that also carried the base price. So the thing
+     naming your purchase morphed three ways across two steps.
+     ⚠️ No parameters. The `withFacts` flag is gone on purpose: a flag is how the two
+     variants drifted apart in the first place. If a caller ever needs a quieter
+     version, that is a second component, not an argument. */
+  function planSummaryHTML(t, spec){
     var product = st.product === 'tbmq' ? 'TBMQ' : 'ThingsBoard';
-    var facts = fixedEnt(spec).map(function(e){ return e[1] + ' ' + e[0].toLowerCase(); });
-    facts.push('fixed by this plan');
+    /* ⚠️ The second line is the PRODUCT DESCRIPTION, not the entitlement facts it
+       used to list ("500 devices · fixed by this plan"). Those numbers are already
+       on screen — step 2 shows every one of them as a control and step 3 lists them
+       in the order breakdown — so repeating them said nothing, while what the
+       product actually IS was said only on step 1 and then dropped.
+       Same string the step-1 cards use (PRODUCT_CHOICES), so there is one source. */
+    var desc = '', glyph = '';
+    PRODUCT_CHOICES.forEach(function(o){ if(o.v === st.product){ desc = o.d; glyph = o.g; } });
+    /* the same product glyph the step-1 radio cards lead with, so the card that
+       names your purchase carries the same mark from step 1 through to review */
     return '<div class="fs-panel nl-plansum">'
-      + '<div class="nl-plansum-t">' + product + ' ' + (NAME[t] || st.plan) + ' · ' + (isPerp() ? 'Perpetual' : 'Subscription') + '</div>'
-      + (withFacts ? '<div class="nl-plansum-f">' + facts.join(' · ') + '</div>' : '')
+      + '<span class="nl-plansum-ic" aria-hidden="true">'
+      +   '<svg class="icon" viewBox="0 0 24 24">' + glyph + '</svg></span>'
+      + '<span class="nl-plansum-tx">'
+      +   '<span class="nl-plansum-t">' + product + ' ' + (NAME[t] || st.plan) + ' · ' + (isPerp() ? 'Perpetual' : 'Subscription') + '</span>'
+      +   '<span class="nl-plansum-f">' + desc + '</span>'
+      + '</span>'
       + '</div>';
   }
   /* Variant B: same row as every other card in the stack — label left, control right.
@@ -534,13 +568,13 @@ var NL = (function(){
        own card in a single vertical stack (capacity rows and add-ons alike), so each
        piece of information separates on its own edge instead of by a heading. */
     var left = variantA
-      ? planSummaryHTML(t, spec, true)
+      ? planSummaryHTML(t, spec)
         + '<div class="am-sec fs-panel">'
         +   '<div class="am-sechead"><h4>Capacity</h4></div>'   // what you can buy more of; the plan is named in the card above
         +   '<div class="am-capgrid">' + cells + '</div>'
         +   (addonCells ? '<div class="am-sechead am-sechead-sub"><h4>Add-ons</h4></div><div class="am-capgrid">' + addonCells + '</div>' : '')
         + '</div>'
-      : planSummaryHTML(t, spec, false)
+      : planSummaryHTML(t, spec)
         + '<div class="am-sec nl-cardstack">' + cells + addonCells + '</div>';
     $('#nlStep2').innerHTML =
       '<div class="fs-grid">'
@@ -604,12 +638,17 @@ var NL = (function(){
     $('#nlStep3').innerHTML =
       '<div class="fs-grid">'
       + '<div class="fs-col">'
+      /* the SAME card step 2 opens with — see planSummaryHTML */
+      +   planSummaryHTML(t, TIER_SPECS[t] || { ent:[] })
       /* the plan block and the terms card are one joined unit: no gap between
          them and no radius where they meet, so a single line divides them */
       +   '<div class="nl-joined">'
       +     '<div class="am-order">'
-      +       '<div class="am-orow am-planrow nl-mainline"><div>' + (st.product === 'tbmq' ? 'TBMQ' : 'ThingsBoard') + ' '
-      +         (isChange() ? (st.oldName + ' → ' + (NAME[t] || st.plan)) : (NAME[t] || st.plan))
+      /* ⚠️ This row no longer names the product: the card above does. It is the
+         base-price line of the breakdown, so it carries the plan (and, in change
+         mode, the transition) and the amount — nothing that the card repeats. */
+      +       '<div class="am-orow am-planrow nl-mainline"><div>'
+      +         (isChange() ? (st.oldName + ' → ' + (NAME[t] || st.plan)) : 'Plan')
       +         '</div><div>' + money(BASE[t] || 0) + perSuffix() + '</div></div>'
       +       '<div class="am-orow nl-entline"><div>' + entSummary(t) + '</div><div></div></div>'
       +       rows
@@ -724,6 +763,62 @@ var NL = (function(){
       + '</div>';
     syncPayBtn();
   }
+  /* ---- the pinned summary on the phone ----------------------------------------
+     Steps 2 and 4 ALWAYS pin their summary to the bottom of the viewport: the total
+     and its commit are the point of those steps, and the content above them is a
+     long list of controls or a billing form.
+     Step 3 is CONDITIONAL, and it is a real measurement, not a guess about content
+     length. The block is rendered inline first, un-pinned, and then asked one
+     question: does its own bottom edge fall below the scroll container's bottom
+     edge? If it does, "Due today" is off the first screen and gets pinned; if it
+     fits, it stays inline exactly as the desktop has it.
+     ⚠️ Measured ONCE, in the un-pinned state. Pinning takes the block out of flow,
+     which shortens the content — so re-measuring afterwards would say "it fits now"
+     and unpin it, then pin it again, forever.
+     ⚠️ The content's bottom padding comes from the bar's MEASURED height (--pinH),
+     not a constant: the bar is two rows on step 2, three on step 4, and a hardcoded
+     value would hide the last row on one of them. */
+  function syncPinnedSummary(){
+    var phone = window.matchMedia('(max-width:600px)').matches;
+    [2, 3, 4].forEach(function(n){
+      var step = $('#nlStep' + n); if(!step) return;
+      var right = $('.fs-right', step); if(!right) return;
+      right.classList.remove('pinned');
+      step.classList.remove('haspin');
+      if(!phone || step.hidden) return;
+      /* Three steps, three different rules — so this is a switch, not a boolean.
+         ⚠️ Step 4 (Billing & payment) NEVER pins: this REVERSES the earlier
+         instruction to pin it. Its content is a long form, and a bar carrying the
+         total plus `Subscribe` over a keyboard-driven form competes with the field
+         being typed in.
+         ⚠️ `n !== 3` was the old test, and simply flipping it to `n === 2` was NOT
+         enough: step 4 then fell into the measurement branch below and the
+         measurement pinned it anyway. Each step has to say what it is. */
+      var pin;
+      if(n === 2)      pin = true;                    // always: the total is the point
+      else if(n === 4) pin = false;                   // never: it is a form
+      else {                                          // step 3: measured, once, un-pinned
+        var box = body.getBoundingClientRect();
+        pin = right.getBoundingClientRect().bottom > box.bottom + 1;
+      }
+      if(!pin) return;
+      right.classList.add('pinned');
+      step.classList.add('haspin');
+      step.style.setProperty('--pinH', right.offsetHeight + 'px');
+    });
+  }
+  window.addEventListener('resize', syncPinnedSummary);
+  /* ⚠️ `resize` alone is not enough. The step-3 decision depends on the height of
+     the scroll box, and that box can change without a window resize — an on-screen
+     keyboard, a URL bar collapsing, or a devtools/harness viewport change that
+     never dispatches the event (observed). A ResizeObserver on the box itself fires
+     for all of them.
+     No feedback loop: pinning takes the bar out of the CONTENT's flow, and #nlBody's
+     own height comes from the sheet, so observing it cannot retrigger itself. */
+  if(window.ResizeObserver && body){
+    new ResizeObserver(function(){ syncPinnedSummary(); }).observe(body);
+  }
+
   function gotoStep(n){
     st.step = n;
     if(n === 1) renderStep1();
@@ -733,6 +828,8 @@ var NL = (function(){
     [1, 2, 3, 4].forEach(function(i){ $('#nlStep' + i).hidden = i !== n; });
     renderSteps();
     if(body) body.scrollTop = 0;
+    /* after the step is visible and laid out — a hidden step measures as zero */
+    syncPinnedSummary();
   }
 
   /* ---- confirm: loading on the button (~1.5s), then a success modal with the
@@ -856,8 +953,16 @@ var NL = (function(){
       st.oldTier = al.tier; st.oldName = al.name;
       st.dirty = false;
       seedFromLicense(al);
-      $('#nlTitle').textContent = 'Manage add-ons · ' + al.product + ' ' + al.name
-        + (al.label ? ' · ' + al.label : '');
+      /* ⚠️ NO label in the header line. It used to append `· <label>` and let
+         `.fs-maintitle`'s ellipsis eat the result — so a licence with a real label
+         ("Production — Central Europe manufacturing cluster, building 4") produced a
+         truncated single line that named neither the flow nor the licence properly.
+         DECISION: the label is DROPPED here, not moved to a second line. The header
+         has to say which flow you are in and which licence it acts on; the label is
+         the user's own note, and the identity block on the licence behind the modal
+         already carries it. A second line would make every modal header two lines
+         tall to serve the minority of licences that have one. */
+      $('#nlTitle').textContent = 'Manage add-ons · ' + al.product + ' ' + al.name;
       gotoStep(2);
     } else if(st.mode === 'change' && st.changeLic){
       // change-plan mode: Product and Billing are locked to the licence, and the
@@ -868,7 +973,8 @@ var NL = (function(){
       st.plan = null;
       st.oldTier = cl.tier; st.oldName = cl.name;
       st.dirty = false;
-      $('#nlTitle').textContent = 'Change plan · ' + cl.name + (cl.label ? ' · ' + cl.label : '');
+      // same rule as above: flow · licence, never the label
+      $('#nlTitle').textContent = 'Change plan · ' + (cl.product || 'ThingsBoard') + ' ' + cl.name;
       gotoStep(1);
     } else {
       // the billing type is chosen inside step 1 now, so the title stays neutral
@@ -914,20 +1020,26 @@ var NL = (function(){
       var f = sb.closest('.stepper').getAttribute('data-nl-field');
       var min = f === 'dev' ? 0 : ((INCL[tier()] || {})[f] || 0);
       cust[f] = Math.max(min, Math.min(MAXQ[f], cust[f] + parseInt(sb.getAttribute('data-dir'), 10)));
-      st.dirty = true; renderStep2(); return;
+      st.dirty = true; renderStep2(); syncPinnedSummary(); return;
     }
     if(e.target.closest('#nlPayChange')){ attemptClose(function(){ location.href = 'billing.html'; }); }
+    /* billing is TABS now, so it arrives as a click. It used to be a checkbox and
+       rode the `change` listener — moving it here is the whole reason that listener
+       lost its first branch. */
+    var btab = e.target.closest('[data-nl-bill]');
+    if(btab && !btab.disabled){
+      var want = btab.getAttribute('data-nl-bill');
+      if(want !== st.kind){
+        st.kind = want;
+        st.plan = null; seededTier = null;
+        renderStep1();
+      }
+      return;
+    }
   });
   body.addEventListener('change', function(e){
-    // billing is a switch now, so it arrives as a change, not a click
-    var bsw = e.target.closest('[data-nl-billsw]');
-    if(bsw){
-      st.kind = bsw.checked ? 'perpetual' : 'subscription';
-      st.plan = null; seededTier = null;
-      renderStep1(); return;
-    }
     var cb = e.target.closest('input[data-nl-addon]');
-    if(cb){ cust[cb.getAttribute('data-nl-addon')] = cb.checked; st.dirty = true; renderStep2(); return; }
+    if(cb){ cust[cb.getAttribute('data-nl-addon')] = cb.checked; st.dirty = true; renderStep2(); syncPinnedSummary(); return; }
     var selField = e.target.closest('[data-nlb]');
     if(selField){ bill[selField.getAttribute('data-nlb')] = selField.value; st.dirty = true; syncPayBtn(); }
   });
@@ -969,7 +1081,7 @@ var NL = (function(){
 
   return { open: open, openChange: function(lic){ open({ mode:'change', license: lic }); },
            // the settings panel switches the Customize variant while it is open
-           refreshCustomize: function(){ if(!scr.hidden && st.step === 2) renderStep2(); },
+           refreshCustomize: function(){ if(!scr.hidden && st.step === 2){ renderStep2(); syncPinnedSummary(); } },
            // the billing-data setting changes the step count under an open wizard
            refreshOpen: function(){
              if(scr.hidden) return;

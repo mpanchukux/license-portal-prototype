@@ -21,7 +21,6 @@ var EMAIL = (function(){
     // the pending line explains the state on its own — the helper would repeat it
     if(help) help.hidden = !!pendingTo;
     if(txt && pendingTo) txt.textContent = msg || ('Pending: ' + pendingTo);
-    var dev = $('#devConfirmEmail'); if(dev) dev.disabled = !pendingTo;
   }
   function onSave(){
     var v = input.value.trim();
@@ -42,7 +41,11 @@ var EMAIL = (function(){
   if(txt) txt.addEventListener('click', confirm);
   var rs = $('#emailResend'); if(rs) rs.addEventListener('click', resend);
   var cn = $('#emailCancel'); if(cn) cn.addEventListener('click', cancel);
-  var dev = $('#devConfirmEmail'); if(dev) dev.addEventListener('click', confirm);
+  /* ⚠️ No binding to `#devConfirmEmail` here. That node lives in the settings panel,
+     whose body is built when the panel OPENS — at boot it does not exist, so this
+     listener never attached. The panel owns that action through its own delegated
+     handler (it stores `emailConfirmed` and reloads; the top of this file applies
+     it). Two paths for one action was the bug; one path is the fix. */
   render();
   return { onSave:onSave, confirm:confirm };
 })();

@@ -451,7 +451,10 @@ function renderPeriodRow(lic, pk){
   var ic = '<span class="rowic">' + (perp ? UPDSVG : CYCLESVG) + '</span>';
   if(lic.grant){
     lab.textContent = 'Expiry';
-    val.innerHTML = ic + '<span class="rowtxt muted">No expiry</span>';
+    /* ⚠️ No `.muted` here either. Its siblings on this row ("Renews Sep 13, 2026",
+       "Updates until …") are --ink from `.rowvalue`; --faint made the grant's line
+       the only lighter one. Same fact, same tone. */
+    val.innerHTML = ic + '<span class="rowtxt">No expiry</span>';
     return;
   }
   var word = perp
@@ -604,7 +607,13 @@ function renderKicker(lic, pk){
      so the eyebrow emits its own short chip and the desktop one steps aside there.
      Short on purpose: the desktop chip spells out "Canceled · active until <date>",
      and that date is already the renewal row two lines further down. */
-  el.innerHTML = esc(product + ' · ' + type)
+  /* ⚠️ Line 1 is the TYPE alone and line 2 is product · plan — the same order the
+     licence cards use, so the list and the detail agree. It used to be
+     "ThingsBoard · Subscription" over "Startup", which named the product twice
+     once the headline gained it and buried the plan under the product.
+     The headline is written by renderLicenseDetails (it sets #planName), so the
+     product is prepended there, not here. */
+  el.innerHTML = esc(type)
     + '<span class="kickchip mob-only">'
     +   '<span class="chip status' + (lic.status === 'canceled' ? ' off' : '') + '">'
     +     (lic.status === 'canceled' ? 'Canceled' : '<span class="sdot"></span>Active')
@@ -639,7 +648,8 @@ function renderLicenseDetails(lic){
   var spec = TIER_SPECS[lic.tier] || {}, isPerp = isPerpLike(lic), pk = isPerp ? 'perp' : 'sub';
   $$('#appView [data-page]').forEach(function(el){ el.hidden = el.getAttribute('data-page') !== pk; });
   var nameEl = isPerp ? $('#planNamePerp') : $('#planName');
-  if(nameEl) nameEl.textContent = lic.name;   // the title is the plan or package
+  // the headline carries product · plan; the eyebrow above it carries the type
+  if(nameEl) nameEl.textContent = (lic.product || 'ThingsBoard') + ' · ' + lic.name;
   renderKicker(lic, pk);
   $('#statusSlot').innerHTML = statusChipHTML(lic);
   renderLabelSlot(lic);
@@ -650,7 +660,8 @@ function renderLicenseDetails(lic){
   if(isPerp){
     var pp = $('#periodPerp');
     // a grant has no term at all — the dated block says so instead of a date
-    if(pp && lic.grant) pp.innerHTML = '<span class="muted">No expiry</span>';
+    // `.period` is --ink for every other licence; the grant matches it
+    if(pp && lic.grant) pp.textContent = 'No expiry';
     else if(pp) pp.textContent = (lic.status==='updates_expiring' ? 'Expires ' : 'Until ') + fmtDate(lic.event);
   } else {
     var ps = $('#periodSub');
@@ -658,7 +669,12 @@ function renderLicenseDetails(lic){
     var price = String(lic.price).replace(/\s*\/\s*mo/i,'');
     var nc=$('#ncAmount'), when=$('#ncWhen');
     if(lic.status==='canceled'){ if(nc) nc.textContent='—'; if(when) when.textContent='No upcoming charge · active until '+fmtDate(lic.event); }
-    else { if(nc) nc.textContent=price; if(when) when.textContent='on '+fmtDate(lic.event); }
+    /* ⚠️ The "on " prefix is its own span so the phone can drop it. With the
+       "NEXT CHARGE" label restored to the line, label + date + amount measured
+       302px against a 284px box — and "on" is redundant once the label says what
+       the date is. Removing it buys the 22px the line was short of. */
+    else { if(nc) nc.textContent=price;
+           if(when) when.innerHTML='<span class="nc-on">on </span>'+fmtDate(lic.event); }
   }
   renderLicInvoices(lic);
   renderEntitlements(spec.ent, lic.extras);

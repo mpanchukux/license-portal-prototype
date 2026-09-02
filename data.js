@@ -21,7 +21,12 @@ var FEATURES = [
    this (see paymentMethodHTML): Payment method on Billing & payment, the Next
    charge card on licence details, the styleguide specimen. Prose mentions of
    "Visa ••4242" (activity feed, invoice mock, wizard) are sentences, not this. */
-var PAYMENT_METHOD = { brand:'VISA', num:'•••• •••• •••• 4242', exp:'Expires 12 / 2028' };
+/* ⚠️ The expiry's WORD is its own span so the phone can drop it. Arithmetic: brand
+   53 + number 118 + "Expires 12 / 2028" 109 + button 44 = 324 against a 330px
+   content box, so with any gap at all the edit button wrapped to a second line.
+   Without the word the expiry is ~55px and the row fits with room to spare. */
+var PAYMENT_METHOD = { brand:'VISA', num:'•••• •••• •••• 4242',
+  exp:'<span class="pc-expw">Expires </span>12 / 2028' };
 
 /* ---------- per-tier specs: what a licence of each tier includes ---------- */
 var TIER_SPECS = {
@@ -94,7 +99,14 @@ var DATASETS = {
       // two deliberately long labels: real deployments name themselves like this,
       // and the Product column has to wrap them rather than stretch the table
       { id:'B13', tier:'business', product:'ThingsBoard', type:'Subscription', name:'Business',  label:'Production — Central Europe manufacturing cluster, building 4', created:'Feb 18 2026', updated:'Aug 04 2026', status:'active', event:'Aug 27 2026', price:'$499.00 / mo', billing:'auto-pay' },
-      { id:'B14', tier:'pilot',    product:'ThingsBoard', type:'Subscription', name:'Pilot',     label:'Long-term evaluation environment for the Munich pilot',          created:'May 24 2026', updated:'Jun 02 2026', status:'active', event:'Sep 24 2026', price:'$99.00 / mo',  billing:'auto-pay' }
+      { id:'B14', tier:'pilot',    product:'ThingsBoard', type:'Subscription', name:'Pilot',     label:'Long-term evaluation environment for the Munich pilot',          created:'May 24 2026', updated:'Jun 02 2026', status:'active', event:'Sep 24 2026', price:'$99.00 / mo',  billing:'auto-pay' },
+      /* ⚠️ The Community Grant completes the type coverage of this dataset: it was
+         the only tier in TIER_SPECS with no row, and it carries the only status no
+         other row exercises (`awaiting_checkin`). It has NO event date and NO price,
+         which is exactly why it belongs here — every type-aware column and the phone
+         card have to cope with both being absent. `grant:true` is what the renderers
+         branch on; `limits` replaces the entitlement columns it has no numbers for. */
+      { id:'B15', tier:'grant',    product:'ThingsBoard', type:'Grant',        name:'Community Grant', label:'Research cluster', created:'Aug 19 2026', updated:'Aug 19 2026', status:'awaiting_checkin', event:'', price:'Free', billing:'\u2014', grant:true, limits:'6,050 devices &middot; 2 production servers' }
     ],
     users: [
       { name:'Mariia Panchuk', email:'mpanchuk@thingsboard.io',  created:'Jul 17 2026' },
