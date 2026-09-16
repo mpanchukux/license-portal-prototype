@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>ThingsBoard License Portal</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<!-- data-public: readable signed out. It is also the ONE page that is unreachable
+     signed in — both directions of that rule live in guardSession(). -->
+<body data-page="landing" data-public>
+
+<div id="shellMain">
+<div class="dashview" id="landingView">
+  <div class="dmain">
+    <div class="dwrap">
+
+      <!-- The page's own headline. The pricing section below is the whole page, so
+           the heading names it rather than selling it: this is the portal's offer
+           list, not a marketing site. -->
+      <div class="dwelcome">
+        <div class="dw-txt">
+          <h1>Plans and pricing</h1>
+          <p>Choose a product and a way to pay. You'll create an account at checkout.</p>
+        </div>
+      </div>
+
+      <!-- The purchase wizard's step 1, rendered on the page instead of in a modal:
+           the same product cards, the same Subscription / Perpetual tabs and the same
+           plan cards with their Select buttons, off the same EC_PLANS data. See
+           renderPlanPicker in wizard.js — this page is its second host, not a copy. -->
+      <div class="planpicker" id="landingPicker">
+        <div id="landingChoices"></div>
+        <div class="plangrid" id="landingPlans"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</div><!-- /#shellMain -->
+
+<script src="data.js"></script>
+<script src="shared.js"></script>
+<script src="components.js"></script>
+<script src="wizard.js"></script>
+<script src="auth.js"></script>
+<script src="page-landing.js"></script>
+</body>
+</html>

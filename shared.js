@@ -85,7 +85,7 @@ var Store = (function(){
      that already has a snapshot — it would need "Reset demo data" pressed by hand,
      which is not something a reviewer should have to know. Bump this whenever the
      seed changes in a way that has to be seen; the old key is simply abandoned. */
-  var KEY = 'tb-license-portal-demo-v6';
+  var KEY = 'tb-license-portal-demo-v7';
   function clone(o){ return JSON.parse(JSON.stringify(o)); }
   function seed(){
     return {
@@ -96,6 +96,11 @@ var Store = (function(){
       dismissed: {},              // one-time banners the viewer closed
       showCanceled: false,        // Licenses table: cancelled rows are hidden until asked for
       licDetails: 'modal',        // licence details open over the list; 'page' is the comparison
+      /* Who is looking. 'out' is the seed, so a fresh browser starts on the landing
+         page and reaches the portal through sign-up or log-in — and so "Reset demo
+         data" returns there without needing a line of its own. */
+      auth: 'out',                // 'out' | 'new' | 'existing'
+      pendingPurchase: null,      // { product, kind, plan } carried across the sign-up navigation
       seq: 0                      // counter behind generated licence ids and keys
     };
   }
@@ -228,6 +233,79 @@ function isDismissed(k){ return !!Store.get('dismissed')[k]; }
 function dismiss(k){ Store.get('dismissed')[k] = true; Store.save(); }
 
 /* ============================================================================
+   Session — who is looking, and what that page is allowed to be
+   ============================================================================
+   Three states, stored like every other piece of demo state, so they survive
+   navigation and refresh:
+
+     out       the landing page and the public documents; the truncated header
+     new       signed in, no licences yet — Home renders its new-user screen
+     existing  signed in with the account's licences — Home renders populated
+
+   The state is not a claim about a real session: it is the demo's way of showing
+   the same prototype from three vantage points, and the settings panel jumps
+   between them (see the Session group).
+   ========================================================================== */
+var AUTH_STATES = {
+  out:      { label:'Signed out (landing)' },
+  'new':    { label:'Signed in — new account' },
+  existing: { label:'Signed in — existing account' }
+};
+function authState(){ return AUTH_STATES[Store.get('auth')] ? Store.get('auth') : 'out'; }
+function isSignedIn(){ return authState() !== 'out'; }
+
+/* A page is PUBLIC when it may be read signed out. Three of them are not a
+   courtesy: the sign-up consent line links to Terms of Use, Privacy Policy and the
+   License agreement, so guarding those would bounce a visitor to the landing page
+   the moment they tried to read what they are agreeing to. `styleguide.html` is
+   public for a different reason — it is prototype scaffolding, reachable from the
+   gear panel, which is itself available while signed out. Everything else is the
+   portal proper and requires a session. Declared on <body>, so the page says it
+   about itself rather than this file keeping a list of filenames. */
+function isPublicPage(){ return document.body.hasAttribute('data-public'); }
+
+/* ⚠️ `location.replace`, never `location.href`: a redirect that leaves a history
+   entry makes Back bounce straight into the same redirect, and the visitor is stuck.
+   Replace swaps the entry, so Back goes where they actually came from.
+   The landing page is the signed-out home AND unreachable once signed in — both
+   directions are the same rule, so both live here. */
+function guardSession(){
+  var landing = document.body.getAttribute('data-page') === 'landing';
+  if(landing && isSignedIn()){ location.replace('index.html'); return false; }
+  if(!landing && !isPublicPage() && !isSignedIn()){ location.replace('landing.html'); return false; }
+  return true;
+}
+
+/* Signing in is a state change plus a destination, and both callers (the auth
+   surface and the settings panel) need the same pairing, so it is one function.
+   ⚠️ `new` also clears billing data. An account created a second ago cannot have a
+   card on file, and the wizard reads exactly that flag to decide whether it has a
+   Billing & payment step — leaving it "saved" would let a brand-new account check
+   out against a payment method it never entered. The gear panel can still flip it
+   back; this only sets the honest starting point. */
+function setSession(next, opts){
+  opts = opts || {};
+  if(!AUTH_STATES[next]) next = 'out';
+  Store.set('auth', next);
+  if(next === 'new'){
+    Store.set('dash', 'dashempty');
+    Store.set('billingData', 'none');
+  }
+  /* ⚠️ Two callers, two meanings, one flag. The settings panel's "Signed in —
+     existing account" is a jump TO a populated account, so an empty dashboard state
+     is not one it can land on and it is replaced. Logging in is not that jump: it
+     reveals whatever account the demo is currently set to — which is how "the
+     populated state with that account's licences, OR the empty state if the account
+     has none" comes out without a branch of its own. */
+  if(next === 'existing' && !opts.keepDash && (DASH_STATES[Store.get('dash')] || {}).empty){
+    Store.set('dash', 'dashB');
+  }
+  if(opts.go === false) return;
+  location.href = next === 'out' ? 'landing.html' : 'index.html';
+}
+function signOut(){ setSession('out'); }
+
+/* ============================================================================
    Chrome — one definition, injected into every page
    ========================================================================== */
 /* The five destinations, in one place. `ic` is only read by the phone's bottom
@@ -275,7 +353,40 @@ function bottomNavHTML(){
       }).join('')
     + '</nav>';
 }
+/* The logo lockup, used by both headers. Its destination is the only thing that
+   differs: signed in it leads Home, signed out it leads back to the landing page —
+   which is the whole of requirement "the logo goes to Home instead". */
+function brandHTML(){
+  var href = isSignedIn() ? 'index.html' : 'landing.html';
+  return '<a class="dbrand" href="' + href + '" aria-label="ThingsBoard License Portal" title="'
+    + (isSignedIn() ? 'Home' : 'ThingsBoard License Portal') + '">'
+    + '<div class="mark"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4v16M4 12h16"/></svg></div>'
+    + '<div class="bt">ThingsBoard<span class="bsep">\u00b7</span>License Portal</div>'
+    + '</a>';
+}
+
+/* ---------- the signed-out header ----------
+   The same band as the signed-in one (.dtopbar / .dtopbar-inner), truncated to what
+   a visitor with no account can act on: the logo, and the two ways in. No nav — there
+   is nowhere to navigate; no profile menu — there is no profile; no refresh — there is
+   no list to refresh. It is the same header with its middle removed, not a second one,
+   so the two cannot drift apart in height, ground or alignment. */
+function publicChromeHTML(){
+  return ''
+  + '<header class="dtopbar pubbar">'
+  +   '<div class="dtopbar-inner">'
+  +     brandHTML()
+  +     '<span class="sp"></span>'
+  +     '<div class="pubacts">'
+  +       '<button class="btn sec" data-auth="login">Log in</button>'
+  +       '<button class="btn" data-auth="signup">Sign up</button>'
+  +     '</div>'
+  +   '</div>'
+  + '</header>';
+}
+
 function chromeHTML(){
+  if(!isSignedIn()) return publicChromeHTML();
   var nav = navItemsHTML();
   return ''
   + '<header class="dtopbar">'
@@ -288,10 +399,7 @@ function chromeHTML(){
   +     '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>'
   +   '</a>'
   +   '<h2 class="tb-title" id="tbTitle"></h2>'
-  +   '<a class="dbrand" href="index.html" aria-label="ThingsBoard License Portal — home" title="Home">'
-  +     '<div class="mark"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4v16M4 12h16"/></svg></div>'
-  +     '<div class="bt">ThingsBoard<span class="bsep">·</span>License Portal</div>'
-  +   '</a>'
+  +   brandHTML()
   +   '<nav class="tnav" aria-label="Primary">' + nav + '</nav>'
   +   '<span class="sp"></span>'
   +   '<div class="tb-act" id="topbarAction"></div>'
@@ -340,7 +448,10 @@ function chromeHTML(){
   +         '</div>'
   +       '</div>'
   +       '<div class="sep"></div>'
-  +       '<button role="menuitem" data-stub="Sign out">Sign out</button>'
+  /* No longer a stub: with a session in the store there is something to sign out
+     OF, and a control labelled "Sign out" sitting next to a working log-in that
+     opened a stub dialog would be the surface telling a lie about itself. */
+  +       '<button role="menuitem" id="signOutBtn">Sign out</button>'
   +     '</div>'
   +   '</div>'
   +   '</div>'
@@ -442,6 +553,14 @@ function settingsBodyHTML(){
       '<label class="sp-opt"><input type="radio" name="billingData" value="saved"' + (billingSaved() ? ' checked' : '') + '><span>Saved</span></label>'
       + '<label class="sp-opt"><input type="radio" name="billingData" value="none"' + (billingSaved() ? '' : ' checked') + '><span>None</span></label>');
   }
+
+  /* ---- always: the session. It is the one setting that applies to every page
+     including the landing one, because it decides which of them you are even
+     allowed to be on — so it is rendered first and never scoped to a context. */
+  out += group('Session', Object.keys(AUTH_STATES).map(function(k){
+    return '<label class="sp-opt"><input type="radio" name="session" value="' + k + '"'
+      + (authState() === k ? ' checked' : '') + '><span>' + AUTH_STATES[k].label + '</span></label>';
+  }).join(''));
 
   // ---- always: chrome-wide variant, dev actions, and the reference page
   out += group('Reference',
@@ -613,6 +732,15 @@ function wireGlobal(){
     if(e.key === 'Escape' && !$('#overlay').hidden) closeModal();
   });
 
+  /* Sign out: the profile menu's last item, and the only way out of a session.
+     ⚠️ Bound DIRECTLY, not delegated from the document like every other chrome
+     action — `#dashProfMenu` carries a `click` listener that calls stopPropagation
+     (it is how a click inside the menu avoids the document listener that closes it),
+     so nothing inside that menu ever reaches a document-level delegate. The node is
+     injected once per page and never re-rendered, so there is nothing to delegate for. */
+  var soBtn = $('#signOutBtn');
+  if(soBtn) soBtn.addEventListener('click', function(){ closeAllMenus(); signOut(); });
+
   // not-yet-specced actions
   document.addEventListener('click', function(e){
     var el = e.target.closest('[data-stub]');
@@ -722,10 +850,17 @@ function wireGlobal(){
     }
   }
 
-  // impersonation banner (persisted, so it survives navigation)
-  var imp = Store.get('impersonating');
-  if(imp){ $('#impEmail').textContent = imp; $('#impBanner').hidden = false; document.body.classList.add('impersonating'); }
-  $('#impReturn').addEventListener('click', function(){
+  /* Impersonation banner (persisted, so it survives navigation).
+     ⚠️ Guarded on the node, not on the stored value. The banner is part of the
+     SIGNED-IN chrome only — a visitor with no session cannot be impersonating
+     anyone — so on the landing page and the public documents `#impReturn` is simply
+     not there, and an unguarded addEventListener threw before the rest of
+     wireGlobal ever ran: menus, tabs and the settings panel all died with it.
+     Everything else in here is either delegated from `document` or already guarded;
+     this was the one direct binding to a node the public header omits. */
+  var imp = Store.get('impersonating'), impRet = $('#impReturn');
+  if(imp && impRet){ $('#impEmail').textContent = imp; $('#impBanner').hidden = false; document.body.classList.add('impersonating'); }
+  if(impRet) impRet.addEventListener('click', function(){
     var was = Store.get('impersonating');
     Store.set('impersonating', null);
     if(was) logActivity({ kind:'user', entityType:'Session', entityName:was, action:'LOGIN_AS_END',
@@ -874,6 +1009,11 @@ function wireSettingsPanel(){
     var r = e.target.closest('input[type="radio"]');
     if(!r || !r.checked) return;
     switch(r.name){
+      /* the session decides which pages exist at all, so it always navigates —
+         staying put would leave you on a page the guard is about to reject */
+      case 'session':
+        setSession(r.value);
+        return;
       // the dashboard state is a stored setting: pick it anywhere, land on Home with it
       case 'dashState':
         Store.set('dash', r.value);
@@ -1004,9 +1144,16 @@ var COUPON_MODAL_HTML = ''
 + '</div>';
 
 /* ---------- boot ---------- */
-injectChrome();
-wireGlobal();
-syncTitleRow();
+/* ⚠️ The guard runs FIRST and the boot stops on a redirect. `location.replace` does
+   not halt the current script, so without the early return this page would carry on
+   building chrome and wiring behaviours for a document that is already navigating
+   away — cheap, but it also runs page scripts against a state they were guarded out
+   of, and any error from that lands in the console as a real-looking failure. */
+if(guardSession()){
+  injectChrome();
+  wireGlobal();
+  syncTitleRow();
+}
 
 /* ---------- the page title row (phone) ----------------------------------------
    Title on the left, the page's own actions on the right, on ONE line. Replaces

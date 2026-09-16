@@ -873,6 +873,74 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
 /* the count on its own row under the heading — the heading row's right end is the
    toggle's, so the two would collide up there */
 
+/* ============================================================================
+   Signed out: the truncated header, the landing page, and the auth surface
+   ============================================================================ */
+
+/* ---------- the truncated header ----------
+   The signed-in bar with its middle removed. Everything that positions the band —
+   height, ground, container width, the rounded bottom edge — comes from .dtopbar /
+   .dtopbar-inner unchanged, so the two headers cannot end up different heights.
+   All this adds is where the two actions sit. */
+.pubacts{display:flex;align-items:center;gap:10px;flex:none}
+
+/* ---------- landing: the plan picker on a page instead of in a modal ----------
+   The wizard sets its own grid margin under #nlModal; on the page the picker owns
+   the gap to the headline above it. The picker itself is unstyled here on purpose —
+   every part of it is the wizard's own component, and a landing-only override would
+   be exactly the drift the shared template exists to prevent. */
+.planpicker{margin-top:28px}
+.planpicker .plangrid{margin-top:24px}
+
+/* ---------- auth: one box, two screens ----------
+   Rides .fs-screen / .fs-box, so it is already a centred modal above 600px and a
+   full-screen sheet below it. ⚠️ .fs-box hard-codes width:min(1040px,92vw) and
+   height:90vh for the wizard's workspace; an auth card is neither, so .authbox
+   narrows it and lets the content set the height. The max-height keeps a long
+   screen scrollable rather than taller than the viewport. */
+.authbox{width:min(440px,92vw);height:auto;max-height:90vh}
+/* the header band is only the way out here — no title, and no band to speak of */
+.authscreen .fs-header{padding:10px 12px;background:transparent;border-bottom:0}
+/* the card's own column: .fs-body's 1040px cap and 24px padding are the wizard's */
+.authbody{padding:0 28px 30px;max-width:none;text-align:center}
+/* the logo lockup, centred and a step larger than the header's */
+.auth-brand{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:22px}
+.auth-brand .mark{width:34px;height:34px;border:1px solid var(--line);border-radius:8px;
+  display:flex;align-items:center;justify-content:center;background:#fff;color:var(--ink)}
+.auth-brand .mark .icon{width:20px;height:20px}
+.auth-brand .bt{font-size:var(--t-h2-fs);font-weight:700;line-height:1.1}
+.auth-brand .bt .bsep{color:var(--faint);font-weight:400;margin:0 6px}
+/* the screen's name. h2 by the scale, sentence case, and it is the only heading
+   in the box — the header band above carries no title precisely so this one is it */
+.auth-h{margin:0 0 20px;font-family:var(--font-ui);font-size:var(--t-h2-fs);
+  line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw)}
+/* two equal halves; they are .btn.sec, so the band and the radius come for free */
+.auth-social{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.auth-soc{gap:8px}
+.auth-soc .icon{width:17px;height:17px}
+/* OR: a rule with the word sitting in a gap cut out of it */
+.auth-or{display:flex;align-items:center;gap:12px;margin:18px 0;color:var(--faint);font-size:14px}
+.auth-or::before,.auth-or::after{content:"";flex:1;height:1px;background:var(--line2)}
+/* fields are the prototype's own .field component; only the alignment is local —
+   the card is centred, its labels are not */
+.authbody .field{text-align:left}
+/* the reveal control sits inside the input's box, at its right edge. The field is
+   the positioning context, and the input keeps room for the button so a long value
+   never runs under it. */
+.authpw{position:relative}
+.authpw input{padding-right:var(--btnH)}
+.authpw-eye{position:absolute;right:0;bottom:0}
+/* consent: quiet, left-aligned with the fields it follows, and its links are prose
+   links (.link underlines on purpose — these are documents, not controls) */
+.auth-legal{margin:14px 0 0;text-align:left;font-size:var(--t-small-fs);
+  line-height:1.55;color:var(--mid)}
+.auth-primary{width:100%;margin-top:22px}
+/* the door to the other screen: a question, then the way to answer it */
+.auth-foot{margin-top:22px;display:flex;flex-direction:column;align-items:center;gap:10px}
+.auth-footq{font-size:var(--t-small-fs);color:var(--mid)}
+.auth-alt{width:100%}
+.auth-forgot{margin-top:16px}
+
 /* ---------- Dashboard (Overview): full-width top bar, no sidebar, centered column ---------- */
 .app[hidden],.dashview[hidden],.licview[hidden]{display:none}
 .dashview{display:flex;flex-direction:column;min-height:100%;background:var(--bg)}
@@ -945,6 +1013,31 @@ button.dbrand{background:none;border:0;padding:0;color:inherit;font:inherit;curs
   padding:6px;background:var(--card);border:1px solid var(--line);border-radius:8px;
   box-shadow:0 12px 32px rgba(0,0,0,.14);z-index:120}
 .dprofsub-p[hidden]{display:none}
+/* ---------- the hover bridge ----------
+   ⚠️ `margin-right:6px` puts 6px of NOTHING between the trigger row and the flyout,
+   and that strip belongs to `.dprofmenu`, not to `.dprofsub`. Moving the pointer from
+   "Users" onto its submenu crossed it, `mouseleave` fired on `.dprofsub`, and the panel
+   closed under the cursor — but only SOMETIMES, which is what made it look random:
+   mousemove is sampled, so a quick move jumps the 6px between two samples and no event
+   ever lands inside the gap, while an unhurried one lands there and closes it.
+   The fix fills the gap with an invisible strip that IS a descendant of `.dprofsub`,
+   so the pointer never actually leaves the element it is hovering.
+   ⚠️ NOT a close delay. A timer would hide the dead zone behind a wait, and the menu
+   would then linger every time you left it on purpose — the cause stays, the symptom
+   moves.
+   ⚠️ And NOT on the panel (`.dprofsub-p::after{left:100%}`), which is where this
+   started: an absolutely positioned pseudo-element resolves its offsets against the
+   containing block's PADDING box, so on a bordered panel `left:100%` begins 1px inside
+   the right border and the strip stops 1px short of the trigger. Measured: one dead
+   column at the trigger's own left edge, and the bug survived at exactly the width of
+   a border. The trigger's side has no border, so the strip lands flush on both edges —
+   verified by walking every pixel between the two boxes.
+   It exists only while the submenu is open: there is nothing to bridge to otherwise,
+   and a permanent 6px hover target lying over the profile menu's padding would open
+   Users on its own. `height:100%` here is the trigger row, which is the band you
+   actually cross. */
+.dprofsub-t[aria-expanded="true"]::after{content:"";position:absolute;
+  top:0;right:100%;width:6px;height:100%}
 /* "Add user" leads the level: it is the action, the list below is the state */
 .dprofsub-add{display:flex;align-items:center;gap:8px;width:100%;
   padding:9px 10px;border:0;border-radius:6px;background:transparent;color:var(--ink);
@@ -1426,6 +1519,28 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
   :root{--btnH:44px; --pageX:16px; --pageY:20px; --backW:44px; --contentX:22px;
          --bnavH:64px}   /* icon 26 + gap 3 + label 16 + padding 13 + border */
 
+  /* ---------- signed out, on a phone ----------
+     ⚠️ The app bar below turns .dtopbar-inner into a GRID with named areas for the
+     signed-in bar's five slots. The public bar has two children and neither is one
+     of those areas, so they would both land in the implicit first cell, stacked. It
+     stays flex, and the actions are pushed right by a margin rather than by the .sp
+     spacer, which this block hides. */
+  .pubbar .dtopbar-inner{display:flex;padding:0 var(--pageX);height:56px}
+  .pubbar .dbrand{display:flex}
+  .pubacts{margin-left:auto;gap:8px}
+  /* the two ways in are the whole bar here, so they may be tighter than the band */
+  .pubacts .btn{height:36px;padding:0 12px}
+
+  /* ---------- the auth sheet ----------
+     ⚠️ .fs-box goes full-viewport at this width, but .authbox is more specific and
+     would keep its 440px card centred on a phone — the one case the reference is
+     explicit about ("full-screen page on mobile"). Restated here so the modifier
+     does not outrank the breakpoint. */
+  .fs-box.authbox{width:100vw;height:100vh;max-height:none;border:0;border-radius:0}
+  .authbody{padding:0 20px 32px;display:flex;flex-direction:column;justify-content:center;flex:1}
+  .auth-h{font-size:var(--t-h2-sm-fs);line-height:var(--t-h2-sm-lh);letter-spacing:var(--t-h2-sm-ls)}
+  .auth-brand .bt{font-size:var(--t-h2-sm-fs)}
+
   /* ---------- top bar becomes a real app bar ----------
      Flush edge-to-edge, one row: leading slot · title · page action · user. No side
      margin, no radius, no floating card — a contained band reads as a card at this
@@ -1505,11 +1620,20 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
      The profile menu is already a bottom sheet here, so its nested level covers it
      and offers a back row — the M3 nested-sheet pattern. A left:100% flyout would
      be off-screen at 390px. */
-  .dprofsub-p{position:fixed;left:0;right:0;bottom:0;top:auto;min-width:0;
+  /* ⚠️ `margin-right:6px` has to be ZEROED here, and it was not. It is the desktop
+     flyout's gap from the trigger; on a `left:0;right:0` bottom sheet it survived as a
+     6px inset on the RIGHT only, so the sheet sat flush left and 6px short of the right
+     edge with the page showing through the gap. Found while measuring that same
+     declaration for the hover-bridge fix. */
+  .dprofsub-p{position:fixed;left:0;right:0;bottom:0;top:auto;min-width:0;margin-right:0;
     max-height:80vh;overflow-y:auto;
     border-radius:12px 12px 0 0;border-left:0;border-right:0;border-bottom:0;
     padding:8px 8px calc(8px + env(safe-area-inset-bottom));
     box-shadow:0 -12px 40px rgba(0,0,0,.22);z-index:150}
+  /* ⚠️ The hover bridge goes with the flyout it bridged. There is no hover here (the
+     submenu is a bottom sheet opened by tap), and the strip would be a stray 6px box
+     hanging off the left of the trigger row inside a full-width sheet. */
+  .dprofsub-t[aria-expanded="true"]::after{display:none}
   /* the back row names the level you are in and the way out of it */
   .dprofmenu .dprofsub-back{display:flex;align-items:center;gap:8px;width:100%;
     min-height:48px;padding:0 10px;margin-bottom:4px;

@@ -1,0 +1,41 @@
+/* ============================================================================
+   page-landing.js — the signed-out front page
+   ============================================================================
+   Header (truncated, from shared.js) + the purchase wizard's plan picker, rendered
+   on the page. The picker's markup, data and click-reading are all shared with the
+   wizard (renderPlanPicker / planPickerClick); the only thing this page owns is
+   what a Select MEANS here — you cannot buy without an account, so it opens
+   sign-up and remembers what you chose.
+   ============================================================================ */
+
+/* The same selection object shape the wizard's `st` is. No `locked` and no
+   `currentName`: nothing is locked on a public page, and a visitor with no account
+   has no current plan. */
+var lsel = { product:'thingsboard', kind:'subscription', plan:null };
+
+var lChoices = $('#landingChoices'), lPlans = $('#landingPlans');
+function renderLanding(){ renderPlanPicker(lChoices, lPlans, lsel); }
+renderLanding();
+
+/* One delegated listener on the whole picker — the cards are re-rendered on every
+   product/billing switch, so nothing may be bound to them directly. */
+$('#landingPicker').addEventListener('click', function(e){
+  var what = planPickerClick(e, lsel);
+  if(what === 'changed'){ renderLanding(); return; }
+  if(what === 'picked'){
+    /* The plan outlives this page: sign-up ends in a real navigation to Home, and
+       the wizard that has to open there with this plan already chosen is on the
+       other side of it. The store is how anything survives a navigation here, so
+       the choice goes in the store and Home picks it up (see page-home.js). */
+    Store.set('pendingPurchase', { product:lsel.product, kind:lsel.kind, plan:lsel.plan });
+    Auth.open('signup');
+  }
+});
+
+/* Keyboard: the plan cards are `.nl-select` with tabindex, and the wizard gives
+   them Enter/Space through its own listener. This host needs its own. */
+$('#landingPicker').addEventListener('keydown', function(e){
+  if((e.key === 'Enter' || e.key === ' ') && e.target.classList && e.target.classList.contains('nl-select')){
+    e.preventDefault(); e.target.click();
+  }
+});

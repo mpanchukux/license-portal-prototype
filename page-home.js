@@ -202,3 +202,20 @@ if(dashEmptyV && !dashEmptyV.hidden){
 }
 
 
+
+/* ---------- arriving from the landing page ----------------------------------
+   A plan picked while signed out is finished here: sign-up ended in a real
+   navigation, and the store is the only thing that survives one. The wizard opens
+   on Customize with the product, billing type and plan already set, and with the
+   picker counted as done rather than skipped — see noPicker() in wizard.js.
+
+   ⚠️ Consumed BEFORE the wizard opens, not after it commits. Left in the store it
+   would survive a refresh, a close, or a change of mind, and reopen the wizard on
+   a plan the visitor had already walked away from. */
+(function(){
+  var pending = Store.get('pendingPurchase');
+  if(!pending || !pending.plan || !window.NL) return;
+  Store.set('pendingPurchase', null);
+  NL.open({ product:pending.product, kind:pending.kind, plan:pending.plan,
+            startStep:2, skipPicker:true });
+})();

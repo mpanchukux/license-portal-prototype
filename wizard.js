@@ -75,6 +75,160 @@ function openManageAddons(lic){ NL.open({ mode:'addons', license:lic }); }
    and lands on the Licenses page so the new row is visible. Closing mid-flow
    with selections made asks the same unsaved-changes confirmation as the
    settings pages. */
+
+/* ============================================================================
+   The plan picker — ONE template, two hosts
+   ============================================================================
+   Product cards · Subscription/Perpetual tabs · plan cards with their Select
+   buttons. The wizard's step 1 is one host; the public landing page's pricing
+   section is the other. They are the same components reading the same data
+   (EC_PLANS), so an offer that changes changes in both places at once — the only
+   difference is what a Select means, which is why picking is reported back to the
+   host rather than acted on here.
+
+   Every function takes a plain selection object — { product, kind, plan, locked,
+   currentName } — instead of reading a controller's private state. That is what
+   made the second host possible: NL passes its own `st` straight in, because the
+   three field names are the ones it already used.
+   ============================================================================ */
+/* LEVEL 1 — product: two wide CARDS, and still a switcher. Exactly one is
+   selected; the selected one is marked with a dark outline (`.nl-select.on`
+   gives border + inset ring), NOT a black fill — a filled card reads as a
+   pressed button and outshouts the plan cards below it, which are the actual
+   offer. Each card carries the product's one-line description, so the step
+   says what the two products are instead of assuming you know.
+   Glyphs stay monochrome: a hub and spokes for the platform, a broadcast arc
+   for the broker. */
+var PRODUCT_CHOICES = [
+  { v:'thingsboard', t:'ThingsBoard', d:'IoT platform — devices, dashboards, rule engine',
+    g:'<circle cx="12" cy="12" r="3"/><circle cx="12" cy="4" r="1.5"/><circle cx="12" cy="20" r="1.5"/>'
+      + '<circle cx="4" cy="12" r="1.5"/><circle cx="20" cy="12" r="1.5"/>'
+      + '<path d="M12 9V5.5M12 15v3.5M9 12H5.5M15 12h3.5"/>' },
+  { v:'tbmq', t:'TBMQ', d:'MQTT broker for reliable message streaming',
+    g:'<circle cx="7" cy="17" r="1.6"/><path d="M7 11.5A5.5 5.5 0 0 1 12.5 17"/>'
+      + '<path d="M7 6A11 11 0 0 1 18 17"/>' }
+];
+function nlProductCardsHTML(sel){
+  var active = sel.product, locked = !!sel.locked;
+  return '<div class="nl-prodrow">'
+    + '<div class="nl-prodcards" role="radiogroup" aria-label="Product">'
+    + PRODUCT_CHOICES.map(function(o){
+        var on = o.v === active;
+        /* a real button, not a div with role=button: it is one of two mutually
+           exclusive choices — see the radio note below for the contract. */
+        /* ⚠️ `role="radio"` + `aria-checked`, not `aria-pressed`. It is exactly-one-of-N,
+           and aria-pressed describes an independent toggle — the wrong contract for
+           a group where choosing one unchooses the other. The leading indicator is
+           drawn (`.nl-prodradio`), so what a sighted user sees and what a screen
+           reader is told finally say the same thing. */
+        return '<button type="button" role="radio" class="dblock nl-prodcard nl-select' + (on ? ' on' : '') + '"'
+          + ' data-nl-product="' + o.v + '" aria-checked="' + on + '"' + (locked ? ' disabled' : '') + '>'
+          + '<span class="nl-prodradio" aria-hidden="true"></span>'
+          + '<span class="nl-prodic"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true">' + o.g + '</svg></span>'
+          + '<span class="nl-prodtxt"><span class="nl-prodname">' + o.t + '</span>'
+          + '<span class="nl-proddesc">' + o.d + '</span></span></button>';
+      }).join('')
+    + '</div></div>';
+}
+
+/* LEVEL 2 — billing as TABS, left-aligned, standing where the heading used to.
+   The heading ("Subscription plans" / "Perpetual licenses") is gone: it said the
+   same thing the active tab says, and the switch + ⓘ pair made one decision look
+   like two controls (a toggle whose labels were also clickable-looking text).
+   Two tabs, the active one carrying the indicator, is what a two-way switch
+   between two sets of content actually is — and it reuses the `.tabs`/`.tab`
+   pattern the details page already has.
+   ⚠️ The descriptions moved to a SHORT LINE BENEATH the active tab, not into the
+   tab's ⓘ. Reason: on the one step whose entire job is this choice, the
+   difference between paying monthly and paying once has to be readable without a
+   gesture — and a tooltip is a hover affordance, which does not exist on touch
+   (the same reason the plan cards' CTA stopped being hover-revealed). The line
+   swaps with the tab, so only the active choice is explained. */
+var BILLING_CHOICES = [
+  { v:'subscription', t:'Subscription',
+    d:'Pay every month. Unlimited customers, dashboards, integrations, API calls, data points and messages, and you can change the plan any time.' },
+  { v:'perpetual', t:'Perpetual',
+    d:'Pay once, run it indefinitely. Includes 12 months of software updates, renewable.' }
+];
+function nlBillTabsHTML(sel){
+  var locked = !!sel.locked, perp = sel.kind === 'perpetual';
+  var active = perp ? BILLING_CHOICES[1] : BILLING_CHOICES[0];
+  return '<div class="nl-billrow">'
+    + '<div class="tabs nl-billtabs" role="tablist" aria-label="Billing">'
+    + BILLING_CHOICES.map(function(o){
+        var on = (o.v === 'perpetual') === perp;
+        return '<button type="button" class="tab nl-billtab' + (on ? ' on' : '') + '"'
+          + ' role="tab" aria-selected="' + on + '" data-nl-bill="' + o.v + '"'
+          + (locked ? ' disabled' : '') + '>' + o.t + '</button>';
+      }).join('')
+    + '</div>'
+    + '<div class="nl-billdesc">' + active.d + '</div>'
+    + '</div>';
+}
+function nlPlanCardHTML(c, set, sel){
+  var current = !!sel.currentName && c.name === sel.currentName;
+  var on = !current && c.name === sel.plan;
+  // Current plan = a strip sitting on the card's top edge (see .pc-strip)
+  var strip = current ? '<div class="pc-strip">Current plan</div>' : '';
+  var badge = !current && c.badge ? '<span class="pill">' + c.badge + '</span>' : '';
+  // primary on the popular plan, or on the only card when the pair leaves one
+  var primary = set.cards.length === 1 || c.badge === 'Popular';
+  var cta = current ? ''
+    : '<button class="btn' + (primary ? '' : ' sec') + ' pc-cta" data-nl-pick="' + c.name + '">Select</button>';
+  return '<div class="dblock plancard ' + (current ? 'nl-current' : 'nl-select') + (on ? ' on' : '')
+    + '" data-plan="' + c.name + '" role="button" tabindex="' + (current ? '-1' : '0') + '"'
+    + ' aria-pressed="' + on + '"' + (current ? ' aria-disabled="true"' : '') + '>'
+    + strip
+    + '<div class="pc-head"><h2>' + c.name + '</h2>' + badge + '</div>'
+    + '<div class="pc-price">' + c.price + ' <span class="pc-per">' + c.per + '</span></div>'
+    + (c.term ? '<div class="pc-term">' + c.term + '</div>' : '')
+    + '<div class="pc-feats">' + c.feats.map(function(f){ return '<div class="pc-feat">' + f + '</div>'; }).join('') + '</div>'
+    + (c.foot ? '<div class="pc-note">' + c.foot + '</div>' : '')
+    + cta
+    + '</div>';
+}
+
+/* One selection object shape, so a host does not have to know the spelling. */
+function planPickerKey(sel){
+  return (sel.product || 'thingsboard') + '|' + (sel.kind === 'perpetual' ? 'perpetual' : 'payg');
+}
+/* Renders both halves into the two nodes the host provides. `withcur` reserves the
+   24px lane the "Current plan" strip needs, and ONLY when a card actually is the
+   current one — a licence on a plan that is no longer offered matches nothing here,
+   and the class would then hold an empty gap open above every card. */
+function renderPlanPicker(choicesEl, gridEl, sel){
+  var set = EC_PLANS[planPickerKey(sel)];
+  choicesEl.innerHTML = nlProductCardsHTML(sel) + nlBillTabsHTML(sel);
+  var hasCur = !!sel.currentName && set.cards.some(function(c){ return c.name === sel.currentName; });
+  gridEl.className = 'plangrid' + (set.single ? ' one' : '') + (hasCur ? ' withcur' : '');
+  gridEl.innerHTML = set.cards.map(function(c){ return nlPlanCardHTML(c, set, sel); }).join('');
+}
+/* One reading of a click inside the picker, so the two hosts cannot disagree about
+   what its parts mean. It mutates `sel` and says what happened; what to DO about it
+   — re-render and stay, or advance a step, or open sign-up — belongs to the host.
+   ⚠️ The plan branch is scoped to `.plangrid`. Product cards carry `.nl-select`
+   too, so an unscoped match would read a product card as a plan. */
+function planPickerClick(e, sel){
+  var seg = e.target.closest('[data-nl-product]');
+  if(seg && !seg.disabled){
+    var wantP = seg.getAttribute('data-nl-product');
+    if(wantP === sel.product) return null;
+    sel.product = wantP; sel.plan = null; return 'changed';
+  }
+  var btab = e.target.closest('[data-nl-bill]');
+  if(btab && !btab.disabled){
+    var wantK = btab.getAttribute('data-nl-bill');
+    if(wantK === sel.kind) return null;
+    sel.kind = wantK; sel.plan = null; return 'changed';
+  }
+  var pick = e.target.closest('[data-nl-pick], .plangrid .nl-select');
+  if(pick){
+    sel.plan = pick.getAttribute('data-nl-pick') || pick.getAttribute('data-plan');
+    return 'picked';
+  }
+  return null;
+}
+
 var NL = (function(){
   var scr = $('#nlModal'), body = $('#nlBody');
   var lastFocus = null;
@@ -161,7 +315,7 @@ var NL = (function(){
   function hasOffline(){ return isPerp(); }
   function hasDev(){ return !isPerp() && st.product === 'thingsboard'; }
   function hasAi(){ var i = INCL[tier()]; return !!(i && i.ai > 0); }
-  function ecKey(){ return (st.product || 'thingsboard') + '|' + (isPerp() ? 'perpetual' : 'payg'); }
+  function ecKey(){ return planPickerKey(st); }
   function perSuffix(){ return isPerp() ? '' : ' / mo'; }
 
   function extras(){
@@ -249,12 +403,18 @@ var NL = (function(){
      one renderStepN serves every mode. Add-ons has no picker, so it starts at 2
      and the DISPLAYED index is offset by firstStep() — "Step 1 of 2 · Customize".
      Nothing hardcodes the count; the progress line reads stepLabels(). */
-  function firstStep(){ return isAddons() ? 2 : 1; }
+  /* Two ways to arrive with the picker already answered, and they get the same
+     shortened flow: Manage add-ons (the plan is settled by the licence) and a plan
+     chosen on the public landing page before the account existed. In both, step 1
+     is not "skipped" — it is COMPLETED elsewhere, so counting it would make the
+     progress line promise a screen that is never coming. */
+  function noPicker(){ return isAddons() || !!st.noPicker; }
+  function firstStep(){ return noPicker() ? 2 : 1; }
   function stepLabels(){
     var tail = needsBilling()
       ? ['Customize', 'Review', 'Billing & payment']
       : ['Customize', 'Review & pay'];
-    return isAddons() ? tail : ['Choose your product and plan'].concat(tail);
+    return noPicker() ? tail : ['Choose your product and plan'].concat(tail);
   }
   function totalSteps(){ return stepLabels().length; }
   function lastStep(){ return firstStep() + totalSteps() - 1; }
@@ -289,119 +449,16 @@ var NL = (function(){
      action), so the step needs no footer. Change-plan mode renders the first two
      groups selected-and-locked and marks the current plan as non-selectable. */
 
-  /* LEVEL 1 — product: two wide CARDS, and still a switcher. Exactly one is
-     selected; the selected one is marked with a dark outline (`.nl-select.on`
-     gives border + inset ring), NOT a black fill — a filled card reads as a
-     pressed button and outshouts the plan cards below it, which are the actual
-     offer. Each card carries the product's one-line description, so the step
-     says what the two products are instead of assuming you know.
-     Glyphs stay monochrome: a hub and spokes for the platform, a broadcast arc
-     for the broker. */
-  var PRODUCT_CHOICES = [
-    { v:'thingsboard', t:'ThingsBoard', d:'IoT platform — devices, dashboards, rule engine',
-      g:'<circle cx="12" cy="12" r="3"/><circle cx="12" cy="4" r="1.5"/><circle cx="12" cy="20" r="1.5"/>'
-        + '<circle cx="4" cy="12" r="1.5"/><circle cx="20" cy="12" r="1.5"/>'
-        + '<path d="M12 9V5.5M12 15v3.5M9 12H5.5M15 12h3.5"/>' },
-    { v:'tbmq', t:'TBMQ', d:'MQTT broker for reliable message streaming',
-      g:'<circle cx="7" cy="17" r="1.6"/><path d="M7 11.5A5.5 5.5 0 0 1 12.5 17"/>'
-        + '<path d="M7 6A11 11 0 0 1 18 17"/>' }
-  ];
-  function productSegHTML(active, locked){
-    return '<div class="nl-prodrow">'
-      + '<div class="nl-prodcards" role="radiogroup" aria-label="Product">'
-      + PRODUCT_CHOICES.map(function(o){
-          var on = o.v === active;
-          /* a real button, not a div with role=button: it is one of two mutually
-             exclusive choices — see the radio note below for the contract. */
-          /* ⚠️ `role="radio"` + `aria-checked`, not `aria-pressed`. It is exactly-one-of-N,
-             and aria-pressed describes an independent toggle — the wrong contract for
-             a group where choosing one unchooses the other. The leading indicator is
-             drawn (`.nl-prodradio`), so what a sighted user sees and what a screen
-             reader is told finally say the same thing. */
-          return '<button type="button" role="radio" class="dblock nl-prodcard nl-select' + (on ? ' on' : '') + '"'
-            + ' data-nl-product="' + o.v + '" aria-checked="' + on + '"' + (locked ? ' disabled' : '') + '>'
-            + '<span class="nl-prodradio" aria-hidden="true"></span>'
-            + '<span class="nl-prodic"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true">' + o.g + '</svg></span>'
-            + '<span class="nl-prodtxt"><span class="nl-prodname">' + o.t + '</span>'
-            + '<span class="nl-proddesc">' + o.d + '</span></span></button>';
-        }).join('')
-      + '</div></div>';
-  }
-
-  /* LEVEL 2 — billing as TABS, left-aligned, standing where the heading used to.
-     The heading ("Subscription plans" / "Perpetual licenses") is gone: it said the
-     same thing the active tab says, and the switch + ⓘ pair made one decision look
-     like two controls (a toggle whose labels were also clickable-looking text).
-     Two tabs, the active one carrying the indicator, is what a two-way switch
-     between two sets of content actually is — and it reuses the `.tabs`/`.tab`
-     pattern the details page already has.
-     ⚠️ The descriptions moved to a SHORT LINE BENEATH the active tab, not into the
-     tab's ⓘ. Reason: on the one step whose entire job is this choice, the
-     difference between paying monthly and paying once has to be readable without a
-     gesture — and a tooltip is a hover affordance, which does not exist on touch
-     (the same reason the plan cards' CTA stopped being hover-revealed). The line
-     swaps with the tab, so only the active choice is explained. */
-  var BILLING_CHOICES = [
-    { v:'subscription', t:'Subscription',
-      d:'Pay every month. Unlimited customers, dashboards, integrations, API calls, data points and messages, and you can change the plan any time.' },
-    { v:'perpetual', t:'Perpetual',
-      d:'Pay once, run it indefinitely. Includes 12 months of software updates, renewable.' }
-  ];
-  function billRowHTML(locked){
-    var perp = isPerp();
-    var active = perp ? BILLING_CHOICES[1] : BILLING_CHOICES[0];
-    return '<div class="nl-billrow">'
-      + '<div class="tabs nl-billtabs" role="tablist" aria-label="Billing">'
-      + BILLING_CHOICES.map(function(o){
-          var on = (o.v === 'perpetual') === perp;
-          return '<button type="button" class="tab nl-billtab' + (on ? ' on' : '') + '"'
-            + ' role="tab" aria-selected="' + on + '" data-nl-bill="' + o.v + '"'
-            + (locked ? ' disabled' : '') + '>' + o.t + '</button>';
-        }).join('')
-      + '</div>'
-      + '<div class="nl-billdesc">' + active.d + '</div>'
-      + '</div>';
-  }
-  function planPickCard(c, set){
-    var current = isChange() && c.name === currentCardName();
-    var on = !current && c.name === st.plan;
-    // Current plan = a strip sitting on the card's top edge (see .pc-strip)
-    var strip = current ? '<div class="pc-strip">Current plan</div>' : '';
-    var badge = !current && c.badge ? '<span class="pill">' + c.badge + '</span>' : '';
-    // primary on the popular plan, or on the only card when the pair leaves one
-    var primary = set.cards.length === 1 || c.badge === 'Popular';
-    var cta = current ? ''
-      : '<button class="btn' + (primary ? '' : ' sec') + ' pc-cta" data-nl-pick="' + c.name + '">Select</button>';
-    return '<div class="dblock plancard ' + (current ? 'nl-current' : 'nl-select') + (on ? ' on' : '')
-      + '" data-plan="' + c.name + '" role="button" tabindex="' + (current ? '-1' : '0') + '"'
-      + ' aria-pressed="' + on + '"' + (current ? ' aria-disabled="true"' : '') + '>'
-      + strip
-      + '<div class="pc-head"><h2>' + c.name + '</h2>' + badge + '</div>'
-      + '<div class="pc-price">' + c.price + ' <span class="pc-per">' + c.per + '</span></div>'
-      + (c.term ? '<div class="pc-term">' + c.term + '</div>' : '')
-      + '<div class="pc-feats">' + c.feats.map(function(f){ return '<div class="pc-feat">' + f + '</div>'; }).join('') + '</div>'
-      + (c.foot ? '<div class="pc-note">' + c.foot + '</div>' : '')
-      + cta
-      + '</div>';
-  }
+  /* `st` IS the selection object the shared picker reads — product, kind and plan
+     are the field names it already used. The two extras say what this host adds:
+     change-plan locks the first two groups and names the card you are on. */
   function renderStep1(){
-    var set = EC_PLANS[ecKey()], locked = isChange();
-    $('#nlChoices').innerHTML = productSegHTML(st.product, locked) + billRowHTML(locked);
-    /* the count gets its OWN row under the heading: the heading row's right end
-       belongs to the billing toggle, and the two would collide there */
-    var grid = $('#nlPlanCards');
-    /* ⚠️ `withcur` reserves a 24px lane above every card for the "Current plan"
-       strip, so it may only go on when a card actually IS the current one. A licence
-       on a plan that is no longer offered (Maker, Prototype — dropped 2026-09-01)
-       matches nothing in the grid, and the class then held an empty gap open above
-       three cards. Note this only removes the empty lane: such a licence still has
-       NO anchor on this step saying where it is now — see the debt list. */
-    var hasCur = locked && set.cards.some(function(c){ return c.name === currentCardName(); });
-    grid.className = 'plangrid' + (set.single ? ' one' : '') + (hasCur ? ' withcur' : '');
-    grid.innerHTML = set.cards.map(function(c){ return planPickCard(c, set); }).join('');
+    st.locked = isChange();
+    st.currentName = isChange() ? currentCardName() : null;
+    renderPlanPicker($('#nlChoices'), $('#nlPlanCards'), st);
     // No "What's included in Professional Edition" block here any more: the
     // Subscription card above already says what every plan includes. The block
-    // still lives on the new-user screen (see page-home.js).
+    // still lives on the new-user screen (see page-home.js) and on the landing page.
   }
   /* ---- step 2: customize -----------------------------------------------------
      Two variants, switched from the prototype settings panel:
@@ -939,6 +996,11 @@ var NL = (function(){
     st.kind = opts.kind === 'perpetual' ? 'perpetual' : 'subscription';
     st.product = opts.product || 'thingsboard';   // the filter bar always shows a selection
     st.plan = opts.plan || null;
+    /* ⚠️ Reset on every open, not only when asked for. `st` outlives one flow — the
+       controller is a singleton — so a wizard opened once from the landing hand-off
+       would keep the shortened progress line for every later purchase from the
+       "Buy a license" button, which DOES have a picker. */
+    st.noPicker = !!(opts.skipPicker && opts.plan);
     st.dirty = !!(opts.product || opts.plan);   // preselected entry counts as selections made
     seededTier = null;
     cust = { prod:1, dev:0, ai:0, edge:false, trendz:false };
@@ -992,12 +1054,12 @@ var NL = (function(){
   });
 
   body.addEventListener('click', function(e){
-    // the product pill only changes what the grid offers — it selects nothing
-    var seg = e.target.closest('#nlChoices [data-nl-product]');
-    if(seg && !seg.disabled){
-      st.product = seg.getAttribute('data-nl-product');
-      st.plan = null; seededTier = null;
-      renderStep1(); return;
+    /* the picker reads itself (shared with the landing page); this host decides what
+       its two outcomes mean here — narrow the offer, or take the plan and advance */
+    if(st.step === 1){
+      var what = planPickerClick(e, st);
+      if(what === 'changed'){ seededTier = null; renderStep1(); return; }
+      if(what === 'picked'){ st.dirty = true; gotoStep(2); return; }
     }
     // every step acts from the card that carries its total
     if(e.target.closest('#nlSumNext')){ if(st.step < lastStep()) gotoStep(st.step + 1); return; }
@@ -1009,12 +1071,6 @@ var NL = (function(){
     }
     var payNow = e.target.closest('#nlPayNow');
     if(payNow){ if(billValid()) startPurchase(payNow); return; }
-    // the whole card is the control, and so is its button — either advances
-    var pick = e.target.closest('#nlPlanCards [data-nl-pick], #nlPlanCards .nl-select');
-    if(pick){
-      st.plan = pick.getAttribute('data-nl-pick') || pick.getAttribute('data-plan');
-      st.dirty = true; gotoStep(2); return;
-    }
     var sb = e.target.closest('#nlStep2 .stepper button');
     if(sb){
       var f = sb.closest('.stepper').getAttribute('data-nl-field');
@@ -1023,19 +1079,6 @@ var NL = (function(){
       st.dirty = true; renderStep2(); syncPinnedSummary(); return;
     }
     if(e.target.closest('#nlPayChange')){ attemptClose(function(){ location.href = 'billing.html'; }); }
-    /* billing is TABS now, so it arrives as a click. It used to be a checkbox and
-       rode the `change` listener — moving it here is the whole reason that listener
-       lost its first branch. */
-    var btab = e.target.closest('[data-nl-bill]');
-    if(btab && !btab.disabled){
-      var want = btab.getAttribute('data-nl-bill');
-      if(want !== st.kind){
-        st.kind = want;
-        st.plan = null; seededTier = null;
-        renderStep1();
-      }
-      return;
-    }
   });
   body.addEventListener('change', function(e){
     var cb = e.target.closest('input[data-nl-addon]');
