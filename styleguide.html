@@ -41,10 +41,16 @@
 
     <div class="sg-item">
       <h3>Type scale</h3>
-      <p class="sg-note">Six levels, a 14px floor, and weight that grows with size (700 only on display and h1).</p>
+      <p class="sg-note">Nine levels across two tiers plus the key, a 14px floor, and weight that grows with size (700 only on display and h1). The compact tier is what &le;600px substitutes for h1, h2 and body &mdash; the phone is not the desktop scale shrunk, it is its own three sizes.</p>
       <div class="tablescroll"><table class="sg-type"><thead>
         <tr><th>Level</th><th>Token</th><th>Size / line / tracking / weight</th><th>Specimen</th></tr>
       </thead><tbody id="sgType"></tbody></table></div>
+      <p class="sg-note sg-exc"><b>Exceptions, all of them.</b> Every other hardcoded size in the stylesheet is one of these, and nothing else is allowed to join the list without moving into the table above.
+        <br>&middot; <b>Glyph sizing</b> &mdash; 22, 20, 19, 18, 16, 15 and 13px set the box of a text-glyph button (<span class="sg-cls">&#8942;</span>, <span class="sg-cls">&times;</span>, <span class="sg-cls">+</span>, <span class="sg-cls">&larr;</span>), not the size of any text. A glyph is an icon that happens to be a character; it takes the size its target needs, and 13px on <span class="sg-cls">.kn-x</span> is the only sub-floor number anywhere because nothing there is read.
+        <br>&middot; <b>Levels written as literals</b> &mdash; 106 rules say <span class="sg-cls">font-size:14px</span> and 11 say <span class="sg-cls">16px</span> where they mean <span class="sg-cls">small</span>/<span class="sg-cls">label</span> and <span class="sg-cls">body</span>. The rendered scale is correct &mdash; only the authoring is loose. Not a second scale, and not a reason to read a number off the stylesheet instead of off this table.
+        <br>&middot; <b>17px <span class="sg-cls">tr.lic-row .lp-head</span></b> &mdash; the licence name on a phone card, one step above <span class="sg-cls">body-sm</span> so the card has a clear headline. The only 17px in the prototype.
+        <br>&middot; <b>14.5px <span class="sg-cls">.am-celltop</span></b> &mdash; a half-pixel nudge on the add-ons matrix so a long cell fits its column. Below the floor by half a pixel; kept because rounding it up reflows the table.
+        <br>&middot; <b>Two mono stacks</b> &mdash; <span class="sg-cls">.mono</span> uses the raw system stack, while <span class="sg-cls">--font-mono</span> (Ubuntu&nbsp;Mono) is used only by <span class="sg-cls">.nl-keybox code</span> and this page&rsquo;s own chrome. The key therefore renders in two different faces depending on where you meet it.</p>
     </div>
 
     <div class="sg-item">

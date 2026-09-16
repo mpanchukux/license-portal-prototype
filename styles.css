@@ -31,6 +31,19 @@
   --t-body-fs:16px;    --t-body-lh:1.50;    --t-body-ls:0;           --t-body-fw:400;
   --t-small-fs:14px;   --t-small-lh:1.45;   --t-small-ls:0;          --t-small-fw:400;
   --t-label-fs:14px;   --t-label-lh:1.20;   --t-label-ls:0.10em;     --t-label-fw:500;
+  /* ---- the COMPACT tier (≤600px) --------------------------------------------
+     Three levels the phone uses in place of h1, h2 and body. They were rendered
+     as literals in ~17 rules before being named here, which is why the styleguide
+     documented six levels while the prototype actually showed nine.
+       h1-sm   28  the page's own headline: a plan name, Home's greeting
+       h2-sm   18  a title bar, a block heading, a sheet's title
+       body-sm 15  card and list text — the phone's most common size after 14
+     ⚠️ Values copied from what those rules already rendered; naming them changed
+     nothing on screen. `body-sm` keeps 1.4 as its line-height, and the two rules
+     that need 1.3 / 1.35 override the line-height only, not the size. */
+  --t-h1-sm-fs:28px;   --t-h1-sm-lh:1.15;   --t-h1-sm-ls:-0.025em;   --t-h1-sm-fw:700;
+  --t-h2-sm-fs:18px;   --t-h2-sm-lh:1.20;   --t-h2-sm-ls:-0.01em;    --t-h2-sm-fw:500;
+  --t-body-sm-fs:15px; --t-body-sm-lh:1.40; --t-body-sm-ls:0;        --t-body-sm-fw:400;
   /* in-sentence emphasis (the activity feed): lifts the object of an action out of
      the sentence without reading as a heading. 400 body → 500 emphasis, never 700. */
   --t-em-fw:500;
@@ -1374,6 +1387,14 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
 .sg-swatch .sg-meta b{display:block;font-family:var(--font-mono);font-size:13px;font-weight:400;color:var(--ink)}
 .sg-swatch .sg-meta span{font-size:13px;color:var(--faint)}
 .sg-type td:first-child{white-space:nowrap;vertical-align:middle}
+/* a tier heading inside the type table: not a level, so it wears the label
+   treatment instead of the row treatment and cannot be mistaken for a token */
+.sg-tier > td{padding-top:16px;font-size:var(--t-label-fs);letter-spacing:var(--t-label-ls);
+  font-weight:var(--t-label-fw);text-transform:uppercase;color:var(--faint)}
+.sg-type tbody tr:first-child > td{padding-top:0}
+.sg-exc{max-width:82ch;line-height:1.55}
+.sg-exc b{color:var(--mid);font-weight:var(--t-em-fw)}
+.sg-exc .sg-cls{display:inline;white-space:nowrap}
 .sg-space{display:flex;align-items:center;gap:12px;margin-bottom:8px}
 .sg-space i{display:block;height:14px;background:var(--track);border:1px solid var(--line2)}
 .sg-space span{font-family:var(--font-mono);font-size:13px;color:var(--mid)}
@@ -1423,7 +1444,7 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
      page the bar's leading slot was simply empty, and an app bar with nothing on the
      left but whitespace reads as broken rather than minimal. */
   .dbrand{display:flex;grid-area:title;min-width:0}
-  .dbrand .bt{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .dbrand .bt{font-size:var(--t-body-sm-fs);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .tnav{display:none}                        /* desktop's strip; the bottom bar replaces it */
   .tb-title{display:block}                   /* both are on the phone-only hide list */
   /* One back control per page. The app bar's leading slot is now the back arrow, so
@@ -1437,8 +1458,8 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
   .tb-back:hover{color:var(--ink);background:var(--hover)}
   .tb-back .icon{width:22px;height:22px}
   .tb-title{grid-area:title;margin:0;min-width:0;
-    font-family:var(--font-ui);font-size:18px;line-height:1.2;font-weight:500;
-    letter-spacing:-0.01em;color:var(--ink);
+    font-family:var(--font-ui);font-size:var(--t-h2-sm-fs);line-height:var(--t-h2-sm-lh);
+    font-weight:var(--t-h2-sm-fw);letter-spacing:var(--t-h2-sm-ls);color:var(--ink);
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .tb-act{grid-area:act;justify-self:end}
   /* ⚠️ Refresh gets its OWN grid column rather than sharing `act`: that slot is
@@ -1499,7 +1520,7 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
   .dprofsub-t,.dprofsub-add{min-height:48px;font-size:16px}
   .dprofsub-list{max-height:none}
   .dprofuser{padding:8px 10px;gap:12px}
-  .dpu-name,.dpu-mail{font-size:15px}
+  .dpu-name,.dpu-mail{font-size:var(--t-body-sm-fs)}
   .dpu-act .iconbtn{width:44px;height:44px}
   .dpu-act .icon{width:20px;height:20px}
 
@@ -1508,7 +1529,7 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
     border-radius:12px 12px 0 0;border-left:0;border-right:0;border-bottom:0;
     padding:8px 8px calc(8px + env(safe-area-inset-bottom));
     box-shadow:0 -12px 40px rgba(0,0,0,.22);z-index:120}
-  .dprofmenu button,.dprofmenu a{min-height:44px;align-items:center;font-size:15px}
+  .dprofmenu button,.dprofmenu a{min-height:44px;align-items:center;font-size:var(--t-body-sm-fs)}
   .dprofmenu .sep{margin:8px 4px}
 
   /* ---------- impersonation banner keeps the same contained band ---------- */
@@ -1528,10 +1549,10 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
   /* greeting, then the banner, then the blocks — the action goes full width under
      the greeting instead of sitting beside it */
   .dwelcome{flex-direction:column;align-items:stretch;gap:14px}
-  .dwelcome h1{font-size:28px;line-height:1.15}
+  .dwelcome h1{font-size:var(--t-h1-sm-fs);line-height:var(--t-h1-sm-lh)}
   .dwelcome .btn.xl{width:100%}
   .dblock{padding:14px 14px;margin-top:14px}
-  .dblock-head h2{font-size:18px}
+  .dblock-head h2{font-size:var(--t-h2-sm-fs)}
   /* the way out of a block spans it */
   .dblock-foot{display:block}
   .dblock-open{width:100%}
@@ -1567,7 +1588,7 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
      amount · status · date on one line, actions last — which is not the column
      order of the table, so the cells are re-ordered rather than re-rendered. */
   tr.inv-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
-  tr.inv-row > td.mono{order:1;flex:0 0 100%;font-size:15px}
+  tr.inv-row > td.mono{order:1;flex:0 0 100%;font-size:var(--t-body-sm-fs)}
   tr.inv-row > td.lic-prodcell{order:2;flex:0 0 100%}
   tr.inv-row > td.num{order:3}
   tr.inv-row > td:nth-child(4){order:4}
@@ -1611,7 +1632,7 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
      the desktop `--t-h1-fs` (36px). At 36 it was the loudest thing on a screen whose
      job is a calm list of facts, and "ThingsBoard · PE Perpetual License" wrapped to
      three lines. 28 is what it was before that change. */
-  .planname,.dwelcome h1{font-size:28px}
+  .planname,.dwelcome h1{font-size:var(--t-h1-sm-fs);line-height:var(--t-h1-sm-lh)}
   .titlerow{flex-wrap:wrap;gap:8px}
   /* ================= details header, rebuilt for the phone =================
      App bar · banner · identity · two value rows · one primary. Top to bottom:
@@ -1732,7 +1753,7 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
      to it. Match the same shape or the chip and the pencil stay on screen. */
   .metarow #labelSlot{display:none}
   .supportline:not([hidden]){display:block;margin-top:2px;
-    font-size:15px;line-height:1.4;color:var(--mid)}
+    font-size:var(--t-body-sm-fs);line-height:var(--t-body-sm-lh);color:var(--mid)}
 
   /* ---------- zone 3: two single-line value rows ----------
      Glyph + text inline, no caps label above and no filled icon tile — the glyph is
@@ -1830,8 +1851,9 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
   .licmodal .fs-header{gap:8px;padding:6px 8px}
   .licmodal .fs-headactions{display:contents}
   .licmodal .fs-close{order:-1}
-  .licmodal .fs-maintitle{order:0;flex:1;font-size:18px;line-height:1.2;font-weight:500;
-    letter-spacing:-0.01em}
+  .licmodal .fs-maintitle{order:0;flex:1;font-size:var(--t-h2-sm-fs);
+    line-height:var(--t-h2-sm-lh);font-weight:var(--t-h2-sm-fw);
+    letter-spacing:var(--t-h2-sm-ls)}
   .licmodal .fs-header .spacer{display:none}   /* the title flexes instead */
   .licmodal #headKebabMenu{order:1}
   /* both icon buttons, one treatment: plain 44px glyphs. An app bar's trailing and
@@ -2082,7 +2104,8 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
     display:inline-flex;align-items:center;justify-content:center}
   #addUserOverlay #auClose:hover,#couponOverlay #couponClose:hover{background:var(--hover)}
   #addUserOverlay #auTitle,#couponOverlay #couponTitle{order:0;flex:1;min-width:0;
-    font-size:18px;line-height:1.2;font-weight:500;letter-spacing:-0.01em}
+    font-size:var(--t-h2-sm-fs);line-height:var(--t-h2-sm-lh);
+    font-weight:var(--t-h2-sm-fw);letter-spacing:var(--t-h2-sm-ls)}
   /* the fields scroll */
   #addUserOverlay .paymodal-b,#couponOverlay .paymodal-b{flex:1;min-height:0;overflow-y:auto;padding:16px}
   #addUserOverlay .field2{grid-template-columns:1fr}
@@ -2306,7 +2329,7 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
     aspect-ratio:1;min-height:40px;margin-top:2px}
   tr.lic-row .lp-name{display:none}                  /* the desktop one-liner */
   tr.lic-row .lp-eyebrow{grid-area:type;display:block;
-    font-size:15px;line-height:1.3;color:var(--mid)}
+    font-size:var(--t-body-sm-fs);line-height:1.3;color:var(--mid)}
   tr.lic-row .lp-head{grid-area:name;display:block;
     font-size:17px;line-height:1.3;font-weight:500;color:var(--ink)}
   /* long labels wrap instead of being clipped — a licence label is a sentence */
@@ -2318,7 +2341,7 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
      No label, no row: the renderer omits the node entirely, and a grid area with
      no item in it collapses to zero height. */
   tr.lic-row .lic-prodlabel{grid-area:label;max-width:none;margin:4px 0 0;
-    font-size:15px;line-height:1.35;color:var(--mid);
+    font-size:var(--t-body-sm-fs);line-height:1.35;color:var(--mid);
     white-space:normal;overflow:visible;text-overflow:clip}
   tr.lic-row > td:nth-child(2){display:none}         /* the plan's desktop column */
   tr.lic-row > td.lic-num{display:none}              /* Updated has no place in the card */
@@ -2337,7 +2360,7 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
      between the card's own sections, so the bottom row read as a separate block.
      The row-gap alone now carries it, which lands at ~12px of visual space. */
   tr.lic-row .licstat-mob{grid-area:st;display:flex;align-items:center;gap:8px;
-    margin-top:2px;font-size:15px;color:var(--mid);font-variant-numeric:tabular-nums}
+    margin-top:2px;font-size:var(--t-body-sm-fs);color:var(--mid);font-variant-numeric:tabular-nums}
   tr.lic-row .licstat-mob .icon{width:18px;height:18px;flex:none;color:var(--faint)}
   tr.lic-row > td.cellact{display:contents}
   tr.lic-row > td.cellact .lic-actions{display:contents}
@@ -2401,7 +2424,7 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
      tracks sized by row 3 alone; the padding-right below is what stops the wrapping
      number from running under the buttons. */
   tr.inv-row > td.mono{grid-area:num;
-    padding:0 110px var(--cardpad) var(--cardpad);font-size:15px}
+    padding:0 110px var(--cardpad) var(--cardpad);font-size:var(--t-body-sm-fs)}
   /* the action pair closes on the same edge as everything else in the card — 6px
      left a 7px right inset against the 13px on every other row */
   /* ⚠️ The buttons need the band's OWN bottom padding, not zero. The `num` area's
@@ -2450,7 +2473,7 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
   tr.inv-row .lp-link{text-decoration:none;color:inherit;display:block}
 
   /* row 3 — amount and date joined by a middot on the left, how-and-state on the right */
-  tr.inv-row > td.num{grid-area:amt;padding:5px 0 0 var(--cardpad);font-weight:500;font-size:15px}
+  tr.inv-row > td.num{grid-area:amt;padding:5px 0 0 var(--cardpad);font-weight:500;font-size:var(--t-body-sm-fs)}
   /* ⚠️ The separator carries only its LEADING space. A trailing one inside `content`
      sits at the end of the amount's line box and gets collapsed away, which is what
      printed "$499.00 ·Aug 18, 2026" — the gap on the right of the middot has to come
@@ -2458,7 +2481,7 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
      "\00b7" escape trap: never trust whitespace inside `content`.) */
   tr.inv-row > td.num::after{content:" ·";font-weight:400;color:var(--faint)}
   tr.inv-row > td:nth-child(2){grid-area:date;justify-self:start;
-    padding:5px 0 0 5px;color:var(--mid);font-size:15px}
+    padding:5px 0 0 5px;color:var(--mid);font-size:var(--t-body-sm-fs)}
   tr.inv-row > td:nth-child(4){grid-area:stat;justify-self:end;padding:5px var(--cardpad) 0 0}
   /* the auto-charge mark comes before the chip here, so the pair reads
      "charged automatically · Paid" from the left (the chip is first in the DOM) */

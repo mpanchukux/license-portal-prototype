@@ -30,26 +30,61 @@ $('#sgColors').innerHTML = COLORS.map(function(c){
     + '</div>';
 }).join('');
 
-/* ---------- type scale ---------- */
-var LEVELS = [
-  ['display', 'Numbers that carry a page'],
-  ['h1',      'Page titles'],
-  ['h2',      'Section and card titles'],
-  ['body',    'Reading text'],
-  ['small',   'Meta, help, table text'],
-  ['label',   'Uppercase labels']
+/* ---------- type scale ----------
+   Three groups, because the prototype really does render three. The BASE tier
+   is the desktop scale. The COMPACT tier is what the four `max-width:600px`
+   blocks substitute for h1/h2/body — it was undeclared for a long while and the
+   phone rules carried the numbers themselves; the tokens now hold them. MONO is
+   the licence key, which is sized by hand at three steps and has no tokens.
+   Anything not listed here is an exception, and the note under the table names
+   every one of them; if the table and the product disagree, the table is wrong. */
+var TIERS = [
+  ['Base — every viewport unless a compact rule overrides it', [
+    ['display', 'Numbers that carry a page'],
+    ['h1',      'Page titles'],
+    ['h2',      'Section and card titles'],
+    ['body',    'Reading text'],
+    ['small',   'Meta, help, table text'],
+    ['label',   'Uppercase labels']
+  ]],
+  ['Compact — \u2264600px only, substituted for the base level of the same name', [
+    ['h1-sm',   'The page\u2019s own headline: a plan name, Home\u2019s greeting'],
+    ['h2-sm',   'An app bar, a block heading, a bottom sheet\u2019s title'],
+    ['body-sm', 'Card and list text \u2014 the phone\u2019s commonest size after 14']
+  ]]
 ];
-$('#sgType').innerHTML = LEVELS.map(function(l){
-  var k = l[0];
-  var style = 'font-size:var(--t-' + k + '-fs);line-height:var(--t-' + k + '-lh);'
-            + 'letter-spacing:var(--t-' + k + '-ls);font-weight:var(--t-' + k + '-fw);'
-            + (k === 'label' ? 'text-transform:uppercase;' : '');
-  return '<tr><td>' + k + '</td>'
-    + '<td class="sg-cls">--t-' + k + '-*</td>'
-    + '<td class="sg-cls">' + CSSVAR('--t-' + k + '-fs') + ' / ' + CSSVAR('--t-' + k + '-lh')
-      + ' / ' + CSSVAR('--t-' + k + '-ls') + ' / ' + CSSVAR('--t-' + k + '-fw') + '</td>'
-    + '<td><span style="' + style + '">' + l[1] + '</span></td></tr>';
-}).join('');
+/* the key is monospace and hand-sized; no token owns these, so they are listed
+   as measured rather than read from a variable */
+var MONOROWS = [
+  ['key',        '.keyline .mono',    '28px / 1.15 / -0.01em / 400', 'TB-8F2A-…-4C71', 'font-size:28px;line-height:1.15;letter-spacing:-0.01em'],
+  ['key-sm',     '.keyline .mono',    '16px / 1.15 / -0.01em / 400', 'TB-8F2A-…-4C71', 'font-size:16px;letter-spacing:-0.01em'],
+  ['key-inline', '.nl-keybox code',   '15px / inherit / 0.02em / 400', 'TB-8F2A-…-4C71', 'font-size:15px;letter-spacing:.02em']
+];
+
+function sgTypeRow(name, token, values, specimen, style){
+  return '<tr><td>' + name + '</td>'
+    + '<td class="sg-cls">' + token + '</td>'
+    + '<td class="sg-cls">' + values + '</td>'
+    + '<td><span style="' + style + '">' + specimen + '</span></td></tr>';
+}
+
+$('#sgType').innerHTML = TIERS.map(function(tier){
+  return '<tr class="sg-tier"><td colspan="4">' + tier[0] + '</td></tr>'
+    + tier[1].map(function(l){
+        var k = l[0];
+        var style = 'font-size:var(--t-' + k + '-fs);line-height:var(--t-' + k + '-lh);'
+                  + 'letter-spacing:var(--t-' + k + '-ls);font-weight:var(--t-' + k + '-fw);'
+                  + (k === 'label' ? 'text-transform:uppercase;' : '');
+        var values = CSSVAR('--t-' + k + '-fs') + ' / ' + CSSVAR('--t-' + k + '-lh')
+                   + ' / ' + CSSVAR('--t-' + k + '-ls') + ' / ' + CSSVAR('--t-' + k + '-fw');
+        return sgTypeRow(k, '--t-' + k + '-*', values, l[1], style);
+      }).join('');
+}).join('')
++ '<tr class="sg-tier"><td colspan="4">Mono \u2014 the licence key, sized by hand (no tokens)</td></tr>'
++ MONOROWS.map(function(m){
+    return sgTypeRow(m[0], m[1], m[2], m[3],
+      'font-family:ui-monospace,SFMono-Regular,Menlo,monospace;' + m[4]);
+  }).join('');
 
 /* ---------- spacing / layout ---------- */
 var SPACE = [
