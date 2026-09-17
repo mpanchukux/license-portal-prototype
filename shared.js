@@ -604,7 +604,7 @@ function settingsBodyHTML(){
   if(c.wizard){
     out += group('Customize step',
       '<label class="sp-opt"><input type="radio" name="custVariant" value="a"' + (custVariant() === 'a' ? ' checked' : '') + '><span>A — Plan card</span></label>'
-      + '<label class="sp-opt"><input type="radio" name="custVariant" value="b"' + (custVariant() === 'b' ? ' checked' : '') + '><span>B — Locked inputs</span></label>');
+      + '<label class="sp-opt"><input type="radio" name="custVariant" value="b"' + (custVariant() === 'b' ? ' checked' : '') + '><span>B — Locked inputs (default)</span></label>');
   }
   if(c.wizard || c.billing){
     out += group('Billing data',
@@ -983,7 +983,11 @@ function wireTabs(){
 /* ---------- prototype settings panel ---------- */
 // Which Customize-step variant the wizard and Manage add-ons render. A stored
 // setting so it survives navigation between pages; both flows read it at render.
-function custVariant(){ return Store.get('custVariant') === 'b' ? 'b' : 'a'; }
+/* ⚠️ B — "Locked inputs" — is the DEFAULT now. Same shape as licDetailsMode() below:
+   only an explicit 'a' opts out, so a browser that has never touched the panel gets B
+   and one that chose A keeps it. The key is not in the seed, so nothing about the
+   stored state changes and the store key does not need a bump. */
+function custVariant(){ return Store.get('custVariant') === 'a' ? 'a' : 'b'; }
 // How a licence row presents its details: its own page (A) or a modal over the
 // page you were on (B). Read by the row wiring in components.js.
 /* The modal is the default presentation; the page variant stays in the settings

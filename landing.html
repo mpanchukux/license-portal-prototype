@@ -36,17 +36,16 @@
            renderPlanPicker in wizard.js — this page is its second host, not a copy. -->
       <div class="planpicker" id="landingPicker">
         <div id="landingChoices"></div>
-        <!-- ⚠️ BETWEEN the tabs and the cards. It answers "what do I get whichever of
-             these I pick", which is a question the reader has already asked by the time
-             they are looking at prices — and it can only be answered once a product and
-             a mode are chosen, which is why it is not up by the H1. -->
-        <div id="landingBase"></div>
         <div class="plangrid" id="landingPlans"></div>
-        <!-- Under the grid: "What's included in Professional Edition" on a multi-card
-             set, the sizing note on a single-card one. Same node, same renderer as
-             the new-user screen on Home — a visitor must not learn what the edition
-             includes only AFTER signing up. -->
+        <!-- the single-set note stays immediately under the cards: it is about them -->
         <div id="landingExtra"></div>
+        <!-- ⚠️ BELOW the cards. It was between the tabs and the grid for one pass — the
+             argument being that it answers "what do I get whichever of these I pick"
+             before the reader reads what separates them. Moved back down on request:
+             prices come first, and the baseline reads as the footnote to the row above
+             rather than as a wall in front of it. Same node, same renderer as the
+             new-user screen on Home. -->
+        <div id="landingBase"></div>
       </div>
 
     </div>

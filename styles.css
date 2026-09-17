@@ -1049,7 +1049,7 @@ body[data-page="home"] .dwrap{padding-top:48px}
   letter-spacing:var(--t-h1-ls);font-weight:var(--t-h1-fw)}
 .lp-welcome p{margin-top:8px;max-width:64ch}
 
-/* ---- the baseline block, between the tabs and the cards ----
+/* ---- the baseline block, below the plan cards ----
    Quieter than a plan card and clearly not one: no card background, a rule above it
    instead of a border around it, so it reads as a preamble to the row below rather
    than as a fourth option in it. */
@@ -1262,7 +1262,11 @@ body[data-page="home"] .dwrap{padding-top:48px}
 /* SOLO — one person, so no table, no toolbar, no pager: there is nothing to search,
    sort or page, and a one-row table of yourself is a control panel for a decision
    nobody is making. The line states the fact, and the card under it changes it. */
-.solo{max-width:640px}
+/* ⚠️ No width cap. The card used to stop at 640px, which made the solo state a
+   narrower thing than the table state it turns into — the same component changing
+   width as the account grows. It now runs the full content width, so the two states
+   differ only by what is inside them. */
+.solo{max-width:none}
 .solo-line{margin:0 0 12px;font-size:var(--t-body-fs);line-height:var(--t-body-lh);color:var(--ink)}
 
 /* the sign-up email field when an invitation fixed it: readable, not typable */
@@ -2340,17 +2344,12 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
     max-width:none;transform:translate(0,12px)}
   .snack.on{transform:translate(0,0)}
 
-  /* ---- the baseline block goes COMPACT ----
-     ⚠️ Measured at 390 before this rule: the full block was 530px of an 844px viewport
-     and pushed the first plan card to y=1112 — the page opened on a feature list with
-     no price in sight. Dropping the per-item descriptions turns seven three-line rows
-     into one wrapped run of names, which is what the block is for on a screen this
-     narrow: the fact that these come with every plan, not a comparison of them. */
-  .nl-pe.baseline .nl-pe-body{display:block}
-  .nl-pe.baseline .nl-pe-item{display:inline;padding:0;border:0}
-  .nl-pe.baseline .nl-pe-item + .nl-pe-item::before{content:' · ';color:var(--faint)}
-  .nl-pe.baseline .nl-pe-item b{font-weight:400}
-  .nl-pe.baseline .nl-pe-d{display:none}
+  /* ⚠️ The COMPACT baseline is gone with the reason for it. It existed because the
+     block sat between the tabs and the cards and, at 530px of an 844px viewport,
+     pushed the first plan card to y=1112 — the page opened on a feature list with no
+     price in sight. Below the cards there is no fold to protect: the prices are read
+     first and the descriptions are worth having by the time anyone scrolls this far.
+     Carrying a workaround past the problem it solved is how a stylesheet rots. */
 
   /* ---- Users: the invite row stacks, in both states ----
      A 44px button beside a field leaves the field about 180px wide, which is not a

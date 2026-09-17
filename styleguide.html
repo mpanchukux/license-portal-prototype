@@ -440,18 +440,19 @@
 
     <div class="sg-item">
       <h3>Baseline block <span class="sg-cls">.nl-pe.baseline</span></h3>
-      <p class="sg-note">Sits between the billing tabs and the plan cards on both selling surfaces.
-        It states what every plan of the selected product includes, so the cards below it can carry
-        only what <i>differs</i>. Not a card: a rule above it rather than a border around it, so it
-        reads as a preamble to the row below instead of a fourth option in it.</p>
+      <p class="sg-note">Sits <b>below the plan cards</b> on both selling surfaces. It states what
+        every plan of the selected product includes, so the cards above it carry only what
+        <i>differs</i>. Not a card: a rule above it rather than a border around it, so it reads as the
+        footnote to the row it follows rather than a fourth option in it.</p>
       <p class="sg-note">Two things it does that a static block would not. It is <b>contextual</b> &mdash;
         it changes with the product and the billing mode. And where the copy does not exist it says so:
         <span class="sg-cls">.nl-pe.is-gap</span> is a dashed variant carrying a sentence about what is
         missing, which is the honest alternative to writing product facts nobody approved.</p>
-      <p class="sg-note">Below 600px the per-item descriptions
-        (<span class="sg-cls">.nl-pe-d</span>) are dropped and the names run inline. Measured: the full
-        block was 530px of an 844px viewport and pushed the first plan card to y=1112 &mdash; the page
-        opened on a feature list with no price in sight.</p>
+      <p class="sg-note">It was briefly placed <i>above</i> the cards, and on the phone that cost it
+        its descriptions: at 530px of an 844px viewport it pushed the first plan card to y=1112, so the
+        page opened on a feature list with no price in sight. Below the cards there is no fold to
+        protect, so the full block renders at every width and the compact variant is gone with the
+        reason for it.</p>
       <div class="sg-static">
         <div class="nl-pe baseline is-gap" style="margin-top:0">
           <div class="nl-pe-h">Included in every plan</div>
@@ -522,7 +523,7 @@
         changes the state, not an illustration of the state.</p>
       <div class="sg-static">
         <div class="solo">
-          <p class="solo-line">You&rsquo;re the only person with access.</p>
+          <p class="solo-line">You&rsquo;re the only person with access. Invite users by sending link to the e-mail or copy invite link and send directly.</p>
           <div class="inviterow">
             <input type="email" class="invite-in" placeholder="name@company.com, another@company.com" aria-label="Emails to invite">
             <button class="btn invite-go" type="button">Invite</button>
