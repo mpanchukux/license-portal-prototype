@@ -21,7 +21,23 @@ function renderProducts(){
     if(!licShowCanceled && p.status === 'canceled') return;
     vis++; html += rowHtml(p);
   });
-  $('#prodBody').innerHTML = html;
+  /* ⚠️ "Empty" here means the ACCOUNT owns nothing — not that a filter hid everything.
+     A type chip that leaves no rows is the reader's own doing and keeps its toolbar,
+     because the way out is to unset the filter they set. The empty state is for the
+     account that has never bought anything. */
+  var accountEmpty = currentProducts().length === 0;
+  if(accountEmpty){
+    $('#prodBody').innerHTML = emptyStateRow(5, {
+      title:'No licenses yet.',
+      line:'Buy a license to get a key for your ThingsBoard or TBMQ instance.',
+      /* the ONE primary a new account gets, and it opens the same wizard the
+         toolbar's "+ New license" does — one action, not a second way in */
+      action:'<button class="btn" id="licEmptyBuy">Buy a license</button>'
+    });
+  } else {
+    $('#prodBody').innerHTML = html;
+  }
+  syncListEmpty(accountEmpty);
   $('#licRange').textContent = vis ? ('1–' + vis + ' of ' + vis) : '0 of 0';
 }
 renderProducts();
@@ -67,6 +83,10 @@ if(licCanceledChip) licCanceledChip.addEventListener('click', function(){ setSho
 // + New license → the wizard; product and billing type are chosen on its step 1
 var licNewBtn = $('#licNewBtn');
 if(licNewBtn) licNewBtn.addEventListener('click', function(){ NL.open({}); });
+/* delegated: the empty state's button is rendered and destroyed with the table */
+document.addEventListener('click', function(e){
+  if(e.target.closest('#licEmptyBuy')) NL.open({});
+});
 
 /* ---------- search: plan name, product, type and label ---------------------- */
 wireSearch('#licensesView .searchbox input', {

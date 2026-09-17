@@ -592,6 +592,45 @@ function wirePeriod(sel, st, rerender){
    disables it again. There is no "all saved" note — the disabled button says that
    by itself. `dirty` is also what the leave-guard checks. */
 var pageDirty = false;
+/* ---------- empty states: one rule, three pages --------------------------------
+   An empty state says WHAT WILL APPEAR HERE and offers the action that fills it.
+   Nothing else — no illustration, no explanation of the product, no second link.
+
+   ⚠️ Same `.emptybox` the grant's "No invoices" already used; what is new is that it
+   can hold three parts instead of one sentence. That is an extension of the pattern,
+   not a second one: `.eb-t` / `.eb-p` / the action are optional, so the one-line form
+   still renders exactly as it did.
+
+   ⚠️ Kept visually distinct from `.noresults`. That block is a consequence of what the
+   reader TYPED and its exit is "clear the search"; this one is a consequence of a new
+   account and its exit is "go and buy something". Solid border, not dashed, for the
+   same reason the other one is dashed: one describes the account, the other describes
+   the view.
+
+   ⚠️ ONLY ONE PAGE CARRIES A PRIMARY. A new account has exactly one thing to do, and
+   invoices and activity fill themselves as a side effect of it — so Licenses gets the
+   button, Invoices gets a quiet link back to it, and Activity gets no action at all.
+   Four buttons saying different words for the same next step would be four decisions
+   where there is one. */
+function emptyStateHTML(o){
+  return '<div class="emptybox eb">'
+    + '<div class="eb-t">' + o.title + '</div>'
+    + (o.line ? '<p class="eb-p">' + o.line + '</p>' : '')
+    + (o.action ? '<div class="eb-a">' + o.action + '</div>' : '')
+    + '</div>';
+}
+/* A table's empty state is a cell, so the caller says how wide. */
+function emptyStateRow(cols, o){
+  return '<tr class="eb-row"><td colspan="' + cols + '" class="eb-cell">' + emptyStateHTML(o) + '</td></tr>';
+}
+/* ⚠️ A body class, not a class on the view. On the phone `syncTitleRow` RELOCATES the
+   refresh button and `+ New license` out of the toolbar and into the page header row,
+   which is outside the view — a view-scoped rule would hide the toolbar and leave its
+   two buttons sitting in the header above an empty page. */
+function syncListEmpty(isEmpty){
+  document.body.classList.toggle('list-empty', !!isEmpty);
+}
+
 /* ---------- search: one wiring, five surfaces ---------------------------------
    Every search box in the portal was a lit control that did nothing. They filter now,
    live, client-side, and they all go through here so they cannot drift into five

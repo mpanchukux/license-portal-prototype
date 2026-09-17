@@ -1053,7 +1053,14 @@ body[data-page="home"] .dwrap{padding-top:48px}
    Quieter than a plan card and clearly not one: no card background, a rule above it
    instead of a border around it, so it reads as a preamble to the row below rather
    than as a fourth option in it. */
-.planpicker .nl-pe.baseline{margin:18px 0 0;padding:16px 0 0;border-top:1px solid var(--line2)}
+/* ⚠️ The card treatment has to be UNDONE, not just re-padded. `.nl-pe` carries a
+   border, a background and a radius; overriding only `padding` left a bordered box
+   whose text ran flush into its own left edge. The block was never meant to be a card
+   here — a fourth bordered box above three plan cards competes with them — so the
+   border, fill and radius go, the rule above it does the separating, and the text
+   lines up with the cards below instead of being inset from a frame. */
+.planpicker .nl-pe.baseline{margin:18px 0 0;padding:16px 0 0;
+  border:0;border-top:1px solid var(--line2);border-radius:0;background:none}
 .nl-pe.baseline .nl-pe-h{margin-bottom:4px}
 /* the marked gap: copy that does not exist yet, saying so */
 .nl-pe.is-gap{border-top-style:dashed}
@@ -1324,6 +1331,31 @@ body[data-page="home"] .dwrap{padding-top:48px}
 /* inside a table the block is a cell, so it must not also draw the cell's borders */
 td.noresults-cell{padding:0;border:0}
 td.noresults-cell .noresults{margin:14px}
+
+/* ================= empty states =================
+   The extended `.emptybox`: a title, a line saying what will appear, and at most one
+   action. Solid border — `.noresults` is dashed, because that block describes the
+   VIEW (you filtered it) and this one describes the ACCOUNT (nothing exists yet).
+   Two different facts should not look like one. */
+.emptybox.eb{padding:34px 20px;text-align:center}
+.eb-t{font-size:var(--t-body-fs);line-height:var(--t-body-lh);color:var(--ink)}
+.eb-p{margin:6px auto 0;max-width:46ch;font-size:14px;line-height:1.5;color:var(--mid)}
+.eb-a{margin-top:16px}
+td.eb-cell{padding:0;border:0}
+td.eb-cell .emptybox{border:0}
+
+/* ⚠️ An empty page shows no chrome that operates on rows. There is nothing to search,
+   filter, sort, page through or refresh, and a toolbar over nothing is a set of
+   controls that answer no question. It all comes back with the first row.
+   `:has()` picks the wrapper by what is inside it, so the toolbar's own card goes
+   rather than collapsing to an empty bordered strip. */
+body.list-empty .listcard:has(.lic-controls),
+body.list-empty .listcard:has(.insttoolbar),
+body.list-empty .pager,
+body.list-empty thead{display:none}
+/* the two controls the phone relocates into the page header row (syncTitleRow) */
+body.list-empty #pageTitleRow [data-refresh],
+body.list-empty #pageTitleRow #licNewBtn{display:none !important}
 
 /* ================= snackbar =================
    Bottom-centre, above everything except a modal, and it must not cover the thing it

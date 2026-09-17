@@ -7,7 +7,24 @@
 function renderInvoicesPage(){
   var b = $('#invoicesView tbody'); if(!b) return;
   var inv = DATA().invoices;
-  b.innerHTML = inv.length ? inv.map(function(v){ return invRow(v); }).join('') : invEmptyRow();
+  if(inv.length){
+    b.innerHTML = inv.map(function(v){ return invRow(v); }).join('');
+  } else if(DATA().noInvoicesNote){
+    /* ⚠️ A dataset can say WHY it has no invoices — the grant is free, and that is a
+       fact about the account rather than a state waiting to be filled. It keeps the
+       one-line form and gets no action, because there is nothing to do about it. */
+    b.innerHTML = invEmptyRow();
+  } else {
+    b.innerHTML = emptyStateRow(6, {
+      title:'No invoices yet.',
+      line:'Invoices appear here after your first purchase.',
+      /* ⚠️ A quiet LINK, not a button. Buying is one decision and it belongs to one
+         page; a primary here would be a second button for the same next step, phrased
+         differently, on a page that fills itself as a side effect of it. */
+      action:'<a class="link" href="licenses.html">Go to Licenses</a>'
+    });
+  }
+  syncListEmpty(!inv.length);
   var r = $('#invoicesView .pager .range');
   if(r) r.textContent = inv.length ? ('1–' + inv.length + ' of ' + inv.length) : '0 of 0';
 }

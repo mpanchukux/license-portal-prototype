@@ -103,9 +103,18 @@
 <div class="dashview" id="dashEmptyView">
   <div class="dmain">
     <div class="dwrap">
+      <!-- ⚠️ The two lines need `.dw-txt` around them. `.dwelcome` is a flex ROW — it
+           exists so a heading and the page's primary action can sit side by side — so
+           direct children become columns, and the description was rendering to the
+           RIGHT of the title instead of under it. Every other head on the site wraps
+           its text for exactly this reason; this one did not. -->
       <div class="dwelcome">
-        <h1>Welcome, Mariia</h1>
-        <p>ThingsBoard · you don't have any licenses yet. Start with one of these.</p>
+        <div class="dw-txt">
+          <h1>Welcome, Mariia</h1>
+          <!-- no "ThingsBoard ·" prefix: the product is chosen in the picker below, so
+               naming one up here contradicted the choice the screen is asking for. -->
+          <p>You don't have any licenses yet. Start with one of these.</p>
+        </div>
       </div>
 
       <!-- Community Grant under review. Shown only in the "grant pending" state.

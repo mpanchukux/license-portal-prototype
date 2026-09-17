@@ -463,6 +463,37 @@
     </div>
 
     <div class="sg-item">
+      <h3>New-account empty <span class="sg-cls">.emptybox.eb</span></h3>
+      <p class="sg-note">The same <span class="sg-cls">.emptybox</span> the one-line empties use, holding
+        three parts instead of one sentence: what this page is, what will appear here, and at most one
+        action. The parts are optional, so the one-line form still renders exactly as it did.</p>
+      <p class="sg-note"><b>Only one page carries a primary.</b> A new account has exactly one thing to
+        do, and invoices and activity fill themselves as a side effect of it &mdash; so Licenses gets the
+        button, Invoices gets a quiet link back to it, and Activity gets no action at all. Four buttons
+        saying different words for the same next step would be four decisions where there is one.</p>
+      <p class="sg-note"><b>An empty page shows no chrome that operates on rows</b> &mdash; no search,
+        filters, sort headers, pagination, items-per-page or refresh. There is nothing to search or sort,
+        and it all comes back with the first row (<span class="sg-cls">body.list-empty</span>).</p>
+      <div class="sg-row" style="align-items:stretch">
+        <div class="sg-cell" style="flex:1;min-width:300px">
+          <div class="listcard"><div class="tablescroll"><table><tbody>
+            <tr><td colspan="5" class="eb-cell"><div class="emptybox eb">
+              <div class="eb-t">No licenses yet.</div>
+              <p class="eb-p">Buy a license to get a key for your ThingsBoard or TBMQ instance.</p>
+              <div class="eb-a"><button class="btn" type="button">Buy a license</button></div>
+            </div></td></tr>
+          </tbody></table></div></div>
+          <span class="sg-cls">.emptybox.eb with a primary</span>
+        </div>
+      </div>
+      <p class="sg-note" style="margin-top:14px"><b>&#9888; Not the same block as
+        <span class="sg-cls">.noresults</span>.</b> Solid border here, dashed there, and the difference is
+        not decoration: this one describes the <i>account</i> &mdash; nothing exists yet, go and make some
+        &mdash; while that one describes the <i>view</i>, is a consequence of what the reader typed, and
+        its exit is to clear the search. Two different facts must not look like one.</p>
+    </div>
+
+    <div class="sg-item">
       <h3>No results <span class="sg-cls">.noresults</span></h3>
       <p class="sg-note">Not the same thing as an empty state, and deliberately not the same block.
         <span class="sg-cls">.emptybox</span> says <i>nothing here yet</i> and waits for you to create
