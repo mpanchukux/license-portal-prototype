@@ -21,13 +21,13 @@
     <h1 class="lic-h1">Account</h1>
     <span class="sp"></span>
     <a class="btn sec" href="security.html">Change password</a>
-    <button class="btn" id="profSaveBtn" disabled>Save</button>
+    <button class="btn" id="profSaveBtn">Save</button><span class="savednote" id="profSaveBtnNote" hidden></span>
   </div>
   <div class="setcard">
     <div class="setcard-h"><h2>Personal details</h2><span class="setcard-hint">Personal account</span></div>
     <div class="field2">
-      <div class="field"><label>First name</label><input type="text" value="Mariia"></div>
-      <div class="field"><label>Last name</label><input type="text" value="Panchuk"></div>
+      <div class="field"><label for="prof-first">First name</label><input id="prof-first" data-field="first" type="text" value="Mariia"></div>
+      <div class="field"><label for="prof-last">Last name</label><input id="prof-last" data-field="last" type="text" value="Panchuk"></div>
       <div class="field">
         <label>Email</label>
         <input type="email" id="profEmail" value="mpanchuk@thingsboard.io">
@@ -44,22 +44,22 @@
           <button class="link" id="emailCancel">Cancel</button>
         </div>
       </div>
-      <div class="field"><label>Language</label><select><option>English</option><option>Українська</option><option>Deutsch</option><option>Español</option></select></div>
+      <div class="field"><label for="prof-lang">Language</label><select id="prof-lang" data-field="lang"><option>English</option><option>Українська</option><option>Deutsch</option><option>Español</option></select></div>
     </div>
   </div>
 
   <div class="setcard">
     <div class="setcard-h"><h2>Company details</h2><span class="setcard-hint">Organization · appears on invoices</span></div>
-    <div class="field"><label>Company name</label><input type="text" value="ThingsBoard"></div>
-    <div class="field"><label>Description</label><textarea>IoT platform provider.</textarea></div>
+    <div class="field"><label for="prof-company">Company name</label><input id="prof-company" data-field="company" type="text" value="ThingsBoard"></div>
+    <div class="field"><label for="prof-descr">Description</label><textarea id="prof-descr" data-field="descr">IoT platform provider.</textarea></div>
     <div class="field2">
-      <div class="field"><label>Country</label><select><option>United States</option><option>Ukraine</option><option>Germany</option><option>United Kingdom</option></select></div>
-      <div class="field"><label>State / Province</label><input type="text" value="New York"></div>
-      <div class="field"><label>City</label><input type="text" value="New York"></div>
-      <div class="field"><label>ZIP / Postal code</label><input type="text" value="10001"></div>
+      <div class="field"><label for="prof-country">Country</label><select id="prof-country" data-field="country"><option>United States</option><option>Ukraine</option><option>Germany</option><option>United Kingdom</option></select></div>
+      <div class="field"><label for="prof-state">State / Province</label><input id="prof-state" data-field="state" type="text" value="New York"></div>
+      <div class="field"><label for="prof-city">City</label><input id="prof-city" data-field="city" type="text" value="New York"></div>
+      <div class="field"><label for="prof-zip">ZIP / Postal code</label><input id="prof-zip" data-field="zip" type="text" value="10001"></div>
     </div>
-    <div class="field"><label>Address</label><input type="text" value="500 7th Avenue"></div>
-    <div class="field"><label>Address line 2</label><input type="text" value=""></div>
+    <div class="field"><label for="prof-addr">Address</label><input id="prof-addr" data-field="addr" type="text" value="500 7th Avenue"></div>
+    <div class="field"><label for="prof-addr2">Address line 2</label><input id="prof-addr2" data-field="addr2" type="text" value=""></div>
     <div class="field2">
       <div class="field"><label>Phone</label><input type="text" value="+1 555 010 0100"></div>
       <div class="field"><label>Company email</label><input type="email" value="hello@thingsboard.io"></div>

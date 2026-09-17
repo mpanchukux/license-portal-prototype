@@ -160,7 +160,7 @@ function menuItems(p, opts){
   // except in the Home preview block (opts.noLabelEdit), which is a summary: renaming
   // belongs where the licence is the subject, i.e. the Licenses page and its details.
   var label = (opts && opts.noLabelEdit) ? '' : '<button role="menuitem" data-editlabel>Edit label</button>';
-  if(type === 'Perpetual') return label + '<button role="menuitem" data-stub="Add capacity">Add capacity</button><button role="menuitem" data-stub="Renew software updates">Renew software updates</button>';
+  if(type === 'Perpetual') return label + '<button role="menuitem" data-stub="Add capacity">Add capacity</button><a role="menuitem" href="' + EXT.updates + '" target="_blank" rel="noopener">Renew software updates</a>';
   var last = (p && p.status==='canceled')
     ? '<button role="menuitem" data-stub="Renew subscription">Renew subscription</button>'
     : '<button role="menuitem" data-cancel>Cancel subscription</button>';
@@ -267,7 +267,13 @@ function rowHtml(p, opts){
      Product column, and the limits are the entitlement table on the details page —
      no other row explains its allowances in the list, so this one should not
      either. `p.limits` is still used by the details surface. */
-  var lic = '<td><div class="lp-name">' + p.name + '</div></td>';
+  /* ⚠️ A scheduled change gets the EXISTING `.pill` — the same small neutral badge the
+     plan cards use for "Popular" — and it sits in the licence column, not the status
+     one. Status says whether the licence works; this says something is going to
+     change. Two facts, two columns, and the pill is small enough not to compete. */
+  var sched = p.scheduled ? ' <span class="pill" title="Scheduled for '
+      + fmtDate(p.scheduled.effective) + '">Scheduled</span>' : '';
+  var lic = '<td><div class="lp-name">' + p.name + sched + '</div></td>';
   // when the licence last changed — plan, add-ons, label or payment state
   var updatedCell = '<td class="lic-num">' + fmtDate(p.updated || p.created) + '</td>';
   return rowOpen(p) + productCell(p) + lic + statusCell(p) + updatedCell + actionsCell(p, opts) + '</tr>';
@@ -280,14 +286,11 @@ function rowHtml(p, opts){
    over that copy, so this now serves ONE surface: the new-user plan screen
    on Home (#ecPlanExtra). Kept here rather than in wizard.js, which no
    longer knows about it. */
-function peBlockHTML(intro){
-  return '<div class="nl-pe">'
-    + '<div class="nl-pe-h">What\u2019s included in Professional Edition</div>'
-    + (intro ? '<p class="nl-pe-intro">' + intro + '</p>' : '')
-    + '<div class="nl-pe-body">'
-    + PE_FEATURES.map(function(f){ return '<div class="nl-pe-item"><b>' + f[0] + '</b> — ' + f[1] + '</div>'; }).join('')
-    + '</div></div>';
-}
+/* ⚠️ `peBlockHTML` is GONE. It built the "What's included in Professional Edition"
+   card for the one surface that still used it; that surface now renders
+   `baselineBlockHTML`, which is contextual, retitled, and placed above the cards
+   instead of under them. Nothing else called it. */
+
 
 /* The payment method as the parts a surface needs: brand badge, masked number, and
    the expiry where it belongs. Callers own the container — Billing wraps it in a
@@ -295,11 +298,15 @@ function peBlockHTML(intro){
    opts.expiry:false drops the expiry: on the Next charge card the question is which
    card this charge goes to, not when that card runs out. Billing, which is where a
    card is actually managed, keeps it. */
+/* ⚠️ Reads paymentMethodData(), not PAYMENT_METHOD directly: once a card has been
+   entered, every surface that shows one shows THAT card. PAYMENT_METHOD is the
+   fallback for a demo nobody has typed into. */
 function paymentMethodHTML(opts){
   var withExp = !opts || opts.expiry !== false;
-  return '<span class="brandbadge">' + PAYMENT_METHOD.brand + '</span>'
-    + '<span class="pc-num">' + PAYMENT_METHOD.num + '</span>'
-    + (withExp ? '<span class="pc-exp">' + PAYMENT_METHOD.exp + '</span>' : '');
+  var pm = paymentMethodData();
+  return '<span class="brandbadge">' + pm.brand + '</span>'
+    + '<span class="pc-num">' + pm.num + '</span>'
+    + (withExp ? '<span class="pc-exp">' + pm.exp + '</span>' : '');
 }
 
 function licenseHref(p, from){
@@ -391,6 +398,14 @@ function openCancelModal(lic, after){
   confirm.type='button'; confirm.className='btn ter'; confirm.id='cancelConfirmBtn'; confirm.textContent='Cancel subscription';
   foot.appendChild(confirm);
   $('#modalCloseBtn').textContent = 'Keep subscription';
+  /* ⚠️ Quiet, and on the KEEP side — not beside the destructive button. People cancel
+     because something is broken, so a route to a person is legitimate here; placed
+     next to the confirm it would read as a retention trick, which is the one thing a
+     cancel dialog must not be. */
+  var help = document.createElement('span');
+  help.className = 'cancel-help';
+  help.innerHTML = 'Something not working? ' + extLink('support', 'Contact support');
+  foot.insertBefore(help, foot.firstChild);
   confirm.addEventListener('click', function(){
     storeCancelLicense(lic.id);      // persisted, so every page sees it
     closeModal();
@@ -577,15 +592,113 @@ function wirePeriod(sel, st, rerender){
    disables it again. There is no "all saved" note — the disabled button says that
    by itself. `dirty` is also what the leave-guard checks. */
 var pageDirty = false;
-function wirePageSave(viewSel, btnSel, noteSel){
-  var view = $(viewSel), btn = $(btnSel), note = $(noteSel);
+/* ---------- search: one wiring, five surfaces ---------------------------------
+   Every search box in the portal was a lit control that did nothing. They filter now,
+   live, client-side, and they all go through here so they cannot drift into five
+   behaviours.
+
+   A surface hands over: where its items are, how to read the text of one, and where
+   to put the no-results block. Matching is done on STRIPPED text — the activity feed
+   stores HTML (`<b>` round the entity), and matching inside markup would hit a tag
+   name as readily as a word.
+
+   ⚠️ The no-results state is NOT the empty state. "Nothing here yet" and "nothing
+   matched what you typed" are different facts with different exits: the first is
+   waiting for you to create something, the second is waiting for you to clear a
+   filter you set. Same slot, different block, and the second carries the way out.  */
+function stripText(html){
+  var d = document.createElement('div');
+  d.innerHTML = String(html == null ? '' : html);
+  return (d.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase();
+}
+function noResultsHTML(q, cls){
+  return '<div class="noresults' + (cls ? ' ' + cls : '') + '">'
+    + '<div class="nr-t">No matches for &ldquo;' + esc(q) + '&rdquo;</div>'
+    + '<button type="button" class="link nr-clear" data-clearsearch>Clear search</button>'
+    + '</div>';
+}
+/* opts: { items(): [nodes], text(node): string, empty(q): html, host: node }
+   `empty` is asked for the block because a table needs a <tr><td colspan>, and a
+   feed needs a plain div — the slot's shape belongs to the surface. */
+function wireSearch(inputSel, opts){
+  var input = $(inputSel); if(!input) return;
+  var slot = null;
+  function clearSlot(){ if(slot){ slot.remove(); slot = null; } }
+  function run(){
+    var q = input.value.trim().toLowerCase();
+    var items = opts.items(), shown = 0;
+    items.forEach(function(el){
+      var hit = !q || opts.text(el).indexOf(q) >= 0;
+      el.hidden = !hit;
+      if(hit) shown++;
+    });
+    clearSlot();
+    if(q && !shown){
+      var host = opts.host();
+      if(host){
+        host.insertAdjacentHTML('beforeend', opts.empty(input.value.trim()));
+        slot = host.lastElementChild;
+      }
+    }
+  }
+  input.addEventListener('input', run);
+  /* delegated on the document: the block is created and destroyed as you type, so
+     nothing can be bound to it directly */
+  document.addEventListener('click', function(e){
+    var c = e.target.closest('[data-clearsearch]');
+    if(!c || !slot || !slot.contains(c)) return;
+    input.value = ''; run(); input.focus();
+  });
+  return run;
+}
+
+/* ---------- one saved pattern, everywhere something is saved ------------------
+   ⚠️ What this used to be: `btn.disabled = true` and, on two of the three pages,
+   not even a note. Nothing was persisted and nothing was said — a button going quiet
+   is not a confirmation, it is the absence of one, and a "saved" that vanishes on
+   reload is worse than no message at all.
+
+   Now: the caller hands over a `save` function that actually writes to the Store and
+   returns true, and this wires the rest — the button stays ENABLED, the note appears
+   beside it with the time, and it holds until the next edit. A `validate` may refuse,
+   in which case nothing is written and nothing is claimed.
+   `fieldsOf` / `applyFields` are the two halves of the identity those forms grew: a
+   `data-field` on every control, so a page can be read into an object and written
+   back out of one. */
+function fieldsOf(viewSel){
+  var out = {};
+  $$(viewSel + ' [data-field]').forEach(function(el){
+    out[el.getAttribute('data-field')] = el.type === 'checkbox' ? el.checked : el.value;
+  });
+  return out;
+}
+function applyFields(viewSel, data){
+  if(!data) return;
+  $$(viewSel + ' [data-field]').forEach(function(el){
+    var k = el.getAttribute('data-field');
+    if(!(k in data)) return;
+    if(el.type === 'checkbox') el.checked = !!data[k]; else el.value = data[k];
+  });
+}
+function nowClock(){
+  var d = new Date();
+  return ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
+}
+function wirePageSave(viewSel, btnSel, opts){
+  opts = opts || {};
+  var view = $(viewSel), btn = $(btnSel);
   if(!view || !btn) return;
-  function clean(){ btn.disabled = true; if(note) note.hidden = false; pageDirty = false; }
-  function dirty(){ btn.disabled = false; if(note) note.hidden = true; pageDirty = true; }
-  clean();
+  var note = $(btnSel + 'Note');
+  function say(txt){ if(!note) return; note.textContent = txt; note.hidden = !txt; }
+  function dirty(){ say(''); pageDirty = true; }
   view.addEventListener('input', dirty);
   view.addEventListener('change', dirty);
-  btn.addEventListener('click', clean);
+  btn.addEventListener('click', function(){
+    if(opts.validate && !opts.validate()) return;   // refused: it says why itself
+    if(opts.save && opts.save() === false) return;
+    pageDirty = false;
+    say('Saved \u00b7 ' + nowClock());
+  });
 }
 /* Leaving with unsaved edits asks first — the same dialog the wizard uses. */
 function guardLinks(){
@@ -608,16 +721,238 @@ function guardLinks(){
 
 /* ---------- plan & product cards ---------- */
 /* One builder each, shared by the new-user screen, the wizard and styleguide.html. */
-function planCard(c){
-  return '<div class="dblock plancard">'
-    + '<div class="pc-head"><h2>' + c.name + '</h2>' + (c.badge ? '<span class="pill">' + c.badge + '</span>' : '') + '</div>'
+/* ============================================================================
+   The plan picker — ONE template, three hosts
+   ============================================================================
+   Product cards · Subscription/Perpetual tabs · plan cards with their Select
+   buttons. Three hosts render it: the wizard's step 1, the public landing page's
+   pricing section, and the new-user screen on Home. They are the same components
+   reading the same data (EC_PLANS), so an offer that changes changes in all three
+   at once — the only difference is what a Select means, which is why picking is
+   reported back to the host rather than acted on here. A visitor who signs up must
+   not find that choosing a plan looks different on the other side of the door.
+
+   ⚠️ It lives HERE, not in wizard.js, because styleguide.html renders the plan-card
+   specimen and cannot load wizard.js — NL's IIFE binds to #nlModal, which that page
+   has no reason to carry.
+
+   Every function takes a plain selection object — { product, kind, plan, locked,
+   currentName } — instead of reading a controller's private state. That is what
+   made the second host possible: NL passes its own `st` straight in, because the
+   three field names are the ones it already used.
+   ============================================================================ */
+/* LEVEL 1 — product: two wide CARDS, and still a switcher. Exactly one is
+   selected; the selected one is marked with a dark outline (`.nl-select.on`
+   gives border + inset ring), NOT a black fill — a filled card reads as a
+   pressed button and outshouts the plan cards below it, which are the actual
+   offer. Each card carries the product's one-line description, so the step
+   says what the two products are instead of assuming you know.
+   Glyphs stay monochrome: a hub and spokes for the platform, a broadcast arc
+   for the broker. */
+var PRODUCT_CHOICES = [
+  { v:'thingsboard', t:'ThingsBoard', d:'IoT platform — devices, dashboards, rule engine',
+    g:'<circle cx="12" cy="12" r="3"/><circle cx="12" cy="4" r="1.5"/><circle cx="12" cy="20" r="1.5"/>'
+      + '<circle cx="4" cy="12" r="1.5"/><circle cx="20" cy="12" r="1.5"/>'
+      + '<path d="M12 9V5.5M12 15v3.5M9 12H5.5M15 12h3.5"/>' },
+  { v:'tbmq', t:'TBMQ', d:'MQTT broker for reliable message streaming',
+    g:'<circle cx="7" cy="17" r="1.6"/><path d="M7 11.5A5.5 5.5 0 0 1 12.5 17"/>'
+      + '<path d="M7 6A11 11 0 0 1 18 17"/>' }
+];
+function nlProductCardsHTML(sel){
+  var active = sel.product, locked = !!sel.locked;
+  return '<div class="nl-prodrow">'
+    + '<div class="nl-prodcards" role="radiogroup" aria-label="Product">'
+    + PRODUCT_CHOICES.map(function(o){
+        var on = o.v === active;
+        /* a real button, not a div with role=button: it is one of two mutually
+           exclusive choices — see the radio note below for the contract. */
+        /* ⚠️ `role="radio"` + `aria-checked`, not `aria-pressed`. It is exactly-one-of-N,
+           and aria-pressed describes an independent toggle — the wrong contract for
+           a group where choosing one unchooses the other. The leading indicator is
+           drawn (`.nl-prodradio`), so what a sighted user sees and what a screen
+           reader is told finally say the same thing. */
+        return '<button type="button" role="radio" class="dblock nl-prodcard nl-select' + (on ? ' on' : '') + '"'
+          + ' data-nl-product="' + o.v + '" aria-checked="' + on + '"' + (locked ? ' disabled' : '') + '>'
+          + '<span class="nl-prodradio" aria-hidden="true"></span>'
+          + '<span class="nl-prodic"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true">' + o.g + '</svg></span>'
+          + '<span class="nl-prodtxt"><span class="nl-prodname">' + o.t + '</span>'
+          + '<span class="nl-proddesc">' + o.d + '</span></span></button>';
+      }).join('')
+    + '</div></div>';
+}
+
+/* LEVEL 2 — billing as TABS, left-aligned, standing where the heading used to.
+   The heading ("Subscription plans" / "Perpetual licenses") is gone: it said the
+   same thing the active tab says, and the switch + ⓘ pair made one decision look
+   like two controls (a toggle whose labels were also clickable-looking text).
+   Two tabs, the active one carrying the indicator, is what a two-way switch
+   between two sets of content actually is — and it reuses the `.tabs`/`.tab`
+   pattern the details page already has.
+   ⚠️ The descriptions moved to a SHORT LINE BENEATH the active tab, not into the
+   tab's ⓘ. Reason: on the one step whose entire job is this choice, the
+   difference between paying monthly and paying once has to be readable without a
+   gesture — and a tooltip is a hover affordance, which does not exist on touch
+   (the same reason the plan cards' CTA stopped being hover-revealed). The line
+   swaps with the tab, so only the active choice is explained. */
+/* ⚠️ The descriptions are now about PAYMENT only. The subscription tab used to end
+   "...unlimited customers, dashboards, integrations, API calls, data points and
+   messages, and you can change the plan any time" — the first half of that was the
+   baseline written as prose, one tab above a block that listed the same thing. It
+   moved into the baseline block; what stays is when you are charged and what you can
+   change, which is what a billing tab is for. See BILLING_MODE_NOTE in data.js. */
+var BILLING_CHOICES = [
+  { v:'subscription', t:'Subscription', d:BILLING_MODE_NOTE.subscription },
+  { v:'perpetual',    t:'Perpetual',    d:BILLING_MODE_NOTE.perpetual }
+];
+function nlBillTabsHTML(sel){
+  var locked = !!sel.locked, perp = sel.kind === 'perpetual';
+  var active = perp ? BILLING_CHOICES[1] : BILLING_CHOICES[0];
+  return '<div class="nl-billrow">'
+    + '<div class="tabs nl-billtabs" role="tablist" aria-label="Billing">'
+    + BILLING_CHOICES.map(function(o){
+        var on = (o.v === 'perpetual') === perp;
+        return '<button type="button" class="tab nl-billtab' + (on ? ' on' : '') + '"'
+          + ' role="tab" aria-selected="' + on + '" data-nl-bill="' + o.v + '"'
+          + (locked ? ' disabled' : '') + '>' + o.t + '</button>';
+      }).join('')
+    + '</div>'
+    + '<div class="nl-billdesc">' + active.d + '</div>'
+    + '</div>';
+}
+function nlPlanCardHTML(c, set, sel){
+  var current = !!sel.currentName && c.name === sel.currentName;
+  var on = !current && c.name === sel.plan;
+  // Current plan = a strip sitting on the card's top edge (see .pc-strip)
+  var strip = current ? '<div class="pc-strip">Current plan</div>' : '';
+  var badge = !current && c.badge ? '<span class="pill">' + c.badge + '</span>' : '';
+  // primary on the popular plan, or on the only card when the pair leaves one
+  var primary = set.cards.length === 1 || c.badge === 'Popular';
+  var cta = current ? ''
+    : '<button class="btn' + (primary ? '' : ' sec') + ' pc-cta" data-nl-pick="' + c.name + '">Select</button>';
+  return '<div class="dblock plancard ' + (current ? 'nl-current' : 'nl-select') + (on ? ' on' : '')
+    + '" data-plan="' + c.name + '" role="button" tabindex="' + (current ? '-1' : '0') + '"'
+    + ' aria-pressed="' + on + '"' + (current ? ' aria-disabled="true"' : '') + '>'
+    + strip
+    + '<div class="pc-head"><h2>' + c.name + '</h2>' + badge + '</div>'
     + '<div class="pc-price">' + c.price + ' <span class="pc-per">' + c.per + '</span></div>'
     + (c.term ? '<div class="pc-term">' + c.term + '</div>' : '')
     + '<div class="pc-feats">' + c.feats.map(function(f){ return '<div class="pc-feat">' + f + '</div>'; }).join('') + '</div>'
     + (c.foot ? '<div class="pc-note">' + c.foot + '</div>' : '')
-    + '<button class="btn pc-cta" data-plan="' + c.name + '">Get started</button>'
+    + cta
     + '</div>';
 }
+
+/* One selection object shape, so a host does not have to know the spelling. */
+function planPickerKey(sel){
+  return (sel.product || 'thingsboard') + '|' + (sel.kind === 'perpetual' ? 'perpetual' : 'payg');
+}
+/* Renders both halves into the two nodes the host provides. `withcur` reserves the
+   24px lane the "Current plan" strip needs, and ONLY when a card actually is the
+   current one — a licence on a plan that is no longer offered matches nothing here,
+   and the class would then hold an empty gap open above every card. */
+/* What hangs UNDER the grid on a selling surface, and only there. A single-card
+   set says where the sizing happens instead; a multi-card set gets the PE card,
+   whose intro carries the "all plans include …" line so nothing floats loose
+   between the grid and the block.
+   ⚠️ The wizard passes no `extraEl` and so gets neither: its Subscription tab
+   description already says what every plan includes, and repeating the PE card
+   inside a step whose whole job is the choice would push the cards off screen
+   (see renderStep1). That is the one deliberate difference between the hosts. */
+/* ---------- the baseline block ------------------------------------------------
+   Sits directly under the billing tabs and above the cards, because it answers a
+   question the reader has already asked — "what do I get whichever of these I pick"
+   — and it is only answerable once a product and a mode are chosen. It is NOT near
+   the H1: the page sells two products, and up there it would describe one the reader
+   has not selected.
+
+   ⚠️ It is CONTEXTUAL, and for TBMQ it is a marked GAP. Nothing in the data
+   enumerates what a TBMQ PE licence includes — the cards name the set and stop — so
+   the block says that plainly instead of writing broker features that nobody has
+   approved. Do not fill this in from memory of the product. */
+function baselineFor(sel){
+  var product = sel.product || 'thingsboard';
+  if(product === 'thingsboard'){
+    return { title:'Included in every plan', intro:PLANS_INCLUDE_NOTE, items:PE_FEATURES };
+  }
+  return { title:'Included in every plan', gap:true,
+           intro:'The TBMQ baseline is not written yet — the plan cards name it '
+                + '(&ldquo;All TBMQ PE features&rdquo;) but nothing in this prototype lists it. '
+                + 'Copy needed before this block can say anything true.' };
+}
+function baselineBlockHTML(sel){
+  var b = baselineFor(sel);
+  return '<div class="nl-pe baseline' + (b.gap ? ' is-gap' : '') + '">'
+    + '<div class="nl-pe-h">' + b.title + '</div>'
+    + (b.intro ? '<p class="nl-pe-intro">' + b.intro + '</p>' : '')
+    + (b.items
+        /* ⚠️ The description is WRAPPED so the phone can drop it. Measured at 390 before
+           this: the full block ran 530px of an 844px viewport and pushed the first plan
+           card to y=1112 — entirely below the fold, so the page showed a list of
+           features and no prices. On the phone the names alone carry the point; the
+           descriptions are there for someone comparing, and comparing happens on a
+           screen where the cards are visible too. */
+        ? '<div class="nl-pe-body">'
+          + b.items.map(function(f){
+              return '<div class="nl-pe-item"><b>' + f[0] + '</b>'
+                + '<span class="nl-pe-d"> — ' + f[1] + '</span></div>';
+            }).join('')
+          + '</div>'
+        : '')
+    + '</div>';
+}
+
+/* What hangs UNDER the grid. Only the single-set note now: the features block moved
+   ABOVE the cards, where it describes what they have in common before you read what
+   separates them. This note is about the cards themselves, so it stayed below them. */
+function planPickerExtraHTML(set, sel){
+  return set.single ? '<div class="pc-note center">' + EC_SINGLE_NOTE + '</div>' : '';
+}
+/* `extraEl` is optional: pass it on a selling surface (the landing page and the
+   new-user screen on Home), omit it in the wizard. Everything above the grid is
+   identical for all three by construction — there is no second copy to drift. */
+/* `baseEl` is the slot between the tabs and the cards. Like `extraEl` it is optional:
+   the wizard passes neither, because its step 1 is a choice and not a sales page. */
+function renderPlanPicker(choicesEl, gridEl, sel, extraEl, baseEl){
+  var set = EC_PLANS[planPickerKey(sel)];
+  choicesEl.innerHTML = nlProductCardsHTML(sel) + nlBillTabsHTML(sel);
+  if(baseEl) baseEl.innerHTML = baselineBlockHTML(sel);
+  var hasCur = !!sel.currentName && set.cards.some(function(c){ return c.name === sel.currentName; });
+  gridEl.className = 'plangrid' + (set.single ? ' one' : '') + (hasCur ? ' withcur' : '');
+  gridEl.innerHTML = set.cards.map(function(c){ return nlPlanCardHTML(c, set, sel); }).join('');
+  if(extraEl) extraEl.innerHTML = planPickerExtraHTML(set, sel);
+}
+/* One reading of a click inside the picker, so the two hosts cannot disagree about
+   what its parts mean. It mutates `sel` and says what happened; what to DO about it
+   — re-render and stay, or advance a step, or open sign-up — belongs to the host.
+   ⚠️ The plan branch is scoped to `.plangrid`. Product cards carry `.nl-select`
+   too, so an unscoped match would read a product card as a plan. */
+function planPickerClick(e, sel){
+  var seg = e.target.closest('[data-nl-product]');
+  if(seg && !seg.disabled){
+    var wantP = seg.getAttribute('data-nl-product');
+    if(wantP === sel.product) return null;
+    sel.product = wantP; sel.plan = null; return 'changed';
+  }
+  var btab = e.target.closest('[data-nl-bill]');
+  if(btab && !btab.disabled){
+    var wantK = btab.getAttribute('data-nl-bill');
+    if(wantK === sel.kind) return null;
+    sel.kind = wantK; sel.plan = null; return 'changed';
+  }
+  var pick = e.target.closest('[data-nl-pick], .plangrid .nl-select');
+  if(pick){
+    sel.plan = pick.getAttribute('data-nl-pick') || pick.getAttribute('data-plan');
+    return 'picked';
+  }
+  return null;
+}
+
+/* ⚠️ `planCard` is GONE. It was a second plan-card builder — same data, but a
+   "Get started" CTA that was always primary and no selected / current states — and
+   it served only Home's new-user screen and the styleguide specimen. Both now use
+   `nlPlanCardHTML` (wizard.js), which every other surface already used. If you need
+   a plan card, that is the one; do not reintroduce a variant to avoid passing a
+   selection object. */
 function productCardHTML(card, selected){
   var on = !!selected;
   return '<div class="dblock plancard nl-prodcard nl-select' + (on ? ' on' : '') + '" data-product="' + card.key + '" role="button" tabindex="0" aria-pressed="' + on + '">'
@@ -637,6 +972,33 @@ function rowInvoiceData(btn){
 }
 // print-styled mock invoice document — served as a blob URL in a new tab,
 // reads as a PDF preview
+/* ---------- who the invoice is billed to --------------------------------------
+   ⚠️ Read from the SAVED billing address, falling back to the company profile and
+   then to the demo's own strings. Before this, both documents printed hardcoded text
+   and "Paid · Visa ••4242" no matter what the Billing page said — a form claiming to
+   control a document it was not connected to. Now editing the address changes the
+   next invoice, and changing the card changes what the invoice says it was paid with. */
+function invoiceParty(){
+  var b = Store.get('billingAddress') || {}, p = Store.get('profile') || {};
+  var line = function(v, fb){ return (v && String(v).trim()) || fb; };
+  var city = line(b.city, line(p.city, 'New York'));
+  var state = line(b.state, line(p.state, 'New York'));
+  var zip = line(b.zip, line(p.zip, '10001'));
+  return {
+    company: line(p.company, 'ThingsBoard'),
+    email:   line(b.email, 'hello@thingsboard.io'),
+    addr:    line(b.addr, line(p.addr, '500 7th Avenue')),
+    addr2:   line(b.addr2, line(p.addr2, '')),
+    cityline: city + ', ' + state + ' ' + zip,
+    country: line(b.country, line(p.country, 'United States'))
+  };
+}
+function invoicePaidWith(){
+  var pm = savedCard();
+  return pm ? (pm.brand.charAt(0) + pm.brand.slice(1).toLowerCase() + ' \u2022\u2022' + pm.last4)
+            : 'Visa \u2022\u20224242';
+}
+
 function mockInvoiceUrl(d){
   var html = '<!doctype html><html><head><meta charset="utf-8"><title>Invoice ' + d.num + '</title>'
     + '<style>body{margin:0;background:#e9e9e7;font:14px/1.5 Ubuntu,system-ui,sans-serif;color:#1c1c1c}'
@@ -648,14 +1010,21 @@ function mockInvoiceUrl(d){
     + 'td{padding:12px 0;border-bottom:1px dashed #e2e2e2}.num{text-align:right}'
     + '.tot{margin-top:18px;display:flex;justify-content:flex-end;gap:40px;font-weight:700;font-size:16px}'
     + '.ft{margin-top:40px;color:#999;font-size:12px}'
+    + '.bill{margin-top:34px;font-size:13px;line-height:1.55}.bill .muted{text-transform:uppercase;letter-spacing:.08em;font-size:11px;margin-bottom:4px}'
     + '@media print{body{background:#fff}.page{border:0;box-shadow:none;margin:0}}</style></head><body>'
-    + '<div class="page"><div class="hd"><div><h1>ThingsBoard</h1><div class="muted">License Portal · thingsboard.io</div></div>'
+    + '<div class="page"><div class="hd"><div><h1>ThingsBoard</h1><div class="muted">Licenses · thingsboard.io</div></div>'
     + '<div style="text-align:right"><div style="font-size:18px;font-weight:700">INVOICE</div><div class="inv">' + d.num + '</div><div class="muted">' + d.date + '</div></div></div>'
     + '<table><thead><tr><th>Description</th><th class="num">Qty</th><th class="num">Amount</th></tr></thead><tbody>'
     + '<tr><td>ThingsBoard Professional Edition — license charge</td><td class="num">1</td><td class="num">' + d.amount + '</td></tr>'
     + '</tbody></table>'
     + '<div class="tot"><span>Total</span><span>' + d.amount + '</span></div>'
-    + '<div class="ft">Paid · Visa ••4242 · This is a prototype mock document, not a real invoice.</div></div></body></html>';
+    + (function(){ var b = invoiceParty();
+        return '<div class="bill"><div class="muted">Billed to</div><div>' + esc(b.company) + '</div>'
+          + '<div>' + esc(b.addr) + '</div>'
+          + (b.addr2 ? '<div>' + esc(b.addr2) + '</div>' : '')
+          + '<div>' + esc(b.cityline) + '</div><div>' + esc(b.country) + '</div>'
+          + '<div class="muted">' + esc(b.email) + '</div></div>'; })()
+    + '<div class="ft">Paid · ' + esc(invoicePaidWith()) + ' · This is a prototype mock document, not a real invoice.</div></div></body></html>';
   var blob = new Blob([html], { type:'text/html' });
   var url = URL.createObjectURL(blob);
   setTimeout(function(){ URL.revokeObjectURL(url); }, 30000);
@@ -682,16 +1051,24 @@ function buildPdf(textLines){
   return new Blob([pdf], { type:'application/pdf' });
 }
 function downloadInvoice(d, btn){
+  var b = invoiceParty();
   var blob = buildPdf([
-    'ThingsBoard - License Portal', '',
+    'ThingsBoard - Licenses', '',
     'INVOICE ' + d.num,
     'Date: ' + d.date, '',
+    'Billed to:',
+    b.company,
+    b.addr
+  ].concat(b.addr2 ? [b.addr2] : []).concat([
+    b.cityline,
+    b.country,
+    b.email, '',
     'ThingsBoard Professional Edition - license charge',
     'Amount: ' + d.amount, '',
     'Total: ' + d.amount, '',
-    'Paid - Visa **4242',
+    'Paid - ' + invoicePaidWith().replace(/\u2022/g, '*'),
     'This is a prototype mock document, not a real invoice.'
-  ]);
+  ]));
   var a = document.createElement('a'), url = URL.createObjectURL(blob);
   a.href = url; a.download = d.num + '.pdf';
   document.body.appendChild(a); a.click(); a.remove();

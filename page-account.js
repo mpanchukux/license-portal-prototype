@@ -49,9 +49,18 @@ var EMAIL = (function(){
   render();
   return { onSave:onSave, confirm:confirm };
 })();
-var profSaveBtn = $('#profSaveBtn');
-if(profSaveBtn) profSaveBtn.addEventListener('click', function(){ if(EMAIL.onSave) EMAIL.onSave(); });
-wirePageSave('#profileView', '#profSaveBtn', null);   // no saved-note on Account by design
+/* The profile persists now. `applyFields` runs FIRST, so a stored value replaces the
+   markup's placeholder before anyone reads the page; the markup stays as the seed for
+   an account that has never saved. The email field is not in this set — it has its own
+   pending-confirmation flow above, and writing it here would let it change without one. */
+applyFields('#profileView', Store.get('profile'));
+wirePageSave('#profileView', '#profSaveBtn', {
+  save: function(){
+    if(EMAIL.onSave) EMAIL.onSave();       // the email path keeps its own rules
+    Store.set('profile', fieldsOf('#profileView'));
+    return true;
+  }
+});
 guardLinks();
 
 

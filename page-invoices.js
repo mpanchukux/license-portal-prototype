@@ -12,3 +12,12 @@ function renderInvoicesPage(){
   if(r) r.textContent = inv.length ? ('1–' + inv.length + ' of ' + inv.length) : '0 of 0';
 }
 renderInvoicesPage();
+
+/* ---------- search: invoice number, the licence it is for, and the amount ---- */
+wireSearch('#invoicesView .searchbox input', {
+  items: function(){ return $$('#invoicesView tbody tr').filter(function(tr){ return !tr.querySelector('.emptybox'); }); },
+  text:  function(tr){ return stripText(tr.innerHTML); },
+  host:  function(){ return $('#invoicesView tbody'); },
+  empty: function(q){ return '<tr><td colspan="6" class="noresults-cell">'
+                            + noResultsHTML(q) + '</td></tr>'; }
+});

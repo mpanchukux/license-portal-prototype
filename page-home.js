@@ -10,10 +10,17 @@
 
 var dashV = $('#dashView'), dashEmptyV = $('#dashEmptyView');
 var state = dashState();
+/* ⚠️ DERIVED from the licences that exist, not from a stored flag. It used to be
+   `state.empty`, written once at sign-up and cleared by nobody — so the first
+   purchase left this page on its first-run screen while Licenses, Invoices and
+   Activity all showed the new licence. Clearing the flag in the purchase handler
+   would have fixed that one path and left every future one to remember; deriving it
+   means no path can put the two out of step. See dashIsEmpty() in shared.js. */
+var isEmpty = dashIsEmpty();
 
 /* ---------- which surface is on screen ---------- */
-dashV.hidden = !!state.empty;
-dashEmptyV.hidden = !state.empty;
+dashV.hidden = isEmpty;
+dashEmptyV.hidden = !isEmpty;
 $('#grantPending').hidden = state.grant !== 'pending';
 $('#grantBanner').hidden = !(Store.get('dash') === 'dashgrant' && !isDismissed('grantBanner'));
 
@@ -126,9 +133,9 @@ wireFeedAudit('#dashView');
    The copy in the bar takes the plain 31px .btn: the top bar is a control band,
    and --btnH is not negotiable there. Only the hero is oversized (.btn.xl).
 
-   Not installed on the new-user or grant-pending screens: #dashView is hidden
-   there, its button measures 0, and the bar would hold an action for a dashboard
-   that is not on screen. */
+   Not installed while the first-run screen is up: #dashView is hidden then, its
+   button measures 0, and the bar would hold an action for a dashboard that is not
+   on screen. */
 (function(){
   var hero = $('#dashNewBtn'), slot = $('#topbarAction'), shell = $('#shellMain');
   if(!hero || !slot || !shell || dashV.hidden) return;
@@ -171,34 +178,45 @@ wireFeedAudit('#dashView');
 
 /* ---------- new-user screen ---------- */
 
+/* The third host of the purchase wizard's step 1, after the wizard itself and the
+   landing page. A visitor who signs up should not find that choosing a plan looks
+   different on the other side of the door, so this screen renders the very same
+   picker off the very same data — see renderPlanPicker in wizard.js. What it owns
+   is only what a Select MEANS here: signed in with no licences, it can open the
+   wizard straight away. */
 if(dashEmptyV && !dashEmptyV.hidden){
-  var ecProduct = 'thingsboard', ecBilling = 'payg';
+  /* the selection object the shared picker reads. No `locked`, no `currentName`:
+     nothing is locked on this screen and an account with no licences has no
+     current plan — the same reason the landing page omits them. */
+  var esel = { product:'thingsboard', kind:'subscription', plan:null };
   function renderEcPlans(){
-    var set = EC_PLANS[ecProduct + '|' + ecBilling], grid = $('#ecPlans'), note = $('#ecNote');
-    grid.className = 'plangrid' + (set.single ? ' one' : '');
-    grid.innerHTML = set.cards.map(planCard).join('');
-    note.className = 'pc-note' + (set.single ? ' center' : '');
-    note.textContent = set.single ? EC_SINGLE_NOTE : '';
-    // inferred: same PE card as wizard step 2 — the shared "…include unlimited…"
-    // note is the card's muted intro now, so nothing floats under the grid
-    $('#ecPlanExtra').innerHTML = !set.single && ecProduct === 'thingsboard' ? peBlockHTML(PLANS_INCLUDE_NOTE) : '';
+    renderPlanPicker($('#ecChoices'), $('#ecPlans'), esel, $('#ecPlanExtra'), $('#ecBase'));
   }
-  $$('input[name="ecProduct"]', dashEmptyV).forEach(function(r){
-    r.addEventListener('change', function(){ if(r.checked){ ecProduct = r.value; renderEcPlans(); } });
-  });
-  $$('input[name="ecBilling"]', dashEmptyV).forEach(function(r){
-    r.addEventListener('change', function(){ if(r.checked){ ecBilling = r.value; renderEcPlans(); } });
-  });
-  // cards are re-rendered on every switch, so delegate the entry-point action.
-  // Get started preselects product, billing and plan, so the wizard skips its
-  // chooser and opens on Customize (step 2 of 3).
-  dashEmptyV.addEventListener('click', function(e){
-    var cta = e.target.closest('.pc-cta');
-    if(!cta) return;
-    NL.open({ kind: ecBilling === 'perpetual' ? 'perpetual' : 'subscription',
-              product: ecProduct, plan: cta.getAttribute('data-plan'), startStep: 2 });
-  });
   renderEcPlans();
+
+  /* One delegated listener on the whole picker — the cards are re-rendered on every
+     product/billing switch, so nothing may be bound to them directly. */
+  $('#ecPicker').addEventListener('click', function(e){
+    var what = planPickerClick(e, esel);
+    if(what === 'changed'){ renderEcPlans(); return; }
+    if(what === 'picked'){
+      /* `skipPicker` because step 1 was not skipped — it was COMPLETED, on this
+         page, by the same cards the wizard would have shown. Counting it would
+         promise a screen that never comes, and its Back would lead to a duplicate
+         of the picker still sitting behind the modal. Same reasoning, same flow as
+         a plan chosen on the landing page: "Step 1 of 3 · Customize". */
+      NL.open({ product:esel.product, kind:esel.kind, plan:esel.plan,
+                startStep:2, skipPicker:true });
+    }
+  });
+
+  /* Keyboard: the plan cards are `.nl-select` with tabindex and the wizard gives
+     them Enter/Space through its own listener. This host needs its own. */
+  $('#ecPicker').addEventListener('keydown', function(e){
+    if((e.key === 'Enter' || e.key === ' ') && e.target.classList && e.target.classList.contains('nl-select')){
+      e.preventDefault(); e.target.click();
+    }
+  });
 }
 
 

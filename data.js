@@ -84,10 +84,16 @@ var DATASETS = {
   },
   B: {
     licenses: [
-      { id:'B1',  tier:'business', product:'ThingsBoard', type:'Subscription', name:'Business',  label:'Global',       created:'May 02 2026', updated:'Aug 12 2026', status:'active',         event:'Sep 13 2026', price:'$499.00 / mo', billing:'auto-pay' },
-      { id:'B2',  tier:'startup',  product:'ThingsBoard', type:'Subscription', name:'Startup',   label:'Production',   created:'Jun 06 2026', updated:'Aug 02 2026', status:'active',         event:'Sep 20 2026', price:'$299.00 / mo', billing:'auto-pay' },
+      /* ⚠️ Purchased extras and enabled add-ons live here on purpose: without one licence
+         carrying them, the "+N" in the Purchased column, the delta pills on the phone and
+         the whole removal path are states nothing in the demo can reach. */
+      { id:'B1',  tier:'business', product:'ThingsBoard', type:'Subscription', name:'Business',  label:'Global',       created:'May 02 2026', updated:'Aug 12 2026', status:'active',         event:'Sep 13 2026', price:'$736.00 / mo', billing:'auto-pay',
+        extras:{ devices:'500', prod:'1', ai:'4M' }, edge:true, trendz:true },
+      { id:'B2',  tier:'startup',  product:'ThingsBoard', type:'Subscription', name:'Startup',   label:'Production',   created:'Jun 06 2026', updated:'Aug 02 2026', status:'active',         event:'Sep 20 2026', price:'$356.00 / mo', billing:'auto-pay',
+        extras:{ devices:'200', prod:'1' }, edge:true },
       { id:'B3',  tier:'startup',  product:'ThingsBoard', type:'Subscription', name:'Startup',   label:'Factory A',    created:'Jun 20 2026', updated:'Aug 18 2026', status:'payment_failed', event:'Sep 02 2026', price:'$299.00 / mo', billing:'auto-pay' },
-      { id:'B4',  tier:'pilot',    product:'ThingsBoard', type:'Subscription', name:'Pilot',     label:'EU pilot',     created:'Jul 01 2026', updated:'Aug 15 2026', status:'active',         event:'Sep 06 2026', price:'$99.00 / mo',  billing:'auto-pay' },
+      { id:'B4',  tier:'pilot',    product:'ThingsBoard', type:'Subscription', name:'Pilot',     label:'EU pilot',     created:'Jul 01 2026', updated:'Aug 15 2026', status:'active',         event:'Sep 06 2026', price:'$111.00 / mo', billing:'auto-pay',
+        extras:{ ai:'2M' } },
       { id:'B5',  tier:'prototype',product:'ThingsBoard', type:'Subscription', name:'Prototype', label:'Sandbox',      created:'Jul 10 2026', updated:'Jul 28 2026', status:'canceled',       event:'Sep 05 2026', price:'$39.00 / mo',  billing:'auto-pay' },
       { id:'B6',  tier:'maker',    product:'ThingsBoard', type:'Subscription', name:'Maker',     label:'',             created:'Jul 15 2026', updated:'Jul 15 2026', status:'active',         event:'Aug 30 2026', price:'$10.00 / mo',  billing:'auto-pay' },
       { id:'B7',  tier:'prototype',product:'ThingsBoard', type:'Subscription', name:'Prototype', label:'Demo',         created:'Jul 20 2026', updated:'Jul 30 2026', status:'active',         event:'Sep 03 2026', price:'$39.00 / mo',  billing:'auto-pay' },
@@ -183,6 +189,23 @@ var DATASETS = {
       { kind:'created', ts:'Aug 19 2026, 09:02', entityType:'License', entityName:'Community Grant', actor:'System', action:'GRANT_ISSUED',
         txt:'<b>Community Grant</b> was issued to mpanchuk@thingsboard.io — license key created.', delta:'Community Grant issued' }
     ]
+  },
+  /* N — a genuinely NEW account: nothing bought, nobody invited, nothing logged.
+     ⚠️ This dataset exists because the first-run states used to read dataset A, which
+     has three licences, four invoices and two users. Home showed its empty screen off
+     a stored flag while Licenses, Invoices, Activity and Users all showed someone
+     else's populated account — they disagreed from the moment of sign-up, before any
+     purchase. Home now derives its state from the licences that exist (page-home.js),
+     and that derivation is only honest if a new account's data is actually empty.
+     One user, because the account has exactly the person who just created it — which
+     is also the only way the Users page's solo state is ever reached. */
+  N: {
+    licenses: [],
+    users: [
+      { name:'Mariia Panchuk', email:'mpanchuk@thingsboard.io', created:'Aug 19 2026' }
+    ],
+    invoices: [],
+    activity: []
   }
 };
 
@@ -219,12 +242,28 @@ var EC_PLANS = {
   }
 };
 var EC_SINGLE_NOTE = 'You can fine-tune capacity before checkout.';
+/* ⚠️ The SHORT billing-mode line, split out of the tab descriptions below. What is left
+   here is about PAYMENT — when you are charged and what you can change — because the
+   entitlement half of the old sentence ("unlimited customers, dashboards, integrations,
+   API calls, data points and messages") was the baseline written as prose, and it now
+   lives in the baseline block where it is said once instead of twice. */
+var BILLING_MODE_NOTE = {
+  subscription: 'Pay every month, and change the plan any time.',
+  perpetual:    'Pay once and run it indefinitely. Includes 12 months of software updates, renewable.'
+};
 // intro sentence of the PE card — same wording on every plan surface
 var PLANS_INCLUDE_NOTE = 'All plans include unlimited customers, dashboards, integrations, API calls, data points & messages.';
 
-// full PE feature set — rendered once per surface as a self-contained card
-// (wizard step 2, perpetual step 1, new-user screen), never per plan card.
-// White-labeling is NOT edition-wide (Pilot+ only) — it lives on the plan cards
+/* ---------- the baseline: what every plan of a product includes ----------------
+   ⚠️ This list is EDITION-WIDE, not marketing for one tier — which is why it is now
+   titled "Included in every plan". The proof is in the exception that was already
+   recorded here: white labeling is NOT in it, because white labeling starts at Pilot
+   and therefore belongs on the cards that differ. Everything that stayed is true of
+   every ThingsBoard PE tier, subscription and perpetual alike.
+
+   ⚠️ THINGSBOARD ONLY. There is no equivalent list for TBMQ anywhere in the data: its
+   cards name the set ("All TBMQ PE features") and nothing enumerates it. The baseline
+   block says so rather than inventing broker features — see BASELINE below. */
 var PE_FEATURES = [
   ['Advanced RBAC for IoT', 'Fine-grained roles and permissions across customers, users, and assets.'],
   ['Entity groups', 'Organize devices, assets, and customers into managed groups with group-level permissions.'],
@@ -251,6 +290,35 @@ var FCHECK = '<svg class="icon fmark" viewBox="0 0 24 24"><path d="M4 12.5l5 5L2
 var KEBAB = '<svg class="icon" viewBox="0 0 24 24" style="fill:currentColor;stroke:none"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg>';
 var COPYSVG = '<svg class="icon" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg>';
 var STUB = 'Placeholder — not part of this wireframe spec yet.';
+
+/* ============================================================================
+   EXTERNAL LINKS — the only place the prototype points outside itself
+   ============================================================================
+   ⚠️ PLACEHOLDERS. All four point at the documentation ROOT because the real pages
+   have not been named yet. Swapping in the true URLs is a one-line change each, and
+   this constant exists so it is exactly one line and not a hunt through four files.
+
+   ⚠️ This does not break "no external requests": that rule is about ASSETS — fonts
+   stay embedded as base64 and nothing is fetched at load. These are navigation, and
+   every one of them opens in a new tab (target="_blank" rel="noopener"), the same way
+   View invoice already does.
+
+     install  — how to activate a deployment with a licence key
+     updates  — what the updates term is and what renewing it means
+     support  — how to reach a person
+     docs     — the root, for anything that has no page of its own yet
+   ========================================================================== */
+var EXT = {
+  docs:    'https://thingsboard.io/docs/',
+  install: 'https://thingsboard.io/docs/',   // TODO: the licence installation page
+  updates: 'https://thingsboard.io/docs/',   // TODO: the software-updates term page
+  support: 'https://thingsboard.io/docs/'    // TODO: the contact page
+};
+/* one builder, so every outbound link carries the same attributes */
+function extLink(key, text, cls){
+  return '<a class="' + (cls || 'link') + '" href="' + EXT[key] + '" target="_blank" rel="noopener">'
+    + text + '</a>';
+}
 // Feed items carry no event icon (see feedItem), so there is no icon set here.
 // `kind` stays on each event: it is what the event is, and the next thing that
 // groups or filters activity will want it.

@@ -79,6 +79,10 @@ var DETAILS_HTML = ''
 + '            </div>'
 + ''
 + '            <!-- row 2: the label — a muted description line under the title -->'
++ '            <!-- a scheduled change: stated quietly, with the way to undo it. Not a'
++ '                 banner — zone 1 is for things that are wrong, and an agreed change on'
++ '                 a known date is not one of them. -->'
++ '            <p class="schedline" id="schedLine" hidden></p>'
 + '            <div class="metarow">'
 + '              <span id="labelSlot"><button class="chip ghost" id="addLabel">+ Add label</button></span>'
 + '              <!-- phone: status and label merged into one calm supporting line'
@@ -106,9 +110,12 @@ var DETAILS_HTML = ''
 + '                  <!-- what to do with the key, next to the actions that get you the'
 + '                       key. It used to be a button inside the post-purchase banner,'
 + '                       which meant it disappeared the moment that banner was dismissed. -->'
-+ '                  <button class="iconbtn ib tip" id="installBtn" aria-label="Installation instructions" data-tip="Installation instructions" data-stub="Installation instructions">'
+/* ⚠️ An outbound LINK, not a button with a placeholder. Installing a key is not
+   the portal's job — the key is entered in ThingsBoard itself, the platform syncs,
+   and this surface reflects what came back. The honest control is one that leaves. */
++ '                  <a class="iconbtn ib tip" id="installBtn" href="' + EXT.install + '" target="_blank" rel="noopener" aria-label="Installation instructions" data-tip="Installation instructions">'
 + '                    <svg class="icon" viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4"/><path d="M9 12h6M9 16h6"/></svg>'
-+ '                  </button>'
++ '                  </a>'
 + '                </div>'
 + '                <!-- one-time note after a purchase. It belongs under the key it is'
 + '                     about, and quiet: an ink-filled banner over the key would shout'
@@ -258,7 +265,10 @@ var DETAILS_HTML = ''
 + '            <div class="section">'
 + '              <!-- type switcher (same segmented style as the Licenses "Type" filter) + toolbar -->'
 + '              <div class="insttoolbar">'
-+ '                <div class="searchbox"><svg class="icon searchglyph" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input type="text" placeholder="Search instances" aria-label="Search instances"></div>'
+/* ⚠️ The Instances search was REMOVED, not wired. It would have filtered two
+   hardcoded rows that are identical for every licence — theatre, and a control that
+   survives to a demo either works or is not there. It comes back with real instance
+   data; see NOTES. */
 + '                <div class="lic-typeseg" role="group" aria-label="Instance type">'
 + '                  <button class="typechip is-on" data-insttype="prod" aria-pressed="true">Production</button>'
 + '                  <button class="typechip" data-insttype="dev" aria-pressed="false">Development</button>'
@@ -532,13 +542,21 @@ function renderLicenseAlert(lic){
   if(st==='payment_failed'){
     t.innerHTML = '<span class="amsg"><b>Payment failed.</b> Update your payment method before '
       + fmtDate(lic.event) + ' to keep the subscription active.</span>'
-      + alertAction('Update', 'Update payment method', 'data-goto="billing"');
+      /* ⚠️ `data-goto="billing"` used to sit here and was read by NOTHING — a fossil of
+         the single-file era's row router, reused as if it were a mechanism. The one
+         banner whose action matters most had no handler at all. It now opens the card
+         modal OVER this licence: the person stays where the problem is. */
+      + alertAction('Update', 'Update payment method', 'data-paycard')
+      /* the third contextual support route: a failed payment is the other place
+         people get stuck with nothing left to try */
+      + '<a class="link alert-help" href="' + EXT.support + '" target="_blank" rel="noopener">Contact support</a>';
     al.hidden=false;
   }
   else if(st==='updates_expiring'){
     t.innerHTML = '<span class="amsg"><b>Software updates expire ' + fmtDate(lic.event)
       + '.</b> Renew to keep receiving updates and support.</span>'
-      + alertAction('Renew', 'Renew updates', 'data-stub="Renew software updates"', true);
+      + '<a class="btn ter aact mobact" href="' + EXT.updates + '" target="_blank" rel="noopener">'
+      +   '<span class="aact-long">About the updates term</span><span class="aact-short">Updates</span></a>';
     al.hidden=false;
   }
   /* A cancelled subscription's banner states a fact and has no action of its own:
@@ -553,12 +571,39 @@ function renderLicenseAlert(lic){
   else if(st==='awaiting_checkin'){
     t.innerHTML = '<span class="amsg"><b>No instance has checked in yet.</b> The license key was issued '
       + fmtDate(lic.created) + ' \u2014 activate an instance with it and it appears here. '
-      + '<button class="link inlineact" data-stub="Installation instructions" style="margin-left:6px">Installation guide &rarr;</button></span>'
-      + alertAction('Set up', 'Installation guide', 'data-stub="Installation instructions"', true);
+      + '<a class="link inlineact" href="' + EXT.install + '" target="_blank" rel="noopener" style="margin-left:6px">Installation guide &rarr;</a></span>'
+      + '<a class="btn ter aact mobact" href="' + EXT.install + '" target="_blank" rel="noopener">'
+      +   '<span class="aact-long">Installation guide</span><span class="aact-short">Set up</span></a>';
     al.hidden=false;
   }
   else al.hidden = true;
 }
+/* The scheduled change, on the surface that owns the licence. It names what changes
+   and when, and carries the only way to call it off. */
+function renderScheduled(lic){
+  var el = $('#schedLine'); if(!el) return;
+  var sc = lic && lic.scheduled;
+  if(!sc){ el.hidden = true; el.innerHTML = ''; return; }
+  el.innerHTML = '<span><b>Scheduled for ' + fmtDate(sc.effective) + ':</b> ' + esc(sc.summary)
+    + ' Current allowances stay until then.</span>'
+    + '<button class="link" data-cancelsched="' + esc(lic.id) + '">Cancel this change</button>';
+  el.hidden = false;
+}
+document.addEventListener('click', function(e){
+  var b = e.target.closest('[data-cancelsched]');
+  if(!b) return;
+  var id = b.getAttribute('data-cancelsched');
+  var was = cancelScheduledChange(id);
+  if(!was) return;
+  var lic = licById(id);
+  if(window.LicenseDetails && LicenseDetails.isOpen()) LicenseDetails.reopen(lic);
+  else if(typeof renderLicense === 'function') renderLicense(lic);
+  if(typeof refreshLicenseSurfaces === 'function') refreshLicenseSurfaces();
+  openModal('Scheduled change canceled',
+    '<p>The change due on <b>' + fmtDate(was.effective) + '</b> will not happen. '
+    + 'This license keeps its current plan and capacity.</p>');
+});
+
 function renderLicenseActions(lic){
   var canceled = lic.status==='canceled', isPerp = isPerpLike(lic);
   var coupon=$('#couponBtn'), change=$('#changePlanBtn'), kebab=$('#headKebabMenu'), renew=$('#renewBtn');
@@ -680,6 +725,7 @@ function renderLicenseDetails(lic){
   renderEntitlements(spec.ent, lic.extras);
   renderLicenseFeatures(lic, spec);
   renderLicenseAlert(lic);
+  renderScheduled(lic);
   renderLicenseActions(lic);
   renderLicFeed(lic);
 }
@@ -836,6 +882,28 @@ function wireDetailsOnce(){
     closeAllMenus();
     openCancelModal(activeLicense, function(){ LicenseDetails.afterChange(); });
   });
+  /* the card modal can change THIS licence's status (a failed payment recovers), so
+     the surface it was opened over has to restate rather than keep showing the banner
+     for a problem that is now solved */
+  if(window.PayCard) PayCard.onSaved(function(){
+    if(!activeLicense) return;
+    var fresh = licById(activeLicense.id);
+    if(fresh) LicenseDetails.reopen ? LicenseDetails.reopen(fresh) : renderLicense(fresh);
+  });
+
+  /* The licence's own Activity tab has real feed data, so its search is wired —
+     unlike the Instances one next to it, which was removed rather than faked. */
+  (function(){
+    var box = $('#panel-audit .searchbox input');
+    if(!box || typeof wireSearch !== 'function') return;
+    wireSearch('#panel-audit .searchbox input', {
+      items: function(){ return $$('#licFeed > *').filter(function(n){ return !n.classList.contains('noresults'); }); },
+      text:  function(n){ return stripText(n.innerHTML); },
+      host:  function(){ return $('#licFeed'); },
+      empty: function(q){ return noResultsHTML(q); }
+    });
+  })();
+
   var renewBtn = $('#renewBtn');
   if(renewBtn) renewBtn.addEventListener('click', function(){
     openModal('Renew subscription', '<p>Placeholder — reactivate this subscription and resume billing (TODO).</p>');

@@ -13,8 +13,12 @@
    has no current plan. */
 var lsel = { product:'thingsboard', kind:'subscription', plan:null };
 
-var lChoices = $('#landingChoices'), lPlans = $('#landingPlans');
-function renderLanding(){ renderPlanPicker(lChoices, lPlans, lsel); }
+var lChoices = $('#landingChoices'), lPlans = $('#landingPlans'),
+    lExtra = $('#landingExtra'), lBase = $('#landingBase');
+/* The fourth argument is what makes this a SELLING surface rather than a step in a
+   flow: the PE card on a multi-card set, the sizing note on a single one. Home's
+   new-user screen passes its own node to the same renderer; the wizard passes none. */
+function renderLanding(){ renderPlanPicker(lChoices, lPlans, lsel, lExtra, lBase); }
 renderLanding();
 
 /* One delegated listener on the whole picker — the cards are re-rendered on every
@@ -39,3 +43,23 @@ $('#landingPicker').addEventListener('keydown', function(e){
     e.preventDefault(); e.target.click();
   }
 });
+
+/* ---------- arriving on an invite link ---------------------------------------
+   `landing.html?invite=<token>` is what "Copy invite link" hands out and what an
+   invitation email would carry. The token is resolved here, not trusted: a spent,
+   revoked or expired one resolves to nothing and the visitor simply gets the
+   landing page, which is the honest answer — this link does not work.
+
+   ⚠️ The session guard runs first and is right to: someone already signed in who
+   opens an invite link is bounced to Home. They are in; the invitation is for
+   whoever is not.
+   ⚠️ The invited person may never see this page's pricing at all — the sign-up
+   screen opens straight over it, because they were asked to join an account, not
+   to choose a plan. */
+(function(){
+  var tok = new URLSearchParams(location.search).get('invite');
+  if(!tok) return;
+  var rec = inviteByToken(tok);
+  if(!rec) return;
+  Auth.open('signup', { invite:rec });
+})();

@@ -17,15 +17,16 @@
   <div class="pagehead">
     <h1 class="lic-h1">Security</h1>
     <span class="sp"></span>
-    <button class="btn" id="secSaveBtn" disabled>Save</button>
+    <button class="btn" id="secSaveBtn">Save</button><span class="savednote" id="secSaveBtnNote" hidden></span>
   </div>
   <div class="setcard">
     <div class="setcard-h"><h2>Password</h2><span class="setcard-hint">Signs out your other sessions</span></div>
     <!-- one column: the three fields stack, each as wide as a single .field2 cell -->
     <div class="pwstack">
-      <div class="field"><label>Current password</label><input type="password"></div>
-      <div class="field"><label>New password</label><input type="password"></div>
-      <div class="field"><label>Confirm new password</label><input type="password"></div>
+      <p class="seclast" id="secLastChanged"></p>
+      <div class="field"><label for="sec-current">Current password</label><input id="sec-current" data-field="current" type="password"><div class="fielderr" data-secerr="current" hidden></div></div>
+      <div class="field"><label for="sec-next">New password</label><input id="sec-next" data-field="next" type="password"><div class="fielderr" data-secerr="next" hidden></div></div>
+      <div class="field"><label for="sec-confirm">Confirm new password</label><input id="sec-confirm" data-field="confirm" type="password"><div class="fielderr" data-secerr="confirm" hidden></div></div>
     </div>
   </div>
   </div><!-- /setcol -->

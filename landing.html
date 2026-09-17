@@ -19,10 +19,14 @@
       <!-- The page's own headline. The pricing section below is the whole page, so
            the heading names it rather than selling it: this is the portal's offer
            list, not a marketing site. -->
-      <div class="dwelcome">
+      <!-- ⚠️ ONE heading, not three. `Welcome` was the largest element on the page and
+           carried the least information, and `ThingsBoard Products Pricing` named the
+           section the reader was already looking at. The H1 now says what the page is
+           FOR, in the same style the section title used — see .lp-sect / --t-h1-*. -->
+      <div class="dwelcome lp-welcome">
         <div class="dw-txt">
-          <h1>Plans and pricing</h1>
-          <p>Choose a product and a way to pay. You'll create an account at checkout.</p>
+          <h1 class="lp-sect">Buy and manage ThingsBoard licenses</h1>
+          <p>Self-managed ThingsBoard and TBMQ. Choose a product and a way to pay &mdash; you&rsquo;ll need an account to buy a plan.</p>
         </div>
       </div>
 
@@ -32,7 +36,17 @@
            renderPlanPicker in wizard.js — this page is its second host, not a copy. -->
       <div class="planpicker" id="landingPicker">
         <div id="landingChoices"></div>
+        <!-- ⚠️ BETWEEN the tabs and the cards. It answers "what do I get whichever of
+             these I pick", which is a question the reader has already asked by the time
+             they are looking at prices — and it can only be answered once a product and
+             a mode are chosen, which is why it is not up by the H1. -->
+        <div id="landingBase"></div>
         <div class="plangrid" id="landingPlans"></div>
+        <!-- Under the grid: "What's included in Professional Edition" on a multi-card
+             set, the sizing note on a single-card one. Same node, same renderer as
+             the new-user screen on Home — a visitor must not learn what the edition
+             includes only AFTER signing up. -->
+        <div id="landingExtra"></div>
       </div>
 
     </div>

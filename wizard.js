@@ -76,158 +76,13 @@ function openManageAddons(lic){ NL.open({ mode:'addons', license:lic }); }
    with selections made asks the same unsaved-changes confirmation as the
    settings pages. */
 
-/* ============================================================================
-   The plan picker — ONE template, two hosts
-   ============================================================================
-   Product cards · Subscription/Perpetual tabs · plan cards with their Select
-   buttons. The wizard's step 1 is one host; the public landing page's pricing
-   section is the other. They are the same components reading the same data
-   (EC_PLANS), so an offer that changes changes in both places at once — the only
-   difference is what a Select means, which is why picking is reported back to the
-   host rather than acted on here.
-
-   Every function takes a plain selection object — { product, kind, plan, locked,
-   currentName } — instead of reading a controller's private state. That is what
-   made the second host possible: NL passes its own `st` straight in, because the
-   three field names are the ones it already used.
+/* The plan picker (product cards · billing tabs · plan cards · renderPlanPicker ·
+   planPickerClick) MOVED to components.js. It has three hosts now — this wizard,
+   the landing page and Home's new-user screen — plus the styleguide specimen, and
+   styleguide.html cannot load wizard.js: NL's own IIFE binds to #nlModal, which
+   that page does not have. Shared builders live in components.js; that is where a
+   thing used by four surfaces belongs. wizard.js still USES them: it loads after.
    ============================================================================ */
-/* LEVEL 1 — product: two wide CARDS, and still a switcher. Exactly one is
-   selected; the selected one is marked with a dark outline (`.nl-select.on`
-   gives border + inset ring), NOT a black fill — a filled card reads as a
-   pressed button and outshouts the plan cards below it, which are the actual
-   offer. Each card carries the product's one-line description, so the step
-   says what the two products are instead of assuming you know.
-   Glyphs stay monochrome: a hub and spokes for the platform, a broadcast arc
-   for the broker. */
-var PRODUCT_CHOICES = [
-  { v:'thingsboard', t:'ThingsBoard', d:'IoT platform — devices, dashboards, rule engine',
-    g:'<circle cx="12" cy="12" r="3"/><circle cx="12" cy="4" r="1.5"/><circle cx="12" cy="20" r="1.5"/>'
-      + '<circle cx="4" cy="12" r="1.5"/><circle cx="20" cy="12" r="1.5"/>'
-      + '<path d="M12 9V5.5M12 15v3.5M9 12H5.5M15 12h3.5"/>' },
-  { v:'tbmq', t:'TBMQ', d:'MQTT broker for reliable message streaming',
-    g:'<circle cx="7" cy="17" r="1.6"/><path d="M7 11.5A5.5 5.5 0 0 1 12.5 17"/>'
-      + '<path d="M7 6A11 11 0 0 1 18 17"/>' }
-];
-function nlProductCardsHTML(sel){
-  var active = sel.product, locked = !!sel.locked;
-  return '<div class="nl-prodrow">'
-    + '<div class="nl-prodcards" role="radiogroup" aria-label="Product">'
-    + PRODUCT_CHOICES.map(function(o){
-        var on = o.v === active;
-        /* a real button, not a div with role=button: it is one of two mutually
-           exclusive choices — see the radio note below for the contract. */
-        /* ⚠️ `role="radio"` + `aria-checked`, not `aria-pressed`. It is exactly-one-of-N,
-           and aria-pressed describes an independent toggle — the wrong contract for
-           a group where choosing one unchooses the other. The leading indicator is
-           drawn (`.nl-prodradio`), so what a sighted user sees and what a screen
-           reader is told finally say the same thing. */
-        return '<button type="button" role="radio" class="dblock nl-prodcard nl-select' + (on ? ' on' : '') + '"'
-          + ' data-nl-product="' + o.v + '" aria-checked="' + on + '"' + (locked ? ' disabled' : '') + '>'
-          + '<span class="nl-prodradio" aria-hidden="true"></span>'
-          + '<span class="nl-prodic"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true">' + o.g + '</svg></span>'
-          + '<span class="nl-prodtxt"><span class="nl-prodname">' + o.t + '</span>'
-          + '<span class="nl-proddesc">' + o.d + '</span></span></button>';
-      }).join('')
-    + '</div></div>';
-}
-
-/* LEVEL 2 — billing as TABS, left-aligned, standing where the heading used to.
-   The heading ("Subscription plans" / "Perpetual licenses") is gone: it said the
-   same thing the active tab says, and the switch + ⓘ pair made one decision look
-   like two controls (a toggle whose labels were also clickable-looking text).
-   Two tabs, the active one carrying the indicator, is what a two-way switch
-   between two sets of content actually is — and it reuses the `.tabs`/`.tab`
-   pattern the details page already has.
-   ⚠️ The descriptions moved to a SHORT LINE BENEATH the active tab, not into the
-   tab's ⓘ. Reason: on the one step whose entire job is this choice, the
-   difference between paying monthly and paying once has to be readable without a
-   gesture — and a tooltip is a hover affordance, which does not exist on touch
-   (the same reason the plan cards' CTA stopped being hover-revealed). The line
-   swaps with the tab, so only the active choice is explained. */
-var BILLING_CHOICES = [
-  { v:'subscription', t:'Subscription',
-    d:'Pay every month. Unlimited customers, dashboards, integrations, API calls, data points and messages, and you can change the plan any time.' },
-  { v:'perpetual', t:'Perpetual',
-    d:'Pay once, run it indefinitely. Includes 12 months of software updates, renewable.' }
-];
-function nlBillTabsHTML(sel){
-  var locked = !!sel.locked, perp = sel.kind === 'perpetual';
-  var active = perp ? BILLING_CHOICES[1] : BILLING_CHOICES[0];
-  return '<div class="nl-billrow">'
-    + '<div class="tabs nl-billtabs" role="tablist" aria-label="Billing">'
-    + BILLING_CHOICES.map(function(o){
-        var on = (o.v === 'perpetual') === perp;
-        return '<button type="button" class="tab nl-billtab' + (on ? ' on' : '') + '"'
-          + ' role="tab" aria-selected="' + on + '" data-nl-bill="' + o.v + '"'
-          + (locked ? ' disabled' : '') + '>' + o.t + '</button>';
-      }).join('')
-    + '</div>'
-    + '<div class="nl-billdesc">' + active.d + '</div>'
-    + '</div>';
-}
-function nlPlanCardHTML(c, set, sel){
-  var current = !!sel.currentName && c.name === sel.currentName;
-  var on = !current && c.name === sel.plan;
-  // Current plan = a strip sitting on the card's top edge (see .pc-strip)
-  var strip = current ? '<div class="pc-strip">Current plan</div>' : '';
-  var badge = !current && c.badge ? '<span class="pill">' + c.badge + '</span>' : '';
-  // primary on the popular plan, or on the only card when the pair leaves one
-  var primary = set.cards.length === 1 || c.badge === 'Popular';
-  var cta = current ? ''
-    : '<button class="btn' + (primary ? '' : ' sec') + ' pc-cta" data-nl-pick="' + c.name + '">Select</button>';
-  return '<div class="dblock plancard ' + (current ? 'nl-current' : 'nl-select') + (on ? ' on' : '')
-    + '" data-plan="' + c.name + '" role="button" tabindex="' + (current ? '-1' : '0') + '"'
-    + ' aria-pressed="' + on + '"' + (current ? ' aria-disabled="true"' : '') + '>'
-    + strip
-    + '<div class="pc-head"><h2>' + c.name + '</h2>' + badge + '</div>'
-    + '<div class="pc-price">' + c.price + ' <span class="pc-per">' + c.per + '</span></div>'
-    + (c.term ? '<div class="pc-term">' + c.term + '</div>' : '')
-    + '<div class="pc-feats">' + c.feats.map(function(f){ return '<div class="pc-feat">' + f + '</div>'; }).join('') + '</div>'
-    + (c.foot ? '<div class="pc-note">' + c.foot + '</div>' : '')
-    + cta
-    + '</div>';
-}
-
-/* One selection object shape, so a host does not have to know the spelling. */
-function planPickerKey(sel){
-  return (sel.product || 'thingsboard') + '|' + (sel.kind === 'perpetual' ? 'perpetual' : 'payg');
-}
-/* Renders both halves into the two nodes the host provides. `withcur` reserves the
-   24px lane the "Current plan" strip needs, and ONLY when a card actually is the
-   current one — a licence on a plan that is no longer offered matches nothing here,
-   and the class would then hold an empty gap open above every card. */
-function renderPlanPicker(choicesEl, gridEl, sel){
-  var set = EC_PLANS[planPickerKey(sel)];
-  choicesEl.innerHTML = nlProductCardsHTML(sel) + nlBillTabsHTML(sel);
-  var hasCur = !!sel.currentName && set.cards.some(function(c){ return c.name === sel.currentName; });
-  gridEl.className = 'plangrid' + (set.single ? ' one' : '') + (hasCur ? ' withcur' : '');
-  gridEl.innerHTML = set.cards.map(function(c){ return nlPlanCardHTML(c, set, sel); }).join('');
-}
-/* One reading of a click inside the picker, so the two hosts cannot disagree about
-   what its parts mean. It mutates `sel` and says what happened; what to DO about it
-   — re-render and stay, or advance a step, or open sign-up — belongs to the host.
-   ⚠️ The plan branch is scoped to `.plangrid`. Product cards carry `.nl-select`
-   too, so an unscoped match would read a product card as a plan. */
-function planPickerClick(e, sel){
-  var seg = e.target.closest('[data-nl-product]');
-  if(seg && !seg.disabled){
-    var wantP = seg.getAttribute('data-nl-product');
-    if(wantP === sel.product) return null;
-    sel.product = wantP; sel.plan = null; return 'changed';
-  }
-  var btab = e.target.closest('[data-nl-bill]');
-  if(btab && !btab.disabled){
-    var wantK = btab.getAttribute('data-nl-bill');
-    if(wantK === sel.kind) return null;
-    sel.kind = wantK; sel.plan = null; return 'changed';
-  }
-  var pick = e.target.closest('[data-nl-pick], .plangrid .nl-select');
-  if(pick){
-    sel.plan = pick.getAttribute('data-nl-pick') || pick.getAttribute('data-plan');
-    return 'picked';
-  }
-  return null;
-}
 
 var NL = (function(){
   var scr = $('#nlModal'), body = $('#nlBody');
@@ -361,6 +216,51 @@ var NL = (function(){
     }
     return out;
   }
+  /* ---- does this change take anything away? -------------------------------------
+     Entitlement, not money: `total() < oldMonthly()` would also be true for a change
+     that swaps an expensive add-on for more devices, which takes nothing away. What
+     matters is whether any allowance the platform enforces goes DOWN — that is the
+     thing that breaks a running instance if applied today. Plan tier counts too: a
+     lower plan lowers the included amounts under everything above it. */
+  var TIER_ORDER = ['maker','prototype','pilot','startup','business'];
+  function shrinks(){
+    var b = st.baseCust;
+    if(!b) return false;
+    // a lower plan is a shrink by itself, whatever the extras do
+    if(isChange()){
+      var from = TIER_ORDER.indexOf(seededTier), to = TIER_ORDER.indexOf(tier());
+      if(from >= 0 && to >= 0 && to < from) return true;
+    }
+    if(cust.devices < b.devices || cust.prod < b.prod || cust.dev < b.dev || cust.ai < b.ai) return true;
+    if(b.edge && !cust.edge) return true;
+    if(b.trendz && !cust.trendz) return true;
+    if(b.offline && !cust.offline) return true;
+    return false;
+  }
+  /* what the licence will look like once it takes effect — stored on the schedule so
+     applying it later needs no recomputation */
+  function pendingApply(){
+    var t = tier(), e = extras();
+    /* ⚠️ Start from what the licence already has. `extras()` only reports the fields
+       this flow actually shows — a tier with no devices stepper reports 0 devices —
+       so building the target from it alone would silently delete purchased capacity
+       the person never touched. Caught by reading a scheduled record that had lost
+       `devices:'200'`. */
+    var x = {};
+    var had = (st.changeLic && st.changeLic.extras) || {};
+    Object.keys(had).forEach(function(k){ x[k] = had[k]; });
+    if(hasDevices()){ if(e.devices > 0) x.devices = String(e.devices); else delete x.devices; }
+    if(e.prod > 0) x.prod = String(e.prod); else delete x.prod;
+    if(hasDev()){ if(e.dev > 0) x.dev = String(e.dev); else delete x.dev; }
+    if(hasAi()){ if(e.ai > 0) x.ai = e.ai + 'M'; else delete x.ai; }
+    return { tier:t, name:NAME[t] || st.plan, price:money(total()) + ' / mo',
+             extras:Object.keys(x).length ? x : null,
+             edge:hasAddons() ? cust.edge : undefined,
+             trendz:hasAddons() ? cust.trendz : undefined,
+             offline:hasOffline() ? cust.offline : undefined };
+  }
+  function effectiveDate(){ return (st.changeLic && st.changeLic.event) || 'Sep 19 2026'; }
+
   function changeSummary(){
     var r = changeRows();
     return r.length ? r.map(function(x){ return x.t; }).join(' \u00b7 ') + '.' : 'License updated.';
@@ -456,9 +356,10 @@ var NL = (function(){
     st.locked = isChange();
     st.currentName = isChange() ? currentCardName() : null;
     renderPlanPicker($('#nlChoices'), $('#nlPlanCards'), st);
-    // No "What's included in Professional Edition" block here any more: the
-    // Subscription card above already says what every plan includes. The block
-    // still lives on the new-user screen (see page-home.js) and on the landing page.
+    // No `extraEl` here, so no "What's included in Professional Edition" block and
+    // no single-set note: the Subscription tab description above already says what
+    // every plan includes, and the step's job is the choice itself. Both selling
+    // surfaces DO pass one — the landing page and Home's new-user screen.
   }
   /* ---- step 2: customize -----------------------------------------------------
      Two variants, switched from the prototype settings panel:
@@ -684,8 +585,17 @@ var NL = (function(){
     var dueLabel = !isMod() ? 'Due today'
       : 'Due today <span class="muted">— prorated change for the current cycle'
         + (pr ? ' (' + pr.left + ' of ' + pr.cycle + ' days, to ' + pr.end + ')' : '') + '</span>';
+    /* ⚠️ `Math.max(0, …)` is still here and is now CORRECT rather than a silent clamp.
+       A shrinking change is not charged and not credited, because nothing changes
+       today — it takes effect at the end of the period the person already paid for.
+       What used to be wrong was showing "$0.00" with no explanation of why. */
+    var willSchedule = isMod() && shrinks();
     var delta = Math.max(0, total() - oldMonthly());
     var dueVal = isMod() ? money(delta * (pr ? pr.fraction : 1)) : money(total());
+    if(willSchedule){
+      dueLabel = 'Due today <span class="muted">— nothing is charged now</span>';
+      dueVal = money(0);
+    }
     // with a card on file the review commits; without one it leads to the billing step
     var cta = isLastStep() ? confirmLabel() : 'Continue to billing';
     var payline = billingSaved()
@@ -699,6 +609,17 @@ var NL = (function(){
       +   planSummaryHTML(t, TIER_SPECS[t] || { ent:[] })
       /* the plan block and the terms card are one joined unit: no gap between
          them and no radius where they meet, so a single line divides them */
+      /* The agreement itself: what shrinks, and the date it happens. It sits ABOVE the
+         breakdown because it changes how every number under it should be read — the
+         "New monthly" line is not what you pay next week, it is what you pay from the
+         date named here. */
+      +   (willSchedule
+          ? '<div class="nl-sched"><b>This change takes effect ' + fmtDate(effectiveDate()) + '.</b> '
+            + 'It lowers what this license includes, and the current allowances stay until then — '
+            + 'nothing is removed from a period you have already paid for. '
+            + 'From ' + fmtDate(effectiveDate()) + ' it is billed at ' + money(total()) + ' / mo.'
+            + '<div class="nl-schedwhat">' + esc(changeSummary()) + '</div></div>'
+          : '')
       +   '<div class="nl-joined">'
       +     '<div class="am-order">'
       /* ⚠️ This row no longer names the product: the card above does. It is the
@@ -735,8 +656,14 @@ var NL = (function(){
   var bill = { company:'', email:'', phone:'', country:'United States', city:'', state:'', zip:'',
                addr:'', addr2:'', cardName:'', cardCountry:'United States', num:'', exp:'', cvc:'' };
   var COUNTRIES = ['United States', 'Ukraine', 'Germany', 'United Kingdom'];
+  /* ⚠️ A leading EMPTY option, and it is the point. Without it the select showed
+     "United States" while `bill.country` was still '' — the field looked answered and
+     the model said it was not, so `billValid()`'s country rule could never fire and
+     the reader had no way to learn that the blank they never saw was the blocker.
+     An unmade choice now looks unmade, on this step and in the card modal alike. */
   function countryOptions(sel){
-    return COUNTRIES.map(function(c){ return '<option' + (c === sel ? ' selected' : '') + '>' + c + '</option>'; }).join('');
+    return '<option value=""' + (sel ? '' : ' selected') + '>Select a country</option>'
+      + COUNTRIES.map(function(c){ return '<option' + (c === sel ? ' selected' : '') + '>' + c + '</option>'; }).join('');
   }
   function fld(name, label, req, opts){
     opts = opts || {};
@@ -748,18 +675,117 @@ var NL = (function(){
         : '<input id="nlb-' + name + '" data-nlb="' + name + '" type="' + (opts.type || 'text') + '" value="' + val + '"'
           + (opts.ph ? ' placeholder="' + opts.ph + '"' : '') + '>')
       + (opts.help ? '<div class="help">' + opts.help + '</div>' : '')
+      + '<div class="fielderr" data-nlb-err="' + name + '" hidden></div>'
       + '</div>';
   }
-  function billValid(){
-    var mail = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
-    var digits = function(s){ return String(s || '').replace(/\D/g, ''); };
-    return !!bill.company.trim() && mail.test(bill.email.trim())
-      && !!bill.country && !!bill.city.trim() && !!bill.zip.trim() && !!bill.addr.trim()
-      && !!bill.cardName.trim() && !!bill.cardCountry
-      && digits(bill.num).length >= 12 && digits(bill.exp).length >= 4 && digits(bill.cvc).length >= 3;
+  /* ---- billing validation ------------------------------------------------------
+     One rule per field, each returning the REASON it failed or null. The old
+     `billValid()` was a single boolean feeding `nlPayNow.disabled`: eleven required
+     fields collapsed into one dead button that never said which of them it meant.
+
+     The contract now, and it is the same on the standalone card modal: the primary
+     is ALWAYS enabled. A disabled control cannot explain itself — it cannot even be
+     focused — so the button accepts the click and answers it. Fields also answer for
+     themselves on blur, so the reader usually never reaches a rejected submit.
+
+     ⚠️ Deliberately loose, because this is a wireframe: no Luhn, no BIN check, no
+     real address lookup. A card number is "at least 12 digits" and a demo card of
+     4242… passes. The one rule tightened is the expiry MONTH: the old test was
+     "four digits", which accepted 99/99 — that is not leniency, it is a field that
+     cannot be filled wrongly, which is a different kind of broken. */
+  function digitsOf(s){ return String(s || '').replace(/\D/g, ''); }
+  var BILL_RULES = {
+    company:  function(v){ return v.trim() ? null : 'Enter the company name that should appear on the invoice.'; },
+    email:    function(v){
+      v = v.trim();
+      if(!v) return 'Enter a billing email address.';
+      return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v) ? null
+        : 'This does not look like an email address — check for a missing @ or domain.';
+    },
+    country:  function(v){ return v ? null : 'Choose the billing country.'; },
+    city:     function(v){ return v.trim() ? null : 'Enter the city.'; },
+    zip:      function(v){ return v.trim() ? null : 'Enter the ZIP or postal code.'; },
+    addr:     function(v){ return v.trim() ? null : 'Enter the street address.'; },
+    cardName: function(v){ return v.trim() ? null : 'Enter the name printed on the card.'; },
+    cardCountry: function(v){ return v ? null : 'Choose the country the card was issued in.'; },
+    num:      function(v){
+      var d = digitsOf(v);
+      if(!d) return 'Enter the card number.';
+      return d.length >= 12 ? null
+        : 'A card number is at least 12 digits — this one has ' + d.length + '.';
+    },
+    exp:      function(v){
+      var d = digitsOf(v);
+      if(!d) return 'Enter the expiry date.';
+      if(d.length < 4) return 'Use MM / YY — for example 12 / 28.';
+      var mm = parseInt(d.slice(0, 2), 10);
+      if(!(mm >= 1 && mm <= 12)) return 'There is no month ' + d.slice(0, 2) + ' — the first two digits are the month.';
+      return null;
+    },
+    cvc:      function(v){
+      var d = digitsOf(v);
+      if(!d) return 'Enter the security code.';
+      return d.length >= 3 ? null : 'The security code is the 3 or 4 digits on the card.';
+    }
+  };
+  /* phone, state and addr2 have no rule on purpose: they are optional, and a rule
+     for an optional field is a rule that can only ever be silent. */
+  function billError(name){
+    var rule = BILL_RULES[name];
+    return rule ? rule(bill[name] == null ? '' : String(bill[name])) : null;
   }
+  function billErrors(){
+    return Object.keys(BILL_RULES).filter(function(n){ return !!billError(n); });
+  }
+  function billValid(){ return billErrors().length === 0; }
+
+  /* Show or clear ONE field's message. The card number, expiry and CVC share a
+     single `.field` (they sit inside one `.paystripe`), so their messages live in
+     their own slots under it and the box is marked as a whole. */
+  function paintBillField(name, msg){
+    var slot = $('#nlStep4 [data-nlb-err="' + name + '"]');
+    if(slot){ slot.textContent = msg || ''; slot.hidden = !msg; }
+    var input = $('#nlStep4 [data-nlb="' + name + '"]');
+    var field = input && input.closest('.field');
+    if(!field) return;
+    /* the three card subfields share a field: it wears the error state while ANY of
+       them is wrong, so clearing one must not clear the box for the other two */
+    if(name === 'num' || name === 'exp' || name === 'cvc'){
+      var anyBad = ['num', 'exp', 'cvc'].some(function(k){
+        var sl = $('#nlStep4 [data-nlb-err="' + k + '"]');
+        return sl && !sl.hidden;
+      });
+      field.classList.toggle('err', anyBad);
+    } else {
+      field.classList.toggle('err', !!msg);
+    }
+  }
+  function clearBillErrors(){
+    $$('#nlStep4 [data-nlb-err]').forEach(function(sl){ sl.hidden = true; sl.textContent = ''; });
+    $$('#nlStep4 .field.err').forEach(function(f){ f.classList.remove('err'); });
+    var sum = $('#nlBillFormErr'); if(sum){ sum.hidden = true; sum.textContent = ''; }
+  }
+  /* Called by the primary. Paints every failure at once — a form that reveals its
+     problems one at a time makes the reader submit once per mistake — and puts the
+     cursor in the first of them, so the fix starts where the reading stopped. */
+  function showAllBillErrors(){
+    var bad = billErrors();
+    bad.forEach(function(n){ paintBillField(n, billError(n)); });
+    var sum = $('#nlBillFormErr');
+    if(sum){
+      sum.textContent = bad.length === 1
+        ? 'One field needs attention before this order can be placed.'
+        : bad.length + ' fields need attention before this order can be placed.';
+      sum.hidden = false;
+    }
+    var first = bad.length && $('#nlStep4 [data-nlb="' + bad[0] + '"]');
+    if(first){ first.focus(); if(first.scrollIntoView) first.scrollIntoView({ block:'center' }); }
+    return bad.length === 0;
+  }
+  /* ⚠️ No longer gates the button — the button is always live. Kept as the hook the
+     step calls after a re-render so an error already on screen is not left stale. */
   function syncPayBtn(){
-    var b = $('#nlPayNow'); if(b) b.disabled = !billValid();
+    var b = $('#nlPayNow'); if(b) b.disabled = false;
   }
   function renderStep4(){
     var t = tier();
@@ -799,7 +825,13 @@ var NL = (function(){
       +         '<input class="ps-num" id="nlb-num" data-nlb="num" type="text" inputmode="numeric" autocomplete="cc-number" placeholder="Card number" aria-label="Card number" value="' + bill.num + '">'
       +         '<input class="ps-exp" data-nlb="exp" type="text" inputmode="numeric" autocomplete="cc-exp" placeholder="MM / YY" aria-label="Expiry date" maxlength="7" value="' + bill.exp + '">'
       +         '<input class="ps-cvc" data-nlb="cvc" type="text" inputmode="numeric" autocomplete="cc-csc" placeholder="CVC" aria-label="Security code" maxlength="4" value="' + bill.cvc + '">'
-      +       '</div></div>'
+      +       '</div>'
+      /* one slot per card subfield: they share a .field, so they cannot share a slot
+         without the reader having to guess which of the three is meant */
+      +       '<div class="fielderr" data-nlb-err="num" hidden></div>'
+      +       '<div class="fielderr" data-nlb-err="exp" hidden></div>'
+      +       '<div class="fielderr" data-nlb-err="cvc" hidden></div>'
+      +       '</div>'
       +     '<div class="field2">'
       +       fld('cardName', 'Cardholder name', true)
       +       fld('cardCountry', 'Country', true, { select:true })
@@ -815,7 +847,10 @@ var NL = (function(){
       +     '<div class="am-sumrow am-total-row"><span>Due today</span><span>' + money(total()) + '</span></div>'
       +   '</div>'
       +   '<div class="nl-terms nl-terms-tight">' + termsLine() + '</div>'
-      +   '<button class="btn fs-nextbtn" id="nlPayNow" disabled>' + confirmLabel() + '</button>'
+      /* the summary sits WITH the button it belongs to, not at the top of a form the
+         reader has already scrolled past */
+      +   '<div class="formerr" id="nlBillFormErr" role="alert" hidden></div>'
+      +   '<button class="btn fs-nextbtn" id="nlPayNow">' + confirmLabel() + '</button>'
       + '</div>'
       + '</div>';
     syncPayBtn();
@@ -893,6 +928,18 @@ var NL = (function(){
      licence key; Done lands on Licenses where the new row is visible ---- */
   function commitPurchase(){
     if(isMod()){ commitChange(); return; }
+    /* ⚠️ The card entered on the billing step is SAVED. It was not, and the result was
+       a new account that had just paid for a licence and whose Billing page still said
+       "No payment method yet" — the purchase and the page disagreed about a card the
+       person had typed two screens earlier. Caught walking the new-user journey. */
+    if(bill.num && !billingSaved()){
+      storePaymentMethod({ num:bill.num, exp:bill.exp, name:bill.cardName, country:bill.cardCountry });
+    }
+    if(bill.addr && !Store.get('billingAddress')){
+      /* the address too: it is what the invoice for this very purchase prints */
+      Store.set('billingAddress', { email:bill.email, country:bill.country, state:bill.state,
+                                    city:bill.city, zip:bill.zip, addr:bill.addr, addr2:bill.addr2 });
+    }
     var t = tier(), e = extras(), tot = total();
     var seq = storeNextSeq();          // persisted, so ids stay unique across reloads
     var lic = { id:'N' + seq, tier:t,
@@ -923,6 +970,21 @@ var NL = (function(){
   }
   function commitChange(){
     var lic = st.changeLic, t = tier(), e = extras();
+    /* ⚠️ A shrinking change is RECORDED, not applied: the licence keeps everything it
+       has until the end of the period it was paid for. See scheduleChange() and the
+       rule above shrinks(). Growth still applies on the spot, prorated. */
+    if(shrinks()){
+      scheduleChange(lic, { kind:isAddons() ? 'addons' : 'plan',
+                            summary:changeSummary(), effective:effectiveDate(),
+                            apply:pendingApply() });
+      st.dirty = false;
+      scr.hidden = true;
+      Store.set('justChanged', { id:lic.id,
+        text:'Scheduled for ' + fmtDate(effectiveDate()) + ' · ' + changeSummary() });
+      if(window.LicenseDetails && LicenseDetails.isOpen()){ LicenseDetails.reopen(lic); return; }
+      openLicenseDetails(lic, null, { refreshHost:true });
+      return;
+    }
     // add-ons keeps the plan: only the entitlements and the price move
     var summary = isAddons() ? changeSummary() : null;
     lic.tier = t;
@@ -1070,7 +1132,11 @@ var NL = (function(){
       return;
     }
     var payNow = e.target.closest('#nlPayNow');
-    if(payNow){ if(billValid()) startPurchase(payNow); return; }
+    /* ⚠️ The click is always accepted. It used to be gated by `disabled`, which meant
+       a rejected order produced nothing at all — no message, no focus, no reason.
+       Now the submit answers: either it starts, or it paints every failure and puts
+       the cursor in the first one. */
+    if(payNow){ if(showAllBillErrors()) startPurchase(payNow); return; }
     var sb = e.target.closest('#nlStep2 .stepper button');
     if(sb){
       var f = sb.closest('.stepper').getAttribute('data-nl-field');
@@ -1084,7 +1150,32 @@ var NL = (function(){
     var cb = e.target.closest('input[data-nl-addon]');
     if(cb){ cust[cb.getAttribute('data-nl-addon')] = cb.checked; st.dirty = true; renderStep2(); syncPinnedSummary(); return; }
     var selField = e.target.closest('[data-nlb]');
-    if(selField){ bill[selField.getAttribute('data-nlb')] = selField.value; st.dirty = true; syncPayBtn(); }
+    if(selField){
+      var sn = selField.getAttribute('data-nlb');
+      bill[sn] = selField.value; st.dirty = true;
+      // a select answers the moment it changes: there is nothing half-typed about it
+      if(BILL_RULES[sn]) paintBillField(sn, billError(sn));
+      syncPayBtn();
+    }
+  });
+
+  /* Validate on BLUR, not on every keystroke: telling someone their email is invalid
+     while they are still typing the @ is correcting a sentence mid-word. Typing again
+     clears the message — it was an answer to a value that no longer exists. */
+  body.addEventListener('focusout', function(e){
+    var f = e.target.closest('#nlStep4 [data-nlb]');
+    if(!f) return;
+    var n = f.getAttribute('data-nlb');
+    if(BILL_RULES[n]) paintBillField(n, billError(n));
+  });
+  body.addEventListener('input', function(e){
+    var f = e.target.closest('#nlStep4 [data-nlb]');
+    if(!f) return;
+    var n = f.getAttribute('data-nlb');
+    var slot = $('#nlStep4 [data-nlb-err="' + n + '"]');
+    if(slot && !slot.hidden) paintBillField(n, null);
+    var sum = $('#nlBillFormErr');
+    if(sum && !sum.hidden && billErrors().length === 0){ sum.hidden = true; sum.textContent = ''; }
   });
   // billing inputs keep their values in `bill`, so stepping back and forward on the
   // billing step never loses what was typed; each keystroke only re-gates the commit
@@ -1122,7 +1213,36 @@ var NL = (function(){
   $('#nlClose').addEventListener('click', function(){ attemptClose(); });
   document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && !scr.hidden && $('#overlay').hidden) attemptClose(); });
 
+  /* Demo shortcut for the ⚙ panel. Writes into `bill` — the same object the fields
+     read on render — and repaints the step, so the values land through the normal
+     path rather than being poked into the DOM. Clears any error already on screen,
+     because every one of them has just been answered. */
+  function fillDemoBilling(){
+    var panel = $('#nlStep4');
+    // "is the billing step on screen" — the same test the settings panel used to
+    // decide whether to offer this at all, so the two cannot disagree
+    if(scr.hidden || !panel || panel.hidden) return;
+    bill.company = 'ThingsBoard, Inc.';
+    bill.email   = 'billing@thingsboard.io';
+    bill.phone   = '+14155550123';
+    bill.country = 'United States';
+    bill.city    = 'New York';
+    bill.state   = 'New York';
+    bill.zip     = '10001';
+    bill.addr    = '500 7th Avenue';
+    bill.addr2   = '';
+    bill.cardName    = 'Mariia Panchuk';
+    bill.cardCountry = 'United States';
+    bill.num = '4242 4242 4242 4242';
+    bill.exp = '12 / 28';
+    bill.cvc = '123';
+    st.dirty = true;
+    renderStep4();
+    clearBillErrors();
+  }
+
   return { open: open, openChange: function(lic){ open({ mode:'change', license: lic }); },
+           fillDemoBilling: fillDemoBilling,
            // the settings panel switches the Customize variant while it is open
            refreshCustomize: function(){ if(!scr.hidden && st.step === 2){ renderStep2(); syncPinnedSummary(); } },
            // the billing-data setting changes the step count under an open wizard

@@ -67,3 +67,13 @@ if(licCanceledChip) licCanceledChip.addEventListener('click', function(){ setSho
 // + New license → the wizard; product and billing type are chosen on its step 1
 var licNewBtn = $('#licNewBtn');
 if(licNewBtn) licNewBtn.addEventListener('click', function(){ NL.open({}); });
+
+/* ---------- search: plan name, product, type and label ---------------------- */
+wireSearch('#licensesView .searchbox input', {
+  items: function(){ return $$('#licensesView tbody tr.lic-row'); },
+  // the row already carries every one of those as text, so the row IS the query
+  text:  function(tr){ return stripText(tr.innerHTML); },
+  host:  function(){ return $('#licensesView tbody'); },
+  empty: function(q){ return '<tr><td colspan="6" class="noresults-cell">'
+                            + noResultsHTML(q) + '</td></tr>'; }
+});

@@ -12,39 +12,86 @@
 <div id="shellMain">
 <div class="licview" id="usersView">
   <h1 class="lic-h1">Users</h1>
-  <div class="listcard">
-  <div class="insttoolbar">
-    <div class="searchbox"><svg class="icon searchglyph" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input type="text" placeholder="Search users" aria-label="Search users"></div>
-    <span class="spacer"></span>
-    <button class="iconbtn ib" data-refresh aria-label="Refresh" title="Refresh"><svg class="icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg></button>
-    <button class="btn" id="addUserBtn">+ Add user</button>
-  </div>
+
+  <!-- ============================================================================
+       BACKEND DEPENDENCIES assumed by the invite controls (mocked in the store):
+       invitation records carrying a single-use token, an expiry and a revoked
+       flag; server-side burning of the token on redemption; and mail delivery for
+       the email path. See mintInvite / inviteByToken / inviteURL in shared.js.
+       ============================================================================ -->
+
+  <!-- SOLO STATE — you are the only person with access. No table, no toolbar, no
+       pager: there is nothing to search, sort or page through, and a one-row table
+       of yourself is a control panel for a decision nobody is making. What replaces
+       it is the thing that changes the state. -->
+  <div class="solo" id="usersSolo" hidden>
+    <!-- ⚠️ The SAME container in both states, so the two read as one component that
+         gains a table rather than two different screens. `.setcard` is the existing
+         card pattern from the styleguide, not a new one. -->
+    <div class="setcard invitecard" id="soloInviteCard">
+      <p class="solo-line">You&rsquo;re the only person with access.</p>
+      <div class="inviterow" id="soloInvite">
+        <input type="email" class="invite-in" id="soloEmail" autocomplete="off"
+               placeholder="name@company.com, another@company.com" aria-label="Emails to invite">
+        <button class="btn invite-go" data-invite>Invite</button>
+        <button class="link invite-link" data-invitelink>Copy invite link</button>
+      </div>
+      <!-- ⚠️ The message slot is ALWAYS in the layout, empty or not: it is toggled with
+           visibility, not `hidden`, so an error cannot change the block's height. It
+           carries problems only — confirmations go to the snackbar and leave. -->
+      <p class="invite-msg" id="soloMsg"></p>
+      <!-- always visible, in both states: what inviting someone costs is a standing
+           fact about this control, not a receipt for having used it -->
+      <p class="invite-note">Anyone you invite gets full access to your licenses, invoices and payment method.</p>
+    </div>
   </div>
 
-  <div class="listcard">
-  <table>
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Email</th>
-        <th class="sortable" aria-sort="descending" tabindex="0">Added <span class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></span></th>
-        <th aria-label="User actions"></th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr><td>Dev User</td><td>dev@thingsboard.io</td><td>Aug 02 2026</td><td class="cellact"><span class="rowactions"><button class="link" data-stub="Login as Dev User">Login as →</button><button class="link" data-stub="Delete Dev User">Delete</button></span></td></tr>
-      <tr><td>A. Admin</td><td>a.admin@thingsboard.io</td><td>Jul 20 2026</td><td class="cellact"><span class="rowactions"><button class="link" data-stub="Login as A. Admin">Login as →</button><button class="link" data-stub="Delete A. Admin">Delete</button></span></td></tr>
-      <tr><td>Mariia Panchuk</td><td>mpanchuk@thingsboard.io</td><td>Jul 17 2026</td><td class="cellact"><span class="rowactions"><button class="link" data-stub="Login as Mariia Panchuk">Login as →</button><button class="link" data-stub="Delete Mariia Panchuk">Delete</button></span></td></tr>
-    </tbody>
-  </table>
-  <div class="pager air">
-    <span class="spacer"></span>
-    <span>Items per page<select aria-label="Items per page"><option>10</option><option>20</option><option>50</option><option>100</option></select></span>
-    <span class="range">1–3 of 3</span>
-    <span class="pagebtns">
-      <button disabled aria-label="First page">«</button><button disabled aria-label="Previous page">‹</button><button disabled aria-label="Next page">›</button><button disabled aria-label="Last page">»</button>
-    </span>
-  </div>
+  <!-- TABLE STATE — two or more people. -->
+  <div id="usersTable" hidden>
+    <!-- Inviting stays on the page and stays visible: it is how this list grows, and
+         a list you can only add to from behind a modal hides its own next step. Same
+         container as the solo state, in its compact form — no heading line, because
+         the table below already says who has access. -->
+    <div class="setcard invitecard compact" id="tblInviteCard">
+      <div class="inviterow" id="tblInvite">
+        <input type="email" class="invite-in" id="tblEmail" autocomplete="off"
+               placeholder="name@company.com, another@company.com" aria-label="Emails to invite">
+        <button class="btn invite-go" data-invite>Invite</button>
+        <button class="link invite-link" data-invitelink>Copy invite link</button>
+      </div>
+      <p class="invite-msg" id="tblMsg"></p>
+      <p class="invite-note">Anyone you invite gets full access to your licenses, invoices and payment method.</p>
+    </div>
+
+    <div class="listcard">
+    <div class="insttoolbar">
+      <div class="searchbox"><svg class="icon searchglyph" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input type="text" placeholder="Search users" aria-label="Search users"></div>
+      <span class="spacer"></span>
+      <button class="iconbtn ib" data-refresh aria-label="Refresh" title="Refresh"><svg class="icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg></button>
+    </div>
+    </div>
+
+    <div class="listcard">
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th class="sortable" aria-sort="descending" tabindex="0">Added <span class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></span></th>
+          <th aria-label="User actions"></th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <div class="pager air">
+      <span class="spacer"></span>
+      <span>Items per page<select aria-label="Items per page"><option>10</option><option>20</option><option>50</option><option>100</option></select></span>
+      <span class="range"></span>
+      <span class="pagebtns">
+        <button disabled aria-label="First page">&laquo;</button><button disabled aria-label="Previous page">&lsaquo;</button><button disabled aria-label="Next page">&rsaquo;</button><button disabled aria-label="Last page">&raquo;</button>
+      </span>
+    </div>
+    </div>
   </div>
 </div>
 </div><!-- /#shellMain -->

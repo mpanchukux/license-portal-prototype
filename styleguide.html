@@ -23,7 +23,7 @@
       <a href="#tokens">Tokens</a><a href="#buttons">Buttons</a><a href="#inputs">Inputs</a>
       <a href="#chips">Status chips</a><a href="#table">Table</a><a href="#cards">Cards</a>
       <a href="#modals">Modals</a><a href="#stepper">Wizard stepper</a><a href="#banners">Banners</a>
-      <a href="#feed">Feed entry</a><a href="#tooltip">Tooltips</a><a href="#empty">Empty states</a>
+      <a href="#feed">Feed entry</a><a href="#tooltip">Tooltips</a><a href="#empty">Empty states</a><a href="#solo">Solo state</a><a href="#empty">No results</a><a href="#snack">Snackbar</a>
       <a href="index.html">← back to the portal</a>
     </nav>
   </div>
@@ -43,6 +43,7 @@
     <div class="sg-item">
       <h3>Type scale</h3>
       <p class="sg-note">Nine levels across two tiers plus the key, a 14px floor, and weight that grows with size (700 only on display and h1). The compact tier is what &le;600px substitutes for h1, h2 and body &mdash; the phone is not the desktop scale shrunk, it is its own three sizes.</p>
+      <p class="sg-note"><b>&#9888; <span class="sg-cls">display</span> currently has no user.</b> It was written for numbers that carry a page, briefly styled the landing page&rsquo;s <span class="sg-cls">Welcome</span>, and lost that when the landing head was reduced to one heading &mdash; the H1 there takes <span class="sg-cls">h1</span> like every other page. The level is kept and documented rather than deleted, because a scale with a hole in it is harder to read than one with an unused top step; but nothing in the product renders it today.</p>
       <div class="tablescroll"><table class="sg-type"><thead>
         <tr><th>Level</th><th>Token</th><th>Size / line / tracking / weight</th><th>Specimen</th></tr>
       </thead><tbody id="sgType"></tbody></table></div>
@@ -140,7 +141,32 @@
         </div>
       </div>
     </div>
-  </section>
+  
+    <div class="sg-item">
+      <h3>Error state <span class="sg-cls">.field.err &gt; .fielderr</span></h3>
+      <p class="sg-note">Monochrome, so the fault is not carried by hue: the border goes to ink and
+        thickens, and the reason appears under the field in the slot <span class="sg-cls">.help</span>
+        would have used &mdash; <span class="sg-cls">.help</span> is hidden while an error shows, because
+        two lines under one field, one of them now wrong, is worse than either alone.
+        <b>The message says what is wrong, not that something is.</b> &ldquo;Use MM / YY&rdquo; can be
+        acted on; &ldquo;invalid&rdquo; cannot.</p>
+      <p class="sg-note">The rule that goes with it: <b>a primary action is never left disabled with
+        nothing said.</b> Either it is enabled and answers on submit &mdash; painting every failure at
+        once and moving focus to the first &mdash; or it is disabled with the reason visible beside it.
+        The purchase wizard&rsquo;s billing step and the update-card modal both take the first form, and
+        a <span class="sg-cls">.formerr</span> summary sits with the button naming how many fields are
+        waiting. Fields answer on blur, and typing again withdraws the answer.</p>
+      <div class="sg-static">
+        <div class="setcard" style="margin-top:0">
+          <div class="field err"><label for="sgErr1">Card number <span class="req" aria-hidden="true">*</span></label><input id="sgErr1" type="text" value="4242"><div class="fielderr">A card number is at least 12 digits &mdash; this one has 4.</div></div>
+          <div class="field err"><label for="sgErr2">Billing email <span class="req" aria-hidden="true">*</span></label><input id="sgErr2" type="text" value="mariia"><div class="help">This help line is suppressed while the error shows.</div><div class="fielderr">This does not look like an email address &mdash; check for a missing @ or domain.</div></div>
+          <div class="formerr">2 fields need attention before this order can be placed.</div>
+          <button class="btn" type="button">Place order</button>
+        </div>
+      </div>
+    </div>
+
+</section>
 
   <!-- ============================ CHIPS ============================ -->
   <section class="sg-sec" id="chips">
@@ -349,6 +375,138 @@
           <span class="sg-cls">.emptybox (in a feed)</span>
         </div>
       </div>
+    </div>
+
+    <div class="sg-item" id="snack">
+      <h3>Snackbar <span class="sg-cls">.snack</span></h3>
+      <p class="sg-note">A transient message at the bottom of the viewport. It reports that something
+        <b>happened</b>, then leaves on its own (4.2s) &mdash; with a dismiss for the impatient. It never
+        covers the thing it is reporting about: one line tall, in the margin below the content, and on
+        the phone it sits above both the bottom navigation bar and the prototype&rsquo;s gear button.
+        <span class="sg-cls">role="status"</span>, not <span class="sg-cls">alert</span> &mdash; an alert
+        interrupts, and a confirmation of something you just did has no business taking the cursor.</p>
+      <p class="sg-note"><b>Confirmations leave; problems stay.</b> The snackbar carries completed
+        actions &mdash; <i>Invitations sent to 3 people</i>, <i>Invite link copied</i>. It never carries a
+        field error: <i>Already has access</i>, an invalid address, an empty required field all stay
+        inline beside the input, because the person reads them <i>while</i> fixing the thing they
+        describe, and a message that removes itself on a timer is the worst place for an instruction
+        someone has to act on.</p>
+      <div class="sg-static" style="min-height:96px">
+        <div class="snack on" style="position:static;transform:none;margin:0 auto;max-width:420px">
+          <span class="snack-t">Invitations sent to 3 people</span>
+          <button type="button" class="snack-x" aria-label="Dismiss">&#10005;</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="sg-item">
+      <h3>Snackbar or saved note? <span class="sg-cls">.snack</span> vs <span class="sg-cls">.savednote</span></h3>
+      <p class="sg-note">They coexist, and they are not two ways of doing one thing. The split is what
+        the message <i>is</i>, not how loud it should be.</p>
+      <div class="tablescroll"><table class="sg-type"><thead>
+        <tr><th>&nbsp;</th><th>Saved note</th><th>Snackbar</th></tr>
+      </thead><tbody>
+        <tr><td>Says</td><td>a persistent <b>fact</b> about a form &mdash; these values are stored, as of then</td><td>a transient <b>event</b> on a list &mdash; this just happened</td></tr>
+        <tr><td>Lives</td><td>beside the button that caused it, in the layout</td><td>outside the layout, at the bottom of the viewport</td></tr>
+        <tr><td>Leaves</td><td>when the next edit contradicts it</td><td>on a timer</td></tr>
+        <tr><td>Used on</td><td>Account, Billing, Security &mdash; pages with a page-level Save</td><td>Users &mdash; pages with a list and no page-level Save</td></tr>
+      </tbody></table></div>
+      <p class="sg-note">They never appear on the same surface, which is why the pair does not compete:
+        a page either has a Save whose result is a stored state, or it has a list whose result is a
+        changed row. A page-level Save reporting into a snackbar would put a fact on a timer; a list
+        action reporting into an inline note would leave a receipt sitting next to a control the reader
+        has finished with.</p>
+      <div class="sg-static">
+        <div class="setcard" style="margin-top:0">
+          <div class="field"><label for="sgSave1">Company name</label><input id="sgSave1" type="text" value="ThingsBoard"></div>
+          <button class="btn" type="button">Save</button><span class="savednote">Saved &middot; 14:32</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="sg-item">
+      <h3>Invite block <span class="sg-cls">.setcard.invitecard</span></h3>
+      <p class="sg-note">Not a new container &mdash; the existing <span class="sg-cls">.setcard</span>, used
+        for a component rather than a settings section. The same card in both states of the Users page, so
+        the two read as one thing that gains a table: in the solo state it holds a heading line, the field
+        and the access sentence; in the table state it drops the heading and sits directly above the
+        toolbar.</p>
+      <p class="sg-note"><b>Its height does not change.</b> The message slot is always in the layout
+        (<span class="sg-cls">visibility</span>, not <span class="sg-cls">hidden</span>, and exactly one
+        line tall), confirmations go to the snackbar which is outside the layout, and nothing is revealed
+        inside it on copy. Measured through rest, duplicate, invalid, empty and successful invite, and
+        copy: 135px throughout on the desktop, 284px in the solo state.</p>
+    </div>
+
+    <div class="sg-item">
+      <h3>Baseline block <span class="sg-cls">.nl-pe.baseline</span></h3>
+      <p class="sg-note">Sits between the billing tabs and the plan cards on both selling surfaces.
+        It states what every plan of the selected product includes, so the cards below it can carry
+        only what <i>differs</i>. Not a card: a rule above it rather than a border around it, so it
+        reads as a preamble to the row below instead of a fourth option in it.</p>
+      <p class="sg-note">Two things it does that a static block would not. It is <b>contextual</b> &mdash;
+        it changes with the product and the billing mode. And where the copy does not exist it says so:
+        <span class="sg-cls">.nl-pe.is-gap</span> is a dashed variant carrying a sentence about what is
+        missing, which is the honest alternative to writing product facts nobody approved.</p>
+      <p class="sg-note">Below 600px the per-item descriptions
+        (<span class="sg-cls">.nl-pe-d</span>) are dropped and the names run inline. Measured: the full
+        block was 530px of an 844px viewport and pushed the first plan card to y=1112 &mdash; the page
+        opened on a feature list with no price in sight.</p>
+      <div class="sg-static">
+        <div class="nl-pe baseline is-gap" style="margin-top:0">
+          <div class="nl-pe-h">Included in every plan</div>
+          <p class="nl-pe-intro">The TBMQ baseline is not written yet &mdash; the plan cards name it
+            (&ldquo;All TBMQ PE features&rdquo;) but nothing in this prototype lists it. Copy needed
+            before this block can say anything true.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="sg-item">
+      <h3>No results <span class="sg-cls">.noresults</span></h3>
+      <p class="sg-note">Not the same thing as an empty state, and deliberately not the same block.
+        <span class="sg-cls">.emptybox</span> says <i>nothing here yet</i> and waits for you to create
+        something; this says <i>nothing matched</i> and waits for you to undo a filter you set — so it
+        carries the way out. Dashed rather than solid, because it describes a temporary condition of
+        the view rather than a fact about the account.</p>
+      <div class="sg-static">
+        <div class="noresults">
+          <div class="nr-t">No matches for &ldquo;gateway&rdquo;</div>
+          <button type="button" class="link nr-clear">Clear search</button>
+        </div>
+      </div>
+      <p class="sg-note" style="margin-top:14px">Used by all five working searches: Licenses, Invoices,
+        Users, Activity and the licence&rsquo;s own Activity tab. Inside a table it is wrapped in
+        <span class="sg-cls">td.noresults-cell</span> so it does not draw a cell&rsquo;s borders as well
+        as its own.</p>
+    </div>
+
+    <div class="sg-item" id="solo">
+      <h3>Solo state <span class="sg-cls">.solo + .inviterow</span></h3>
+      <p class="sg-note">A <b>third</b> kind of empty, and the only one that is not a box inside a
+        surface: the surface itself is gone. When the Users page has one user &mdash; you &mdash; the
+        table, its toolbar and its pager are all removed rather than shown holding a single row.
+        There is nothing to search, sort or page through, and a one-row table of yourself is a
+        control panel for a decision nobody is making. What replaces it is the control that
+        changes the state, not an illustration of the state.</p>
+      <div class="sg-static">
+        <div class="solo">
+          <p class="solo-line">You&rsquo;re the only person with access.</p>
+          <div class="inviterow">
+            <input type="email" class="invite-in" placeholder="name@company.com, another@company.com" aria-label="Emails to invite">
+            <button class="btn invite-go" type="button">Invite</button>
+            <button class="link invite-link" type="button">Invite with a link</button>
+          </div>
+          <p class="invite-note">Anyone you invite gets full access to your licenses, invoices and payment method.</p>
+        </div>
+      </div>
+      <p class="sg-note" style="margin-top:14px">The same <span class="sg-cls">.inviterow</span> stays
+        on the page in the table state, directly above the toolbar &mdash; it is not a card, has no
+        border and no heading, because it is how the list grows rather than a panel you operate. The
+        access sentence is permanent only here, where it is read <i>before</i> the first invite; in the
+        table state it appears under the field as part of the confirmation. Below 600px the row stacks:
+        full-width input, full-width <b>Invite</b>, the link quietly beneath &mdash; same position, and
+        never a bottom sheet.</p>
     </div>
   </section>
 

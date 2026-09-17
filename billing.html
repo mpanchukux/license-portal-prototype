@@ -17,7 +17,7 @@
   <div class="pagehead">
     <h1 class="lic-h1">Billing &amp; payment</h1>
     <span class="sp"></span>
-    <button class="btn" id="billSaveBtn" disabled>Save</button>
+    <button class="btn" id="billSaveBtn">Save</button><span class="savednote" id="billSaveBtnNote" hidden></span>
   </div>
   <div class="setcard">
     <div class="setcard-h"><h2>Payment method</h2><span class="setcard-hint">Charged automatically for recurring plans</span></div>
@@ -33,15 +33,15 @@
     <div class="setcard-h"><h2>Billing address</h2><span class="setcard-hint">Printed on every invoice</span></div>
     <!-- company profile address is filled, so these start prefilled from it; after this
          they are independent copies — no live link, no toggle, no status states -->
-    <div class="field"><label>Billing email</label><input type="email" value="hello@thingsboard.io"></div>
+    <div class="field"><label for="bill-email">Billing email</label><input id="bill-email" data-field="email" type="email" value="hello@thingsboard.io"></div>
     <div class="field2">
-      <div class="field"><label>Country</label><select><option>United States</option><option>Ukraine</option><option>Germany</option><option>United Kingdom</option></select></div>
-      <div class="field"><label>State / Province</label><input type="text" value="New York"></div>
-      <div class="field"><label>City</label><input type="text" value="New York"></div>
-      <div class="field"><label>ZIP / Postal code</label><input type="text" value="10001"></div>
+      <div class="field"><label for="bill-country">Country</label><select id="bill-country" data-field="country"><option>United States</option><option>Ukraine</option><option>Germany</option><option>United Kingdom</option></select></div>
+      <div class="field"><label for="bill-state">State / Province</label><input id="bill-state" data-field="state" type="text" value="New York"></div>
+      <div class="field"><label for="bill-city">City</label><input id="bill-city" data-field="city" type="text" value="New York"></div>
+      <div class="field"><label for="bill-zip">ZIP / Postal code</label><input id="bill-zip" data-field="zip" type="text" value="10001"></div>
     </div>
-    <div class="field"><label>Address</label><input type="text" value="500 7th Avenue"></div>
-    <div class="field"><label>Address line 2</label><input type="text" value=""></div>
+    <div class="field"><label for="bill-addr">Address</label><input id="bill-addr" data-field="addr" type="text" value="500 7th Avenue"></div>
+    <div class="field"><label for="bill-addr2">Address line 2</label><input id="bill-addr2" data-field="addr2" type="text" value=""></div>
   </div>
   </div><!-- /setcol -->
  </div><!-- /setgrid -->

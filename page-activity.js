@@ -15,3 +15,13 @@ function renderActFeed(){
 renderActFeed();
 wireFeedAudit('#activityView');
 wirePeriod('#actPeriod', actPeriod, renderActFeed);
+
+/* ---------- search: event text, entity name and actor, as ONE query ----------
+   All three at once, against the stripped text of the entry — the feed stores HTML,
+   and matching inside markup would hit a tag name as readily as a word. */
+wireSearch('#activityView .searchbox input', {
+  items: function(){ return $$('#actFeed > *').filter(function(n){ return !n.classList.contains('noresults'); }); },
+  text:  function(n){ return stripText(n.innerHTML); },
+  host:  function(){ return $('#actFeed'); },
+  empty: function(q){ return noResultsHTML(q); }
+});

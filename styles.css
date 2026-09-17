@@ -999,80 +999,11 @@ button.dbrand{background:none;border:0;padding:0;color:inherit;font:inherit;curs
    Desktop: the submenu flies out beside its row. Phone: the profile menu is
    already a bottom sheet, so this becomes a second-level sheet (see the ≤600px
    block) — a flyout has nowhere to fly at 390px. */
-.dprofsub{position:relative}
-.dprofsub-t{display:flex;align-items:center;gap:8px;width:100%;
-  padding:9px 12px;border:0;background:transparent;color:inherit;
-  font:inherit;font-size:14px;text-align:left;cursor:pointer}
-.dprofsub-t:hover,.dprofsub-t[aria-expanded="true"]{background:var(--hover)}
-.dprofsub-caret{width:16px;height:16px;margin-left:auto;flex:none;color:var(--faint)}
-/* ⚠️ It opens to the LEFT (`right:100%`), not the right. The profile menu is
-   anchored to the bar's right edge, so `left:100%` put the submenu's 296px past the
-   viewport — measured 1168..1464 against a 1280 window. There is no room on that
-   side by construction, and there never will be. */
-.dprofsub-p{position:absolute;top:-6px;right:100%;margin-right:6px;min-width:296px;
-  padding:6px;background:var(--card);border:1px solid var(--line);border-radius:8px;
-  box-shadow:0 12px 32px rgba(0,0,0,.14);z-index:120}
-.dprofsub-p[hidden]{display:none}
-/* ---------- the hover bridge ----------
-   ⚠️ `margin-right:6px` puts 6px of NOTHING between the trigger row and the flyout,
-   and that strip belongs to `.dprofmenu`, not to `.dprofsub`. Moving the pointer from
-   "Users" onto its submenu crossed it, `mouseleave` fired on `.dprofsub`, and the panel
-   closed under the cursor — but only SOMETIMES, which is what made it look random:
-   mousemove is sampled, so a quick move jumps the 6px between two samples and no event
-   ever lands inside the gap, while an unhurried one lands there and closes it.
-   The fix fills the gap with an invisible strip that IS a descendant of `.dprofsub`,
-   so the pointer never actually leaves the element it is hovering.
-   ⚠️ NOT a close delay. A timer would hide the dead zone behind a wait, and the menu
-   would then linger every time you left it on purpose — the cause stays, the symptom
-   moves.
-   ⚠️ And NOT on the panel (`.dprofsub-p::after{left:100%}`), which is where this
-   started: an absolutely positioned pseudo-element resolves its offsets against the
-   containing block's PADDING box, so on a bordered panel `left:100%` begins 1px inside
-   the right border and the strip stops 1px short of the trigger. Measured: one dead
-   column at the trigger's own left edge, and the bug survived at exactly the width of
-   a border. The trigger's side has no border, so the strip lands flush on both edges —
-   verified by walking every pixel between the two boxes.
-   It exists only while the submenu is open: there is nothing to bridge to otherwise,
-   and a permanent 6px hover target lying over the profile menu's padding would open
-   Users on its own. `height:100%` here is the trigger row, which is the band you
-   actually cross. */
-.dprofsub-t[aria-expanded="true"]::after{content:"";position:absolute;
-  top:0;right:100%;width:6px;height:100%}
-/* "Add user" leads the level: it is the action, the list below is the state */
-.dprofsub-add{display:flex;align-items:center;gap:8px;width:100%;
-  padding:9px 10px;border:0;border-radius:6px;background:transparent;color:var(--ink);
-  font:inherit;font-size:14px;font-weight:500;text-align:left;cursor:pointer}
-.dprofsub-add:hover{background:var(--hover)}
-.dprofsub-add .icon{width:17px;height:17px;flex:none}
-.dprofsub-list{margin-top:4px;border-top:1px solid var(--line2);padding-top:4px;
-  max-height:min(52vh,420px);overflow-y:auto}
-.dprofsub-empty{padding:10px;font-size:14px;color:var(--faint)}
-/* a two-line list item: name over email on the left, icon actions on the right */
-.dprofuser{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:6px}
-.dprofuser:hover{background:var(--hover)}
-.dpu-txt{display:flex;flex-direction:column;min-width:0;flex:1}
-.dpu-name{font-size:14px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.dpu-mail{font-size:14px;color:var(--mid);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.dpu-act{display:flex;align-items:center;gap:2px;flex:none}
-/* ⚠️ `.dprofmenu button{align-items:baseline}` (0,2,0) was winning on order over a
-   bare `.dpu-act .iconbtn`, so the glyph sat on the text baseline — flush to the
-   TOP of its 32px box, measured 15px off centre, and the hover surface therefore
-   looked offset from the icon it belonged to. The selector has to out-specify the
-   menu's own layout rule; that rule has now ambushed three separate things in this
-   file, so scope anything inside `.dprofmenu` accordingly. */
-.dprofmenu .dpu-act .iconbtn{width:32px;height:32px;padding:0;flex:none;
-  display:inline-flex;align-items:center;justify-content:center;gap:0;
-  border-color:transparent;background:transparent;color:var(--mid);border-radius:6px}
-.dprofmenu .dpu-act .iconbtn:hover{border-color:transparent;background:var(--sel);color:var(--ink)}
-.dpu-act .icon{width:17px;height:17px}
-/* ⚠️ Scoped to `.dprofmenu`, and that is load-bearing. `.dprofmenu button,.dprofmenu
-   a{display:flex}` already exists (it lays out the menu's own rows) and sits at
-   (0,1,1) — so a bare `.dprofsub-back` at (0,1,0) lost, AND so did the element's
-   `hidden` attribute, leaving the phone's back row visible on the desktop. Same
-   specificity family as the five `[hidden]` traps in the ≤600px blocks: in this
-   file, any `display` on a node the renderers toggle needs to out-specify the
-   layout rule that already claims it. */
-.dprofmenu .dprofsub-back{display:none}
+/* ⚠️ `.dprofsub*` removed (2026-09-17) with the nested Users level it styled —
+   including the invisible hover bridge that fixed its 6px dead zone. */
+/* ⚠️ Removed 2026-09-17 with the nested Users level they styled: `.dprofuser` /
+   `.dpu-*`, the two-line user row, and the `.dprofsub-back` display reset. The user
+   row is the Users page's table again — `userRow` in components.js. */
 .dprofmenu{position:absolute;right:0;top:calc(100% + 6px);min-width:232px;background:#fff;border:1px solid var(--line);border-radius:8px;box-shadow:0 12px 32px rgba(0,0,0,.16);padding:6px;z-index:60}
 .dprofmenu[hidden]{display:none}
 .dprofmenu button,.dprofmenu a{display:flex;align-items:baseline;gap:8px;width:100%;text-align:left;padding:8px 10px;border:0;background:transparent;border-radius:6px;font:inherit;font-size:14px;color:var(--ink)}
@@ -1107,6 +1038,26 @@ body[data-page="home"] .dwrap{padding-top:48px}
 .dwelcome .dw-txt{flex:1;min-width:0}
 .dwelcome h1{margin:0;font-family:var(--font-ui);font-size:var(--t-h1-fs);line-height:var(--t-h1-lh);letter-spacing:var(--t-h1-ls);font-weight:var(--t-h1-fw)}
 .dwelcome p{margin:5px 0 0;font-family:var(--font-ui);font-size:var(--t-small-fs);line-height:var(--t-small-lh);letter-spacing:var(--t-small-ls);font-weight:var(--t-small-fw);color:var(--mid)}
+
+/* ---- the landing page's head: one heading and one line ----
+   ⚠️ `.lp-hello` is GONE with the `Welcome` it styled. It was the only user of the
+   `display` step, which is now unused again — the token and its styleguide row stay,
+   marked as unused there rather than quietly deleted. The H1 keeps the h1 treatment
+   the section title had, so the page starts one step lower and says more. */
+.lp-welcome .lp-sect{margin:0;font-family:var(--font-ui);
+  font-size:var(--t-h1-fs);line-height:var(--t-h1-lh);
+  letter-spacing:var(--t-h1-ls);font-weight:var(--t-h1-fw)}
+.lp-welcome p{margin-top:8px;max-width:64ch}
+
+/* ---- the baseline block, between the tabs and the cards ----
+   Quieter than a plan card and clearly not one: no card background, a rule above it
+   instead of a border around it, so it reads as a preamble to the row below rather
+   than as a fourth option in it. */
+.planpicker .nl-pe.baseline{margin:18px 0 0;padding:16px 0 0;border-top:1px solid var(--line2)}
+.nl-pe.baseline .nl-pe-h{margin-bottom:4px}
+/* the marked gap: copy that does not exist yet, saying so */
+.nl-pe.is-gap{border-top-style:dashed}
+.nl-pe.is-gap .nl-pe-intro{color:var(--mid)}
 
 .dblock{background:var(--card);border:1px solid var(--line2);border-radius:10px;padding:15px 18px;margin-top:20px}
 /* Home feed lazy load: a sentinel the observer watches, plus a quiet fallback */
@@ -1183,12 +1134,6 @@ body[data-page="home"] .dwrap{padding-top:48px}
 .gb-x{border-color:transparent;background:none;color:rgba(255,255,255,.72)}
 .gb-x:hover{color:#fff;background:rgba(255,255,255,.14)}
 #statusSlot{display:inline-flex;align-items:center;gap:8px}   /* a grant carries two quiet chips */
-.planpick{display:flex;flex-direction:column;align-items:flex-start;gap:12px;margin-top:20px}
-.planpick-row{display:flex;align-items:center;gap:12px}
-.planpick .pp-label{font-size:14px;color:var(--mid);min-width:56px}
-.planpick .seg{flex:none}
-.planpick .seg label{flex:none}
-.planpick .seg span{padding:7px 14px}
 /* ⚠️ The column count is NOT hardcoded any more. `repeat(5, …)` was written when the
    subscription set had five cards; dropping Maker and Prototype (2026-09-01) left
    three cards sitting in the left 3/5 of the row with two empty tracks. `grid-auto-flow:
@@ -1266,6 +1211,146 @@ body[data-page="home"] .dwrap{padding-top:48px}
 .setcard-h{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:14px}
 .setcard-h h2{margin:0;font-family:var(--font-ui);font-size:var(--t-label-fs);line-height:var(--t-label-lh);letter-spacing:var(--t-label-ls);font-weight:var(--t-label-fw);text-transform:uppercase}
 .setcard-hint{font-size:var(--t-small-fs);line-height:var(--t-small-lh);letter-spacing:var(--t-small-ls);font-weight:var(--t-small-fw);color:var(--faint)}
+/* ⚠️ The Add user screen's styles (.au-*) are gone with the screen, and so is
+   `.au-keybox` — the wrapping monospace block that showed the invite link. The link
+   is not shown any more: one click copies it and the snackbar says so. `.authlocked`
+   (the sign-up email an invitation fixes) is the only survivor, just below. */
+
+/* ================= Users: inviting, in both states =================
+   ONE container, two states. `.setcard` is the existing card pattern — the invite
+   controls are a component with a job, and loose on the page background they read as
+   page furniture rather than as the thing that changes the list below them.
+
+   ⚠️ FIXED HEIGHT. The card is sized for its resting content and does not move: the
+   message slot is always in the layout (visibility, not `hidden`, and one line tall),
+   confirmations went to the snackbar which lives outside the layout entirely, and the
+   copied-link block that used to appear inside it is gone. Nothing it can do to itself
+   changes where the table below starts. */
+.invitecard{margin-top:0;margin-bottom:16px}
+.invitecard > *:not(.setcard-h){max-width:none}
+.inviterow{display:flex;align-items:center;gap:10px;margin:0}
+.invite-in{flex:1;min-width:0;height:var(--btnH);
+  font-family:var(--font-ui);font-size:var(--t-body-fs);letter-spacing:var(--t-body-ls);
+  border:1px solid var(--line);border-radius:6px;padding:0 10px;background:#fff;
+  color:var(--ink);outline:none}
+.invite-in:focus{border-color:var(--ink)}
+.invite-in::placeholder{color:var(--faint)}
+.invite-go{flex:none}
+/* the link is the quiet third option, at the END of the row — a second button here
+   would make two equal ways in, which is exactly what it must not be */
+.invite-link{flex:none;margin-left:4px;font-size:14px}
+
+/* ⚠️ Reserved, always. One line of 14/1.45 plus its gap, held whether or not anything
+   is in it — this is what keeps the card's height constant through an error. It
+   carries PROBLEMS only: confirmations are transient and go to the snackbar, because
+   a message that removes itself on a timer is the worst place for an instruction
+   someone has to act on. */
+.invite-msg{margin:8px 0 0;height:21px;overflow:hidden;font-size:14px;line-height:1.45;
+  color:var(--mid);visibility:hidden}
+.invite-msg.on{visibility:visible}
+.invite-msg b{color:var(--ink);font-weight:var(--t-em-fw)}
+/* always visible, in both states — a standing fact about the control, not a receipt */
+.invite-note{margin:8px 0 0;font-size:14px;line-height:1.45;color:var(--faint)}
+
+/* SOLO — one person, so no table, no toolbar, no pager: there is nothing to search,
+   sort or page, and a one-row table of yourself is a control panel for a decision
+   nobody is making. The line states the fact, and the card under it changes it. */
+.solo{max-width:640px}
+.solo-line{margin:0 0 12px;font-size:var(--t-body-fs);line-height:var(--t-body-lh);color:var(--ink)}
+
+/* the sign-up email field when an invitation fixed it: readable, not typable */
+.authlocked{position:relative}
+.authlocked input{background:var(--bg);color:var(--mid);padding-right:38px;cursor:default}
+.authlocked input:focus{border-color:var(--line)}
+.authlock-ic{position:absolute;right:11px;bottom:11px;width:18px;height:18px;
+  color:var(--faint);pointer-events:none}
+
+/* ================= the field error state =================
+   ⚠️ NEW in the system, not reused: the styleguide's Inputs section documented
+   default, with-description, read-only, select and textarea — and no error at all.
+   The only error-ish thing in the product was `.numerr` on the wizard's steppers,
+   which is ink-coloured bold text and reads as a note, not a fault.
+   Monochrome, so the fault cannot be carried by hue: the border goes to ink and
+   thickens, and the message sits under the field in the same slot `.help` uses —
+   a reader who is not seeing colour still sees a changed box and a new line of text.
+   `.help` is hidden while an error shows: two lines under one field, one of them
+   now wrong, is worse than either alone. */
+.field.err > input,.field.err > select,.field.err > textarea,
+.field.err .paystripe{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.field.err .help{display:none}
+.fielderr{margin-top:6px;font-size:14px;line-height:1.4;color:var(--ink);font-weight:var(--t-em-fw)}
+.fielderr::before{content:'';display:inline-block;width:14px;height:14px;margin-right:6px;
+  vertical-align:-2px;border-radius:50%;border:1.5px solid var(--ink);
+  background:
+    linear-gradient(var(--ink),var(--ink)) center 2.5px/1.5px 5px no-repeat,
+    linear-gradient(var(--ink),var(--ink)) center 9.5px/1.5px 1.5px no-repeat}
+.fielderr[hidden]{display:none}
+/* the summary that appears next to a rejected primary, naming how many and why */
+.formerr{margin:0 0 10px;font-size:14px;line-height:1.45;color:var(--ink);font-weight:var(--t-em-fw)}
+.formerr[hidden]{display:none}
+
+/* the billing card block with nothing on file: a sentence where the card would be,
+   in the same row, so the block does not change shape between its two states */
+/* The saved confirmation: a line BESIDE the button, not a toast and not the button
+   going quiet. ⚠️ The button stays enabled afterwards — greying it out was the old
+   behaviour, and a control that goes silent is not a confirmation, it is the absence
+   of one. The note holds until the next edit, so it survives being looked away from. */
+/* NO RESULTS — deliberately not the empty state. `.emptybox` says "nothing here yet"
+   and waits for you to create something; this says "nothing matched" and carries the
+   way out of the filter you set. Different words, different exit, and visibly a
+   different block: dashed rather than solid, because it is a temporary condition of
+   the view rather than a fact about the account. */
+/* the review step's statement of a scheduled change: a bordered note above the
+   breakdown, because it changes how every figure below it should be read */
+.nl-sched{border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin-bottom:12px;
+  font-size:14px;line-height:1.5;color:var(--ink);background:var(--bg)}
+.nl-schedwhat{margin-top:6px;color:var(--mid)}
+/* the same fact, quietly, on the licence details page */
+.schedline{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;
+  margin:0 0 14px;font-size:14px;line-height:1.5;color:var(--mid)}
+.schedline b{color:var(--ink);font-weight:var(--t-em-fw)}
+.schedline[hidden]{display:none}
+
+/* the support route in the cancel dialog: quiet, left-aligned, on the keep side */
+/* the banner's secondary route: after the action, quieter than it */
+.alert-help{margin-left:14px;font-size:14px;color:var(--mid);white-space:nowrap}
+
+.cancel-help{flex:1;font-size:14px;color:var(--mid);text-align:left}
+
+.noresults{border:1px dashed var(--line);border-radius:8px;background:transparent;
+  padding:22px 18px;text-align:center}
+.nr-t{font-size:var(--t-body-fs);line-height:var(--t-body-lh);color:var(--ink)}
+.nr-clear{margin-top:6px;font-size:14px}
+/* inside a table the block is a cell, so it must not also draw the cell's borders */
+td.noresults-cell{padding:0;border:0}
+td.noresults-cell .noresults{margin:14px}
+
+/* ================= snackbar =================
+   Bottom-centre, above everything except a modal, and it must not cover the thing it
+   is reporting about — so it is one line tall, sits in the margin below the content,
+   and leaves on its own. `translateY` rather than `opacity` alone: it reads as
+   arriving from off-screen, which is what a transient message is. */
+.snack{position:fixed;left:50%;bottom:24px;transform:translate(-50%,12px);
+  z-index:400;display:flex;align-items:center;gap:14px;
+  max-width:min(520px,calc(100vw - 32px));
+  padding:12px 12px 12px 16px;border-radius:8px;
+  background:var(--ink);color:#fff;box-shadow:0 10px 30px rgba(0,0,0,.28);
+  opacity:0;transition:opacity .16s ease,transform .16s ease;pointer-events:none}
+.snack.on{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+.snack[hidden]{display:none}
+.snack-t{font-size:14px;line-height:1.45}
+/* the dismiss is quiet: the message leaves by itself, this is for the impatient */
+.snack-x{flex:none;width:28px;height:28px;padding:0;border:0;border-radius:6px;
+  background:transparent;color:#fff;opacity:.7;font-size:13px;line-height:1;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center}
+.snack-x:hover{opacity:1;background:rgba(255,255,255,.14)}
+
+.savednote{margin-left:12px;font-size:14px;color:var(--mid);white-space:nowrap}
+.savednote[hidden]{display:none}
+.seclast{margin:0 0 14px;font-size:14px;color:var(--mid)}
+
+.paycard-none{flex:1;min-width:0;font-size:14px;line-height:1.45;color:var(--mid)}
+
 .field{margin-bottom:14px}
 .field:last-child{margin-bottom:0}
 .field > label{display:block;font-size:var(--t-small-fs);line-height:var(--t-small-lh);letter-spacing:var(--t-small-ls);font-weight:var(--t-small-fw);color:var(--mid);margin-bottom:6px}
@@ -1320,7 +1405,7 @@ body[data-page="home"] .dwrap{padding-top:48px}
 .payoverlay{position:fixed;inset:0;z-index:100;background:rgba(28,28,28,.32);display:flex;align-items:center;justify-content:center;padding:20px}
 .payoverlay[hidden]{display:none}
 /* modal widths: the two narrower dialogs that ride the payment-modal chrome */
-.paymodal.narrow{width:min(480px,96vw)}
+/* ⚠️ `.paymodal.narrow` removed: Add user was its only caller. */
 .paymodal.tight{width:min(420px,96vw)}
 /* a table that can outgrow its card scrolls inside its own wrapper — the card
    itself must not clip (it would cut off the row menus) */
@@ -1616,37 +1701,9 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
   .menu .pop .mob-only{display:block}
   .menu .pop [data-revealmenu],.menu .pop [data-installmenu]{display:none}
 
-  /* ---------- Users: a SECOND-level sheet, not a flyout ----------
-     The profile menu is already a bottom sheet here, so its nested level covers it
-     and offers a back row — the M3 nested-sheet pattern. A left:100% flyout would
-     be off-screen at 390px. */
-  /* ⚠️ `margin-right:6px` has to be ZEROED here, and it was not. It is the desktop
-     flyout's gap from the trigger; on a `left:0;right:0` bottom sheet it survived as a
-     6px inset on the RIGHT only, so the sheet sat flush left and 6px short of the right
-     edge with the page showing through the gap. Found while measuring that same
-     declaration for the hover-bridge fix. */
-  .dprofsub-p{position:fixed;left:0;right:0;bottom:0;top:auto;min-width:0;margin-right:0;
-    max-height:80vh;overflow-y:auto;
-    border-radius:12px 12px 0 0;border-left:0;border-right:0;border-bottom:0;
-    padding:8px 8px calc(8px + env(safe-area-inset-bottom));
-    box-shadow:0 -12px 40px rgba(0,0,0,.22);z-index:150}
-  /* ⚠️ The hover bridge goes with the flyout it bridged. There is no hover here (the
-     submenu is a bottom sheet opened by tap), and the strip would be a stray 6px box
-     hanging off the left of the trigger row inside a full-width sheet. */
-  .dprofsub-t[aria-expanded="true"]::after{display:none}
-  /* the back row names the level you are in and the way out of it */
-  .dprofmenu .dprofsub-back{display:flex;align-items:center;gap:8px;width:100%;
-    min-height:48px;padding:0 10px;margin-bottom:4px;
-    border:0;border-bottom:1px solid var(--line2);background:transparent;
-    color:var(--ink);font:inherit;font-size:16px;font-weight:500;
-    text-align:left;cursor:pointer}
-  .dprofsub-back .icon{width:20px;height:20px;flex:none;color:var(--mid)}
-  .dprofsub-t,.dprofsub-add{min-height:48px;font-size:16px}
-  .dprofsub-list{max-height:none}
-  .dprofuser{padding:8px 10px;gap:12px}
-  .dpu-name,.dpu-mail{font-size:var(--t-body-sm-fs)}
-  .dpu-act .iconbtn{width:44px;height:44px}
-  .dpu-act .icon{width:20px;height:20px}
+  /* ⚠️ The nested Users sheet is gone (2026-09-17): its bottom-sheet rules, the
+     back row, the disabled hover bridge and the two-line row's phone sizing all
+     went with it. Users is a destination in the bottom bar again. */
 
   /* ---------- profile menu: a bottom sheet, not a dropdown ---------- */
   .dprofmenu{position:fixed;left:0;right:0;bottom:0;top:auto;width:100%;min-width:0;
@@ -2211,35 +2268,75 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
      same surface with a different body and a different footer.
      ⚠️ Structure comes entirely from CSS. The markup is the shared payoverlay/
      paymodal one (shared.js), which the payment modal also uses — so every rule
-     here is scoped to #addUserOverlay and cannot leak into that. */
-  /* ⚠️ ONE full-screen surface, three overlays. Was scoped to #addUserOverlay
-     alone; Apply coupon rode the centred `.paymodal` and looked like a different
-     kind of thing on the same phone. Every selector below now lists both ids, so
-     adding a third means adding it here and nowhere else. */
-  #addUserOverlay,#couponOverlay{padding:0;align-items:stretch;justify-content:stretch}
-  #addUserOverlay .paymodal,#couponOverlay .paymodal{width:100%;max-width:none;height:100%;max-height:none;
+     here is scoped to #couponOverlay and cannot leak into that. */
+  /* ⚠️ ONE full-screen surface. It was three (Add user, Apply coupon), then two;
+     Add user is gone — inviting is a row on the Users page now, not a screen — so
+     every selector below names #couponOverlay alone. A third would be added here
+     and nowhere else. */
+  #couponOverlay{padding:0;align-items:stretch;justify-content:stretch}
+  #couponOverlay .paymodal{width:100%;max-width:none;height:100%;max-height:none;
     border:0;border-radius:0;box-shadow:none;display:flex;flex-direction:column}
   /* the app bar: ✕ leading, title beside it — the same shape the licence sheet uses */
-  #addUserOverlay .paymodal-h,#couponOverlay .paymodal-h{flex:none;gap:8px;padding:6px 8px;
+  #couponOverlay .paymodal-h{flex:none;gap:8px;padding:6px 8px;
     border-bottom:1px solid var(--line2)}
-  #addUserOverlay .paymodal-h .sp,#couponOverlay .paymodal-h .sp{display:none}
-  #addUserOverlay #auClose,#couponOverlay #couponClose{order:-1;width:44px;height:44px;flex:none;padding:0;
+  #couponOverlay .paymodal-h .sp{display:none}
+  #couponOverlay #couponClose{order:-1;width:44px;height:44px;flex:none;padding:0;
     border:0;background:transparent;color:var(--ink);font-size:19px;
     display:inline-flex;align-items:center;justify-content:center}
-  #addUserOverlay #auClose:hover,#couponOverlay #couponClose:hover{background:var(--hover)}
-  #addUserOverlay #auTitle,#couponOverlay #couponTitle{order:0;flex:1;min-width:0;
+  #couponOverlay #couponClose:hover{background:var(--hover)}
+  #couponOverlay #couponTitle{order:0;flex:1;min-width:0;
     font-size:var(--t-h2-sm-fs);line-height:var(--t-h2-sm-lh);
     font-weight:var(--t-h2-sm-fw);letter-spacing:var(--t-h2-sm-ls)}
   /* the fields scroll */
-  #addUserOverlay .paymodal-b,#couponOverlay .paymodal-b{flex:1;min-height:0;overflow-y:auto;padding:16px}
-  #addUserOverlay .field2{grid-template-columns:1fr}
+  #couponOverlay .paymodal-b{flex:1;min-height:0;overflow-y:auto;padding:16px}
   /* the actions pin, primary last and widest, Cancel beside it */
-  #addUserOverlay .paymodal-f,#couponOverlay .paymodal-f{flex:none;gap:10px;padding:12px 16px calc(12px + env(safe-area-inset-bottom));
+  #couponOverlay .paymodal-f{flex:none;gap:10px;padding:12px 16px calc(12px + env(safe-area-inset-bottom));
     border-top:1px solid var(--line2);background:#fff}
-  #addUserOverlay .paymodal-f .sp,#couponOverlay .paymodal-f .sp{display:none}
-  #addUserOverlay .paymodal-f .btn,#couponOverlay .paymodal-f .btn{height:48px}
-  #addUserOverlay #auCancel,#couponOverlay #couponCancel{flex:0 0 auto;padding:0 18px}
-  #addUserOverlay #auAdd,#addUserOverlay #auDone,#couponOverlay #couponApply{flex:1}
+  #couponOverlay .paymodal-f .sp{display:none}
+  #couponOverlay .paymodal-f .btn{height:48px}
+  #couponOverlay #couponCancel{flex:0 0 auto;padding:0 18px}
+  #couponOverlay #couponApply{flex:1}
+
+  /* ⚠️ The snackbar clears the bottom navigation bar. Under it, a confirmation is a
+     message nobody can read — and the bar is fixed, so "bottom:24px" would put it
+     exactly there. Same offset the gear FAB uses, for the same reason. */
+  /* ⚠️ Also clears the prototype's own gear FAB, which sits bottom-LEFT at exactly
+     `bnavH + 16` — at the same offset the snackbar ran straight through it. The
+     snackbar goes above it: a transient confirmation is the more important of the two
+     for the moment it exists, and scaffolding should not sit on top of product. */
+  .snack{left:16px;right:16px;bottom:calc(var(--bnavH) + 74px);
+    max-width:none;transform:translate(0,12px)}
+  .snack.on{transform:translate(0,0)}
+
+  /* ---- the baseline block goes COMPACT ----
+     ⚠️ Measured at 390 before this rule: the full block was 530px of an 844px viewport
+     and pushed the first plan card to y=1112 — the page opened on a feature list with
+     no price in sight. Dropping the per-item descriptions turns seven three-line rows
+     into one wrapped run of names, which is what the block is for on a screen this
+     narrow: the fact that these come with every plan, not a comparison of them. */
+  .nl-pe.baseline .nl-pe-body{display:block}
+  .nl-pe.baseline .nl-pe-item{display:inline;padding:0;border:0}
+  .nl-pe.baseline .nl-pe-item + .nl-pe-item::before{content:' · ';color:var(--faint)}
+  .nl-pe.baseline .nl-pe-item b{font-weight:400}
+  .nl-pe.baseline .nl-pe-d{display:none}
+
+  /* ---- Users: the invite row stacks, in both states ----
+     A 44px button beside a field leaves the field about 180px wide, which is not a
+     field. Full-width input, full-width Invite under it, the link as a quiet text
+     action below. Same position — above whatever is below it — and NOT a bottom
+     sheet: it is how this page grows, not a thing you summon. */
+  /* the row stacks; the CARD does not change — its height still comes from resting
+     content, there is just more of it stacked */
+  .inviterow{flex-direction:column;align-items:stretch;gap:10px}
+  /* ⚠️ `flex:none` is load-bearing. The desktop rule is `.invite-in{flex:1}`, and
+     flex sizing follows the MAIN axis — which this rule just turned vertical, so
+     `flex:1` gave the input a flex-basis of 0 in HEIGHT and collapsed it to 21px.
+     Measured before the fix: input h=21 above a 44px button. */
+  .inviterow .invite-in{flex:none;height:var(--btnH)}
+  .inviterow .invite-go{width:100%;height:var(--btnH)}
+  .inviterow .invite-link{align-self:flex-start;margin-left:0}
+  .invite-in{font-size:16px}          /* 16px or iOS zooms the page on focus */
+  .solo{padding:0}
 
   /* ================= Activity: the period filter is a bottom sheet =================
      An anchored dropdown next to a chip has nowhere to go at 390px — and this menu

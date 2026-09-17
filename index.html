@@ -120,30 +120,22 @@
         </div>
       </div>
 
-      <!-- Product × Billing switchers. No deployment switcher: the portal is
-           self-managed only, so Community/Public/Private are implicit context. -->
-      <div class="planpick">
-        <!-- interdependent: product first, then billing (dependency reads top-down) -->
-        <div class="planpick-row">
-          <span class="pp-label">Product</span>
-          <div class="seg" role="radiogroup" aria-label="Product">
-            <label><input type="radio" name="ecProduct" value="thingsboard" checked><span>ThingsBoard</span></label>
-            <label><input type="radio" name="ecProduct" value="tbmq"><span>TBMQ</span></label>
-          </div>
-        </div>
-        <div class="planpick-row">
-          <span class="pp-label">Billing</span>
-          <div class="seg" role="radiogroup" aria-label="Billing">
-            <label><input type="radio" name="ecBilling" value="payg" checked><span>Subscription</span></label>
-            <label><input type="radio" name="ecBilling" value="perpetual"><span>Perpetual</span></label>
-          </div>
-        </div>
+      <!-- The SAME plan picker the landing page shows a signed-out visitor: product
+           cards, Subscription / Perpetual tabs and the plan cards, all off one
+           renderer (renderPlanPicker in wizard.js). Signing up must not change what
+           choosing a plan looks like — the two radio rows this screen used to own
+           were a second pattern for one decision. No deployment switcher: the portal
+           is self-managed only, so Community/Public/Private are implicit context. -->
+      <div class="planpicker" id="ecPicker">
+        <div id="ecChoices"></div>
+        <!-- ⚠️ Same slot, same order as the landing page. Moving it there and not here
+             would split two screens an earlier pass deliberately made identical. -->
+        <div id="ecBase"></div>
+        <div class="plangrid" id="ecPlans"></div>
+        <!-- under the grid: the single-set note, or the PE card. Filled by the same
+             renderer, so this screen and the landing page cannot drift apart. -->
+        <div id="ecPlanExtra"></div>
       </div>
-
-      <!-- plan area: rendered from EC_PLANS for the current Product × Billing pair -->
-      <div class="plangrid" id="ecPlans"></div>
-      <div class="pc-note" id="ecNote"></div>
-      <div id="ecPlanExtra"></div>
 
     </div>
   </div>

@@ -115,18 +115,21 @@ $('#sgSpace').innerHTML = SPACE.map(function(s){
   $('#sgTableBody').innerHTML = sample.map(function(p){ return rowHtml(p); }).join('');
 })();
 
-/* ---------- plan cards, including the Current plan strip ---------- */
+/* ---------- plan cards: all three states in one row ----------
+   Built by nlPlanCardHTML, the ONE plan-card builder the product has — the wizard,
+   the landing page and Home's new-user screen all render it. It used to be a second
+   builder plus a string replace to fake the Current-plan strip; both are gone, so a
+   card cannot look one way here and another way in the flow.
+   The selection object gives the row its three states: card 1 selected, card 2 the
+   current plan (strip, no CTA), card 3 plain. */
 (function(){
   var set = EC_PLANS['thingsboard|payg'];
   var cards = set.cards.slice(0, 3);
-  var html = cards.map(function(c, i){
-    var card = planCard(c);
-    // the second card wears the strip the change-plan wizard puts on the current plan
-    return i === 1 ? card.replace('<div class="pc-head">', '<div class="pc-strip">Current plan</div><div class="pc-head">') : card;
-  }).join('');
+  var sel = { product:'thingsboard', kind:'subscription',
+              plan:cards[0].name, currentName:cards[1].name };
   var grid = $('#sgPlans');
   grid.className = 'plangrid withcur';
-  grid.innerHTML = html;
+  grid.innerHTML = cards.map(function(c){ return nlPlanCardHTML(c, set, sel); }).join('');
 })();
 
 /* ---------- product cards ---------- */

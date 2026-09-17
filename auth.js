@@ -1,5 +1,5 @@
 /* ============================================================================
-   auth.js — the signed-out surface: sign up and log in, in ONE container
+   auth.js — the signed-out surface: sign up and sign in, in ONE container
    ============================================================================
    Two screens, one box. They are not two modals: the footer of each is a link to
    the other, and switching re-renders the body in place rather than closing one
@@ -19,7 +19,7 @@
 
    Loaded on the landing page only: it is the one page a signed-out visitor can
    reach that has a way in. The public documents (Terms, Privacy, License
-   agreement) carry the header's Log in / Sign up, which link there.
+   agreement) carry the header's Sign in / Sign up, which link there.
    ============================================================================ */
 
 var Auth = (function(){
@@ -39,9 +39,13 @@ var Auth = (function(){
      else. Keeping that difference as DATA rather than as two render functions is
      what stops the pair drifting into two designs. */
   var SCREENS = {
+    /* The invited person fills in their OWN details — which is the whole reason
+       Add user stopped asking an admin to type someone else's name. Name is asked
+       on every sign-up, invited or not: one screen, not two. */
     signup: {
       h:'Create your personal account',
-      fields:[ { id:'authEmail', label:'Email', type:'email', req:true, ac:'email' },
+      fields:[ { id:'authName',  label:'Full name', type:'text', req:true, ac:'name' },
+               { id:'authEmail', label:'Email', type:'email', req:true, ac:'email' },
                { id:'authPass',  label:'Create a password', type:'password', req:true, ac:'new-password' } ],
       legal:true, cta:'Sign up', foot:'login', footTxt:'Already have an account?'
     },
@@ -71,6 +75,8 @@ var Auth = (function(){
   document.body.insertAdjacentHTML('beforeend', MARKUP);
   var scr = $('#authModal'), body = $('#authBody');
   var mode = 'signup', lastFocus = null;
+  /* the invitation this sign-up is redeeming, or null for an ordinary one */
+  var invited = null;
 
   function socialHTML(){
     return '<div class="auth-social">'
@@ -84,11 +90,21 @@ var Auth = (function(){
   /* The password field gets the same reveal control the licence key has — one eye
      that swaps for a struck-through eye — so "did I type that right" is answerable
      without clearing the field. */
+  /* An invitation binds an address, so on that sign-up the email is shown and not
+     editable: changing it would mean redeeming someone else's invitation. It is
+     `readonly`, not `disabled` — a disabled field is skipped by the keyboard and
+     is not read out, and this one still has to be readable as "this is who you
+     are signing up as". The lock glyph says why it cannot be typed in, the same
+     way the wizard's fixed entitlements do. */
   function fieldHTML(f){
     var pw = f.type === 'password';
-    return '<div class="field' + (pw ? ' authpw' : '') + '">'
+    var lock = f.id === 'authEmail' && invited && invited.email;
+    return '<div class="field' + (pw ? ' authpw' : '') + (lock ? ' authlocked' : '') + '">'
       + '<label for="' + f.id + '">' + f.label + (f.req ? ' <span class="req">*</span>' : '') + '</label>'
-      + '<input id="' + f.id + '" type="' + f.type + '" autocomplete="' + f.ac + '">'
+      + '<input id="' + f.id + '" type="' + f.type + '" autocomplete="' + f.ac + '"'
+      + (lock ? ' value="' + esc(invited.email) + '" readonly aria-readonly="true"' : '') + '>'
+      + (lock ? '<svg class="icon authlock-ic" viewBox="0 0 24 24" aria-hidden="true">'
+          + '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>' : '')
       + (pw ? '<button class="iconbtn ghost ib authpw-eye" data-auth-reveal aria-label="Show password">'
           + '<svg class="icon eye" viewBox="0 0 24 24"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z"/><circle cx="12" cy="12" r="2.5"/></svg>'
           + '<svg class="icon eyeoff" viewBox="0 0 24 24" hidden><path d="M10.6 6.1A9.6 9.6 0 0 1 12 6c6.5 0 10 6 10 6a16.9 16.9 0 0 1-2.4 3M6.5 6.6A16.8 16.8 0 0 0 2 12s3.5 6 10 6a9.5 9.5 0 0 0 3.9-.8"/><path d="M3 3l18 18"/></svg>'
@@ -110,7 +126,7 @@ var Auth = (function(){
     body.innerHTML = ''
       + '<div class="auth-brand" aria-hidden="true">'
       +   '<div class="mark"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4v16M4 12h16"/></svg></div>'
-      +   '<div class="bt">ThingsBoard<span class="bsep">·</span>License Portal</div>'
+      +   '<div class="bt">ThingsBoard<span class="bsep">·</span>Licenses</div>'
       + '</div>'
       + '<h2 class="auth-h" id="authHeading">' + s.h + '</h2>'
       + socialHTML()
@@ -127,7 +143,7 @@ var Auth = (function(){
       +   '<span class="auth-footq">' + s.footTxt + '</span>'
       +   (mode === 'login'
           ? '<button class="btn sec auth-alt" data-auth="signup">Create an account</button>'
-          : '<button class="link auth-altlink" data-auth="login">Log in</button>')
+          : '<button class="link auth-altlink" data-auth="login">Sign in</button>')
       + '</div>'
       + (s.forgot ? '<div class="auth-forgot"><button class="link" data-stub="Forgot password">Forgot password?</button></div>' : '');
     scr.setAttribute('aria-label', s.h);
@@ -140,12 +156,21 @@ var Auth = (function(){
      account's licences, or the empty state if the account has none" comes out of one
      line instead of a branch. */
   function finish(){
+    /* Redeeming burns the token: single use is the invitation's whole promise, and
+       the burn belongs at the moment the account is made, not at the moment the
+       link was opened — a visitor who closes the screen has not used anything. */
+    if(invited){ updateInvite(invited.token, { used:true }); invited = null; }
     if(mode === 'signup') setSession('new');
     else setSession('existing', { keepDash:true });
   }
 
-  function open(which){
+  /* `opts.invite` is an invitation record (see mintInvite in shared.js). It only
+     ever reaches sign-up: logging in needs no invitation, and an invitation is not
+     a way to log in to an account that already exists. */
+  function open(which, opts){
     mode = SCREENS[which] ? which : 'signup';
+    invited = (opts && opts.invite) || null;
+    if(mode !== 'signup') invited = null;
     lastFocus = document.activeElement;
     render();
     scr.hidden = false;
@@ -163,7 +188,11 @@ var Auth = (function(){
   /* delegated: the body is re-rendered on every switch between the two screens */
   body.addEventListener('click', function(e){
     var alt = e.target.closest('[data-auth]');
-    if(alt){ mode = alt.getAttribute('data-auth'); render(); var f = $('input', body); if(f) f.focus(); return; }
+    if(alt){
+      mode = alt.getAttribute('data-auth');
+      if(mode !== 'signup') invited = null;   // an invitation is not a way to log in
+      render(); var f = $('input', body); if(f) f.focus(); return;
+    }
     if(e.target.closest('#authSubmit') || e.target.closest('[data-auth-social]')){ finish(); return; }
     var eye = e.target.closest('[data-auth-reveal]');
     if(eye){

@@ -85,7 +85,7 @@ var Store = (function(){
      that already has a snapshot — it would need "Reset demo data" pressed by hand,
      which is not something a reviewer should have to know. Bump this whenever the
      seed changes in a way that has to be seen; the old key is simply abandoned. */
-  var KEY = 'tb-license-portal-demo-v7';
+  var KEY = 'tb-license-portal-demo-v9';
   function clone(o){ return JSON.parse(JSON.stringify(o)); }
   function seed(){
     return {
@@ -101,6 +101,13 @@ var Store = (function(){
          data" returns there without needing a line of its own. */
       auth: 'out',                // 'out' | 'new' | 'existing'
       pendingPurchase: null,      // { product, kind, plan } carried across the sign-up navigation
+      /* Everything below is written by a form and read by a surface. `null` means
+         "nothing saved yet", and every reader falls back to what the markup or
+         PAYMENT_METHOD already shows — so an untouched demo looks exactly as it did. */
+      paymentMethod: null,        // { brand, last4, num, exp, name, country } once a card is entered
+      profile: null,              // Account: name, company, address — see PROFILE_FIELDS
+      billingAddress: null,       // Billing: the address printed on invoices
+      passwordChangedAt: null,    // Security: a date string. The password itself is NEVER stored.
       seq: 0                      // counter behind generated licence ids and keys
     };
   }
@@ -125,12 +132,19 @@ var Store = (function(){
 var DASH_STATES = {
   dashboard:        { label:'Dashboard — small account (A)', variant:'A' },
   dashB:            { label:'Dashboard — large account (B)', variant:'B' },
-  dashempty:        { label:'Dashboard — new user (empty)',  variant:'A', empty:true },
-  dashgrantpending: { label:'Dashboard — grant pending',     variant:'A', empty:true, grant:'pending' },
+  dashempty:        { label:'Dashboard — new user (empty)',  variant:'N' },
+  dashgrantpending: { label:'Dashboard — grant pending',     variant:'N', grant:'pending' },
   dashgrant:        { label:'Dashboard — grant approved',    variant:'G' }
 };
 function dashState(){ return DASH_STATES[Store.get('dash')] || DASH_STATES.dashboard; }
 function dashVariant(){ return dashState().variant; }
+/* ⚠️ DERIVED, not stored. `empty:true` used to be a flag on the state above, set once
+   by setSession('new') and cleared by nobody — so buying a licence left Home on its
+   first-run screen while every other page showed the new licence. The answer is not
+   to clear the flag in the purchase handler (the next path that adds a licence would
+   forget), it is to stop having a flag: an account is new exactly while it owns no
+   licences, and that is a question the data can always answer. */
+function dashIsEmpty(){ return (DATA().licenses || []).length === 0; }
 function DATA(){ return Store.get('datasets')[dashVariant()] || Store.get('datasets').A; }
 
 /* ---------- mutations: every one writes through to localStorage ---------- */
@@ -196,6 +210,54 @@ function storeAddUser(u){
   Store.save();
   logActivity({ kind:'user', entityType:'User', entityName:u.name || u.email, action:'INVITED',
     txt:'User <b>' + esc(u.name || u.email) + '</b> was invited by ' + PORTAL_ACTOR + '.' });
+}
+
+/* ---------- invitations ------------------------------------------------------
+   The mock of the backend the Add user screen assumes: a record per invitation,
+   whose token IS the credential. Held in the store because it has to survive the
+   navigation the invite link performs — the whole point of a link is that it is
+   opened somewhere else, later.
+
+   ⚠️ `invites` is NOT in the seed and the store key is NOT bumped: an absent key
+   reads as an empty list, and nothing a reviewer looks at changes on first load,
+   so making every existing browser throw its demo state away would buy nothing.
+   ⚠️ An invitation is NOT access. Nothing here touches DATA().users — the invited
+   person joins that list by signing up, not by being asked. */
+var INVITE_DAYS = 7;
+function invites(){ return Store.get('invites') || []; }
+function newInviteToken(){
+  var n = (Store.get('seq') || 0) + 1;
+  Store.set('seq', n);
+  return 'inv-' + (1000 + n) + '-' + (n * 7919 % 65536).toString(16);
+}
+/* `email` is the address the invitation is bound to, or null for the copied link,
+   which is an open single-use door rather than one person's. The sign-up screen
+   locks the email field exactly when this is set — see Auth.open. */
+function mintInvite(email){
+  var rec = { token:newInviteToken(), email:email || null,
+              createdDay:TODAY_DAY, expiresDay:TODAY_DAY + INVITE_DAYS,
+              used:false, revoked:false };
+  var all = invites(); all.push(rec); Store.set('invites', all);
+  return rec;
+}
+function inviteByToken(t){
+  var m = invites().filter(function(i){ return i.token === t; })[0];
+  /* a spent, revoked or expired token is the same answer to the visitor: this
+     link does not work. The distinction is the server's business, not the page's. */
+  if(!m || m.used || m.revoked || TODAY_DAY > m.expiresDay) return null;
+  return m;
+}
+function updateInvite(t, patch){
+  var all = invites();
+  all.forEach(function(i){ if(i.token === t) Object.keys(patch).forEach(function(k){ i[k] = patch[k]; }); });
+  Store.set('invites', all);
+}
+/* The URL the copied link carries. Built from where the prototype actually is, so
+   the link genuinely opens — paste it anywhere and it works, on Pages, in the
+   artifact or on localhost. A real portal would mint this against its own domain. */
+function inviteURL(token){
+  var base = location.href.split('?')[0].split('#')[0].replace(/[^/]*$/, '');
+  return base + 'landing.html?invite=' + encodeURIComponent(token);
 }
 function storeDeleteUser(email){
   var ds = Store.get('datasets');
@@ -297,8 +359,12 @@ function setSession(next, opts){
      reveals whatever account the demo is currently set to — which is how "the
      populated state with that account's licences, OR the empty state if the account
      has none" comes out without a branch of its own. */
-  if(next === 'existing' && !opts.keepDash && (DASH_STATES[Store.get('dash')] || {}).empty){
-    Store.set('dash', 'dashB');
+  /* ⚠️ Reads the STATE's dataset, not a flag: "is the dashboard this demo is set to
+     an empty one" is now answered by which dataset it names. `dashempty` and
+     `dashgrantpending` both point at N, which has no licences. */
+  if(next === 'existing' && !opts.keepDash){
+    var v = (DASH_STATES[Store.get('dash')] || {}).variant;
+    if(v === 'N') Store.set('dash', 'dashB');
   }
   if(opts.go === false) return;
   location.href = next === 'out' ? 'landing.html' : 'index.html';
@@ -329,6 +395,14 @@ var NAV_ITEMS = [
     ic:'<path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9.5 8.5h5M9.5 12.5h5"/>' },
   { key:'activity', href:'activity.html', label:'Activity',
     ic:'<path d="M3 12h4l2.5-6 3 12 2.5-6h6"/>' },
+  /* ⚠️ BACK in the destination strip (2026-09-17), reversing the pass that moved it
+     into a nested level of the profile menu. That level put `Log in as` and Delete —
+     the two most destructive actions in the portal — one hover away, inside a
+     control that does not exist on touch and stopped scaling after a handful of
+     rows. Both now live only on the Users page, where the subject is on screen. */
+  { key:'users',    href:'users.html',    label:'Users',
+    ic:'<circle cx="9" cy="8" r="3.2"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/>'
+      + '<path d="M16.5 5.5a3 3 0 0 1 0 5.6"/><path d="M17.5 19a5.4 5.4 0 0 0-1.6-3.8"/>' },
 ];
 
 function navItemsHTML(extraClass){
@@ -358,10 +432,10 @@ function bottomNavHTML(){
    which is the whole of requirement "the logo goes to Home instead". */
 function brandHTML(){
   var href = isSignedIn() ? 'index.html' : 'landing.html';
-  return '<a class="dbrand" href="' + href + '" aria-label="ThingsBoard License Portal" title="'
-    + (isSignedIn() ? 'Home' : 'ThingsBoard License Portal') + '">'
+  return '<a class="dbrand" href="' + href + '" aria-label="ThingsBoard Licenses" title="'
+    + (isSignedIn() ? 'Home' : 'ThingsBoard Licenses') + '">'
     + '<div class="mark"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4v16M4 12h16"/></svg></div>'
-    + '<div class="bt">ThingsBoard<span class="bsep">\u00b7</span>License Portal</div>'
+    + '<div class="bt">ThingsBoard<span class="bsep">\u00b7</span>Licenses</div>'
     + '</a>';
 }
 
@@ -378,7 +452,7 @@ function publicChromeHTML(){
   +     brandHTML()
   +     '<span class="sp"></span>'
   +     '<div class="pubacts">'
-  +       '<button class="btn sec" data-auth="login">Log in</button>'
+  +       '<button class="btn sec" data-auth="login">Sign in</button>'
   +       '<button class="btn" data-auth="signup">Sign up</button>'
   +     '</div>'
   +   '</div>'
@@ -424,29 +498,9 @@ function chromeHTML(){
   +     '<div class="dprofmenu" id="dashProfMenu" role="menu" hidden>'
   +       '<a role="menuitem" href="account.html">Account</a>'
   +       '<a role="menuitem" href="billing.html">Billing &amp; payment</a>'
-  /* Users, as a nested level: who can get into the account is an account fact, so
-     it belongs beside Account and Billing rather than in the destination strip.
-     ⚠️ The submenu is FILLED at open time by syncUsersSubmenu(), not here — the
-     user list lives in the dataset and the chrome is built once per page load,
-     long before a user is added or deleted. */
-  +       '<div class="dprofsub" id="dashUsersSub">'
-  +         '<button class="dprofsub-t" id="dashUsersBtn" role="menuitem"'
-  +           ' aria-haspopup="true" aria-expanded="false">'
-  +           '<span>Users</span>'
-  +           '<svg class="icon dprofsub-caret" viewBox="0 0 24 24" aria-hidden="true">'
-  +             '<path d="M9 5l7 7-7 7"/></svg>'
-  +         '</button>'
-  +         '<div class="dprofsub-p" id="dashUsersPanel" role="menu" aria-label="Users" hidden>'
-  +           '<button class="dprofsub-back" id="dashUsersBack" hidden>'
-  +             '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>'
-  +             '<span>Users</span></button>'
-  +           '<button class="dprofsub-add" role="menuitem" data-modal="add-user">'
-  +             '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">'
-  +               '<path d="M12 5v14M5 12h14"/></svg>'
-  +             '<span>Add user</span></button>'
-  +           '<div class="dprofsub-list" id="dashUsersList"></div>'
-  +         '</div>'
-  +       '</div>'
+  /* Support, in the one menu that is on every page. ⚠️ Above the separator, with the
+     other account-level things: it is not a destructive action and not a way out. */
+  +       '<a role="menuitem" href="' + EXT.support + '" target="_blank" rel="noopener">Help &amp; support</a>'
   +       '<div class="sep"></div>'
   /* No longer a stub: with a session in the store there is something to sign out
      OF, and a control labelled "Sign out" sitting next to a working log-in that
@@ -507,7 +561,11 @@ function settingsContext(){
     /* the details surface counts in either presentation: the full page, or the
        modal mounted over any list */
     details: page === 'license' || !!(lic && !lic.hidden && $('#licModal #appView')),
-    wizard: !!(nl && !nl.hidden)
+    wizard: !!(nl && !nl.hidden),
+    /* the billing step specifically, not just "a wizard is open": the autofill below
+       has nothing to fill on the other three steps, and a panel action that does
+       nothing where it appears is the thing this panel was cleaned up to stop doing */
+    billStep: !!(nl && !nl.hidden && $('#nlStep4') && !$('#nlStep4').hidden)
   };
 }
 function settingsBodyHTML(){
@@ -552,6 +610,15 @@ function settingsBodyHTML(){
     out += group('Billing data',
       '<label class="sp-opt"><input type="radio" name="billingData" value="saved"' + (billingSaved() ? ' checked' : '') + '><span>Saved</span></label>'
       + '<label class="sp-opt"><input type="radio" name="billingData" value="none"' + (billingSaved() ? '' : ' checked') + '><span>None</span></label>');
+  }
+
+  /* ---- the wizard's billing step: a demo shortcut, labelled as one.
+     Eleven required fields is a lot to type to reach the one screen after them, and
+     a reviewer is here to look at the flow, not to be a typist. It is scoped to the
+     step because there is nothing to fill anywhere else. */
+  if(c.billStep){
+    out += group('Billing step',
+      '<label class="sp-opt"><button class="link" id="devFillBilling">Demo: fill billing with test data</button></label>');
   }
 
   /* ---- always: the session. It is the one setting that applies to every page
@@ -606,7 +673,7 @@ function modalsHTML(){
   +     '<div class="mf"><button class="btn sec" id="modalCloseBtn">Close</button></div>'
   +   '</div>'
   + '</div>'
-  + ADD_USER_HTML + PAY_MODAL_HTML + COUPON_MODAL_HTML;
+  + PAY_MODAL_HTML + COUPON_MODAL_HTML;
 }
 
 /* ---------- inject ---------- */
@@ -656,30 +723,11 @@ function syncAppBar(){
    a user shows up in both without a second source.
    ⚠️ Rendered on every open, not once at inject time: the chrome is built on page
    load and the list changes underneath it. */
-function syncUsersSubmenu(){
-  var host = $('#dashUsersList');
-  if(!host) return;
-  var us = (DATA().users || []);
-  host.innerHTML = us.map(function(u){
-    return '<div class="dprofuser">'
-      + '<span class="dpu-txt">'
-      +   '<span class="dpu-name">' + esc(u.name) + '</span>'
-      +   '<span class="dpu-mail">' + esc(u.email) + '</span>'
-      + '</span>'
-      + '<span class="dpu-act">'
-      +   '<button class="iconbtn ib tip" data-loginas="' + esc(u.email) + '"'
-      +     ' aria-label="Log in as ' + esc(u.name) + '" data-tip="Log in as">'
-      +     '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">'
-      +       '<path d="M14 3h5a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-5"/>'
-      +       '<path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg></button>'
-      +   '<button class="iconbtn ib tip" data-deluser="' + esc(u.email) + '"'
-      +     ' aria-label="Delete ' + esc(u.name) + '" data-tip="Delete">'
-      +     '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">'
-      +       '<path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M6 7l1 13h10l1-13"/></svg></button>'
-      + '</span>'
-      + '</div>';
-  }).join('') || '<div class="dprofsub-empty">No users yet.</div>';
-}
+/* ⚠️ `userRowHTML` / `usersListHTML` / `syncUsersSubmenu` are GONE (2026-09-17).
+   They rendered the two-line user row that lived inside the profile submenu and,
+   briefly, inside the Add user screen. Both surfaces were removed: user management
+   is the Users page's table now, and `userRow` in components.js is the one row
+   builder again. Nothing else read them. */
 
 function syncTopNav(){
   var active = document.body.getAttribute('data-nav') || '';
@@ -783,71 +831,26 @@ function wireGlobal(){
 
   // profile hub
   var pb = $('#dashProfBtn'), pm = $('#dashProfMenu');
-  /* The nested Users level. Desktop: the submenu opens beside its row on hover or
-     click. Phone: the profile menu is already a bottom sheet, so this becomes a
-     SECOND-level sheet — it covers the first one and offers a back row, which is
-     the M3 pattern for a nested sheet (a submenu flying out sideways off a sheet
-     has nowhere to go at 390px). */
-  function closeUsersSub(){
-    var panel = $('#dashUsersPanel'), btn = $('#dashUsersBtn');
-    if(panel){ panel.hidden = true; panel.classList.remove('on'); }
-    if(btn) btn.setAttribute('aria-expanded', 'false');
-  }
-  function openUsersSub(){
-    var panel = $('#dashUsersPanel'), btn = $('#dashUsersBtn');
-    if(!panel) return;
-    syncUsersSubmenu();
-    panel.hidden = false; panel.classList.add('on');
-    if(btn) btn.setAttribute('aria-expanded', 'true');
-  }
+  /* One level, and it closes the way every menu here closes: click outside, or
+     Escape. ⚠️ The nested Users level that used to hang off this menu is gone —
+     with it went openUsersSub/closeUsersSub, the hover bridge that fixed its 6px
+     dead zone, and the panel's own click handler that existed because this menu
+     stops propagation. */
   if(pb){
     pb.addEventListener('click', function(e){
       e.stopPropagation();
       var open = pm.hidden;
       pm.hidden = !open;
-      if(!open) closeUsersSub();          // reopening starts at the first level
       pb.setAttribute('aria-expanded', open ? 'true' : 'false');
     });
     pm.addEventListener('click', function(e){ e.stopPropagation(); });
-    document.addEventListener('click', function(){ if(!pm.hidden){ pm.hidden = true; closeUsersSub(); pb.setAttribute('aria-expanded', 'false'); } });
-    document.addEventListener('keydown', function(e){
-      if(e.key !== 'Escape') return;
-      var panel = $('#dashUsersPanel');
-      // Escape peels one level at a time, deepest first
-      if(panel && !panel.hidden){ closeUsersSub(); var ub = $('#dashUsersBtn'); if(ub) ub.focus(); return; }
-      if(!pm.hidden){ pm.hidden = true; pb.setAttribute('aria-expanded', 'false'); pb.focus(); }
+    document.addEventListener('click', function(){
+      if(!pm.hidden){ pm.hidden = true; pb.setAttribute('aria-expanded', 'false'); }
     });
-    var sub = $('#dashUsersSub');
-    if(sub){
-      $('#dashUsersBtn').addEventListener('click', function(e){
-        e.stopPropagation();
-        var panel = $('#dashUsersPanel');
-        if(panel.hidden) openUsersSub(); else closeUsersSub();
-      });
-      $('#dashUsersBack').addEventListener('click', function(e){ e.stopPropagation(); closeUsersSub(); });
-      /* ⚠️ The panel needs its OWN handler. `#dashProfMenu` stops propagation on
-         click (so a click inside the menu does not reach the document listener that
-         closes it) — which also means the document-level delegation for
-         [data-loginas] / [data-deluser] / [data-modal="add-user"] never fires here.
-         Both buttons were dead on every page until this listener existed.
-         `openLoginAs` / `openDeleteUser` are hoisted function declarations from the
-         block at the end of this file; `openAddUser` is exposed by its IIFE. */
-      $('#dashUsersPanel').addEventListener('click', function(e){
-        var add = e.target.closest('[data-modal="add-user"]');
-        if(add){ pm.hidden = true; closeUsersSub(); if(window.openAddUser) window.openAddUser(); return; }
-        var la = e.target.closest('[data-loginas]');
-        if(la){ pm.hidden = true; closeUsersSub(); openLoginAs(la.getAttribute('data-loginas')); return; }
-        var du = e.target.closest('[data-deluser]');
-        if(du){ pm.hidden = true; closeUsersSub(); openDeleteUser(du.getAttribute('data-deluser')); return; }
-      });
-      // hover opens it on a pointer device only — a touch tap must not need a hover
-      sub.addEventListener('mouseenter', function(){
-        if(window.matchMedia('(hover:hover)').matches) openUsersSub();
-      });
-      sub.addEventListener('mouseleave', function(){
-        if(window.matchMedia('(hover:hover)').matches) closeUsersSub();
-      });
-    }
+    document.addEventListener('keydown', function(e){
+      if(e.key !== 'Escape' || pm.hidden) return;
+      pm.hidden = true; pb.setAttribute('aria-expanded', 'false'); pb.focus();
+    });
   }
 
   /* Impersonation banner (persisted, so it survives navigation).
@@ -895,6 +898,11 @@ function wireGlobal(){
     th.setAttribute('aria-sort', th.getAttribute('aria-sort') === 'descending' ? 'ascending' : 'descending');
   });
 
+  PayCard.wire();          // the card modal is chrome now, not a page's
+  /* delegated, because the banner is rebuilt every time a licence renders */
+  document.addEventListener('click', function(e){
+    if(e.target.closest('[data-paycard]')) PayCard.open(e.target.closest('[data-paycard]'));
+  });
   wireSettingsPanel();
   syncTopNav();
   syncAppBar();
@@ -984,7 +992,103 @@ function licDetailsMode(){ return Store.get('licDetails') === 'page' ? 'page' : 
 // Whether the account already has billing data. With it the wizard commits on
 // Review & pay (3 steps); without it a Billing & payment step is appended and the
 // commit moves there (4 steps). Nothing hardcodes the count — see totalSteps().
-function billingSaved(){ return Store.get('billingData') !== 'none'; }
+/* ---------- the payment method on file ----------------------------------------
+   `PAYMENT_METHOD` in data.js is the demo's card. It is now a FALLBACK: once someone
+   enters one it is stored, and every surface that shows a card reads the stored one.
+   ⚠️ `billingData` (the ⚙ panel's switch) and a stored card have to agree, so saving
+   a card flips the switch to 'saved'. Otherwise the panel could claim there is no
+   card while the billing page displayed the one just entered. */
+function savedCard(){ return Store.get('paymentMethod') || null; }
+function billingSaved(){ return Store.get('billingData') !== 'none' || !!savedCard(); }
+/* Brand from the first digit — the same crude rule a form uses before it has asked
+   anyone: 4 Visa, 5 Mastercard, 3 Amex. Anything else is just a card. */
+function cardBrand(num){
+  var d = String(num || '').replace(/\D/g, '');
+  return d.charAt(0) === '4' ? 'VISA' : d.charAt(0) === '5' ? 'MASTERCARD'
+       : d.charAt(0) === '3' ? 'AMEX' : 'CARD';
+}
+function storePaymentMethod(c){
+  var d = String(c.num || '').replace(/\D/g, '');
+  var last4 = d.slice(-4);
+  Store.set('paymentMethod', {
+    brand: cardBrand(d), last4: last4,
+    num: '\u2022\u2022\u2022\u2022 \u2022\u2022\u2022\u2022 \u2022\u2022\u2022\u2022 ' + last4,
+    // stored as DIGITS, so one rule formats it everywhere (12/28, 12 / 28, 1228 → 1228)
+    exp: String(c.exp || '').replace(/\D/g, '').slice(0, 4),
+    name: c.name || '', country: c.country || ''
+  });
+  Store.set('billingData', 'saved');
+}
+/* What every card surface renders from. Shape matches PAYMENT_METHOD so the callers
+   do not have to know which of the two they got. */
+function paymentMethodData(){
+  var c = savedCard();
+  if(!c) return PAYMENT_METHOD;
+  var exp = c.exp.length === 4 ? (c.exp.slice(0,2) + ' / 20' + c.exp.slice(2)) : c.exp;
+  return { brand:c.brand, num:c.num, exp:'<span class="pc-expw">Expires </span>' + exp };
+}
+/* ---------- scheduled changes -------------------------------------------------
+   THE RULE, and it applies to plan changes and add-ons alike:
+     · anything that GROWS  — higher plan, more capacity, an add-on switched on —
+       applies immediately, prorated, as it always did;
+     · anything that SHRINKS — lower plan, less capacity, an add-on switched off —
+       applies at the END of the current paid period.
+
+   ⚠️ The reason is not billing neatness. Entitlement is enforced by the platform, so
+   taking it away mid-period stops a running instance the person has already paid for
+   this month. Immediate-and-symmetric would have been less code and wrong.
+
+   ⚠️ A MIXED change (something grows, something else shrinks) is scheduled WHOLE. The
+   test is "does any entitlement decrease", not "is the net bill lower": splitting one
+   agreement into two half-applied ones is the thing this rule exists to prevent, and
+   the person agreed to one change on one date.
+
+   The record lives on the licence so every surface can read it: what changes, to what,
+   and when it takes effect. Cancelling it restores nothing — the licence was never
+   modified — it just drops the record and says so. */
+function scheduleChange(lic, rec){
+  lic.scheduled = rec;                       // { summary, effective, apply:{…}, kind }
+  lic.updated = 'Aug 19 2026';
+  Store.save();
+  logActivity({ kind:'updated', entityType:rec.kind === 'plan' ? 'Plan' : 'Add-on',
+    entityName:lic.name, action:'SCHEDULED',
+    txt:'A change to <b>' + esc(lic.label || lic.name) + '</b> was scheduled by ' + PORTAL_ACTOR
+      + ' for ' + fmtDate(rec.effective) + ' — ' + esc(rec.summary),
+    delta:rec.summary });
+}
+function cancelScheduledChange(licId){
+  var lic = licById(licId);
+  if(!lic || !lic.scheduled) return null;
+  var was = lic.scheduled;
+  delete lic.scheduled;
+  lic.updated = 'Aug 19 2026';
+  Store.save();
+  logActivity({ kind:'updated', entityType:'License', entityName:lic.name, action:'SCHEDULE_CANCELED',
+    txt:'The scheduled change to <b>' + esc(lic.label || lic.name) + '</b> was canceled by '
+      + PORTAL_ACTOR + ' — the license keeps its current plan and capacity.' });
+  return was;
+}
+
+/* ---------- recovery from a failed payment ------------------------------------
+   ⚠️ A failed payment is a property of the CARD, not of the licence — one card
+   failing is why a licence is in that state, so replacing the card clears every
+   licence that failed on it, not only the one whose banner you happened to open.
+   Logged per licence, because each is a separate thing coming back to life. */
+function recoverFailedPayments(){
+  var ds = Store.get('datasets'), fixed = [];
+  Object.keys(ds).forEach(function(k){
+    ds[k].licenses.forEach(function(l){
+      if(l.status !== 'payment_failed') return;
+      l.status = 'active';
+      l.updated = 'Aug 19 2026';
+      if(fixed.indexOf(l.id) < 0) fixed.push(l.id);
+      logActivity({ kind:'updated', entityType:'License', entityName:l.name, action:'PAYMENT_RECOVERED',
+        txt:'Payment succeeded on <b>' + esc(l.label || l.name) + '</b> after the payment method was updated — the license is active again.' });
+    });
+  });
+  if(fixed.length) Store.save();
+  return fixed.length;
+}
 function wireSettingsPanel(){
   var gearBtn = $('#gearBtn'), panel = $('#settingsPanel');
   /* ⚠️ Rebuilt on every open. The context (wizard open? details mounted?) changes
@@ -1040,6 +1144,12 @@ function wireSettingsPanel(){
   // the two dev actions, delegated for the same reason
   panel.addEventListener('click', function(e){
     if(e.target.closest('#resetDemo')){ Store.reset(); location.reload(); return; }
+    /* the wizard owns its own state, so the panel asks it rather than writing into
+       the DOM behind its back — NL.fillDemoBilling repaints the step from `bill` */
+    if(e.target.closest('#devFillBilling')){
+      if(window.NL && NL.fillDemoBilling) NL.fillDemoBilling();
+      return;
+    }
     // dev affordance: play the confirmation click that would arrive by email
     if(e.target.closest('#devConfirmEmail')){
       var pend = Store.get('pendingEmail');
@@ -1052,42 +1162,203 @@ function wireSettingsPanel(){
 }
 
 /* ============================================================================
+   Snack — transient confirmation of a completed action
+   ============================================================================
+   A message at the bottom of the viewport that says something HAPPENED, then goes.
+
+   ⚠️ What it carries and what it must not. Confirmations leave; problems stay.
+     · carries — "Invitations sent", "Invite link copied": the action is over, the
+       result is on screen behind it, and nothing is left to do about the message;
+     · never carries — "Already has access", an invalid address, an empty required
+       field. Those belong beside the input, because the person reads them WHILE
+       fixing the thing they describe, and a message that removes itself on a timer
+       is the worst possible place to put an instruction someone has to act on.
+
+   ⚠️ It coexists with `.savednote` ("Saved · 14:32"), and they are not two ways of
+   doing one thing — see the styleguide entry. The note states a PERSISTENT FACT
+   about a form ("this page's values are stored, as of then") and stays until the
+   next edit contradicts it. The snackbar reports a TRANSIENT EVENT on a list. They
+   never appear on the same surface: the settings pages have a page-level Save and
+   no list, the list pages have a list and no page-level Save.
+
+   Positioned clear of the bottom navigation bar on the phone — under it, a
+   confirmation would be a message nobody can read.
+   ========================================================================== */
+var Snack = (function(){
+  var host = null, timer = null;
+  function el(){
+    if(host) return host;
+    host = document.createElement('div');
+    host.className = 'snack';
+    host.id = 'snackbar';
+    /* role=status, not alert: an alert interrupts, and a confirmation of something
+       the person just did has no business taking the cursor off what they are doing */
+    host.setAttribute('role', 'status');
+    host.setAttribute('aria-live', 'polite');
+    host.hidden = true;
+    document.body.appendChild(host);
+    return host;
+  }
+  function hide(){
+    if(timer){ clearTimeout(timer); timer = null; }
+    if(host){ host.classList.remove('on'); host.hidden = true; }
+  }
+  /* `ms` is generous by default: long enough to read a sentence twice, short enough
+     that it is gone before it becomes furniture. */
+  function show(text, ms){
+    var h = el();
+    h.innerHTML = '<span class="snack-t"></span>'
+      + '<button type="button" class="snack-x" aria-label="Dismiss">\u2715</button>';
+    $('.snack-t', h).textContent = text;
+    $('.snack-x', h).addEventListener('click', hide);
+    h.hidden = false;
+    // next frame, so the transition has a state to move from
+    requestAnimationFrame(function(){ h.classList.add('on'); });
+    if(timer) clearTimeout(timer);
+    timer = setTimeout(hide, ms || 4200);
+  }
+  return { show:show, hide:hide };
+})();
+
+/* ============================================================================
+   PayCard — the one update-card surface
+   ============================================================================
+   Lives here, not on the billing page, because two callers need it: the Billing &
+   payment card block, and the "Payment failed" banner on a licence — which appears
+   wherever the details surface does. Opening it over the licence keeps the person
+   where the problem is; sending them to billing.html would have been one surface
+   instead of two, and would also have thrown away what they were looking at.
+
+   ⚠️ This is the ONE flow in the prototype that has to actually work. Everything
+   else can be a placeholder without lying, because nothing has gone wrong; here
+   something has, and the whole point is that the person fixed it. So Update stores
+   the card, closes, says so, and the licence that failed on the old card comes back
+   to life — see recoverFailedPayments().
+   ========================================================================== */
+var PayCard = (function(){
+  var ov, opener = null, savedFns = [];
+  function d(v){ return String(v || '').replace(/\D/g, ''); }
+  var NODE = { num:'#payNum', exp:'#payExp', cvc:'#payCvc', name:'#payName', country:'#payCountry' };
+  /* Same rules, same words as the wizard's billing step — the two surfaces share
+     these fields and must not disagree about when a card is acceptable.
+     Deliberately loose for a wireframe: no Luhn, 4242… passes. The one thing
+     tightened is the expiry MONTH; "four digits" accepted 99/99. */
+  var RULES = {
+    num:  function(){ var v = d($('#payNum').value);
+      if(!v) return 'Enter the card number.';
+      return v.length >= 12 ? null : 'A card number is at least 12 digits — this one has ' + v.length + '.'; },
+    exp:  function(){ var v = d($('#payExp').value);
+      if(!v) return 'Enter the expiry date.';
+      if(v.length < 4) return 'Use MM / YY — for example 12 / 28.';
+      var mm = parseInt(v.slice(0, 2), 10);
+      return (mm >= 1 && mm <= 12) ? null
+        : 'There is no month ' + v.slice(0, 2) + ' — the first two digits are the month.'; },
+    cvc:  function(){ var v = d($('#payCvc').value);
+      if(!v) return 'Enter the security code.';
+      return v.length >= 3 ? null : 'The security code is the 3 or 4 digits on the card.'; },
+    name: function(){ return $('#payName').value.trim() ? null : 'Enter the name printed on the card.'; },
+    country: function(){ return $('#payCountry').value ? null : 'Choose the country the card was issued in.'; }
+  };
+  function keyOf(el){
+    if(!el || !el.id) return null;
+    var hit = null;
+    Object.keys(NODE).forEach(function(k){ if(NODE[k] === '#' + el.id) hit = k; });
+    return hit;
+  }
+  function paint(k, msg){
+    var slot = $('[data-payerr="' + k + '"]', ov);
+    if(slot){ slot.textContent = msg || ''; slot.hidden = !msg; }
+    var f = $(NODE[k], ov); f = f && f.closest('.field');
+    if(!f) return;
+    // num / exp / cvc share one .field: it stays marked while any of the three is wrong
+    if(k === 'num' || k === 'exp' || k === 'cvc'){
+      var any = ['num', 'exp', 'cvc'].some(function(x){
+        var sl = $('[data-payerr="' + x + '"]', ov); return sl && !sl.hidden;
+      });
+      f.classList.toggle('err', any);
+    } else { f.classList.toggle('err', !!msg); }
+  }
+  function badKeys(){ return Object.keys(RULES).filter(function(k){ return !!RULES[k](); }); }
+  function clearAll(){
+    $$('[data-payerr]', ov).forEach(function(s){ s.hidden = true; s.textContent = ''; });
+    $$('.field.err', ov).forEach(function(f){ f.classList.remove('err'); });
+    var sum = $('#payFormErr'); if(sum){ sum.hidden = true; sum.textContent = ''; }
+  }
+  /* The primary is never disabled, so a rejected click has to answer: every failure
+     at once, and the cursor in the first of them. */
+  function showAll(){
+    var bad = badKeys();
+    bad.forEach(function(k){ paint(k, RULES[k]()); });
+    var sum = $('#payFormErr');
+    if(sum){
+      sum.textContent = bad.length === 1
+        ? 'One field needs attention before the card can be saved.'
+        : bad.length + ' fields need attention before the card can be saved.';
+      sum.hidden = !bad.length;
+    }
+    var first = bad.length && $(NODE[bad[0]], ov);
+    if(first){ first.focus(); if(first.scrollIntoView) first.scrollIntoView({ block:'center' }); }
+    return bad.length === 0;
+  }
+  function open(from){
+    ov = $('#payOverlay'); if(!ov) return;
+    opener = from || null;
+    $('#payNum').value = ''; $('#payExp').value = ''; $('#payCvc').value = '';
+    var c = savedCard();
+    if(c){ $('#payName').value = c.name || ''; $('#payCountry').value = c.country || ''; }
+    clearAll();
+    ov.hidden = false;
+    $('#payClose').focus();
+  }
+  function close(){ if(!ov) return; ov.hidden = true; clearAll(); if(opener && opener.focus) opener.focus(); }
+  function save(){
+    if(!showAll()) return;              // rejected: every reason is now on screen
+    storePaymentMethod({ num:$('#payNum').value, exp:$('#payExp').value,
+                         name:$('#payName').value.trim(), country:$('#payCountry').value });
+    var recovered = recoverFailedPayments();
+    var c = savedCard();
+    close();
+    /* Confirmed, and the confirmation says what it did — including the part the
+       person came for. A card saved in silence is the same as a card not saved. */
+    openModal('Payment method updated',
+      '<p>Charges now go to <b>' + esc(c.brand) + ' \u2022\u2022' + esc(c.last4) + '</b>.</p>'
+      + (recovered
+          ? '<p>' + (recovered === 1 ? 'The license that failed on the old card is active again.'
+                                     : recovered + ' licenses that failed on the old card are active again.')
+            + '</p>'
+          : ''));
+    savedFns.forEach(function(fn){ try { fn(); } catch(e){} });
+  }
+  function wire(){
+    ov = $('#payOverlay'); if(!ov) return;
+    $('#payClose').addEventListener('click', close);
+    $('#payCancel').addEventListener('click', close);
+    $('#payUpdate').addEventListener('click', save);
+    ov.addEventListener('click', function(e){ if(e.target === ov) close(); });
+    // blur answers; typing again withdraws the answer, because the value changed
+    ov.addEventListener('focusout', function(e){ var k = keyOf(e.target); if(k) paint(k, RULES[k]()); });
+    ov.addEventListener('change', function(e){ var k = keyOf(e.target); if(k === 'country') paint(k, RULES[k]()); });
+    ov.addEventListener('input', function(e){
+      var k = keyOf(e.target); if(!k) return;
+      var slot = $('[data-payerr="' + k + '"]', ov);
+      if(slot && !slot.hidden) paint(k, null);
+      var sum = $('#payFormErr');
+      if(sum && !sum.hidden && !badKeys().length){ sum.hidden = true; sum.textContent = ''; }
+    });
+    document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && ov && !ov.hidden) close(); });
+  }
+  return { open:open, close:close, wire:wire,
+           onSaved:function(fn){ savedFns.push(fn); } };
+})();
+
+/* ============================================================================
    Shared modal markup
    ========================================================================== */
-var ADD_USER_HTML = ''
-+ '<div class="payoverlay" id="addUserOverlay" hidden>'
-+ '  <div class="paymodal narrow" role="dialog" aria-modal="true" aria-labelledby="auTitle">'
-+ '    <div class="paymodal-h">'
-+ '      <h3 id="auTitle">Add user</h3>'
-+ '      <span class="sp"></span>'
-+ '      <button class="paymodal-x" id="auClose" aria-label="Close">✕</button>'
-+ '    </div>'
-+ '    <div class="paymodal-b" id="auStep1">'
-+ '      <div class="field"><label for="auEmail">Email</label><input type="email" id="auEmail" placeholder="user@company.com" autocomplete="off"></div>'
-+ '      <div class="field2">'
-+ '        <div class="field"><label for="auFirst">First name</label><input type="text" id="auFirst"></div>'
-+ '        <div class="field"><label for="auLast">Last name</label><input type="text" id="auLast"></div>'
-+ '      </div>'
-+ '      <div class="field"><label for="auDesc">Description</label><textarea id="auDesc"></textarea></div>'
-+ '      <div class="field"><label for="auMethod">Activation method</label>'
-+ '        <select id="auMethod">'
-+ '          <option value="link">Display activation link</option>'
-+ '          <option value="email">Send activation email</option>'
-+ '        </select>'
-+ '      </div>'
-+ '    </div>'
-+ '    <div class="paymodal-b" id="auStep2" hidden></div>'
-+ '    <div class="paymodal-f" id="auFoot1">'
-+ '      <span class="sp"></span>'
-+ '      <button class="btn sec" id="auCancel">Cancel</button>'
-+ '      <button class="btn" id="auAdd" disabled>Add</button>'
-+ '    </div>'
-+ '    <div class="paymodal-f" id="auFoot2" hidden>'
-+ '      <span class="sp"></span>'
-+ '      <button class="btn" id="auDone">Done</button>'
-+ '    </div>'
-+ '  </div>'
-+ '</div>';
+/* ⚠️ ADD_USER_HTML is GONE (2026-09-17). Inviting is not a screen any more: it is
+   one row sitting above the Users table, visible while you look at the people it
+   adds to. The invitation model it introduced (mintInvite / inviteByToken /
+   updateInvite / inviteURL, above) survives unchanged and is now driven from
+   page-users.js. `.paymodal.narrow` went with it — nothing else used that width. */
 
 var PAY_MODAL_HTML = ''
 + '<div class="payoverlay" id="payOverlay" hidden>'
@@ -1106,17 +1377,27 @@ var PAY_MODAL_HTML = ''
 + '          <input class="ps-exp" id="payExp" type="text" inputmode="numeric" autocomplete="cc-exp" placeholder="MM / YY" aria-label="Expiry date" maxlength="7">'
 + '          <input class="ps-cvc" id="payCvc" type="text" inputmode="numeric" autocomplete="cc-csc" placeholder="CVC" aria-label="Security code" maxlength="4">'
 + '        </div>'
+/* one slot per subfield, same as the wizard's billing step — the three share a
+   .field, so they cannot share a message without the reader guessing which */
++ '        <div class="fielderr" data-payerr="num" hidden></div>'
++ '        <div class="fielderr" data-payerr="exp" hidden></div>'
++ '        <div class="fielderr" data-payerr="cvc" hidden></div>'
 + '      </div>'
 + '      <div class="field2">'
-+ '        <div class="field"><label>Cardholder name</label><input type="text" id="payName" autocomplete="cc-name" value="Mariia Panchuk"></div>'
-+ '        <div class="field"><label>Country</label><select id="payCountry"><option>United States</option><option>Ukraine</option><option>Germany</option><option>United Kingdom</option></select></div>'
++ '        <div class="field"><label for="payName">Cardholder name</label><input type="text" id="payName" autocomplete="cc-name" value="Mariia Panchuk">'
++ '          <div class="fielderr" data-payerr="name" hidden></div></div>'
++ '        <div class="field"><label for="payCountry">Country</label><select id="payCountry"><option value="">Select a country</option><option>United States</option><option>Ukraine</option><option>Germany</option><option>United Kingdom</option></select>'
++ '          <div class="fielderr" data-payerr="country" hidden></div></div>'
 + '      </div>'
 + '    </div>'
 + '    <div class="paymodal-f">'
++ '      <div class="formerr" id="payFormErr" role="alert" hidden></div>'
 + '      <span class="paystripe-note">Powered by <b>Stripe</b></span>'
 + '      <span class="sp"></span>'
 + '      <button class="btn sec" id="payCancel">Cancel</button>'
-+ '      <button class="btn" id="payUpdate" disabled>Update</button>'
+/* ⚠️ Not disabled. Same contract as the wizard's billing step: a disabled primary
+   cannot say why it is disabled, so this one accepts the click and answers it. */
++ '      <button class="btn" id="payUpdate">Update</button>'
 + '    </div>'
 + '  </div>'
 + '</div>';
@@ -1242,9 +1523,11 @@ window.addEventListener('resize', syncTitleRow);
 /* ---------- users: the actions, shared by every surface that lists them ----------
    Users is a nested level inside the profile menu, which is chrome — so add,
    delete and log-in-as live here rather than in page-users.js. */
+/* One surface reads the user list now: the Users page. Kept as a function rather
+   than inlined because `storeDeleteUser` and the invite row both have to restate
+   whatever is mounted, and on any other page that is nothing at all. */
 function refreshUsersSurfaces(){
   if(typeof renderUsersPage === 'function') renderUsersPage();   // only on users.html
-  syncUsersSubmenu();                                            // only when the submenu exists
 }
 
 function openDeleteUser(email){
@@ -1277,7 +1560,11 @@ function openLoginAs(email){
   openModal('Log in as', '<p>Log in as <b>' + email + '</b>? You will see and manage the portal on their behalf until you return to your own account.</p>');
   var foot = $('#overlay .mf');
   var go = document.createElement('button');
-  go.type = 'button'; go.className = 'btn'; go.id = 'loginAsBtn'; go.textContent = 'Log in';
+  /* ⚠️ Not 'Log in'. The FLOW is called "Log in as" and keeps that name (it is a
+     different thing from signing in — see the Users table), but this button is the
+     confirm of a dialog that already says whose account it is, so it names the act
+     rather than repeating a verb the portal now spells 'Sign in' everywhere else. */
+  go.type = 'button'; go.className = 'btn'; go.id = 'loginAsBtn'; go.textContent = 'Continue as this user';
   foot.appendChild(go);
   $('#modalCloseBtn').textContent = 'Cancel';
   go.addEventListener('click', function(){ impersonate(email); closeModal(); });
@@ -1291,57 +1578,8 @@ document.addEventListener('click', function(e){
   if(la){ openLoginAs(la.getAttribute('data-loginas')); return; }
 });
 
-/* ---------- add user ---------- */
-(function(){
-  var ov = $('#addUserOverlay'); if(!ov) return;
-  var email = $('#auEmail'), addBtn = $('#auAdd');
-  var auSeq = 1;
-  function valid(){ return /.+@.+\..+/.test(email.value.trim()); }
-  function refresh(){ addBtn.disabled = !valid(); }
-  function showStep(n){
-    $('#auStep1').hidden = n !== 1; $('#auFoot1').hidden = n !== 1;
-    $('#auStep2').hidden = n !== 2; $('#auFoot2').hidden = n !== 2;
-  }
-  function open(){
-    email.value = ''; $('#auFirst').value = ''; $('#auLast').value = ''; $('#auDesc').value = ''; $('#auMethod').value = 'link';
-    refresh(); showStep(1); ov.hidden = false; email.focus();
-  }
-  function close(){ ov.hidden = true; }
-  /* two entry points now: the Users page's own button, and the "Add user" row at
-     the top of the profile submenu (on every page). Both open the same modal —
-     the submenu reaches it through window.openAddUser, because the profile menu
-     swallows clicks before any document-level delegation can see them. */
-  var trigger = $('#addUserBtn');
-  if(trigger) trigger.addEventListener('click', open);
-  window.openAddUser = open;
-  email.addEventListener('input', refresh);
-  $('#auClose').addEventListener('click', close);
-  $('#auCancel').addEventListener('click', close);
-  $('#auDone').addEventListener('click', close);
-  ov.addEventListener('click', function(e){ if(e.target === ov) close(); });
-  document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && !ov.hidden) close(); });
-  addBtn.addEventListener('click', function(){
-    if(addBtn.disabled) return;
-    var em = email.value.trim();
-    var name = ($('#auFirst').value.trim() + ' ' + $('#auLast').value.trim()).trim() || em;
-    storeAddUser({ name:name, email:em, created:'Aug 19 2026' });   // persisted
-    refreshUsersSurfaces();
-    if($('#auMethod').value === 'link'){
-      $('#auStep2').innerHTML = '<p class="nl-success-p" style="margin:0">Share this activation link with the user:</p>'
-        + '<div class="nl-keybox" style="margin-top:2px"><code id="auLink">https://portal.thingsboard.io/activate?token=au-' + (1000 + auSeq++) + '-9f2c</code>'
-        + '<button class="iconbtn ib tip" id="auCopy" data-tip="Copy" aria-label="Copy activation link"><svg class="icon" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg></button></div>';
-    } else {
-      $('#auStep2').innerHTML = '<p class="nl-success-p" style="margin:0">Activation email sent to <b>' + em + '</b>.</p>';
-    }
-    showStep(2);
-    $('#auDone').focus();
-  });
-  ov.addEventListener('click', function(e){
-    var c = e.target.closest('#auCopy'); if(!c) return;
-    var flash = function(){
-      c.setAttribute('data-tip', 'Copied'); c.classList.add('show', 'copied');
-      setTimeout(function(){ c.classList.remove('show', 'copied'); c.setAttribute('data-tip', 'Copy'); }, 1200);
-    };
-    if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText($('#auLink').textContent).then(flash, flash); } else { flash(); }
-  });
-})();
+/* ⚠️ The Add user controller is GONE with its screen. Inviting, the invite link and
+   the "who has access" list all live on the Users page now (page-users.js), which
+   is the one place the subject — the people — is already on screen. What stays here
+   is what every page needs: the invitation records above, and the delegated
+   [data-loginas] / [data-deluser] handlers, which the table's rows use. */
