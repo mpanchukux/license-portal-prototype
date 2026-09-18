@@ -57,10 +57,11 @@ var DETAILS_HTML = ''
 + '                <button class="btn sec" id="couponBtn">Apply coupon</button>'
 + '                <button class="btn" id="changePlanBtn" data-modal="change-plan" data-page="sub">Change plan</button>'
 + '                <button class="btn sec" id="renewBtn" data-page="sub" hidden>Renew subscription</button>'
-+ '                <!-- inferred: a perpetual license does not renew and has nothing to'
-+ '                     cancel, so Change plan and the ⋮ menu are dropped; the primary'
-+ '                     action becomes a one-time capacity purchase. Confirm with team. -->'
-+ '                <button class="btn" data-modal="add-capacity" data-page="perp">Add capacity</button>'
++ '                <!-- a perpetual does not renew and has nothing to cancel, so Change'
++ '                     plan and the ⋮ menu are dropped. Its primary is `Manage`: the same'
++ '                     wizard a subscription opens, committing as a one-time purchase'
++ '                     with no proration and no renewal. -->'
++ '                <button class="btn" data-modal="add-ons" data-page="perp">Manage</button>'
 + '                <div class="menu" data-page="sub" id="headKebabMenu">'
 + '                  <button class="btn sec kebab-btn" id="headKebabBtn" aria-haspopup="true" aria-expanded="false" aria-label="More actions">⋮</button>'
 + '                  <div class="pop" id="headKebabPop" role="menu" hidden>'
@@ -79,10 +80,10 @@ var DETAILS_HTML = ''
 + '            </div>'
 + ''
 + '            <!-- row 2: the label — a muted description line under the title -->'
-+ '            <!-- a scheduled change: stated quietly, with the way to undo it. Not a'
-+ '                 banner — zone 1 is for things that are wrong, and an agreed change on'
-+ '                 a known date is not one of them. -->'
-+ '            <p class="schedline" id="schedLine" hidden></p>'
++ '            <!-- ⚠️ The scheduled-change line USED TO SIT HERE, under the title. It'
++ '                 moved into the Plan block (see #schedLine there): everything it'
++ '                 describes — production instances, development instances, AI credits —'
++ '                 is a row of that table, so it belongs above the table it is about. -->'
 + '            <div class="metarow">'
 + '              <span id="labelSlot"><button class="chip ghost" id="addLabel">+ Add label</button></span>'
 + '              <!-- phone: status and label merged into one calm supporting line'
@@ -113,7 +114,7 @@ var DETAILS_HTML = ''
 /* ⚠️ An outbound LINK, not a button with a placeholder. Installing a key is not
    the portal's job — the key is entered in ThingsBoard itself, the platform syncs,
    and this surface reflects what came back. The honest control is one that leaves. */
-+ '                  <a class="iconbtn ib tip" id="installBtn" href="' + EXT.install + '" target="_blank" rel="noopener" aria-label="Installation instructions" data-tip="Installation instructions">'
++ '                  <a class="iconbtn ib tip" id="installBtn" href="' + EXT.install + '" target="_blank" rel="noopener" aria-label="Installation instructions (opens in a new tab)" data-tip="Installation instructions \u2197">'
 + '                    <svg class="icon" viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4"/><path d="M9 12h6M9 16h6"/></svg>'
 + '                  </a>'
 + '                </div>'
@@ -139,9 +140,14 @@ var DETAILS_HTML = ''
 + '                   software-updates term -->'
 + '              <div class="keycol right" data-page="perp">'
 + '                <h3 class="periodhead">Software updates</h3>'
-+ '                <div class="period" id="periodPerp">1 year · until Aug 13 2027</div>'
++ '                <div class="period" id="periodPerp">1 year &middot; until Aug 13 2027</div>'
 + '                <h3 class="rowlabel mob-only" id="periodLabelPerp"></h3>'
 + '                <div class="rowvalue mob-only" id="periodValuePerp"></div>'
++ '                <!-- ⚠️ What the date MEANS, next to the date. PERPETUAL + Active +'
++ '                     "Expires ..." read as a contradiction, and nothing said what is'
++ '                     lost on that day. Filled from UPDATES_LAPSE so the owner reads the'
++ '                     same sentence the buyer was shown. -->'
++ '                <p class="updnote" id="updatesNote"></p>'
 + '              </div>'
 + '            </div>'
 + ''
@@ -164,8 +170,24 @@ var DETAILS_HTML = ''
 + '                <!-- inferred: capacity is bought once, so this opens a one-time'
 + '                     purchase flow — not the recurring Manage add-ons flow, which'
 + '                     computes proration and a new monthly total. -->'
-+ '                <button class="btn sec" data-modal="add-capacity" data-page="perp">Add capacity</button>'
++ '                <!-- ⚠️ NO perpetual Manage here. On a subscription the header says'
++ '                     `Change plan` and this says `Manage` — two different actions, two'
++ '                     words. On a perpetual the header ALREADY says `Manage` and opens'
++ '                     this very wizard, so a second one two inches below it was the same'
++ '                     word for the same thing twice on one screen. -->'
 + '              </div>'
++ ''
++ '              <!-- A scheduled change, as the first thing in the block it changes.'
++ '                   ⚠️ It wears `.alert` — the styleguide\'s existing page-alert banner —'
++ '                   and NOT a new treatment. The old note here said a banner was wrong'
++ '                   because "zone 1 is for things that are wrong"; that objection was'
++ '                   about the SLOT, not the clothing, and this no longer sits in that'
++ '                   slot. `.alert` is a light box with an ink rule, not a red flag, so'
++ '                   nothing about it claims something has gone wrong. The glyph is a'
++ '                   clock rather than the specimen\'s warning mark, for the same reason.'
++ '                   Filled by renderScheduled(); hidden when nothing is scheduled. -->'
++ '              <div class="alert sched" id="schedLine" role="status" hidden></div>'
++ ''
 + '              <table class="plantable">'
 + '                <thead>'
 + '                  <!-- Usage is hidden in the UI, not removed: the cells are still'
@@ -277,53 +299,47 @@ var DETAILS_HTML = ''
 + '                <button class="iconbtn ib" data-refresh aria-label="Refresh" title="Refresh"><svg class="icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg></button>'
 + '              </div>'
 + ''
-+ '              <!-- PRODUCTION instances -->'
++ '              <!-- ⚠️ RENDERED, not written. This used to be two hardcoded rows —'
++ '                   the same two ids, the same blank labels, the same dates, for every'
++ '                   licence in the product. Now both tables are filled by'
++ '                   renderInstances() from the licence\'s own `instances`. -->'
++ '              <p class="inst-note" id="instNote"></p>'
 + '              <div class="insttype" data-insttype="prod">'
 + '                <table class="insttable">'
 + '                  <thead>'
 + '                    <tr>'
-+ '                      <th class="chk"><input type="checkbox" aria-label="Select all production instances"></th>'
 + '                      <th>Instance ID</th>'
 + '                      <th>Label</th>'
++ '                      <th>Status</th>'
 + '                      <th>Last activity time</th>'
 + '                      <th class="sortable" aria-sort="descending" tabindex="0">Created time <span class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></span></th>'
 + '                    </tr>'
 + '                  </thead>'
-+ '                  <tbody>'
-+ '                    <tr>'
-+ '                      <td class="chk"><input type="checkbox" aria-label="Select instance a1b2c3d4…e5f"></td>'
-+ '                      <td class="mono">' + 'a1b2c3d4…e5f'
-+ '                        <button class="iconbtn ib mob-only inst-copy" aria-label="Copy instance ID">' + COPYSVG + '</button></td>'
-+ '                      <td class="muted">—</td>'
-+ '                      <td>' + fmtDate(dayStr(-1)).replace(/, (\d{4})$/, ' <span class="yr">$1</span>') + '</td>'
-+ '                      <td>' + fmtDate(dayStr(-5)) + '</td>'
-+ '                    </tr>'
-+ '                    <tr>'
-+ '                      <td class="chk"><input type="checkbox" aria-label="Select instance 7e5f9a2b…c3d"></td>'
-+ '                      <td class="mono">' + '7e5f9a2b…c3d'
-+ '                        <button class="iconbtn ib mob-only inst-copy" aria-label="Copy instance ID">' + COPYSVG + '</button></td>'
-+ '                      <td class="muted">—</td>'
-+ '                      <td>' + fmtDate(dayStr(-3)).replace(/, (\d{4})$/, ' <span class="yr">$1</span>') + '</td>'
-+ '                      <td>Aug 13 2026</td>'
-+ '                    </tr>'
-+ '                  </tbody>'
++ '                  <tbody id="instBodyProd"></tbody>'
 + '                </table>'
-+ '                <div class="pager instpager">'
++ '                <div class="pager instpager" id="instPagerProd">'
 + '                  <span class="spacer"></span>'
 + '                  <span>Items per page<select aria-label="Items per page"><option>10</option><option>20</option><option>50</option><option>100</option></select></span>'
-+ '                  <span class="range">1–2 of 2</span>'
++ '                  <span class="range" id="instRangeProd">0 of 0</span>'
 + '                  <span class="pagebtns">'
-+ '                    <button disabled aria-label="First page">«</button>'
-+ '                    <button disabled aria-label="Previous page">‹</button>'
-+ '                    <button disabled aria-label="Next page">›</button>'
-+ '                    <button disabled aria-label="Last page">»</button>'
++ '                    <button disabled aria-label="First page">&laquo;</button>'
++ '                    <button disabled aria-label="Previous page">&lsaquo;</button>'
++ '                    <button disabled aria-label="Next page">&rsaquo;</button>'
++ '                    <button disabled aria-label="Last page">&raquo;</button>'
 + '                  </span>'
 + '                </div>'
 + '              </div>'
 + ''
-+ '              <!-- DEVELOPMENT instances — seeded empty to show the empty-state -->'
 + '              <div class="insttype" data-insttype="dev" hidden>'
-+ '                <div class="emptybox">Instances appear here automatically when a deployment is activated with this license.</div>'
++ '                <table class="insttable" id="instTableDev">'
++ '                  <thead>'
++ '                    <tr>'
++ '                      <th>Instance ID</th><th>Label</th><th>Status</th>'
++ '                      <th>Last activity time</th><th>Created time</th>'
++ '                    </tr>'
++ '                  </thead>'
++ '                  <tbody id="instBodyDev"></tbody>'
++ '                </table>'
 + '              </div>'
 + ''
 + '              <!-- Community Grant: nothing has connected with the new key yet, so the'
@@ -476,6 +492,14 @@ function renderPeriodRow(lic, pk){
 function statusChipHTML(lic){
   if(lic.status === 'canceled')
     return '<span class="chip status off">Canceled &middot; active until ' + fmtDate(lic.event) + '</span>';
+  /* ⚠️ BLOCKED IS A STATUS, and this is the one exception to "attention states live in
+     the banner, not the chip". The rule holds for payment failed, expiring updates and
+     awaiting check-in: the licence still works, and the banner says what to do before
+     it stops. Over the instance limit is different — the banner says the licence IS
+     blocked right now, and a chip reading `● Active` beside that sentence contradicts
+     it outright. The chip answers "is this licence alive"; here the answer is no. */
+  if(instOverLimit(lic))
+    return '<span class="chip status blocked">Blocked &middot; over instance limit</span>';
   return '<span class="chip status"><span class="sdot"></span>Active</span>';
 }
 function renderEntitlements(entList, extras){
@@ -494,7 +518,7 @@ function renderEntitlements(entList, extras){
 function renderLicInvoices(lic){
   var body = $('#licInvBody'); if(!body) return;
   var opts = { noProduct:true };
-  var list = DATA().invoices.filter(function(v){ return v.licId === lic.id; });
+  var list = invoicesSorted().filter(function(v){ return v.licId === lic.id; });
   /* ⚠️ THREE cases, and the old code had one line for all of them. "No invoices for
      this license yet." shown to someone who had just paid reads as "your payment
      failed" — which is exactly how the participant read it. It is now reserved for an
@@ -542,6 +566,32 @@ function alertAction(short, long, attrs, mobOnly){
 function renderLicenseAlert(lic){
   var al = $('#subAlert'); if(!al) return;
   var t = $('.atxt', al), st = lic.status;
+  /* ⚠️ OVER THE INSTANCE LIMIT is checked FIRST, and it is derived rather than stored:
+     it is a comparison between what is running and what the plan allows, so it cannot
+     be forgotten on a licence the way a status field can. Before this, the demo had a
+     licence running two instances against a limit of one, showing `Active`, with
+     nothing anywhere saying so.
+
+     ⚠️ Devices deliberately have no equivalent. The platform refuses connections past
+     the licence's allowance, so a device count can never exceed its limit — an
+     over-limit device banner would describe a state that cannot happen.
+
+     ⚠️ PROVISIONAL WORDING: "the whole licence is blocked" is what was said verbally
+     and is being confirmed with the team. Nothing in the repository states what the
+     portal blocks. If it turns out only the extra instance is refused, this sentence
+     is the only thing that changes — the count, the action and the attention routing
+     stay as they are. */
+  if(instOverLimit(lic)){
+    t.innerHTML = '<span class="amsg"><b>Over the production instance limit.</b> '
+      + instRunning(lic) + ' running, ' + instAllowed(lic) + ' allowed on this plan \u2014 '
+      + 'this license is blocked until the count is back within its limit.</span>'
+      /* ⚠️ NOT a third "Manage" on one screen. The header already carries the licence's
+         `Manage`; this one is about the instance count specifically, so it says so.
+         Same wizard, named for what it is being opened to change. */
+      + alertAction('Manage', 'Manage instances', 'data-modal="add-ons"');
+    al.hidden = false;
+    return;
+  }
   /* M3 banner: leading icon, the message with its concrete date, and the action as a
      text button — on the phone the two sit side by side on ONE row, the action
      vertically centred against the message; on the desktop the band stays the single
@@ -560,14 +610,16 @@ function renderLicenseAlert(lic){
       + alertAction('Update', 'Update payment method', 'data-paycard')
       /* the third contextual support route: a failed payment is the other place
          people get stuck with nothing left to try */
-      + '<a class="link alert-help" href="' + EXT.support + '" target="_blank" rel="noopener">Contact support</a>';
+      + '<a class="link alert-help" href="' + EXT.support + '" target="_blank" rel="noopener">Contact support' + EXTSVG + '</a>';
     al.hidden=false;
   }
   else if(st==='updates_expiring'){
+    /* ⚠️ The banner told you to renew and carried NO control that did it — its only
+       button opened the documentation in a new tab. It now opens the same purchase
+       modal the menu item opens, so the instruction and the means are in one place. */
     t.innerHTML = '<span class="amsg"><b>Software updates expire ' + fmtDate(lic.event)
-      + '.</b> Renew to keep receiving updates and support.</span>'
-      + '<a class="btn ter aact mobact" href="' + EXT.updates + '" target="_blank" rel="noopener">'
-      +   '<span class="aact-long">About the updates term</span><span class="aact-short">Updates</span></a>';
+      + '.</b> ' + UPDATES_LAPSE_SHORT + '</span>'
+      + alertAction('Renew', 'Renew software updates', 'data-renewupdates="' + esc(lic.id) + '"');
     al.hidden=false;
   }
   /* A cancelled subscription's banner states a fact and has no action of its own:
@@ -582,22 +634,28 @@ function renderLicenseAlert(lic){
   else if(st==='awaiting_checkin'){
     t.innerHTML = '<span class="amsg"><b>No instance has checked in yet.</b> The license key was issued '
       + fmtDate(lic.created) + ' \u2014 activate an instance with it and it appears here. '
-      + '<a class="link inlineact" href="' + EXT.install + '" target="_blank" rel="noopener" style="margin-left:6px">Installation guide &rarr;</a></span>'
+      + '<a class="link inlineact" href="' + EXT.install + '" target="_blank" rel="noopener" style="margin-left:6px">Installation guide' + EXTSVG + '</a></span>'
       + '<a class="btn ter aact mobact" href="' + EXT.install + '" target="_blank" rel="noopener">'
-      +   '<span class="aact-long">Installation guide</span><span class="aact-short">Set up</span></a>';
+      +   '<span class="aact-long">Installation guide' + EXTSVG + '</span><span class="aact-short">Set up' + EXTSVG + '</span></a>';
     al.hidden=false;
   }
   else al.hidden = true;
 }
 /* The scheduled change, on the surface that owns the licence. It names what changes
-   and when, and carries the only way to call it off. */
+   and when, and carries the only way to call it off.
+   ⚠️ Renders into the Plan block's banner (see the markup above), because every figure
+   it mentions is a row of the table directly beneath it. Same text, same action; what
+   changed is that the reader no longer has to carry the sentence down the page. */
+var SCHEDSVG = '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">'
+  + '<circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l2.8 1.8"/></svg>';
 function renderScheduled(lic){
   var el = $('#schedLine'); if(!el) return;
   var sc = lic && lic.scheduled;
   if(!sc){ el.hidden = true; el.innerHTML = ''; return; }
-  el.innerHTML = '<span><b>Scheduled for ' + fmtDate(sc.effective) + ':</b> ' + esc(sc.summary)
+  el.innerHTML = SCHEDSVG
+    + '<span class="atxt"><b>Scheduled for ' + fmtDate(sc.effective) + ':</b> ' + esc(sc.summary)
     + ' Current allowances stay until then.</span>'
-    + '<button class="link" data-cancelsched="' + esc(lic.id) + '">Cancel this change</button>';
+    + '<button class="link sched-cancel" data-cancelsched="' + esc(lic.id) + '">Cancel this change</button>';
   el.hidden = false;
 }
 document.addEventListener('click', function(e){
@@ -607,9 +665,16 @@ document.addEventListener('click', function(e){
   var was = cancelScheduledChange(id);
   if(!was) return;
   var lic = licById(id);
-  if(window.LicenseDetails && LicenseDetails.isOpen()) LicenseDetails.reopen(lic);
-  else if(typeof renderLicense === 'function') renderLicense(lic);
-  if(typeof refreshLicenseSurfaces === 'function') refreshLicenseSurfaces();
+  /* ⚠️ `renderLicense` NEVER EXISTED — grepped: no file defines it, so the page-mode
+     branch of this handler has always been dead. Cancelling a scheduled change on
+     license.html removed it from the store and left the banner on screen until a
+     reload. Invisible while the banner was a quiet line under the title; not invisible
+     now that it is the first thing in the Plan block. `afterChange()` is the module's
+     own re-render and serves BOTH hosts, so there is no second name to keep alive. */
+  if(window.LicenseDetails){
+    if(LicenseDetails.isOpen()) LicenseDetails.reopen(lic);
+    else LicenseDetails.afterChange();
+  }
   openModal('Scheduled change canceled',
     '<p>The change due on <b>' + fmtDate(was.effective) + '</b> will not happen. '
     + 'This license keeps its current plan and capacity.</p>');
@@ -688,7 +753,7 @@ function renderGrantChrome(lic){
   var coupon = $('#couponBtn'); if(coupon) coupon.hidden = isGrant;
   // the data-page pass above already restored these for a perpetual licence,
   // so a grant only has to take them back out
-  if(isGrant) $$('#appView [data-modal="add-capacity"]').forEach(function(b){ b.hidden = true; });
+  if(isGrant) $$('#appView [data-page="perp"][data-modal="add-ons"]').forEach(function(b){ b.hidden = true; });
   var invEmpty = $('#grantInvEmpty'); if(invEmpty) invEmpty.hidden = !isGrant;
   // the invoice block is no longer keyed by data-page (one table serves sub and perp),
   // so the grant hides it by id
@@ -719,6 +784,10 @@ function renderLicenseDetails(lic){
     // `.period` is --ink for every other licence; the grant matches it
     if(pp && lic.grant) pp.textContent = 'No expiry';
     else if(pp) pp.textContent = (lic.status==='updates_expiring' ? 'Expires ' : 'Until ') + fmtDate(lic.event);
+    /* the sentence that stops the date reading as "the licence expires". A grant has
+       no updates term at all, so it gets no note rather than an irrelevant one. */
+    var un = $('#updatesNote');
+    if(un){ un.textContent = UPDATES_LAPSE; un.hidden = !!lic.grant; }
   } else {
     var ps = $('#periodSub');
     if(ps) ps.textContent = (lic.status==='canceled' ? 'Active until ' : 'Renews ') + fmtDate(lic.event);
@@ -732,7 +801,9 @@ function renderLicenseDetails(lic){
     else { if(nc) nc.textContent=price;
            if(when) when.innerHTML='<span class="nc-on">on </span>'+fmtDate(lic.event); }
   }
+  renderLicenseKey(lic);
   renderLicInvoices(lic);
+  renderInstances(lic);
   renderEntitlements(spec.ent, lic.extras);
   renderLicenseFeatures(lic, spec);
   renderLicenseAlert(lic);
@@ -740,6 +811,179 @@ function renderLicenseDetails(lic){
   renderLicenseActions(lic);
   renderLicFeed(lic);
 }
+
+/* ---------- the licence key, per licence and masked on open ----------
+   ⚠️ Called from renderLicenseDetails, so it runs on EVERY open — page mount, modal
+   open, and every re-render after a change. That is what makes "re-masks when the
+   panel is closed or another licence is opened" true without a close handler: there
+   is no path that shows a licence without going through here. */
+function setKeyRevealed(on){
+  var t = $('#keyText'), b = $('#revealBtn');
+  if(!t || !b) return;
+  t.textContent = on ? t.dataset.full : t.dataset.masked;
+  var eye = $('.eye', b), eyeOff = $('.eyeoff', b);
+  // note: .hidden as a JS property is a no-op on SVG elements — toggle the attribute
+  if(on){ eye && eye.setAttribute('hidden',''); eyeOff && eyeOff.removeAttribute('hidden'); }
+  else  { eyeOff && eyeOff.setAttribute('hidden',''); eye && eye.removeAttribute('hidden'); }
+  b.setAttribute('aria-pressed', on ? 'true' : 'false');
+  b.setAttribute('aria-label', on ? 'Hide license key' : 'Reveal license key');
+  b.setAttribute('title', on ? 'Hide' : 'Reveal');
+}
+function renderLicenseKey(lic){
+  var t = $('#keyText'); if(!t) return;
+  var key = licenseKeyFor(lic);
+  t.dataset.full = key;
+  t.dataset.masked = licenseKeyMask(key);
+  setKeyRevealed(false);              // never inherit the previous licence's state
+}
+
+/* ---------- instances -------------------------------------------------------
+   ⚠️ The STATUS column is derived, never stored: an instance has a last check-in and
+   a known cadence, and "healthy" is a reading of those two, not a third fact that
+   could drift out of step with them. See CHECKIN_INTERVAL_H / instStale in data.js.
+
+   The cadence is stated ONCE, above the table (`#instNote`), because a column that
+   says "Stale" without saying what it is measured against asks the reader to guess
+   the very thing they came to find out. */
+function instStatusCell(i){
+  return instStale(i)
+    ? '<td><span class="pill attn">Stale</span></td>'
+    : '<td><span class="pill soft">Healthy</span></td>';
+}
+/* ⚠️ The full id is on the page, not truncated away from it. It used to render as
+   `a1b2c3d4…e5f` with no way to see or copy the rest — an identifier you cannot read
+   or paste is decoration. `.inst-id` clips with CSS so the column keeps its width,
+   `title` gives it on hover, and the copy button puts the WHOLE value on the
+   clipboard (the truncation was only ever visual). */
+function instRow(i){
+  var id = esc(i.id);
+  return '<tr data-instid="' + id + '">'
+    + '<td class="mono"><span class="inst-id" title="' + id + '">' + id + '</span>'
+    +   '<button class="iconbtn ib tip inst-copy" data-instcopy="' + id + '"'
+    +     ' aria-label="Copy instance ID" data-tip="Copy instance ID">' + COPYSVG + '</button></td>'
+    + '<td class="inst-labelcell">'
+    +   (i.label ? '<span class="inst-label">' + esc(i.label) + '</span>'
+                 : '<span class="muted">&mdash;</span>')
+    +   '<button class="iconbtn ib tip inst-editlabel" data-instlabel="' + id + '"'
+    +     ' aria-label="Edit label" data-tip="Edit label">' + PENSVG + '</button></td>'
+    + instStatusCell(i)
+    + '<td>' + fmtDateTime(i.seen) + '</td>'
+    + '<td>' + fmtDate(i.created) + '</td></tr>';
+}
+function renderInstances(lic){
+  var prod = instancesOf(lic, 'prod'), dev = instancesOf(lic, 'dev');
+  var note = $('#instNote');
+  if(note){
+    /* one sentence, and it carries the number the column is read against */
+    note.textContent = 'Licenses check in about every ' + CHECKIN_INTERVAL_H
+      + ' hours. An instance that has not checked in since then is shown as stale.';
+    note.hidden = !(prod.length || dev.length);
+  }
+  var pb = $('#instBodyProd');
+  if(pb) pb.innerHTML = prod.length
+    ? prod.map(instRow).join('')
+    : '<tr><td colspan="5" class="emptybox">Instances appear here automatically when a deployment is activated with this license.</td></tr>';
+  var db = $('#instBodyDev');
+  if(db) db.innerHTML = dev.length
+    ? dev.map(instRow).join('')
+    : '<tr><td colspan="5" class="emptybox">No development instances are running with this license.</td></tr>';
+  var pager = $('#instPagerProd'); if(pager) pager.hidden = !prod.length;
+  var range = $('#instRangeProd');
+  if(range) range.textContent = prod.length ? ('1\u2013' + prod.length + ' of ' + prod.length) : '0 of 0';
+}
+
+/* An instance label is set the same way a licence label is — a small dialog, the same
+   writer shape, the same activity entry — because it is the same job on a smaller
+   object. ⚠️ It writes onto the instance INSIDE the store\'s licence, so it survives a
+   reload like every other mutation; `Store.save()` is what makes that true. */
+function openInstanceLabelModal(instId){
+  var lic = activeLicense; if(!lic) return;
+  var i = instancesOf(lic).filter(function(x){ return x.id === instId; })[0];
+  if(!i) return;
+  openModal('Edit instance label',
+    '<div class="field"><label for="instLabelInput">Label</label>'
+    + '<input id="instLabelInput" type="text" autocomplete="off" placeholder="e.g. HQ node 1" value="' + esc(i.label || '') + '">'
+    + '<div class="help">A label tells this instance apart from the others running on the same license.</div></div>');
+  $('#modalCloseBtn').textContent = 'Cancel';
+  var inp = $('#instLabelInput');
+  var save = modalAction('Save', function(){
+    var was = i.label;
+    i.label = String(inp.value || '').trim();
+    Store.save();
+    if(i.label !== was){
+      logActivity({ kind:'updated', entityType:'Instance', entityName:(i.label || i.id), action:'UPDATED',
+        txt: i.label
+          ? ('Label <b>' + esc(i.label) + '</b> was set on an instance of <b>' + esc(lic.name) + '</b> by ' + portalActor() + '.')
+          : ('Label was cleared on an instance of <b>' + esc(lic.name) + '</b> by ' + portalActor() + '.') });
+    }
+    renderInstances(lic);
+    closeModal();
+  });
+  inp.addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); save.click(); } });
+  inp.focus(); inp.select();
+}
+
+/* ---------- buy software updates ---------------------------------------------
+   ⚠️ This was a dead control in two places at once — the row kebab and the licence
+   page — and it was dead in the worst way: it LOOKED like it worked (a new tab opened
+   behind an open menu) so nothing told the person to stop. One participant pressed it
+   five times across two surfaces. It now costs money and says so.
+
+   ⚠️ PRICE: 40% of the licence's base price (UPDATES_RENEW_RATE), computed from the
+   licence rather than typed per tier, so it follows the price list. The rate itself is
+   unconfirmed in writing — see NOTES.
+
+   ⚠️ TERM: 12 months FROM THE PURCHASE DATE, as specified for this pass. Deliberately
+   NOT "12 months from the current expiry": that means renewing a month early forfeits
+   the month left, which the modal states outright rather than letting the new date be
+   a surprise afterwards. */
+function updatesRenewPrice(lic){
+  return Math.round(tierBase(lic && lic.tier) * UPDATES_RENEW_RATE * 100) / 100;
+}
+function updatesNewExpiry(){ return dayStr(Math.round(UPDATES_RENEW_MONTHS * 30.44)); }
+function openRenewUpdatesModal(licId){
+  var lic = licById(licId) || activeLicense;
+  if(!lic) return;
+  var price = updatesRenewPrice(lic), to = updatesNewExpiry();
+  var lapsed = lic.event && dateKey(lic.event) < dateKey(todayStr());
+  openModal('Renew software updates',
+    '<p>Buy another ' + UPDATES_RENEW_MONTHS + ' months of software updates for <b>'
+    +   esc(lic.name) + (lic.label ? ' \u00b7 ' + esc(lic.label) : '') + '</b>.</p>'
+    + '<div class="row"><span class="l">Software updates &middot; ' + UPDATES_RENEW_MONTHS + ' months</span>'
+    +   '<span class="r"><b>' + fmtMoney(price) + '</b></span></div>'
+    + '<div class="row"><span class="l">' + (lapsed ? 'Updates lapsed' : 'Current term ends') + '</span>'
+    +   '<span class="r">' + fmtDate(lic.event) + '</span></div>'
+    + '<div class="row"><span class="l">New term ends</span><span class="r"><b>' + fmtDate(to) + '</b></span></div>'
+    /* the honest consequence of "12 months from the purchase date" */
+    + (lapsed ? '' : '<div class="cardhelp" style="margin-top:12px">The new term runs 12 months from today, '
+        + 'so renewing before ' + fmtDate(lic.event) + ' does not add the remaining days.</div>')
+    + '<div class="cardhelp" style="margin-top:10px">' + TAX_NOTE + '</div>');
+  $('#modalCloseBtn').textContent = 'Cancel';
+  modalAction('Pay ' + fmtMoney(price), function(){
+    lic.event = to;
+    /* ⚠️ the STATUS has to move too, or the banner keeps warning about a term that has
+       just been paid for — the exact "form does not change the page" fault this pass
+       is cleaning up elsewhere */
+    if(lic.status === 'updates_expiring') lic.status = 'active';
+    Store.save();
+    storeAddInvoice(lic, fmtMoney(price), { payment:'Card', auto:false });
+    logActivity({ kind:'updated', entityType:'Perpetual', entityName:lic.name, action:'UPDATED',
+      txt:'Software updates were renewed on <b>' + esc(lic.name) + '</b> by ' + portalActor() + '.',
+      delta:'Updates term now ends ' + fmtDate(to) });
+    closeModal();
+    Snack.show('Software updates renewed until ' + fmtDate(to));
+    if(window.LicenseDetails && LicenseDetails.isOpen()) LicenseDetails.reopen(lic);
+    else if(window.LicenseDetails) LicenseDetails.afterChange();
+    });
+}
+/* one delegated handler for every entry point: the row kebab, the licence header
+   menu and the expiring-updates banner all carry `data-renewupdates` */
+document.addEventListener('click', function(e){
+  var b = e.target.closest('[data-renewupdates]');
+  if(!b) return;
+  closeAllMenus();
+  openRenewUpdatesModal(b.getAttribute('data-renewupdates') || (activeLicense && activeLicense.id));
+});
 
 /* ---------- entitlement rows ---------- */
 
@@ -771,18 +1015,15 @@ function meterRow(item, included, extra){
    licence by renderLicenseDetails(). */
 function wireDetailsOnce(){
   /* ---------- license key reveal / copy ---------- */
-  var keyText = $('#keyText'), revealBtn = $('#revealBtn');
-  var eyeIcon = $('.eye', revealBtn), eyeOff = $('.eyeoff', revealBtn);
-  var revealed = false;
+  var revealBtn = $('#revealBtn');
+  /* ⚠️ The reveal state lives on the BUTTON (`aria-pressed`), not in a closure
+     variable. It was `var revealed = false` inside this once-only wiring, which meant
+     it survived every licence switch: reveal one licence and the next one you opened
+     was already in the clear — with the same key, because the markup carried one
+     hardcoded value for all of them. Reading it from the DOM is what lets
+     renderLicenseKey() put it back to masked on every open. */
   revealBtn.addEventListener('click', function(){
-    revealed = !revealed;
-    keyText.textContent = revealed ? keyText.dataset.full : keyText.dataset.masked;
-    // note: .hidden as a JS property is a no-op on SVG elements — toggle the attribute
-    if(revealed){ eyeIcon.setAttribute('hidden',''); eyeOff.removeAttribute('hidden'); }
-    else { eyeOff.setAttribute('hidden',''); eyeIcon.removeAttribute('hidden'); }
-    revealBtn.setAttribute('aria-pressed', revealed?'true':'false');
-    revealBtn.setAttribute('aria-label', revealed?'Hide license key':'Reveal license key');
-    revealBtn.setAttribute('title', revealed?'Hide':'Reveal');
+    setKeyRevealed(revealBtn.getAttribute('aria-pressed') !== 'true');
   });
 
   /* ⚠️ `Copy instance ID` had NO handler at all — found while making every copy
@@ -793,12 +1034,14 @@ function wireDetailsOnce(){
     if(!ic) return;
     var cell = ic.closest('td');
     var id = cell ? cell.textContent.trim() : '';
-    copyValue(id, 'Instance ID');
+    copyValue(id, 'Instance ID', ic);
   });
 
   var copyBtn = $('#copyBtn');
   copyBtn.addEventListener('click', function(){
-    copyValue(keyText.dataset.full, 'License key');
+    // read it fresh: `keyText` is no longer captured in this scope, and the value
+    // changes with the licence
+    copyValue($('#keyText').dataset.full, 'License key', copyBtn);
   });
 ;
 
@@ -856,13 +1099,19 @@ function wireDetailsOnce(){
         $$('.insttype', instPanel).forEach(function(b){ b.hidden = b.getAttribute('data-insttype') !== type; });
       });
     });
-    // header checkbox toggles every row checkbox in the same table
-    $$('.insttable', instPanel).forEach(function(tbl){
-      var all = tbl.querySelector('thead input[type=checkbox]');
-      if(!all) return;
-      all.addEventListener('change', function(){
-        $$('tbody input[type=checkbox]', tbl).forEach(function(cb){ cb.checked = all.checked; });
-      });
+    /* ⚠️ THE SELECT-ALL AND ROW CHECKBOXES ARE GONE, not re-wired. They ticked, the
+       header ticked them all, and nothing anywhere acted on a selection — no action
+       bar, no menu, no bulk anything. There is no bulk operation specified for
+       instances, so the honest options were "invent one" or "remove the control";
+       a control that responds and does nothing is the exact fault this pass is for.
+       If a bulk action arrives, the column comes back with it.
+
+       ---------- copy the FULL instance id ---------- */
+    instPanel.addEventListener('click', function(e){
+      var c = e.target.closest('[data-instcopy]');
+      if(c){ copyValue(c.getAttribute('data-instcopy'), 'Instance ID', c); return; }
+      var l = e.target.closest('[data-instlabel]');
+      if(l){ openInstanceLabelModal(l.getAttribute('data-instlabel')); return; }
     });
   }
 
@@ -870,12 +1119,23 @@ function wireDetailsOnce(){
   var MODALS = {
     'change-plan': function(){ if(activeLicense && activeLicense.type === 'Subscription'){ NL.openChange(activeLicense); } else { openModal('Change plan', '<p>Open a subscription first.</p>'); } },
     'add-ons': function(){ openManageAddons(activeLicense); },
-    // inferred: perpetual capacity is bought once — no recurring billing, no proration
-    'add-capacity': function(){ openModal('Add capacity', '<p>Placeholder — one-time purchase of extra devices, instances, or AI credits. Paid once, no renewal and no proration.</p>'); },
+    /* ⚠️ `add-capacity` IS GONE — both the button and the placeholder dialog it opened.
+       A perpetual buys capacity through the SAME wizard a subscription uses (`add-ons`),
+       so the two headers now read `Manage` on both kinds and there is no second,
+       emptier route that only perpetual owners ever found. */
     'manage-payment': function(){ openModal('Manage payment', '<p>Payment method lives in account Billing.</p>'); }
   };
-  $$('[data-modal]').forEach(function(el){
-    el.addEventListener('click', function(){ var fn=MODALS[el.getAttribute('data-modal')]; if(fn) fn(); });
+  /* ⚠️ DELEGATED, not bound per node. `$$('[data-modal]')` ran once over the nodes that
+     existed at wiring time — which is every button in the static markup and NONE of the
+     ones a render produces later. The over-limit banner builds its action in
+     renderLicenseAlert, so its `Manage` never got a listener: three taps, no response,
+     on the one control that fixes the state the banner is warning about.
+     A delegated listener cannot go stale, whatever a later render builds. */
+  document.addEventListener('click', function(e){
+    var el = e.target.closest('[data-modal]');
+    if(!el) return;
+    var fn = MODALS[el.getAttribute('data-modal')];
+    if(fn) fn();
   });
 
   /* ---------- render ---------- */
@@ -964,54 +1224,45 @@ var LicenseDetails = (function(){
     host.innerHTML = DETAILS_HTML;
     mountedIn = host;
   }
+  /* ⚠️ The surface KEPT the previous licence's scroll position and selected tab.
+     `mount()` moves the same DOM between hosts, so nothing was ever reset — open one
+     licence, scroll to its Instances tab, close, open another, and the second one
+     opened mid-page on Instances, with the name and status off-screen above. On a
+     phone that means the panel gives no sign of which licence you are in.
+     Both belong to the licence you WERE looking at, so both are dropped on every open. */
+  function resetSurface(){
+    var first = $('#tab-invoices');
+    if(first) selectTab(first);
+  }
+  /* ⚠️ SEPARATE from the tab reset, and called AFTER the surface is on screen.
+     `show()` runs while the modal is still `hidden`, and `scrollTop` on an element
+     with no layout box is silently dropped — measured: the tab reset took effect and
+     the scroll stayed at 400, so the second licence still opened mid-page. */
+  function resetScroll(){
+    var body = $('#licModalBody'), shell = $('#shellMain');
+    if(body) body.scrollTop = 0;
+    if(shell) shell.scrollTop = 0;
+    if(window.scrollY) window.scrollTo(0, 0);
+  }
   function show(lic){
     activeLicense = lic;
     renderLicenseDetails(lic);
+    resetSurface();
     if(!wired){ wireDetailsOnce(); wired = true; }
     syncNewBanner(lic);
     syncChangedBanner(lic);
-    placeOverflow();
   }
-  /* ---------- the overflow menu belongs to the header on a phone ----------
-     M3: one primary action in the content, everything else behind a single
-     overflow in the app bar's trailing slot. A mid-block ⋮ beside the primary is
-     what we had, and on a 390px card it read as a second, equal action.
-     CSS cannot move a node across subtrees, so the button is relocated here — into
-     the sheet's own header in modal mode, or the app bar's action slot in page
-     mode — and put back beside the primary above the breakpoint. The menu itself
-     becomes a bottom sheet in CSS, not an anchored dropdown. */
-  var overflowHome = null;
-  function placeOverflow(){
-    var menu = $('#headKebabMenu'); if(!menu) return;
-    if(!overflowHome) overflowHome = menu.parentNode;      // .headactions, where it lives on desktop
-    var phone = window.matchMedia('(max-width:600px)').matches;
-    /* ⚠️ Decide by WHERE the surface is mounted, not by modal.hidden: openModal calls
-       show() (and so this) BEFORE it unhides the modal, so a hidden-flag test sent
-       the overflow to the page's app bar while the surface was in the sheet. */
-    var inModal = !!$('#licModal #appView');
-    var host = !phone ? overflowHome
-      : (inModal ? $('#licModal .fs-headactions') : $('#topbarAction'));
-    if(!host || menu.parentNode === host) return;
-    // in the sheet header it sits BEFORE the close control, so ✕ stays the last thing
-    if(host.id === 'topbarAction') host.appendChild(menu);
-    else host.insertBefore(menu, host.firstChild);
-    /* ⚠️ .tb-act is Home's animated slot: opacity:0, pointer-events:none and a
-       translateY until it gets .on. Without the class the overflow sat there
-       invisible and unclickable — and worse, the transform made the slot a
-       containing block for position:fixed, so the bottom sheet was trapped inside
-       a 44px box instead of spanning the viewport. .on clears all three. */
-    var slot = $('#topbarAction');
-    if(slot){
-      var hosting = slot.contains(menu);
-      slot.classList.toggle('on', hosting);
-      /* ⚠️ .on is not enough: on Home the slot's OPACITY is driven inline by JS
-         (page-home.js crossfades it against the hero button) and CSS only carries
-         the slide. Reusing the slot means honouring that contract — otherwise the
-         overflow sits there at opacity 0. */
-      slot.style.opacity = hosting ? '1' : '';
-    }
-  }
-  window.addEventListener('resize', placeOverflow);
+  /* ---------- the overflow stays WITH the other actions ----------
+     ⚠️ `placeOverflow()` is GONE. It relocated the ⋮ on a phone — into the app bar's
+     trailing slot on the page, into the sheet's own header in the modal — following
+     M3's "one primary in the content, everything else behind an overflow in the app
+     bar". The cost was that the overflow ended up ABOVE the licence title, three
+     screens away from `Change plan`, and so read as the FIRST action on the page
+     rather than the last: the opposite of what an overflow is.
+     It now lives where it does on desktop — last in `.headactions`, right of the
+     primary — at every width and in both hosts. The menu itself is still a bottom
+     sheet on a phone; that is keyed off `#headKebabPop` in CSS, not off where the
+     button sits, so it survived the removal unchanged. */
   /* The wizard sets Store.justCreated to the new licence id and lands here, so
      the page states it once: the licence exists, its key is on this page, and
      where the installation instructions are. Dismissing clears the flag. */
@@ -1074,6 +1325,7 @@ var LicenseDetails = (function(){
     $('#licModalTitle').textContent = titleFor();
     modal.hidden = false;
     document.body.classList.add('licmodal-open');            // the page behind stops scrolling
+    resetScroll();                                           // now that it has a layout box
     $('#licModalClose').focus();
   }
   function close(){
@@ -1086,6 +1338,7 @@ var LicenseDetails = (function(){
     var host = $(hostSel); if(!host) return;
     mount(host);
     show(lic);
+    resetScroll();
     var b = $('#backBtn');
     if(b && opts && opts.back){
       b.setAttribute('aria-label', opts.back.label);

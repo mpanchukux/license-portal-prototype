@@ -13,6 +13,12 @@
    by adding the Community Grant row: it never surfaced in Home's top five. Order is
    most-urgent first; `active` and `canceled` keep their relative places. */
 function attnRank(l){
+  /* ⚠️ Over the instance limit ranks ABOVE a failed payment, and it is DERIVED rather
+     than read from `status` — a licence can be `active` and still be over its limit,
+     which is exactly the state the demo was in with nothing anywhere saying so. It
+     leads because it is the only one of these that stops the deployment now rather
+     than on a future date. */
+  if(instOverLimit(l)) return -1;
   return l.status==='payment_failed'   ? 0
        : l.status==='updates_expiring' ? 1
        : l.status==='awaiting_checkin' ? 2
@@ -27,6 +33,10 @@ function attnRank(l){
 function statusChip(l){
   var st = l && typeof l === 'object' ? l.status : l;
   if(st==='canceled') return '<span class="pill off">Canceled</span>';
+  /* ⚠️ The one attention state that IS a status — see statusChipHTML. A row that says
+     `Active` while its own state line says "Over instance limit · 2 of 1" is the list
+     contradicting itself in two adjacent cells. */
+  if(typeof l === 'object' && instOverLimit(l)) return '<span class="pill attn">Blocked</span>';
   return '<span class="pill">Active</span>';
 }
 /* What the next date means depends on the licence: a subscription renews, a
@@ -37,6 +47,9 @@ function stateText(p){
      Sep 02, 2026", "Updates until …") inherits --mid from .licstat-txt/.licstat-mob
      — so the grant's line was a shade lighter than its neighbours for no reason.
      It is the same kind of fact; it gets the same tone. */
+  /* the blocking fact outranks the dated one: a licence that is not running right now
+     is not best described by when it renews */
+  if(instOverLimit(p)) return 'Over instance limit &middot; ' + instRunning(p) + ' of ' + instAllowed(p);
   if(p.grant)  return 'No expiry';
   if(!p.event) return '<span class="muted">—</span>';
   var d = fmtDate(p.event);
@@ -78,6 +91,7 @@ var KEYSVG = '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">'
    exactly right for the desktop column, so the phone reuses it rather than
    keeping a second phrasing that can drift. */
 function stateMobile(p){
+  if(instOverLimit(p)) return '<span>' + stateText(p) + '</span>';
   if(p.grant)  return 'No expiry';                    // same tone as every other state
   if(!p.event) return '<span class="muted">&mdash;</span>';
   return (p.type === 'Perpetual' ? UPDSVG : CYCLESVG) + '<span>' + stateText(p) + '</span>';
@@ -134,7 +148,7 @@ function invRow(v, opts){
     + (opts.noProduct ? '' : invProductCell(v, opts))
     + '<td class="cellact"><span class="rowactions">'
     +   '<button class="link ra-act" data-dlinv aria-label="Download PDF">' + DLSVG + '<span class="ra-txt">Download PDF</span></button>'
-    +   '<a class="link ra-act" data-viewinv target="_blank" rel="noopener" href="#" aria-label="View invoice">' + VIEWSVG + '<span class="ra-txt">View invoice</span></a>'
+    +   '<a class="link ra-act" data-viewinv target="_blank" rel="noopener" href="#" aria-label="View invoice (opens in a new tab)">' + VIEWSVG + '<span class="ra-txt">View invoice' + EXTSVG + '</span></a>'
     + '</span></td></tr>';
 }
 // how many columns invRow produces — the empty-state row has to span them
@@ -150,19 +164,35 @@ function invProductCell(v, opts){
   return lic ? productCell(lic, { link:'invoices', bare: !!(opts && opts.bareProduct) })
              : '<td class="lic-prodcell"><span class="muted">—</span></td>';
 }
-/* ⚠️ Two rows, not one. An INVITED user — asked, but not yet signed in and filled in
-   their details — renders muted, carrying their email and nothing else: no name, no
-   date, and no actions at all. `Login as` on someone who has never signed in would be
-   impersonating an account that does not exist yet, and Delete would be revoking an
-   invitation through a control labelled as though it removed a person. The row
-   becomes an ordinary one, with its actions, the moment they complete sign-up. */
+/* ⚠️ An INVITED user — asked, but not yet signed in and filled in their details —
+   keeps the table's columns. Their email sits in the EMAIL column like everyone's,
+   Name and Added are simply blank because those facts do not exist yet, and a quiet
+   `Invited` pill next to the address says why.
+
+   ⚠️ SUPERSEDES the `colspan=3` muted row this used to be. That version said the same
+   thing but broke the grid to say it: the email slid under the NAME heading, so the
+   one column every row shares stopped lining up exactly where a reader scans for it.
+   Missing data is blank cells, not a different row shape.
+
+   What does NOT come back is the actions: `Login as` on someone who has never signed
+   in would impersonate an account that does not exist yet, and Delete would revoke an
+   invitation through a control labelled as though it removed a person. The row gains
+   them the moment they complete sign-up — no separate renderer, just fuller data. */
 function userRow(u){
   if(u.pending){
-    return '<tr class="user-pending"><td class="muted" colspan="3">' + esc(u.email)
-      + '<span class="user-pendmark">Invited — waiting for them to sign in</span></td>'
-      + '<td class="cellact"></td></tr>';
+    /* ⚠️ Em dashes, not empty cells. A blank cell reads as "we forgot to render this";
+       a dash reads as "there is nothing here yet", which is the actual fact — the
+       person has not signed in and so has neither a name nor an added date. Same mark
+       the Label column uses for an unlabelled instance. */
+    return '<tr class="user-row user-pending"><td class="muted">&mdash;</td>'
+      + '<td>' + esc(u.email) + ' <span class="pill soft user-invited">Invited</span></td>'
+      + '<td class="muted">&mdash;</td><td class="cellact"></td></tr>';
   }
-  return '<tr><td>'+u.name+'</td><td>'+u.email+'</td><td>'+fmtDate(u.created)+'</td>'
+  /* ⚠️ `.user-row` is the hook the phone layout needs. The Users table had NO mobile
+     treatment at all — it kept its four columns at 390px, so `Login as` and `Delete`
+     sat off-screen entirely and dragging sideways moved the whole page. The class lets
+     it become a card the same way the licence and invoice rows already do. */
+  return '<tr class="user-row"><td>'+u.name+'</td><td>'+u.email+'</td><td>'+fmtDate(u.created)+'</td>'
     + '<td class="cellact"><span class="rowactions"><button class="link" data-loginas="'+u.email+'">Login as →</button><button class="link" data-deluser="'+u.email+'">Delete</button></span></td></tr>';
 }
 function menuItems(p, opts){
@@ -171,7 +201,16 @@ function menuItems(p, opts){
   // except in the Home preview block (opts.noLabelEdit), which is a summary: renaming
   // belongs where the licence is the subject, i.e. the Licenses page and its details.
   var label = (opts && opts.noLabelEdit) ? '' : '<button role="menuitem" data-editlabel>Edit label</button>';
-  if(type === 'Perpetual') return label + '<button role="menuitem" data-stub="Add capacity">Add capacity</button><a role="menuitem" href="' + EXT.updates + '" target="_blank" rel="noopener">Renew software updates</a>';
+  /* ⚠️ Two faults lived in this one line.
+     `Add capacity` opened a placeholder dialog and is GONE — the same job is `Manage
+     add-ons`, exactly as on a subscription, opening the same wizard.
+     `Renew software updates` was an <a target="_blank"> among <button>s: it looked
+     different from its neighbours AND, because a new tab opens behind the menu that
+     stays open, pressing it produced no visible change at all. A participant pressed
+     it five times from two places. It is a real menu item now, and it buys. */
+  if(type === 'Perpetual') return label
+    + '<button role="menuitem" data-manageaddons>Manage add-ons</button>'
+    + '<button role="menuitem" data-renewupdates="' + esc(p && p.id) + '">Renew software updates</button>';
   var last = (p && p.status==='canceled')
     ? '<button role="menuitem" data-stub="Renew subscription">Renew subscription</button>'
     : '<button role="menuitem" data-cancel>Cancel subscription</button>';
@@ -278,13 +317,13 @@ function rowHtml(p, opts){
      Product column, and the limits are the entitlement table on the details page —
      no other row explains its allowances in the list, so this one should not
      either. `p.limits` is still used by the details surface. */
-  /* ⚠️ A scheduled change gets the EXISTING `.pill` — the same small neutral badge the
-     plan cards use for "Popular" — and it sits in the licence column, not the status
-     one. Status says whether the licence works; this says something is going to
-     change. Two facts, two columns, and the pill is small enough not to compete. */
-  var sched = p.scheduled ? ' <span class="pill" title="Scheduled for '
-      + fmtDate(p.scheduled.effective) + '">Scheduled</span>' : '';
-  var lic = '<td><div class="lp-name">' + p.name + sched + '</div></td>';
+  /* ⚠️ THE `Scheduled` PILL IS GONE from beside the licence name. It was a third badge
+     competing with the status chip and the plan name for the same glance, and it said
+     the least of the three — "something changes, at some point", with the date only in
+     a `title` nobody hovers. The change itself is stated in full, with its date and its
+     Cancel action, in the banner at the top of the Plan block on the details surface
+     (see renderScheduled) — which is where everything it describes actually lives. */
+  var lic = '<td><div class="lp-name">' + p.name + '</div></td>';
   // when the licence last changed — plan, add-ons, label or payment state
   var updatedCell = '<td class="lic-num">' + fmtDate(p.updated || p.created) + '</td>';
   return rowOpen(p) + productCell(p) + lic + statusCell(p) + updatedCell + actionsCell(p, opts) + '</tr>';
@@ -315,9 +354,31 @@ function rowHtml(p, opts){
 function paymentMethodHTML(opts){
   var withExp = !opts || opts.expiry !== false;
   var pm = paymentMethodData();
-  return '<span class="brandbadge">' + pm.brand + '</span>'
+  return brandBadgeHTML(pm.brand)
     + '<span class="pc-num">' + pm.num + '</span>'
     + (withExp ? '<span class="pc-exp">' + pm.exp + '</span>' : '');
+}
+/* ⚠️ Mastercard is a SYMBOL, not a word. Its two interlocking circles are the mark
+   people recognise on a card, and spelling "MASTERCARD" in the badge read as a
+   placeholder standing in for the artwork — next to "VISA", which really is a
+   wordmark, the pair looked inconsistent for no reason.
+   Drawn, not fetched: the prototype takes no external assets, and the mark reduces
+   honestly to monochrome — two overlapping discs at the same tone, so the overlap
+   comes out darker on its own, exactly as the real mark's does. Every other brand
+   keeps its wordmark until someone asks for its artwork. */
+/* ⚠️ Geometry matters more than it looks. First attempt put two r=7.5 circles 8 apart
+   inside a 34-wide box: they overlapped by more than half their width and, at the
+   ~30px this renders at, read as one rounded blob — a toggle switch, not a card mark.
+   Centres are 12 apart on r=9 now (overlapping by a third, the proportion the real
+   mark uses), so two discs are legible at badge size and the darker lens between them
+   does the work the two brand colours do. */
+var MASTERCARD_MARK = '<svg class="brandmark" viewBox="0 0 40 24" role="img" aria-label="Mastercard">'
+  + '<circle cx="14" cy="12" r="9" fill="currentColor" fill-opacity=".36"/>'
+  + '<circle cx="26" cy="12" r="9" fill="currentColor" fill-opacity=".36"/></svg>';
+function brandBadgeHTML(brand){
+  if(String(brand).toUpperCase() === 'MASTERCARD')
+    return '<span class="brandbadge brandbadge-mark">' + MASTERCARD_MARK + '</span>';
+  return '<span class="brandbadge">' + brand + '</span>';
 }
 
 function licenseHref(p, from){
@@ -349,7 +410,10 @@ function wireLicenseRows(rootSel, opts){
     var copy = e.target.closest('.lic-copy');
     if(copy){
       e.stopPropagation();
-      copyValue('license-secret', 'License key');
+      /* ⚠️ Was the literal string 'license-secret' — the row's copy button put a
+         placeholder on the clipboard, not a key, and every row put the SAME one. */
+      var lrow = copy.closest('.lic-row');
+      copyValue(licenseKeyFor(lrow && licById(lrow.getAttribute('data-licid'))), 'License key', copy);
       return;
     }
     var licOf = function(el){ var r = el.closest('.lic-row'); return r && licById(r.getAttribute('data-licid')); };
@@ -515,7 +579,7 @@ function licenseActivity(lic){
   /* The invoices this licence produced. Same sentence the Activity page uses, so
      "charged automatically" reads identically wherever the event surfaces — and an
      invoice the viewer paid themselves names them instead. */
-  DATA().invoices.filter(function(v){ return v.licId === lic.id; }).forEach(function(v){
+  invoicesSorted().filter(function(v){ return v.licId === lic.id; }).forEach(function(v){
     acts.push({ kind:'info', ts: tsFrom(v.date, '00:05'), entityType:'Invoice', entityName:v.num,
       actor: v.auto ? 'Auto-pay' : who, action:'PAID',
       txt:'Invoice <b>'+v.num+'</b> was paid' + (v.auto ? ', charged automatically.' : ' by '+who+'.') });
@@ -652,6 +716,40 @@ function syncListEmpty(isEmpty){
    matched what you typed" are different facts with different exits: the first is
    waiting for you to create something, the second is waiting for you to clear a
    filter you set. Same slot, different block, and the second carries the way out.  */
+/* ---------- the info icon ----------------------------------------------------
+   ONE pattern, wherever a row's name needs an explanation that does not deserve
+   permanent body text. Built on `.tip`, which already solves the hard half: the
+   hover bubble is gated behind `(hover:hover)`, so a tap cannot leave a label stuck
+   over the glyph (see the note above `.tip` in styles.css).
+
+   Desktop: hover, and `:focus-visible` for the keyboard — both free from `.tip`.
+   Below 600px there is no hover, so a tap toggles `.show`; that handler is delegated
+   once in shared.js rather than per call site.
+
+   ⚠️ It is a <button>, not a <span>: it is operable, so it must be reachable by Tab
+   and answer Enter/Space. `aria-label` names WHAT is being explained ("About AI
+   credits"), while the explanation itself rides in `data-tip`, which is what the
+   bubble paints — a screen reader gets both without the text being painted twice. */
+function infoIcon(about, text){
+  return '<button type="button" class="infoic tip wide" data-tip="' + esc(text) + '"'
+    + ' aria-label="About ' + esc(about) + '">' + INFOSVG + '</button>';
+}
+/* Text with its icon attached.
+   ⚠️ The icon is tied to the text's LAST WORD, not appended loosely. Wherever this is
+   used the text can wrap — a card feature in a narrow column, a heading sharing its
+   row with a stepper — and a loose icon wrapped ALONE onto the next line, reading as a
+   stray glyph belonging to nothing. Same reason a typesetter does not leave a widow:
+   the mark and the word it marks break together. */
+function textWithInfo(text, desc){
+  if(!desc) return text;
+  var cut = text.lastIndexOf(' ');
+  var head = cut < 0 ? '' : text.slice(0, cut + 1);
+  var tail = cut < 0 ? text : text.slice(cut + 1);
+  return head + '<span class="nobreak">' + tail + infoIcon(text, desc) + '</span>';
+}
+function cellTopWithInfo(label, desc){
+  return '<div class="am-celltop">' + textWithInfo(label, desc) + '</div>';
+}
 function stripText(html){
   var d = document.createElement('div');
   d.innerHTML = String(html == null ? '' : html);
@@ -670,6 +768,27 @@ function wireSearch(inputSel, opts){
   var input = $(inputSel); if(!input) return;
   var slot = null;
   function clearSlot(){ if(slot){ slot.remove(); slot = null; } }
+  /* ⚠️ A CLEAR CONTROL, built here rather than in each page's markup — five search
+     boxes, one behaviour, and every one of them was missing it. A participant deleted
+     a query character by character; on a phone that is a dozen taps on a key the
+     keyboard has already half-covered. Shown only when there is something to clear,
+     so an empty field keeps its quiet. */
+  var box = input.closest('.searchbox');
+  var clearBtn = null;
+  if(box){
+    clearBtn = document.createElement('button');
+    clearBtn.type = 'button';
+    clearBtn.className = 'searchclear';
+    clearBtn.setAttribute('aria-label', 'Clear search');
+    clearBtn.innerHTML = '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">'
+      + '<path d="M6 6l12 12M18 6L6 18"/></svg>';
+    clearBtn.hidden = true;
+    box.appendChild(clearBtn);
+    clearBtn.addEventListener('click', function(){
+      input.value = ''; run(); input.focus();     // focus returns to where typing continues
+    });
+  }
+  function syncClear(){ if(clearBtn) clearBtn.hidden = !input.value; }
   function run(){
     var q = input.value.trim().toLowerCase();
     var items = opts.items(), shown = 0;
@@ -679,6 +798,7 @@ function wireSearch(inputSel, opts){
       if(hit) shown++;
     });
     clearSlot();
+    syncClear();
     if(q && !shown){
       var host = opts.host();
       if(host){
@@ -882,9 +1002,22 @@ function nlPlanCardHTML(c, set, sel){
     + '<div class="pc-head"><h2>' + c.name + '</h2>' + badge + '</div>'
     + '<div class="pc-price">' + c.price + ' <span class="pc-per">' + c.per + '</span></div>'
     + (c.term ? '<div class="pc-term">' + c.term + '</div>' : '')
+    /* ⚠️ BOTH forms are emitted and the breakpoint picks one — the same technique the
+       product cell already uses for its desktop and phone arrangements, and for the
+       same reason: CSS cannot turn an attribute into body text.
+
+       Desktop gets the INFO ICON. The picker is where someone is still working out
+       what a production instance or an AI credit IS, but two extra lines inside two of
+       the features pushed the cards apart and buried the prices they exist to compare.
+
+       ⚠️ The phone gets the SENTENCE, because there is nothing to hover. An icon that
+       only answers on tap hides the explanation behind an interaction nobody is told
+       about — on the one breakpoint where the cards are stacked and have the width to
+       spare. The tap still works; it is just not the only way to read it.
+       The Customize step keeps its descriptions as body text on both; see stepCell. */
     + '<div class="pc-feats">' + c.feats.map(function(f){
         var n = featNote(f);
-        return '<div class="pc-feat">' + f
+        return '<div class="pc-feat">' + textWithInfo(f, n)
           + (n ? '<span class="pc-featnote">' + n + '</span>' : '') + '</div>';
       }).join('') + '</div>'
     + (c.foot ? '<div class="pc-note">' + c.foot + '</div>' : '')
@@ -967,7 +1100,19 @@ function planPickerExtraHTML(set, sel){
    the wizard passes neither, because its step 1 is a choice and not a sales page. */
 function renderPlanPicker(choicesEl, gridEl, sel, extraEl, baseEl){
   var set = EC_PLANS[planPickerKey(sel)];
-  choicesEl.innerHTML = nlProductCardsHTML(sel) + nlBillTabsHTML(sel);
+  /* ⚠️ `sel.locked` means "this is an EXISTING licence" — Change plan. Neither of the
+     choices above the grid can change on one: a ThingsBoard subscription does not
+     become TBMQ, and a monthly plan does not become perpetual. Those are different
+     licences and different purchases.
+     They used to render DISABLED, which is worse than absent: a greyed radio pair and
+     a greyed tab pair still read as "these are settings of this flow", and the reader
+     has to work out why two of the four controls on the step refuse to move. Removed,
+     the step opens on the one thing it is for — the plan cards.
+     ⚠️ The CURRENT PLAN card stays greyed and unselectable, and that is NOT the same
+     case: it is not an option being refused, it is where you are now, which is what you
+     compare the others against. See nlPlanCardHTML. */
+  choicesEl.hidden = !!sel.locked;
+  choicesEl.innerHTML = sel.locked ? '' : (nlProductCardsHTML(sel) + nlBillTabsHTML(sel));
   if(baseEl) baseEl.innerHTML = baselineBlockHTML(sel);
   var hasCur = !!sel.currentName && set.cards.some(function(c){ return c.name === sel.currentName; });
   gridEl.className = 'plangrid' + (set.single ? ' one' : '') + (hasCur ? ' withcur' : '');
@@ -1026,24 +1171,27 @@ function rowInvoiceData(btn){
 // print-styled mock invoice document — served as a blob URL in a new tab,
 // reads as a PDF preview
 /* ---------- who the invoice is billed to --------------------------------------
-   ⚠️ Read from the SAVED billing address, falling back to the company profile and
-   then to the demo's own strings. Before this, both documents printed hardcoded text
-   and "Paid · Visa ••4242" no matter what the Billing page said — a form claiming to
-   control a document it was not connected to. Now editing the address changes the
-   next invoice, and changing the card changes what the invoice says it was paid with. */
+   ⚠️ ONE source: the saved billing address, with the demo's own strings as the only
+   fallback. It used to read `billingAddress` for the address and `profile` for the
+   company name, because those two lived on two different pages — which meant the
+   document printed halves assembled from two forms, and the company name came from a
+   page that never claimed to control invoices. Company details are consolidated on
+   Billing now (see billing.html), so the second lookup is gone rather than kept "just
+   in case": a fallback to a field no form writes any more is a silent way for an old
+   store to keep overriding the current one.
+   Before all of this, both documents printed hardcoded text and "Paid · Visa ••4242"
+   no matter what the Billing page said. Editing the address changes the next invoice;
+   changing the card changes what the invoice says it was paid with. */
 function invoiceParty(){
-  var b = Store.get('billingAddress') || {}, p = Store.get('profile') || {};
+  var b = Store.get('billingAddress') || {};
   var line = function(v, fb){ return (v && String(v).trim()) || fb; };
-  var city = line(b.city, line(p.city, 'New York'));
-  var state = line(b.state, line(p.state, 'New York'));
-  var zip = line(b.zip, line(p.zip, '10001'));
   return {
-    company: line(p.company, 'ThingsBoard'),
+    company: line(b.company, 'ThingsBoard'),
     email:   line(b.email, 'hello@thingsboard.io'),
-    addr:    line(b.addr, line(p.addr, '500 7th Avenue')),
-    addr2:   line(b.addr2, line(p.addr2, '')),
-    cityline: city + ', ' + state + ' ' + zip,
-    country: line(b.country, line(p.country, 'United States'))
+    addr:    line(b.addr, '500 7th Avenue'),
+    addr2:   line(b.addr2, ''),
+    cityline: line(b.city, 'New York') + ', ' + line(b.state, 'New York') + ' ' + line(b.zip, '10001'),
+    country: line(b.country, 'United States')
   };
 }
 function invoicePaidWith(){
@@ -1126,11 +1274,13 @@ function downloadInvoice(d, btn){
   a.href = url; a.download = d.num + '.pdf';
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
-  if(btn){
-    var old = btn.textContent;
-    btn.textContent = '✓ Downloaded'; btn.disabled = true;
-    setTimeout(function(){ btn.textContent = old; btn.disabled = false; }, 1000);
-  }
+  /* ⚠️ The confirmation is the SNACKBAR now. It used to swap the button's own text to
+     "✓ Downloaded" — which destroyed the icon and the `.ra-txt` span inside it, and on
+     the surfaces where that label is hidden and the action is icon-only there was
+     nothing to see at all. Reported as "no on-screen response", and that was accurate
+     wherever it mattered. The snack is the same acknowledgement every other completed
+     action in the product already uses. */
+  Snack.show('Invoice ' + d.num + ' downloaded');
 }
 
 

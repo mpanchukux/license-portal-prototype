@@ -10,19 +10,39 @@
 
 var dashV = $('#dashView'), dashEmptyV = $('#dashEmptyView');
 var state = dashState();
-/* ⚠️ DERIVED from the licences that exist, not from a stored flag. It used to be
-   `state.empty`, written once at sign-up and cleared by nobody — so the first
-   purchase left this page on its first-run screen while Licenses, Invoices and
-   Activity all showed the new licence. Clearing the flag in the purchase handler
-   would have fixed that one path and left every future one to remember; deriving it
-   means no path can put the two out of step. See dashIsEmpty() in shared.js. */
-var isEmpty = dashIsEmpty();
+var stickyActionOn = false;          // the topbar hand-off installs once, see below
 
-/* ---------- which surface is on screen ---------- */
-dashV.hidden = isEmpty;
-dashEmptyV.hidden = !isEmpty;
-$('#grantPending').hidden = state.grant !== 'pending';
-$('#grantBanner').hidden = !(Store.get('dash') === 'dashgrant' && !isDismissed('grantBanner'));
+/* ---------- which surface is on screen ----------
+   ⚠️ DERIVED from the licences that exist, not from a stored flag, AND RE-APPLIED
+   on every render. Those are two separate fixes and only the first had been made.
+
+   Round one killed the flag: `state.empty` was written once at sign-up and cleared by
+   nobody, so the first purchase left this page on its first-run screen. dashIsEmpty()
+   (shared.js) now asks the data instead.
+
+   Round two — this one — kills the SNAPSHOT. The value was derived correctly and then
+   frozen into two `.hidden` writes that ran once at load, while the re-render hook
+   every mutating path already calls (renderHome, via LicenseDetails.setRerender)
+   redrew only the CONTENTS. Measured after a first purchase made on this page:
+   #dashLicBody held 1 row and #dashInvBody held 1 row — the populated dashboard was
+   fully built and still `hidden`, behind the plan picker. The refresh was never the
+   thing that was missing; the surface decision simply was not part of it.
+
+   So the decision lives INSIDE the render. There is no path that adds a licence and
+   does not render, which is what makes "the page and the data disagree" unreachable
+   rather than merely fixed here. */
+function syncDashSurface(){
+  var empty = dashIsEmpty();
+  state = dashState();               // the gear panel can move it under us
+  dashV.hidden = empty;
+  dashEmptyV.hidden = !empty;
+  $('#grantPending').hidden = state.grant !== 'pending';
+  $('#grantBanner').hidden = !(Store.get('dash') === 'dashgrant' && !isDismissed('grantBanner'));
+  /* the hand-off measures #dashNewBtn, so it can only be wired once that button is on
+     screen — which, for an account buying its first licence, is now, not at load */
+  if(!empty) installStickyAction();
+  return empty;
+}
 
 /* ---------- populated dashboard ---------- */
 function dashLicList(){
@@ -45,7 +65,7 @@ function renderDashLicenses(){
 // a dataset may legitimately have no invoices (the grant is free) — say so
 function renderDashInvoices(){
   var b=$('#dashInvBody'); if(!b) return;
-  var inv = DATA().invoices;
+  var inv = invoicesSorted();          // same order as the Invoices page
   // bareProduct: in a three-row preview the licence only has to be named — the mark
   // and the label line belong to the Invoices page, where the table is the subject
   var opts = { bareProduct:true };
@@ -94,6 +114,7 @@ function dashFeedLoadMore(){
   renderDashFeed();
 }
 function renderHome(){
+  syncDashSurface();                 // surface first: the blocks below fill #dashView
   renderGreeting();
   renderDashLicenses();
   renderDashInvoices();
@@ -139,9 +160,16 @@ wireFeedAudit('#dashView');
    Not installed while the first-run screen is up: #dashView is hidden then, its
    button measures 0, and the bar would hold an action for a dashboard that is not
    on screen. */
-(function(){
+/* ⚠️ Was an IIFE that ran once at load and bailed on `dashV.hidden`. That was right
+   while the surface never changed after load — and wrong the moment it could: an
+   account buying its first licence got the dashboard with no topbar hand-off until it
+   reloaded. Now it is called from syncDashSurface() whenever the populated view is up,
+   and guards itself so repeated renders do not stack scroll listeners. */
+function installStickyAction(){
+  if(stickyActionOn) return;
   var hero = $('#dashNewBtn'), slot = $('#topbarAction'), shell = $('#shellMain');
   if(!hero || !slot || !shell || dashV.hidden) return;
+  stickyActionOn = true;
   /* Both labels ship; CSS picks one. On a phone the bar is tight (logo · action ·
      profile on one row), so the copy collapses to an icon plus "Buy". */
   slot.innerHTML = '<button class="btn" id="topbarNewBtn">'
@@ -163,7 +191,7 @@ wireFeedAudit('#dashView');
   shell.addEventListener('scroll', syncStickyAction);
   window.addEventListener('resize', syncStickyAction);
   syncStickyAction();
-})();
+}
 
 /* the grant banner is one-time: dismissing it is remembered */
 (function(){

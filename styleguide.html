@@ -23,7 +23,7 @@
       <a href="#tokens">Tokens</a><a href="#buttons">Buttons</a><a href="#inputs">Inputs</a>
       <a href="#chips">Status chips</a><a href="#table">Table</a><a href="#cards">Cards</a>
       <a href="#modals">Modals</a><a href="#stepper">Wizard stepper</a><a href="#banners">Banners</a>
-      <a href="#feed">Feed entry</a><a href="#tooltip">Tooltips</a><a href="#empty">Empty states</a><a href="#solo">Solo state</a><a href="#empty">No results</a><a href="#snack">Snackbar</a>
+      <a href="#feed">Feed entry</a><a href="#tooltip">Tooltips</a><a href="#infoicon">Info icon</a><a href="#empty">Empty states</a><a href="#solo">Solo state</a><a href="#empty">No results</a><a href="#sheet">Bottom sheet</a><a href="#snack">Snackbar</a>
       <a href="index.html">← back to the portal</a>
     </nav>
   </div>
@@ -358,6 +358,34 @@
         <div class="sg-cell"><span class="usecell"><span class="usetxt">0 / 50</span><span class="meter"><span style="width:0%"></span></span></span><span class="sg-cls">.usecell + .meter</span></div>
       </div>
     </div>
+
+    <div class="sg-item" id="infoicon">
+      <h3>Info icon <span class="sg-cls">.infoic.tip.wide</span></h3>
+      <p class="sg-note">The explanation a row&rsquo;s name needs, one hover away — for a description
+        worth reading <b>once, to decide</b>, on a row whose name and number get read every time.
+        Built from <code class="sg-cls">infoIcon(about, text)</code> in <code class="sg-cls">components.js</code>;
+        the text rides in <code class="sg-cls">data-tip</code>, so there is no second copy of it in the DOM.</p>
+      <div class="sg-row">
+        <div class="sg-cell">
+          <span style="font-size:14.5px;font-weight:600">AI credits
+            <button type="button" class="infoic tip wide" aria-label="About AI credits"
+              data-tip="Monthly allowance, in blocks of 1M credits. Minimum matches your plan — increase to buy more."><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11.5v4.5"/><path d="M12 8h.01"/></svg></button></span>
+          <span class="sg-cls">hover me</span>
+        </div>
+      </div>
+      <p class="sg-note" style="margin-top:12px"><b>Rules.</b>
+        It is a <code class="sg-cls">&lt;button&gt;</code>, so Tab reaches it and Enter opens it;
+        <code class="sg-cls">aria-label</code> names <em>what</em> is explained (&ldquo;About AI credits&rdquo;),
+        never the explanation itself. Desktop opens on hover and <code class="sg-cls">:focus-visible</code>.
+        <b>Below 600px there is no hover</b>, so a tap toggles <code class="sg-cls">.show</code> — one
+        delegated handler in <code class="sg-cls">shared.js</code>, which stands down entirely on a
+        pointer device so a click never pins a bubble hover is about to show anyway.
+        There the bubble also anchors to the <em>heading</em> rather than the glyph, which is what keeps
+        a 300px bubble on a 375px screen.</p>
+      <p class="sg-note"><b>When not to use it.</b> If the description is what the reader is
+        <em>choosing between</em> — an add-on they may or may not want — it stays as body text.
+        Hiding it behind an icon would hide the thing being decided.</p>
+    </div>
   </section>
 
   <!-- ============================ EMPTY ============================ -->
@@ -377,12 +405,44 @@
       </div>
     </div>
 
+    <div class="sg-item" id="sheet">
+      <h3>Bottom sheet <span class="sg-cls">.dprofmenu · #headKebabPop · .permenu</span></h3>
+      <p class="sg-note">Below 600px a menu with more than two items stops being an anchored dropdown
+        and becomes a sheet at the bottom edge. Three of them exist: the profile menu, the licence
+        &#8942; overflow, and Activity&rsquo;s period filter. <b>One declaration covers all three</b>
+        &mdash; they had drifted apart and were each missing the same things.</p>
+      <p class="sg-note"><b>The three requirements.</b>
+        A <b>grab handle</b> (36&times;4, centred) so the thing reads as a sheet rather than a panel
+        that appeared; <b>22px under the last item</b>, because a list ending flush against the screen
+        edge gives no way to tell whether it continues; and <b>scrolling</b> at
+        <span class="sg-cls">max-height:72vh</span>, or a sheet taller than the viewport silently loses
+        its tail. ⚠️ All three were absent, and a participant closed these by guessing at the dimmed
+        area. The handle is a <span class="sg-cls">::before</span>, so a sheet needs no extra markup
+        to get one.</p>
+      <div class="sg-row">
+        <div class="sg-cell" style="flex-direction:column;align-items:stretch;width:260px">
+          <div class="pop" style="position:static;display:block;padding:0 8px 22px;border-radius:12px 12px 0 0">
+            <div style="width:36px;height:4px;border-radius:999px;background:var(--line);margin:10px auto 8px"></div>
+            <button role="menuitem" style="display:block;width:100%;text-align:left;min-height:44px">Apply coupon</button>
+            <button role="menuitem" style="display:block;width:100%;text-align:left;min-height:44px">Edit label</button>
+            <button role="menuitem" style="display:block;width:100%;text-align:left;min-height:44px">Cancel subscription</button>
+          </div>
+          <span class="sg-cls">handle · 44px rows · 22px tail</span>
+        </div>
+      </div>
+    </div>
+
     <div class="sg-item" id="snack">
       <h3>Snackbar <span class="sg-cls">.snack</span></h3>
-      <p class="sg-note">A transient message at the bottom of the viewport. It reports that something
-        <b>happened</b>, then leaves on its own (4.2s) &mdash; with a dismiss for the impatient. It never
-        covers the thing it is reporting about: one line tall, in the margin below the content, and on
-        the phone it sits above both the bottom navigation bar and the prototype&rsquo;s gear button.
+      <p class="sg-note">A transient message that reports something <b>happened</b>, then leaves on its
+        own (4.2s) &mdash; with a dismiss for the impatient.
+        <b>Two anchors, one per breakpoint.</b> On the desktop it sits at the <b>bottom</b> of the
+        viewport, in the margin below the content. <b>Below 600px it anchors to the TOP</b>, 12px under
+        the app bar. ⚠️ That is not a preference: at the bottom of a phone it has to clear the bottom
+        navigation and the prototype&rsquo;s gear, and every offset that clears both lands it in the
+        middle of a short viewport, over the content it is confirming &mdash; measured at 393&times;748,
+        all three confirmations came up mid-page. The top has one fixed thing to clear and nothing
+        pinned below it.
         <span class="sg-cls">role="status"</span>, not <span class="sg-cls">alert</span> &mdash; an alert
         interrupts, and a confirmation of something you just did has no business taking the cursor.</p>
       <p class="sg-note"><b>Confirmations leave; problems stay.</b> The snackbar carries completed

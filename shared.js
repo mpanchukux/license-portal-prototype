@@ -79,7 +79,13 @@ var Store = (function(){
      that already has a snapshot — it would need "Reset demo data" pressed by hand,
      which is not something a reviewer should have to know. Bump this whenever the
      seed changes in a way that has to be seen; the old key is simply abandoned. */
-  var KEY = 'tb-license-portal-demo-v10';
+  /* ⚠️ v10 → v11: the SEED is unchanged (both keys were already null), but the MEANING
+     of stored data is not — a browser holding a v10 `profile` has a company name and
+     address in it that no form writes or reads any more, and its `billingAddress` has
+     no company name at all. That store would render a half-empty consolidated section
+     and print an invoice missing the company. Bumping is cheaper than a migration for
+     a prototype, and unlike a migration it cannot half-succeed. */
+  var KEY = 'tb-license-portal-demo-v12';   // v12: billingAddress is seeded (see the note below)
   function clone(o){ return JSON.parse(JSON.stringify(o)); }
   /* ⚠️ The snapshot is taken ONCE and then shifted to today. Doing it here rather than
      at render time means every surface reads the same stored dates, and a browser left
@@ -104,8 +110,24 @@ var Store = (function(){
          "nothing saved yet", and every reader falls back to what the markup or
          PAYMENT_METHOD already shows — so an untouched demo looks exactly as it did. */
       paymentMethod: null,        // { brand, last4, num, exp, name, country } once a card is entered
-      profile: null,              // Account: name, company, address — see PROFILE_FIELDS
-      billingAddress: null,       // Billing: the address printed on invoices
+      /* ⚠️ The split moved. `profile` is now ONLY the person — first, last, language;
+         the company name, description, phone and address it used to also hold live in
+         `billingAddress`, on the one page that owns them. */
+      profile: null,              // Account: first, last, lang
+      /* ⚠️ SEEDED, unlike its neighbours, and that is the fix for a demo fault: every
+         invoice printed "Billed to ThingsBoard, 500 7th Avenue, New York" — the
+         VENDOR's own address on a customer's invoice. It came from invoiceParty()'s
+         fallback strings, which were the only thing there while nothing was saved.
+         A populated demo account is a CUSTOMER, so it now has customer details, and
+         the document reads like a document someone was actually sent.
+         ⚠️ setSession('new') clears this — a brand-new account has saved nothing and
+         must not inherit another company's billing details. */
+      billingAddress: {           // Billing: company, descr, email, phone + the address
+        company:'Northwind Industrial GmbH', descr:'Industrial IoT systems integrator.',
+        email:'billing@northwind-industrial.de', phone:'+49 89 5550 1234',
+        country:'Germany', state:'Bavaria', city:'Munich', zip:'80331',
+        addr:'Leopoldstrasse 21', addr2:''
+      },                          // printed on every invoice (see invoiceParty)
       passwordChangedAt: null,    // Security: a date string. The password itself is NEVER stored.
       /* who signed up in this browser — { email, name }. Events log against it, so a
          purchase made by a new account is not attributed to the demo's own address. */
@@ -231,6 +253,17 @@ function invoiceNumber(){
   var n = (Store.get('seq') || 0) + 1;
   Store.set('seq', n);
   return 'NAWE49WG-' + ('000' + (1000 + n)).slice(-4);
+}
+/* ⚠️ ONE sorted reading of the invoice list, newest first, used by every surface that
+   shows invoices. They used to read `DATA().invoices` raw, which is seed order plus
+   whatever `unshift` put on the front — so the page ran Sep 17, Sep 15, Aug 26,
+   Oct 01 2025, Sep 12… neither by date nor by number, with no sort control to fix it.
+   Sorted here rather than in each renderer so the Invoices page, Home's preview block
+   and a licence's own Invoices tab cannot disagree about the order.
+   ⚠️ Not sorted in place: `sort` mutates, and the store's array is the seed. */
+function invoicesSorted(list){
+  return (list || DATA().invoices).slice()
+    .sort(function(a, b){ return dateKey(b.date) - dateKey(a.date); });
 }
 function storeAddInvoice(lic, amount, opts){
   opts = opts || {};
@@ -393,6 +426,9 @@ function setSession(next, opts){
   if(next === 'new'){
     Store.set('dash', 'dashempty');
     Store.set('billingData', 'none');
+    /* the seeded demo customer belongs to the populated account, not to whoever just
+       signed up — see the billingAddress note in the seed */
+    Store.set('billingAddress', null);
   }
   /* ⚠️ Two callers, two meanings, one flag. The settings panel's "Signed in —
      existing account" is a jump TO a populated account, so an empty dashboard state
@@ -541,7 +577,7 @@ function chromeHTML(){
   +       '<a role="menuitem" href="billing.html">Billing &amp; payment</a>'
   /* Support, in the one menu that is on every page. ⚠️ Above the separator, with the
      other account-level things: it is not a destructive action and not a way out. */
-  +       '<a role="menuitem" href="' + EXT.support + '" target="_blank" rel="noopener">Help &amp; support</a>'
+  +       '<a role="menuitem" href="' + EXT.support + '" target="_blank" rel="noopener">Help &amp; support' + EXTSVG + '</a>'
   +       '<div class="sep"></div>'
   /* No longer a stub: with a session in the store there is something to sign out
      OF, and a control labelled "Sign out" sitting next to a working log-in that
@@ -813,6 +849,34 @@ function modalAction(label, onClick, disabled){
    Global behaviours — delegated, so re-rendered rows keep working
    ========================================================================== */
 function wireGlobal(){
+  /* ---------- info icons (see infoIcon in components.js) ----------
+     Only the TAP half lives here. On a pointer device `.tip` already opens on hover
+     and on :focus-visible, so this handler stands down — otherwise a mouse click
+     would PIN a bubble that hover is about to show anyway, and the same click would
+     then be needed to unpin it. Below 600px there is no hover to rely on, so the tap
+     is the whole interaction: toggle this one, and close any other that is open.
+     Delegated from the document because these icons are rendered inside the wizard,
+     which rebuilds its steps on every change — a per-node listener would be lost. */
+  var canHover = window.matchMedia && window.matchMedia('(hover:hover)').matches;
+  function closeInfo(except){
+    $$('.infoic.show').forEach(function(n){ if(n !== except) n.classList.remove('show'); });
+  }
+  document.addEventListener('click', function(e){
+    var ic = e.target.closest && e.target.closest('.infoic');
+    if(!ic){ closeInfo(null); return; }
+    /* ⚠️ SWALLOW THE CLICK ON EVERY DEVICE, including the ones where hover already
+       shows the bubble and this handler has nothing else to do. The icon now lives
+       inside plan cards, and a plan card IS a button — without this, reading the
+       explanation of "1 production instance" selected that plan and moved the wizard
+       on. The icon explains a choice; it must never make it. */
+    e.preventDefault();
+    e.stopPropagation();
+    if(canHover) return;        // hover and :focus-visible already paint it
+    closeInfo(ic);
+    ic.classList.toggle('show');
+  });
+  document.addEventListener('keydown', function(e){ if(e.key === 'Escape') closeInfo(null); });
+
   // generic dialog
   $('#modalClose').addEventListener('click', closeModal);
   $('#modalCloseBtn').addEventListener('click', closeModal);
@@ -978,7 +1042,13 @@ function elevateOpenPops(){
        instead of a full-width sheet. The relocated header overflow was the first
        case (see placeOverflow in license-details.js); Activity's period menu is
        the second — it is a .dropmenu, so it lands in this selector by default. */
-    if(phone && (pop.closest('.fs-headactions, #topbarAction') || pop.classList.contains('permenu'))) return;
+    /* ⚠️ Keyed on the POP, not on where its button sits. It used to test
+       `closest('.fs-headactions, #topbarAction')` — the two places placeOverflow()
+       relocated the details overflow to. That relocation is gone (the ⋮ stays beside
+       the other actions now), so an ancestor test would no longer match and this
+       helper would pin the bottom sheet under a 44px button as a dropdown. The fact
+       that matters was never the ancestor: it is that THIS pop is a sheet in CSS. */
+    if(phone && (pop.id === 'headKebabPop' || pop.classList.contains('permenu'))) return;
     var anchor = pop.parentNode ? pop.parentNode.querySelector('[aria-haspopup]') : null;
     if(!anchor) return;
     var r = anchor.getBoundingClientRect();
@@ -1053,8 +1123,35 @@ function licDetailsMode(){ return Store.get('licDetails') === 'page' ? 'page' : 
    tell which of the three was on the clipboard, did not trust it, and went looking for
    the key by hand. The icons stay as they are — what changed is that the confirmation
    names the thing, through the snackbar. */
-function copyValue(text, what){
-  var done = function(){ Snack.show(what + ' copied'); };
+/* money, for the surfaces outside the wizard's IIFE (which has its own `money`) */
+function fmtMoney(n){ return '$' + Number(n).toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 }); }
+/* ⚠️ The confirmation belongs to the BUTTON, not to a snackbar at the edge of the
+   screen. A copy is a micro-action taken on one small control; answering it at the
+   bottom of the page makes the reader look away from the thing they just pressed to
+   find out whether it worked. The tooltip is already there, already positioned, and
+   already says what the button does — so it says what the button DID for a moment
+   instead, then goes back.
+
+   This is what `.tip.show` was built for: it is deliberately outside the
+   `(hover:hover)` gate precisely so a tap on a phone gets the same answer a hover
+   gets on a desktop (see the note above `.tip` in styles.css).
+
+   `btn` optional: a copy fired from something without a tooltip still has to say
+   something, and for that the snackbar is right. */
+function copyValue(text, what, btn){
+  var done = function(){
+    var tip = btn && btn.closest && btn.closest('.tip');
+    if(!tip){ Snack.show(what + ' copied'); return; }
+    if(tip._copyT){ clearTimeout(tip._copyT); }
+    else { tip._copyWas = tip.getAttribute('data-tip'); }   // only the FIRST press stores it
+    tip.setAttribute('data-tip', what + ' copied');
+    tip.classList.add('show', 'copied');
+    tip._copyT = setTimeout(function(){
+      tip.setAttribute('data-tip', tip._copyWas);
+      tip.classList.remove('show', 'copied');
+      tip._copyT = null;
+    }, 1200);
+  };
   if(navigator.clipboard && navigator.clipboard.writeText){
     navigator.clipboard.writeText(String(text == null ? '' : text)).then(done, done);
   } else { done(); }
@@ -1089,11 +1186,28 @@ function reformatCardField(el, fn){
 }
 /* one delegated listener for every card field in the product — the wizard's billing
    step and the update-card modal both carry these ids/attributes */
+/* ⚠️ AUTO-ADVANCE between the three subfields. They share one bordered box and read as
+   one control, so a full number that leaves the caret sitting at its end asks the
+   person to find the next box themselves — on a phone, where the next box is 60px wide
+   and the keyboard covers half the screen. Advance only when the field is FULL, and
+   never backwards: moving focus on a delete would trap a correction. */
+function cardNext(el, sel){
+  var box = el.closest('.paystripe'); if(!box) return;
+  var next = box.querySelector(sel);
+  if(next && !next.value) next.focus();
+}
 document.addEventListener('input', function(e){
   var el = e.target;
   if(!el || el.tagName !== 'INPUT') return;
-  if(el.id === 'payNum' || el.getAttribute('data-nlb') === 'num') reformatCardField(el, fmtCardNumber);
-  else if(el.id === 'payExp' || el.getAttribute('data-nlb') === 'exp') reformatCardField(el, fmtCardExpiry);
+  var nlb = el.getAttribute('data-nlb');
+  if(el.id === 'payNum' || nlb === 'num'){
+    reformatCardField(el, fmtCardNumber);
+    if(el.value.replace(/\D/g, '').length >= 16) cardNext(el, '.ps-exp, #payExp');
+  }
+  else if(el.id === 'payExp' || nlb === 'exp'){
+    reformatCardField(el, fmtCardExpiry);
+    if(el.value.replace(/\D/g, '').length >= 4) cardNext(el, '.ps-cvc, #payCvc');
+  }
 });
 
 /* ---------- the payment method on file ----------------------------------------
@@ -1203,6 +1317,9 @@ function wireSettingsPanel(){
     if(open) $('#settingsBody').innerHTML = settingsBodyHTML();
     panel.hidden = !open;
     gearBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    /* on a phone the gear is collapsed into the screen edge until you reach for it —
+       while its panel is open it has to be fully out (see .gearfab in the ≤600px block) */
+    gearBtn.classList.toggle('on', open);
   }
   gearBtn.addEventListener('click', function(e){ e.stopPropagation(); toggle(panel.hidden); });
   panel.addEventListener('click', function(e){ e.stopPropagation(); });
@@ -1564,7 +1681,7 @@ function syncTitleRow(){
       if(home) home.appendChild(el);
       el.removeAttribute('data-homed');
     });
-    if(row.classList.contains('pagehead')){
+    if(row.classList.contains('pagehead') || row.classList.contains('setcard-h-page')){
       row.classList.remove('pagetitlerow');   // markup row: only the class was ours
       row.removeAttribute('id');
     } else {
@@ -1581,7 +1698,13 @@ function syncTitleRow(){
      measured, the title's centre sat 7px above the buttons'. So when a `.pagehead`
      already exists it IS the header row: it gets the class and keeps its children,
      and the back control is moved into it. Otherwise one is created. */
-  var existing = h1.closest('.pagehead');
+  /* ⚠️ `.setcard-h-page` counts too. Account and Billing put their header INSIDE the
+     page's one white frame (see styles.css), so their h1 no longer sits in a
+     `.pagehead` — and this lookup, matching nothing, built a second row around the
+     title and left Save behind in the card header. Measured on 375: "Account" and
+     "Change password" in one row, "Save" orphaned on the next. Both header shapes are
+     header rows; the rule is "a header already exists", not "it is called pagehead". */
+  var existing = h1.closest('.pagehead, .setcard-h-page');
   if(existing){
     row = existing;
     row.id = 'pageTitleRow';

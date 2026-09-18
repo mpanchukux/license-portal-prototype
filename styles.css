@@ -202,6 +202,9 @@ a{color:inherit}
 .periodhead{margin:0 0 6px;font-family:var(--font-ui);font-size:var(--t-label-fs);line-height:var(--t-label-lh);letter-spacing:var(--t-label-ls);font-weight:var(--t-label-fw);text-transform:uppercase;color:var(--ink)}
 .chip{font-size:14px;padding:2px 9px;border:1px solid var(--line);border-radius:999px;color:var(--mid);background:#fafafa;display:inline-flex;align-items:center;gap:6px}
 .chip.status{border-color:var(--ink);color:var(--ink);font-weight:600;background:#fff}
+/* blocked is the one status that is not "alive" — ink fill, the same weight every
+   other attention mark in the product carries (see .pill.attn) */
+.chip.status.blocked{background:var(--ink);color:#fff;border-color:var(--ink)}
 .chip .sdot{width:7px;height:7px;border-radius:50%;background:var(--ink);flex:none}
 .chip.ghost{border-style:dashed;color:var(--faint);background:transparent}
 .chip.ghost:hover{color:var(--ink);border-color:var(--mid)}
@@ -387,6 +390,42 @@ th.num,td.num{text-align:right}
     border:5px solid transparent;border-top-color:var(--ink);z-index:20}
 }
 
+/* what the updates date means, under it — quiet, it is an explanation not a warning */
+/* ⚠️ `text-align:left` is not cosmetic here: `.keycol.right` right-aligns its column,
+   which is right for a one-line date and wrong for three lines of prose — ragged-left
+   body text is read line by line instead of scanned. */
+.updnote{margin:10px 0 0;font-size:14px;line-height:1.5;color:var(--faint);
+  max-width:44ch;text-align:left;margin-left:auto}
+.updnote[hidden]{display:none}
+/* the check-in cadence, stated once above the Instances table */
+.inst-note{margin:0 0 14px;font-size:14px;line-height:1.5;color:var(--faint)}
+.inst-note[hidden]{display:none}
+/* the id column keeps its width; the full value is in `title` and on the clipboard */
+.inst-id{display:inline-block;max-width:22ch;overflow:hidden;text-overflow:ellipsis;
+  white-space:nowrap;vertical-align:-4px}
+.inst-labelcell .inst-editlabel{opacity:0;transition:opacity .12s}
+.inst-labelcell:hover .inst-editlabel,.inst-editlabel:focus-visible{opacity:1}
+/* the new-tab marker: it rides after the label, at text size, never its own control */
+.extmark{width:13px;height:13px;margin-left:5px;vertical-align:-2px;opacity:.65}
+
+/* ---------- info icon ----------
+   The explanation a row's name needs, one tap away. Rides on `.tip.wide` for the
+   bubble, so the hover gate and the wrapping measure come from there; this rule is
+   only the target itself. ⚠️ NOT on the 40px control band: it is not a control in a
+   toolbar, it is a mark inside a line of text, and it sizes to that line. Its hit
+   area is padded out to 24px so a thumb can find it on a phone. */
+.infoic{display:inline-flex;align-items:center;justify-content:center;
+  width:24px;height:24px;margin:-4px 0 -4px 2px;padding:0;
+  border:0;background:transparent;color:var(--faint);cursor:pointer;vertical-align:-3px}
+.infoic .icon{width:15px;height:15px}
+/* the name's last word and its icon break as one — see cellTopWithInfo */
+.nobreak{white-space:nowrap}
+.infoic:hover,.infoic.show{color:var(--ink)}
+.infoic:focus-visible{outline:2px solid var(--ink);outline-offset:2px;border-radius:50%}
+/* the bubble hangs left of the glyph, which sits mid-line rather than at a card edge */
+.infoic.tip.wide::after{right:auto;left:-8px}
+.infoic.tip::before{right:auto;left:6px}
+
 .row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px dashed var(--line2)}
 .row:first-child{padding-top:0}
 .row:last-child{border-bottom:0;padding-bottom:0}
@@ -483,10 +522,16 @@ th[aria-label$="ctions"],th.cellact,td.cellact{width:1%;white-space:nowrap;text-
 
 .switch{position:relative;display:inline-flex;width:40px;height:22px;flex:none}
 .switch input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer;z-index:1}
-.switch .track{width:40px;height:22px;border-radius:999px;background:#fff;border:1px solid var(--line);position:relative;transition:.15s}
-.switch .track::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:var(--mid);transition:.15s}
+/* ⚠️ THE OFF STATE WAS INVERTED. A dark knob on a light track reads as "on" — a
+   filled element is the thing that carries state everywhere else in this product
+   (see .pill.attn), so a dark disc says "active" whatever side of the track it sits
+   on. Off is now the quiet one: a light knob with an outline on a light track, and
+   the ink fill belongs to on, which is the only state that has earned it. */
+.switch .track{width:40px;height:22px;border-radius:999px;background:var(--hover);border:1px solid var(--line);position:relative;transition:.15s}
+.switch .track::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;
+  background:#fff;border:1px solid var(--line);box-sizing:border-box;transition:.15s}
 .switch input:checked + .track{background:var(--ink);border-color:var(--ink)}
-.switch input:checked + .track::after{transform:translateX(18px);background:#fff}
+.switch input:checked + .track::after{transform:translateX(18px);background:#fff;border-color:#fff}
 .switch input:focus-visible + .track{outline:2px solid var(--ink);outline-offset:2px}
 /* The large switch: the billing toggle on step 1 and the add-on blocks on step 2 —
    controls that carry a decision, not a quiet list setting. The base size stays for
@@ -904,12 +949,9 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
 /* the card's own column: .fs-body's 1040px cap and 24px padding are the wizard's */
 .authbody{padding:0 28px 30px;max-width:none;text-align:center}
 /* the logo lockup, centred and a step larger than the header's */
-.auth-brand{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:22px}
-.auth-brand .mark{width:34px;height:34px;border:1px solid var(--line);border-radius:8px;
-  display:flex;align-items:center;justify-content:center;background:#fff;color:var(--ink)}
-.auth-brand .mark .icon{width:20px;height:20px}
-.auth-brand .bt{font-size:var(--t-h2-fs);font-weight:700;line-height:1.1}
-.auth-brand .bt .bsep{color:var(--faint);font-weight:400;margin:0 6px}
+/* ⚠️ The `.auth-brand` row (mark + "ThingsBoard · Licenses") was REMOVED from both
+   auth screens along with its styles — decoration that repeated the identity already
+   on the page behind the modal, at a weight that competed with the real heading. */
 /* the screen's name. h2 by the scale, sentence case, and it is the only heading
    in the box — the header band above carries no title precisely so this one is it */
 .auth-h{margin:0 0 20px;font-family:var(--font-ui);font-size:var(--t-h2-fs);
@@ -919,9 +961,9 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
 .auth-soc{gap:8px}
 .auth-soc .icon{width:17px;height:17px}
 /* OR: a rule with the word sitting in a gap cut out of it */
-/* what the visitor just chose, restated at the top of the sign-up modal */
-.auth-ctx{margin:6px 0 0;text-align:center;font-size:14px;line-height:1.45;color:var(--mid)}
-.auth-ctx b{color:var(--ink);font-weight:var(--t-em-fw)}
+/* ⚠️ `.auth-h-price` and `.auth-ctx` are both GONE. What the visitor chose rides in the
+   heading (see signupHeading) and the PRICE no longer rides anywhere on this screen —
+   it is a term of the purchase, and the review step states the terms. */
 
 .auth-or{display:flex;align-items:center;gap:12px;margin:18px 0;color:var(--faint);font-size:14px}
 .auth-or::before,.auth-or::after{content:"";flex:1;height:1px;background:var(--line2)}
@@ -1175,13 +1217,28 @@ body[data-page="home"] .dwrap{padding-top:48px}
 .pc-cta{width:100%;margin-top:14px}
 /* a feature line's explanation: under it, quieter, and it must not make the row read
    as two features */
-.pc-featnote{display:block;margin-top:2px;font-size:14px;line-height:1.4;color:var(--faint)}
+/* The card's feature explanation exists in BOTH forms in the markup (see
+   nlPlanCardHTML) and the breakpoint chooses. Desktop: the icon, because two features
+   carrying two extra lines each is what pushed the plan cards apart and buried the
+   prices they exist to be compared on. Phone: the sentence — see the ≤600px block. */
+.pc-featnote{display:none}
+/* ⚠️ `-1px`, measured, not guessed: at -4px the icon's centre sat 2.75px BELOW the
+   feature line's own centre, which at this size reads as the glyph sagging off the
+   text rather than sitting with it. Re-measure with a Range over the text node if the
+   card's font size ever changes — the text's line box, not the row's, is what it has
+   to line up with. */
+.pc-feat .infoic{width:20px;height:20px;margin-left:3px;vertical-align:-1px}
+.pc-feat .infoic .icon{width:13px;height:13px}
 /* the tax line — same muted weight wherever it appears */
-/* an included entitlement named on the plan card in the wizard — a fact, not an offer */
-.nl-plansum-inc{display:block;margin-top:4px;font-size:14px;line-height:1.45;color:var(--mid)}
-.nl-plansum-inc b{color:var(--ink);font-weight:var(--t-em-fw)}
-/* why a locked row is locked, said under it rather than left to a padlock */
-.am-lockwhy{margin-top:8px;font-size:14px;line-height:1.45;color:var(--mid)}
+/* ⚠️ `.nl-plansum-inc` and `.am-lockwhy` are GONE, each with the thing it styled:
+   White labeling left the plan card for a block of its own (featureRow), and the
+   lock sentence was folded into the row's one description (lockedCell). Both were
+   second text slots on a block that already had one. */
+/* a stated, unbuyable entitlement: the row shape of its neighbours, a word where
+   they carry a control — so it cannot be mistaken for something you can change */
+.am-feature .fs-cellhead{align-items:flex-start}
+.am-featstate{flex:none;align-self:center;white-space:nowrap}
+.am-featgrid{margin-top:12px}
 .nl-taxline{display:block;margin-top:6px}
 
 .taxnote{margin:12px 0 0;font-size:14px;line-height:1.45;color:var(--faint)}
@@ -1269,12 +1326,19 @@ body[data-page="home"] .dwrap{padding-top:48px}
    carries PROBLEMS only: confirmations are transient and go to the snackbar, because
    a message that removes itself on a timer is the worst place for an instruction
    someone has to act on. */
-.invite-msg{margin:8px 0 0;height:21px;overflow:hidden;font-size:14px;line-height:1.45;
+/* ⚠️ The empty message used to RESERVE its line — `height:21px` plus 8px above and
+   the note's 8px below, so 37px of nothing sat between the input row and the sentence
+   explaining it, in the state the block is in almost always. The reservation existed
+   to stop the layout jumping when a message appears; the price was a permanent hole.
+   It collapses now and takes its margin with it. The jump it buys back is one line,
+   on a message that is transient anyway — and the note reads as belonging to the
+   control again, which is what it is for. */
+.invite-msg{margin:0;height:0;overflow:hidden;font-size:14px;line-height:1.45;
   color:var(--mid);visibility:hidden}
-.invite-msg.on{visibility:visible}
+.invite-msg.on{visibility:visible;height:auto;margin:10px 0 0}
 .invite-msg b{color:var(--ink);font-weight:var(--t-em-fw)}
 /* always visible, in both states — a standing fact about the control, not a receipt */
-.invite-note{margin:8px 0 0;font-size:14px;line-height:1.45;color:var(--faint)}
+.invite-note{margin:10px 0 0;font-size:14px;line-height:1.45;color:var(--faint)}
 
 /* SOLO — one person, so no table, no toolbar, no pager: there is nothing to search,
    sort or page, and a one-row table of yourself is a control panel for a decision
@@ -1333,11 +1397,24 @@ body[data-page="home"] .dwrap{padding-top:48px}
 .nl-sched{border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin-bottom:12px;
   font-size:14px;line-height:1.5;color:var(--ink);background:var(--bg)}
 .nl-schedwhat{margin-top:6px;color:var(--mid)}
-/* the same fact, quietly, on the licence details page */
-.schedline{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;
-  margin:0 0 14px;font-size:14px;line-height:1.5;color:var(--mid)}
-.schedline b{color:var(--ink);font-weight:var(--t-em-fw)}
-.schedline[hidden]{display:none}
+/* ⚠️ `.schedline` is GONE. The same fact now wears `.alert` inside the Plan block —
+   the styleguide's own banner, not a private treatment for one line. `.sched` adds
+   only what a banner with an action needs: the action pushed to the far end, and the
+   wrap that keeps it readable when the sentence is long. */
+.alert.sched{margin:0 0 16px}
+.alert.sched .atxt{flex:1}
+.sched-cancel{flex:none;white-space:nowrap}
+@media (max-width:600px){
+  /* The sentence is two or three lines here, so the ACTION drops under it rather than
+     squeezing the text into a column. ⚠️ Only the action: `flex:1 1 100%` on the text
+     wrapped it too, which left the clock glyph sitting alone on the first line like a
+     bullet for nothing. The text keeps the icon company (`flex:1 1 60px` — it takes
+     what is left of that line), and only the button is given a full-width basis. */
+  .alert.sched{flex-wrap:wrap;align-items:flex-start}
+  .alert.sched .icon{margin-top:2px}
+  .alert.sched .atxt{flex:1 1 60px}
+  .sched-cancel{flex:0 0 100%;margin-left:26px;text-align:left}
+}
 
 /* the support route in the cancel dialog: quiet, left-aligned, on the keep side */
 /* the banner's secondary route: after the action, quieter than it */
@@ -1399,8 +1476,10 @@ body.list-empty #pageTitleRow #licNewBtn{display:none !important}
 .snack-x:hover{opacity:1;background:rgba(255,255,255,.14)}
 
 /* an invited user: present in the list, not yet a person in it */
+/* an invited user keeps the grid: only the tone says the row is not complete yet.
+   `.user-pendmark` went with the colspan row it belonged to — see userRow(). */
 .user-pending td{color:var(--mid)}
-.user-pendmark{margin-left:10px;font-size:14px;color:var(--faint)}
+.user-invited{margin-left:8px;vertical-align:1px}
 
 .savednote{margin-left:12px;font-size:14px;color:var(--mid);white-space:nowrap}
 .savednote[hidden]{display:none}
@@ -1432,6 +1511,10 @@ body.list-empty #pageTitleRow #licNewBtn{display:none !important}
 .paycard .sp{flex:1}
 .pc-expw{display:inline}
 .brandbadge{font-size:14px;font-weight:800;letter-spacing:.08em;border:1px solid var(--line);border-radius:4px;padding:3px 7px;background:#fff;color:var(--ink)}
+/* the symbol badge keeps the wordmark badge's box so the two never change the row's
+   height or the gap after them — only what is inside the box differs */
+.brandbadge-mark{display:inline-flex;align-items:center;padding:2px 6px;line-height:0}
+.brandmark{width:34px;height:20px;display:block}
 .pc-num{font-variant-numeric:tabular-nums;font-size:14px;letter-spacing:.06em}
 .pc-exp{font-size:14px;color:var(--mid)}
 /* readonly billing address: half the card width; billing email on top, then a divider,
@@ -1457,8 +1540,24 @@ body.list-empty #pageTitleRow #licNewBtn{display:none !important}
    inputs: .setcard > *:not(.setcard-h) already claims max-width:800px here. */
 .pwstack{display:grid;gap:12px}
 .pwstack .field input{max-width:393px}
-.setdelete{margin-top:14px}
+.setdelete{margin-top:0}
 .setdelete .btn.ter{padding:0}
+/* ---------- settings pages: ONE frame, divided inside ----------
+   ⚠️ `.pagehead` (a sticky header floating on the grey page above a white card) is
+   gone from Account and Billing. Two containers and two titles for one subject read
+   as two areas; the card IS the page now. The header keeps the stickiness — that part
+   was doing real work, holding Save in reach while you are in the fields below. */
+.setcard-page{padding:0 24px 22px}
+.setcard-h-page{position:sticky;top:0;z-index:5;align-items:center;gap:12px;
+  background:var(--card);margin:0 -24px 18px;padding:18px 24px 14px;
+  border-bottom:1px solid var(--line2)}
+.setcard-h-page .lic-h1{margin:0}
+.setcard-h-page .sp{flex:1}
+.setcard-h-page .btn[disabled]{opacity:.45;cursor:not-allowed}
+/* the frame's own max-width rule must not clip the full-bleed header or the rules */
+.setcard > .setcard-h-page,.setcard > .setdiv{max-width:none}
+.setsec > .setcard-h{margin-bottom:14px}
+.setdiv{border-top:1px solid var(--line2);margin:22px 0}
 .modal .mf .btn[disabled]{opacity:.45;cursor:not-allowed}
 /* sticky page header carrying a single page-level Save (Profile / Billing settings) */
 .pagehead{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:12px;background:var(--bg);padding:14px 0 12px}
@@ -1505,6 +1604,14 @@ body.list-empty #pageTitleRow #licNewBtn{display:none !important}
 .searchbox .searchglyph{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:var(--faint);pointer-events:none}
 .searchbox input{font:inherit;font-size:14px;width:100%;height:var(--btnH);border:1px solid var(--line);border-radius:6px;padding:0 10px 0 32px;background:#fff;color:var(--ink);outline:none}
 .searchbox input:focus{border-color:var(--ink)}
+/* the clear control — inside the field, trailing edge, only when there is text */
+.searchclear{position:absolute;right:4px;top:50%;transform:translateY(-50%);
+  width:30px;height:30px;padding:0;border:0;background:transparent;color:var(--faint);
+  display:inline-flex;align-items:center;justify-content:center;border-radius:6px;cursor:pointer}
+.searchclear:hover{color:var(--ink);background:var(--hover)}
+.searchclear[hidden]{display:none}
+.searchclear .icon{width:15px;height:15px}
+.searchbox input{padding-right:36px}
 .searchbox input::placeholder{color:var(--faint)}
 .lic-toggle{display:inline-flex;align-items:center;height:var(--btnH);gap:9px;font-size:14px;color:var(--mid);cursor:pointer;margin-left:12px}
 /* Type filter: segmented chips, mutually exclusive */
@@ -1663,6 +1770,30 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
    ========================================================================== */
 @media (max-width:600px){
 
+  /* ---------- plan cards: the explanation is TEXT here, not an icon ----------
+     ⚠️ There is no hover on a phone, so the icon can only answer a tap — and a tap
+     nobody is prompted to make is the explanation being hidden, on the very breakpoint
+     that has room for it (the cards are stacked full-width here, not three across).
+     So the sentence is shown and the glyph steps aside. Scoped to `.pc-feat`: the
+     pattern itself keeps its tap behaviour everywhere else, including the styleguide
+     specimen. */
+  .pc-feat .infoic{display:none}
+  .pc-featnote{display:block;margin-top:3px;font-size:14px;line-height:1.4;color:var(--faint)}
+
+  /* ---------- info icon: the bubble anchors to the HEADING, not the glyph ----------
+     ⚠️ Measured, not guessed: at 375px the desktop bubble (300px wide, hung off the
+     icon's own left edge) started at x≈106 and ran to 406 — 31px past the viewport,
+     so the sentence it exists to show was cut off mid-word. The glyph is 24px wide
+     and sits wherever the name ends, so nothing positioned against IT can be kept on
+     screen. Making `.infoic` static hands the bubble's containing block to
+     `.am-celltop`, which is exactly as wide as the card allows — so it fits by
+     construction, at any name length and any viewport.
+     The arrow goes: it pointed at the glyph, and the bubble no longer starts there. */
+  .am-celltop{position:relative}
+  .infoic{position:static}
+  .infoic.tip.wide::after{left:0;right:auto;width:100%;bottom:calc(100% + 6px)}
+  .infoic.tip::before{content:none}
+
   /* ---------- tap targets and page gutter ---------- */
   /* The band carries every control, so raising it once gives the whole prototype
      44px targets. Type never goes below 14px anywhere, so nothing to do there. */
@@ -1689,7 +1820,6 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
   .fs-box.authbox{width:100vw;height:100vh;max-height:none;border:0;border-radius:0}
   .authbody{padding:0 20px 32px;display:flex;flex-direction:column;justify-content:center;flex:1}
   .auth-h{font-size:var(--t-h2-sm-fs);line-height:var(--t-h2-sm-lh);letter-spacing:var(--t-h2-sm-ls)}
-  .auth-brand .bt{font-size:var(--t-h2-sm-fs)}
 
   /* ---------- top bar becomes a real app bar ----------
      Flush edge-to-edge, one row: leading slot · title · page action · user. No side
@@ -1770,11 +1900,26 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
      back row, the disabled hover bridge and the two-line row's phone sizing all
      went with it. Users is a destination in the bottom bar again. */
 
-  /* ---------- profile menu: a bottom sheet, not a dropdown ---------- */
-  .dprofmenu{position:fixed;left:0;right:0;bottom:0;top:auto;width:100%;min-width:0;
+  /* ---------- ONE bottom-sheet pattern ----------
+     ⚠️ Three sheets had grown independently (profile menu, licence ⋮, Activity's
+     period filter) and all three were missing the same three things: no grab handle,
+     nothing to say the sheet was a sheet; no padding under the last item, so the list
+     ended flush against the screen edge and there was no way to tell whether it
+     continued; and no scrolling, so a sheet taller than the viewport simply lost its
+     tail. A participant closed them by guessing at the dimmed area.
+     Declared once here. The handle is a `::before`, so no sheet needed new markup —
+     which is also why it could be applied to all three in one pass. */
+  .dprofmenu,#headKebabPop,.permenu{
+    position:fixed;left:0;right:0;bottom:0;top:auto;width:100%;min-width:0;
+    max-height:72vh;overflow-y:auto;-webkit-overflow-scrolling:touch;
     border-radius:12px 12px 0 0;border-left:0;border-right:0;border-bottom:0;
-    padding:8px 8px calc(8px + env(safe-area-inset-bottom));
-    box-shadow:0 -12px 40px rgba(0,0,0,.22);z-index:120}
+    /* ⚠️ 22px under the last item, not 8: the gap is the signal that the list ended */
+    padding:0 8px calc(22px + env(safe-area-inset-bottom));
+    box-shadow:0 -12px 40px rgba(0,0,0,.22)}
+  .dprofmenu::before,#headKebabPop::before,.permenu::before{
+    content:"";display:block;width:36px;height:4px;border-radius:999px;
+    background:var(--line);margin:10px auto 8px}
+  .dprofmenu{z-index:120}
   .dprofmenu button,.dprofmenu a{min-height:44px;align-items:center;font-size:var(--t-body-sm-fs)}
   .dprofmenu .sep{margin:8px 4px}
 
@@ -1809,16 +1954,33 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
      heads go away with the columns. Applies to the licence row and the invoice row
      wherever they render — same component, same treatment. */
   .tablescroll{overflow-x:visible}
-  table:has(.lic-row) thead,table:has(.inv-row) thead{display:none}
-  .lic-row,.inv-row{display:block;position:relative;
+  table:has(.lic-row) thead,table:has(.inv-row) thead,table:has(.user-row) thead{display:none}
+  .lic-row,.inv-row,.user-row{display:block;position:relative;
     border:1px solid var(--line2);border-radius:10px;padding:12px;
     margin-bottom:10px;background:var(--card)}
-  .lic-row:last-child,.inv-row:last-child{margin-bottom:0}
+  .lic-row:last-child,.inv-row:last-child,.user-row:last-child{margin-bottom:0}
   /* ⚠️ `tr.` on the front is load-bearing: .dblock table td sets an 11px cell
      padding at the same specificity, and without the extra type selector every
      line of the card keeps a 22px band of dead space (measured: 42px lines). */
-  tr.lic-row > td,tr.inv-row > td{display:block;width:auto;padding:0;border:0;
+  tr.lic-row > td,tr.inv-row > td,tr.user-row > td{display:block;width:auto;padding:0;border:0;
     white-space:normal;text-align:left}
+
+  /* ---------- the Users row becomes a card ----------
+     ⚠️ This page had been skipped entirely: only Home and the licence pages were
+     adapted, so at 390px the four columns simply overflowed — `Login as` and `Delete`
+     were off-screen, and dragging sideways moved the header, the invite field and the
+     search box with the table, because the page itself was the thing scrolling.
+     Reading order is name, email, added, then the two actions on their own line —
+     the column order, which here is also the order someone reads a person. */
+  tr.user-row{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px}
+  tr.user-row > td:nth-child(1){order:1;flex:0 0 100%;font-weight:600;color:var(--ink)}
+  tr.user-row > td:nth-child(2){order:2;flex:0 0 100%;color:var(--mid);
+    overflow-wrap:anywhere}                 /* a long address wraps rather than pushes */
+  tr.user-row > td:nth-child(3){order:3;color:var(--faint);font-size:14px}
+  tr.user-row > td.cellact{order:4;flex:0 0 100%;margin-top:8px}
+  .user-row .rowactions{gap:18px}
+  /* the invited row has no actions, so its empty cell must not add a line */
+  tr.user-pending > td.cellact{margin-top:0}
   tr.lic-row > td.cellact{position:absolute;top:8px;right:8px;
     width:auto;margin:0;padding:0;text-align:right}
   .lic-row > td.cellact .lic-actions{gap:2px}
@@ -2021,6 +2183,13 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
      and display:contents does not stop inheritance — only box generation. So the row
      has to set its own edge or the period lands right-aligned while the key is left. */
   .head .rowvalue,.head .keyline{text-align:left}
+  /* ⚠️ The updates note needs an `order` OF ITS OWN. `.keycol` dissolves with
+     display:contents here, so every child of it becomes a flex item of `.headcol` and
+     is placed by `order` alone — a new child with no order defaults to 0 and lands
+     ABOVE the licence title. Measured: the explanation printed at the top of the
+     screen, above the banner and the name it belongs to. 7 puts it directly under the
+     date row (`.rowvalue` is 6), which is the one place it makes sense. */
+  .updnote:not([hidden]){order:7;margin:8px 0 0;max-width:none;text-align:left}
   /* the key row: glyph, value, ONE trailing icon-button (copy), all centred on the
      row's own middle. 16px is the list-item value size the calmer hierarchy asks
      for — 18px was display size for a line that is not the headline. */
@@ -2077,15 +2246,13 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
      renderer toggles. */
   .headactions.empty{display:none}
   .headactions #couponBtn{display:none}       /* into the overflow */
+  /* ⚠️ The primary flexes, the ⋮ keeps its own 44px — so the overflow sits to the RIGHT
+     of `Change plan` instead of being relocated to the app bar above the title (see
+     the note where placeOverflow used to be). `:not(.kebab-btn)` is what stops the
+     overflow being stretched to half the row. */
   .headactions .btn:not(.kebab-btn){flex:1}
-  /* the overflow itself has been moved into the app bar by placeOverflow(), so the
-     wrapper must not keep a slot in the content column */
-  .headactions #headKebabMenu{display:none}
-  /* ⚠️ `:not([hidden])` again — `renderLicenseActions` hides the whole overflow on a
-     cancelled licence, and an id selector setting `display:block` would override
-     the UA `[hidden]` rule and leave a live ⋮ in the app bar. */
-  .fs-headactions #headKebabMenu:not([hidden]),
-  #topbarAction #headKebabMenu:not([hidden]){display:block}
+  .headactions .kebab-btn{flex:none;width:44px;padding:0;
+    display:inline-flex;align-items:center;justify-content:center;font-size:20px}
 
   /* ---------- the app bar: ✕ leading, title, ⋮ as the single trailing action ----
      ⚠️ In the sheet the ✕ sits inside `.fs-headactions`, so `order` alone could not
@@ -2095,35 +2262,30 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
      and `placeOverflow` both test `closest('.fs-headactions')`, and that is DOM,
      not layout, so dissolving the box does not break either. */
   .licmodal .fs-header{gap:8px;padding:6px 8px}
-  .licmodal .fs-headactions{display:contents}
   .licmodal .fs-close{order:-1}
   .licmodal .fs-maintitle{order:0;flex:1;font-size:var(--t-h2-sm-fs);
     line-height:var(--t-h2-sm-lh);font-weight:var(--t-h2-sm-fw);
     letter-spacing:var(--t-h2-sm-ls)}
   .licmodal .fs-header .spacer{display:none}   /* the title flexes instead */
-  .licmodal #headKebabMenu{order:1}
   /* both icon buttons, one treatment: plain 44px glyphs. An app bar's trailing and
      leading actions are chrome, and an outline there competes with the content
      below. Scoped to the details sheet so the wizard's ✕ keeps the shared 30px. */
-  .licmodal .fs-close,
-  .fs-headactions .kebab-btn,#topbarAction .kebab-btn{width:44px;height:44px;
-    border:0;background:transparent;color:var(--ink);padding:0;
-    display:inline-flex;align-items:center;justify-content:center}
-  .fs-headactions .kebab-btn,#topbarAction .kebab-btn{font-size:22px;line-height:1}
-  .licmodal .fs-close{font-size:19px}
-  .licmodal .fs-close:hover,.fs-headactions .kebab-btn:hover{background:var(--hover)}
+  /* ⚠️ The ⋮ is no longer relocated into either header, so the rules that dressed it
+     as an app-bar glyph went with it. Only the sheet's own ✕ is left here. */
+  .licmodal .fs-close{width:44px;height:44px;border:0;background:transparent;
+    color:var(--ink);padding:0;display:inline-flex;align-items:center;
+    justify-content:center;font-size:19px}
+  .licmodal .fs-close:hover{background:var(--hover)}
   /* page presentation of the same screen: the leading control is already 44px and
      already plain (see .tb-back), and the avatar steps aside so ⋮ is the only
      trailing action — declared by the page via data-backicon (see syncAppBar). */
   body[data-backicon="close"] .dprofile{display:none}
   body[data-backicon="close"] .dtopbar-inner{grid-template-columns:auto 1fr auto;
     grid-template-areas:"back title act"}
-  /* …and the overflow menu is a bottom sheet, not a dropdown anchored to a button */
-  #headKebabPop{position:fixed;left:0;right:0;bottom:0;top:auto;
-    width:100%;min-width:0;max-height:70vh;overflow-y:auto;
-    border-radius:12px 12px 0 0;border-left:0;border-right:0;border-bottom:0;
-    padding:8px 8px calc(8px + env(safe-area-inset-bottom));
-    box-shadow:0 -12px 40px rgba(0,0,0,.22);z-index:140}
+  /* …and the overflow menu is a bottom sheet, not a dropdown anchored to a button.
+     Everything about being a sheet comes from the shared rule above; this is only
+     what is its own. */
+  #headKebabPop{z-index:140}
   #headKebabPop button{min-height:48px;align-items:center;font-size:16px}
 
   /* the three tabs scroll sideways rather than squeezing */
@@ -2235,7 +2397,6 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
      inside a group" step was the largest one on the step instead of the smallest.
      Inside a grid the gap owns the spacing; the margin has to go. */
   .nl-prodcards > .dblock,#nlModal .plangrid > .dblock{margin-top:0}
-  .gearfab{width:44px;height:44px}
   /* a row's text actions are its primary controls, so they get a tappable band even
      though the text itself stays 14px */
   .rowactions .link{min-height:44px;display:inline-flex;align-items:center}
@@ -2246,7 +2407,58 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
      FAB is bottom-RIGHT at the same `bnavH + 16` offset, so both at right would
      stack on each other. Lifted clear of the bottom navigation bar by its own
      height, and the panel opens above it from the same corner. */
-  .gearfab{right:auto;left:16px;bottom:calc(var(--bnavH) + 16px)}
+  /* ⚠️ The wizard header keeps the LICENCE, and sheds the rest in order of how little
+     it identifies: first the flow name (the step line and the commit button both say
+     it), then the product word (you opened this licence from a page that named it).
+     Measured at 390: with the flow dropped the longest title still overflowed by 21px;
+     with the product dropped too it fits. */
+  .nl-titleflow,.nl-titleprod{display:none}
+
+  /* ---------- the modal footer stacks at phone width ----------
+     ⚠️ The cancel dialog puts three things on one row: a support sentence that wraps
+     to three lines at 390px, `Keep subscription`, and `Cancel subscription`. Flexed to
+     the right on one line, the sentence squeezed the two buttons into a column of
+     fragments. Stacked, each gets the full width, and the order is the order they are
+     meant to be considered in: the way out, then keep, then cancel.
+     (Button order and emphasis were settled in an earlier pass — this is layout only.) */
+  .modal .mf{flex-wrap:wrap;gap:10px}
+  .modal .mf .btn{flex:1 1 100%;justify-content:center}
+  .cancel-help{flex:1 1 100%;text-align:left;order:-1;line-height:1.45}
+
+
+  /* ---------- the card number gets its own row ----------
+     ⚠️ Three subfields in one 358px-wide box left the number ~200px: the placeholder
+     was clipped to fifteen zeros where sixteen belong, and a typed number lost its
+     last digit at the subfield edge. This is the one field in the product someone is
+     copying off a physical card and reading back, so it is the one that must not be
+     the field that gets squeezed.
+     The box stays one box — that is what makes it read as one control — and wraps
+     inside: number on the first row, expiry and CVC sharing the second. */
+  .paystripe{flex-wrap:wrap;height:auto;padding:0 10px;column-gap:10px;row-gap:0}
+  .paystripe .ps-num{flex:1 1 calc(100% - 26px);height:var(--btnH)}
+  /* ⚠️ `min-width:0` is what actually makes them share the row. An <input> has an
+     intrinsic min-content width (~170px from its default `size`), and `flex-basis:0`
+     does not override `min-width:auto` — so both refused to shrink and each took a
+     row of its own. Measured before the fix: exp at y=1008, cvc at y=1052. */
+  .paystripe .ps-exp,.paystripe .ps-cvc{flex:1 1 0;width:auto;min-width:0;
+    height:var(--btnH);border-top:1px solid var(--line2)}
+  .paystripe .ps-cvc{border-left:1px solid var(--line2);padding-left:10px}
+
+  /* ---------- the prototype's gear COLLAPSES to an edge tab on a phone ----------
+     ⚠️ It is scaffolding, and at 390px it was sitting on product: measured over prices,
+     section headings, pagination and — while testing this very batch — over a menu item
+     inside an open bottom sheet. A 44px disc pinned 16px in from the left edge has no
+     safe place on a full-width column, because there is no margin to hide in.
+     So it hides in the EDGE instead: mostly off-screen, small, and dimmed until you
+     reach for it, when it comes fully into view.
+     ⚠️ And it drops BELOW the sheets in the stack (z-index 900 → 95). Scaffolding that
+     can cover a product menu is worse than scaffolding that is hard to find. */
+  .gearfab{right:auto;left:0;bottom:calc(var(--bnavH) + 24px);
+    width:38px;height:38px;border-radius:0 50% 50% 0;z-index:95;
+    transform:translateX(-38%);opacity:.5;
+    transition:transform .15s ease,opacity .15s ease}
+  .gearfab:hover,.gearfab:focus-visible,.gearfab.on{transform:translateX(0);opacity:1}
+  .gearfab .icon{width:18px;height:18px;margin-left:6px}
   .settings-panel{right:auto;left:16px;bottom:calc(var(--bnavH) + 70px);
     width:auto;max-width:calc(100vw - 32px);max-height:calc(100vh - var(--bnavH) - 110px)}
 
@@ -2297,6 +2509,17 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
      the title look 7px high against a 44px button. Giving the title the buttons'
      own height and centring its line box inside that lines the two up for real. */
   .pagetitlerow,.pagehead.pagetitlerow{display:flex;align-items:center;gap:8px;margin:0 0 14px}
+  /* ⚠️ The settings frame's header is a title row too, but it carries TWO actions and
+     a 36px title, which do not fit 375px on one line — measured, it wrapped with Save
+     alone on the second row, left-aligned under the title. So the wrap is made
+     deliberate instead of accidental: the title takes the first line, and the two
+     actions share the second at equal width. `.sp` is dropped because a spacer that
+     pushes nothing is just an invisible row item. */
+  .setcard-h-page.pagetitlerow{gap:8px;flex-wrap:wrap;padding-bottom:12px}
+  .setcard-h-page.pagetitlerow .lic-h1{flex:1 1 100%;min-height:0}
+  .setcard-h-page.pagetitlerow .sp{display:none}
+  .setcard-h-page.pagetitlerow .btn{flex:1 1 0;min-width:0}
+  .setcard-h-page.pagetitlerow .savednote{flex:1 1 100%}
   /* ⚠️ This once had to out-specify `body.nav-v2 .lic-h1{display:block}` (0,2,1),
      which beat a bare `.pagetitlerow .lic-h1` (0,2,0) and left the title 7px off
      centre. That rule is now `.lic-h1` (0,1,0), so a single class is enough — but
@@ -2304,7 +2527,7 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
   .pagetitlerow .lic-h1{margin:0;min-width:0;flex:0 1 auto;
     display:flex;align-items:center;min-height:44px;
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .ptr-sp,.pagehead.pagetitlerow .sp{flex:1}
+  .ptr-sp,.pagehead.pagetitlerow .sp,.setcard-h-page.pagetitlerow .sp{flex:1}
   /* Save is an action on this row like any other, so it gets the row's own height */
   .pagetitlerow .btn{min-height:44px}
   /* every action in the row is the same 44px tertiary icon-button */
@@ -2365,12 +2588,18 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
   /* ⚠️ The snackbar clears the bottom navigation bar. Under it, a confirmation is a
      message nobody can read — and the bar is fixed, so "bottom:24px" would put it
      exactly there. Same offset the gear FAB uses, for the same reason. */
-  /* ⚠️ Also clears the prototype's own gear FAB, which sits bottom-LEFT at exactly
-     `bnavH + 16` — at the same offset the snackbar ran straight through it. The
-     snackbar goes above it: a transient confirmation is the more important of the two
-     for the moment it exists, and scaffolding should not sit on top of product. */
-  .snack{left:16px;right:16px;bottom:calc(var(--bnavH) + 74px);
-    max-width:none;transform:translate(0,12px)}
+  /* ---------- the snackbar anchors to the TOP on a phone ----------
+     ⚠️ At the bottom it had nowhere safe to be. Above the bottom nav and above the
+     gear FAB it landed in the MIDDLE of a short viewport, sitting over the content it
+     was confirming — measured at 393×748, all three confirmations (key copied,
+     invitation sent, invoice downloaded) came up mid-page. Every offset that clears
+     the two fixed things at the bottom pushes it further into the page.
+     The top has exactly one thing to clear — the 56px app bar — and nothing below it
+     is pinned, so the message sits in its own band and the content stays readable.
+     Desktop keeps the bottom: there is no bottom navigation there and no FAB in the
+     way, and bottom is where a snackbar belongs when it can be. */
+  .snack{left:16px;right:16px;top:calc(56px + 12px);bottom:auto;
+    max-width:none;transform:translate(0,-12px)}
   .snack.on{transform:translate(0,0)}
 
   /* ⚠️ The COMPACT baseline is gone with the reason for it. It existed because the
@@ -2401,11 +2630,7 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
   /* ================= Activity: the period filter is a bottom sheet =================
      An anchored dropdown next to a chip has nowhere to go at 390px — and this menu
      carries a custom date range, so it is the tallest one in the prototype. */
-  .permenu{position:fixed;left:0;right:0;bottom:0;top:auto;
-    width:100%;min-width:0;max-height:80vh;overflow-y:auto;
-    border-radius:12px 12px 0 0;border-left:0;border-right:0;border-bottom:0;
-    padding:8px 8px calc(8px + env(safe-area-inset-bottom));
-    box-shadow:0 -12px 40px rgba(0,0,0,.22);z-index:140}
+  .permenu{z-index:140}
   .permenu > button{min-height:48px;align-items:center;font-size:16px}
   .percustom{padding:8px 10px 4px}
   .percustom .perrow{flex-wrap:wrap;gap:8px}
@@ -2848,7 +3073,10 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
      which keeps the back gutter) the two dates together overflowed it. The year on
      the first date is the least useful token there, so it drops out on a phone —
      "Last activity Aug 18 · created Aug 14 2026". */
-  .insttable .yr{display:none}
+  /* ⚠️ `.insttable .yr{display:none}` REMOVED with the markup that fed it. It hid the
+     year on a phone, which meant the same table printed "Sep 13" in one column and
+     "Sep 13, 2026" in the next — two formats, one row. One format everywhere wins;
+     if the column is ever too tight again, the fix is the column, not the date. */
 
   /* ---------- pager: the count, and the two steps that matter ---------- */
   /* Items per page and first/last are desktop affordances: on a phone the pager is

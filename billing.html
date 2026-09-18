@@ -13,36 +13,63 @@
 <div class="licview" id="billingView">
  <div class="setgrid">
   <div class="setcol">
-  <!-- sticky page header: one Save for the whole page (billing address edits) -->
-  <div class="pagehead">
-    <h1 class="lic-h1">Billing &amp; payment</h1>
-    <span class="sp"></span>
-    <button class="btn" id="billSaveBtn">Save</button><span class="savednote" id="billSaveBtnNote" hidden></span>
-  </div>
-  <div class="setcard">
-    <div class="setcard-h"><h2>Payment method</h2><span class="setcard-hint">Charged automatically for recurring plans</span></div>
-    <!-- the card itself comes from PAYMENT_METHOD via paymentMethodHTML(), the same
-         source the Next charge card on licence details renders from -->
-    <div class="paycard" id="payCard">
+  <!-- ⚠️ ONE FRAME, dividers inside — the same move as Account. Two white cards on a
+       grey page made "Payment method" and "Company details" look like two settings
+       areas that happen to share a URL; they are two parts of one subject, and one
+       Save already covers both. Divided, the relationship is legible.
+       The header is sticky INSIDE the card so Save stays reachable from the fields. -->
+  <div class="setcard setcard-page">
+    <div class="setcard-h setcard-h-page">
+      <h1 class="lic-h1">Billing &amp; payment</h1>
       <span class="sp"></span>
-      <button class="iconbtn ib" id="payUpdateBtn" aria-label="Update payment method" title="Update payment method"><svg class="icon" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+      <button class="btn" id="billSaveBtn">Save</button><span class="savednote" id="billSaveBtnNote" hidden></span>
+    </div>
+
+    <div class="setsec">
+      <div class="setcard-h"><h2>Payment method</h2><span class="setcard-hint">Charged automatically for recurring plans</span></div>
+      <!-- the card itself comes from PAYMENT_METHOD via paymentMethodHTML(), the same
+           source the Next charge card on licence details renders from -->
+      <div class="paycard" id="payCard">
+        <span class="sp"></span>
+        <button class="iconbtn ib" id="payUpdateBtn" aria-label="Update payment method" title="Update payment method"><svg class="icon" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+      </div>
+    </div>
+
+    <div class="setdiv"></div>
+
+    <!-- ⚠️ ONE section for the company, and it lives HERE. Account used to carry a
+         "Company details" card — company name, description and a full address — while
+         this page carried "Billing address" with the same country / state / city / ZIP /
+         address / address line 2 again. Two forms, two Saves, two copies of one address,
+         and only the one on this page was ever printed on an invoice. The Account card
+         is gone entirely (not stubbed, not linked): a field belongs to the page that
+         owns what it does, and what this address does is print on invoices.
+         ⚠️ ONE email, not two. Account's card also had a "Company email", holding the
+         same hello@thingsboard.io as this page's "Billing email". Carrying both across
+         would have put two identical email fields in one section, which is the very
+         duplication this consolidation exists to remove. `Billing email` is the one the
+         invoice reads, so it is the one that survives.
+         ⚠️ Phone now PERSISTS. On Account it had no `data-field`, so it was never saved
+         — a control that took typing and threw it away. -->
+    <div class="setsec">
+      <div class="setcard-h"><h2>Company details</h2><span class="setcard-hint">Printed on every invoice</span></div>
+      <div class="field"><label for="bill-company">Company name</label><input id="bill-company" data-field="company" type="text" value="ThingsBoard"></div>
+      <div class="field"><label for="bill-descr">Description</label><textarea id="bill-descr" data-field="descr">IoT platform provider.</textarea></div>
+      <div class="field2">
+        <div class="field"><label for="bill-email">Billing email</label><input id="bill-email" data-field="email" type="email" value="hello@thingsboard.io"></div>
+        <div class="field"><label for="bill-phone">Phone</label><input id="bill-phone" data-field="phone" type="text" value="+1 555 010 0100"></div>
+      </div>
+      <div class="field2">
+        <div class="field"><label for="bill-country">Country</label><select id="bill-country" data-field="country"><option>United States</option><option>Ukraine</option><option>Germany</option><option>United Kingdom</option></select></div>
+        <div class="field"><label for="bill-state">State / Province</label><input id="bill-state" data-field="state" type="text" value="New York"></div>
+        <div class="field"><label for="bill-city">City</label><input id="bill-city" data-field="city" type="text" value="New York"></div>
+        <div class="field"><label for="bill-zip">ZIP / Postal code</label><input id="bill-zip" data-field="zip" type="text" value="10001"></div>
+      </div>
+      <div class="field"><label for="bill-addr">Address</label><input id="bill-addr" data-field="addr" type="text" value="500 7th Avenue"></div>
+      <div class="field"><label for="bill-addr2">Address line 2</label><input id="bill-addr2" data-field="addr2" type="text" value=""></div>
     </div>
   </div>
 
-  <div class="setcard">
-    <div class="setcard-h"><h2>Billing address</h2><span class="setcard-hint">Printed on every invoice</span></div>
-    <!-- company profile address is filled, so these start prefilled from it; after this
-         they are independent copies — no live link, no toggle, no status states -->
-    <div class="field"><label for="bill-email">Billing email</label><input id="bill-email" data-field="email" type="email" value="hello@thingsboard.io"></div>
-    <div class="field2">
-      <div class="field"><label for="bill-country">Country</label><select id="bill-country" data-field="country"><option>United States</option><option>Ukraine</option><option>Germany</option><option>United Kingdom</option></select></div>
-      <div class="field"><label for="bill-state">State / Province</label><input id="bill-state" data-field="state" type="text" value="New York"></div>
-      <div class="field"><label for="bill-city">City</label><input id="bill-city" data-field="city" type="text" value="New York"></div>
-      <div class="field"><label for="bill-zip">ZIP / Postal code</label><input id="bill-zip" data-field="zip" type="text" value="10001"></div>
-    </div>
-    <div class="field"><label for="bill-addr">Address</label><input id="bill-addr" data-field="addr" type="text" value="500 7th Avenue"></div>
-    <div class="field"><label for="bill-addr2">Address line 2</label><input id="bill-addr2" data-field="addr2" type="text" value=""></div>
-  </div>
   </div><!-- /setcol -->
  </div><!-- /setgrid -->
 </div>

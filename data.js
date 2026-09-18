@@ -74,6 +74,93 @@ function shiftDemoDates(node, delta){
   return node;
 }
 
+/* ---------- the licence key ---------------------------------------------------
+   ⚠️ EVERY LICENCE USED TO SHOW THE SAME KEY. It was one literal in DETAILS_HTML
+   (`d41d-8cd9-…-3f2a`), so a demo with fifteen licences had fifteen copies of one
+   secret — and because the reveal was global too (see wireDetailsOnce), opening one
+   licence and revealing it left that same string legible on every other licence for
+   the rest of the session.
+
+   Derived, not stored: a key is an identifier, not a product decision, so a table of
+   fifteen literals would be fifteen things to keep unique by hand. `licenseKeyFor`
+   hashes the licence id into a stable, unique, plausible-looking key — same licence,
+   same key, across reloads and across the shifted seed.
+   ⚠️ Deterministic on purpose. A random key would change under the reader between one
+   render and the next, which is exactly the kind of thing that makes a demo look
+   broken when it is only being careless. */
+function licenseKeyFor(lic){
+  var id = String((lic && lic.id) || 'x');
+  var h = 2166136261;                                   // FNV-1a, enough for a mock
+  for(var i = 0; i < id.length; i++){ h ^= id.charCodeAt(i); h = (h * 16777619) >>> 0; }
+  var g = [], n = h;
+  for(var k = 0; k < 6; k++){
+    n = (n * 1664525 + 1013904223) >>> 0;               // LCG, so the groups differ
+    g.push(('000' + (n & 0xffff).toString(16)).slice(-4));
+  }
+  return g.join('-');
+}
+function licenseKeyMask(key){
+  var tail = String(key).slice(-4);
+  return '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' + tail;
+}
+
+/* ---------- production instances: check-in ------------------------------------
+   ⚠️ THIS NUMBER WAS NOT IN THE REPOSITORY. Nothing anywhere defined a check-in
+   cadence — `awaiting_checkin` existed as a licence status, and `PER_LABEL['24h']`
+   is an activity filter, neither of which says how often a running deployment
+   reports in. 24 is the figure given verbally for this pass; it is a constant here
+   so there is one place to correct it, and it is flagged in NOTES as unconfirmed.
+
+   ⚠️ The threshold is the interval ITSELF, as specified: checked in within 24h is
+   fine, beyond it is stale. Worth knowing the edge that buys: if deployments really
+   do report every ~24h, a healthy one is routinely 20–24h old and sits one slow hour
+   from reading as stale. A grace multiple (stale at 2× the interval) is the usual
+   defence. Not applied, because the instruction was explicit — but the demo data is
+   written well clear of the boundary so the column is never ambiguous. */
+var CHECKIN_INTERVAL_H = 24;
+
+/* Hours between a "Mon DD YYYY, HH:MM" stamp and now. Built on the same epochDay the
+   date shifting uses, so a shifted seed measures correctly without re-parsing. */
+function hoursSince(ts){
+  var q = String(ts).split(', '), d = String(q[0]).split(' ');
+  if(d.length !== 3 || !MONF[d[0]]) return null;
+  var hm = String(q[1] || '00:00').split(':');
+  var then = epochDay(+d[2], MONF[d[0]], +d[1]) * 24 + (+hm[0]) + (+hm[1]) / 60;
+  var now = new Date();
+  return (TODAY_DAY * 24 + now.getHours() + now.getMinutes() / 60) - then;
+}
+/* The one rule the Instances column is derived from. Unknown stamp → not stale:
+   an instance is never accused of being stale because its date failed to parse. */
+function instStale(inst){
+  var h = hoursSince(inst && inst.seen);
+  return h != null && h > CHECKIN_INTERVAL_H;
+}
+/* How many production instances a licence is ALLOWED: what the plan includes plus
+   whatever was purchased on top. One reading, used by the details banner, the Plan
+   table and the Home attention list, so they cannot disagree. */
+function instAllowed(lic){
+  if(!lic) return 0;
+  var spec = TIER_SPECS[lic.tier] || { ent:[] }, base = 0;
+  spec.ent.forEach(function(e){
+    if(e[0] === 'Production instances') base = parseInt(String(e[1]).replace(/,/g, ''), 10) || 0;
+  });
+  var extra = lic.extras && lic.extras.prod ? (parseInt(lic.extras.prod, 10) || 0) : 0;
+  return base + extra;
+}
+function instancesOf(lic, type){
+  var all = (lic && lic.instances) || [];
+  return type ? all.filter(function(i){ return (i.type || 'prod') === type; }) : all;
+}
+function instRunning(lic){ return instancesOf(lic, 'prod').length; }
+/* ⚠️ Devices have NO over-limit state and must never be given one: the platform
+   refuses connections beyond what the licence allows, so the number on screen is a
+   ceiling, not a count that can be exceeded. Instances are the opposite — the portal
+   is what checks, so it is the portal that has to say when the count is too high. */
+function instOverLimit(lic){
+  var allowed = instAllowed(lic);
+  return allowed > 0 && instRunning(lic) > allowed;
+}
+
 /* ---------- boolean entitlements shown as chips on licence details ---------- */
 var FEATURES = [
   { key:'whitelabel', label:'White labeling' },
@@ -195,10 +282,21 @@ var DATASETS = {
     ],
     invoices: [
       { num:'NAWE49WG-0021', licId:'B13', date:'Aug 18 2026', amount:'$499.00',   status:'Paid', payment:'Auto-pay', auto:true  },
-      // Add capacity on the perpetual: a one-time purchase the viewer made, so no
-      // auto-charge icon — and it sits in Home's three-row preview next to the
-      // renewals, which is where the difference has to be visible
+      // A capacity purchase on the perpetual: one-time, so no auto-charge icon — and it
+      // sits in Home's three-row preview next to the renewals, which is where the
+      // difference has to be visible. $1,999 is the perpetual production-instance unit
+      // price (UNITS.perpTB.prod), so the figure is the one the wizard would charge.
       { num:'NAWE49WG-0022', licId:'B11', date:'Aug 16 2026', amount:'$1,999.00', status:'Paid', payment:'Card',     auto:false },
+      /* ⚠️ THE ORIGINAL PURCHASES. Every perpetual here was created on a date and had
+         no document for it: B11 said "created Sep 01 2025" while its only invoice was
+         dated eleven months later and the tab read "1–1 of 1", so the purchase that
+         brought the licence into existence left no trace. Each one is dated to its own
+         licence's `created` and priced at the PRODUCT CARD's price — B11 was invoiced
+         $1,999.00 for a licence the card sells at $4,999, which is the same figure the
+         wizard would quote today. */
+      { num:'NAWE49WG-0009', licId:'B10', date:'Jul 27 2026', amount:'$4,999.00', status:'Paid', payment:'Card',     auto:false },
+      { num:'NAWE49WG-0002', licId:'B11', date:'Sep 01 2025', amount:'$4,999.00', status:'Paid', payment:'Card',     auto:false },
+      { num:'NAWE49WG-0010', licId:'B12', date:'Aug 13 2026', amount:'$2,999.00', status:'Paid', payment:'Card',     auto:false },
       { num:'NAWE49WG-0020', licId:'B6',  date:'Aug 15 2026', amount:'$10.00',    status:'Paid', payment:'Auto-pay', auto:true  },
       { num:'NAWE49WG-0019', licId:'B8',  date:'Aug 12 2026', amount:'$15.00',    status:'Paid', payment:'Auto-pay', auto:true  },
       { num:'NAWE49WG-0018', licId:'B1',  date:'Aug 08 2026', amount:'$499.00',   status:'Paid', payment:'Auto-pay', auto:true  },
@@ -278,6 +376,71 @@ var DATASETS = {
   }
 };
 
+/* ---------- instances, per licence -------------------------------------------
+   ⚠️ REPLACES two hardcoded rows that were identical for every licence — same two
+   ids, same blank labels, same dates, whether you opened a $10 Maker or a perpetual.
+   Anything derived from instances (a status, a running count, an over-limit check)
+   is meaningless while every licence claims the same two, so they had to become data
+   before §5, §6 and §7 could mean anything.
+
+   ⚠️ ONE TABLE, so the counts can be audited against the limits at a glance. The
+   right-hand comment on each row is `running / allowed`; `allowed` is what
+   instAllowed() computes from TIER_SPECS plus purchased extras.
+
+   ⚠️ EXACTLY ONE licence is over its limit on purpose — B10, 2 running against 1
+   allowed. Every other row here was checked against its own limit so that the
+   over-limit state means something when you find it, rather than being the accident
+   it was before (every perpetual showed two instances against a limit of one).
+
+   `seen` is the last check-in. Values sit well clear of the 24h threshold in both
+   directions — hours for healthy, days for stale — so the derived column is never
+   ambiguous in a demo. See CHECKIN_INTERVAL_H. */
+function inst(id, label, seen, created, type){
+  return { id:id, label:label || '', seen:seen, created:created, type:type || 'prod' };
+}
+var DEMO_INSTANCES = {
+  /* A — small account */
+  A1: [ inst('7c4a8d09-ca37-4f1b-9c4e-2b1e8f3a5d61', 'EU line 2',    'Aug 19 2026, 06:20', 'Aug 10 2026') ],                                 // 1 / 1
+  A2: [ inst('b5f2e1c7-3a9d-4e62-8f17-0c6d4b2a9e83', 'Broker',       'Aug 19 2026, 05:02', 'Jul 22 2026') ],                                 // 1 / 1
+  A3: [],                                                                                                                                    // 0 / 1 — never activated
+  /* B — large account */
+  B1:  [ inst('1f0b9a24-6c3e-4d85-b721-9e5a0c8f3d47', 'HQ primary',  'Aug 19 2026, 07:41', 'May 02 2026'),
+         inst('2a7c5e13-8d40-4b96-a3f2-6c1b9d7e0452', 'HQ secondary','Aug 19 2026, 07:38', 'May 04 2026'),
+         inst('9d3f6b80-2e51-4a7c-8b04-5f2a1c6e9370', 'Dev sandbox', 'Aug 19 2026, 03:15', 'Jun 01 2026', 'dev') ],                          // 2 / 4
+  B2:  [ inst('4e8a2d76-1b93-4c50-9f6e-3a7d5b2c8014', 'Prod EU',     'Aug 19 2026, 06:55', 'Jun 06 2026'),
+         inst('6b1d4f29-7a08-4e63-b5c1-2d9f8a3e7615', 'Prod US',     'Aug 19 2026, 06:49', 'Jun 10 2026') ],                                 // 2 / 3
+  B3:  [ inst('8c5e0a31-9d76-4f18-a6b3-1e4c7d0b592f', 'Factory A',   'Aug 19 2026, 04:10', 'Jun 20 2026') ],                                 // 1 / 2
+  B4:  [ inst('3a9f7c52-0e14-4b86-9d27-8c5b1a6f3e40', 'Pilot EU',    'Aug 19 2026, 05:33', 'Jul 01 2026') ],                                 // 1 / 1
+  B5:  [],                                                                                                                                    // 0 / 1 — canceled
+  B6:  [ inst('5d2b8e47-6f01-4a93-8c15-7b3e9d4a2f60', 'Maker box',   'Aug 14 2026, 22:05', 'Jul 15 2026') ],                                 // 1 / 1 — STALE (5 days)
+  B7:  [ inst('7f4c1a68-3b97-4e02-a5d8-9c6b2e0f4713', 'Demo',        'Aug 19 2026, 02:47', 'Jul 20 2026') ],                                 // 1 / 1
+  B8:  [ inst('0b6e3d95-8c24-4f71-b9a0-4e1d7c5a8362', 'MQTT prod',   'Aug 19 2026, 07:02', 'Jun 30 2026') ],                                 // 1 / 1
+  B9:  [ inst('2c9a5f80-4d13-4b67-8e92-1a7f3c6d0b54', 'MQTT staging','Aug 19 2026, 06:11', 'Jul 05 2026') ],                                 // 1 / 1
+  /* ⚠️ THE deliberate over-limit licence: a perpetual that includes one production
+     instance and is running two. This is the only one, and it is what §5's banner,
+     the Home attention row and the Manage route are all demonstrated on. */
+  B10: [ inst('6e0d2b73-5a89-4c14-9f37-8b2e6a1d4053', 'HQ node 1',   'Aug 19 2026, 07:20', 'Jul 27 2026'),
+         inst('4b8f1e06-2c75-4d93-a610-7e5c3b9f2841', 'HQ node 2',   'Aug 19 2026, 07:18', 'Aug 02 2026') ],                                 // 2 / 1 — OVER
+  B11: [ inst('9a3c7d51-0b68-4e27-8d94-5f1a2c7b6e30', 'Plant B',     'Aug 19 2026, 06:33', 'Sep 01 2025') ],                                 // 1 / 1
+  B12: [ inst('1d5b9f42-7e30-4a86-b2c9-6a4d8e0f3517', 'Broker on-prem','Aug 19 2026, 05:58', 'Aug 13 2026') ],                               // 1 / 1
+  B13: [ inst('8e2a6c04-9f51-4b73-a8d6-3c7b1e5f9024', 'CE building 4','Aug 19 2026, 07:05', 'Feb 18 2026'),
+         inst('5c7d3a91-6b28-4f40-9e15-2a8f4c6b7d39', 'CE building 5','Aug 19 2026, 07:01', 'Mar 02 2026') ],                                // 2 / 3
+  B14: [ inst('3f6b0e85-1a47-4d29-8c73-9b5e2f8a0164', 'Munich',      'Aug 17 2026, 09:12', 'May 24 2026') ],                                 // 1 / 1 — STALE (2 days)
+  /* the grant has been issued but nothing has connected with the key yet — the whole
+     point of the awaiting-check-in state, so it must stay empty */
+  B15: [],
+  G1:  []
+};
+/* Attached by id, so a licence row stays readable and every instance decision is
+   visible in one place above. */
+(function attachInstances(){
+  Object.keys(DATASETS).forEach(function(k){
+    (DATASETS[k].licenses || []).forEach(function(l){
+      l.instances = DEMO_INSTANCES[l.id] || [];
+    });
+  });
+})();
+
 /* ---------- plan cards for the new-user screen and the wizard ---------- */
 var EC_PLANS = {
   /* ⚠️ Maker ($10) and Prototype ($39) were REMOVED from the offer (2026-09-01) —
@@ -297,7 +460,11 @@ var EC_PLANS = {
   'thingsboard|perpetual': {
     single: true,
     cards: [ { name:'ThingsBoard PE Perpetual License', price:'$4,999', per:'· one-time', term:'Including 1 year of software updates',
-               feats:['5,000 devices', '5,000 assets', '1 production instance', '5M AI credits / month', 'White labeling', 'All ThingsBoard PE features', 'Device limit is fixed on this plan'] } ]
+               /* ⚠️ NO "Device limit is fixed on this plan" here. It was wrong: devices ARE
+                  addable on perpetual — each purchased production instance brings 5,000
+                  more, and extra devices can be added on top. That line belongs only to
+                  the subscription plans that genuinely cap (Pilot, Startup). */
+               feats:['5,000 devices included', '5,000 assets', '1 production instance', '5M AI credits / month', 'White labeling', 'All ThingsBoard PE features', 'Add devices and instances at any time'] } ]
   },
   'tbmq|payg': {
     single: true,
@@ -351,6 +518,35 @@ var BILLING_MODE_NOTE = {
   subscription: 'Pay every month, and change the plan any time.',
   perpetual:    'Pay once and run it indefinitely. Includes 12 months of software updates, renewable.'
 };
+/* ---------- what expiry actually means on a perpetual --------------------------
+   ⚠️ `PERPETUAL`, `Active` and `Expires Oct 01, 2026` sat next to each other and read
+   as a contradiction — a licence that is perpetual and also expires — until you worked
+   out that it is the UPDATES TERM that ends, not the licence. Nothing on the licence
+   said what you lose on that date.
+
+   ⚠️ ONE source for both audiences. The buyer's sentence (BILLING_MODE_NOTE.perpetual)
+   already said the good half — pay once, run indefinitely — but it is only ever shown
+   to someone buying, never to the owner whose term is ending. These say the same thing
+   in the same words from the other side of the purchase. Change one, change the set. */
+var UPDATES_LAPSE = 'Your deployment keeps running indefinitely — a perpetual license does not stop. '
+  + 'What ends is the software updates term: you stop receiving new versions and support. '
+  + 'You can buy software updates again at any time.';
+// the banner has room for one clause, so it carries the half the reader does not expect
+var UPDATES_LAPSE_SHORT = 'The deployment keeps running; new versions and support stop.';
+/* ⚠️ 40% of the licence base price — the figure given for this pass. It is the only
+   pricing rule the repository has for updates, and it is not confirmed in writing
+   anywhere; see NOTES. Renewing sets a fresh 12-month term FROM THE PURCHASE DATE
+   (confirmed for this pass), not from the old expiry — so renewing early forfeits
+   whatever was left, which is worth watching in testing. */
+var UPDATES_RENEW_RATE = 0.40;
+var UPDATES_RENEW_MONTHS = 12;
+/* ⚠️ Base price per tier, as NUMBERS, in one place. It used to live only inside
+   wizard.js's IIFE, which meant anything outside the wizard that needed a licence's
+   price — the updates purchase, for one — had to re-derive it from a display string.
+   wizard.js now reads this instead of keeping its own copy. */
+var TIER_BASE = { maker:10, prototype:39, pilot:99, startup:299, business:499,
+                  tbmqsub:15, tbperp:4999, tbmqperp:2999, grant:0 };
+function tierBase(t){ return TIER_BASE[t] || 0; }
 // intro sentence of the PE card — same wording on every plan surface
 var PLANS_INCLUDE_NOTE = 'All plans include unlimited customers, dashboards, integrations, API calls, data points & messages.';
 
@@ -389,28 +585,38 @@ var PRODUCT_CARDS = [
 var FCHECK = '<svg class="icon fmark" viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5"/></svg>';
 var KEBAB = '<svg class="icon" viewBox="0 0 24 24" style="fill:currentColor;stroke:none"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg>';
 var COPYSVG = '<svg class="icon" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg>';
+var INFOSVG = '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11.5v4.5"/><path d="M12 8h.01"/></svg>';
+/* the same pencil the Billing card and the licence label already draw — shared here
+   so the instance label editor is not a fourth private copy of it */
+var PENSVG = '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
+/* Marks an action that opens a NEW TAB. ⚠️ Not decoration: a participant opened six
+   duplicate tabs because nothing on the page changed when the first one opened behind
+   it. The mark makes the behaviour predictable before the click instead of a surprise
+   after it — so it belongs on EVERY outbound action, not just the ones that felt odd. */
+var EXTSVG = '<svg class="icon extmark" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6"/><path d="M20 4l-8.5 8.5"/><path d="M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4"/></svg>';
 var STUB = 'Placeholder — not part of this wireframe spec yet.';
 
 /* ============================================================================
    EXTERNAL LINKS — the only place the prototype points outside itself
    ============================================================================
-   ⚠️ PLACEHOLDERS. All four point at the documentation ROOT because the real pages
-   have not been named yet. Swapping in the true URLs is a one-line change each, and
-   this constant exists so it is exactly one line and not a hunt through four files.
+   ⚠️ THREE OF FOUR ARE STILL PLACEHOLDERS pointing at the documentation ROOT, because
+   the real pages have not been named yet. `install` is the one that is real (confirmed
+   2026-09-18). Swapping in the true URLs is a one-line change each, and this constant
+   exists so it is exactly one line and not a hunt through four files.
 
    ⚠️ This does not break "no external requests": that rule is about ASSETS — fonts
-   stay embedded as base64 and nothing is fetched at load. These are navigation, and
-   every one of them opens in a new tab (target="_blank" rel="noopener"), the same way
-   View invoice already does.
+   are served locally from fonts/*.woff2 and nothing is fetched at load. These are
+   navigation, and every one of them opens in a new tab (target="_blank" rel="noopener"),
+   the same way View invoice already does.
 
-     install  — how to activate a deployment with a licence key
+     install  — how to activate a deployment with a licence key (PE install docs)
      updates  — what the updates term is and what renewing it means
      support  — how to reach a person
      docs     — the root, for anything that has no page of its own yet
    ========================================================================== */
 var EXT = {
   docs:    'https://thingsboard.io/docs/',
-  install: 'https://thingsboard.io/docs/',   // TODO: the licence installation page
+  install: 'https://thingsboard.io/docs/pe/installation/',
   updates: 'https://thingsboard.io/docs/',   // TODO: the software-updates term page
   support: 'https://thingsboard.io/docs/'    // TODO: the contact page
 };

@@ -13,18 +13,25 @@
 <div class="licview" id="profileView">
  <div class="setgrid">
   <div class="setcol">
-  <!-- sticky page header: the page's own actions, escalating toward the primary —
-       Change password · Save. Signing out is a global session action, so it stays
-       in the profile menu ("Sign out") and is not duplicated here. No "all saved"
-       text: Save's disabled state already says there is nothing to save. -->
-  <div class="pagehead">
-    <h1 class="lic-h1">Account</h1>
-    <span class="sp"></span>
-    <a class="btn sec" href="security.html">Change password</a>
-    <button class="btn" id="profSaveBtn">Save</button><span class="savednote" id="profSaveBtnNote" hidden></span>
-  </div>
-  <div class="setcard">
-    <div class="setcard-h"><h2>Personal details</h2><span class="setcard-hint">Personal account</span></div>
+  <!-- ⚠️ ONE FRAME for the whole page. It used to be a page header floating on the grey
+       background plus a separate white card titled "Personal details" — two containers
+       and two titles for a page that has one subject. The card is the page now: its
+       header carries the page name and the page's actions, and everything below is
+       inside it, divided rather than boxed.
+       The header stays STICKY (inside the card, not above it) — Save has to stay
+       reachable while you are in the fields below it, which is why it was sticky
+       before. -->
+  <div class="setcard setcard-page">
+    <div class="setcard-h setcard-h-page">
+      <h1 class="lic-h1">Account</h1>
+      <span class="sp"></span>
+      <!-- Signing out is a global session action, so it stays in the profile menu and
+           is not duplicated here. No "all saved" text: Save's disabled state already
+           says there is nothing to save. -->
+      <a class="btn sec" href="security.html">Change password</a>
+      <button class="btn" id="profSaveBtn">Save</button><span class="savednote" id="profSaveBtnNote" hidden></span>
+    </div>
+
     <div class="field2">
       <div class="field"><label for="prof-first">First name</label><input id="prof-first" data-field="first" type="text" value="Mariia"></div>
       <div class="field"><label for="prof-last">Last name</label><input id="prof-last" data-field="last" type="text" value="Panchuk"></div>
@@ -46,33 +53,16 @@
       </div>
       <div class="field"><label for="prof-lang">Language</label><select id="prof-lang" data-field="lang"><option>English</option><option>Українська</option><option>Deutsch</option><option>Español</option></select></div>
     </div>
+
+    <!-- quiet, low-emphasis delete: a muted text link below a divider; the friction
+         lives in the confirm dialog, not on the page -->
+    <div class="setdiv"></div>
+    <div class="setdelete">
+      <button class="btn ter" id="deleteAcctBtn">Delete account</button>
+      <div class="cardhelp" style="margin-top:4px">Removes your profile and access. Active licenses and billing history are not affected. You'll confirm on the next step.</div>
+    </div>
   </div>
 
-  <div class="setcard">
-    <div class="setcard-h"><h2>Company details</h2><span class="setcard-hint">Organization · appears on invoices</span></div>
-    <div class="field"><label for="prof-company">Company name</label><input id="prof-company" data-field="company" type="text" value="ThingsBoard"></div>
-    <div class="field"><label for="prof-descr">Description</label><textarea id="prof-descr" data-field="descr">IoT platform provider.</textarea></div>
-    <div class="field2">
-      <div class="field"><label for="prof-country">Country</label><select id="prof-country" data-field="country"><option>United States</option><option>Ukraine</option><option>Germany</option><option>United Kingdom</option></select></div>
-      <div class="field"><label for="prof-state">State / Province</label><input id="prof-state" data-field="state" type="text" value="New York"></div>
-      <div class="field"><label for="prof-city">City</label><input id="prof-city" data-field="city" type="text" value="New York"></div>
-      <div class="field"><label for="prof-zip">ZIP / Postal code</label><input id="prof-zip" data-field="zip" type="text" value="10001"></div>
-    </div>
-    <div class="field"><label for="prof-addr">Address</label><input id="prof-addr" data-field="addr" type="text" value="500 7th Avenue"></div>
-    <div class="field"><label for="prof-addr2">Address line 2</label><input id="prof-addr2" data-field="addr2" type="text" value=""></div>
-    <div class="field2">
-      <div class="field"><label>Phone</label><input type="text" value="+1 555 010 0100"></div>
-      <div class="field"><label>Company email</label><input type="email" value="hello@thingsboard.io"></div>
-    </div>
-    <div class="cardhelp">Used as your billing / invoice address by default — change it in <a class="link" href="billing.html">Billing &amp; payment</a>.</div>
-  </div>
-
-  <!-- quiet, low-emphasis delete: a muted text link separated by a hairline; the
-       friction lives in the confirm dialog, not on the page -->
-  <div class="setdelete">
-    <button class="btn ter" id="deleteAcctBtn">Delete account</button>
-    <div class="cardhelp" style="margin-top:4px">Removes your profile and access. Active licenses and billing history are not affected. You'll confirm on the next step.</div>
-  </div>
   </div><!-- /setcol -->
  </div><!-- /setgrid -->
 </div>

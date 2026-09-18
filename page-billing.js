@@ -33,10 +33,13 @@ var PENCIL_SVG = '<svg class="icon" viewBox="0 0 24 24"><path d="M12 20h9"/>'
   + '<path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
 renderPayCard();
 
-/* ⚠️ This address is READ — by the invoice documents (see invoiceParty in
+/* ⚠️ This section is READ — by the invoice documents (see invoiceParty in
    components.js). That is the whole reason it is stored: a form that claims to
    control what is printed on an invoice, and is connected to nothing, is the lie the
-   flow audit caught. Saving here changes the next PDF and the next preview. */
+   flow audit caught. Saving here changes the next PDF and the next preview.
+   ⚠️ It now carries the COMPANY too (name, description, phone), consolidated off
+   Account — so one Save writes everything the invoice prints, and there is no second
+   form anywhere that can disagree with it. */
 applyFields('#billingView', Store.get('billingAddress'));
 wirePageSave('#billingView', '#billSaveBtn', {
   save: function(){ Store.set('billingAddress', fieldsOf('#billingView')); return true; }

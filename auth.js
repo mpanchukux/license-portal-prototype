@@ -124,32 +124,43 @@ var Auth = (function(){
       + '<a class="link" href="privacy.html">Privacy Policy</a> and acknowledge the '
       + '<a class="link" href="license-agreement.html">License agreement</a>.</p>';
   }
-  /* Reads the choice the landing page stored. Silent when there is none — a flat
-     sign-up from the header is not buying anything yet. */
-  function pendingPurchaseLine(){
+  /* ⚠️ ONE line, not a heading with a subtitle under it. It used to be
+     `Create your account` with `Creating an account to buy ThingsBoard Pilot — $99/mo`
+     beneath — two sentences that restate each other's subject, so the reader had to
+     assemble the single fact they carry between them. Merged, the line names the
+     action and what it is for, in the order they happen.
+
+     Reads the choice the landing page stored. No pending purchase — a flat sign-up
+     from the header — leaves the bare heading: nothing is being bought, so there is
+     nothing to name, and the line must not invent one. Same for a stored plan that no
+     longer matches a card (the offer changed under a stale store). */
+  function signupHeading(){
+    var base = SCREENS.signup.h;
     var p = Store.get('pendingPurchase');
-    if(!p || !p.plan) return '';
+    if(!p || !p.plan) return esc(base);
     var set = EC_PLANS[(p.product || 'thingsboard') + '|' + (p.kind === 'perpetual' ? 'perpetual' : 'payg')];
     var card = set && set.cards.filter(function(c){ return c.name === p.plan; })[0];
-    if(!card) return '';
+    if(!card) return esc(base);
     var product = p.product === 'tbmq' ? 'TBMQ' : 'ThingsBoard';
-    var price = card.price + (card.per === '/ month' ? '/mo' : ' ' + card.per);
-    return '<p class="auth-ctx">Creating an account to buy <b>' + esc(product) + ' ' + esc(card.name)
-      + '</b> — ' + esc(price) + '</p>';
+    /* ⚠️ NO PRICE. It was here in a quieter span, and it was still one fact too many:
+       this heading answers "what am I signing up for", and the price is a term of the
+       purchase, which the review step states in full before anyone pays. What the
+       reader is checking here is that they picked the right PLAN. */
+    return esc(base) + ' to buy ' + esc(product) + ' ' + esc(card.name);
   }
   function render(){
     var s = SCREENS[mode];
+    /* ⚠️ The `ThingsBoard · Licenses` brand row is GONE from both screens. It was
+       `aria-hidden` decoration repeating the identity that is already on the page
+       behind the modal and in the browser tab — and at h2 weight it out-shouted the
+       heading that says what the screen is actually for. */
     body.innerHTML = ''
-      + '<div class="auth-brand" aria-hidden="true">'
-      +   '<div class="mark"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4v16M4 12h16"/></svg></div>'
-      +   '<div class="bt">ThingsBoard<span class="bsep">·</span>Licenses</div>'
-      + '</div>'
-      + '<h2 class="auth-h" id="authHeading">' + s.h + '</h2>'
-      /* ⚠️ What you just chose, carried into the modal. Clicking Select on a plan used
-         to open a dialog that said nothing about the plan, the product or the price,
-         and the participant stopped to check whether they had clicked the wrong thing.
-         Built from the pending purchase, so it says exactly what the card said. */
-      + (mode === 'signup' ? pendingPurchaseLine() : '')
+      /* ⚠️ What you just chose is IN the heading, not under it — clicking Select on a
+         plan used to open a dialog that said nothing about the plan, the product or
+         the price, and the participant stopped to check they had not clicked the wrong
+         thing. Built from the pending purchase, so it says what the card said. */
+      + '<h2 class="auth-h" id="authHeading">'
+      +   (mode === 'signup' ? signupHeading() : esc(s.h)) + '</h2>'
       + socialHTML()
       + '<div class="auth-or"><span>OR</span></div>'
       + s.fields.map(fieldHTML).join('')
@@ -168,6 +179,22 @@ var Auth = (function(){
       + '</div>'
       + (s.forgot ? '<div class="auth-forgot"><button class="link" data-stub="Forgot password">Forgot password?</button></div>' : '');
     scr.setAttribute('aria-label', s.h);
+    /* ⚠️ THE PASSWORD FIELD IS CLEARED, and the reason matters for where to look:
+       nothing in this prototype ever wrote a value into it. The prefill is the
+       BROWSER's password manager acting on `autocomplete="current-password"` — which
+       is the correct markup, and exactly what you want everywhere except here. On the
+       one screen people reach BECAUSE they have forgotten their password, a filled
+       password field is absurd, and it also hands the next person at the machine a
+       working session in a demo that gets passed around.
+
+       Cleared twice on purpose: autofill runs asynchronously, so the synchronous clear
+       alone loses the race in some browsers. The email is left exactly as it is — it
+       saves typing in the demo and gives away nothing. */
+    var pw = $('#authPass');
+    if(pw && mode === 'login'){
+      pw.value = '';
+      setTimeout(function(){ if(pw.isConnected) pw.value = ''; }, 0);
+    }
   }
 
   /* ---- the way in ------------------------------------------------------------

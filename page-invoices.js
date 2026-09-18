@@ -6,9 +6,16 @@
 
 function renderInvoicesPage(){
   var b = $('#invoicesView tbody'); if(!b) return;
-  var inv = DATA().invoices;
+  var inv = invoicesSorted();          // newest first, everywhere (see invoicesSorted)
   if(inv.length){
-    b.innerHTML = inv.map(function(v){ return invRow(v); }).join('');
+    /* ⚠️ `bareProduct`, the SAME cell Home's invoice block renders. The full product
+       cell belongs to the Licenses table, where the licence is the subject of the row;
+       here the subject is the invoice, and the licence is a reference. Carrying the
+       mark placeholder and the licence label into this column made the reference look
+       like an entry of its own — a grey square and a deployment name competing with
+       the invoice number two columns to the left. Product, type, and a link to the
+       licence: nothing else earns a place. */
+    b.innerHTML = inv.map(function(v){ return invRow(v, { bareProduct:true }); }).join('');
   } else if(DATA().noInvoicesNote){
     /* ⚠️ A dataset can say WHY it has no invoices — the grant is free, and that is a
        fact about the account rather than a state waiting to be filled. It keeps the

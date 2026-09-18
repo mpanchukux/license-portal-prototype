@@ -95,7 +95,7 @@ var NL = (function(){
   // included quantities per tier (production instances / AI in blocks of 1M)
   var INCL = { maker:{prod:1,ai:1}, prototype:{prod:1,ai:2}, pilot:{prod:1,ai:4}, startup:{prod:2,ai:8}, business:{prod:3,ai:16},
                tbmqsub:{prod:1,ai:0}, tbperp:{prod:1,ai:5}, tbmqperp:{prod:1,ai:0} };
-  var BASE = { maker:10, prototype:39, pilot:99, startup:299, business:499, tbmqsub:15, tbperp:4999, tbmqperp:2999 };
+  var BASE = TIER_BASE;          // one source, shared with everything outside this IIFE
   // PLACEHOLDER unit prices (prototype only). Perpetual production instance is
   // anchored to the $1,999 Add-capacity invoice; the rest are inferred.
   var UNITS = { sub:{prod:29,dev:15,ai:5}, perpTB:{prod:1999,ai:500}, perpMQ:{prod:999,ai:0} };
@@ -117,8 +117,33 @@ var NL = (function(){
      refuses anything below what the plan already includes. */
   var DEVICE_UNIT = 0.10;
   var DEVICE_TIERS = { business:1000 };
-  function devicesIncluded(){ return DEVICE_TIERS[tier()] || 0; }
-  function hasDevices(){ return !isPerp() && !!DEVICE_TIERS[tier()]; }
+  /* ---------- perpetual: devices and production instances are LINKED ----------
+     ⚠️ Perpetual used to have no device control at all: `hasDevices()` excluded it
+     outright, so Devices rendered as a locked row reading "The device limit is set by
+     this plan" — which was simply untrue. Devices ARE addable on a perpetual; each
+     production instance you buy brings 5,000 more.
+
+     The model, in one line: the licence includes 5,000 devices per production
+     instance, and anything typed above that is EXTRA and is carried along when the
+     instance count changes. Type 5,050 on one instance and you have 5,000 included
+     + 50 extra; press + and you have 10,050 — the extra survives, because it was a
+     separate decision from how many instances you run. */
+  var PERP_DEV_PER_INSTANCE = 5000;
+  function isPerpTB(){ return isPerp() && st.product !== 'tbmq'; }   // TBMQ counts sessions, not devices
+  /* what the CURRENT configuration includes without paying for loose devices */
+  function devicesIncluded(){
+    if(isPerpTB()) return PERP_DEV_PER_INSTANCE * (cust.prod || 1);
+    return DEVICE_TIERS[tier()] || 0;
+  }
+  function hasDevices(){ return isPerp() ? isPerpTB() : !!DEVICE_TIERS[tier()]; }
+  // devices typed on top of what the instances already include
+  function extraDevices(){ return Math.max(0, (cust.devices || 0) - devicesIncluded()); }
+  /* ⚠️ NO PRICE EXISTS for a loose device on a perpetual. The repository prices extra
+     devices only on Business (`DEVICE_UNIT`, a monthly figure on a subscription), and
+     nothing anywhere gives a one-time per-device rate. Rather than invent one, the
+     line is listed WITHOUT an amount — the same treatment Offline Mode already gets
+     for the same reason. Flagged in NOTES. */
+  function perpDevicesPriced(){ return false; }
 
   /* AI is counted in blocks of 1,000,000 credits, and the product's unit is
      "{N}M AI credits" — so every figure for it carries the M. A bare "2" next to
@@ -144,7 +169,8 @@ var NL = (function(){
   function extrasCostOf(c){
     var u = units(), i = INCL[tier()] || { prod:1, ai:0 };
     return Math.max(0, c.prod - i.prod) * u.prod
-      + (hasDevices() ? Math.max(0, (c.devices || 0) - devicesIncluded()) * DEVICE_UNIT : 0)
+      /* perpetual loose devices have no rate — see perpDevicesPriced() */
+      + (hasDevices() && !isPerp() ? Math.max(0, (c.devices || 0) - devicesIncluded()) * DEVICE_UNIT : 0)
       + (hasDev() ? c.dev * u.dev : 0)
       + (hasAi() ? Math.max(0, c.ai - (i.ai || 0)) * u.ai : 0)
       + (hasAddons() && c.edge ? ADD.edge : 0)
@@ -157,6 +183,22 @@ var NL = (function(){
     if(isAddons()) return (BASE[tier()] || 0) + extrasCostOf(st.baseCust || cust);
     return BASE[st.oldTier] || 0;
   }
+  /* What a MODIFICATION actually charges: the difference, never the whole licence.
+     ⚠️ `total()` is BASE + extras, which is right for a first purchase and wrong for a
+     capacity purchase on a licence you already own — step 1 of a perpetual add-on read
+     `One-time total $6,998.00`, the $4,999 base of a licence already paid for plus the
+     $1,999 being bought. Same figure, one name, used by the step-2 summary, the step-3
+     total and Due today, so the screen cannot show two of them again. */
+  function modDelta(){ return Math.max(0, total() - oldMonthly()); }
+  /* the fraction of the current cycle a subscription change is charged for; a
+     perpetual has no cycle, so its callers pass 1 (see the note above renderStep3) */
+  function prorateFraction(){
+    var pr = (isMod() && !isPerp()) ? prorate(st.changeLic && st.changeLic.event) : null;
+    return pr ? pr.fraction : 1;
+  }
+  /* ⚠️ A perpetual modification has no recurring figure at all, so "New monthly" is
+     meaningless on it and the only honest total is what is being added today. */
+  function perpMod(){ return isPerp() && isMod(); }
   function confirmLabel(){
     if(isAddons()) return 'Confirm changes';
     return isChange() ? 'Confirm change' : (isPerp() ? 'Buy license' : 'Subscribe');
@@ -180,7 +222,11 @@ var NL = (function(){
   }
   function deltas(){
     var u = units(), e = extras(), out = [];
-    if(e.devices > 0) out.push({ t:'+' + e.devices.toLocaleString('en-US') + ' devices', amt:e.devices * DEVICE_UNIT, unit:DEVICE_UNIT });
+    if(e.devices > 0) out.push({ t:'+' + e.devices.toLocaleString('en-US') + ' devices',
+      /* amt null = "no rate for this yet", rendered as a line with no figure rather
+         than a made-up $0.00 (see the Offline Mode note) */
+      amt: perpDevicesPriced() || !isPerp() ? e.devices * DEVICE_UNIT : null,
+      unit: isPerp() ? null : DEVICE_UNIT });
     if(e.prod > 0) out.push({ t:'+' + e.prod + ' production instance' + (e.prod > 1 ? 's' : ''), amt:e.prod * u.prod, unit:u.prod });
     if(hasDev() && e.dev > 0) out.push({ t:'+' + e.dev + ' development instance' + (e.dev > 1 ? 's' : ''), amt:e.dev * u.dev, unit:u.dev });
     if(hasAi() && e.ai > 0) out.push({ t:'+' + e.ai + 'M AI credits', amt:e.ai * u.ai, unit:u.ai });
@@ -198,12 +244,18 @@ var NL = (function(){
   function changeRows(){
     var b = st.baseCust, u = units(), out = [];
     if(!b) return out;
+    /* `price === null` means "this quantity has no rate" — the row is stated without a
+       figure rather than priced at a rate borrowed from somewhere else. */
     function qty(f, label, price, show){
       if(!show || cust[f] === b[f]) return;
       out.push({ t:label + ' ' + qtyLabel(f, b[f]) + ' \u2192 ' + qtyLabel(f, cust[f]),
-                 amt:(cust[f] - b[f]) * price });
+                 amt: price == null ? null : (cust[f] - b[f]) * price });
     }
-    qty('devices', 'Devices', DEVICE_UNIT, hasDevices());
+    /* ⚠️ A perpetual's devices are NOT priced at DEVICE_UNIT. That is $0.10 PER MONTH
+       on a Business subscription, and applying it here charged $505.00 for a one-time
+       purchase — a figure that then did not appear in the total, so the breakdown and
+       the sum disagreed on screen. Caught on the first perpetual Manage run. */
+    qty('devices', 'Devices', isPerp() ? null : DEVICE_UNIT, hasDevices());
     qty('prod', 'Production instances', u.prod, true);
     qty('dev', 'Development instances', u.dev, hasDev());
     qty('ai', 'AI credits', u.ai, hasAi());
@@ -272,21 +324,34 @@ var NL = (function(){
     var t = tier(), i = INCL[t] || { prod:1, ai:0 };
     var x = lic.extras || {};
     var n = function(v){ return parseInt(String(v || '0'), 10) || 0; };
-    cust = { prod:i.prod + n(x.prod), dev:n(x.dev), ai:(i.ai || 0) + n(x.ai),
-             devices:(DEVICE_TIERS[t] || 0) + n(x.devices),
+    var prod0 = i.prod + n(x.prod);
+    /* ⚠️ Seeded from the INSTANCE COUNT on a perpetual, not from a fixed tier number:
+       a licence already running 3 instances includes 15,000 devices, and seeding it
+       with 5,000 would have shown the owner fewer devices than they have. */
+    var devBase = isPerp() ? (isPerpTB() ? PERP_DEV_PER_INSTANCE * prod0 : 0)
+                           : (DEVICE_TIERS[t] || 0);
+    cust = { prod:prod0, dev:n(x.dev), ai:(i.ai || 0) + n(x.ai),
+             devices:devBase + n(x.devices),
              edge:!!lic.edge, trendz:!!lic.trendz, offline:!!lic.offline };
     st.baseCust = { prod:cust.prod, dev:cust.dev, ai:cust.ai, devices:cust.devices,
                     edge:cust.edge, trendz:cust.trendz, offline:cust.offline };
     seededTier = t;
   }
+  /* ⚠️ White labeling joins this line rather than sitting in the card above it. The
+     line is what the plan gives you, item by item — a quantity is not a different
+     KIND of fact from a capability, and splitting them put half the answer in the
+     title block and half here. It is appended, not sorted in, because the quantities
+     have an order the spec fixes and this has no number to sort by. */
   function entSummary(t){
     var spec = TIER_SPECS[t] || { ent:[] };
     // same exclusion as the capacity list: Assets is out of the wizard (see skipEnt)
-    return spec.ent.filter(function(e){ return !skipEnt(e[0]); }).map(function(e){
+    var parts = spec.ent.filter(function(e){ return !skipEnt(e[0]); }).map(function(e){
       var lbl = e[0] === 'AI credits' ? 'AI credits' : e[0].toLowerCase();
       if(e[1] === '1') lbl = lbl.replace(/s$/, '');
       return e[1] + ' ' + lbl;
-    }).join(' · ');
+    });
+    if(whitelabelState(t)) parts.push('White labeling');
+    return parts.join(' · ');
   }
 
   /* ---- step indicator: a thin progress line under the header, then one
@@ -314,7 +379,12 @@ var NL = (function(){
     var tail = needsBilling()
       ? ['Customize', 'Review', 'Billing & payment']
       : ['Customize', 'Review & pay'];
-    return noPicker() ? tail : ['Choose your product and plan'].concat(tail);
+    /* ⚠️ Change plan says "Choose a plan", not "Choose your product and plan": on an
+       existing licence the product is settled and is already named in the header
+       ("Change plan · ThingsBoard Pilot"), so the step must not promise a choice it
+       does not offer. A new purchase keeps the longer label — there it is accurate. */
+    if(noPicker()) return tail;
+    return [isChange() ? 'Choose a plan' : 'Choose your product and plan'].concat(tail);
   }
   function totalSteps(){ return stepLabels().length; }
   function lastStep(){ return firstStep() + totalSteps() - 1; }
@@ -411,13 +481,14 @@ var NL = (function(){
       + '<span class="nl-plansum-tx">'
       +   '<span class="nl-plansum-t">' + product + ' ' + (NAME[t] || st.plan) + ' · ' + (isPerp() ? 'Perpetual' : 'Subscription') + '</span>'
       +   '<span class="nl-plansum-f">' + desc + '</span>'
-      /* ⚠️ Included entitlements the plan carries but no control on this screen shows.
-         White labeling is the case that cost a sale's worth of confidence: the buyer
-         chose the plan FOR it, saw it on the card, then saw no mention of it on either
-         Customize or Review, and only found it confirmed as a ticked chip after paying.
-         It is not a paid option — it comes with the plan — so it is stated as included
-         rather than offered. `wl` is the spec's own flag; nothing is invented here. */
-      +   (spec.wl ? '<span class="nl-plansum-inc"><b>Included:</b> White labeling</span>' : '')
+      /* ⚠️ `Included: White labeling` USED TO SIT HERE and has moved — to its own block
+         at the foot of the capacity list on Customize (see featureRow) and into the
+         entitlement line under the plan name on Review (see entSummary). The reason it
+         had to be somewhere is unchanged: the buyer chooses the plan FOR it, sees it on
+         the card, and used to find it confirmed only as a ticked chip after paying.
+         The reason it is no longer HERE is that this card names the PURCHASE — product,
+         plan, billing kind — and every other thing the plan carries is listed with the
+         rest of the entitlements, not appended to the title block. One list, not two. */
       + '</span>'
       + '</div>';
   }
@@ -431,17 +502,27 @@ var NL = (function(){
      control that will not explain itself is the same fault as the disabled Subscribe
      button. ⚠️ The wording is true from the data, not decided here: only `DEVICE_TIERS`
      carries extra-device pricing, and today that is Business alone. */
+  /* ⚠️ ONE description, not a description plus a separate `.am-lockwhy` line beneath.
+     Devices carried both — "Total number of IoT devices that will connect to your
+     ThingsBoard platform." and "The device limit is set by this plan. To change it,
+     change the plan." — stacked as two blocks in two styles, which read as two
+     unrelated remarks about the same row. They are one fact: what the number is, and
+     why you cannot move it. Joined, they sit in `.fs-celldesc`, the same slot and the
+     same style every other row's description uses.
+     ⚠️ A locked row with no description of its own (Sessions, Messages / sec) is not
+     left blank: the lock sentence becomes its description, so every row in the stack
+     has exactly one, in exactly one place. */
   function lockedCell(lbl, val, desc){
     var why = lbl === 'Devices'
       ? 'The device limit is set by this plan. To change it, change the plan.'
       : 'Set by this plan. To change it, change the plan.';
+    var full = desc ? desc + ' ' + why : why;
     return '<div class="am-cell am-locked"><div class="fs-cellhead"><div class="fs-celltext">'
       + '<div class="am-celltop">' + lbl + '</div>'
-      + (desc ? '<div class="fs-celldesc">' + desc + '</div>' : '') + '</div>'
+      + '<div class="fs-celldesc">' + full + '</div></div>'
       + '<span class="fs-lockfield">' + LOCKSVG
       + '<input class="fs-devinput locked" type="text" value="' + val + '" disabled aria-label="' + lbl + ' — ' + why + '"></span>'
       + '</div>'
-      + '<div class="am-lockwhy">' + why + '</div>'
       + '</div>';
   }
   /* Devices: typed, not stepped. The error lives under the field and the commit
@@ -458,11 +539,19 @@ var NL = (function(){
       + '<div class="numerr" data-nl-err="' + field + '" hidden>Minimum for this plan is '
       +   min.toLocaleString('en-US') + '.</div></div>';
   }
-  function stepCell(field, label, desc, priceNote, val, min){
+  /* ⚠️ DESCRIPTIONS ARE BODY TEXT HERE, and the info icon lives on the PLAN PICKER
+     instead. Both were tried: the icon was put on these Customize rows first, and it
+     was the wrong surface for it. By the time you are on Customize you have chosen the
+     plan and are setting quantities — the sentence explaining what a production
+     instance IS belongs where you are still deciding, not where you are adjusting.
+     `info` stays a parameter of stepCell so the choice is visible at the call sites
+     rather than baked in, but nothing on this step passes it. */
+  function stepCell(field, label, desc, priceNote, val, min, info){
     var minus = val <= min ? ' disabled' : '', plus = val >= MAXQ[field] ? ' disabled' : '';
     return '<div class="am-cell"><div class="fs-cellhead"><div class="fs-celltext">'
-      + '<div class="am-celltop">' + label + '</div>'
-      + (desc ? '<div class="fs-celldesc">' + desc + '</div>' : '') + '</div>'
+      + (info ? cellTopWithInfo(label, desc)
+              : '<div class="am-celltop">' + label + '</div>'
+                + (desc ? '<div class="fs-celldesc">' + desc + '</div>' : '')) + '</div>'
       + '<div class="stepper" data-nl-field="' + field + '">'
       + '<button type="button" data-dir="-1"' + minus + ' aria-label="Decrease ' + label + '">−</button>'
       + '<span class="val" aria-live="polite">' + qtyLabel(field, val) + '</span>'
@@ -476,6 +565,37 @@ var NL = (function(){
      indicator; the hover state on the block says it is all clickable.
      ⚠️ The switch markup is a <span> here, not a <label>: a label inside a label is
      invalid, and it is the outer one that has to cover the whole block. */
+  /* ---- White labeling: stated, not offered -----------------------------------
+     ⚠️ NOT a control, and that is the whole point of giving it its own shape. Every
+     other block in this stack is something you can move — a stepper, a switch, a
+     number. This one is a fact about the plan you picked, so it carries a word on the
+     right where its neighbours carry a price or a control, and nothing to click.
+
+     ⚠️ The DESCRIPTION is `inferred`: nothing in this repository describes what white
+     labeling does — the plan cards list it as a feature name and the details surface
+     shows it as a ticked chip, neither with a sentence. Written here so the row is not
+     a bare name; confirm the wording with the team.
+
+     ⚠️ `Enabled` vs `Included` comes from WHERE the flag is true, which is a real
+     distinction the data already carries (renderLicenseFeatures reads the same pair):
+     `lic.whitelabel` set on the licence itself means it is turned on for THIS licence
+     — Enabled — while `spec.wl` means it arrives with the plan — Included. In the
+     shipped datasets only the plan path occurs, so today this reads `Included`
+     everywhere; the licence flag exists and is settable (window.setFeature), so the
+     other word is reachable rather than decorative. */
+  var WL_DESC = 'Your own logo, colours and product name in place of ThingsBoard branding.'; // inferred
+  function whitelabelState(t){
+    var lic = isMod() ? st.changeLic : null;
+    if(lic && lic.whitelabel != null) return lic.whitelabel ? 'Enabled' : null;
+    return (TIER_SPECS[t || tier()] || {}).wl ? 'Included' : null;
+  }
+  function featureRow(name, desc, state){
+    return '<div class="am-cell am-feature"><div class="fs-cellhead"><div class="fs-celltext">'
+      + '<div class="am-celltop">' + name + '</div>'
+      + '<div class="fs-celldesc">' + desc + '</div></div>'
+      + '<span class="pill soft am-featstate">' + state + '</span>'
+      + '</div></div>';
+  }
   function addonRow(key, name, desc, price, on){
     return '<label class="am-cell am-addon' + (on ? ' on' : '') + '"><div class="fs-cellhead"><div class="fs-celltext">'
       + '<div class="am-celltop">' + name + '</div>'
@@ -489,7 +609,10 @@ var NL = (function(){
   function summaryHTML(){
     var html = '';
     if(isChange()) html += '<div class="am-sumrow cur"><span>Current · ' + st.oldName + '</span><span>' + money(oldMonthly()) + ' / mo</span></div>';
-    html += '<div class="am-sumrow cur"><span>' + (NAME[tier()] || st.plan) + ' base</span><span>' + money(BASE[tier()] || 0) + perSuffix() + '</span></div>';
+    /* ⚠️ The base-price row is DROPPED on a perpetual modification: you are not buying
+       the licence again, and listing its price made the summary total include it. */
+    if(!perpMod())
+      html += '<div class="am-sumrow cur"><span>' + (NAME[tier()] || st.plan) + ' base</span><span>' + money(BASE[tier()] || 0) + perSuffix() + '</span></div>';
     deltas().forEach(function(c){
       var left = c.unit ? (c.t + ' × ' + money(c.unit)) : c.t;
       // amt == null: a toggle whose price is not settled yet (see ADD / Offline Mode)
@@ -506,11 +629,40 @@ var NL = (function(){
     list.innerHTML = summaryHTML();
     var totalRow = $('#nlStep2 .am-total-row');
     if(totalRow) totalRow.innerHTML = '<span>' + (isPerp() ? 'One-time total' : 'New monthly')
-      + '</span><span>' + money(total()) + perSuffix() + '</span>';
+      + '</span><span>' + money(perpMod() ? modDelta() : total()) + perSuffix() + '</span>';
+  }
+  /* The Devices description names every part the number is made of, and only the
+     parts that exist. On a perpetual with 3 instances and nothing typed on top:
+     "5,000 included + 10,000 from instances". Type 50 more and "+ 50 extra" joins it.
+     ⚠️ Built from the same numbers the field is clamped to, so the sentence and the
+     minimum can never describe different things. */
+  function devicesDesc(){
+    if(!isPerpTB()){
+      return DEVICES_DESC + ' ' + devicesIncluded().toLocaleString('en-US')
+        + ' included with this plan \u2014 enter the total you need.';
+    }
+    var fromInst = PERP_DEV_PER_INSTANCE * Math.max(0, (cust.prod || 1) - 1);
+    var parts = [PERP_DEV_PER_INSTANCE.toLocaleString('en-US') + ' included'];
+    if(fromInst > 0) parts.push(fromInst.toLocaleString('en-US') + ' from instances');
+    var x = extraDevices();
+    if(x > 0) parts.push(x.toLocaleString('en-US') + ' extra');
+    return parts.join(' + ');
+  }
+  /* ⚠️ The subscription note is a PRICE ("+$0.10 / mo per extra device"). The perpetual
+     has no per-device rate at all, so it must not pretend to one — it states where the
+     number comes from instead, which is the thing the reader is actually working out. */
+  function devicesPriceNote(){
+    if(!isPerpTB()) return '+$0.10 / mo per extra device';
+    return PERP_DEV_PER_INSTANCE.toLocaleString('en-US') + ' devices per production instance';
   }
   function renderStep2(){
     var t = tier(), i = INCL[t] || { prod:1, ai:0 }, u = units(), spec = TIER_SPECS[t] || { ent:[] };
-    if(seededTier !== t){ cust = { prod:i.prod, dev:0, ai:i.ai, devices:DEVICE_TIERS[t] || 0, edge:false, trendz:false }; seededTier = t; }
+    if(seededTier !== t){
+      cust = { prod:i.prod, dev:0, ai:i.ai, devices:0, edge:false, trendz:false };
+      // devicesIncluded() reads cust.prod, so the floor is set after prod exists
+      cust.devices = devicesIncluded();
+      seededTier = t;
+    }
     var per = isPerp() ? ' one-time' : ' / mo';
     var variantA = custVariant() === 'a';
     var cells = '';
@@ -518,12 +670,19 @@ var NL = (function(){
       var lbl = e[0], val = e[1];
       if(skipEnt(lbl)) return;                       // Assets is out of the wizard
       if(lbl === 'Devices' && hasDevices()){
-        cells += numberCell('devices', 'Devices', DEVICES_DESC + ' '
-          + devicesIncluded().toLocaleString('en-US')
-          + ' included with this plan — enter the total you need.',
-          '+$0.10 / mo per extra device', cust.devices, devicesIncluded());
+        cells += numberCell('devices', 'Devices', devicesDesc(),
+          devicesPriceNote(), cust.devices, devicesIncluded());
       } else if(lbl === 'Production instances'){
-        cells += stepCell('prod', 'Production instances', 'Production compute — ' + i.prod + ' included. Enables clustering and HA.', '+' + money(u.prod) + per + ' each', cust.prod, i.prod);
+        /* ⚠️ A perpetual instance is not just compute — it is 5,000 devices, and that
+           is the fact the buyer needs before pressing +. The subscription sentence is
+           unchanged; only the perpetual one names the linkage. */
+        var prodDesc = isPerpTB()
+          ? i.prod + ' included. Each purchased instance includes '
+            + PERP_DEV_PER_INSTANCE.toLocaleString('en-US')
+            + ' devices. Add more at any time to horizontally scale your solution.'
+          : 'Production compute — ' + i.prod + ' included. Enables clustering and HA.';
+        cells += stepCell('prod', 'Production instances', prodDesc,
+          '+' + money(u.prod) + per + ' each', cust.prod, i.prod);
       } else if(lbl === 'AI credits'){
         cells += stepCell('ai', 'AI credits', 'Monthly allowance, in blocks of 1M credits. Minimum matches your plan — increase to buy more.', '+' + money(u.ai) + per + ' per 1M AI credits', cust.ai, i.ai);
       } else if(!variantA){
@@ -543,22 +702,27 @@ var NL = (function(){
        Variant B — no section headers at all: the plan banner, then every item as its
        own card in a single vertical stack (capacity rows and add-ons alike), so each
        piece of information separates on its own edge instead of by a heading. */
+    /* last in the list, in both variants: it is the one row you cannot act on, so it
+       must not sit among — or above — the ones you can. See featureRow. */
+    var wlState = whitelabelState();
+    var featureCells = wlState ? featureRow('White labeling', WL_DESC, wlState) : '';
     var left = variantA
       ? planSummaryHTML(t, spec)
         + '<div class="am-sec fs-panel">'
         +   '<div class="am-sechead"><h4>Capacity</h4></div>'   // what you can buy more of; the plan is named in the card above
         +   '<div class="am-capgrid">' + cells + '</div>'
         +   (addonCells ? '<div class="am-sechead am-sechead-sub"><h4>Add-ons</h4></div><div class="am-capgrid">' + addonCells + '</div>' : '')
+        +   (featureCells ? '<div class="am-capgrid am-featgrid">' + featureCells + '</div>' : '')
         + '</div>'
       : planSummaryHTML(t, spec)
-        + '<div class="am-sec nl-cardstack">' + cells + addonCells + '</div>';
+        + '<div class="am-sec nl-cardstack">' + cells + addonCells + featureCells + '</div>';
     $('#nlStep2').innerHTML =
       '<div class="fs-grid">'
       + '<div class="fs-col">' + left + '</div>'
       + '<div class="am-sec fs-right">'
       +   '<div class="am-sechead"><h4>Calculation summary</h4></div>'
       +   '<div class="am-figures"><div class="am-sumlist">' + summaryHTML() + '</div>'
-      +     '<div class="am-sumrow am-total-row"><span>' + (isPerp() ? 'One-time total' : 'New monthly') + '</span><span>' + money(total()) + perSuffix() + '</span></div>'
+      +     '<div class="am-sumrow am-total-row"><span>' + (isPerp() ? 'One-time total' : 'New monthly') + '</span><span>' + money(perpMod() ? modDelta() : total()) + perSuffix() + '</span></div>'
       +   '</div>'
       +   '<button class="btn fs-nextbtn" id="nlSumNext">Review order</button>'
       + '</div>'
@@ -599,8 +763,17 @@ var NL = (function(){
        from its own renewal date — not one hardcoded fraction for every licence.
        Without a renewal date to read (a grant) the parenthetical is dropped and
        the delta is charged whole. */
-    var pr = isMod() ? prorate(st.changeLic && st.changeLic.event) : null;
+    /* ⚠️ A PERPETUAL IS NEVER PRORATED. Proration divides a recurring charge across the
+       days left in a billing cycle — a perpetual has no cycle, and the date it does
+       carry is its software-updates term, not a period anyone is billed for. Before
+       this, buying capacity on a perpetual read "prorated change for the current cycle
+       (31 of 31 days, to Aug 26, 2027)": a cycle invented out of the updates date.
+       The word is now decided by the billing kind, not by the fact that this is a
+       modification. */
+    var prorates = isMod() && !isPerp();
+    var pr = prorates ? prorate(st.changeLic && st.changeLic.event) : null;
     var dueLabel = !isMod() ? 'Due today'
+      : !prorates ? 'Due today <span class="muted">— one-time, added to this license</span>'
       : 'Due today <span class="muted">— prorated change for the current cycle'
         + (pr ? ' (' + pr.left + ' of ' + pr.cycle + ' days, to ' + pr.end + ')' : '') + '</span>';
     /* ⚠️ `Math.max(0, …)` is still here and is now CORRECT rather than a silent clamp.
@@ -608,7 +781,8 @@ var NL = (function(){
        today — it takes effect at the end of the period the person already paid for.
        What used to be wrong was showing "$0.00" with no explanation of why. */
     var willSchedule = isMod() && shrinks();
-    var delta = Math.max(0, total() - oldMonthly());
+    var delta = modDelta();          // one definition, shared with the summary above
+    // a perpetual modification charges the delta WHOLE — no fraction of a cycle
     var dueVal = isMod() ? money(delta * (pr ? pr.fraction : 1)) : money(total());
     if(willSchedule){
       dueLabel = 'Due today <span class="muted">— nothing is charged now</span>';
@@ -643,14 +817,29 @@ var NL = (function(){
       /* ⚠️ This row no longer names the product: the card above does. It is the
          base-price line of the breakdown, so it carries the plan (and, in change
          mode, the transition) and the amount — nothing that the card repeats. */
-      +       '<div class="am-orow am-planrow nl-mainline"><div>'
-      +         (isChange() ? (st.oldName + ' → ' + (NAME[t] || st.plan)) : 'Plan')
-      +         '</div><div>' + money(BASE[t] || 0) + perSuffix() + '</div></div>'
+      /* ⚠️ `Startup base`, not `Plan` — the SAME words the Calculation summary on step 2
+         uses for the same number. Two names for one line made the review read as a
+         different document from the step that produced it, and the reader has to match
+         them up before trusting the total. A change keeps its transition
+         ("Business → Pilot"): that line is not a base-price line, it says what is
+         being swapped. */
+      /* ⚠️ On a perpetual modification the base row goes, and the total row goes with
+         it: the licence is already owned, so the change rows plus "Due today" on the
+         right are the whole truth about this purchase. Keeping them printed the same
+         screen's second, larger figure — $6,998 above $1,999 — with nothing to say
+         which one was being charged. */
+      +       (perpMod() ? '' :
+                '<div class="am-orow am-planrow nl-mainline"><div>'
+              +   (isChange() ? (st.oldName + ' \u2192 ' + (NAME[t] || st.plan))
+                              : ((NAME[t] || st.plan) + ' base'))
+              +   '</div><div>' + money(BASE[t] || 0) + perSuffix() + '</div></div>')
       +       '<div class="am-orow nl-entline"><div>' + entSummary(t) + '</div><div></div></div>'
       +       rows
-      +       '<div class="am-orow am-newmonthly"><div>' + (isMod() ? 'New monthly' : (isPerp() ? 'One-time total' : 'Monthly total'))
-      +         '</div><div>' + money(total()) + perSuffix() + '</div></div>'
-      +     '</div>'
+      /* `isMod()` used to win outright and printed "New monthly" on a PERPETUAL
+         modification — a licence that is never billed monthly at all. */
+      +       (perpMod() ? '' :
+                '<div class="am-orow am-newmonthly"><div>' + (isPerp() ? 'One-time total' : (isMod() ? 'New monthly' : 'Monthly total'))
+              +   '</div><div>' + money(total()) + perSuffix() + '</div></div>')
       +     '<div class="nl-terms">' + termsLine()
       +       '<span class="taxnote nl-taxline">' + TAX_NOTE + '</span></div>'
       +   '</div>'
@@ -972,8 +1161,17 @@ var NL = (function(){
       storePaymentMethod({ num:bill.num, exp:bill.exp, name:bill.cardName, country:bill.cardCountry });
     }
     if(bill.addr && !Store.get('billingAddress')){
-      /* the address too: it is what the invoice for this very purchase prints */
-      Store.set('billingAddress', { email:bill.email, country:bill.country, state:bill.state,
+      /* the address too: it is what the invoice for this very purchase prints.
+         ⚠️ COMPANY AND PHONE ARE PART OF IT NOW. This step has always asked for a
+         company name — it is a required field, and the label says it should appear on
+         the invoice — and this write has always thrown it away. That was survivable
+         only while the invoice read its company from Account's own form; once company
+         details consolidated onto Billing (see billing.html), the discarded value
+         became the printed one. Measured before the fix: an account that typed
+         "Acme IoT" got an invoice billed to "ThingsBoard" at its own Austin address —
+         the demo's fallback, under a real buyer's street. */
+      Store.set('billingAddress', { company:bill.company, descr:'', email:bill.email,
+                                    phone:bill.phone, country:bill.country, state:bill.state,
                                     city:bill.city, zip:bill.zip, addr:bill.addr, addr2:bill.addr2 });
     }
     var t = tier(), e = extras(), tot = total();
@@ -1029,11 +1227,26 @@ var NL = (function(){
     }
     // add-ons keeps the plan: only the entitlements and the price move
     var summary = isAddons() ? changeSummary() : null;
+    /* ⚠️ Captured BEFORE the licence is mutated: `modDelta()` reads `oldMonthly()`,
+       which on an add-ons flow is computed from the licence's own current state. */
+    var charged = modDelta() * (isPerp() ? 1 : prorateFraction());
     lic.tier = t;
     lic.name = NAME[t] || st.plan;
-    lic.price = money(total()) + ' / mo';
+    /* ⚠️ A perpetual has no monthly price, and writing one made its row read
+       "$6,998.00 / mo" after a capacity purchase. It keeps `one-time`. */
+    if(!isPerp()) lic.price = money(total()) + ' / mo';
     var x = {};
-    if(e.devices > 0) x.devices = String(e.devices);
+    /* ⚠️ On a perpetual, devices bought THROUGH INSTANCES have to land in `extras` too,
+       or the Plan table keeps showing the plan's own 5,000 while the confirmation
+       banner says "Devices 5,000 → 10,000". `extras()` measures against what the
+       CURRENT instance count includes, which is exactly the amount that disappears.
+       Measured against the plan's base instead, the table and the banner agree. */
+    if(isPerpTB()){
+      var devBase = PERP_DEV_PER_INSTANCE;               // what the plan itself carries
+      var devTotal = Math.max(devBase, cust.devices || 0);
+      if(devTotal > devBase) x.devices = String(devTotal - devBase);
+    }
+    else if(e.devices > 0) x.devices = String(e.devices);
     if(e.prod > 0) x.prod = String(e.prod);
     if(hasDev() && e.dev > 0) x.dev = String(e.dev);
     if(hasAi() && e.ai > 0) x.ai = e.ai + 'M';
@@ -1052,6 +1265,14 @@ var NL = (function(){
         txt:'Plan was changed from <b>' + esc(st.oldName) + '</b> to <b>' + esc(lic.name)
           + '</b> on <b>' + esc(lic.label || lic.name) + '</b> by ' + portalActor() + '.' });
     }
+    /* ⚠️ EVERY CHARGE PRODUCES AN INVOICE, not just a first purchase. A $93.33
+       proration on an upgrade and a $1,999 one-time capacity purchase both went
+       through with no document anywhere — the Invoices count did not move. The rule
+       is now the charge, not the kind of flow that made it: if money is taken, there
+       is a receipt, on the Invoices page and on this licence's own Invoices tab.
+       Zero is not a charge — a shrink is scheduled and bills nothing today, and it
+       returns above this line anyway. */
+    if(charged > 0) storeAddInvoice(lic, money(charged), { payment:'Card', auto:false });
     st.dirty = false;
     scr.hidden = true;
     /* no success modal in either mode: the licence page is the destination. Add-ons
@@ -1062,6 +1283,21 @@ var NL = (function(){
     // restate them in place; otherwise open them the one way there is
     if(window.LicenseDetails && LicenseDetails.isOpen()){ LicenseDetails.reopen(lic); return; }
     openLicenseDetails(lic, null, { refreshHost:true });
+  }
+  /* ⚠️ The two halves are separate spans so the PREFIX can be dropped, not the name.
+     `.fs-maintitle` ellipsizes at the end, so `Manage add-ons · ThingsBoard PE
+     Perpetual License` came out as `Manage add-ons · ThingsBoar…` on a phone — the
+     flow name survived in full and the licence being edited, the one thing you cannot
+     work out from anywhere else on the screen, was the part that got cut.
+     The flow is already named by the step line ("Step 1 of 2 · Customize") and by the
+     commit button, so it is the half that can afford to go. */
+  function setWizardTitle(flow, product, licName){
+    var el = $('#nlTitle'); if(!el) return;
+    el.innerHTML = licName
+      ? '<span class="nl-titleflow">' + esc(flow) + ' &middot; </span>'
+        + '<span class="nl-titleprod">' + esc(product) + ' </span>'
+        + '<span class="nl-titlelic">' + esc(licName) + '</span>'
+      : esc(flow);
   }
   function startPurchase(btn){
     if(!btn || btn.disabled) return;
@@ -1128,7 +1364,7 @@ var NL = (function(){
          the user's own note, and the identity block on the licence behind the modal
          already carries it. A second line would make every modal header two lines
          tall to serve the minority of licences that have one. */
-      $('#nlTitle').textContent = 'Manage add-ons · ' + al.product + ' ' + al.name;
+      setWizardTitle('Manage add-ons', al.product, al.name);
       gotoStep(2);
     } else if(st.mode === 'change' && st.changeLic){
       // change-plan mode: Product and Billing are locked to the licence, and the
@@ -1140,11 +1376,11 @@ var NL = (function(){
       st.oldTier = cl.tier; st.oldName = cl.name;
       st.dirty = false;
       // same rule as above: flow · licence, never the label
-      $('#nlTitle').textContent = 'Change plan · ' + (cl.product || 'ThingsBoard') + ' ' + cl.name;
+      setWizardTitle('Change plan', cl.product || 'ThingsBoard', cl.name);
       gotoStep(1);
     } else {
       // the billing type is chosen inside step 1 now, so the title stays neutral
-      $('#nlTitle').textContent = 'New license';
+      setWizardTitle('New license', '', '');
       gotoStep(opts.startStep && st.plan ? 2 : 1);   // preselected entry lands on Customize
     }
     scr.hidden = false;
@@ -1183,7 +1419,18 @@ var NL = (function(){
     if(sb){
       var f = sb.closest('.stepper').getAttribute('data-nl-field');
       var min = f === 'dev' ? 0 : ((INCL[tier()] || {})[f] || 0);
+      var was = cust[f];
       cust[f] = Math.max(min, Math.min(MAXQ[f], cust[f] + parseInt(sb.getAttribute('data-dir'), 10)));
+      /* ⚠️ THE LINKAGE. On a perpetual each production instance carries 5,000 devices,
+         so moving the stepper moves the device total with it — by the SAME delta, which
+         is what preserves anything typed on top. Add an instance to a licence set to
+         5,050 and you get 10,050, not 10,000: the 50 extra was a separate decision and
+         is not silently dropped. Clamped at the floor so the total can never fall below
+         what the remaining instances include. */
+      if(isPerpTB() && f === 'prod' && cust[f] !== was){
+        cust.devices = Math.max(devicesIncluded(),
+          (cust.devices || 0) + PERP_DEV_PER_INSTANCE * (cust[f] - was));
+      }
       st.dirty = true; renderStep2(); syncPinnedSummary(); return;
     }
     if(e.target.closest('#nlPayChange')){ attemptClose(function(){ location.href = 'billing.html'; }); }
@@ -1247,7 +1494,13 @@ var NL = (function(){
     if(!num) return;
     var min = parseInt(num.getAttribute('data-nl-min'), 10) || 0;
     var n = parseInt(num.value.replace(/[^0-9]/g, ''), 10);
-    if(n >= min) num.value = n.toLocaleString('en-US');   // an invalid value stays put, with its error
+    if(!(n >= min)) return;                 // an invalid value stays put, with its error
+    num.value = n.toLocaleString('en-US');
+    /* ⚠️ The perpetual device description is composed from the value ("5,000 included
+       + 50 extra"), so it has to be rebuilt once the number settles. Deliberately on
+       FOCUSOUT, not on input: re-rendering the step mid-number throws the caret away,
+       which is the whole reason typing only refreshes the summary. */
+    if(isPerpTB() && num.getAttribute('data-nl-num') === 'devices'){ renderStep2(); syncPinnedSummary(); }
   });
   body.addEventListener('keydown', function(e){
     if((e.key === 'Enter' || e.key === ' ') && e.target.classList && e.target.classList.contains('nl-select')){ e.preventDefault(); e.target.click(); }
