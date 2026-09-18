@@ -55,11 +55,11 @@ renderLastChanged();
 wirePageSave('#securityView', '#secSaveBtn', {
   validate: secValidate,
   save: function(){
-    Store.set('passwordChangedAt', 'Aug 19 2026');   // pinned "today", like every date here
+    Store.set('passwordChangedAt', todayStr());
     ['current', 'next', 'confirm'].forEach(function(k){ $('#sec-' + k).value = ''; secPaint(k, null); });
     renderLastChanged();
-    logActivity({ kind:'user', entityType:'Account', entityName:PORTAL_ACTOR, action:'PASSWORD_CHANGED',
-      txt:'The account password was changed by ' + PORTAL_ACTOR + '.' });
+    logActivity({ kind:'user', entityType:'Account', entityName:portalActor(), action:'PASSWORD_CHANGED',
+      txt:'The account password was changed by ' + portalActor() + '.' });
     return true;
   }
 });

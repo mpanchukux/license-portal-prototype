@@ -19,17 +19,11 @@ function $(s, r){ return (r || document).querySelector(s); }
 function $$(s, r){ return Array.prototype.slice.call((r || document).querySelectorAll(s)); }
 function esc(x){ return String(x).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 
-/* ---------- dates: the prototype's "today" is pinned to Aug 19 2026 ---------- */
-var MONF = { Jan:1, Feb:2, Mar:3, Apr:4, May:5, Jun:6, Jul:7, Aug:8, Sep:9, Oct:10, Nov:11, Dec:12 };
-// exact day count (Howard Hinnant's days-from-civil) — no Date() needed
-function epochDay(y, m, d){
-  y -= (m <= 2) ? 1 : 0;
-  var era = Math.floor((y >= 0 ? y : y - 399) / 400), yoe = y - era * 400;
-  var doy = Math.floor((153 * ((m > 2 ? m - 3 : m + 9)) + 2) / 5) + d - 1;
-  var doe = yoe * 365 + Math.floor(yoe / 4) - Math.floor(yoe / 100) + doy;
-  return era * 146097 + doe - 719468;
-}
-var TODAY_DAY = epochDay(2026, 8, 19);
+/* ---------- dates ----------
+   ⚠️ `MONF`, `epochDay`, `dayToDate`, `TODAY_DAY`, `todayStr()`, `dayStr()` and
+   `shiftDemoDates()` all live in data.js now, because the seed itself has to be able
+   to shift its own dates and data.js loads first. TODAY is the real today; the
+   formatters below are unchanged. */
 function dateKey(sv){ var q = String(sv).split(' '); return (+q[2]) * 10000 + (MONF[q[0]] || 0) * 100 + (+q[1]); }
 function fmtDate(sv){ var q = String(sv).split(' '); return q.length === 3 ? (q[0] + ' ' + q[1] + ', ' + q[2]) : sv; }
 /* One display format for a date-time: "Aug 17, 2026, 16:20". Timestamps are stored
@@ -85,12 +79,17 @@ var Store = (function(){
      that already has a snapshot — it would need "Reset demo data" pressed by hand,
      which is not something a reviewer should have to know. Bump this whenever the
      seed changes in a way that has to be seen; the old key is simply abandoned. */
-  var KEY = 'tb-license-portal-demo-v9';
+  var KEY = 'tb-license-portal-demo-v10';
   function clone(o){ return JSON.parse(JSON.stringify(o)); }
+  /* ⚠️ The snapshot is taken ONCE and then shifted to today. Doing it here rather than
+     at render time means every surface reads the same stored dates, and a browser left
+     open overnight does not have its history move under it mid-session. */
   function seed(){
+    var ds = clone(DATASETS);
+    shiftDemoDates(ds, TODAY_DAY - SEED_ANCHOR_DAY);
     return {
       dash: 'dashB',              // which dashboard state the settings panel selected — the large account
-      datasets: clone(DATASETS),  // the account as the demo has mutated it
+      datasets: ds,               // the demo's accounts, dated relative to today
       pendingEmail: null,         // { from, to } while an email change awaits confirmation
       impersonating: null,        // email of the user being impersonated
       dismissed: {},              // one-time banners the viewer closed
@@ -108,6 +107,9 @@ var Store = (function(){
       profile: null,              // Account: name, company, address — see PROFILE_FIELDS
       billingAddress: null,       // Billing: the address printed on invoices
       passwordChangedAt: null,    // Security: a date string. The password itself is NEVER stored.
+      /* who signed up in this browser — { email, name }. Events log against it, so a
+         purchase made by a new account is not attributed to the demo's own address. */
+      account: null,
       seq: 0                      // counter behind generated licence ids and keys
     };
   }
@@ -168,16 +170,36 @@ function licById(id){
    raw payload need no special case. Date stays the pinned Aug 19 2026; the TIME
    is the real clock, which is the same exception the greeting already makes —
    without it every session event would collide at one minute. */
+/* The demo's own account, and the fallback for a session that never signed up. */
 var PORTAL_ACTOR = 'mpanchuk@thingsboard.io';
+/* ⚠️ Who an event is attributed to. It used to be the constant above, unconditionally
+   — so an account that had just signed up as someone else watched its own first
+   purchase logged under mpanchuk@thingsboard.io. The address typed at sign-up is
+   stored (see Auth.finish) and this reads it. */
+function portalActor(){
+  var a = Store.get('account');
+  return (a && a.email) || PORTAL_ACTOR;
+}
+/* ⚠️ And the NAME, for the same reason. Signing up as someone else left the chrome
+   and Home's greeting saying "Mariia Panchuk" — the account's own screens addressing
+   a stranger. Falls back to the demo's own name when nobody signed up in this browser. */
+var PORTAL_NAME = 'Mariia Panchuk';
+function portalName(){
+  var a = Store.get('account');
+  return (a && a.name) || PORTAL_NAME;
+}
+function portalFirstName(){ return String(portalName()).split(' ')[0]; }
+/* ⚠️ Was 'Aug 19 2026, HH:MM' — the clock was real and the date was not, so an event
+   logged a second ago carried a date months away from it. Both halves are real now. */
 function nowTs(){
   var d = new Date(), p2 = function(n){ return ('0' + n).slice(-2); };
-  return 'Aug 19 2026, ' + p2(d.getHours()) + ':' + p2(d.getMinutes());
+  return todayStr() + ', ' + p2(d.getHours()) + ':' + p2(d.getMinutes());
 }
 function logActivity(e){
   var a = {
     kind: e.kind, ts: nowTs(),
     entityType: e.entityType, entityName: e.entityName,
-    actor: e.actor || PORTAL_ACTOR, action: e.action, txt: e.txt
+    actor: e.actor || portalActor(), action: e.action, txt: e.txt
   };
   if(e.delta) a.delta = e.delta;
   DATA().activity.unshift(a);          // newest first, the order the feed reads in
@@ -195,21 +217,40 @@ function storeCancelLicense(id){
     Store.save();
     logActivity({ kind:'canceled', entityType:'Subscription', entityName:l.name, action:'CANCELED',
       txt:'Subscription <b>' + esc(l.name) + '</b>' + (l.label ? ' (' + esc(l.label) + ')' : '')
-        + ' was canceled by ' + PORTAL_ACTOR + ' — active until <b>' + fmtDate(l.event) + '</b>.' });
+        + ' was canceled by ' + portalActor() + ' — active until <b>' + fmtDate(l.event) + '</b>.' });
   }
   return l;
+}
+/* ---------- the charge that pays for a licence --------------------------------
+   ⚠️ A purchase used to produce NO invoice at all. The proof of payment did not exist
+   anywhere in the product: the licence's Invoices tab, the Invoices page, Activity and
+   Billing all had nothing, and the closest thing to a receipt was a raw audit record.
+   The first charge is now a real, paid invoice — the same shape as every seeded one,
+   so it renders, downloads and opens like the rest without a special case. */
+function invoiceNumber(){
+  var n = (Store.get('seq') || 0) + 1;
+  Store.set('seq', n);
+  return 'NAWE49WG-' + ('000' + (1000 + n)).slice(-4);
+}
+function storeAddInvoice(lic, amount, opts){
+  opts = opts || {};
+  var inv = { num:invoiceNumber(), licId:lic.id, date:todayStr(), amount:amount,
+              status:'Paid', payment:opts.payment || 'Card', auto:!!opts.auto };
+  DATA().invoices.unshift(inv);
+  Store.save();
+  return inv;
 }
 function storeAddLicense(lic){
   DATA().licenses.unshift(lic);
   Store.save();
   logActivity({ kind:'created', entityType:lic.type, entityName:lic.name, action:'ADDED',
-    txt:esc(lic.type) + ' <b>' + esc(lic.name) + '</b> was created by ' + PORTAL_ACTOR + '.' });
+    txt:esc(lic.type) + ' <b>' + esc(lic.name) + '</b> was created by ' + portalActor() + '.' });
 }
 function storeAddUser(u){
   DATA().users.push(u);
   Store.save();
   logActivity({ kind:'user', entityType:'User', entityName:u.name || u.email, action:'INVITED',
-    txt:'User <b>' + esc(u.name || u.email) + '</b> was invited by ' + PORTAL_ACTOR + '.' });
+    txt:'User <b>' + esc(u.name || u.email) + '</b> was invited by ' + portalActor() + '.' });
 }
 
 /* ---------- invitations ------------------------------------------------------
@@ -266,7 +307,7 @@ function storeDeleteUser(email){
   });
   Store.save();
   logActivity({ kind:'user', entityType:'User', entityName:email, action:'DELETED',
-    txt:'User <b>' + esc(email) + '</b> was removed by ' + PORTAL_ACTOR + '.' });
+    txt:'User <b>' + esc(email) + '</b> was removed by ' + portalActor() + '.' });
 }
 /* A label is the one field the demo lets you edit, from three places: the pencil
    on the details surface, that surface's ⋮, and a row's ⋮ in the table. It writes
@@ -280,8 +321,8 @@ function setLicenseLabel(lic, val){
   if(lic.label !== was){
     logActivity({ kind:'updated', entityType:'Label', entityName:lic.name, action:'UPDATED',
       txt: lic.label
-        ? ('Label <b>' + esc(lic.label) + '</b> was set on <b>' + esc(lic.name) + '</b> by ' + PORTAL_ACTOR + '.')
-        : ('Label was cleared on <b>' + esc(lic.name) + '</b> by ' + PORTAL_ACTOR + '.') });
+        ? ('Label <b>' + esc(lic.label) + '</b> was set on <b>' + esc(lic.name) + '</b> by ' + portalActor() + '.')
+        : ('Label was cleared on <b>' + esc(lic.name) + '</b> by ' + portalActor() + '.') });
   }
   repaintLabelSurfaces();
 }
@@ -492,7 +533,7 @@ function chromeHTML(){
   +     '<button class="dprofbtn" id="dashProfBtn" aria-haspopup="true" aria-expanded="false">'
   +       '<svg class="icon dprof-ic" viewBox="0 0 24 24" aria-hidden="true">'
   +         '<circle cx="12" cy="8.5" r="3.5"/><path d="M5 20c0-3.6 3.1-5.5 7-5.5s7 1.9 7 5.5"/></svg>'
-  +       '<span class="dprof-name">Mariia Panchuk</span>'
+  +       '<span class="dprof-name">' + esc(portalName()) + '</span>'
   +       '<span class="dprof-caret" aria-hidden="true">▾</span>'
   +     '</button>'
   +     '<div class="dprofmenu" id="dashProfMenu" role="menu" hidden>'
@@ -843,7 +884,17 @@ function wireGlobal(){
       pm.hidden = !open;
       pb.setAttribute('aria-expanded', open ? 'true' : 'false');
     });
-    pm.addEventListener('click', function(e){ e.stopPropagation(); });
+    /* ⚠️ stopPropagation keeps the document handler from closing the menu on a click
+       INSIDE it — which is right for the panel, and wrong for its items. Help & support
+       opens in a new tab, and with the menu still sitting there afterwards the click
+       read as having done nothing at all. Any real menu item now closes it. */
+    pm.addEventListener('click', function(e){
+      e.stopPropagation();
+      if(e.target.closest('[role="menuitem"]')){
+        pm.hidden = true;
+        pb.setAttribute('aria-expanded', 'false');
+      }
+    });
     document.addEventListener('click', function(){
       if(!pm.hidden){ pm.hidden = true; pb.setAttribute('aria-expanded', 'false'); }
     });
@@ -867,7 +918,7 @@ function wireGlobal(){
     var was = Store.get('impersonating');
     Store.set('impersonating', null);
     if(was) logActivity({ kind:'user', entityType:'Session', entityName:was, action:'LOGIN_AS_END',
-      txt:'Session as <b>' + esc(was) + '</b> was ended by ' + PORTAL_ACTOR + '.' });
+      txt:'Session as <b>' + esc(was) + '</b> was ended by ' + portalActor() + '.' });
     $('#impBanner').hidden = true;
     document.body.classList.remove('impersonating');
   });
@@ -996,6 +1047,55 @@ function licDetailsMode(){ return Store.get('licDetails') === 'page' ? 'page' : 
 // Whether the account already has billing data. With it the wizard commits on
 // Review & pay (3 steps); without it a Billing & payment step is appended and the
 // commit moves there (4 steps). Nothing hardcodes the count — see totalSteps().
+/* ---------- copying, and saying what was copied --------------------------------
+   ⚠️ Every copy action used to confirm with the word "Copied" and nothing else. On a
+   licence row that carries a key, an id and a plan name, the participant could not
+   tell which of the three was on the clipboard, did not trust it, and went looking for
+   the key by hand. The icons stay as they are — what changed is that the confirmation
+   names the thing, through the snackbar. */
+function copyValue(text, what){
+  var done = function(){ Snack.show(what + ' copied'); };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(String(text == null ? '' : text)).then(done, done);
+  } else { done(); }
+}
+
+/* ---------- card input formatting ---------------------------------------------
+   ⚠️ Sixteen unbroken digits cannot be checked by eye, and the panel is labelled
+   "Powered by Stripe", which sets the expectation that it behaves like one. The
+   participant re-read the number twice and still was not sure. Grouped in fours as it
+   is typed, and the expiry gets its slash.
+
+   The caret is restored by counting DIGITS before it rather than characters — with
+   characters, inserting a space pushes the caret one position and the next keystroke
+   lands in the wrong place. */
+function fmtCardNumber(v){
+  return String(v || '').replace(/\D/g, '').slice(0, 19).replace(/(.{4})/g, '$1 ').trim();
+}
+function fmtCardExpiry(v){
+  var d = String(v || '').replace(/\D/g, '').slice(0, 4);
+  return d.length <= 2 ? d : d.slice(0, 2) + ' / ' + d.slice(2);
+}
+function reformatCardField(el, fn){
+  var before = el.value, caret = el.selectionStart == null ? before.length : el.selectionStart;
+  var digitsBefore = before.slice(0, caret).replace(/\D/g, '').length;
+  var after = fn(before);
+  if(after === before) return;
+  el.value = after;
+  // walk forward through the formatted value until that many digits have passed
+  var pos = 0, seen = 0;
+  while(pos < after.length && seen < digitsBefore){ if(/\d/.test(after[pos])) seen++; pos++; }
+  try { el.setSelectionRange(pos, pos); } catch(e){}
+}
+/* one delegated listener for every card field in the product — the wizard's billing
+   step and the update-card modal both carry these ids/attributes */
+document.addEventListener('input', function(e){
+  var el = e.target;
+  if(!el || el.tagName !== 'INPUT') return;
+  if(el.id === 'payNum' || el.getAttribute('data-nlb') === 'num') reformatCardField(el, fmtCardNumber);
+  else if(el.id === 'payExp' || el.getAttribute('data-nlb') === 'exp') reformatCardField(el, fmtCardExpiry);
+});
+
 /* ---------- the payment method on file ----------------------------------------
    `PAYMENT_METHOD` in data.js is the demo's card. It is now a FALLBACK: once someone
    enters one it is stored, and every surface that shows a card reads the stored one.
@@ -1052,11 +1152,11 @@ function paymentMethodData(){
    modified — it just drops the record and says so. */
 function scheduleChange(lic, rec){
   lic.scheduled = rec;                       // { summary, effective, apply:{…}, kind }
-  lic.updated = 'Aug 19 2026';
+  lic.updated = todayStr();
   Store.save();
   logActivity({ kind:'updated', entityType:rec.kind === 'plan' ? 'Plan' : 'Add-on',
     entityName:lic.name, action:'SCHEDULED',
-    txt:'A change to <b>' + esc(lic.label || lic.name) + '</b> was scheduled by ' + PORTAL_ACTOR
+    txt:'A change to <b>' + esc(lic.label || lic.name) + '</b> was scheduled by ' + portalActor()
       + ' for ' + fmtDate(rec.effective) + ' — ' + esc(rec.summary),
     delta:rec.summary });
 }
@@ -1065,11 +1165,11 @@ function cancelScheduledChange(licId){
   if(!lic || !lic.scheduled) return null;
   var was = lic.scheduled;
   delete lic.scheduled;
-  lic.updated = 'Aug 19 2026';
+  lic.updated = todayStr();
   Store.save();
   logActivity({ kind:'updated', entityType:'License', entityName:lic.name, action:'SCHEDULE_CANCELED',
     txt:'The scheduled change to <b>' + esc(lic.label || lic.name) + '</b> was canceled by '
-      + PORTAL_ACTOR + ' — the license keeps its current plan and capacity.' });
+      + portalActor() + ' — the license keeps its current plan and capacity.' });
   return was;
 }
 
@@ -1084,7 +1184,7 @@ function recoverFailedPayments(){
     ds[k].licenses.forEach(function(l){
       if(l.status !== 'payment_failed') return;
       l.status = 'active';
-      l.updated = 'Aug 19 2026';
+      l.updated = todayStr();
       if(fixed.indexOf(l.id) < 0) fixed.push(l.id);
       logActivity({ kind:'updated', entityType:'License', entityName:l.name, action:'PAYMENT_RECOVERED',
         txt:'Payment succeeded on <b>' + esc(l.label || l.name) + '</b> after the payment method was updated — the license is active again.' });
@@ -1377,7 +1477,7 @@ var PAY_MODAL_HTML = ''
 + '        <label>Card number</label>'
 + '        <div class="paystripe" id="payCardBox">'
 + '          <svg class="icon paystripe-glyph" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>'
-+ '          <input class="ps-num" id="payNum" type="text" inputmode="numeric" autocomplete="cc-number" placeholder="Card number" aria-label="Card number">'
++ '          <input class="ps-num" id="payNum" type="text" inputmode="numeric" autocomplete="cc-number" placeholder="0000 0000 0000 0000" aria-label="Card number" maxlength="24">'
 + '          <input class="ps-exp" id="payExp" type="text" inputmode="numeric" autocomplete="cc-exp" placeholder="MM / YY" aria-label="Expiry date" maxlength="7">'
 + '          <input class="ps-cvc" id="payCvc" type="text" inputmode="numeric" autocomplete="cc-csc" placeholder="CVC" aria-label="Security code" maxlength="4">'
 + '        </div>'
@@ -1558,7 +1658,7 @@ function impersonate(email){
      logged (see the Return handler in shared.js) — a start without an end leaves
      "how long did this last" unanswered. */
   logActivity({ kind:'user', entityType:'Session', entityName:email, action:'LOGIN_AS',
-    txt:'Session was started as <b>' + esc(email) + '</b> by ' + PORTAL_ACTOR + '.' });
+    txt:'Session was started as <b>' + esc(email) + '</b> by ' + portalActor() + '.' });
 }
 function openLoginAs(email){
   openModal('Log in as', '<p>Log in as <b>' + email + '</b>? You will see and manage the portal on their behalf until you return to your own account.</p>');

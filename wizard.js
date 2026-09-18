@@ -259,7 +259,7 @@ var NL = (function(){
              trendz:hasAddons() ? cust.trendz : undefined,
              offline:hasOffline() ? cust.offline : undefined };
   }
-  function effectiveDate(){ return (st.changeLic && st.changeLic.event) || 'Sep 19 2026'; }
+  function effectiveDate(){ return (st.changeLic && st.changeLic.event) || dayStr(30); }
 
   function changeSummary(){
     var r = changeRows();
@@ -411,6 +411,13 @@ var NL = (function(){
       + '<span class="nl-plansum-tx">'
       +   '<span class="nl-plansum-t">' + product + ' ' + (NAME[t] || st.plan) + ' · ' + (isPerp() ? 'Perpetual' : 'Subscription') + '</span>'
       +   '<span class="nl-plansum-f">' + desc + '</span>'
+      /* ⚠️ Included entitlements the plan carries but no control on this screen shows.
+         White labeling is the case that cost a sale's worth of confidence: the buyer
+         chose the plan FOR it, saw it on the card, then saw no mention of it on either
+         Customize or Review, and only found it confirmed as a ticked chip after paying.
+         It is not a paid option — it comes with the plan — so it is stated as included
+         rather than offered. `wl` is the spec's own flag; nothing is invented here. */
+      +   (spec.wl ? '<span class="nl-plansum-inc"><b>Included:</b> White labeling</span>' : '')
       + '</span>'
       + '</div>';
   }
@@ -418,13 +425,24 @@ var NL = (function(){
      Same disabled styling as before, with the lock riding inside the field. `.am-locked`
      is only a hook for the field's width (see styles.css); nothing about the card's
      own layout differs from its neighbours. */
+  /* ⚠️ A locked row now SAYS it is locked and why, in place. The padlock alone
+     answered nothing: the participant clicked the field, then the padlock, and got no
+     response of any kind while every other row on the screen adjusted. A disabled
+     control that will not explain itself is the same fault as the disabled Subscribe
+     button. ⚠️ The wording is true from the data, not decided here: only `DEVICE_TIERS`
+     carries extra-device pricing, and today that is Business alone. */
   function lockedCell(lbl, val, desc){
+    var why = lbl === 'Devices'
+      ? 'The device limit is set by this plan. To change it, change the plan.'
+      : 'Set by this plan. To change it, change the plan.';
     return '<div class="am-cell am-locked"><div class="fs-cellhead"><div class="fs-celltext">'
       + '<div class="am-celltop">' + lbl + '</div>'
       + (desc ? '<div class="fs-celldesc">' + desc + '</div>' : '') + '</div>'
       + '<span class="fs-lockfield">' + LOCKSVG
-      + '<input class="fs-devinput locked" type="text" value="' + val + '" disabled aria-label="' + lbl + ' — fixed by this plan"></span>'
-      + '</div></div>';
+      + '<input class="fs-devinput locked" type="text" value="' + val + '" disabled aria-label="' + lbl + ' — ' + why + '"></span>'
+      + '</div>'
+      + '<div class="am-lockwhy">' + why + '</div>'
+      + '</div>';
   }
   /* Devices: typed, not stepped. The error lives under the field and the commit
      is held while the value is below the plan's own allowance — a licence cannot
@@ -633,7 +651,8 @@ var NL = (function(){
       +       '<div class="am-orow am-newmonthly"><div>' + (isMod() ? 'New monthly' : (isPerp() ? 'One-time total' : 'Monthly total'))
       +         '</div><div>' + money(total()) + perSuffix() + '</div></div>'
       +     '</div>'
-      +     '<div class="nl-terms">' + termsLine() + '</div>'
+      +     '<div class="nl-terms">' + termsLine()
+      +       '<span class="taxnote nl-taxline">' + TAX_NOTE + '</span></div>'
       +   '</div>'
       + '</div>'
       /* right: Due today, the payment context, then the commit — all sitting in
@@ -730,6 +749,13 @@ var NL = (function(){
   };
   /* phone, state and addr2 have no rule on purpose: they are optional, and a rule
      for an optional field is a rule that can only ever be silent. */
+  /* what each field is called when the summary names it — the same words the labels
+     use, so "Billing email" in the message points at "Billing email" on screen */
+  var BILL_LABEL = {
+    company:'Company name', email:'Billing email', country:'Country', city:'City',
+    zip:'ZIP / Postal code', addr:'Address', cardName:'Cardholder name',
+    cardCountry:'Card country', num:'Card number', exp:'Expiry date', cvc:'Security code'
+  };
   function billError(name){
     var rule = BILL_RULES[name];
     return rule ? rule(bill[name] == null ? '' : String(bill[name])) : null;
@@ -773,10 +799,19 @@ var NL = (function(){
     bad.forEach(function(n){ paintBillField(n, billError(n)); });
     var sum = $('#nlBillFormErr');
     if(sum){
-      sum.textContent = bad.length === 1
-        ? 'One field needs attention before this order can be placed.'
-        : bad.length + ' fields need attention before this order can be placed.';
-      sum.hidden = false;
+      /* ⚠️ Only ever shown above zero. It used to render unconditionally, so the
+         successful path printed "0 fields need attention before this order can be
+         placed." at the exact moment the order went through — a validation error
+         containing a zero, which the participant read as a rejection. */
+      if(!bad.length){
+        sum.hidden = true; sum.textContent = '';
+      } else {
+        /* and it names them: a count alone sends the reader hunting down a form for
+           whichever fields are marked */
+        sum.textContent = (bad.length === 1 ? 'One field needs attention: ' : bad.length + ' fields need attention: ')
+          + bad.map(function(k){ return BILL_LABEL[k] || k; }).join(', ') + '.';
+        sum.hidden = false;
+      }
     }
     var first = bad.length && $('#nlStep4 [data-nlb="' + bad[0] + '"]');
     if(first){ first.focus(); if(first.scrollIntoView) first.scrollIntoView({ block:'center' }); }
@@ -822,8 +857,8 @@ var NL = (function(){
       +     '<div class="field"><label for="nlb-num">Card number <span class="req" aria-hidden="true">*</span></label>'
       +       '<div class="paystripe">'
       +         '<svg class="icon paystripe-glyph" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>'
-      +         '<input class="ps-num" id="nlb-num" data-nlb="num" type="text" inputmode="numeric" autocomplete="cc-number" placeholder="Card number" aria-label="Card number" value="' + bill.num + '">'
-      +         '<input class="ps-exp" data-nlb="exp" type="text" inputmode="numeric" autocomplete="cc-exp" placeholder="MM / YY" aria-label="Expiry date" maxlength="7" value="' + bill.exp + '">'
+      +         '<input class="ps-num" id="nlb-num" data-nlb="num" type="text" inputmode="numeric" autocomplete="cc-number" placeholder="0000 0000 0000 0000" aria-label="Card number" maxlength="24" value="' + bill.num + '">'
+      +         '<input class="ps-exp" data-nlb="exp" type="text" inputmode="numeric" autocomplete="cc-exp" placeholder="MM / YY" aria-label="Expiry date" maxlength="7" inputmode="numeric" value="' + bill.exp + '">'
       +         '<input class="ps-cvc" data-nlb="cvc" type="text" inputmode="numeric" autocomplete="cc-csc" placeholder="CVC" aria-label="Security code" maxlength="4" value="' + bill.cvc + '">'
       +       '</div>'
       /* one slot per card subfield: they share a .field, so they cannot share a slot
@@ -837,6 +872,7 @@ var NL = (function(){
       +       fld('cardCountry', 'Country', true, { select:true })
       +     '</div>'
       +     '<div class="paystripe-note">Powered by <b>Stripe</b></div>'
+      +     '<p class="taxnote">' + TAX_NOTE + '</p>'
       +   '</div>'
       + '</div>'
       + '<div class="am-sec fs-right">'
@@ -946,8 +982,9 @@ var NL = (function(){
       product: st.product === 'tbmq' ? 'TBMQ' : 'ThingsBoard',
       type: isPerp() ? 'Perpetual' : 'Subscription',
       name: NAME[t] || st.plan,
-      label:'', created:'Aug 19 2026', status:'active',
-      event: isPerp() ? 'Aug 19 2027' : 'Sep 19 2026',
+      label:'', created:todayStr(), status:'active',
+      /* a perpetual's updates term runs a year; a subscription renews in a month */
+      event: isPerp() ? dayStr(365) : dayStr(30),
       price: isPerp() ? 'one-time' : (money(tot) + ' / mo'),
       billing: isPerp() ? 'paid' : 'auto-pay' };
     var x = {};
@@ -959,6 +996,11 @@ var NL = (function(){
     if(hasAddons()){ lic.edge = cust.edge; lic.trendz = cust.trendz; }
     if(hasOffline()) lic.offline = cust.offline;
     storeAddLicense(lic);              // straight into the mock backend
+    /* ⚠️ And the charge that paid for it. Without this the buyer had a licence, a
+       "NEXT CHARGE" figure, and no evidence anywhere that the money had moved —
+       which is the state the participant failed the task in. The amount is what the
+       review step showed as due, so the receipt and the order agree. */
+    storeAddInvoice(lic, money(tot), { payment:'Card', auto:!isPerp() });
     st.dirty = false;
     scr.hidden = true;
     /* No success modal: the details surface is where the key lives, so open it and
@@ -1003,12 +1045,12 @@ var NL = (function(){
        changed the capacity, change-plan moved the licence to another plan. */
     if(isAddons()){
       logActivity({ kind:'updated', entityType:'Add-on', entityName:lic.name, action:'UPDATED',
-        txt:'Capacity was changed on <b>' + esc(lic.name) + '</b> by ' + PORTAL_ACTOR + '.',
+        txt:'Capacity was changed on <b>' + esc(lic.name) + '</b> by ' + portalActor() + '.',
         delta: summary });
     } else {
       logActivity({ kind:'updated', entityType:'Plan', entityName:lic.name, action:'UPDATED',
         txt:'Plan was changed from <b>' + esc(st.oldName) + '</b> to <b>' + esc(lic.name)
-          + '</b> on <b>' + esc(lic.label || lic.name) + '</b> by ' + PORTAL_ACTOR + '.' });
+          + '</b> on <b>' + esc(lic.label || lic.name) + '</b> by ' + portalActor() + '.' });
     }
     st.dirty = false;
     scr.hidden = true;
@@ -1231,7 +1273,7 @@ var NL = (function(){
     bill.zip     = '10001';
     bill.addr    = '500 7th Avenue';
     bill.addr2   = '';
-    bill.cardName    = 'Mariia Panchuk';
+    bill.cardName    = portalName();
     bill.cardCountry = 'United States';
     bill.num = '4242 4242 4242 4242';
     bill.exp = '12 / 28';

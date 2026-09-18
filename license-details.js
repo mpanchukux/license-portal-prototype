@@ -295,15 +295,15 @@ var DETAILS_HTML = ''
 + '                      <td class="mono">' + 'a1b2c3d4…e5f'
 + '                        <button class="iconbtn ib mob-only inst-copy" aria-label="Copy instance ID">' + COPYSVG + '</button></td>'
 + '                      <td class="muted">—</td>'
-+ '                      <td>Aug 18 <span class="yr">2026</span></td>'
-+ '                      <td>Aug 14 2026</td>'
++ '                      <td>' + fmtDate(dayStr(-1)).replace(/, (\d{4})$/, ' <span class="yr">$1</span>') + '</td>'
++ '                      <td>' + fmtDate(dayStr(-5)) + '</td>'
 + '                    </tr>'
 + '                    <tr>'
 + '                      <td class="chk"><input type="checkbox" aria-label="Select instance 7e5f9a2b…c3d"></td>'
 + '                      <td class="mono">' + '7e5f9a2b…c3d'
 + '                        <button class="iconbtn ib mob-only inst-copy" aria-label="Copy instance ID">' + COPYSVG + '</button></td>'
 + '                      <td class="muted">—</td>'
-+ '                      <td>Aug 16 <span class="yr">2026</span></td>'
++ '                      <td>' + fmtDate(dayStr(-3)).replace(/, (\d{4})$/, ' <span class="yr">$1</span>') + '</td>'
 + '                      <td>Aug 13 2026</td>'
 + '                    </tr>'
 + '                  </tbody>'
@@ -419,8 +419,8 @@ var activeLicense = null;
 function licFromNamed(key){
   var tier = NAMED_TIER[key] || 'prototype', spec = TIER_SPECS[tier];
   var lic = { tier:tier, product:'ThingsBoard', type: spec.perp ? 'Perpetual' : 'Subscription',
-    name: spec.name, label:'', status:'active', created:'Aug 13 2026',
-    event: spec.perp ? 'Jul 27 2027' : 'Sep 13 2026', price: spec.price, billing: spec.perp ? 'paid' : 'auto-pay' };
+    name: spec.name, label:'', status:'active', created:dayStr(-6),
+    event: spec.perp ? dayStr(359) : dayStr(25), price: spec.price, billing: spec.perp ? 'paid' : 'auto-pay' };
   if(key === 'perp') lic.name = 'ThingsBoard PE Perpetual License';
   if(key === 'prototypeaddons'){ lic.name='Prototype'; lic.price='$126.00'; lic.extras={prod:'2',ai:'2M'}; lic.edge=true; lic.trendz=true; }
   return lic;
@@ -495,9 +495,20 @@ function renderLicInvoices(lic){
   var body = $('#licInvBody'); if(!body) return;
   var opts = { noProduct:true };
   var list = DATA().invoices.filter(function(v){ return v.licId === lic.id; });
+  /* ⚠️ THREE cases, and the old code had one line for all of them. "No invoices for
+     this license yet." shown to someone who had just paid reads as "your payment
+     failed" — which is exactly how the participant read it. It is now reserved for an
+     account that genuinely has not been charged; a free licence says it is free, and a
+     paid account looking at a licence with no charges of its own says so plainly. */
+  var neverPaid = !DATA().invoices.length;
+  var msg = lic.grant
+    ? 'No invoices — the Community Grant is free.'
+    : (neverPaid
+        ? 'No invoices yet. The first one appears when this license is charged.'
+        : 'No charges on this license yet.');
   body.innerHTML = list.length
     ? list.map(function(v){ return invRow(v, opts); }).join('')
-    : '<tr><td colspan="' + invCols(opts) + '" class="emptybox">No invoices for this license yet.</td></tr>';
+    : '<tr><td colspan="' + invCols(opts) + '" class="emptybox">' + msg + '</td></tr>';
   var r = $('#licInvRange');
   if(r) r.textContent = list.length ? ('1–' + list.length + ' of ' + list.length) : '0 of 0';
 }
@@ -774,24 +785,22 @@ function wireDetailsOnce(){
     revealBtn.setAttribute('title', revealed?'Hide':'Reveal');
   });
 
+  /* ⚠️ `Copy instance ID` had NO handler at all — found while making every copy
+     action name what it copied. It is phone-only, which is why it survived unnoticed.
+     Delegated, because the Instances panel is part of the mounted markup. */
+  document.addEventListener('click', function(e){
+    var ic = e.target.closest('.inst-copy');
+    if(!ic) return;
+    var cell = ic.closest('td');
+    var id = cell ? cell.textContent.trim() : '';
+    copyValue(id, 'Instance ID');
+  });
+
   var copyBtn = $('#copyBtn');
   copyBtn.addEventListener('click', function(){
-    var val = keyText.dataset.full;
-    var flash = function(){
-      // copy is icon-only now — surface "Copied" via the forced tooltip
-      copyBtn.setAttribute('data-tip', 'Copied');
-      copyBtn.classList.add('show', 'copied');
-      setTimeout(function(){
-        copyBtn.classList.remove('show', 'copied');
-        copyBtn.setAttribute('data-tip', 'Copy');
-      }, 1200);
-    };
-    if(navigator.clipboard && navigator.clipboard.writeText){
-      navigator.clipboard.writeText(val).then(flash, flash);
-    } else {
-      flash();
-    }
+    copyValue(keyText.dataset.full, 'License key');
   });
+;
 
   /* the pencil, the "+ Add label" chip and the menu item all open the same inline
      edit; delegated, because the slot's contents are replaced on every render */

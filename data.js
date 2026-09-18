@@ -2,8 +2,77 @@
    data.js — every mock dataset the prototype renders from. Pure data, no DOM:
    loaded first on every page, read through DATA() (see shared.js) so the chosen
    dashboard variant decides which account is on screen.
-   Today, everywhere in this data, is Aug 19 2026.
    ============================================================================ */
+
+/* ============================================================================
+   DATES — authored around Aug 19 2026, rendered relative to TODAY
+   ============================================================================
+   ⚠️ REVERSES the pinned-today decision this prototype was built on. Every date
+   below is still written as a literal around Aug 19 2026, because their SPACING is
+   hand-tuned — a renewal fourteen days out, updates expiring next week, an invoice
+   paid last month — and that spacing is the thing the demo is showing. What changed
+   is that the whole set is SHIFTED to today at seed time (see shiftDemoDates), so a
+   licence created a minute ago no longer says "Aug 19, 2026" while the clock says
+   otherwise. Relative relationships are preserved exactly; only the anchor moves.
+
+   The reason it mattered: dates that disagree with the clock cost the reader trust in
+   every other number on the screen, not just the date.
+   ========================================================================== */
+var MONF = { Jan:1, Feb:2, Mar:3, Apr:4, May:5, Jun:6, Jul:7, Aug:8, Sep:9, Oct:10, Nov:11, Dec:12 };
+var MONN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+// exact day count (Howard Hinnant's days-from-civil)
+function epochDay(y, m, d){
+  y -= (m <= 2) ? 1 : 0;
+  var era = Math.floor((y >= 0 ? y : y - 399) / 400), yoe = y - era * 400;
+  var doy = Math.floor((153 * ((m > 2 ? m - 3 : m + 9)) + 2) / 5) + d - 1;
+  var doe = yoe * 365 + Math.floor(yoe / 4) - Math.floor(yoe / 100) + doy;
+  return era * 146097 + doe - 719468;
+}
+// and back again (civil-from-days), so an offset can be turned into a date string
+function dayToDate(z){
+  z += 719468;
+  var era = Math.floor((z >= 0 ? z : z - 146096) / 146097), doe = z - era * 146097;
+  var yoe = Math.floor((doe - Math.floor(doe/1460) + Math.floor(doe/36524) - Math.floor(doe/146096)) / 365);
+  var y = yoe + era * 400, doy = doe - (365*yoe + Math.floor(yoe/4) - Math.floor(yoe/100));
+  var mp = Math.floor((5*doy + 2) / 153), d = doy - Math.floor((153*mp + 2)/5) + 1;
+  var m = mp + (mp < 10 ? 3 : -9);
+  if(m <= 2) y += 1;
+  return MONN[m-1] + ' ' + (d < 10 ? '0' + d : d) + ' ' + y;
+}
+/* TODAY is the real one now. `nowDay()` reads the clock ONCE per page load — a
+   value that changes under a render would put two dates on one screen that disagree. */
+var TODAY_DAY = (function(){
+  var d = new Date();
+  return epochDay(d.getFullYear(), d.getMonth() + 1, d.getDate());
+})();
+function todayStr(){ return dayToDate(TODAY_DAY); }
+function dayStr(offset){ return dayToDate(TODAY_DAY + offset); }
+/* The anchor the literals below were written around. The delta between it and today
+   is applied to every date in the seed, once, when the store first snapshots it. */
+var SEED_ANCHOR_DAY = epochDay(2026, 8, 19);
+var DATE_RE = /^([A-Z][a-z]{2}) (\d{1,2}) (\d{4})(, \d{2}:\d{2})?$/;
+/* Walks any structure and rewrites every date-shaped string by `delta` days. Both
+   shapes the data uses are covered: "Aug 19 2026" and "Aug 17 2026, 16:20". A value
+   that is not a date is left exactly as it is — the grant's empty `event`, prices,
+   ids, labels. */
+function shiftDemoDates(node, delta){
+  if(!delta) return node;
+  if(typeof node === 'string'){
+    var m = DATE_RE.exec(node);
+    if(!m) return node;
+    var day = epochDay(+m[3], MONF[m[1]] || 1, +m[2]) + delta;
+    return dayToDate(day) + (m[4] || '');
+  }
+  if(Array.isArray(node)){
+    for(var i = 0; i < node.length; i++) node[i] = shiftDemoDates(node[i], delta);
+    return node;
+  }
+  if(node && typeof node === 'object'){
+    Object.keys(node).forEach(function(k){ node[k] = shiftDemoDates(node[k], delta); });
+    return node;
+  }
+  return node;
+}
 
 /* ---------- boolean entitlements shown as chips on licence details ---------- */
 var FEATURES = [
@@ -220,15 +289,15 @@ var EC_PLANS = {
      was never shown on any other plan. */
   'thingsboard|payg': {
     cards: [
-      { name:'Pilot',     price:'$99',  per:'/ month', badge:'Popular', feats:['100 devices', '100 assets', '1 production instance', '4M AI credits / month', 'Help desk', 'White labeling'] },
-      { name:'Startup',   price:'$299', per:'/ month', feats:['500 devices', '500 assets', '2 production instances', '8M AI credits / month', 'Priority help desk', 'White labeling'] },
+      { name:'Pilot',     price:'$99',  per:'/ month', badge:'Popular', feats:['100 devices', '100 assets', '1 production instance', '4M AI credits / month', 'Help desk', 'White labeling', 'Device limit is fixed on this plan'] },
+      { name:'Startup',   price:'$299', per:'/ month', feats:['500 devices', '500 assets', '2 production instances', '8M AI credits / month', 'Priority help desk', 'White labeling', 'Device limit is fixed on this plan'] },
       { name:'Business',  price:'$499', per:'/ month', feats:['1,000 devices', '1,000 assets', '3 production instances', '16M AI credits / month', 'Priority help desk', 'White labeling', '+$0.10 per extra device'] }
     ]
   },
   'thingsboard|perpetual': {
     single: true,
     cards: [ { name:'ThingsBoard PE Perpetual License', price:'$4,999', per:'· one-time', term:'Including 1 year of software updates',
-               feats:['5,000 devices', '5,000 assets', '1 production instance', '5M AI credits / month', 'White labeling', 'All ThingsBoard PE features'] } ]
+               feats:['5,000 devices', '5,000 assets', '1 production instance', '5M AI credits / month', 'White labeling', 'All ThingsBoard PE features', 'Device limit is fixed on this plan'] } ]
   },
   'tbmq|payg': {
     single: true,
@@ -241,6 +310,37 @@ var EC_PLANS = {
                feats:['10,000 sessions', '1,000 msg/sec', '1 production instance', 'White labeling', 'All TBMQ PE features'] } ]
   }
 };
+/* ---------- what two of the feature lines actually mean -----------------------
+   ⚠️ NOT invented. Both sentences are the prototype's own wording, taken from the
+   descriptions the wizard's Customize step already shows for the same two controls
+   (see stepCell('prod', …) and stepCell('ai', …) in wizard.js) and shortened to fit a
+   card. The plan cards are where a first-time buyer meets these lines FIRST, and they
+   carried no explanation at all — the participant guessed at one and gave up on the
+   other.
+
+   ⚠️ MARKED GAP: "assets", "sessions" and "msg/sec" have no description anywhere in
+   the repo either. They are left unexplained rather than guessed at. */
+var FEAT_NOTES = [
+  { re:/production instance/i,
+    note:'Production compute for your live deployment — enables clustering and HA.' },
+  { re:/AI credits/i,
+    note:'Monthly allowance for AI features, counted in blocks of 1M credits.' }
+];
+function featNote(text){
+  for(var i = 0; i < FEAT_NOTES.length; i++){
+    if(FEAT_NOTES[i].re.test(text)) return FEAT_NOTES[i].note;
+  }
+  return '';
+}
+
+/* ---------- tax ---------------------------------------------------------------
+   ⚠️ COPY PENDING CONFIRMATION FROM THE TEAM — recorded in NOTES.md as such. Nothing
+   in the repo states a tax position, and a buyer sees no mention of tax anywhere
+   before entering a company card. This is the most neutral true-for-most-places
+   sentence that can be written without inventing a rule; it says where the number is
+   settled rather than what it will be. One constant, three surfaces. */
+var TAX_NOTE = 'Prices exclude tax. Tax, where applicable, is calculated at checkout.';
+
 var EC_SINGLE_NOTE = 'You can fine-tune capacity before checkout.';
 /* ⚠️ The SHORT billing-mode line, split out of the tab descriptions below. What is left
    here is about PAYMENT — when you are charged and what you can change — because the

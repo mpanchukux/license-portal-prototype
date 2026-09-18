@@ -43,7 +43,10 @@ var Auth = (function(){
        Add user stopped asking an admin to type someone else's name. Name is asked
        on every sign-up, invited or not: one screen, not two. */
     signup: {
-      h:'Create your personal account',
+      /* ⚠️ Not "personal". The buyer is purchasing for a company, on a company card,
+         and will invite colleagues — "personal" sent the participant looking for a
+         business sign-up that does not exist. */
+      h:'Create your account',
       fields:[ { id:'authName',  label:'Full name', type:'text', req:true, ac:'name' },
                { id:'authEmail', label:'Email', type:'email', req:true, ac:'email' },
                { id:'authPass',  label:'Create a password', type:'password', req:true, ac:'new-password' } ],
@@ -121,6 +124,19 @@ var Auth = (function(){
       + '<a class="link" href="privacy.html">Privacy Policy</a> and acknowledge the '
       + '<a class="link" href="license-agreement.html">License agreement</a>.</p>';
   }
+  /* Reads the choice the landing page stored. Silent when there is none — a flat
+     sign-up from the header is not buying anything yet. */
+  function pendingPurchaseLine(){
+    var p = Store.get('pendingPurchase');
+    if(!p || !p.plan) return '';
+    var set = EC_PLANS[(p.product || 'thingsboard') + '|' + (p.kind === 'perpetual' ? 'perpetual' : 'payg')];
+    var card = set && set.cards.filter(function(c){ return c.name === p.plan; })[0];
+    if(!card) return '';
+    var product = p.product === 'tbmq' ? 'TBMQ' : 'ThingsBoard';
+    var price = card.price + (card.per === '/ month' ? '/mo' : ' ' + card.per);
+    return '<p class="auth-ctx">Creating an account to buy <b>' + esc(product) + ' ' + esc(card.name)
+      + '</b> — ' + esc(price) + '</p>';
+  }
   function render(){
     var s = SCREENS[mode];
     body.innerHTML = ''
@@ -129,6 +145,11 @@ var Auth = (function(){
       +   '<div class="bt">ThingsBoard<span class="bsep">·</span>Licenses</div>'
       + '</div>'
       + '<h2 class="auth-h" id="authHeading">' + s.h + '</h2>'
+      /* ⚠️ What you just chose, carried into the modal. Clicking Select on a plan used
+         to open a dialog that said nothing about the plan, the product or the price,
+         and the participant stopped to check whether they had clicked the wrong thing.
+         Built from the pending purchase, so it says exactly what the card said. */
+      + (mode === 'signup' ? pendingPurchaseLine() : '')
       + socialHTML()
       + '<div class="auth-or"><span>OR</span></div>'
       + s.fields.map(fieldHTML).join('')
@@ -156,6 +177,15 @@ var Auth = (function(){
      account's licences, or the empty state if the account has none" comes out of one
      line instead of a branch. */
   function finish(){
+    /* ⚠️ Remember WHO. Nothing used to store the address typed here, so every event a
+       new account created was logged against the demo's own mpanchuk@thingsboard.io —
+       a purchase attributed to a stranger. `portalActor()` reads this. */
+    if(mode === 'signup'){
+      var em = ($('#authEmail') && $('#authEmail').value.trim())
+            || (invited && invited.email) || '';
+      var nm = ($('#authName') && $('#authName').value.trim()) || '';
+      if(em || nm) Store.set('account', { email:em || PORTAL_ACTOR, name:nm });
+    }
     /* Redeeming burns the token: single use is the invitation's whole promise, and
        the burn belongs at the moment the account is made, not at the moment the
        link was opened — a visitor who closes the screen has not used anything. */

@@ -17,7 +17,9 @@ function renderInvoicesPage(){
   } else {
     b.innerHTML = emptyStateRow(6, {
       title:'No invoices yet.',
-      line:'Invoices appear here after your first purchase.',
+      /* ⚠️ Only ever reached with zero invoices in the account, and a purchase now
+         writes one — so this can no longer be read by someone who has just paid. */
+      line:'Your first invoice appears here as soon as a license is charged.',
       /* ⚠️ A quiet LINK, not a button. Buying is one decision and it belongs to one
          page; a primary here would be a second button for the same next step, phrased
          differently, on a page that fills itself as a side effect of it. */

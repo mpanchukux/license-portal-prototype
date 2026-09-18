@@ -69,8 +69,11 @@ function renderBlockFooters(){
    05:00–11:59 morning · 12:00–17:59 afternoon · 18:00–04:59 evening. */
 function greetingFor(h){ return (h >= 5 && h < 12) ? 'Good morning' : (h >= 12 && h < 18) ? 'Good afternoon' : 'Good evening'; }
 function renderGreeting(){
+  /* the first-run screen greets by name too — it was hardcoded to the demo's owner */
+  var eg = $('#emptyGreeting');
+  if(eg) eg.textContent = 'Welcome, ' + portalFirstName();
   var el = $('#dashGreeting'); if(!el) return;
-  el.textContent = greetingFor(new Date().getHours()) + ', Mariia';
+  el.textContent = greetingFor(new Date().getHours()) + ', ' + portalFirstName();
 }
 /* Home activity block: latest batch first, then it grows in place. The count is
    per page load — a different dashboard state starts a fresh feed. */

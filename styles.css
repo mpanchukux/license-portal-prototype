@@ -919,6 +919,10 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
 .auth-soc{gap:8px}
 .auth-soc .icon{width:17px;height:17px}
 /* OR: a rule with the word sitting in a gap cut out of it */
+/* what the visitor just chose, restated at the top of the sign-up modal */
+.auth-ctx{margin:6px 0 0;text-align:center;font-size:14px;line-height:1.45;color:var(--mid)}
+.auth-ctx b{color:var(--ink);font-weight:var(--t-em-fw)}
+
 .auth-or{display:flex;align-items:center;gap:12px;margin:18px 0;color:var(--faint);font-size:14px}
 .auth-or::before,.auth-or::after{content:"";flex:1;height:1px;background:var(--line2)}
 /* fields are the prototype's own .field component; only the alignment is local —
@@ -1169,6 +1173,19 @@ body[data-page="home"] .dwrap{padding-top:48px}
 .pc-feat{font-size:14px;color:var(--mid);padding:7px 0;border-bottom:1px dashed var(--line2)}
 .pc-feat:last-child{border-bottom:0}
 .pc-cta{width:100%;margin-top:14px}
+/* a feature line's explanation: under it, quieter, and it must not make the row read
+   as two features */
+.pc-featnote{display:block;margin-top:2px;font-size:14px;line-height:1.4;color:var(--faint)}
+/* the tax line — same muted weight wherever it appears */
+/* an included entitlement named on the plan card in the wizard — a fact, not an offer */
+.nl-plansum-inc{display:block;margin-top:4px;font-size:14px;line-height:1.45;color:var(--mid)}
+.nl-plansum-inc b{color:var(--ink);font-weight:var(--t-em-fw)}
+/* why a locked row is locked, said under it rather than left to a padlock */
+.am-lockwhy{margin-top:8px;font-size:14px;line-height:1.45;color:var(--mid)}
+.nl-taxline{display:block;margin-top:6px}
+
+.taxnote{margin:12px 0 0;font-size:14px;line-height:1.45;color:var(--faint)}
+
 .pc-note{margin-top:12px;font-size:14px;color:var(--faint)}
 .pc-note.center{text-align:center}
 .pc-note:empty{display:none}
@@ -1381,6 +1398,10 @@ body.list-empty #pageTitleRow #licNewBtn{display:none !important}
   display:inline-flex;align-items:center;justify-content:center}
 .snack-x:hover{opacity:1;background:rgba(255,255,255,.14)}
 
+/* an invited user: present in the list, not yet a person in it */
+.user-pending td{color:var(--mid)}
+.user-pendmark{margin-left:10px;font-size:14px;color:var(--faint)}
+
 .savednote{margin-left:12px;font-size:14px;color:var(--mid);white-space:nowrap}
 .savednote[hidden]{display:none}
 .seclast{margin:0 0 14px;font-size:14px;color:var(--mid)}
@@ -1393,6 +1414,14 @@ body.list-empty #pageTitleRow #licNewBtn{display:none !important}
 .field input,.field select,.field textarea{font-family:var(--font-ui);font-size:var(--t-body-fs);line-height:var(--t-body-lh);letter-spacing:var(--t-body-ls);font-weight:var(--t-body-fw);width:100%;height:var(--btnH);border:1px solid var(--line);border-radius:6px;padding:0 10px;background:#fff;color:var(--ink);outline:none}
 .field textarea{height:auto;min-height:62px;padding:8px 10px;resize:vertical;line-height:1.5}
 .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--ink)}
+/* ⚠️ Placeholders were browser-default grey, which in a monochrome interface sits
+   close enough to real text to be read as one. The participant nearly submitted the
+   billing form believing the phone number was already filled in. `--faint` is the
+   same muted treatment the search boxes and the invite field already used; this
+   applies it to every `.field` and to the card row, so no input on any step can
+   present an example as a value. */
+.field input::placeholder,.field textarea::placeholder,
+.paystripe input::placeholder{color:var(--faint);opacity:1}
 .field.ro input{background:var(--bg);color:var(--mid);cursor:default}
 .field .help{font-size:var(--t-small-fs);line-height:var(--t-small-lh);letter-spacing:var(--t-small-ls);color:var(--faint);margin-top:5px}
 .field2{display:grid;grid-template-columns:1fr 1fr;gap:12px 14px}

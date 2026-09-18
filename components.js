@@ -150,7 +150,18 @@ function invProductCell(v, opts){
   return lic ? productCell(lic, { link:'invoices', bare: !!(opts && opts.bareProduct) })
              : '<td class="lic-prodcell"><span class="muted">—</span></td>';
 }
+/* ⚠️ Two rows, not one. An INVITED user — asked, but not yet signed in and filled in
+   their details — renders muted, carrying their email and nothing else: no name, no
+   date, and no actions at all. `Login as` on someone who has never signed in would be
+   impersonating an account that does not exist yet, and Delete would be revoking an
+   invitation through a control labelled as though it removed a person. The row
+   becomes an ordinary one, with its actions, the moment they complete sign-up. */
 function userRow(u){
+  if(u.pending){
+    return '<tr class="user-pending"><td class="muted" colspan="3">' + esc(u.email)
+      + '<span class="user-pendmark">Invited — waiting for them to sign in</span></td>'
+      + '<td class="cellact"></td></tr>';
+  }
   return '<tr><td>'+u.name+'</td><td>'+u.email+'</td><td>'+fmtDate(u.created)+'</td>'
     + '<td class="cellact"><span class="rowactions"><button class="link" data-loginas="'+u.email+'">Login as →</button><button class="link" data-deluser="'+u.email+'">Delete</button></span></td></tr>';
 }
@@ -338,11 +349,7 @@ function wireLicenseRows(rootSel, opts){
     var copy = e.target.closest('.lic-copy');
     if(copy){
       e.stopPropagation();
-      var flash = function(){
-        copy.setAttribute('data-tip', 'Copied'); copy.classList.add('show', 'copied');
-        setTimeout(function(){ copy.classList.remove('show', 'copied'); copy.setAttribute('data-tip', 'Copy license key'); }, 1200);
-      };
-      if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText('license-secret').then(flash, flash); } else { flash(); }
+      copyValue('license-secret', 'License key');
       return;
     }
     var licOf = function(el){ var r = el.closest('.lic-row'); return r && licById(r.getAttribute('data-licid')); };
@@ -875,7 +882,11 @@ function nlPlanCardHTML(c, set, sel){
     + '<div class="pc-head"><h2>' + c.name + '</h2>' + badge + '</div>'
     + '<div class="pc-price">' + c.price + ' <span class="pc-per">' + c.per + '</span></div>'
     + (c.term ? '<div class="pc-term">' + c.term + '</div>' : '')
-    + '<div class="pc-feats">' + c.feats.map(function(f){ return '<div class="pc-feat">' + f + '</div>'; }).join('') + '</div>'
+    + '<div class="pc-feats">' + c.feats.map(function(f){
+        var n = featNote(f);
+        return '<div class="pc-feat">' + f
+          + (n ? '<span class="pc-featnote">' + n + '</span>' : '') + '</div>';
+      }).join('') + '</div>'
     + (c.foot ? '<div class="pc-note">' + c.foot + '</div>' : '')
     + cta
     + '</div>';
@@ -944,7 +955,10 @@ function baselineBlockHTML(sel){
    ABOVE the cards, where it describes what they have in common before you read what
    separates them. This note is about the cards themselves, so it stayed below them. */
 function planPickerExtraHTML(set, sel){
-  return set.single ? '<div class="pc-note center">' + EC_SINGLE_NOTE + '</div>' : '';
+  /* the tax line sits with the prices it qualifies — one of the three surfaces
+     TAX_NOTE appears on, the others being the Review and Billing steps */
+  return (set.single ? '<div class="pc-note center">' + EC_SINGLE_NOTE + '</div>' : '')
+    + '<p class="taxnote">' + TAX_NOTE + '</p>';
 }
 /* `extraEl` is optional: pass it on a selling surface (the landing page and the
    new-user screen on Home), omit it in the wizard. Everything above the grid is

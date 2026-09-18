@@ -72,12 +72,9 @@ function renderUsersPage(){
     el.classList.toggle('on', !!html);
   }
 
-  /* The name an invited person shows before they have entered one. ⚠️ Derived, not
-     invented from nothing: the local part is the only thing the address actually
-     tells us, and it is what they will overwrite with their real name when they
-     complete the sign-up the invitation opens. Leaving the cell empty reads as a
-     broken row; repeating the address reads as a bug. */
-  function nameFromEmail(e){ return e.split('@')[0]; }
+  /* ⚠️ `nameFromEmail` is gone. It derived a display name from the address so an
+     invited person could render as an ordinary row; invited rows now show no name at
+     all, which is the honest thing — nobody has told us one yet. */
 
   function invite(m){
     var input = $(m.input), p = parse(input.value);
@@ -98,7 +95,11 @@ function renderUsersPage(){
          the earlier "an invitation is not access" rule, which kept them out of the
          list until they signed up — the table is asked to carry no pending state,
          so a row that appears only later would make Invite look like it did nothing. */
-      storeAddUser({ name:nameFromEmail(em), email:em, created:'Aug 19 2026' });
+      /* ⚠️ `pending:true` and NO name. This supersedes the earlier "invited users are
+         ordinary rows" rule: an invitation is not a person yet — there is no name, no
+         join date, and nothing anyone should be able to do to them. The row says the
+         one true thing (this address was invited) and waits. */
+      storeAddUser({ email:em, pending:true, created:todayStr() });
     });
     refreshUsersSurfaces();
 
@@ -148,7 +149,7 @@ function renderUsersPage(){
       navigator.clipboard.writeText(url).then(done, done);
     } else { done(); }
     logActivity({ kind:'user', entityType:'Invitation', entityName:rec.token, action:'LINK_CREATED',
-      txt:'A single-use invite link was created by ' + PORTAL_ACTOR + '.' });
+      txt:'A single-use invite link was created by ' + portalActor() + '.' });
   }
 
   MOUNTS.forEach(function(m){
