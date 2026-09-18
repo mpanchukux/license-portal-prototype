@@ -272,15 +272,16 @@ a{color:inherit}
 /* light-grey sub-cards (Billing / Invoices / Production instances) */
 .billcard{background:#f6f6f4;border:1px solid var(--line2);border-radius:8px;padding:14px 16px;margin-top:12px}
 .billcard-h{margin:0 0 10px;font-family:var(--font-ui);font-size:var(--t-label-fs);line-height:var(--t-label-lh);letter-spacing:var(--t-label-ls);font-weight:var(--t-label-fw);text-transform:uppercase;color:var(--ink)}
-/* two fixed tracks so the single Next charge card keeps its half-width size */
-/* Next charge spans the whole content area. This grid once held two cards side by
-   side; only Next charge is left, so it is a single full-width column. */
-/* ⚠️ 75%, not full width. The card carries three short facts on one line and at
-   the full block width the row ended in a long empty stretch after the pencil.
-   `max-width` rather than a column definition, so the phone (which stacks it into
-   two lines) keeps the whole width — see the ≤600px block. */
+/* This grid once held two cards side by side; only Next charge is left, so it is a
+   single full-width column.
+   ⚠️ FULL WIDTH, reversing the 75% cap. That cap was there for a real reason — the
+   card carries three short facts and the row ended in an empty stretch after the
+   pencil — but the cost was worse than the gap: a card narrower than every other
+   block on the page read as unfinished, an odd inset with no rule behind it. A
+   full-width card with its two groups pushed to the two edges is the ordinary
+   shape of a card; the gap between them is alignment, not emptiness. */
 .billgrid{display:grid;grid-template-columns:1fr;gap:12px;margin-top:12px}
-.billgrid .nextcharge{max-width:75%}
+.billgrid[hidden]{display:none}
 .billgrid .billcard{margin-top:0}
 /* Next charge card — ONE logical row on the desktop, left to right:
      Next charge · $299.00 · on Sep 20, 2026 ······ VISA ••••4242 · [pencil]
@@ -2313,7 +2314,7 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
      If anything is added to this line again, it will wrap — check the numbers. */
   /* the phone stacks this card into two lines, so it keeps the full width — the
      desktop's 75% cap would only squeeze it */
-  .billgrid .nextcharge{max-width:none}
+  /* the desktop cap is gone, so the phone has nothing left to undo here */
   .nextcharge .billcard-h{display:block;letter-spacing:0.06em}
   .nc-on{display:none}
   .nc-main{gap:8px 10px;flex-wrap:wrap;align-items:center}

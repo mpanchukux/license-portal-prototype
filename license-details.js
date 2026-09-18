@@ -793,13 +793,21 @@ function renderLicenseDetails(lic){
     if(ps) ps.textContent = (lic.status==='canceled' ? 'Active until ' : 'Renews ') + fmtDate(lic.event);
     var price = String(lic.price).replace(/\s*\/\s*mo/i,'');
     var nc=$('#ncAmount'), when=$('#ncWhen');
-    if(lic.status==='canceled'){ if(nc) nc.textContent='—'; if(when) when.textContent='No upcoming charge · active until '+fmtDate(lic.event); }
+    /* ⚠️ NO CHARGE AHEAD → NO BLOCK. A cancelled subscription used to keep the card
+       and fill it with an em dash and "No upcoming charge" — a framed block, a heading
+       and a big empty amount, all to report that there is nothing to report. The card
+       exists to answer "what comes off my card next"; when the answer is "nothing", the
+       honest form of that answer is the card's absence, not a dash inside it.
+       `data-page` already hides it for perpetual and grant, which never charge again;
+       this covers the one recurring licence that has stopped. */
+    var bill = $('#appView .billgrid');
+    if(bill) bill.hidden = !hasNextCharge(lic);
+    if(nc) nc.textContent = price;
     /* ⚠️ The "on " prefix is its own span so the phone can drop it. With the
        "NEXT CHARGE" label restored to the line, label + date + amount measured
        302px against a 284px box — and "on" is redundant once the label says what
        the date is. Removing it buys the 22px the line was short of. */
-    else { if(nc) nc.textContent=price;
-           if(when) when.innerHTML='<span class="nc-on">on </span>'+fmtDate(lic.event); }
+    if(when) when.innerHTML='<span class="nc-on">on </span>'+fmtDate(lic.event);
   }
   renderLicenseKey(lic);
   renderLicInvoices(lic);
@@ -810,6 +818,19 @@ function renderLicenseDetails(lic){
   renderScheduled(lic);
   renderLicenseActions(lic);
   renderLicFeed(lic);
+}
+
+/* Is there a scheduled charge ahead? One reading, so the block's visibility and any
+   later surface that asks the same question cannot drift apart.
+   ⚠️ `payment_failed` counts: the charge is still coming, it is the RETRY, and the
+   amount and date are exactly what the person needs while the banner tells them to
+   update the card. Cancelled does not: it runs to the end of what was paid for and
+   then stops. Perpetual and grant never had one. */
+function hasNextCharge(lic){
+  if(!lic || lic.grant) return false;
+  if(lic.type !== 'Subscription') return false;
+  if(lic.status === 'canceled') return false;
+  return !!lic.event;
 }
 
 /* ---------- the licence key, per licence and masked on open ----------
