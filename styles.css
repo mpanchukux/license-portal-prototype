@@ -399,7 +399,12 @@ th.num,td.num{text-align:right}
    updates" heading now. Three lines of prose in the licence header were read once and
    then re-read forever; the icon keeps the answer one hover away.
    The heading owns the icon, so it needs a baseline that does not push the row. */
-.periodhead .infoic{vertical-align:-4px;margin-left:4px;width:20px;height:20px}
+/* ⚠️ -1.5px, not -4px: measured, not guessed. The label is all-caps, so the eye
+   centres the icon on the CAP block (cap-top→baseline), not on the font's em box —
+   and the glyph box sits lower than the em box's middle because the descender space
+   below the baseline stays empty in uppercase. At -4px the icon read as resting on
+   the baseline; measured, its centre was 2.46px below the cap centre. */
+.periodhead .infoic{vertical-align:-1.5px;margin-left:4px;width:20px;height:20px}
 .periodhead .infoic .icon{width:13px;height:13px}
 /* ⚠️ `.keycol.right` right-aligns this column, and the bubble is hung off the glyph's
    left edge — so on this surface it must not also inherit the right alignment. */
@@ -692,6 +697,12 @@ th[aria-label$="ctions"],th.cellact,td.cellact{width:1%;white-space:nowrap;text-
    start on the same vertical line, and end on the same one. */
 .licmodal .sheet{max-width:none;padding:0 0 34px}
 .licmodal .section,.licmodal .tabs{padding-left:22px;padding-right:22px}
+/* ⚠️ The sheet drops its side padding here so the grey summary band can run edge to
+   edge — but `#licNewBanner` is a rounded ink block, not a band, and with no gutter of
+   its own it butted straight into the modal's rounded corners. It takes the content
+   inset, so it starts and ends on the same vertical line as the title and every
+   section below it. (In page mode `.sheet` still has --pageX, so nothing to add.) */
+.licmodal .gbanner.licnew{margin-left:22px;margin-right:22px}
 body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its place */
 .back[hidden]{display:none}   /* .back sets display:flex, so [hidden] needs help */
 /* no back button in modal mode, so its gutter column goes too — otherwise the
@@ -2046,6 +2057,7 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
   .licmodal .sheet{padding:0 0 28px}
   .licmodal .head{padding:16px}
   .licmodal .section,.licmodal .tabs{padding-left:16px;padding-right:16px}
+  .licmodal .gbanner.licnew{margin-left:16px;margin-right:16px}
   /* summary block stacks: title + status, label, key, then the period */
   .licmodal .headgrid{grid-template-columns:1fr}
   /* ⚠️ `.planname` is back to 28px on the phone, REVERSING the pass that let it take
