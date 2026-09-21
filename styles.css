@@ -406,9 +406,21 @@ th.num,td.num{text-align:right}
    the baseline; measured, its centre was 2.46px below the cap centre. */
 .periodhead .infoic{vertical-align:-1.5px;margin-left:4px;width:20px;height:20px}
 .periodhead .infoic .icon{width:13px;height:13px}
-/* ⚠️ `.keycol.right` right-aligns this column, and the bubble is hung off the glyph's
-   left edge — so on this surface it must not also inherit the right alignment. */
-.periodhead .infoic.tip.wide::after{text-align:left}
+/* ⚠️ This icon sits at the RIGHT EDGE of the surface, so it takes the base tooltip's
+   right anchoring BACK. `.tip` hangs the bubble off `right:0` precisely so an icon near
+   an edge keeps it inside; `.infoic` then flips it to `left:-8px`, which is right for
+   the case it was written for — an icon in the MIDDLE of a line, where the bubble has
+   room on its right. Here it has none: `.keycol.right` puts the glyph on the content's
+   last vertical line, so a 300px bubble opening rightwards ran under the modal's edge
+   and `.fs-body` (overflow:auto) clipped it — measured at 1280: the 320px bubble ran
+   270px past the body's right edge, i.e. most of the sentence was never on screen.
+   Anchored right it opens leftwards into the sheet: 14px clear of the edge, 706px of
+   room on its left.
+   ⚠️ The arrow flips with it, or it points at nothing.
+   `text-align:left` is separate and stays: the column right-aligns its text, which is
+   right for a one-line date and wrong for three lines of prose. */
+.periodhead .infoic.tip.wide::after{text-align:left;left:auto;right:-8px}
+.periodhead .infoic.tip::before{left:auto;right:6px}
 /* the check-in cadence, stated once above the Instances table */
 .inst-note{margin:0 0 14px;font-size:14px;line-height:1.5;color:var(--faint)}
 .inst-note[hidden]{display:none}
