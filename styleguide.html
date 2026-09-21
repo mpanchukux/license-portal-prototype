@@ -23,7 +23,7 @@
       <a href="#tokens">Tokens</a><a href="#buttons">Buttons</a><a href="#inputs">Inputs</a>
       <a href="#chips">Status chips</a><a href="#table">Table</a><a href="#cards">Cards</a>
       <a href="#modals">Modals</a><a href="#stepper">Wizard stepper</a><a href="#banners">Banners</a>
-      <a href="#feed">Feed entry</a><a href="#tooltip">Tooltips</a><a href="#infoicon">Info icon</a><a href="#empty">Empty states</a><a href="#solo">Solo state</a><a href="#empty">No results</a><a href="#sheet">Bottom sheet</a><a href="#snack">Snackbar</a>
+      <a href="#feed">Feed entry</a><a href="#tooltip">Tooltips</a><a href="#infoicon">Info icon</a><a href="#empty">Empty states</a><a href="#solo">Solo state</a><a href="#empty">No results</a><a href="#messages">Messages</a><a href="#sheet">Bottom sheet</a><a href="#snack">Snackbar</a>
       <a href="index.html">← back to the portal</a>
     </nav>
   </div>
@@ -150,6 +150,11 @@
         two lines under one field, one of them now wrong, is worse than either alone.
         <b>The message says what is wrong, not that something is.</b> &ldquo;Use MM / YY&rdquo; can be
         acted on; &ldquo;invalid&rdquo; cannot.</p>
+      <p class="sg-note">⚠️ <b>No glyph on the message.</b> It carried a drawn (!) circle and that mark
+        was removed: in a monochrome system it repeats what the message already says, while costing a
+        hanging indent that pushed a two-line error out of line with everything else under the field.
+        The fault is signalled twice already &mdash; the border thickens to ink, and this line is ink and
+        bold where <span class="sg-cls">.help</span> is faint and regular.</p>
       <p class="sg-note">The rule that goes with it: <b>a primary action is never left disabled with
         nothing said.</b> Either it is enabled and answers on submit &mdash; painting every failure at
         once and moving focus to the first &mdash; or it is disabled with the reason visible beside it.
@@ -403,6 +408,40 @@
           <span class="sg-cls">.emptybox (in a feed)</span>
         </div>
       </div>
+    </div>
+
+    <div class="sg-item" id="messages">
+      <h3>Where a message goes &mdash; three places, one rule each</h3>
+      <p class="sg-note">⚠️ <b>A single action used to produce two messages at once</b> — a bar inside the
+        licence panel and an inline note under the key. Split by <b>kind</b>, each kind has exactly one
+        place, and nothing invents a fourth.</p>
+      <p class="sg-note"><b>1 · Result of an action → snackbar.</b> Something the person just did, which is
+        finished and will not become truer by staying on screen: plan changed, capacity purchased, add-on
+        removed, coupon applied, label saved, payment method updated, subscription cancelled, scheduled
+        change cancelled, updates renewed, invoice downloaded. It lives <b>outside</b> the licence panel —
+        bottom of the viewport on desktop, top below 600px — and leaves on its own.</p>
+      <p class="sg-note"><b>2 · Persistent state → the slot below the panel header</b>
+        (<span class="sg-cls">#subAlert</span>). Facts that stay true until something changes: payment
+        failed, over the instance limit, cancelled and active until a date, software updates expiring.
+        <b>One at a time.</b> If two are true, show the more serious one and <b>name the other in the same
+        banner</b> rather than stacking — two banners is two problems competing for one glance and pushing
+        the licence off screen. Nothing transient goes here.</p>
+      <p class="sg-note"><b>3 · Scheduled changes → the Plan block</b>
+        (<span class="sg-cls">#schedLine</span>). ⚠️ <b>A deliberate exception to the one-slot rule, and it
+        is not to be "fixed" by moving it.</b> The line annotates the table <i>directly beneath it</i> —
+        every figure it names (production instances, development instances, AI credits) is a row of that
+        table. Moved to the state slot it would describe numbers three scroll-lengths away, which is the
+        arrangement it was moved out of.</p>
+      <p class="sg-note"><b>The one banner that sits above the header</b> is
+        <span class="sg-cls">#licNewBanner</span> — <i>License created</i>. It is above the title precisely
+        so a newly created licence <i>with a problem</i> can show it and the state banner at once without
+        colliding. It appears <b>once per licence, ever</b>: the seen mark is written when it is shown, not
+        when it is dismissed, so closing and reopening the panel — or reloading — does not bring it back.</p>
+      <p class="sg-note"><b>Exception, and it is deliberate.</b> <i>License key copied</i> and
+        <i>Instance ID copied</i> answer <b>in the button's own tooltip</b>, not the snackbar: a copy is a
+        micro-action on a small control, and an answer at the edge of the screen makes the reader look away
+        from the thing they just pressed. The tooltip is already there and already says what the button
+        does; for 1.2s it says what it did.</p>
     </div>
 
     <div class="sg-item" id="sheet">

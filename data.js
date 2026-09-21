@@ -174,7 +174,7 @@ var FEATURES = [
 
 /* ---------- the account's payment method ----------
    One card, one place. Every surface that shows the card itself renders from
-   this (see paymentMethodHTML): Payment method on Billing & payment, the Next
+   this (see paymentMethodHTML): Payment method on Payment & Billing, the Next
    charge card on licence details, the styleguide specimen. Prose mentions of
    "Visa ••4242" (activity feed, invoice mock, wizard) are sentences, not this. */
 /* ⚠️ The expiry's WORD is its own span so the phone can drop it. Arithmetic: brand

@@ -395,9 +395,15 @@ th.num,td.num{text-align:right}
 /* ⚠️ `text-align:left` is not cosmetic here: `.keycol.right` right-aligns its column,
    which is right for a one-line date and wrong for three lines of prose — ragged-left
    body text is read line by line instead of scanned. */
-.updnote{margin:10px 0 0;font-size:14px;line-height:1.5;color:var(--faint);
-  max-width:44ch;text-align:left;margin-left:auto}
-.updnote[hidden]{display:none}
+/* ⚠️ `.updnote` is GONE — the updates explanation is an info icon on the "Software
+   updates" heading now. Three lines of prose in the licence header were read once and
+   then re-read forever; the icon keeps the answer one hover away.
+   The heading owns the icon, so it needs a baseline that does not push the row. */
+.periodhead .infoic{vertical-align:-4px;margin-left:4px;width:20px;height:20px}
+.periodhead .infoic .icon{width:13px;height:13px}
+/* ⚠️ `.keycol.right` right-aligns this column, and the bubble is hung off the glyph's
+   left edge — so on this surface it must not also inherit the right alignment. */
+.periodhead .infoic.tip.wide::after{text-align:left}
 /* the check-in cadence, stated once above the Instances table */
 .inst-note{margin:0 0 14px;font-size:14px;line-height:1.5;color:var(--faint)}
 .inst-note[hidden]{display:none}
@@ -1371,12 +1377,13 @@ body[data-page="home"] .dwrap{padding-top:48px}
 .field.err > input,.field.err > select,.field.err > textarea,
 .field.err .paystripe{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
 .field.err .help{display:none}
+/* ⚠️ NO GLYPH. The message carried a drawn (!) circle, and in a monochrome system that
+   mark is doing the same job the message already does — while costing a hanging indent
+   that pushed a two-line error out of alignment with every other line under a field.
+   The fault is already carried twice over: the border goes to ink and thickens, and
+   this line is ink and bold where `.help` is faint and regular. A third marker is
+   decoration on a message that is the opposite of decorative. */
 .fielderr{margin-top:6px;font-size:14px;line-height:1.4;color:var(--ink);font-weight:var(--t-em-fw)}
-.fielderr::before{content:'';display:inline-block;width:14px;height:14px;margin-right:6px;
-  vertical-align:-2px;border-radius:50%;border:1.5px solid var(--ink);
-  background:
-    linear-gradient(var(--ink),var(--ink)) center 2.5px/1.5px 5px no-repeat,
-    linear-gradient(var(--ink),var(--ink)) center 9.5px/1.5px 1.5px no-repeat}
 .fielderr[hidden]{display:none}
 /* the summary that appears next to a rejected primary, naming how many and why */
 .formerr{margin:0 0 10px;font-size:14px;line-height:1.45;color:var(--ink);font-weight:var(--t-em-fw)}
@@ -1549,9 +1556,13 @@ body.list-empty #pageTitleRow #licNewBtn{display:none !important}
    as two areas; the card IS the page now. The header keeps the stickiness — that part
    was doing real work, holding Save in reach while you are in the fields below. */
 .setcard-page{padding:0 24px 22px}
+/* ⚠️ The header carries its own background and is pulled out to the card's edges with
+   a negative margin, so it paints OVER the card's rounded top corners and squared
+   them off. It has to repeat the radius — the card cannot clip it, because
+   `overflow:hidden` on the card would also clip the sticky positioning. */
 .setcard-h-page{position:sticky;top:0;z-index:5;align-items:center;gap:12px;
   background:var(--card);margin:0 -24px 18px;padding:18px 24px 14px;
-  border-bottom:1px solid var(--line2)}
+  border-radius:8px 8px 0 0;border-bottom:1px solid var(--line2)}
 .setcard-h-page .lic-h1{margin:0}
 .setcard-h-page .sp{flex:1}
 .setcard-h-page .btn[disabled]{opacity:.45;cursor:not-allowed}
@@ -2190,7 +2201,8 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
      ABOVE the licence title. Measured: the explanation printed at the top of the
      screen, above the banner and the name it belongs to. 7 puts it directly under the
      date row (`.rowvalue` is 6), which is the one place it makes sense. */
-  .updnote:not([hidden]){order:7;margin:8px 0 0;max-width:none;text-align:left}
+  /* the prose that needed its own `order` here is gone with `.updnote`; the icon
+     travels with the heading it belongs to */
   /* the key row: glyph, value, ONE trailing icon-button (copy), all centred on the
      row's own middle. 16px is the list-item value size the calmer hierarchy asks
      for — 18px was display size for a line that is not the headline. */

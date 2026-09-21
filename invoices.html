@@ -52,7 +52,18 @@
 
 <script src="data.js"></script>
 <script src="shared.js"></script>
+<!-- ⚠️ `wizard.js` and `license-details.js` are loaded HERE, on a page that has no
+     licence table of its own, and the reason is the Product column. Each invoice links
+     to the licence it bills, and the delegated interceptor in components.js opens that
+     licence as a MODAL — but only `if(window.LicenseDetails)`. Without the module the
+     guard failed silently and the link followed its href to license.html, so this one
+     route landed on the old full-page surface while every other route in the product
+     opened the panel. `wizard.js` comes with it because the panel's own actions
+     (Change plan, Manage) call into `NL`. Order per NOTES: data → shared → components
+     → wizard → page-*. -->
 <script src="components.js"></script>
+<script src="wizard.js"></script>
+<script src="license-details.js"></script>
 <script src="page-invoices.js"></script>
 </body>
 </html>

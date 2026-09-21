@@ -1,5 +1,5 @@
 /* ============================================================================
-   page-billing.js — Billing & payment: the same sticky Save as Account, plus the
+   page-billing.js — Payment & Billing: the same sticky Save as Account, plus the
    bespoke Update payment method modal (its own overlay, deliberately not the
    generic dialog).
    ============================================================================ */

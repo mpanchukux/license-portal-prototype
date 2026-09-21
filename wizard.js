@@ -359,7 +359,7 @@ var NL = (function(){
   /* Product, billing type and plan are all chosen on step 1, so there is no
      separate product step. The tail depends on the account: with billing data
      saved the last step is Review & pay and commits there; without it, Review
-     only reviews and a Billing & payment step is appended to collect the data
+     only reviews and a Payment & Billing step is appended to collect the data
      and commit. Nothing hardcodes the count — the progress line reads it. */
   // a licence you can change already pays for itself, so change-plan never asks
   // for billing data — only a first purchase can land on the billing step
@@ -377,7 +377,7 @@ var NL = (function(){
   function firstStep(){ return noPicker() ? 2 : 1; }
   function stepLabels(){
     var tail = needsBilling()
-      ? ['Customize', 'Review', 'Billing & payment']
+      ? ['Customize', 'Review', 'Payment & Billing']
       : ['Customize', 'Review & pay'];
     /* ⚠️ Change plan says "Choose a plan", not "Choose your product and plan": on an
        existing licence the product is settled and is already named in the header
@@ -792,7 +792,7 @@ var NL = (function(){
     var cta = isLastStep() ? confirmLabel() : 'Continue to billing';
     var payline = billingSaved()
       ? (isPerp() ? 'Charged once to' : 'Charged to') + ' Visa ••4242'
-        + (isPerp() ? '' : ' · auto-pay') + ' · <button class="link" id="nlPayChange">Change → Billing &amp; payment</button>'
+        + (isPerp() ? '' : ' · auto-pay') + ' · <button class="link" id="nlPayChange">Change → Payment &amp; Billing</button>'
       : 'You’ll add billing and payment details on the next step.';
     $('#nlStep3').innerHTML =
       '<div class="fs-grid">'
@@ -840,6 +840,14 @@ var NL = (function(){
       +       (perpMod() ? '' :
                 '<div class="am-orow am-newmonthly"><div>' + (isPerp() ? 'One-time total' : (isMod() ? 'New monthly' : 'Monthly total'))
               +   '</div><div>' + money(total()) + perSuffix() + '</div></div>')
+      /* ⚠️ THIS CLOSES `.am-order`, and losing it is what broke the Review layout:
+         `.nl-terms` fell inside the order list, the remaining two closers went to
+         `.am-order` and `.nl-joined`, and `.fs-col` was left open — so `.fs-right`
+         (Due today, the pay line, the commit) nested INSIDE the left column and
+         rendered underneath it instead of beside it. Dropped when the perpetual
+         guards were added by rewriting this block by line range; a `</div>` on a
+         line of its own is exactly what a range rewrite loses. */
+      +     '</div>'
       +     '<div class="nl-terms">' + termsLine()
       +       '<span class="taxnote nl-taxline">' + TAX_NOTE + '</span></div>'
       +   '</div>'
@@ -1104,7 +1112,7 @@ var NL = (function(){
       step.classList.remove('haspin');
       if(!phone || step.hidden) return;
       /* Three steps, three different rules — so this is a switch, not a boolean.
-         ⚠️ Step 4 (Billing & payment) NEVER pins: this REVERSES the earlier
+         ⚠️ Step 4 (Payment & Billing) NEVER pins: this REVERSES the earlier
          instruction to pin it. Its content is a long form, and a bar carrying the
          total plus `Subscribe` over a keyboard-driven form competes with the field
          being typed in.
@@ -1219,8 +1227,9 @@ var NL = (function(){
                             apply:pendingApply() });
       st.dirty = false;
       scr.hidden = true;
-      Store.set('justChanged', { id:lic.id,
-        text:'Scheduled for ' + fmtDate(effectiveDate()) + ' · ' + changeSummary() });
+      /* the RESULT goes to the snackbar; the scheduled change itself is state and is
+         stated in the Plan block's own banner (renderScheduled) */
+      Snack.show('Change scheduled for ' + fmtDate(effectiveDate()));
       if(window.LicenseDetails && LicenseDetails.isOpen()){ LicenseDetails.reopen(lic); return; }
       openLicenseDetails(lic, null, { refreshHost:true });
       return;
@@ -1275,10 +1284,18 @@ var NL = (function(){
     if(charged > 0) storeAddInvoice(lic, money(charged), { payment:'Card', auto:false });
     st.dirty = false;
     scr.hidden = true;
-    /* no success modal in either mode: the licence page is the destination. Add-ons
-       leaves a one-time banner there saying what changed, next to the updated
-       entitlements it produced (see syncChangedBanner in license-details.js). */
-    if(summary) Store.set('justChanged', { id:lic.id, text:summary });
+    /* ⚠️ No success modal and NO PANEL BANNER either: what just happened is an action
+       result, so it goes to the snackbar. It used to write `justChanged` and render a
+       bar inside the licence panel, which meant one action could put a message there
+       AND leave the state banner below the header — two messages, two places, one
+       event. The panel keeps state; results leave on their own. */
+    /* ⚠️ The two modes need different sentences. Add-ons changed quantities, so it
+       names them; change-plan moved the licence between plans, and `changeSummary()`
+       there falls back to its own "License updated." — prefixing that produced
+       "License updated. License updated." Measured, not theorised. */
+    Snack.show(isAddons()
+      ? ('License updated. ' + (summary || changeSummary()))
+      : ('Plan changed from ' + st.oldName + ' to ' + (NAME[t] || st.plan)));
     // the details may already be open underneath (Change plan from inside them) —
     // restate them in place; otherwise open them the one way there is
     if(window.LicenseDetails && LicenseDetails.isOpen()){ LicenseDetails.reopen(lic); return; }

@@ -22,13 +22,21 @@ var DETAILS_HTML = ''
 + '    <!-- content -->'
 + '    <div class="content">'
 + '      <div class="sheet">'
-+ '        <!-- one-time banner after Manage add-ons: states what changed, right'
-+ '             above the entitlements the change produced -->'
-+ '        <div class="gbanner licnew" id="licChgBanner" role="status" hidden>'
++ '        <!-- ⚠️ The "License updated …" banner USED TO BE HERE and is now a'
++ '             SNACKBAR. It is the result of something the person just did, not a'
++ '             fact about the licence — and while it lived in the panel it could'
++ '             appear at the same time as the state banner below the header, so one'
++ '             action produced two messages in two places. See the three-way rule in'
++ '             the styleguide: results → snackbar, state → the slot below the header,'
++ '             scheduled changes → the Plan block. -->'
++ '        <!-- License created is the one banner that lives up here: it is shown once'
++ '             per licence, above the title, so a new licence WITH a problem can show'
++ '             it and the state banner without the two colliding. -->'
++ '        <div class="gbanner licnew" id="licNewBanner" role="status" hidden>'
 + '          <svg class="icon gb-ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.4l2.4 2.4 4.6-5"/></svg>'
-+ '          <span class="gb-txt" id="licChgTxt"></span>'
++ '          <span class="gb-txt">License created &mdash; your license key is ready.</span>'
 + '          <span class="sp"></span>'
-+ '          <button class="gb-x" id="licChgDismiss" aria-label="Dismiss">\u2715</button>'
++ '          <button class="gb-x" id="licNewDismiss" aria-label="Dismiss">\u2715</button>'
 + '        </div>'
 + '        <div class="canvas">'
 + ''
@@ -118,14 +126,11 @@ var DETAILS_HTML = ''
 + '                    <svg class="icon" viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4"/><path d="M9 12h6M9 16h6"/></svg>'
 + '                  </a>'
 + '                </div>'
-+ '                <!-- one-time note after a purchase. It belongs under the key it is'
-+ '                     about, and quiet: an ink-filled banner over the key would shout'
-+ '                     louder than the thing it points at. -->'
-+ '                <div class="keynote" id="licNewBanner" role="status" hidden>'
-+ '                  <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.4l2.4 2.4 4.6-5"/></svg>'
-+ '                  <span>License created &mdash; your license key is ready.</span>'
-+ '                  <button class="kn-x" id="licNewDismiss" aria-label="Dismiss">\u2715</button>'
-+ '                </div>'
++ '                <!-- ⚠️ The "License created" note that used to sit here has moved'
++ '                     ABOVE the licence title (see #licNewBanner at the top of the'
++ '                     panel). Under the key it was the second message a freshly'
++ '                     purchased licence could show at once, and it read as a property'
++ '                     of the key rather than of the licence. -->'
 + '              </div>'
 + '              <div class="keycol right" data-page="sub">'
 + '                <h3 class="periodhead">Subscription period</h3>'
@@ -139,15 +144,16 @@ var DETAILS_HTML = ''
 + '              <!-- the license itself never expires; what is dated here is the'
 + '                   software-updates term -->'
 + '              <div class="keycol right" data-page="perp">'
-+ '                <h3 class="periodhead">Software updates</h3>'
++ '                <h3 class="periodhead">Software updates<span id="updatesInfo"></span></h3>'
 + '                <div class="period" id="periodPerp">1 year &middot; until Aug 13 2027</div>'
 + '                <h3 class="rowlabel mob-only" id="periodLabelPerp"></h3>'
 + '                <div class="rowvalue mob-only" id="periodValuePerp"></div>'
-+ '                <!-- ⚠️ What the date MEANS, next to the date. PERPETUAL + Active +'
-+ '                     "Expires ..." read as a contradiction, and nothing said what is'
-+ '                     lost on that day. Filled from UPDATES_LAPSE so the owner reads the'
-+ '                     same sentence the buyer was shown. -->'
-+ '                <p class="updnote" id="updatesNote"></p>'
++ '                <!-- ⚠️ What the date MEANS now rides in an INFO ICON beside the'
++ '                     "Software updates" heading (#updatesInfo), not as three lines of'
++ '                     prose under the date. PERPETUAL + Active + "Expires ..." still'
++ '                     reads as a contradiction without it, so the explanation stays —'
++ '                     but it is a thing you read ONCE, and it was pushing the licence'
++ '                     header a third taller on every visit after that. -->'
 + '              </div>'
 + '            </div>'
 + ''
@@ -237,7 +243,7 @@ var DETAILS_HTML = ''
 + '                    </div>'
 + '                    <span class="sp"></span>'
 + '                    <!-- the same three parts, same classes, as Payment method on'
-+ '                         Billing & payment: one source (paymentMethodHTML in'
++ '                         Payment & Billing: one source (paymentMethodHTML in'
 + '                         components.js, loaded before this file). No border of its'
 + '                         own — a framed card inside this one would read as a card'
 + '                         on a card. -->'
@@ -245,7 +251,7 @@ var DETAILS_HTML = ''
 + '                    <!-- the payment method is account-level, so the edit action routes'
 + '                         to Billing rather than pretending to be an inline edit. Same'
 + '                         pencil, same icon-button, as Payment method there. -->'
-+ '                    <a class="iconbtn ib tip" id="ncEditPay" href="billing.html" aria-label="Billing and payment" data-tip="Billing &amp; payment">'
++ '                    <a class="iconbtn ib tip" id="ncEditPay" href="billing.html" aria-label="Payment and Billing" data-tip="Payment &amp; Billing">'
 + '                      <svg class="icon" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>'
 + '                    </a>'
 + '                  </div>'
@@ -581,10 +587,25 @@ function renderLicenseAlert(lic){
      portal blocks. If it turns out only the extra instance is refused, this sentence
      is the only thing that changes — the count, the action and the attention routing
      stay as they are. */
+  /* ⚠️ ONE SLOT, ONE BANNER — and when two conditions are true the second is NAMED in
+     the first rather than stacked under it. Two banners is two problems competing for
+     the same glance and pushing the licence itself off screen; a clause is enough to
+     say "and there is also this", and the reader can act on the blocking one first.
+     Order of seriousness: blocked → payment failed → updates expiring → cancelled →
+     awaiting check-in. */
+  function alsoClause(skip){
+    var also = [];
+    if(skip !== 'payment_failed' && lic.status === 'payment_failed') also.push('a failed payment');
+    if(skip !== 'updates_expiring' && lic.status === 'updates_expiring')
+      also.push('software updates expiring ' + fmtDate(lic.event));
+    if(skip !== 'canceled' && lic.status === 'canceled') also.push('a pending cancellation');
+    return also.length ? ' This license also has ' + also.join(' and ') + '.' : '';
+  }
   if(instOverLimit(lic)){
     t.innerHTML = '<span class="amsg"><b>Over the production instance limit.</b> '
       + instRunning(lic) + ' running, ' + instAllowed(lic) + ' allowed on this plan \u2014 '
-      + 'this license is blocked until the count is back within its limit.</span>'
+      + 'this license is blocked until the count is back within its limit.'
+      + alsoClause('over_limit') + '</span>'
       /* ⚠️ NOT a third "Manage" on one screen. The header already carries the licence's
          `Manage`; this one is about the instance count specifically, so it says so.
          Same wizard, named for what it is being opened to change. */
@@ -675,9 +696,10 @@ document.addEventListener('click', function(e){
     if(LicenseDetails.isOpen()) LicenseDetails.reopen(lic);
     else LicenseDetails.afterChange();
   }
-  openModal('Scheduled change canceled',
-    '<p>The change due on <b>' + fmtDate(was.effective) + '</b> will not happen. '
-    + 'This license keeps its current plan and capacity.</p>');
+  /* ⚠️ Was a MODAL. Interrupting with a dialog to confirm that something was undone
+     makes the person dismiss a second thing to get back to where they were; it is an
+     action result like any other. */
+  Snack.show('Scheduled change canceled \u2014 this license keeps its current plan');
 });
 
 function renderLicenseActions(lic){
@@ -748,8 +770,16 @@ function renderKicker(lic, pk){
    in with the new key. Every non-grant licence restores the same nodes. */
 function renderGrantChrome(lic){
   var isGrant = !!(lic && lic.grant);
+  /* ⚠️ `textContent` here WIPED the heading's info-icon slot — it rewrites the whole
+     node, span included, and this runs after the markup is mounted. The word is set on
+     its own text node instead, and `#updatesInfo` (which renderLicenseDetails fills)
+     is left alone. A grant has no updates term, so it gets the word and no icon. */
   var ph = $('#appView .keycol[data-page="perp"] .periodhead');
-  if(ph) ph.textContent = isGrant ? 'Expiry' : 'Software updates';
+  if(ph){
+    var slot = $('#updatesInfo', ph);
+    ph.textContent = isGrant ? 'Expiry' : 'Software updates';
+    if(slot) ph.appendChild(slot);
+  }
   var coupon = $('#couponBtn'); if(coupon) coupon.hidden = isGrant;
   // the data-page pass above already restored these for a perpetual licence,
   // so a grant only has to take them back out
@@ -784,10 +814,10 @@ function renderLicenseDetails(lic){
     // `.period` is --ink for every other licence; the grant matches it
     if(pp && lic.grant) pp.textContent = 'No expiry';
     else if(pp) pp.textContent = (lic.status==='updates_expiring' ? 'Expires ' : 'Until ') + fmtDate(lic.event);
-    /* the sentence that stops the date reading as "the licence expires". A grant has
-       no updates term at all, so it gets no note rather than an irrelevant one. */
-    var un = $('#updatesNote');
-    if(un){ un.textContent = UPDATES_LAPSE; un.hidden = !!lic.grant; }
+    /* the explanation that stops the date reading as "the licence expires". A grant has
+       no updates term at all, so it gets no icon rather than an irrelevant one. */
+    var ui = $('#updatesInfo');
+    if(ui) ui.innerHTML = lic.grant ? '' : infoIcon('Software updates', UPDATES_LAPSE);
   } else {
     var ps = $('#periodSub');
     if(ps) ps.textContent = (lic.status==='canceled' ? 'Active until ' : 'Renews ') + fmtDate(lic.event);
@@ -939,6 +969,7 @@ function openInstanceLabelModal(instId){
     }
     renderInstances(lic);
     closeModal();
+    Snack.show(i.label ? 'Instance label saved' : 'Instance label cleared');
   });
   inp.addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); save.click(); } });
   inp.focus(); inp.select();
@@ -1101,7 +1132,15 @@ function wireDetailsOnce(){
     input.addEventListener('input', refresh);
     $('#couponClose').addEventListener('click', close);
     $('#couponCancel').addEventListener('click', close);
-    apply.addEventListener('click', function(){ if(!apply.disabled) close(); });   // stub: no real redemption
+    /* ⚠️ Applying a coupon used to close the dialog and say NOTHING — the redemption is
+       a stub, but silence made it read as a failure. The result is an action result,
+       so it is a snackbar like every other one. */
+    apply.addEventListener('click', function(){
+      if(apply.disabled) return;
+      var code = input.value.trim();
+      close();
+      Snack.show('Coupon ' + code + ' applied');
+    });
     ov.addEventListener('click', function(e){ if(e.target===ov) close(); });
     document.addEventListener('keydown', function(e){ if(e.key==='Escape' && !ov.hidden) close(); });
   })();
@@ -1176,6 +1215,7 @@ function wireDetailsOnce(){
      the surface it was opened over has to restate rather than keep showing the banner
      for a problem that is now solved */
   if(window.PayCard) PayCard.onSaved(function(){
+    Snack.show('Payment method updated');
     if(!activeLicense) return;
     var fresh = licById(activeLicense.id);
     if(fresh) LicenseDetails.reopen ? LicenseDetails.reopen(fresh) : renderLicense(fresh);
@@ -1271,7 +1311,6 @@ var LicenseDetails = (function(){
     resetSurface();
     if(!wired){ wireDetailsOnce(); wired = true; }
     syncNewBanner(lic);
-    syncChangedBanner(lic);
   }
   /* ---------- the overflow stays WITH the other actions ----------
      ⚠️ `placeOverflow()` is GONE. It relocated the ⋮ on a phone — into the app bar's
@@ -1284,35 +1323,30 @@ var LicenseDetails = (function(){
      primary — at every width and in both hosts. The menu itself is still a bottom
      sheet on a phone; that is keyed off `#headKebabPop` in CSS, not off where the
      button sits, so it survived the removal unchanged. */
-  /* The wizard sets Store.justCreated to the new licence id and lands here, so
-     the page states it once: the licence exists, its key is on this page, and
-     where the installation instructions are. Dismissing clears the flag. */
+  /* ⚠️ ONCE PER LICENCE, and the "once" is recorded the moment it is SHOWN, not when
+     it is dismissed. It used to key off `Store.justCreated` alone and clear on dismiss,
+     so closing the panel and reopening it brought the banner back, and so did a
+     reload — a one-time message that was not one-time. `createdSeen` is a map of
+     licence ids in the store, so the record survives a refresh.
+     Dismissing only hides it; the seen mark is already written. */
   function syncNewBanner(lic){
     var b = $('#licNewBanner'); if(!b) return;
     var justId = Store.get('justCreated');
-    b.hidden = !(lic && justId && lic.id === justId);
-    if(b.hidden) return;
+    var seen = Store.get('createdSeen') || {};
+    var show = !!(lic && justId && lic.id === justId && !seen[lic.id]);
+    b.hidden = !show;
+    if(!show) return;
+    seen[lic.id] = true;
+    Store.set('createdSeen', seen);
     var x = $('#licNewDismiss');
     if(x && !x.getAttribute('data-wired')){
       x.setAttribute('data-wired', '1');
-      x.addEventListener('click', function(){ Store.set('justCreated', null); b.hidden = true; });
+      x.addEventListener('click', function(){ b.hidden = true; });
     }
   }
-  /* Manage add-ons commits and lands here (no success modal, same as a purchase),
-     so the page states the change once. Store.justChanged carries {id,text}; the
-     ✕ clears it for good. */
-  function syncChangedBanner(lic){
-    var b = $('#licChgBanner'); if(!b) return;
-    var c = Store.get('justChanged');
-    b.hidden = !(lic && c && c.id === lic.id && c.text);
-    if(b.hidden) return;
-    $('#licChgTxt').textContent = 'License updated. ' + c.text;
-    var x = $('#licChgDismiss');
-    if(x && !x.getAttribute('data-wired')){
-      x.setAttribute('data-wired', '1');
-      x.addEventListener('click', function(){ Store.set('justChanged', null); b.hidden = true; });
-    }
-  }
+  /* ⚠️ `syncChangedBanner` is GONE. A completed change is an action RESULT, so it goes
+     to the snackbar (see commitChange in wizard.js) — it neither renders in the panel
+     nor competes with the state slot for the space below the header. */
   function nestedOpen(){
     return NESTED.some(function(sel){ var el = $(sel); return el && !el.hidden; });
   }

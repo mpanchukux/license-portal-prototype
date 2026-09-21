@@ -1,6 +1,6 @@
 /* ============================================================================
    page-account.js — Account (the PERSON). ⚠️ No longer "profile + company": the
-   company card moved to Billing & payment, which owns what those fields do. What is
+   company card moved to Payment & Billing, which owns what those fields do. What is
    left here is personal — name, email, language. Two things beyond the form:
    the sticky page-level Save with its leave-guard, and the verify-then-switch
    email change, whose pending state is kept in the store so the dev action in

@@ -240,6 +240,9 @@ function storeCancelLicense(id){
     logActivity({ kind:'canceled', entityType:'Subscription', entityName:l.name, action:'CANCELED',
       txt:'Subscription <b>' + esc(l.name) + '</b>' + (l.label ? ' (' + esc(l.label) + ')' : '')
         + ' was canceled by ' + portalActor() + ' — active until <b>' + fmtDate(l.event) + '</b>.' });
+    /* the RESULT leaves on its own; the licence's own "Canceled · active until …" is
+       state and belongs to the slot below the panel header */
+    Snack.show('Subscription canceled \u2014 active until ' + fmtDate(l.event));
   }
   return l;
 }
@@ -358,6 +361,8 @@ function setLicenseLabel(lic, val){
         : ('Label was cleared on <b>' + esc(lic.name) + '</b> by ' + portalActor() + '.') });
   }
   repaintLabelSurfaces();
+  /* an action result, so it leaves on its own rather than sitting in the panel */
+  if(lic.label !== was) Snack.show(lic.label ? 'Label saved' : 'Label cleared');
 }
 function repaintLabelSurfaces(){
   if(typeof renderProducts === 'function' && $('#prodBody')) renderProducts();
@@ -416,7 +421,7 @@ function guardSession(){
    surface and the settings panel) need the same pairing, so it is one function.
    ⚠️ `new` also clears billing data. An account created a second ago cannot have a
    card on file, and the wizard reads exactly that flag to decide whether it has a
-   Billing & payment step — leaving it "saved" would let a brand-new account check
+   Payment & Billing step — leaving it "saved" would let a brand-new account check
    out against a payment method it never entered. The gear panel can still flip it
    back; this only sets the honest starting point. */
 function setSession(next, opts){
@@ -574,7 +579,7 @@ function chromeHTML(){
   +     '</button>'
   +     '<div class="dprofmenu" id="dashProfMenu" role="menu" hidden>'
   +       '<a role="menuitem" href="account.html">Account</a>'
-  +       '<a role="menuitem" href="billing.html">Billing &amp; payment</a>'
+  +       '<a role="menuitem" href="billing.html">Payment &amp; Billing</a>'
   /* Support, in the one menu that is on every page. ⚠️ Above the separator, with the
      other account-level things: it is not a destructive action and not a way out. */
   +       '<a role="menuitem" href="' + EXT.support + '" target="_blank" rel="noopener">Help &amp; support' + EXTSVG + '</a>'
@@ -677,7 +682,7 @@ function settingsBodyHTML(){
 
   /* ---- the wizard's own options. `Billing data` decides whether the flow has a
      billing step at all, so it belongs to the wizard — and it also drives the
-     Billing & payment page, which is why it appears in both contexts. */
+     Payment & Billing page, which is why it appears in both contexts. */
   if(c.wizard){
     out += group('Customize step',
       '<label class="sp-opt"><input type="radio" name="custVariant" value="a"' + (custVariant() === 'a' ? ' checked' : '') + '><span>A — Plan card</span></label>'
@@ -1115,7 +1120,7 @@ function custVariant(){ return Store.get('custVariant') === 'a' ? 'a' : 'b'; }
    panel for comparison. Only an explicit 'page' choice opts out. */
 function licDetailsMode(){ return Store.get('licDetails') === 'page' ? 'page' : 'modal'; }
 // Whether the account already has billing data. With it the wizard commits on
-// Review & pay (3 steps); without it a Billing & payment step is appended and the
+// Review & pay (3 steps); without it a Payment & Billing step is appended and the
 // commit moves there (4 steps). Nothing hardcodes the count — see totalSteps().
 /* ---------- copying, and saying what was copied --------------------------------
    ⚠️ Every copy action used to confirm with the word "Copied" and nothing else. On a
@@ -1424,6 +1429,21 @@ var Snack = (function(){
     if(timer){ clearTimeout(timer); timer = null; }
     if(host){ host.classList.remove('on'); host.hidden = true; }
   }
+  /* ⚠️ Below 600px the snackbar anchors to the TOP — and the top of a licence panel is
+     where the STATE banner lives (payment failed, over the instance limit). Measured at
+     390: the snack landed exactly on `#subAlert`, hiding the problem for 4.2s to report
+     something unrelated. A result must never cover the state it is not about.
+     Measured at show time rather than expressed in CSS: the banner is per-surface and
+     conditional, so no static offset can know whether it is there. Desktop is left
+     alone — it anchors to the bottom, where no banner ever sits. */
+  function clearOf(h){
+    h.style.top = '';
+    if(!window.matchMedia || !window.matchMedia('(max-width:600px)').matches) return;
+    var band = $('#subAlert');
+    if(!band || band.hidden) return;
+    var r = band.getBoundingClientRect();
+    if(r.height) h.style.top = Math.round(r.bottom + 12) + 'px';
+  }
   /* `ms` is generous by default: long enough to read a sentence twice, short enough
      that it is gone before it becomes furniture. */
   function show(text, ms){
@@ -1433,6 +1453,7 @@ var Snack = (function(){
     $('.snack-t', h).textContent = text;
     $('.snack-x', h).addEventListener('click', hide);
     h.hidden = false;
+    clearOf(h);
     // next frame, so the transition has a state to move from
     requestAnimationFrame(function(){ h.classList.add('on'); });
     if(timer) clearTimeout(timer);
