@@ -53,6 +53,11 @@ function stateText(p){
   if(p.grant)  return 'No expiry';
   if(!p.event) return '<span class="muted">—</span>';
   var d = fmtDate(p.event);
+  /* ⚠️ A PAST DATE NEEDS ITS OWN WORDS. "Updates until Sep 10, 2026" on a date that has
+     already gone reads as a fact about the future and has to be re-read against today
+     before it means anything. Four words say it instead, next to the alert icon that
+     marks it — and the full explanation stays on the licence page, as specified. */
+  if(hasUpdatesTerm(p) && daysUntil(p.event) < 0) return 'Updates period over';
   return p.status === 'canceled' ? ('Active until ' + d)
        : p.type === 'Perpetual'  ? ('Updates until ' + d)
        : ('Renews ' + d);
@@ -102,9 +107,56 @@ function stateMobile(p){
    On the phone the chip goes too — the card's left stripe carries the status — and
    only the date line survives, in its icon form. */
 function statusCell(p){
-  return '<td><div class="licstat">' + statusChip(p)
+  return '<td><div class="licstat">' + statusChip(p) + alertIcon(p)
     + '<div class="licstat-txt">' + stateText(p) + '</div>'
     + '<div class="licstat-mob mob-only">' + stateMobile(p) + '</div></div></td>';
+}
+/* ---------- the ALERT icon, and why it is not the info icon ---------------------
+   ⚠️ TWO ICONS, TWO MEANINGS, AND THE DIFFERENCE IS THE POINT. `infoIcon` (ⓘ) explains
+   something NEUTRAL — what a production instance is, what an AI credit buys — and the
+   reader loses nothing by never opening it. This one says something is WRONG, and it
+   is the only thing in the row that does. If they looked the same, a row would answer
+   "is anything the matter here?" with a glyph that means either.
+   Both are in the styleguide with the distinction stated, so a third does not get
+   invented the next time something needs marking.
+
+   ⚠️ IT IS NOT IN AN ERROR COLOUR, and that is a deliberate departure from the brief —
+   see the report. This prototype is monochrome by hard rule: state is carried by
+   weight, fill and shape, never by hue, and one red glyph would be the only colour in
+   the product. The filled ink triangle is the strongest mark the system has, and it is
+   the same one the attention chips already use. Adding `--error` is a one-token change
+   if the rule is being revisited.
+
+   ⚠️ The label is SHORT, by instruction: the full sentence is on the licence page. */
+var ALERTSVG = '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">'
+  + '<path d="M12 3.2l9.2 16.3H2.8z"/><path class="al-bang" d="M12 9.4v4.4"/>'
+  + '<circle class="al-bang" cx="12" cy="16.7" r="1"/></svg>';
+function alertIcon(p){
+  if(!(p && typeof p === 'object')) return '';
+  if(!(hasUpdatesTerm(p) && daysUntil(p.event) < 0)) return '';
+  /* `.tip` gives it hover on a pointer device AND the delegated tap below 600px — the
+     same contract the info icon runs on, because touch has no hover. */
+  return '<button type="button" class="alertic tip wide" data-tip="Software updates ended '
+    + fmtDate(p.event) + '. No security fixes or version upgrades."'
+    + ' aria-label="Software updates expired">' + ALERTSVG + '</button>';
+}
+/* The running version against the latest released — the comparison IS the argument,
+   which is why the two sit in one cell and not in two columns.
+   ⚠️ A licence with no instances has no running version: nothing has reported one, and
+   printing the latest release there would claim the customer is current when in fact
+   they have never started. */
+function versionCell(p){
+  var v = licenseVersion(p);
+  if(v == null) return '<td class="lic-ver"><span class="muted">&mdash;</span></td>';
+  var behind = cmpVersion(v, LATEST_VERSION) < 0;
+  return '<td class="lic-ver"><div class="verline' + (behind ? ' is-behind' : '') + '">'
+    + '<span class="ver-run">' + esc(v) + '</span>'
+    + (behind ? '<span class="ver-latest">latest ' + esc(LATEST_VERSION) + '</span>' : '')
+    + '</div>'
+    /* only when the instances disagree: the licence-level number is the LOWEST of
+       them, so without this the reader cannot tell one laggard from a whole estate */
+    + (versionMixed(p) ? '<div class="ver-mixed">across ' + instRunning(p) + ' instances</div>' : '')
+    + '</td>';
 }
 function nextCharge(ds){
   var subs = ds.licenses.filter(function(l){ return l.type==='Subscription' && l.status==='active'; });
@@ -263,6 +315,9 @@ function rowOpen(p){
    column, which is what lets the Status column carry only Active / Canceled. */
 function headHtml(){
   return '<tr><th class="lic-prodhead">Product</th><th>License</th><th>Status</th>'
+    /* next to Status on purpose: "am I current" and "is anything wrong" are read
+       together, and the version gap is what argues for renewing */
+    + '<th>Product version</th>'
     + '<th>Updated</th>'
     + '<th aria-label="Actions"></th></tr>';
 }
@@ -317,16 +372,16 @@ function rowHtml(p, opts){
      Product column, and the limits are the entitlement table on the details page —
      no other row explains its allowances in the list, so this one should not
      either. `p.limits` is still used by the details surface. */
-  /* ⚠️ THE `Scheduled` PILL IS GONE from beside the licence name. It was a third badge
-     competing with the status chip and the plan name for the same glance, and it said
-     the least of the three — "something changes, at some point", with the date only in
-     a `title` nobody hovers. The change itself is stated in full, with its date and its
-     Cancel action, in the banner at the top of the Plan block on the details surface
-     (see renderScheduled) — which is where everything it describes actually lives. */
+  /* ⚠️ THE `Scheduled` PILL IS GONE from beside the licence name — and now so is the
+     thing it pointed at. It was a third badge competing with the status chip and the
+     plan name for the same glance, and it said the least of the three: "something
+     changes, at some point". The banner it deferred to has since gone too, because
+     downgrades take effect immediately and there is no pending change to announce
+     anywhere (see the note in shared.js where scheduleChange used to be). */
   var lic = '<td><div class="lp-name">' + p.name + '</div></td>';
   // when the licence last changed — plan, add-ons, label or payment state
   var updatedCell = '<td class="lic-num">' + fmtDate(p.updated || p.created) + '</td>';
-  return rowOpen(p) + productCell(p) + lic + statusCell(p) + updatedCell + actionsCell(p, opts) + '</tr>';
+  return rowOpen(p) + productCell(p) + lic + statusCell(p) + versionCell(p) + updatedCell + actionsCell(p, opts) + '</tr>';
 }
 
 /* ---------- navigation ---------- */
@@ -915,38 +970,89 @@ function guardLinks(){
    says what the two products are instead of assuming you know.
    Glyphs stay monochrome: a hub and spokes for the platform, a broadcast arc
    for the broker. */
+/* `d` describes the product in a row next to the other one — it has to say what KIND of
+   thing it is ("IoT platform"). `short` is for a page that has already named the product
+   in its own heading, where repeating the category is the third level of text saying the
+   same thing. See landingLead(). */
 var PRODUCT_CHOICES = [
-  { v:'thingsboard', t:'ThingsBoard', d:'IoT platform — devices, dashboards, rule engine',
+  { v:'thingsboard', t:'ThingsBoard', short:'devices, dashboards, rule engine',
+    d:'IoT platform — devices, dashboards, rule engine',
     g:'<circle cx="12" cy="12" r="3"/><circle cx="12" cy="4" r="1.5"/><circle cx="12" cy="20" r="1.5"/>'
       + '<circle cx="4" cy="12" r="1.5"/><circle cx="20" cy="12" r="1.5"/>'
       + '<path d="M12 9V5.5M12 15v3.5M9 12H5.5M15 12h3.5"/>' },
-  { v:'tbmq', t:'TBMQ', d:'MQTT broker for reliable message streaming',
+  { v:'tbmq', t:'TBMQ', short:'MQTT broker for reliable message streaming',
+    d:'MQTT broker for reliable message streaming',
     g:'<circle cx="7" cy="17" r="1.6"/><path d="M7 11.5A5.5 5.5 0 0 1 12.5 17"/>'
       + '<path d="M7 6A11 11 0 0 1 18 17"/>' }
 ];
-function nlProductCardsHTML(sel){
-  var active = sel.product, locked = !!sel.locked;
-  return '<div class="nl-prodrow">'
-    + '<div class="nl-prodcards" role="radiogroup" aria-label="Product">'
-    + PRODUCT_CHOICES.map(function(o){
-        var on = o.v === active;
-        /* a real button, not a div with role=button: it is one of two mutually
-           exclusive choices — see the radio note below for the contract. */
-        /* ⚠️ `role="radio"` + `aria-checked`, not `aria-pressed`. It is exactly-one-of-N,
-           and aria-pressed describes an independent toggle — the wrong contract for
-           a group where choosing one unchooses the other. The leading indicator is
-           drawn (`.nl-prodradio`), so what a sighted user sees and what a screen
-           reader is told finally say the same thing. */
-        return '<button type="button" role="radio" class="dblock nl-prodcard nl-select' + (on ? ' on' : '') + '"'
-          + ' data-nl-product="' + o.v + '" aria-checked="' + on + '"' + (locked ? ' disabled' : '') + '>'
-          + '<span class="nl-prodradio" aria-hidden="true"></span>'
-          + '<span class="nl-prodic"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true">' + o.g + '</svg></span>'
-          + '<span class="nl-prodtxt"><span class="nl-prodname">' + o.t + '</span>'
-          + '<span class="nl-proddesc">' + o.d + '</span></span></button>';
-      }).join('')
-    + '</div></div>';
-}
+/* ---------- the product is STATED, not chosen ---------------------------------
+   ⚠️ THIS REPLACES THE TWO-CARD SELECTOR, and the reason is about where the reader
+   came from, not about space. Someone arriving at the portal has already decided
+   which product they want — they came from that product's own pages — so a pair of
+   equal cards asks a question that was answered before the page loaded, and makes
+   the one they want look like a maybe.
 
+   So: one line stating the product, and a quiet link offering the other. Choosing the
+   link SWAPS the flow, and the line and the link swap with it — the other product is
+   never unreachable, it just stops competing for the first decision on the screen.
+
+   ⚠️ The link keeps `data-nl-product`, which is the SAME attribute the cards carried,
+   so `planPickerClick` needed no change: one reading of "the product changed" still
+   serves all three hosts.
+
+   Which product is stated comes from `arrivedProduct()` — the ⚙ panel's setting. In a
+   real portal it would come from the referrer or a campaign link; the prototype cannot
+   know that, and there is no URL parameter here to read (checked: only `invite`, `id`
+   and `tier` exist), so the setting stands in for arrival rather than inventing one. */
+/* ---------- the landing head: TWO levels of text, not four -----------------------
+   ⚠️ IT WAS FOUR, and every one of them was true, which is what made it hard to see:
+   a heading, a page description, the product name, and the product's own description —
+   all before anything could be chosen. The heading already names the product (arrival
+   decided it), so the separate product row was saying it a second time, and the
+   description was asking the reader to choose a product that was not in question and
+   naming a second product they had not come for.
+   Two levels now: the heading says what the page is for and which product, the line
+   under it says what that product is and what is needed to buy. The swap link survives
+   as the only route to the other product. */
+function productOf(sel){
+  var v = (sel && sel.product) || arrivedProduct();
+  return PRODUCT_CHOICES.filter(function(o){ return o.v === v; })[0] || PRODUCT_CHOICES[0];
+}
+function landingHeading(sel){ return 'Buy and manage ' + productOf(sel).t + ' licenses'; }
+function landingLead(sel){
+  var p = productOf(sel);
+  return 'Self-managed ' + p.t + ' \u2014 ' + p.short
+    + '. You\u2019ll need an account to buy a plan.';
+}
+/* Just the escape hatch, for a surface that has stated the product in its own heading.
+   ⚠️ Same builder as the full row below, so the two cannot word it differently. */
+function productSwapHTML(sel){
+  var cur = productOf(sel);
+  var other = PRODUCT_CHOICES.filter(function(o){ return o.v !== cur.v; })[0];
+  return other
+    ? '<button type="button" class="link nl-prodswap" data-nl-product="' + other.v + '">'
+      + 'Need ' + other.t + ' instead?</button>'
+    : '';
+}
+function nlProductStatedHTML(sel){
+  /* ⚠️ `statedInHead` — the surface has already named the product in its own H1 (the
+     landing page does), so the row would be a second statement of it. The link still
+     has to exist, and it lives with the heading there. */
+  if(sel && sel.statedInHead) return '';
+  var cur = productOf(sel);
+  var other = PRODUCT_CHOICES.filter(function(o){ return o.v !== cur.v; })[0];
+  return '<div class="nl-prodrow">'
+    + '<div class="nl-stated">'
+    +   '<span class="nl-prodic"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true">' + cur.g + '</svg></span>'
+    +   '<span class="nl-prodtxt"><span class="nl-prodname">' + cur.t + '</span>'
+    +   '<span class="nl-proddesc">' + cur.d + '</span></span>'
+    + '</div>'
+    /* a text link, deliberately not a button that looks like an option: it is an
+       escape hatch for the minority who arrived on the wrong product */
+    + (other ? '<button type="button" class="link nl-prodswap" data-nl-product="' + other.v + '">'
+        + 'Need ' + other.t + ' instead?</button>' : '')
+    + '</div>';
+}
 /* LEVEL 2 — billing as TABS, left-aligned, standing where the heading used to.
    The heading ("Subscription plans" / "Perpetual licenses") is gone: it said the
    same thing the active tab says, and the switch + ⓘ pair made one decision look
@@ -1052,18 +1158,20 @@ function planPickerKey(sel){
    enumerates what a TBMQ PE licence includes — the cards name the set and stop — so
    the block says that plainly instead of writing broker features that nobody has
    approved. Do not fill this in from memory of the product. */
+/* ⚠️ TBMQ HAS NO BASELINE BLOCK AT ALL NOW. It used to render a marked GAP — a block
+   saying the TBMQ baseline had not been written — which was honest but put an admission
+   of missing copy on a selling page. The block is removed for TBMQ rather than filled
+   in: writing broker features nobody has approved is the one thing worse than the gap.
+   ThingsBoard keeps its block unchanged. When the TBMQ copy exists, this returns a
+   second branch and nothing else changes. */
 function baselineFor(sel){
   var product = sel.product || 'thingsboard';
-  if(product === 'thingsboard'){
-    return { title:'Included in every plan', intro:PLANS_INCLUDE_NOTE, items:PE_FEATURES };
-  }
-  return { title:'Included in every plan', gap:true,
-           intro:'The TBMQ baseline is not written yet — the plan cards name it '
-                + '(&ldquo;All TBMQ PE features&rdquo;) but nothing in this prototype lists it. '
-                + 'Copy needed before this block can say anything true.' };
+  if(product !== 'thingsboard') return null;
+  return { title:'Included in every plan', intro:PLANS_INCLUDE_NOTE, items:PE_FEATURES };
 }
 function baselineBlockHTML(sel){
   var b = baselineFor(sel);
+  if(!b) return '';
   return '<div class="nl-pe baseline' + (b.gap ? ' is-gap' : '') + '">'
     + '<div class="nl-pe-h">' + b.title + '</div>'
     + (b.intro ? '<p class="nl-pe-intro">' + b.intro + '</p>' : '')
@@ -1112,7 +1220,7 @@ function renderPlanPicker(choicesEl, gridEl, sel, extraEl, baseEl){
      case: it is not an option being refused, it is where you are now, which is what you
      compare the others against. See nlPlanCardHTML. */
   choicesEl.hidden = !!sel.locked;
-  choicesEl.innerHTML = sel.locked ? '' : (nlProductCardsHTML(sel) + nlBillTabsHTML(sel));
+  choicesEl.innerHTML = sel.locked ? '' : (nlProductStatedHTML(sel) + nlBillTabsHTML(sel));
   if(baseEl) baseEl.innerHTML = baselineBlockHTML(sel);
   var hasCur = !!sel.currentName && set.cards.some(function(c){ return c.name === sel.currentName; });
   gridEl.className = 'plangrid' + (set.single ? ' one' : '') + (hasCur ? ' withcur' : '');
@@ -1161,6 +1269,397 @@ function productCardHTML(card, selected){
     + '</div>';
 }
 
+/* ============================================================================
+   THE HOME BANNER — one slot, one banner, a stated priority order
+   ============================================================================
+   ⚠️ ONE SLOT AND ONLY THE HIGHEST-PRIORITY CONDITION RENDERS. An account with three
+   problems does not get three bands pushing its licences off the screen; it gets the
+   most serious one, and that banner SAYS how many other licences need attention and
+   links to them. The alternative — stack them — turns the top of Home into a queue
+   nobody reads and buries the list the page exists for.
+
+   ⚠️ DISMISSAL IS PER LICENCE AND PER STATE. The key is `<licence id>:<state>`, so
+   closing the 30-day notice on one licence can never silence a different licence, a
+   different problem, or a LATER STAGE of the same problem: `B11:updates30` and
+   `B11:updates14` are different keys, so the 14-day notice arrives as if nothing had
+   been dismissed. That is the whole reason the stage is in the key rather than in a
+   value beside it.
+
+   ⚠️ BLOCKING STATES CANNOT BE DISMISSED — and this is the right call, not a
+   simplification: blocked, payment failed and no-payment-method are all conditions
+   where something is already not working or is about to stop, and where the portal is
+   the only place the person will find out. A dismissible blocker is a blocker that
+   gets dismissed once and never seen again, and the next contact is a support ticket
+   asking why the deployment stopped. Time-based warnings are different — they repeat
+   on their own, so dismissing one costs nothing.
+
+   Priority order, and the whole inventory:
+     1 blocked over the instance limit    · no dismiss
+     2 payment failed                     · no dismiss
+     3 no payment method, paid licence    · no dismiss
+     4 card expires before the next charge· dismiss, returns at 14 days
+     5 software updates expired           · dismiss, returns after 7 days
+     6 software updates end in 14 days    · dismiss, returns at expiry
+     7 software updates end in 30 days    · dismiss, returns at 14 days
+     8 never activated by any instance    · dismiss, permanent
+     9 Community Grant approved           · dismiss, permanent
+   A CANCELLED licence that is still active until its end date gets NO banner: nothing
+   needs doing, and the state is already on the licence and in the list. */
+
+/* days until a date string, negative once it is past */
+function daysUntil(dateStr){
+  var d = dayOf(dateStr);
+  return d == null ? null : d - TODAY_DAY;
+}
+/* Does this licence carry a software-updates term at all? Perpetual licences do; a
+   subscription's date is its renewal, which is a different fact with a different
+   banner. A grant has neither. */
+function hasUpdatesTerm(lic){
+  return !!(lic && !lic.grant && lic.type === 'Perpetual' && lic.event);
+}
+/* ⚠️ Dismissal remembers the DAY, not a boolean, because two of the rules are "comes
+   back after N days". A stored `true` (the shape the grant banner has always written)
+   still counts as dismissed, so nothing that was already closed reappears. */
+function dismissBanner(key){ Store.get('dismissed')[key] = TODAY_DAY; Store.save(); }
+function bannerDismissed(key, returnAfterDays){
+  var v = Store.get('dismissed')[key];
+  if(v == null || v === false) return false;
+  if(returnAfterDays == null) return true;          // permanent, or until the next stage
+  if(v === true) return true;                       // legacy boolean: no day to count from
+  return (TODAY_DAY - v) < returnAfterDays;
+}
+/* The card on file, as a date we can compare. `paymentMethod.exp` is stored as four
+   digits (MMYY); the demo's fallback prints "12 / 2028" inside markup, which is why
+   this reads the STORED card only and treats the demo fallback as "no date known". */
+function cardExpiryDay(){
+  var c = savedCard();
+  if(!c || !c.exp || c.exp.length !== 4) return null;
+  var m = +c.exp.slice(0, 2), y = 2000 + (+c.exp.slice(2));
+  if(!(m >= 1 && m <= 12)) return null;
+  // the card dies at the END of its month: the first day of the next one
+  return epochDay(m === 12 ? y + 1 : y, m === 12 ? 1 : m + 1, 1);
+}
+/* Every condition that is currently true, in priority order, one entry per licence.
+   ⚠️ Derived on every render and never stored: a banner that is written down goes
+   stale the moment the thing it describes is fixed. */
+function attentionConditions(){
+  var out = [];
+  var licenses = DATA().licenses || [];
+  licenses.forEach(function(l){
+    if(l.status === 'canceled') return;             // nothing to do about it — see above
+    if(instOverLimit(l)) out.push({ p:1, state:'blocked', lic:l });
+    if(l.status === 'payment_failed') out.push({ p:2, state:'payment_failed', lic:l });
+    if(hasUpdatesTerm(l)){
+      var d = daysUntil(l.event);
+      if(d != null && d < 0) out.push({ p:5, state:'updates_expired', lic:l, days:d });
+      else if(d != null && d <= 14) out.push({ p:6, state:'updates_14', lic:l, days:d });
+      else if(d != null && d <= 30) out.push({ p:7, state:'updates_30', lic:l, days:d });
+    }
+    /* "never activated by any instance" — the key exists and nothing has ever used it.
+       ⚠️ Not the same as stale: stale means it reported once and then stopped. */
+    if(l.status === 'awaiting_checkin' || !(l.instances || []).length)
+      out.push({ p:8, state:'never_activated', lic:l });
+  });
+  /* Account-level conditions. They have no licence of their own, so they key on the
+     id `account` — dismissal is still per state, it is just that the scope is the
+     account rather than one row. */
+  var paid = licenses.filter(function(l){
+    return l.status !== 'canceled' && !l.grant && String(l.price || '').indexOf('$') === 0;
+  });
+  if(paid.length && !billingSaved())
+    out.push({ p:3, state:'no_card', lic:{ id:'account' } });
+  else {
+    var exp = cardExpiryDay();
+    /* the next charge this card has to survive: the soonest renewal among the
+       subscriptions it pays for */
+    var next = null;
+    licenses.forEach(function(l){
+      if(l.status === 'canceled' || l.type !== 'Subscription' || !l.event) return;
+      var d = dayOf(l.event);
+      if(d != null && (next == null || d < next)) next = d;
+    });
+    if(exp != null && next != null && exp <= next)
+      out.push({ p:4, state:'card_expiring', lic:{ id:'account' }, expDay:exp });
+  }
+  var grant = licenses.filter(function(l){ return l.grant; })[0];
+  if(grant) out.push({ p:9, state:'grant', lic:grant });
+  return out.sort(function(a, b){ return a.p - b.p; });
+}
+/* How long a dismissal of this state lasts. null = until the next stage arrives,
+   which is a different key and therefore a different banner. */
+var BANNER_RETURN = { updates_expired:7, updates_14:null, updates_30:null,
+                      card_expiring:null, never_activated:null, grant:null };
+var BANNER_BLOCKING = { blocked:true, payment_failed:true, no_card:true };
+function bannerKey(c){
+  /* the card warning has two stages and they must be two keys, or dismissing the
+     30-day one would also swallow the 14-day one */
+  if(c.state === 'card_expiring')
+    return 'account:card_' + ((c.expDay - TODAY_DAY) <= 14 ? '14' : '30');
+  return c.lic.id + ':' + c.state;
+}
+/* What actually renders: the first condition that is either blocking or not
+   dismissed, plus how many OTHER licences have something wrong. */
+function homeBannerPick(){
+  var all = attentionConditions();
+  var shown = null;
+  for(var i = 0; i < all.length; i++){
+    var c = all[i];
+    if(BANNER_BLOCKING[c.state]){ shown = c; break; }
+    if(!bannerDismissed(bannerKey(c), BANNER_RETURN[c.state])){ shown = c; break; }
+  }
+  if(!shown) return null;
+  /* ⚠️ Counted by LICENCE, not by condition: one licence that is blocked AND behind on
+     updates is one licence needing attention, and saying "2 other licenses" about it
+     would be a lie the reader can check in the list. The grant is not a problem, so it
+     never counts toward it. */
+  var others = {};
+  all.forEach(function(c){
+    if(c.state === 'grant' || c.lic.id === 'account' || c.lic.id === shown.lic.id) return;
+    others[c.lic.id] = true;
+  });
+  shown.others = Object.keys(others).length;
+  return shown;
+}
+/* The licence's name as a LINK to the licence, for use inside a banner sentence.
+   ⚠️ The name is the link, not a "View license" button beside it: the sentence already
+   names the thing, and a button repeating it is a second control for one intent. */
+function bannerLicLink(lic){
+  return '<a class="gb-lic" href="' + licenseHref(lic, 'home') + '" data-invlic="'
+    + esc(lic.id) + '">' + esc(lic.label || lic.name) + '</a>';
+}
+/* One sentence per state, plus the action that answers it. Everything the reader is
+   told about updates comes from UPDATES_LOSS, so the three stages differ only in
+   WHEN — never in what is at stake. */
+function homeBannerCopy(c){
+  var lic = c.lic;
+  switch(c.state){
+    case 'blocked':
+      return { txt:'<b>' + bannerLicLink(lic) + ' is blocked.</b> ' + instRunning(lic)
+          + ' production instances are running against ' + instAllowed(lic) + ' allowed on this plan. '
+          + 'The license checks in every hour, so it stays blocked until the count is back within its limit. '
+          + DETACH_HINT,
+        act:'<button class="gb-act" data-modal="add-ons" data-licid="' + esc(lic.id) + '">Manage</button>'
+          + '<a class="gb-act sec" href="licenses.html?view=instances">Detach an instance</a>' };
+    case 'payment_failed':
+      return { txt:'<b>Payment failed for ' + bannerLicLink(lic) + '.</b> '
+          + cardLabel() + ' was declined — update it before ' + fmtDate(lic.event)
+          + ' to keep the subscription active.',
+        act:'<button class="gb-act" data-paycard>Update payment method</button>' };
+    case 'no_card':
+      return { txt:'<b>No payment method on file.</b> '
+          + 'You have an active paid license, and its next charge will fail without one.',
+        act:'<a class="gb-act" href="billing.html">Add payment method</a>' };
+    case 'card_expiring':
+      return { txt:'<b>' + cardLabel() + ' expires ' + fmtDate(dayToDate(c.expDay - 1)) + '.</b> '
+          + 'That is before your next charge, so it will be declined.',
+        act:'<button class="gb-act" data-paycard>Update payment method</button>' };
+    case 'updates_expired':
+      return { txt:'<b>Software updates for ' + bannerLicLink(lic) + ' ended on '
+          + fmtDate(lic.event) + '.</b> ' + UPDATES_LOSS,
+        act:'<button class="gb-act" data-renewupdates="' + esc(lic.id) + '">Renew updates</button>' };
+    case 'updates_14':
+      return { txt:'<b>Software updates for ' + bannerLicLink(lic) + ' end on '
+          + fmtDate(lic.event) + ', in ' + c.days + ' day' + (c.days === 1 ? '' : 's') + '.</b> '
+          + UPDATES_LOSS,
+        act:'<button class="gb-act" data-renewupdates="' + esc(lic.id) + '">Renew updates</button>' };
+    case 'updates_30':
+      return { txt:'<b>Software updates for ' + bannerLicLink(lic) + ' end on '
+          + fmtDate(lic.event) + '.</b> ' + UPDATES_LOSS,
+        act:'<button class="gb-act" data-renewupdates="' + esc(lic.id) + '">Renew updates</button>' };
+    case 'never_activated':
+      return { txt:'<b>' + bannerLicLink(lic) + ' is waiting for its first instance.</b> '
+          + 'The key has been issued — activate a deployment with it and it appears here.',
+        act:'<a class="gb-act" href="' + EXT.install + '" target="_blank" rel="noopener">Installation instructions</a>' };
+    case 'grant':
+      return { txt:'Your Community Grant is ready — the license key has been issued.',
+        act:'<button class="gb-act" data-invlic="' + esc(lic.id) + '">View license</button>' };
+  }
+  return null;
+}
+/* the card, named the way the Billing page names it */
+function cardLabel(){
+  var c = savedCard();
+  return c ? (c.brand + ' ending ' + c.last4) : 'Your card';
+}
+/* ⚠️ ONE SENTENCE, IN TWO PLACES, AND IT IS COPY RATHER THAN A CONTROL. Detaching is
+   discoverable because the banner explains the situation people are actually in — they
+   moved a deployment — not because a second button was added next to Manage. The other
+   copy of it sits above the Instances list (see licenses.html). */
+var DETACH_HINT = 'This usually happens after moving a deployment to a new server. '
+  + 'If that is what happened, detach the old one.';
+function renderHomeBanner(){
+  var slot = $('#homeBanner');
+  if(!slot) return;
+  var c = homeBannerPick();
+  if(!c){ slot.hidden = true; slot.innerHTML = ''; return; }
+  var copy = homeBannerCopy(c);
+  if(!copy){ slot.hidden = true; return; }
+  var blocking = !!BANNER_BLOCKING[c.state];
+  /* the "and there are others" clause lives INSIDE this banner — the alternative is a
+     second banner, which is the thing the one-slot rule exists to prevent */
+  var others = c.others
+    ? ' <a class="gb-lic" href="licenses.html?attention=1">' + c.others + ' other license'
+      + (c.others === 1 ? '' : 's') + ' need' + (c.others === 1 ? 's' : '') + ' attention</a>.'
+    : '';
+  slot.className = 'gbanner homebanner' + (blocking ? ' is-blocking' : '');
+  slot.innerHTML = '<svg class="icon gb-ic" viewBox="0 0 24 24" aria-hidden="true">'
+    + (blocking
+        ? '<path d="M12 3l9 16H3z"/><path d="M12 9.5v4.2"/><circle cx="12" cy="16.6" r=".9"/>'
+        : '<circle cx="12" cy="12" r="9"/><path d="M12 7.5V13"/><circle cx="12" cy="16.4" r=".9"/>')
+    + '</svg>'
+    + '<span class="gb-txt">' + copy.txt + others + '</span>'
+    + '<span class="sp"></span>'
+    + copy.act
+    + (blocking ? '' : '<button class="gb-x" data-bannerx="' + esc(bannerKey(c)) + '" aria-label="Dismiss">✕</button>');
+  slot.hidden = false;
+}
+document.addEventListener('click', function(e){
+  var x = e.target.closest('[data-bannerx]');
+  if(!x) return;
+  dismissBanner(x.getAttribute('data-bannerx'));
+  renderHomeBanner();
+});
+/* ============================================================================
+   INSTANCES — the account's deployments, across every licence
+   ============================================================================
+   ⚠️ A VIEW, NOT A PAGE. It shares the Licenses page's toolbar and chrome because it
+   is the same data sliced differently, and because two to five instances do not earn a
+   nav destination of their own.
+   Columns answer one question each: which deployment · under which licence · did it
+   report · what is it running · is it healthy. Plans and money are deliberately
+   absent — that is what the licence row is for. */
+function allInstances(){
+  var out = [];
+  (DATA().licenses || []).forEach(function(l){
+    (l.instances || []).forEach(function(i){ out.push({ inst:i, lic:l }); });
+  });
+  /* newest check-in first: the question "is anything not reporting" is answered by
+     reading from the bottom, and the stale rows collect there */
+  return out.sort(function(a, b){ return (a.inst.agoMin || 0) - (b.inst.agoMin || 0); });
+}
+function instAllHeadHTML(){
+  return '<tr><th>Instance</th><th>License</th><th>Last check-in</th>'
+    + '<th>Version</th><th>Status</th><th aria-label="Actions"></th></tr>';
+}
+/* how long ago, in words — "12 minutes ago" reads as health; a timestamp has to be
+   subtracted from the current time before it says anything */
+function agoText(min){
+  if(min == null) return '—';
+  if(min < 60) return Math.max(1, Math.round(min)) + ' min ago';
+  var h = min / 60;
+  if(h < 48) return Math.round(h) + ' hour' + (Math.round(h) === 1 ? '' : 's') + ' ago';
+  return Math.round(h / 24) + ' days ago';
+}
+function instAllRow(r){
+  var i = r.inst, l = r.lic, id = esc(i.id);
+  var behind = cmpVersion(i.version, LATEST_VERSION) < 0;
+  return '<tr data-instid="' + id + '" data-licid="' + esc(l.id) + '">'
+    + '<td><div class="ia-name">' + (i.label ? esc(i.label) : '<span class="muted">Unnamed</span>') + '</div>'
+    +   '<div class="ia-id mono"><span class="inst-id" title="' + id + '">' + id + '</span></div></td>'
+    + '<td class="ia-lic"><a class="link" href="' + licenseHref(l, 'licenses') + '" data-invlic="' + esc(l.id) + '">'
+    +   esc(l.label || l.name) + '</a><div class="ia-licsub">' + esc(l.product || '') + ' · ' + esc(l.type) + '</div></td>'
+    + '<td>' + agoText(i.agoMin) + '</td>'
+    + '<td class="lic-ver"><div class="verline' + (behind ? ' is-behind' : '') + '">'
+    +   '<span class="ver-run">' + esc(i.version || '—') + '</span>'
+    +   (behind ? '<span class="ver-latest">latest ' + esc(LATEST_VERSION) + '</span>' : '') + '</div></td>'
+    + instStatusCell(i)
+    + '<td class="cellact"><div class="lic-actions">' + instRowMenu(i) + '</div></td></tr>';
+}
+/* ⚠️ Detach is in the row's own menu and NOWHERE ELSE. The blocked banner does not
+   implement a second one — it routes here, exactly the way the payment-failed banner
+   routes to the card modal. One action, one implementation, one confirmation. */
+/* ⚠️ THE MARKUP CONTRACT IS `.menu` > trigger + `.pop`, and getting it wrong is how a
+   row ends up with actions that exist and do nothing. This built `.menuwrap` > `.menu`,
+   so the delegated handler in shared.js — which looks for `.menu [aria-haspopup]` and
+   then for a `.pop` beside it — never matched: the kebab was there, the items were in
+   the DOM, and clicking did nothing at all. It reads as "the table has no row actions",
+   which is exactly how it was reported. Same builder as the licence row now
+   (see actionsCell), so there is one contract and not two. */
+function instRowMenu(i){
+  var id = esc(i.id);
+  return '<div class="menu"><button class="iconbtn ib" aria-haspopup="true" aria-expanded="false" aria-label="Instance actions">' + KEBAB + '</button>'
+    + '<div class="pop" role="menu" hidden>'
+    +   '<button role="menuitem" data-instlabel="' + id + '">Rename</button>'
+    +   '<button role="menuitem" data-instcopy="' + id + '">Copy instance ID</button>'
+    +   '<button role="menuitem" data-instopenlic="' + id + '">Open license</button>'
+    +   '<button role="menuitem" data-instdetach="' + id + '">Detach</button>'
+    + '</div></div>';
+}
+function renderInstancesView(){
+  var head = $('#instAllHead'), body = $('#instAllBody');
+  if(!head || !body) return;
+  head.innerHTML = instAllHeadHTML();
+  var rows = allInstances();
+  body.innerHTML = rows.length
+    ? rows.map(instAllRow).join('')
+    : emptyStateRow(6, { title:'No instances yet.',
+        line:'An instance appears here the first time a deployment checks in with one of your license keys.' });
+  var r = $('#instRange');
+  if(r) r.textContent = rows.length ? ('1–' + rows.length + ' of ' + rows.length) : '0 of 0';
+}
+/* Find an instance anywhere in the account, with the licence that owns it. */
+function findInstance(instId){
+  var hit = null;
+  (DATA().licenses || []).forEach(function(l){
+    (l.instances || []).forEach(function(i){ if(i.id === instId) hit = { inst:i, lic:l }; });
+  });
+  return hit;
+}
+/* ---------- detach --------------------------------------------------------------
+   ⚠️ DESTRUCTIVE TREATMENT, because this turns off live infrastructure. The dialog
+   NAMES the instance — there is no "are you sure?" about an unnamed thing when the
+   whole point is choosing the right one of several — and it says what happens to the
+   server and WHEN: it keeps running until its next check-in, and then stops. At an
+   hourly cadence that is within the hour, which is the fact that makes this a decision
+   rather than a click. */
+function openDetachModal(instId, after){
+  var hit = findInstance(instId);
+  if(!hit) return;
+  var i = hit.inst, l = hit.lic;
+  var who = i.label || 'this instance';
+  openModal('Detach instance',
+    '<p>Detach <b>' + esc(who) + '</b> from <b>' + esc(l.label || l.name) + '</b>?</p>'
+    + '<div class="row"><span class="l">Instance ID</span><span class="r mono">' + esc(i.id) + '</span></div>'
+    + '<div class="row"><span class="l">Last check-in</span><span class="r">' + agoText(i.agoMin) + '</span></div>'
+    + '<p>The server keeps running until its next check-in, within the hour, and then '
+    + 'stops. The license seat is freed immediately, so another deployment can be '
+    + 'activated with the same key straight away.</p>');
+  $('#modalCloseBtn').textContent = 'Keep instance';
+  var foot = $('#overlay .mf');
+  var confirm = document.createElement('button');
+  confirm.type = 'button'; confirm.className = 'btn ter'; confirm.textContent = 'Detach instance';
+  foot.appendChild(confirm);
+  confirm.addEventListener('click', function(){
+    l.instances = (l.instances || []).filter(function(x){ return x.id !== i.id; });
+    l.updated = todayStr();
+    Store.save();
+    logActivity({ kind:'updated', entityType:'Instance', entityName:(i.label || i.id), action:'DETACHED',
+      txt:'Instance <b>' + esc(i.label || i.id) + '</b> was detached from <b>'
+        + esc(l.label || l.name) + '</b> by ' + portalActor() + '.',
+      delta:'Stops at its next check-in' });
+    closeModal();
+    Snack.show('Instance detached — it stops at its next check-in');
+    if(typeof after === 'function') after();
+  });
+}
+document.addEventListener('click', function(e){
+  var d = e.target.closest('[data-instdetach]');
+  if(d){
+    closeAllMenus();
+    openDetachModal(d.getAttribute('data-instdetach'), function(){
+      if(typeof renderInstancesView === 'function') renderInstancesView();
+      if(window.LicenseDetails && LicenseDetails.isOpen()) LicenseDetails.reopen(activeLicense);
+      else if(window.LicenseDetails) LicenseDetails.afterChange();
+    });
+    return;
+  }
+  var o = e.target.closest('[data-instopenlic]');
+  if(o){
+    closeAllMenus();
+    var hit = findInstance(o.getAttribute('data-instopenlic'));
+    if(hit) openLicenseDetails(hit.lic, 'licenses');
+  }
+});
 /* ============ Invoice actions: mock PDF view + real download ============ */
 function rowInvoiceData(btn){
   var tr = btn.closest('tr'), tds = tr ? tr.querySelectorAll('td') : [];

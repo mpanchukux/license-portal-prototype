@@ -37,7 +37,10 @@ function syncDashSurface(){
   dashV.hidden = empty;
   dashEmptyV.hidden = !empty;
   $('#grantPending').hidden = state.grant !== 'pending';
-  $('#grantBanner').hidden = !(Store.get('dash') === 'dashgrant' && !isDismissed('grantBanner'));
+  /* ⚠️ ONE renderer for every Home banner now — the grant is condition 9 of nine in a
+     stated priority order, not a special case with its own visibility rule. See
+     renderHomeBanner in components.js. */
+  renderHomeBanner();
   /* the hand-off measures #dashNewBtn, so it can only be wired once that button is on
      screen — which, for an account buying its first licence, is now, not at load */
   if(!empty) installStickyAction();
@@ -193,15 +196,14 @@ function installStickyAction(){
   syncStickyAction();
 }
 
-/* the grant banner is one-time: dismissing it is remembered */
+/* ⚠️ The grant banner's own wiring is GONE: view / dismiss / learn were three
+   listeners for one banner that is now built, actioned and dismissed by the shared
+   Home-banner component (renderHomeBanner). `Learn more` went with it — it opened a
+   placeholder modal for a programme page this prototype does not have, and the banner
+   the brief specifies carries one action, not two.
+   The grant's own `Learn more` on the pending CARD (#grantLearnBtn) is untouched. */
 (function(){
-  var view = $('#grantViewBtn'), dismissBtn = $('#grantDismissBtn'), learn = $('#grantLearnBtn');
-  if(view) view.addEventListener('click', function(){
-    var g = DATA().licenses.filter(function(l){ return l.grant; })[0];
-    if(!g) return;
-    openLicenseDetails(g, 'home');
-  });
-  if(dismissBtn) dismissBtn.addEventListener('click', function(){ dismiss('grantBanner'); $('#grantBanner').hidden = true; });
+  var learn = $('#grantLearnBtn');
   if(learn) learn.addEventListener('click', function(){
     openModal('Community Grant', '<p>Placeholder — the Community Grant programme page is not part of this prototype.</p>');
   });
@@ -219,7 +221,8 @@ if(dashEmptyV && !dashEmptyV.hidden){
   /* the selection object the shared picker reads. No `locked`, no `currentName`:
      nothing is locked on this screen and an account with no licences has no
      current plan — the same reason the landing page omits them. */
-  var esel = { product:'thingsboard', kind:'subscription', plan:null };
+  // same starting point as the landing page: the product the session arrived for
+  var esel = { product:arrivedProduct(), kind:'subscription', plan:null };
   function renderEcPlans(){
     renderPlanPicker($('#ecChoices'), $('#ecPlans'), esel, $('#ecPlanExtra'), $('#ecBase'));
   }

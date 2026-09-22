@@ -432,6 +432,45 @@ th.num,td.num{text-align:right}
 /* the new-tab marker: it rides after the label, at text size, never its own control */
 .extmark{width:13px;height:13px;margin-left:5px;vertical-align:-2px;opacity:.65}
 
+/* ---------- the ALERT icon: something is wrong ---------------------------------
+   ⚠️ Deliberately NOT the info icon. `.infoic` is a hairline ring that explains a
+   neutral thing and can be ignored; this is a FILLED triangle that says the row has a
+   problem. Same size and the same tooltip mechanics — including the tap on touch,
+   since hover does not exist there — and a different shape and weight, because the two
+   must never be mistaken for each other. See the styleguide.
+   ⚠️ Monochrome: the fill is ink, not an error colour. The brief asked for the error
+   colour; this prototype has no hue at all, and one red glyph would be the only colour
+   in the product. Reported rather than introduced. */
+.alertic{display:inline-flex;align-items:center;justify-content:center;
+  width:24px;height:24px;margin:-4px 0 -4px 6px;padding:0;
+  border:0;background:transparent;color:var(--ink);cursor:pointer;vertical-align:-3px}
+.alertic .icon{width:15px;height:15px;fill:var(--ink);stroke:none}
+/* the mark inside the triangle is knocked OUT of the fill, so it reads at 15px */
+.alertic .icon .al-bang{stroke:var(--card);stroke-width:2;fill:var(--card)}
+.alertic:hover,.alertic.show{opacity:.78}
+.alertic:focus-visible{outline:2px solid var(--ink);outline-offset:2px;border-radius:4px}
+
+/* ---------- product version: the running one against the latest ----------------
+   The two numbers are one fact, so they are one cell: the gap between them is the
+   argument, and splitting them into two columns would make the reader do the
+   subtraction across a table. */
+.lic-ver{white-space:nowrap}
+.verline{display:flex;flex-direction:column;gap:2px;line-height:1.3}
+.ver-run{font-variant-numeric:tabular-nums}
+.verline.is-behind .ver-run{font-weight:500}
+.ver-latest,.ver-mixed{font-size:13px;color:var(--faint);font-variant-numeric:tabular-nums}
+
+/* ---------- the Instances view ------------------------------------------------- */
+.lic-viewseg{flex:none;margin-right:4px}
+.inst-hint{margin:0;padding:14px 18px;border-bottom:1px solid var(--line2);
+  font-size:14px;line-height:1.5;color:var(--mid)}
+.ia-name{font-weight:500}
+.ia-id{font-size:13px;color:var(--faint);max-width:30ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ia-licsub{font-size:13px;color:var(--faint)}
+/* the one destructive entry in a row menu */
+.menu button.danger{color:var(--ink)}
+.menu button.danger::before{content:"";display:inline-block;width:0}
+
 /* ---------- info icon ----------
    The explanation a row's name needs, one tap away. Rides on `.tip.wide` for the
    bubble, so the hover gate and the wrapping measure come from there; this rule is
@@ -744,7 +783,7 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
 .fs-nextbtn{width:100%;margin-top:14px}
 /* Customize step: one control per row, so every stepper and toggle lands in the
    same right-hand column */
-#nlStep2 .am-capgrid,#fsStep1 .am-capgrid{grid-template-columns:1fr}
+#nlStepCap .am-capgrid,#nlStepAdd .am-capgrid,#fsStep1 .am-capgrid{grid-template-columns:1fr}
 /* variant A — what was chosen, stated as read-only facts above the controls */
 /* This card is the anchor of the step, so it carries the left column: its title
    sits a full type level above the section headings under it (h2 vs the label
@@ -900,7 +939,19 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
    ⚠️ Selected = a dark OUTLINE, never a fill: `.nl-select.on` (defined with the
    other selectable cards) gives border-color + an inset 1px ring, which is the
    same "chosen" mark the plan cards use. Do not reintroduce a background here. */
-.nl-prodrow{display:flex;justify-content:center;margin-bottom:26px}
+/* ⚠️ The row now holds a STATEMENT and an escape hatch, not two competing cards, so
+   it stops centring a grid and becomes a baseline-aligned line: product on the left,
+   the quiet swap link on the right. See nlProductStatedHTML for why. */
+.nl-prodrow{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:26px}
+/* the landing page's swap link: under the line it belongs to, on both widths */
+.lp-swap{margin-top:8px}
+.nl-stated{display:flex;align-items:flex-start;gap:12px;min-width:0}
+.nl-stated .icon{width:24px;height:24px}
+.nl-stated .nl-prodic{color:var(--ink)}    /* stated, not one of two — it is not dimmed */
+/* the link is deliberately quiet: it serves the minority who arrived on the wrong
+   product, and must not read as the second half of a choice */
+.nl-prodswap{flex:none;white-space:nowrap;color:var(--mid)}
+.nl-prodswap:hover{color:var(--ink)}
 .nl-prodcards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;width:100%}
 /* a <button> reset first — these are real buttons so the keyboard and aria-pressed
    come for free, but none of the UA button chrome should survive */
@@ -1207,6 +1258,33 @@ body[data-page="home"] .dwrap{padding-top:48px}
    column, so it keeps all four corners and clears the content below it.
    One-time: dismissing removes it for the session. */
 .gbanner{display:flex;align-items:center;gap:12px;margin:0 0 26px;border-radius:10px;background:var(--ink);color:#fff;padding:10px 10px 10px 16px;font-size:14px}
+/* ---------- the Home banner slot ----------------------------------------------
+   One band, whatever the condition. It keeps `.gbanner`'s ink fill — in a monochrome
+   system the fill IS the attention signal — and adds only what a multi-line sentence
+   needs: the text may now be two or three lines (the updates sentence is a full one),
+   so the row aligns to the TOP rather than centring a three-line block against a
+   30px button. */
+.homebanner{align-items:flex-start;padding:14px 12px 14px 16px;line-height:1.5}
+.homebanner .gb-ic{margin-top:2px}
+.homebanner .gb-txt{flex:1;min-width:0}
+.homebanner .sp{display:none}          /* the text takes the space; the actions do not float */
+.homebanner .gb-act{margin-top:1px}
+/* a link inside the sentence: underlined, because on an ink band weight alone does not
+   separate it from the bold lead-in */
+.gb-lic{color:#fff;text-decoration:underline;text-underline-offset:2px}
+.gb-lic:hover{opacity:.82}
+/* the secondary route (detach) next to the primary: outlined on ink, not filled */
+.gb-act.sec{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.55);
+  display:inline-flex;align-items:center;text-decoration:none}
+.gb-act.sec:hover{background:rgba(255,255,255,.14)}
+@media (max-width:600px){
+  /* the actions drop under the sentence rather than squeezing it into a column */
+  .homebanner{flex-wrap:wrap}
+  .homebanner .gb-txt{flex:1 1 100%}
+  .homebanner .gb-act{margin-left:34px}
+  .homebanner .gb-x{position:absolute;top:8px;right:8px}
+  .homebanner{position:relative}
+}
 .gbanner[hidden]{display:none}
 .gbanner .sp{flex:1}
 .gbanner .gb-ic{width:18px;height:18px;color:#fff}
@@ -1423,29 +1501,41 @@ body[data-page="home"] .dwrap{padding-top:48px}
    way out of the filter you set. Different words, different exit, and visibly a
    different block: dashed rather than solid, because it is a temporary condition of
    the view rather than a fact about the account. */
-/* the review step's statement of a scheduled change: a bordered note above the
-   breakdown, because it changes how every figure below it should be read */
-.nl-sched{border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin-bottom:12px;
+/* The review step's statement of an IMMEDIATE lowering change: a bordered note above
+   the breakdown, because it changes how every figure below it should be read.
+   ⚠️ Renamed from `.nl-sched`: it no longer describes a schedule. The shape stayed
+   because the job did — this is still the one block on the step that has to be read
+   before the numbers under it. */
+.nl-effect{border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin-bottom:12px;
   font-size:14px;line-height:1.5;color:var(--ink);background:var(--bg)}
-.nl-schedwhat{margin-top:6px;color:var(--mid)}
-/* ⚠️ `.schedline` is GONE. The same fact now wears `.alert` inside the Plan block —
-   the styleguide's own banner, not a private treatment for one line. `.sched` adds
-   only what a banner with an action needs: the action pushed to the far end, and the
-   wrap that keeps it readable when the sentence is long. */
-.alert.sched{margin:0 0 16px}
-.alert.sched .atxt{flex:1}
-.sched-cancel{flex:none;white-space:nowrap}
-@media (max-width:600px){
-  /* The sentence is two or three lines here, so the ACTION drops under it rather than
-     squeezing the text into a column. ⚠️ Only the action: `flex:1 1 100%` on the text
-     wrapped it too, which left the clock glyph sitting alone on the first line like a
-     bullet for nothing. The text keeps the icon company (`flex:1 1 60px` — it takes
-     what is left of that line), and only the button is given a full-width basis. */
-  .alert.sched{flex-wrap:wrap;align-items:flex-start}
-  .alert.sched .icon{margin-top:2px}
-  .alert.sched .atxt{flex:1 1 60px}
-  .sched-cancel{flex:0 0 100%;margin-left:26px;text-align:left}
-}
+.nl-effectwhat{margin-top:6px;color:var(--mid)}
+/* ⚠️ `.alert.sched` and `.sched-cancel` ARE GONE with the banner they dressed — the
+   Plan block no longer states a pending change, because there is no longer such a
+   thing. Their mobile rules went with them. */
+/* ---------- the coupon row: one row, three states -------------------------------
+   ⚠️ It USED to be a link on the base-price row (`.nl-coupon`), which made it read as a
+   property of that one figure. It is a row of its own now, immediately above the total,
+   and the input opens IN it — so the offer, the field, the error and the result all
+   occupy the same line and nothing below it moves. That last part is why the open state
+   keeps the row's height: a field that pushes the total off a phone screen defeats the
+   point of showing what the coupon did. */
+.nl-couponrow .nl-couponfield{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.nl-couponrow .field{margin:0;flex:0 1 200px;min-width:140px}
+.nl-couponrow .field input{height:32px;font-size:14px}
+.nl-couponrow .btn.sec{height:32px;padding:0 14px;font-size:14px}
+.nl-couponedit{margin-left:10px;font-size:14px;color:var(--mid)}
+.nl-couponedit:hover{color:var(--ink)}
+/* the error sits under the field, on the row, and takes the whole line so a long
+   message never squeezes the input */
+.nl-couponerr{flex:1 1 100%;margin-top:2px}
+.nl-couponrow div:last-child{white-space:nowrap}
+/* the price the coupon replaced: struck through and quiet, so the pair reads as
+   "was / now" without a second row explaining it */
+.am-newmonthly .was{color:var(--faint);text-decoration:line-through;font-weight:400;margin-right:6px}
+/* A free plan replaces the whole Due-today block rather than printing $0.00 into it:
+   there is no transaction, so there is no figure. */
+.nl-free{font-size:14px;line-height:1.5;color:var(--ink)}
+
 
 /* the support route in the cancel dialog: quiet, left-aligned, on the keep side */
 /* the banner's secondary route: after the action, quieter than it */
@@ -1634,6 +1724,12 @@ body.list-empty #pageTitleRow #licNewBtn{display:none !important}
 .paystripe .ps-cvc{width:48px;flex:none;border-left:1px solid var(--line2);padding-left:10px}
 .lic-controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
 .lic-controls .spacer{flex:1}
+/* ---------- the toolbar's two rows ---------------------------------------------
+   Row one carries the view toggle alone — it changes the subject, and everything in
+   row two narrows it. The gap between them is smaller than the gap under the pair, so
+   they read as one toolbar in two bands rather than two toolbars. */
+.lic-viewrow{margin-bottom:10px}
+.lic-filterrow{margin-bottom:14px}
 /* persistent search input (always-visible, magnifier inside) — standard toolbar element */
 .searchbox{position:relative;flex:none;width:280px;max-width:100%}
 .searchbox .searchglyph{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:var(--faint);pointer-events:none}
@@ -2394,7 +2490,7 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
   /* ⚠️ The bar sits over the SHEET, whose own scroll container is .fs-body — so the
      padding that keeps the last row reachable belongs to the step, not to the page.
      --pinH is written by syncPinnedSummary from the bar's measured height. */
-  #nlStep2.haspin,#nlStep3.haspin,#nlStep4.haspin{padding-bottom:calc(var(--pinH, 96px) + 16px)}
+  #nlStepCap.haspin,#nlStepAdd.haspin,#nlStepRev.haspin,#nlStepBill.haspin{padding-bottom:calc(var(--pinH, 96px) + 16px)}
   /* the section heading inside the bar is noise once it is a bar — the figure and
      its button say what it is */
   .fs-right.pinned .am-sechead{display:none}
@@ -2415,8 +2511,9 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
      COLOUR token, and shadowing it here made `background:var(--card)` resolve to
      `12px` — an invalid colour, so every plan card inside step 1 rendered
      transparent. The `--s-` prefix keeps spacing out of the colour namespace. */
-  #nlStep1{--s-grp:28px;--s-own:10px;--s-card:12px}
-  .nl-prodrow{margin:0 0 var(--s-grp)}
+  #nlStepPick{--s-grp:28px;--s-own:10px;--s-card:12px}
+  /* the phone stacks them: the link under the line it belongs to, left-aligned with it */
+  .nl-prodrow{flex-direction:column;align-items:flex-start;gap:var(--s-own);margin:0 0 var(--s-grp)}
   .nl-prodcards{grid-template-columns:1fr;gap:var(--s-card)}
   .nl-billrow{gap:var(--s-own)}
   /* the tab strip's gray baseline runs edge to edge while the LABELS keep the
@@ -2694,6 +2791,17 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
     background:transparent;border:0;border-radius:0;padding:0;margin-bottom:16px;
     overflow:visible}
   .lic-controls,.insttoolbar{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+  /* ⚠️ On the phone the two rows are the first thing above the list, so they are made
+     to cost as little as possible: the view toggle's row loses its own bottom margin
+     (the filter row below it supplies the separation) and the segment takes the full
+     width, which is what it would wrap to anyway. Measured before this: the pair added
+     ~18px of dead space above the first card for nothing. */
+  .lic-viewrow{margin-bottom:8px}
+  /* the toggle takes the line it would wrap to anyway; the primary follows on its own,
+     which is the arrangement every other list page's primary already has */
+  .lic-viewrow .lic-viewseg{flex:1 1 100%;margin-right:0}
+  .lic-viewrow .lic-viewtab{flex:1}
+  .lic-viewrow .spacer{display:none}
   .searchbox{width:100%;min-width:0;flex:0 0 100%;order:1}
   /* the chip row: one line, scrolls sideways, no scrollbar furniture */
   .lic-typeseg,.insttoolbar .perctl{order:2}

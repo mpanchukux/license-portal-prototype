@@ -46,6 +46,15 @@ var TODAY_DAY = (function(){
   return epochDay(d.getFullYear(), d.getMonth() + 1, d.getDate());
 })();
 function todayStr(){ return dayToDate(TODAY_DAY); }
+/* "Mon DD YYYY" → epoch day, so a stored date can be used in day ARITHMETIC.
+   ⚠️ Not `dateKey`: that packs a date into YYYYMMDD for COMPARING and sorting, and the
+   number it returns is not a count of days — adding 365 to it lands in the wrong year.
+   Two jobs, two functions. */
+function dayOf(dateStr){
+  var q = String(dateStr).split(' ');
+  if(q.length !== 3 || !MONF[q[0]]) return null;
+  return epochDay(+q[2], MONF[q[0]], +q[1]);
+}
 function dayStr(offset){ return dayToDate(TODAY_DAY + offset); }
 /* The anchor the literals below were written around. The delta between it and today
    is applied to every date in the seed, once, when the store first snapshots it. */
@@ -104,20 +113,35 @@ function licenseKeyMask(key){
   return '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' + tail;
 }
 
-/* ---------- production instances: check-in ------------------------------------
-   ⚠️ THIS NUMBER WAS NOT IN THE REPOSITORY. Nothing anywhere defined a check-in
-   cadence — `awaiting_checkin` existed as a licence status, and `PER_LABEL['24h']`
-   is an activity filter, neither of which says how often a running deployment
-   reports in. 24 is the figure given verbally for this pass; it is a constant here
-   so there is one place to correct it, and it is flagged in NOTES as unconfirmed.
+/* ---------- product versions ---------------------------------------------------
+   ⚠️ BOTH OF THESE ARE `inferred`. Nothing in this repository carried a version number
+   of any kind before this pass — not a running one, not a released one — so the
+   figures below are demo values, not facts about the product. What is real is the
+   SHAPE: an instance reports its version when it checks in, so the running version is
+   a property of an INSTANCE, and a licence shows the lowest of its instances (see
+   licenseVersion) because the question "am I current" is answered by the laggard.
 
-   ⚠️ The threshold is the interval ITSELF, as specified: checked in within 24h is
-   fine, beyond it is stale. Worth knowing the edge that buys: if deployments really
-   do report every ~24h, a healthy one is routinely 20–24h old and sits one slow hour
-   from reading as stale. A grace multiple (stale at 2× the interval) is the usual
-   defence. Not applied, because the instruction was explicit — but the demo data is
-   written well clear of the boundary so the column is never ambiguous. */
-var CHECKIN_INTERVAL_H = 24;
+   ⚠️ ONE number stands for both products. TBMQ versions independently of ThingsBoard
+   in reality; a second constant is one line when someone confirms the real pair. */
+var LATEST_VERSION = '3.9.4';   // inferred
+
+/* ---------- production instances: check-in ------------------------------------
+   ⚠️ CORRECTED: the licence checks in EVERY HOUR. It was 24 here — a figure given
+   verbally for an earlier pass and flagged in NOTES as unconfirmed — and everything
+   derived from it (the stale threshold, the Instances note, the detach confirmation)
+   read the wrong cadence. One constant, so there is one place to be wrong. */
+var CHECKIN_INTERVAL_H = 1;
+/* ⚠️ STALE IS A MULTIPLE OF THE INTERVAL, NOT THE INTERVAL ITSELF — and at one hour
+   this stops being a nicety. The earlier pass set the threshold equal to the interval
+   because the instruction was explicit, and noted the cost: a healthy deployment that
+   reports every N hours is routinely almost N hours old and sits one slow report from
+   being accused. At 24h that was a narrow edge. At 1h it is the normal case — one
+   missed report, a slow restart, a clock a few minutes out, and a perfectly healthy
+   instance reads Stale. 2× is the usual defence and it is what is applied here.
+   If the product wants "stale after exactly one missed check-in", set the multiple
+   to 1 — the rule is one line and both numbers are named. */
+var CHECKIN_STALE_MULT = 2;
+function checkinStaleAfterH(){ return CHECKIN_INTERVAL_H * CHECKIN_STALE_MULT; }
 
 /* Hours between a "Mon DD YYYY, HH:MM" stamp and now. Built on the same epochDay the
    date shifting uses, so a shifted seed measures correctly without re-parsing. */
@@ -129,11 +153,38 @@ function hoursSince(ts){
   var now = new Date();
   return (TODAY_DAY * 24 + now.getHours() + now.getMinutes() / 60) - then;
 }
+/* ---------- demo check-in stamps are RELATIVE, and they have to be ---------------
+   ⚠️ The demo used to carry literal stamps ("Aug 19 2026, 07:41") shifted to today by
+   whole days. That worked while the threshold was 24 hours: any time today was inside
+   it. At an hourly cadence it breaks completely — a stamp of 07:41 is stale by 10:00,
+   so every healthy instance in the demo would read Stale for most of the day, and the
+   whole Instances view would be a screen of red herrings.
+   So an instance stores `agoMin` — how long ago it last reported — and the stamp is
+   DERIVED from the clock each time the demo is loaded. A healthy instance is always
+   minutes old and a stale one is always days old, whenever anyone opens the page. */
+function agoStamp(min){
+  var d = new Date(Date.now() - min * 60000);
+  return dayToDate(epochDay(d.getFullYear(), d.getMonth() + 1, d.getDate()))
+    + ', ' + (d.getHours() < 10 ? '0' : '') + d.getHours()
+    + ':' + (d.getMinutes() < 10 ? '0' : '') + d.getMinutes();
+}
+/* Re-stamps every instance that carries `agoMin`. Runs against the STORED datasets at
+   boot, after the one-time date shift, so it wins over whatever was snapshotted. */
+function refreshCheckins(ds){
+  Object.keys(ds || {}).forEach(function(k){
+    (ds[k].licenses || []).forEach(function(l){
+      (l.instances || []).forEach(function(i){
+        if(i.agoMin != null) i.seen = agoStamp(i.agoMin);
+      });
+    });
+  });
+  return ds;
+}
 /* The one rule the Instances column is derived from. Unknown stamp → not stale:
    an instance is never accused of being stale because its date failed to parse. */
 function instStale(inst){
   var h = hoursSince(inst && inst.seen);
-  return h != null && h > CHECKIN_INTERVAL_H;
+  return h != null && h > checkinStaleAfterH();
 }
 /* How many production instances a licence is ALLOWED: what the plan includes plus
    whatever was purchased on top. One reading, used by the details banner, the Plan
@@ -152,6 +203,36 @@ function instancesOf(lic, type){
   return type ? all.filter(function(i){ return (i.type || 'prod') === type; }) : all;
 }
 function instRunning(lic){ return instancesOf(lic, 'prod').length; }
+/* The version a licence is RUNNING: the lowest across its production instances.
+   ⚠️ Lowest, not highest, and not a list. The column answers "am I current", and that
+   is governed by the instance furthest behind — a maximum would hide exactly the
+   deployment that still needs upgrading. Where instances disagree the count says so
+   (see versionCell), rather than printing a number that is true of only one of them.
+   A licence with no instances has no running version at all: nothing has reported. */
+function licenseVersion(lic){
+  var vs = instancesOf(lic, 'prod').map(function(i){ return i.version; }).filter(Boolean);
+  if(!vs.length) return null;
+  return vs.slice().sort(cmpVersion)[0];
+}
+/* numeric, part by part — "3.10.0" is ABOVE "3.9.4", which a string compare gets wrong */
+function cmpVersion(a, b){
+  var x = String(a).split('.'), y = String(b).split('.');
+  for(var i = 0; i < Math.max(x.length, y.length); i++){
+    var d = (parseInt(x[i], 10) || 0) - (parseInt(y[i], 10) || 0);
+    if(d) return d;
+  }
+  return 0;
+}
+function versionBehind(lic){
+  var v = licenseVersion(lic);
+  return v != null && cmpVersion(v, LATEST_VERSION) < 0;
+}
+/* how many production instances do NOT agree with the licence's reported version */
+function versionMixed(lic){
+  var v = licenseVersion(lic);
+  if(v == null) return false;
+  return instancesOf(lic, 'prod').some(function(i){ return i.version !== v; });
+}
 /* ⚠️ Devices have NO over-limit state and must never be given one: the platform
    refuses connections beyond what the licence allows, so the number on screen is a
    ceiling, not a count that can be exceeded. Instances are the opposite — the portal
@@ -188,6 +269,15 @@ var PAYMENT_METHOD = { brand:'VISA', num:'•••• •••• ••••
 var TIER_SPECS = {
   maker:    { name:'Maker',     price:'$10.00',  wl:false, ent:[['Devices','10'],['Assets','10'],['Production instances','1'],['AI credits','1M','/ month']] },
   prototype:{ name:'Prototype', price:'$39.00',  wl:false, ent:[['Devices','50'],['Assets','50'],['Production instances','1'],['AI credits','2M','/ month']] },
+  /* ⚠️ THE TWO FREE TIERS CARRY EXACTLY THE THREE NUMBERS THAT WERE GIVEN and no
+     fourth. The paid tiers above and below also list Assets; these do not, because
+     no Assets figure was stated for them and inventing one would put a number the
+     product never approved on a card people read as a promise. Same for anything
+     else the paid shape has — see the report: help desk, white labeling and the
+     device-limit line are all absent on purpose, not by omission.
+     `free:true` is what every surface tests: no price, no billing step, no total. */
+  free:     { name:'Free',           price:'Free', free:true, wl:false, ent:[['Devices','100'],['Production instances','1'],['AI credits','1M','/ month']] },
+  noncomm:  { name:'Non-commercial', price:'Free', free:true, wl:false, ent:[['Devices','1,000'],['Production instances','Unlimited'],['AI credits','1M','/ month']] },
   pilot:    { name:'Pilot',     price:'$99.00',  wl:true,  ent:[['Devices','100'],['Assets','100'],['Production instances','1'],['AI credits','4M','/ month']] },
   startup:  { name:'Startup',   price:'$299.00', wl:true,  ent:[['Devices','500'],['Assets','500'],['Production instances','2'],['AI credits','8M','/ month']] },
   business: { name:'Business',  price:'$499.00', wl:true,  ent:[['Devices','1,000'],['Assets','1,000'],['Production instances','3'],['AI credits','16M','/ month']] },
@@ -257,7 +347,11 @@ var DATASETS = {
       { id:'B9',  tier:'tbmqsub',  product:'TBMQ',        type:'Subscription', name:'PE subscription', label:'MQTT staging', created:'Jul 05 2026', updated:'Jul 05 2026', status:'active',   event:'Sep 10 2026', price:'$15.00 / mo', billing:'auto-pay' },
       { id:'B10', tier:'tbperp',   product:'ThingsBoard', type:'Perpetual',    name:'PE Perpetual License', label:'On-prem HQ',    created:'Jul 27 2026', updated:'Jul 27 2026', status:'active',           event:'Jul 27 2027', price:'one-time', billing:'paid' },
       { id:'B11', tier:'tbperp',   product:'ThingsBoard', type:'Perpetual',    name:'PE Perpetual License', label:'Plant B',       created:'Sep 01 2025', updated:'Aug 05 2026', status:'updates_expiring', event:'Sep 01 2026', price:'one-time', billing:'paid' },
-      { id:'B12', tier:'tbmqperp', product:'TBMQ',        type:'Perpetual',    name:'PE license',           label:'Broker on-prem',created:'Aug 13 2026', updated:'Aug 13 2026', status:'active',           event:'Aug 13 2027', price:'one-time', billing:'paid' },
+      /* ⚠️ Its updates term is ~25 days out ON PURPOSE: it is the only licence in the
+         demo that exercises the 30-day stage of the updates warning. The three stages
+         are 30 / 14 / expired, and without one licence sitting in each the banner's
+         escalation cannot be seen at all. */
+      { id:'B12', tier:'tbmqperp', product:'TBMQ',        type:'Perpetual',    name:'PE license',           label:'Broker on-prem',created:'Aug 13 2026', updated:'Aug 13 2026', status:'active',           event:'Sep 13 2026', price:'one-time', billing:'paid' },
       // two deliberately long labels: real deployments name themselves like this,
       // and the Product column has to wrap them rather than stretch the table
       { id:'B13', tier:'business', product:'ThingsBoard', type:'Subscription', name:'Business',  label:'Production — Central Europe manufacturing cluster, building 4', created:'Feb 18 2026', updated:'Aug 04 2026', status:'active', event:'Aug 27 2026', price:'$499.00 / mo', billing:'auto-pay' },
@@ -268,6 +362,15 @@ var DATASETS = {
          which is exactly why it belongs here — every type-aware column and the phone
          card have to cope with both being absent. `grant:true` is what the renderers
          branch on; `limits` replaces the entitlement columns it has no numbers for. */
+      /* ⚠️ THE EXPIRED-UPDATES LICENCE, and the demo had none. Its term ended twelve days
+         ago, so it is what the alert icon in the list, the licence page's explanation
+         and the expired stage of the Home banner are all demonstrated on. Its instance
+         runs 3.7.2 against 3.9.4, which is the Product version column's whole argument:
+         the gap is the reason to renew, stated as a number rather than a warning.
+         ⚠️ `status:'active'` and NOT a stored "expired" status — the state is DERIVED
+         from the date, the same way over-the-instance-limit is derived from a count.
+         A stored flag can be forgotten on a licence; a comparison cannot. */
+      { id:'B16', tier:'tbperp',   product:'ThingsBoard', type:'Perpetual',    name:'PE Perpetual License', label:'Warehouse DC',  created:'Aug 07 2024', updated:'Aug 07 2025', status:'active',           event:'Aug 07 2026', price:'one-time', billing:'paid' },
       { id:'B15', tier:'grant',    product:'ThingsBoard', type:'Grant',        name:'Community Grant', label:'Research cluster', created:'Aug 19 2026', updated:'Aug 19 2026', status:'awaiting_checkin', event:'', price:'Free', billing:'\u2014', grant:true, limits:'6,050 devices &middot; 2 production servers' }
     ],
     users: [
@@ -392,42 +495,55 @@ var DATASETS = {
    over-limit state means something when you find it, rather than being the accident
    it was before (every perpetual showed two instances against a limit of one).
 
-   `seen` is the last check-in. Values sit well clear of the 24h threshold in both
-   directions — hours for healthy, days for stale — so the derived column is never
-   ambiguous in a demo. See CHECKIN_INTERVAL_H. */
-function inst(id, label, seen, created, type){
-  return { id:id, label:label || '', seen:seen, created:created, type:type || 'prod' };
+   `agoMin` is how long ago the instance last reported, and `seen` is derived from it
+   at load. Values sit well clear of the stale threshold in both directions — minutes
+   for healthy, days for stale — so the derived column is never ambiguous in a demo.
+   See CHECKIN_INTERVAL_H, CHECKIN_STALE_MULT and agoStamp. */
+function inst(id, label, agoMin, created, type, version){
+  return { id:id, label:label || '', agoMin:agoMin, seen:agoStamp(agoMin),
+           created:created, type:type || 'prod', version:version || LATEST_VERSION };
 }
+/* ⚠️ `agoMin` IS THE DATA; `seen` is derived from it (see refreshCheckins). Healthy
+   instances are minutes old, stale ones days — whenever the demo is opened, not
+   whenever it was seeded. The stale threshold is 2 hours (see CHECKIN_STALE_MULT), so
+   every "healthy" figure here is well under it and every "stale" one is well over. */
 var DEMO_INSTANCES = {
   /* A — small account */
-  A1: [ inst('7c4a8d09-ca37-4f1b-9c4e-2b1e8f3a5d61', 'EU line 2',    'Aug 19 2026, 06:20', 'Aug 10 2026') ],                                 // 1 / 1
-  A2: [ inst('b5f2e1c7-3a9d-4e62-8f17-0c6d4b2a9e83', 'Broker',       'Aug 19 2026, 05:02', 'Jul 22 2026') ],                                 // 1 / 1
-  A3: [],                                                                                                                                    // 0 / 1 — never activated
+  A1: [ inst('7c4a8d09-ca37-4f1b-9c4e-2b1e8f3a5d61', 'EU line 2',    12, 'Aug 10 2026', 'prod', '3.9.4') ],       // 1 / 1
+  A2: [ inst('b5f2e1c7-3a9d-4e62-8f17-0c6d4b2a9e83', 'Broker',       21, 'Jul 22 2026', 'prod', '3.9.4') ],       // 1 / 1
+  A3: [],                                                                                                          // 0 / 1 — never activated
   /* B — large account */
-  B1:  [ inst('1f0b9a24-6c3e-4d85-b721-9e5a0c8f3d47', 'HQ primary',  'Aug 19 2026, 07:41', 'May 02 2026'),
-         inst('2a7c5e13-8d40-4b96-a3f2-6c1b9d7e0452', 'HQ secondary','Aug 19 2026, 07:38', 'May 04 2026'),
-         inst('9d3f6b80-2e51-4a7c-8b04-5f2a1c6e9370', 'Dev sandbox', 'Aug 19 2026, 03:15', 'Jun 01 2026', 'dev') ],                          // 2 / 4
-  B2:  [ inst('4e8a2d76-1b93-4c50-9f6e-3a7d5b2c8014', 'Prod EU',     'Aug 19 2026, 06:55', 'Jun 06 2026'),
-         inst('6b1d4f29-7a08-4e63-b5c1-2d9f8a3e7615', 'Prod US',     'Aug 19 2026, 06:49', 'Jun 10 2026') ],                                 // 2 / 3
-  B3:  [ inst('8c5e0a31-9d76-4f18-a6b3-1e4c7d0b592f', 'Factory A',   'Aug 19 2026, 04:10', 'Jun 20 2026') ],                                 // 1 / 2
-  B4:  [ inst('3a9f7c52-0e14-4b86-9d27-8c5b1a6f3e40', 'Pilot EU',    'Aug 19 2026, 05:33', 'Jul 01 2026') ],                                 // 1 / 1
-  B5:  [],                                                                                                                                    // 0 / 1 — canceled
-  B6:  [ inst('5d2b8e47-6f01-4a93-8c15-7b3e9d4a2f60', 'Maker box',   'Aug 14 2026, 22:05', 'Jul 15 2026') ],                                 // 1 / 1 — STALE (5 days)
-  B7:  [ inst('7f4c1a68-3b97-4e02-a5d8-9c6b2e0f4713', 'Demo',        'Aug 19 2026, 02:47', 'Jul 20 2026') ],                                 // 1 / 1
-  B8:  [ inst('0b6e3d95-8c24-4f71-b9a0-4e1d7c5a8362', 'MQTT prod',   'Aug 19 2026, 07:02', 'Jun 30 2026') ],                                 // 1 / 1
-  B9:  [ inst('2c9a5f80-4d13-4b67-8e92-1a7f3c6d0b54', 'MQTT staging','Aug 19 2026, 06:11', 'Jul 05 2026') ],                                 // 1 / 1
+  B1:  [ inst('1f0b9a24-6c3e-4d85-b721-9e5a0c8f3d47', 'HQ primary',   7,  'May 02 2026', 'prod', '3.9.4'),
+         inst('2a7c5e13-8d40-4b96-a3f2-6c1b9d7e0452', 'HQ secondary', 9,  'May 04 2026', 'prod', '3.9.4'),
+         inst('9d3f6b80-2e51-4a7c-8b04-5f2a1c6e9370', 'Dev sandbox',  34, 'Jun 01 2026', 'dev',  '3.9.1') ],       // 2 / 4
+  B2:  [ inst('4e8a2d76-1b93-4c50-9f6e-3a7d5b2c8014', 'Prod EU',      5,  'Jun 06 2026', 'prod', '3.9.4'),
+         inst('6b1d4f29-7a08-4e63-b5c1-2d9f8a3e7615', 'Prod US',      11, 'Jun 10 2026', 'prod', '3.9.2') ],       // 2 / 3
+  B3:  [ inst('8c5e0a31-9d76-4f18-a6b3-1e4c7d0b592f', 'Factory A',    18, 'Jun 20 2026', 'prod', '3.8.1') ],       // 1 / 2
+  B4:  [ inst('3a9f7c52-0e14-4b86-9d27-8c5b1a6f3e40', 'Pilot EU',     26, 'Jul 01 2026', 'prod', '3.9.4') ],       // 1 / 1
+  B5:  [],                                                                                                          // 0 / 1 — canceled
+  /* STALE: five days without a report, against a one-hour cadence */
+  B6:  [ inst('5d2b8e47-6f01-4a93-8c15-7b3e9d4a2f60', 'Maker box',    7200, 'Jul 15 2026', 'prod', '3.7.2') ],     // 1 / 1 — STALE
+  B7:  [ inst('7f4c1a68-3b97-4e02-a5d8-9c6b2e0f4713', 'Demo',         41, 'Jul 20 2026', 'prod', '3.9.0') ],       // 1 / 1
+  B8:  [ inst('0b6e3d95-8c24-4f71-b9a0-4e1d7c5a8362', 'MQTT prod',    8,  'Jun 30 2026', 'prod', '3.9.4') ],       // 1 / 1
+  B9:  [ inst('2c9a5f80-4d13-4b67-8e92-1a7f3c6d0b54', 'MQTT staging', 16, 'Jul 05 2026', 'prod', '3.9.3') ],       // 1 / 1
   /* ⚠️ THE deliberate over-limit licence: a perpetual that includes one production
-     instance and is running two. This is the only one, and it is what §5's banner,
-     the Home attention row and the Manage route are all demonstrated on. */
-  B10: [ inst('6e0d2b73-5a89-4c14-9f37-8b2e6a1d4053', 'HQ node 1',   'Aug 19 2026, 07:20', 'Jul 27 2026'),
-         inst('4b8f1e06-2c75-4d93-a610-7e5c3b9f2841', 'HQ node 2',   'Aug 19 2026, 07:18', 'Aug 02 2026') ],                                 // 2 / 1 — OVER
-  B11: [ inst('9a3c7d51-0b68-4e27-8d94-5f1a2c7b6e30', 'Plant B',     'Aug 19 2026, 06:33', 'Sep 01 2025') ],                                 // 1 / 1
-  B12: [ inst('1d5b9f42-7e30-4a86-b2c9-6a4d8e0f3517', 'Broker on-prem','Aug 19 2026, 05:58', 'Aug 13 2026') ],                               // 1 / 1
-  B13: [ inst('8e2a6c04-9f51-4b73-a8d6-3c7b1e5f9024', 'CE building 4','Aug 19 2026, 07:05', 'Feb 18 2026'),
-         inst('5c7d3a91-6b28-4f40-9e15-2a8f4c6b7d39', 'CE building 5','Aug 19 2026, 07:01', 'Mar 02 2026') ],                                // 2 / 3
-  B14: [ inst('3f6b0e85-1a47-4d29-8c73-9b5e2f8a0164', 'Munich',      'Aug 17 2026, 09:12', 'May 24 2026') ],                                 // 1 / 1 — STALE (2 days)
+     instance and is running two. This is the only one, and it is what the blocked
+     banner, the Home attention row and the detach route are all demonstrated on. */
+  B10: [ inst('6e0d2b73-5a89-4c14-9f37-8b2e6a1d4053', 'HQ node 1',    6,  'Jul 27 2026', 'prod', '3.8.1'),
+         inst('4b8f1e06-2c75-4d93-a610-7e5c3b9f2841', 'HQ node 2',    4,  'Aug 02 2026', 'prod', '3.8.1') ],       // 2 / 1 — OVER
+  /* the updates case: a perpetual well behind the current release, which is what the
+     Product version column is for — the gap argues better than any warning */
+  B11: [ inst('9a3c7d51-0b68-4e27-8d94-5f1a2c7b6e30', 'Plant B',      23, 'Sep 01 2025', 'prod', '3.7.2') ],       // 1 / 1
+  B12: [ inst('1d5b9f42-7e30-4a86-b2c9-6a4d8e0f3517', 'Broker on-prem', 14, 'Aug 13 2026', 'prod', '3.9.4') ],     // 1 / 1
+  B13: [ inst('8e2a6c04-9f51-4b73-a8d6-3c7b1e5f9024', 'CE building 4', 3,  'Feb 18 2026', 'prod', '3.9.4'),
+         inst('5c7d3a91-6b28-4f40-9e15-2a8f4c6b7d39', 'CE building 5', 10, 'Mar 02 2026', 'prod', '3.9.4') ],      // 2 / 3
+  /* STALE: two days */
+  B14: [ inst('3f6b0e85-1a47-4d29-8c73-9b5e2f8a0164', 'Munich',       2880, 'May 24 2026', 'prod', '3.8.0') ],     // 1 / 1 — STALE
   /* the grant has been issued but nothing has connected with the key yet — the whole
      point of the awaiting-check-in state, so it must stay empty */
+  /* the expired-updates licence: reporting normally, but two minor versions behind —
+     which is exactly what the Product version column is for */
+  B16: [ inst('c4a71f38-5b62-4e09-9d17-3f8e5a2b6c04', 'Warehouse DC', 19, 'Aug 07 2024', 'prod', '3.7.2') ],
   B15: [],
   G1:  []
 };
@@ -452,6 +568,16 @@ var EC_PLANS = {
      was never shown on any other plan. */
   'thingsboard|payg': {
     cards: [
+      /* ⚠️ FIRST, and ThingsBoard-only: TBMQ's sets are untouched. `free:true` travels
+         with the card so every surface that renders one — landing, Home, both wizards —
+         reads the same flag rather than testing the price string.
+         The qualifier given for each ("up to 100 devices, 1 production instance") rides
+         in `term`, the slot the perpetual card already uses for its one-line condition,
+         so a free card keeps the paid cards' shape without borrowing their rows. */
+      { name:'Free',           price:'Free', per:'', free:true, term:'up to 100 devices, 1 production instance',
+        feats:['100 devices', '1 production instance', '1M AI credits / month'] },
+      { name:'Non-commercial', price:'Free', per:'', free:true, term:'up to 1,000 devices, non-commercial only',
+        feats:['1,000 devices', 'Unlimited production instances', '1M AI credits / month'] },
       { name:'Pilot',     price:'$99',  per:'/ month', badge:'Popular', feats:['100 devices', '100 assets', '1 production instance', '4M AI credits / month', 'Help desk', 'White labeling', 'Device limit is fixed on this plan'] },
       { name:'Startup',   price:'$299', per:'/ month', feats:['500 devices', '500 assets', '2 production instances', '8M AI credits / month', 'Priority help desk', 'White labeling', 'Device limit is fixed on this plan'] },
       { name:'Business',  price:'$499', per:'/ month', feats:['1,000 devices', '1,000 assets', '3 production instances', '16M AI credits / month', 'Priority help desk', 'White labeling', '+$0.10 per extra device'] }
@@ -533,6 +659,13 @@ var UPDATES_LAPSE = 'Your deployment keeps running indefinitely — a perpetual 
   + 'You can buy software updates again at any time.';
 // the banner has room for one clause, so it carries the half the reader does not expect
 var UPDATES_LAPSE_SHORT = 'The deployment keeps running; new versions and support stop.';
+/* ⚠️ THE ONE SENTENCE every updates warning carries, at every stage and on every
+   surface — Home banner, licence page, and the list's alert tooltip in short form.
+   It names exactly two consequences and nothing else: no vague "risk", no "your
+   deployment may become insecure", nothing the product cannot stand behind. If the
+   wording changes it changes in one place, so the three surfaces cannot drift into
+   three different promises. */
+var UPDATES_LOSS = 'You will not receive security fixes released after this date, and you cannot upgrade to new versions.';
 /* ⚠️ 40% of the licence base price — the figure given for this pass. It is the only
    pricing rule the repository has for updates, and it is not confirmed in writing
    anywhere; see NOTES. Renewing sets a fresh 12-month term FROM THE PURCHASE DATE
@@ -544,7 +677,7 @@ var UPDATES_RENEW_MONTHS = 12;
    wizard.js's IIFE, which meant anything outside the wizard that needed a licence's
    price — the updates purchase, for one — had to re-derive it from a display string.
    wizard.js now reads this instead of keeping its own copy. */
-var TIER_BASE = { maker:10, prototype:39, pilot:99, startup:299, business:499,
+var TIER_BASE = { free:0, noncomm:0, maker:10, prototype:39, pilot:99, startup:299, business:499,
                   tbmqsub:15, tbperp:4999, tbmqperp:2999, grant:0 };
 function tierBase(t){ return TIER_BASE[t] || 0; }
 // intro sentence of the PE card — same wording on every plan surface

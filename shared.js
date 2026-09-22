@@ -85,7 +85,7 @@ var Store = (function(){
      no company name at all. That store would render a half-empty consolidated section
      and print an invoice missing the company. Bumping is cheaper than a migration for
      a prototype, and unlike a migration it cannot half-succeed. */
-  var KEY = 'tb-license-portal-demo-v12';   // v12: billingAddress is seeded (see the note below)
+  var KEY = 'tb-license-portal-demo-v14';   // v14: B16 (expired updates) + B12 moved to the 30-day stage
   function clone(o){ return JSON.parse(JSON.stringify(o)); }
   /* ⚠️ The snapshot is taken ONCE and then shifted to today. Doing it here rather than
      at render time means every surface reads the same stored dates, and a browser left
@@ -105,6 +105,14 @@ var Store = (function(){
          page and reaches the portal through sign-up or log-in — and so "Reset demo
          data" returns there without needing a line of its own. */
       auth: 'out',                // 'out' | 'new' | 'existing'
+      /* ⚠️ WHICH PRODUCT THE SESSION ARRIVED FOR. The portal states the product rather
+         than offering a choice of two (see nlProductStatedHTML), and in a real portal
+         this would come from where the person came from — the product's own pages, a
+         campaign link, a referrer. The prototype cannot know that, and there is no URL
+         parameter here to read, so the ⚙ panel sets it and every selling surface starts
+         from it. Swapping product inside a flow still works and does not write here:
+         arrival is where you STARTED, not where you ended up. */
+      arrived: 'thingsboard',     // 'thingsboard' | 'tbmq'
       pendingPurchase: null,      // { product, kind, plan } carried across the sign-up navigation
       /* Everything below is written by a form and read by a surface. `null` means
          "nothing saved yet", and every reader falls back to what the markup or
@@ -140,6 +148,11 @@ var Store = (function(){
   if(!state || !state.datasets || !state.datasets.A){ state = seed(); fresh = true; }
 
   function save(){ try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e){} }
+  /* ⚠️ CHECK-IN STAMPS ARE REFRESHED ON EVERY LOAD, not only on a fresh seed. At an
+     hourly cadence a stored stamp is stale within the hour, so a demo opened the next
+     day would show every instance as Stale — a screen of red herrings. `agoMin` is the
+     real datum; the stamp is derived from the clock each time (see refreshCheckins). */
+  refreshCheckins(state.datasets);
   if(fresh) save();   // write the seed straight away, so every page starts from the same copy
   return {
     state: function(){ return state; },
@@ -638,6 +651,7 @@ function settingsContext(){
   return {
     page: page,
     home: page === 'home',
+    landing: page === 'landing',
     licenses: page === 'licenses',
     billing: page === 'billing',
     /* the details surface counts in either presentation: the full page, or the
@@ -647,7 +661,7 @@ function settingsContext(){
     /* the billing step specifically, not just "a wizard is open": the autofill below
        has nothing to fill on the other three steps, and a panel action that does
        nothing where it appears is the thing this panel was cleaned up to stop doing */
-    billStep: !!(nl && !nl.hidden && $('#nlStep4') && !$('#nlStep4').hidden)
+    billStep: !!(nl && !nl.hidden && $('#nlStepBill') && !$('#nlStepBill').hidden)
   };
 }
 function settingsBodyHTML(){
@@ -678,6 +692,17 @@ function settingsBodyHTML(){
   if(c.licenses){
     out += group('List layout',
       '<a class="sp-opt" href="licenses.html"><span>Product-first (neutral)</span></a>');
+  }
+
+  /* ---- which product the session behaves as having arrived for. Scoped to the three
+     surfaces that STATE a product — the landing page, Home's new-user screen and the
+     wizard — because nowhere else reads it. It stands in for a referrer the prototype
+     has no way to see. */
+  if(c.landing || c.home || c.wizard){
+    out += group('Arrived for', PRODUCT_CHOICES.map(function(o){
+      return '<label class="sp-opt"><input type="radio" name="arrived" value="' + o.v + '"'
+        + (arrivedProduct() === o.v ? ' checked' : '') + '><span>' + o.t + '</span></label>';
+    }).join(''));
   }
 
   /* ---- the wizard's own options. `Billing data` decides whether the flow has a
@@ -1114,6 +1139,8 @@ function wireTabs(){
    and one that chose A keeps it. The key is not in the seed, so nothing about the
    stored state changes and the store key does not need a bump. */
 function custVariant(){ return Store.get('custVariant') === 'a' ? 'a' : 'b'; }
+/* the product every selling surface opens on — see the `arrived` note in the seed */
+function arrivedProduct(){ return Store.get('arrived') === 'tbmq' ? 'tbmq' : 'thingsboard'; }
 // How a licence row presents its details: its own page (A) or a modal over the
 // page you were on (B). Read by the row wiring in components.js.
 /* The modal is the default presentation; the page variant stays in the settings
@@ -1250,47 +1277,23 @@ function paymentMethodData(){
   var exp = c.exp.length === 4 ? (c.exp.slice(0,2) + ' / 20' + c.exp.slice(2)) : c.exp;
   return { brand:c.brand, num:c.num, exp:'<span class="pc-expw">Expires </span>' + exp };
 }
-/* ---------- scheduled changes -------------------------------------------------
-   THE RULE, and it applies to plan changes and add-ons alike:
-     · anything that GROWS  — higher plan, more capacity, an add-on switched on —
-       applies immediately, prorated, as it always did;
-     · anything that SHRINKS — lower plan, less capacity, an add-on switched off —
-       applies at the END of the current paid period.
+/* ---------- scheduled changes: REMOVED -----------------------------------------
+   ⚠️ `scheduleChange()` and `cancelScheduledChange()` are gone, and with them the rule
+   they enforced: that anything which SHRINKS a licence — a lower plan, less capacity, an
+   add-on switched off — took effect at the end of the paid period, while growth applied
+   at once. Downgrades now recalculate immediately, so there is no record to write, no
+   date to hold it, and nothing to cancel.
 
-   ⚠️ The reason is not billing neatness. Entitlement is enforced by the platform, so
-   taking it away mid-period stops a running instance the person has already paid for
-   this month. Immediate-and-symmetric would have been less code and wrong.
+   What that rule was protecting is worth stating, because removing it accepted the cost
+   knowingly: entitlement is enforced by the platform, so lowering a licence mid-period
+   takes capacity away from a deployment that has already been paid for to this month's
+   end. The decision supersedes that; this note is the only thing left of it.
 
-   ⚠️ A MIXED change (something grows, something else shrinks) is scheduled WHOLE. The
-   test is "does any entitlement decrease", not "is the net bill lower": splitting one
-   agreement into two half-applied ones is the thing this rule exists to prevent, and
-   the person agreed to one change on one date.
-
-   The record lives on the licence so every surface can read it: what changes, to what,
-   and when it takes effect. Cancelling it restores nothing — the licence was never
-   modified — it just drops the record and says so. */
-function scheduleChange(lic, rec){
-  lic.scheduled = rec;                       // { summary, effective, apply:{…}, kind }
-  lic.updated = todayStr();
-  Store.save();
-  logActivity({ kind:'updated', entityType:rec.kind === 'plan' ? 'Plan' : 'Add-on',
-    entityName:lic.name, action:'SCHEDULED',
-    txt:'A change to <b>' + esc(lic.label || lic.name) + '</b> was scheduled by ' + portalActor()
-      + ' for ' + fmtDate(rec.effective) + ' — ' + esc(rec.summary),
-    delta:rec.summary });
-}
-function cancelScheduledChange(licId){
-  var lic = licById(licId);
-  if(!lic || !lic.scheduled) return null;
-  var was = lic.scheduled;
-  delete lic.scheduled;
-  lic.updated = todayStr();
-  Store.save();
-  logActivity({ kind:'updated', entityType:'License', entityName:lic.name, action:'SCHEDULE_CANCELED',
-    txt:'The scheduled change to <b>' + esc(lic.label || lic.name) + '</b> was canceled by '
-      + portalActor() + ' — the license keeps its current plan and capacity.' });
-  return was;
-}
+   Removed with it: `lic.scheduled` as a stored shape, the SCHEDULED and
+   SCHEDULE_CANCELED activity entries, the banner in the Plan block (`#schedLine` and
+   renderScheduled in license-details.js) and its `Cancel this change` action, and the
+   Review step's deferral box. Nothing seeded a `scheduled` record in DATASETS, so no
+   demo data had to change. */
 
 /* ---------- recovery from a failed payment ------------------------------------
    ⚠️ A failed payment is a property of the CARD, not of the licence — one card
@@ -1358,6 +1361,12 @@ function wireSettingsPanel(){
       // the details presentation is a stored setting; rows read it on click
       case 'licDetails':
         Store.set('licDetails', r.value);
+        return;
+      /* arrival changes what every selling surface states, and all three of them are
+         re-rendered from one entry point rather than each knowing about the others */
+      case 'arrived':
+        Store.set('arrived', r.value);
+        location.reload();
         return;
       // switching the Customize variant re-renders whichever flow is open
       case 'custVariant':
@@ -1665,6 +1674,60 @@ var COUPON_MODAL_HTML = ''
 + '    </div>'
 + '  </div>'
 + '</div>';
+
+/* ---------- the coupon dialog: ONE controller, two callers -----------------------
+   ⚠️ It used to be wired inside license-details.js, against `#couponBtn` — which was
+   right while the licence surface was the only place a coupon could be applied. The
+   purchase flow applies one too now (on Review, beside the price it changes), and a
+   second controller over the same markup is how two surfaces end up disagreeing about
+   what Apply does. So the dialog lives with its markup and takes a callback: the
+   CALLER decides what applying means — a snackbar on the licence, a recalculated total
+   in the wizard — and the dialog only collects the code.
+
+   ⚠️ The `Apply` button IS disabled until something is typed here, unlike the billing
+   primaries. It is not refusing a judgement it could explain: there is literally no
+   code yet, and the field it belongs to is the only one in the dialog. */
+var Coupon = (function(){
+  /* ⚠️ BOUND LAZILY, on first open — not at definition. The dialog's markup is injected
+     by injectChrome(), which runs in the boot block at the END of this file, so every
+     node this controller needs is null while the file is still being evaluated. Bound
+     eagerly, `open()` became a silent no-op: the click was handled, nothing appeared,
+     and there was no error to find it by. Caught in a flow measurement, not in console. */
+  var ov, input, apply, wired = false;
+  var onApply = null, returnTo = null;
+  function refresh(){ apply.disabled = !input.value.trim(); }
+  function close(){
+    ov.hidden = true;
+    // focus goes back to whatever opened it, not to a fixed button that may not exist
+    if(returnTo && document.contains(returnTo)) returnTo.focus();
+    returnTo = null; onApply = null;
+  }
+  function wire(){
+    if(wired) return true;
+    ov = $('#couponOverlay'); input = $('#couponInput'); apply = $('#couponApply');
+    if(!ov || !input || !apply) return false;
+    input.addEventListener('input', refresh);
+    $('#couponClose').addEventListener('click', close);
+    $('#couponCancel').addEventListener('click', close);
+    apply.addEventListener('click', function(){
+      if(apply.disabled) return;
+      var code = input.value.trim(), cb = onApply;
+      close();
+      if(cb) cb(code);
+    });
+    ov.addEventListener('click', function(e){ if(e.target === ov) close(); });
+    document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && !ov.hidden) close(); });
+    wired = true;
+    return true;
+  }
+  return {
+    open: function(cb, opener){
+      if(!wire()) return;
+      onApply = cb || null; returnTo = opener || null;
+      input.value = ''; refresh(); ov.hidden = false; input.focus();
+    }
+  };
+})();
 
 /* ---------- boot ---------- */
 /* ⚠️ The guard runs FIRST and the boot stops on a redirect. `location.replace` does

@@ -23,10 +23,17 @@
            carried the least information, and `ThingsBoard Products Pricing` named the
            section the reader was already looking at. The H1 now says what the page is
            FOR, in the same style the section title used — see .lp-sect / --t-h1-*. -->
+      <!-- ⚠️ BOTH LINES ARE FILLED BY JS, because both depend on which product the
+           session arrived for (see landingHeading / landingLead). The swap link sits
+           DIRECTLY BENEATH the line rather than to its right: right-aligned it would
+           float ~500px away from the sentence it belongs to on a wide screen, reading
+           as page chrome instead of an answer to "but I wanted the other one". Beneath,
+           it behaves the same at 1280 and at 390. -->
       <div class="dwelcome lp-welcome">
         <div class="dw-txt">
-          <h1 class="lp-sect">Buy and manage ThingsBoard licenses</h1>
-          <p>Self-managed ThingsBoard and TBMQ. Choose a product and a way to pay &mdash; you&rsquo;ll need an account to buy a plan.</p>
+          <h1 class="lp-sect" id="landingHead"></h1>
+          <p id="landingLead"></p>
+          <div id="landingSwap" class="lp-swap"></div>
         </div>
       </div>
 

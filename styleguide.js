@@ -124,23 +124,29 @@ $('#sgSpace').innerHTML = SPACE.map(function(s){
    current plan (strip, no CTA), card 3 plain. */
 (function(){
   var set = EC_PLANS['thingsboard|payg'];
-  var cards = set.cards.slice(0, 3);
+  /* ⚠️ PICKED BY NAME, not `slice(0, 3)`. The set now leads with the two free plans, so
+     a positional slice showed Free, Non-commercial and Pilot — three cards, but only one
+     of the two SHAPES the component has. One free card and two paid ones show both, and
+     the row keeps its three states. */
+  function card(n){ return set.cards.filter(function(c){ return c.name === n; })[0]; }
+  var cards = [card('Free'), card('Pilot'), card('Startup')];
   var sel = { product:'thingsboard', kind:'subscription',
-              plan:cards[0].name, currentName:cards[1].name };
+              plan:'Pilot', currentName:'Startup' };
   var grid = $('#sgPlans');
   grid.className = 'plangrid withcur';
   grid.innerHTML = cards.map(function(c){ return nlPlanCardHTML(c, set, sel); }).join('');
 })();
 
-/* ---------- product cards ---------- */
-$('#sgProducts').innerHTML = PRODUCT_CARDS.map(function(c, i){
-  return productCardHTML(c, i === 0);      // the first one shows the selected ring
-}).join('');
+/* ---------- the stated product ----------
+   Built by the same function the three selling surfaces call, so the specimen cannot
+   drift from them. `sel` is empty: with no product on it the line falls back to the
+   session's arrival, which is exactly what a surface opening fresh does. */
+$('#sgProducts').innerHTML = nlProductStatedHTML({});
 
 /* ---------- wizard stepper inside the modal specimen ---------- */
 $('#sgWizStep').innerHTML = '<div class="nl-progress">'
   + '<div class="nl-ptrack"><span class="nl-pfill" style="width:25%"></span></div>'
-  + '<div class="nl-plabel">Step 1 of 4 · <b>Product</b></div></div>';
+  + '<div class="nl-plabel">Step 1 of 4 · <b>Choose your plan</b></div></div>';
 
 /* ---------- feed entries, from the real renderer ---------- */
 (function(){

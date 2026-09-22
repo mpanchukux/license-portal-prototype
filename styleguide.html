@@ -23,7 +23,7 @@
       <a href="#tokens">Tokens</a><a href="#buttons">Buttons</a><a href="#inputs">Inputs</a>
       <a href="#chips">Status chips</a><a href="#table">Table</a><a href="#cards">Cards</a>
       <a href="#modals">Modals</a><a href="#stepper">Wizard stepper</a><a href="#banners">Banners</a>
-      <a href="#feed">Feed entry</a><a href="#tooltip">Tooltips</a><a href="#infoicon">Info icon</a><a href="#empty">Empty states</a><a href="#solo">Solo state</a><a href="#empty">No results</a><a href="#messages">Messages</a><a href="#sheet">Bottom sheet</a><a href="#snack">Snackbar</a>
+      <a href="#feed">Feed entry</a><a href="#tooltip">Tooltips</a><a href="#infoicon">Info icon</a><a href="#empty">Empty states</a><a href="#solo">Solo state</a><a href="#empty">No results</a><a href="#alerticon">Alert icon</a><a href="#homebanner">Home banner</a><a href="#instancesview">Instances view</a><a href="#messages">Messages</a><a href="#sheet">Bottom sheet</a><a href="#snack">Snackbar</a>
       <a href="index.html">← back to the portal</a>
     </nav>
   </div>
@@ -228,14 +228,26 @@
       <p class="sg-note"><code class="sg-cls">.plancard</code> in the plan grid, with the
         <code class="sg-cls">.pc-current</code> strip the current plan wears; the strip's height is reserved on every
         card so plan names stay on one line.</p>
+      <p class="sg-note"><b>Free plans use the same card.</b> A card whose data carries
+        <code class="sg-cls">free:true</code> puts the word <i>Free</i> where a price goes and its
+        qualifier in <code class="sg-cls">.pc-term</code> — the slot the perpetual card already uses for a
+        one-line condition. It gets no extra rows: a free card lists only what was stated for it, so it is
+        visibly shorter than a paid one, and that difference is information rather than a gap to fill.</p>
       <div class="plangrid" id="sgPlans"></div>
     </div>
     <div class="sg-item">
-      <h3>Product card</h3>
-      <p class="sg-note"><code class="sg-cls">.nl-prodcard.nl-select</code> — the large product card.
-        The wizard no longer uses it (product, billing and plan share one step now); kept here as a
-        specimen of the pattern.</p>
-      <div class="nl-prodgrid" id="sgProducts"></div>
+      <h3>Stated product</h3>
+      <p class="sg-note"><code class="sg-cls">.nl-stated</code> with <code class="sg-cls">.nl-prodswap</code> —
+        how every selling surface names the product: <b>stated, not chosen</b>. Someone arriving at the portal
+        has already decided which product they want, so a pair of equal cards asked a question that was
+        answered before the page loaded. One line states it; a quiet link offers the other, and choosing it
+        swaps both the line and the link. Which product is stated comes from the session's arrival
+        (⚙ panel → <i>Arrived for</i>); in a real portal it would come from the referrer.</p>
+      <div id="sgProducts"></div>
+      <p class="sg-note"><b>&#9888; <code class="sg-cls">.nl-prodcard</code> and
+        <code class="sg-cls">productCardHTML</code> now have no user.</b> They drew the two-card selector this
+        replaced. Left in place rather than deleted, like <code class="sg-cls">display</code> in the type scale —
+        but unlike that one they are a whole component, so removing them is a decision worth taking on purpose.</p>
     </div>
     <div class="sg-item">
       <h3>Dashboard block</h3>
@@ -302,12 +314,17 @@
     <h2>Wizard stepper</h2>
     <p>One stepper: the progress line. A 3px track directly under the header hairline, then a single
       “Step N of M · Label” row.</p>
+    <p class="sg-note"><b>M is computed, never written down.</b> The purchase flow's steps are a list built per
+      mode — <i>Choose your plan · Capacity · Add-ons · Review</i>, plus <i>Payment &amp; Billing</i> when the
+      account has no billing data — and steps drop out of it: a free plan has no Capacity, no Add-ons and no
+      billing, TBMQ subscriptions have no Add-ons, and Manage add-ons has no plan step. So the same
+      component reads “Step 2 of 2” and “Step 4 of 5”, and no screen can promise a step that is not coming.</p>
     <div class="sg-item">
       <h3>Progress line <span class="sg-cls">.nl-stepbar &gt; .nl-progress</span></h3>
       <div class="sg-static" style="padding:0">
         <div class="nl-stepbar"><div class="nl-progress">
           <div class="nl-ptrack"><span class="nl-pfill" style="width:50%"></span></div>
-          <div class="nl-plabel">Step 2 of 4 · <b>Plan</b></div>
+          <div class="nl-plabel">Step 2 of 4 · <b>Capacity</b></div>
         </div></div>
       </div>
       <div class="sg-flag"><b>Deviation from the brief:</b> the brief asked for all three stepper variants.
@@ -391,6 +408,43 @@
         <em>choosing between</em> — an add-on they may or may not want — it stays as body text.
         Hiding it behind an icon would hide the thing being decided.</p>
     </div>
+
+    <div class="sg-item" id="alerticon">
+      <h3>Alert icon <span class="sg-cls">.alertic.tip.wide</span></h3>
+      <p class="sg-note"><b>Two icons, two meanings, and the difference is the whole reason there are
+        two.</b> The info icon above explains something <b>neutral</b> — what a production instance is,
+        what an AI credit buys — and a reader who never opens it has lost nothing. This one says
+        <b>something is wrong</b>, and in a list row it is the only mark that does. If they looked alike,
+        a row would answer &ldquo;is anything the matter here?&rdquo; with a glyph that means either.</p>
+      <div class="sg-row">
+        <div class="sg-cell">
+          <span style="font-size:14.5px"><span class="pill">Active</span>
+            <button type="button" class="alertic tip wide" aria-label="Software updates expired"
+              data-tip="Software updates ended Sep 10, 2026. No security fixes or version upgrades."><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2l9.2 16.3H2.8z"/><path class="al-bang" d="M12 9.4v4.4"/><circle class="al-bang" cx="12" cy="16.7" r="1"/></svg></button></span>
+          <span class="sg-cls">hover me</span>
+        </div>
+        <div class="sg-cell">
+          <span style="font-size:14.5px">AI credits
+            <button type="button" class="infoic tip wide" aria-label="About AI credits"
+              data-tip="Monthly allowance, in blocks of 1M credits."><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11.5v4.5"/><path d="M12 8h.01"/></svg></button></span>
+          <span class="sg-cls">the neutral one, for contrast</span>
+        </div>
+      </div>
+      <p class="sg-note" style="margin-top:12px"><b>How they differ, and it is not only the shape.</b>
+        Info is a <b>hairline ring</b> in <code class="sg-cls">--faint</code>; alert is a <b>filled
+        triangle</b> in <code class="sg-cls">--ink</code>, with the exclamation knocked out of the fill.
+        Fill is the strongest emphasis this system has, and it is what the attention chips already use.
+        Same size, same tooltip mechanics — hover on a pointer device, <b>tap below 600px</b>, because
+        touch has no hover and an explanation only reachable by hover is not reachable.</p>
+      <p class="sg-note"><b>&#9888; Not in an error colour, and that is a departure from what was asked.</b>
+        This prototype is monochrome by hard rule — state is carried by weight, fill and shape, never by
+        hue — and a single red glyph would be the only colour in the product. Adding an
+        <code class="sg-cls">--error</code> token is a one-line change if that rule is being revisited;
+        it is recorded here rather than made quietly.</p>
+      <p class="sg-note"><b>Keep the row's own label short.</b> In the table the icon carries a few
+        words. The full sentence — what is actually lost — lives on the licence page, where there is room
+        to say it once, properly.</p>
+    </div>
   </section>
 
   <!-- ============================ EMPTY ============================ -->
@@ -410,15 +464,94 @@
       </div>
     </div>
 
+    <div class="sg-item" id="homebanner">
+      <h3>The Home banner slot <span class="sg-cls">#homeBanner · .gbanner.homebanner</span></h3>
+      <p class="sg-note"><b>One slot, one banner, a stated priority order.</b> An account with three
+        problems does not get three bands pushing its licences off the screen — it gets the most serious
+        one, and that banner <b>says how many other licences need attention</b> and links to them
+        (<code class="sg-cls">licenses.html?attention=1</code>). Stacking them turns the top of Home into
+        a queue nobody reads.</p>
+      <div class="sg-static" style="padding:0;margin-bottom:12px">
+        <div class="gbanner homebanner is-blocking">
+          <svg class="icon gb-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l9 16H3z"/><path d="M12 9.5v4.2"/><circle cx="12" cy="16.6" r=".9"/></svg>
+          <span class="gb-txt"><b><a class="gb-lic" href="#">On-prem HQ</a> is blocked.</b> 2 production
+            instances are running against 1 allowed on this plan. The license checks in every hour, so it
+            stays blocked until the count is back within its limit. This usually happens after moving a
+            deployment to a new server. If that is what happened, detach the old one.
+            <a class="gb-lic" href="#">3 other licenses need attention</a>.</span>
+          <span class="sp"></span>
+          <button class="gb-act">Manage</button><a class="gb-act sec" href="#">Detach an instance</a>
+        </div>
+      </div>
+      <p class="sg-note"><b>The order, and the whole inventory.</b> Nothing renders that is not on this
+        list; a condition without a row here does not get a banner invented for it.</p>
+      <div class="tablescroll"><table class="sg-table">
+        <thead><tr><th>#</th><th>Condition</th><th>Action</th><th>Dismissible</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Licence blocked — over the production instance limit</td><td>Manage · route to Instances</td><td><b>no</b></td></tr>
+          <tr><td>2</td><td>Payment failed</td><td>Update payment method</td><td><b>no</b></td></tr>
+          <tr><td>3</td><td>No payment method, paid licence active</td><td>Add payment method</td><td><b>no</b></td></tr>
+          <tr><td>4</td><td>Card expires before the next charge</td><td>Update payment method</td><td>yes — returns at 14 days</td></tr>
+          <tr><td>5</td><td>Software updates expired</td><td>Renew updates</td><td>yes — returns after 7 days</td></tr>
+          <tr><td>6</td><td>Software updates end in 14 days</td><td>Renew updates</td><td>yes — returns at expiry</td></tr>
+          <tr><td>7</td><td>Software updates end in 30 days</td><td>Renew updates</td><td>yes — returns at 14 days</td></tr>
+          <tr><td>8</td><td>Never activated by any instance</td><td>Installation instructions</td><td>yes — permanently</td></tr>
+          <tr><td>9</td><td>Community Grant approved</td><td>View license</td><td>yes — permanently</td></tr>
+        </tbody>
+      </table></div>
+      <p class="sg-note" style="margin-top:12px"><b>Dismissal is per licence AND per state.</b> The key is
+        <code class="sg-cls">&lt;licence id&gt;:&lt;state&gt;</code>, so closing one notice can never
+        silence a different licence, a different problem, or a <b>later stage of the same one</b>:
+        <code class="sg-cls">B11:updates_30</code> and <code class="sg-cls">B11:updates_14</code> are
+        different keys, so the 14-day notice arrives as if nothing had been dismissed. That is why the
+        stage is in the key rather than in a value beside it. The two &ldquo;returns after N days&rdquo;
+        rules store the <b>day</b> dismissed, not a boolean.</p>
+      <p class="sg-note"><b>&#9888; Blocking states cannot be dismissed, and that is deliberate.</b>
+        Blocked, payment failed and no-payment-method are all conditions where something has already
+        stopped working or is about to, and where the portal is the only place the person finds out. A
+        dismissible blocker is a blocker that gets closed once and never seen again, and the next contact
+        is a support ticket asking why the deployment stopped. Time-based warnings are the opposite: they
+        come back on their own, so dismissing one costs nothing.</p>
+      <p class="sg-note"><b>Home notifies; the licence records.</b> The same conditions appear on the
+        licence page in <code class="sg-cls">#subAlert</code> and are <b>never</b> dismissible there —
+        Home is a notification surface, the licence is the record of state.</p>
+      <p class="sg-note"><b>A cancelled licence that is still active until its end date gets no banner.</b>
+        Nothing needs doing, and the state is already on the licence and in the list.</p>
+    </div>
+
+    <div class="sg-item" id="instancesview">
+      <h3>The Instances view <span class="sg-cls">#instancesList</span></h3>
+      <p class="sg-note"><b>A view, not a nav destination.</b> A typical customer runs two to five
+        instances; a top-level page for five rows costs more attention than it returns. The Licenses page
+        carries a <code class="sg-cls">.lic-viewseg</code> toggle — same page, same toolbar, two ways of
+        slicing the same data. Columns: instance · licence · last check-in · version · status. <b>Nothing
+        about plans or money lives here</b> — that is what the licence row is for.</p>
+      <p class="sg-note"><b>The shared toolbar has to stand down.</b> The type chips and the canceled
+        switch filter <em>licences</em>, and an instance has neither a type nor a cancellation, so they are
+        hidden in this view rather than left disabled. Search stays: both views are rows.</p>
+      <p class="sg-note"><b>Detach lives on the instance row and nowhere else.</b> The blocked banner does
+        not implement a second one — it <em>routes</em> here, the same way the payment-failed banner routes
+        to the card modal. Discovery is handled by copy, in two places: the blocked banner
+        (&ldquo;This usually happens after moving a deployment to a new server…&rdquo;) and a quiet
+        persistent line above this list (<code class="sg-cls">.inst-hint</code>). Two sentences, no second
+        button.</p>
+      <p class="sg-note"><b>The confirmation is destructive treatment, because this turns off live
+        infrastructure.</b> It <b>names the instance</b> — there is no &ldquo;are you sure?&rdquo; about an
+        unnamed thing when the whole point is picking the right one of several — shows its full ID and last
+        check-in, and says what happens and <b>when</b>: the server keeps running until its next check-in,
+        <b>within the hour</b>, and then stops. The seat is freed immediately, so the replacement can be
+        activated with the same key straight away.</p>
+    </div>
+
     <div class="sg-item" id="messages">
-      <h3>Where a message goes &mdash; three places, one rule each</h3>
+      <h3>Where a message goes &mdash; two places, one rule each</h3>
       <p class="sg-note">⚠️ <b>A single action used to produce two messages at once</b> — a bar inside the
         licence panel and an inline note under the key. Split by <b>kind</b>, each kind has exactly one
         place, and nothing invents a fourth.</p>
       <p class="sg-note"><b>1 · Result of an action → snackbar.</b> Something the person just did, which is
         finished and will not become truer by staying on screen: plan changed, capacity purchased, add-on
-        removed, coupon applied, label saved, payment method updated, subscription cancelled, scheduled
-        change cancelled, updates renewed, invoice downloaded. It lives <b>outside</b> the licence panel —
+        removed, coupon applied, label saved, payment method updated, subscription cancelled,
+        updates renewed, invoice downloaded. It lives <b>outside</b> the licence panel —
         bottom of the viewport on desktop, top below 600px — and leaves on its own.</p>
       <p class="sg-note"><b>2 · Persistent state → the slot below the panel header</b>
         (<span class="sg-cls">#subAlert</span>). Facts that stay true until something changes: payment
@@ -426,12 +559,14 @@
         <b>One at a time.</b> If two are true, show the more serious one and <b>name the other in the same
         banner</b> rather than stacking — two banners is two problems competing for one glance and pushing
         the licence off screen. Nothing transient goes here.</p>
-      <p class="sg-note"><b>3 · Scheduled changes → the Plan block</b>
-        (<span class="sg-cls">#schedLine</span>). ⚠️ <b>A deliberate exception to the one-slot rule, and it
-        is not to be "fixed" by moving it.</b> The line annotates the table <i>directly beneath it</i> —
-        every figure it names (production instances, development instances, AI credits) is a row of that
-        table. Moved to the state slot it would describe numbers three scroll-lengths away, which is the
-        arrangement it was moved out of.</p>
+      <p class="sg-note">⚠️ <b>There used to be a third place: scheduled changes, in the Plan block</b>
+        (<span class="sg-cls">#schedLine</span>) — a line stating that a lowering change would take effect on
+        a future date, carrying the action that cancelled it. <b>It is gone, and so is the thing it
+        described.</b> Downgrades recalculate immediately, so no change is ever pending: there is nothing to
+        announce between deciding and it happening, and nothing to cancel. What the reader needs is said
+        <i>before</i> they commit, on the Review step (<span class="sg-cls">.nl-effect</span>) — what is being
+        given up, the new price, and that it starts immediately — and afterwards by the snackbar, like every
+        other completed action.</p>
       <p class="sg-note"><b>The one banner that sits above the header</b> is
         <span class="sg-cls">#licNewBanner</span> — <i>License created</i>. It is above the title precisely
         so a newly created licence <i>with a problem</i> can show it and the state banner at once without

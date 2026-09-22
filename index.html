@@ -26,15 +26,13 @@
         <button class="btn xl" id="dashNewBtn">Buy a license</button>
       </div>
 
-      <!-- Community Grant approved: one-time success banner, shown only in the
-           grant state and only until dismissed (see syncGrantChrome) -->
-      <div class="gbanner" id="grantBanner" role="status" hidden>
-        <svg class="icon gb-ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.4l2.4 2.4 4.6-5"/></svg>
-        <span class="gb-txt">Your Community Grant is ready &mdash; the license key has been issued.</span>
-        <span class="sp"></span>
-        <button class="gb-act" id="grantViewBtn">View license</button>
-        <button class="gb-x" id="grantDismissBtn" aria-label="Dismiss">&#10005;</button>
-      </div>
+      <!-- ⚠️ ONE SLOT FOR EVERY HOME BANNER, filled by renderHomeBanner (components.js).
+           The Community Grant banner used to be hard-coded here with its own buttons and
+           its own dismissal; it is now condition 9 of nine in one priority order, so a
+           grant can never outrank a blocked licence, and every banner dismisses by the
+           same per-licence, per-state rule. Only the highest-priority condition renders;
+           that banner names how many other licences need attention. -->
+      <div class="gbanner homebanner" id="homeBanner" role="status" hidden></div>
 
       <!-- Licenses: full width, rendered with the same head/row builders as the
            Licenses page, capped at the top five attention-first for the large

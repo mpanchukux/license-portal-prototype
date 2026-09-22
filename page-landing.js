@@ -11,15 +11,33 @@
 /* The same selection object shape the wizard's `st` is. No `locked` and no
    `currentName`: nothing is locked on a public page, and a visitor with no account
    has no current plan. */
-var lsel = { product:'thingsboard', kind:'subscription', plan:null };
+// the product is STATED here, and which one comes from arrival — see arrivedProduct()
+/* `statedInHead` — this page names the product in its own H1, so the shared picker
+   must not state it a second time above the tabs (see nlProductStatedHTML). */
+var lsel = { product:arrivedProduct(), kind:'subscription', plan:null, statedInHead:true };
 
 var lChoices = $('#landingChoices'), lPlans = $('#landingPlans'),
     lExtra = $('#landingExtra'), lBase = $('#landingBase');
 /* The fourth argument is what makes this a SELLING surface rather than a step in a
    flow: the PE card on a multi-card set, the sizing note on a single one. Home's
    new-user screen passes its own node to the same renderer; the wizard passes none. */
-function renderLanding(){ renderPlanPicker(lChoices, lPlans, lsel, lExtra, lBase); }
+/* The head is part of the render, not static markup: swapping the product changes the
+   heading, the line and the link along with the cards. */
+function renderLanding(){
+  $('#landingHead').textContent = landingHeading(lsel);
+  $('#landingLead').textContent = landingLead(lsel);
+  $('#landingSwap').innerHTML = productSwapHTML(lsel);
+  renderPlanPicker(lChoices, lPlans, lsel, lExtra, lBase);
+}
 renderLanding();
+
+/* ⚠️ The swap link moved OUT of the picker and into the page head, so the picker's own
+   delegated listener stopped seeing it — the link rendered, was clickable, and changed
+   nothing. Its host listens for it now, through the same `planPickerClick` reading, so
+   there is still one interpretation of "the product changed". */
+$('#landingSwap').addEventListener('click', function(e){
+  if(planPickerClick(e, lsel) === 'changed') renderLanding();
+});
 
 /* One delegated listener on the whole picker — the cards are re-rendered on every
    product/billing switch, so nothing may be bound to them directly. */

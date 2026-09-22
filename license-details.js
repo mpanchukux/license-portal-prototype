@@ -26,9 +26,10 @@ var DETAILS_HTML = ''
 + '             SNACKBAR. It is the result of something the person just did, not a'
 + '             fact about the licence — and while it lived in the panel it could'
 + '             appear at the same time as the state banner below the header, so one'
-+ '             action produced two messages in two places. See the three-way rule in'
-+ '             the styleguide: results → snackbar, state → the slot below the header,'
-+ '             scheduled changes → the Plan block. -->'
++ '             action produced two messages in two places. See the rule in the'
++ '             styleguide: results → snackbar, state → the slot below the header.'
++ '             (There was a third place — scheduled changes — until downgrades'
++ '             started taking effect immediately.) -->'
 + '        <!-- License created is the one banner that lives up here: it is shown once'
 + '             per licence, above the title, so a new licence WITH a problem can show'
 + '             it and the state banner without the two colliding. -->'
@@ -88,10 +89,9 @@ var DETAILS_HTML = ''
 + '            </div>'
 + ''
 + '            <!-- row 2: the label — a muted description line under the title -->'
-+ '            <!-- ⚠️ The scheduled-change line USED TO SIT HERE, under the title. It'
-+ '                 moved into the Plan block (see #schedLine there): everything it'
-+ '                 describes — production instances, development instances, AI credits —'
-+ '                 is a row of that table, so it belongs above the table it is about. -->'
++ '            <!-- ⚠️ The scheduled-change line used to sit here, then moved into the'
++ '                 Plan block. It is gone from both: downgrades take effect'
++ '                 immediately, so nothing is pending to state. -->'
 + '            <div class="metarow">'
 + '              <span id="labelSlot"><button class="chip ghost" id="addLabel">+ Add label</button></span>'
 + '              <!-- phone: status and label merged into one calm supporting line'
@@ -155,6 +155,17 @@ var DETAILS_HTML = ''
 + '                     but it is a thing you read ONCE, and it was pushing the licence'
 + '                     header a third taller on every visit after that. -->'
 + '              </div>'
++ '              <!-- ⚠️ PRODUCT VERSION, NEXT TO THE UPDATES TERM, because the two are one'
++ '                   argument: the term is what entitles you to new versions, and this is'
++ '                   how far behind you actually are. Apart, each is a fact; together the'
++ '                   gap is a number, and a number argues better than a warning. Filled by'
++ '                   renderLicenseVersion(); hidden when no instance has reported one. -->'
++ '              <div class="keycol right" id="verCol" hidden>'
++ '                <h3 class="periodhead">Product version</h3>'
++ '                <div class="period" id="licVersion"></div>'
++ '                <h3 class="rowlabel mob-only">Product version</h3>'
++ '                <div class="rowvalue mob-only" id="licVersionMob"></div>'
++ '              </div>'
 + '            </div>'
 + ''
 + '            <!-- Conditional alert. Rendered ONLY when the subscription needs attention'
@@ -183,16 +194,10 @@ var DETAILS_HTML = ''
 + '                     word for the same thing twice on one screen. -->'
 + '              </div>'
 + ''
-+ '              <!-- A scheduled change, as the first thing in the block it changes.'
-+ '                   ⚠️ It wears `.alert` — the styleguide\'s existing page-alert banner —'
-+ '                   and NOT a new treatment. The old note here said a banner was wrong'
-+ '                   because "zone 1 is for things that are wrong"; that objection was'
-+ '                   about the SLOT, not the clothing, and this no longer sits in that'
-+ '                   slot. `.alert` is a light box with an ink rule, not a red flag, so'
-+ '                   nothing about it claims something has gone wrong. The glyph is a'
-+ '                   clock rather than the specimen\'s warning mark, for the same reason.'
-+ '                   Filled by renderScheduled(); hidden when nothing is scheduled. -->'
-+ '              <div class="alert sched" id="schedLine" role="status" hidden></div>'
++ '              <!-- ⚠️ THE SCHEDULED-CHANGE BANNER USED TO BE HERE (#schedLine). It'
++ '                   stated that a lowering change would take effect on a future date'
++ '                   and carried the action that cancelled it. Downgrades recalculate'
++ '                   immediately now, so there is no pending state to announce. -->'
 + ''
 + '              <table class="plantable">'
 + '                <thead>'
@@ -319,6 +324,7 @@ var DETAILS_HTML = ''
 + '                      <th>Status</th>'
 + '                      <th>Last activity time</th>'
 + '                      <th class="sortable" aria-sort="descending" tabindex="0">Created time <span class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></span></th>'
++ '                      <th aria-label="Actions"></th>'
 + '                    </tr>'
 + '                  </thead>'
 + '                  <tbody id="instBodyProd"></tbody>'
@@ -341,7 +347,7 @@ var DETAILS_HTML = ''
 + '                  <thead>'
 + '                    <tr>'
 + '                      <th>Instance ID</th><th>Label</th><th>Status</th>'
-+ '                      <th>Last activity time</th><th>Created time</th>'
++ '                      <th>Last activity time</th><th>Created time</th><th aria-label="Actions"></th>'
 + '                    </tr>'
 + '                  </thead>'
 + '                  <tbody id="instBodyDev"></tbody>'
@@ -569,6 +575,22 @@ function alertAction(short, long, attrs, mobOnly){
     + '<span class="aact-short">' + short + '</span>'
     + '</button>';
 }
+/* The running version against the latest released, on the licence itself — the same two
+   facts the Licenses table shows, in the same order and with the same rule: the licence
+   reports the LOWEST of its instances, and says so when they disagree.
+   ⚠️ Hidden, not blank, when nothing has reported: a licence waiting for its first
+   check-in has no version, and an empty row under a caps heading reads as a bug. */
+function renderLicenseVersion(lic){
+  var col = $('#verCol'); if(!col) return;
+  var v = licenseVersion(lic);
+  if(v == null){ col.hidden = true; return; }
+  col.hidden = false;
+  var behind = cmpVersion(v, LATEST_VERSION) < 0;
+  var txt = esc(v) + (behind ? ' <span class="ver-latest">latest ' + esc(LATEST_VERSION) + '</span>' : '')
+    + (versionMixed(lic) ? ' <span class="ver-mixed">across ' + instRunning(lic) + ' instances</span>' : '');
+  var el = $('#licVersion'); if(el) el.innerHTML = txt;
+  var mob = $('#licVersionMob'); if(mob) mob.innerHTML = txt;
+}
 function renderLicenseAlert(lic){
   var al = $('#subAlert'); if(!al) return;
   var t = $('.atxt', al), st = lic.status;
@@ -634,13 +656,29 @@ function renderLicenseAlert(lic){
       + '<a class="link alert-help" href="' + EXT.support + '" target="_blank" rel="noopener">Contact support' + EXTSVG + '</a>';
     al.hidden=false;
   }
+  /* ⚠️ EXPIRED IS ITS OWN BRANCH, above "expiring", and it is DERIVED from the date
+     rather than read from a status — the same rule as the instance limit above. A
+     perpetual whose term has run out still says `active`, because the licence really is
+     active: what ended is the updates term, and only the date knows that.
+     The sentence is UPDATES_LOSS, the same one the Home banner and the list's alert
+     tooltip carry, so the three surfaces cannot drift into three different promises.
+     ⚠️ Not dismissible, and nothing here offers to dismiss it: Home is a notification
+     surface and this is the record of state. */
+  else if(hasUpdatesTerm(lic) && daysUntil(lic.event) < 0){
+    t.innerHTML = '<span class="amsg"><b>Software updates ended on ' + fmtDate(lic.event)
+      + '.</b> ' + UPDATES_LOSS + alsoClause('updates_expired') + '</span>'
+      + alertAction('Renew updates', 'Renew software updates', 'data-renewupdates="' + esc(lic.id) + '"');
+    al.hidden=false;
+  }
   else if(st==='updates_expiring'){
     /* ⚠️ The banner told you to renew and carried NO control that did it — its only
        button opened the documentation in a new tab. It now opens the same purchase
-       modal the menu item opens, so the instruction and the means are in one place. */
-    t.innerHTML = '<span class="amsg"><b>Software updates expire ' + fmtDate(lic.event)
-      + '.</b> ' + UPDATES_LAPSE_SHORT + '</span>'
-      + alertAction('Renew', 'Renew software updates', 'data-renewupdates="' + esc(lic.id) + '"');
+       modal the menu item opens, so the instruction and the means are in one place.
+       ⚠️ The same UPDATES_LOSS sentence as the expired branch: what is at stake does
+       not change with the date, only when it starts. */
+    t.innerHTML = '<span class="amsg"><b>Software updates end on ' + fmtDate(lic.event)
+      + ', in ' + daysUntil(lic.event) + ' days.</b> ' + UPDATES_LOSS + '</span>'
+      + alertAction('Renew updates', 'Renew software updates', 'data-renewupdates="' + esc(lic.id) + '"');
     al.hidden=false;
   }
   /* A cancelled subscription's banner states a fact and has no action of its own:
@@ -662,45 +700,13 @@ function renderLicenseAlert(lic){
   }
   else al.hidden = true;
 }
-/* The scheduled change, on the surface that owns the licence. It names what changes
-   and when, and carries the only way to call it off.
-   ⚠️ Renders into the Plan block's banner (see the markup above), because every figure
-   it mentions is a row of the table directly beneath it. Same text, same action; what
-   changed is that the reader no longer has to carry the sentence down the page. */
-var SCHEDSVG = '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">'
-  + '<circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l2.8 1.8"/></svg>';
-function renderScheduled(lic){
-  var el = $('#schedLine'); if(!el) return;
-  var sc = lic && lic.scheduled;
-  if(!sc){ el.hidden = true; el.innerHTML = ''; return; }
-  el.innerHTML = SCHEDSVG
-    + '<span class="atxt"><b>Scheduled for ' + fmtDate(sc.effective) + ':</b> ' + esc(sc.summary)
-    + ' Current allowances stay until then.</span>'
-    + '<button class="link sched-cancel" data-cancelsched="' + esc(lic.id) + '">Cancel this change</button>';
-  el.hidden = false;
-}
-document.addEventListener('click', function(e){
-  var b = e.target.closest('[data-cancelsched]');
-  if(!b) return;
-  var id = b.getAttribute('data-cancelsched');
-  var was = cancelScheduledChange(id);
-  if(!was) return;
-  var lic = licById(id);
-  /* ⚠️ `renderLicense` NEVER EXISTED — grepped: no file defines it, so the page-mode
-     branch of this handler has always been dead. Cancelling a scheduled change on
-     license.html removed it from the store and left the banner on screen until a
-     reload. Invisible while the banner was a quiet line under the title; not invisible
-     now that it is the first thing in the Plan block. `afterChange()` is the module's
-     own re-render and serves BOTH hosts, so there is no second name to keep alive. */
-  if(window.LicenseDetails){
-    if(LicenseDetails.isOpen()) LicenseDetails.reopen(lic);
-    else LicenseDetails.afterChange();
-  }
-  /* ⚠️ Was a MODAL. Interrupting with a dialog to confirm that something was undone
-     makes the person dismiss a second thing to get back to where they were; it is an
-     action result like any other. */
-  Snack.show('Scheduled change canceled \u2014 this license keeps its current plan');
-});
+/* ⚠️ `renderScheduled()`, `SCHEDSVG` and the `Cancel this change` handler ARE GONE.
+   They rendered a banner in the Plan block stating that a lowering change would take
+   effect on a future date, and the only action that could call it off. Downgrades now
+   recalculate immediately (see the note in shared.js where scheduleChange used to be),
+   so there is nothing pending to state and nothing to cancel — a change that has
+   already happened is undone by making another one, not by a link.
+   The `#schedLine` node went with them; every other banner on this surface stays. */
 
 function renderLicenseActions(lic){
   var canceled = lic.status==='canceled', isPerp = isPerpLike(lic);
@@ -813,7 +819,12 @@ function renderLicenseDetails(lic){
     // a grant has no term at all — the dated block says so instead of a date
     // `.period` is --ink for every other licence; the grant matches it
     if(pp && lic.grant) pp.textContent = 'No expiry';
-    else if(pp) pp.textContent = (lic.status==='updates_expiring' ? 'Expires ' : 'Until ') + fmtDate(lic.event);
+    /* ⚠️ Three words for three tenses. "Until <a date that has gone>" is the same
+       awkward reading the list just fixed — it states a limit in the future about a
+       date in the past, and the reader has to compare it with today before it means
+       anything. Same wording as the table's `Updates period over`. */
+    else if(pp) pp.textContent = (daysUntil(lic.event) < 0 ? 'Ended '
+      : lic.status==='updates_expiring' ? 'Expires ' : 'Until ') + fmtDate(lic.event);
     /* the explanation that stops the date reading as "the licence expires". A grant has
        no updates term at all, so it gets no icon rather than an irrelevant one. */
     var ui = $('#updatesInfo');
@@ -845,7 +856,7 @@ function renderLicenseDetails(lic){
   renderEntitlements(spec.ent, lic.extras);
   renderLicenseFeatures(lic, spec);
   renderLicenseAlert(lic);
-  renderScheduled(lic);
+  renderLicenseVersion(lic);
   renderLicenseActions(lic);
   renderLicFeed(lic);
 }
@@ -919,25 +930,32 @@ function instRow(i){
     +     ' aria-label="Edit label" data-tip="Edit label">' + PENSVG + '</button></td>'
     + instStatusCell(i)
     + '<td>' + fmtDateTime(i.seen) + '</td>'
-    + '<td>' + fmtDate(i.created) + '</td></tr>';
+    + '<td>' + fmtDate(i.created) + '</td>'
+    /* ⚠️ THE SAME ROW MENU AS THE INSTANCES VIEW, from the same builder. An instance row
+       is an instance row: if Detach lives on it in one table and not the other, the
+       reader has to learn which table is the one that can act. One builder, so the two
+       cannot drift — and Detach still has exactly one implementation behind it. */
+    + '<td class="cellact"><div class="lic-actions">' + instRowMenu(i) + '</div></td></tr>';
 }
 function renderInstances(lic){
   var prod = instancesOf(lic, 'prod'), dev = instancesOf(lic, 'dev');
   var note = $('#instNote');
   if(note){
     /* one sentence, and it carries the number the column is read against */
-    note.textContent = 'Licenses check in about every ' + CHECKIN_INTERVAL_H
-      + ' hours. An instance that has not checked in since then is shown as stale.';
+    /* ⚠️ HOURLY, and the two numbers are different on purpose: the cadence is what the
+       deployment does, the threshold is when we stop believing it. See CHECKIN_STALE_MULT. */
+    note.textContent = 'Licenses check in every hour. An instance that has not reported for '
+      + checkinStaleAfterH() + ' hours is shown as stale.';
     note.hidden = !(prod.length || dev.length);
   }
   var pb = $('#instBodyProd');
   if(pb) pb.innerHTML = prod.length
     ? prod.map(instRow).join('')
-    : '<tr><td colspan="5" class="emptybox">Instances appear here automatically when a deployment is activated with this license.</td></tr>';
+    : '<tr><td colspan="6" class="emptybox">Instances appear here automatically when a deployment is activated with this license.</td></tr>';
   var db = $('#instBodyDev');
   if(db) db.innerHTML = dev.length
     ? dev.map(instRow).join('')
-    : '<tr><td colspan="5" class="emptybox">No development instances are running with this license.</td></tr>';
+    : '<tr><td colspan="6" class="emptybox">No development instances are running with this license.</td></tr>';
   var pager = $('#instPagerProd'); if(pager) pager.hidden = !prod.length;
   var range = $('#instRangeProd');
   if(range) range.textContent = prod.length ? ('1\u2013' + prod.length + ' of ' + prod.length) : '0 of 0';
@@ -985,18 +1003,27 @@ function openInstanceLabelModal(instId){
    licence rather than typed per tier, so it follows the price list. The rate itself is
    unconfirmed in writing — see NOTES.
 
-   ⚠️ TERM: 12 months FROM THE PURCHASE DATE, as specified for this pass. Deliberately
-   NOT "12 months from the current expiry": that means renewing a month early forfeits
-   the month left, which the modal states outright rather than letting the new date be
-   a surprise afterwards. */
+   ⚠️ TERM: 12 months FROM THE EXISTING END DATE. This REVERSES the earlier pass, which
+   ran the term from the purchase date and stated the forfeit outright — honest about a
+   rule that was wrong. Buying early now loses nothing, and the modal says so, because
+   the fear of losing paid days is exactly what makes people wait until the last day.
+   A lapsed term has no days left to keep, so it runs from today instead. */
 function updatesRenewPrice(lic){
   return Math.round(tierBase(lic && lic.tier) * UPDATES_RENEW_RATE * 100) / 100;
 }
-function updatesNewExpiry(){ return dayStr(Math.round(UPDATES_RENEW_MONTHS * 30.44)); }
+/* ⚠️ Anchored on the licence, not on today: the new term starts where the current one
+   ends. Past its end there is nothing to extend, so a lapsed licence starts from today
+   — the only case where the two answers differ. */
+function updatesNewExpiry(lic){
+  var days = Math.round(UPDATES_RENEW_MONTHS * 30.44);
+  var end = lic && lic.event ? dayOf(lic.event) : null;
+  var from = (end != null && end > TODAY_DAY) ? end : TODAY_DAY;
+  return dayToDate(from + days);
+}
 function openRenewUpdatesModal(licId){
   var lic = licById(licId) || activeLicense;
   if(!lic) return;
-  var price = updatesRenewPrice(lic), to = updatesNewExpiry();
+  var price = updatesRenewPrice(lic), to = updatesNewExpiry(lic);
   var lapsed = lic.event && dateKey(lic.event) < dateKey(todayStr());
   openModal('Renew software updates',
     '<p>Buy another ' + UPDATES_RENEW_MONTHS + ' months of software updates for <b>'
@@ -1006,9 +1033,15 @@ function openRenewUpdatesModal(licId){
     + '<div class="row"><span class="l">' + (lapsed ? 'Updates lapsed' : 'Current term ends') + '</span>'
     +   '<span class="r">' + fmtDate(lic.event) + '</span></div>'
     + '<div class="row"><span class="l">New term ends</span><span class="r"><b>' + fmtDate(to) + '</b></span></div>'
-    /* the honest consequence of "12 months from the purchase date" */
-    + (lapsed ? '' : '<div class="cardhelp" style="margin-top:12px">The new term runs 12 months from today, '
-        + 'so renewing before ' + fmtDate(lic.event) + ' does not add the remaining days.</div>')
+    /* ⚠️ THE REASSURANCE IS THE POINT OF THIS LINE, not a disclaimer. People wait until
+       the last day because they assume buying early throws the remaining days away; the
+       rule is the opposite, so the modal says it where the decision is made. */
+    + (lapsed
+        ? '<div class="cardhelp" style="margin-top:12px">Updates have lapsed, so the new term '
+          + 'runs 12 months from today.</div>'
+        : '<div class="cardhelp" style="margin-top:12px">The new term starts when the current one '
+          + 'ends, on ' + fmtDate(lic.event) + ' \u2014 buying early adds 12 months to it and loses '
+          + 'none of the days you have already paid for.</div>')
     + '<div class="cardhelp" style="margin-top:10px">' + TAX_NOTE + '</div>');
   $('#modalCloseBtn').textContent = 'Cancel';
   modalAction('Pay ' + fmtMoney(price), function(){
@@ -1121,28 +1154,17 @@ function wireDetailsOnce(){
     });
   });
 
-  /* ---------- coupon ---------- */
+  /* ---------- coupon ----------
+     ⚠️ The controller moved to shared.js (see `Coupon`) when the purchase flow gained
+     its own Apply coupon on the Review step. This surface is now one of its two
+     callers and owns only what applying means HERE: the redemption is a stub, and the
+     result is an action result, so it is a snackbar like every other one. */
   (function(){
-    var ov=$('#couponOverlay'), btn=$('#couponBtn'), input=$('#couponInput'), apply=$('#couponApply');
-    if(!ov || !btn) return;
-    function refresh(){ apply.disabled = !input.value.trim(); }
-    function open(){ input.value=''; refresh(); ov.hidden=false; input.focus(); }
-    function close(){ ov.hidden=true; btn.focus(); }
-    btn.addEventListener('click', open);
-    input.addEventListener('input', refresh);
-    $('#couponClose').addEventListener('click', close);
-    $('#couponCancel').addEventListener('click', close);
-    /* ⚠️ Applying a coupon used to close the dialog and say NOTHING — the redemption is
-       a stub, but silence made it read as a failure. The result is an action result,
-       so it is a snackbar like every other one. */
-    apply.addEventListener('click', function(){
-      if(apply.disabled) return;
-      var code = input.value.trim();
-      close();
-      Snack.show('Coupon ' + code + ' applied');
+    var btn = $('#couponBtn');
+    if(!btn) return;
+    btn.addEventListener('click', function(){
+      Coupon.open(function(code){ Snack.show('Coupon ' + code + ' applied'); }, btn);
     });
-    ov.addEventListener('click', function(e){ if(e.target===ov) close(); });
-    document.addEventListener('keydown', function(e){ if(e.key==='Escape' && !ov.hidden) close(); });
   })();
 
   /* ---------- Instances tab: Production / Development switcher + select-all ---------- */

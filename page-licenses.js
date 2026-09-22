@@ -9,6 +9,19 @@ var licType = null;
 /* Cancelled licences are out of the way until asked for. The choice is a stored
    setting like the dashboard state, so it survives navigation and refresh. */
 var licShowCanceled = !!Store.get('showCanceled');
+/* ⚠️ Two URL parameters, and BOTH arrive from a Home banner rather than from a menu:
+   `?attention=1` is where "3 other licenses need attention" lands, and
+   `?view=instances` is where the blocked banner's detach route lands. They exist so a
+   banner can hand the reader a filtered surface instead of a list to search. */
+var licParams = new URLSearchParams(location.search);
+var licAttentionOnly = licParams.get('attention') === '1';
+/* Does this licence have something wrong with it? One reading, shared with the Home
+   banner's own count — see attentionConditions. */
+function licNeedsAttention(l){
+  return attentionConditions().some(function(c){
+    return c.state !== 'grant' && c.lic && c.lic.id === l.id;
+  });
+}
 
 function currentProducts(){
   return DATA().licenses.slice().sort(function(a, b){ return dateKey(b.created) - dateKey(a.created); });
@@ -18,6 +31,7 @@ function renderProducts(){
   var vis = 0, html = '';
   currentProducts().forEach(function(p){
     if(licType && p.type !== licType) return;
+    if(licAttentionOnly && !licNeedsAttention(p)) return;
     if(!licShowCanceled && p.status === 'canceled') return;
     vis++; html += rowHtml(p);
   });
@@ -27,7 +41,7 @@ function renderProducts(){
      account that has never bought anything. */
   var accountEmpty = currentProducts().length === 0;
   if(accountEmpty){
-    $('#prodBody').innerHTML = emptyStateRow(5, {
+    $('#prodBody').innerHTML = emptyStateRow(6, {   // 6 columns since Product version joined
       title:'No licenses yet.',
       line:'Buy a license to get a key for your ThingsBoard or TBMQ instance.',
       /* the ONE primary a new account gets, and it opens the same wizard the
@@ -87,6 +101,37 @@ if(licNewBtn) licNewBtn.addEventListener('click', function(){ NL.open({}); });
 document.addEventListener('click', function(e){
   if(e.target.closest('#licEmptyBuy')) NL.open({});
 });
+
+/* ---------- Licenses / Instances: one page, two slicings ---------------------
+   ⚠️ The toolbar is SHARED, so controls that mean nothing in the other view have to
+   stand down: the type chips and the canceled switch filter licences, and an instance
+   has neither a type nor a cancellation. They are hidden rather than disabled — a
+   control that cannot act and cannot explain itself is the thing this prototype keeps
+   removing. Search stays: it works on rows, and both views have rows. */
+var licView = licParams.get('view') === 'instances' ? 'instances' : 'licenses';
+function syncView(){
+  var inst = licView === 'instances';
+  $('#licensesList').hidden = inst;
+  $('#instancesList').hidden = !inst;
+  $$('#licensesView .lic-viewtab').forEach(function(t){
+    var on = t.getAttribute('data-view') === licView;
+    t.classList.toggle('on', on);
+    t.setAttribute('aria-selected', on ? 'true' : 'false');
+  });
+  var typeSeg = $('#licensesView .lic-typeseg'), cancelSw = $('#licensesView .lic-toggle');
+  if(typeSeg) typeSeg.hidden = inst;
+  if(cancelSw) cancelSw.hidden = inst;
+  var search = $('#licensesView .searchbox input');
+  if(search) search.setAttribute('placeholder', inst ? 'Search instances' : 'Search licenses');
+  if(inst) renderInstancesView();
+}
+$$('#licensesView .lic-viewtab').forEach(function(t){
+  t.addEventListener('click', function(){
+    licView = t.getAttribute('data-view');
+    syncView();
+  });
+});
+syncView();
 
 /* ---------- search: plan name, product, type and label ---------------------- */
 wireSearch('#licensesView .searchbox input', {

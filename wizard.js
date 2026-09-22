@@ -24,20 +24,26 @@ var WIZARD_HTML = ''
 + '    <!-- the one stepper: a thin progress line + "Step N of M · Label" -->'
 + '    <div class="nl-stepbar" id="nlStepbar"><div id="nlSteps"></div></div>'
 + '    <div class="fs-body" id="nlBody">'
-+ '      <!-- STEP 1 — CHOOSE YOUR PRODUCT AND PLAN: three levels, no boxes.'
-+ '           #nlChoices holds the centred product pill and, under it, the heading'
-+ '           row whose right end carries the billing toggle, then the offer grid.'
++ '      <!-- ⚠️ THE STEPS ARE NAMED, NOT NUMBERED. Which of them a flow has depends on'
++ '           the flow — Customize is two steps, a free plan has neither of them nor a'
++ '           billing step, TBMQ has no add-ons — so the ids say what a step IS and the'
++ '           order lives in one place (see steps()). Numbered ids forced every call'
++ '           site to do arithmetic about a sequence it could not see. -->'
++ '      <!-- CHOOSE YOUR PLAN: the product is stated above the tabs, not chosen.'
++ '           #nlChoices holds that line plus the billing toggle, then the offer grid.'
 + '           Each offer card carries its own action, so this step needs no footer. -->'
-+ '      <div id="nlStep1">'
++ '      <div id="nlStepPick">'
 + '        <div id="nlChoices"></div>'
 + '        <div class="plangrid" id="nlPlanCards"></div>'
 + '      </div>'
-+ '      <!-- STEP 2 — CUSTOMIZE (manage add-ons content, seeded from the chosen plan) -->'
-+ '      <div id="nlStep2" hidden></div>'
-+ '      <!-- STEP 3 — REVIEW (& PAY, when billing data already exists) -->'
-+ '      <div id="nlStep3" hidden></div>'
-+ '      <!-- STEP 4 — BILLING & PAYMENT (only when the account has no billing data) -->'
-+ '      <div id="nlStep4" hidden></div>'
++ '      <!-- CAPACITY — what you can buy more of: devices, instances, AI credits -->'
++ '      <div id="nlStepCap" hidden></div>'
++ '      <!-- ADD-ONS — the switches, and the features the plan states -->'
++ '      <div id="nlStepAdd" hidden></div>'
++ '      <!-- REVIEW (& PAY, when billing data already exists) -->'
++ '      <div id="nlStepRev" hidden></div>'
++ '      <!-- PAYMENT & BILLING (only when the account has no billing data) -->'
++ '      <div id="nlStepBill" hidden></div>'
 + '    </div>'
 + '    <!-- no footer bar: every step commits from the card that carries its total -->'
 + '  </div>'
@@ -56,25 +62,22 @@ function openManageAddons(lic){ NL.open({ mode:'addons', license:lic }); }
 
 
 /* ============ New license flow (NL) — stepped modal ============
-   Subscription: 1 Product → 2 Plan → 3 Customize → 4 Review & pay.
-   Perpetual:    1 Product → 2 Package → 3 Customize → 4 Review & pay.
-   Completed steps are clickable back (selections preserved); future steps are
-   not. Step 3 reuses the Manage plan & add-ons content, seeded from the chosen
-   plan/package. Confirm appends the licence to the CURRENT dataset (DATA())
-   and lands on the Licenses page so the new row is visible. Closing mid-flow
-   with selections made asks the same unsaved-changes confirmation as the
-   settings pages. */
+   ⚠️ THIS HEADER WAS STALE AND DUPLICATED — two copies of "1 Product → 2 Plan →
+   3 Customize → 4 Review", a flow that stopped existing when product and plan merged
+   into one step, and doubly wrong once Customize became two. One copy, and it names
+   the rule rather than a fixed sequence, because the sequence is now computed.
+
+   THE STEPS ARE A LIST, BUILT PER MODE — see steps(). The full set is
+   Choose your plan · Capacity · Add-ons · Review · Payment & Billing, and steps drop
+   out of it: a free plan has no Capacity, no Add-ons and no billing; a TBMQ
+   subscription has no Add-ons; Manage add-ons has no plan step; an account with
+   billing data on file has no billing step and commits from Review.
+   Confirm appends the licence to the CURRENT dataset (DATA()) and opens its details.
+   Closing mid-flow with selections made asks the same unsaved-changes confirmation as
+   the settings pages. */
 
 /* ---------- new licence wizard ---------- */
-/* ============ New license flow (NL) — stepped modal ============
-   Subscription: 1 Product → 2 Plan → 3 Customize → 4 Review & pay.
-   Perpetual:    1 Product → 2 Package → 3 Customize → 4 Review & pay.
-   Completed steps are clickable back (selections preserved); future steps are
-   not. Step 3 reuses the Manage plan & add-ons content, seeded from the chosen
-   plan/package. Confirm appends the licence to the CURRENT dataset (DATA())
-   and lands on the Licenses page so the new row is visible. Closing mid-flow
-   with selections made asks the same unsaved-changes confirmation as the
-   settings pages. */
+
 
 /* The plan picker (product cards · billing tabs · plan cards · renderPlanPicker ·
    planPickerClick) MOVED to components.js. It has three hosts now — this wizard,
@@ -87,7 +90,7 @@ function openManageAddons(lic){ NL.open({ mode:'addons', license:lic }); }
 var NL = (function(){
   var scr = $('#nlModal'), body = $('#nlBody');
   var lastFocus = null;
-  var st = { kind:'subscription', product:null, plan:null, step:1, dirty:false };
+  var st = { kind:'subscription', product:null, plan:null, step:'pick', dirty:false };
   var cust = { prod:1, dev:0, ai:0, edge:false, trendz:false, offline:false };
   var seededTier = null;
 
@@ -156,6 +159,10 @@ var NL = (function(){
   // a modification can lower the bill, so its rows carry an explicit sign
   function moneySigned(n){ return (n < 0 ? '\u2212' : '+') + money(Math.abs(n)); }
   function isPerp(){ return st.kind === 'perpetual'; }
+  /* ⚠️ Read from the SPEC, not from the price string or the plan name. `free:true` is the
+     one fact three different behaviours hang off — no billing step, no total, and a
+     Review that says nothing is charged — so it must not be re-derived three times. */
+  function isFree(){ return !!(TIER_SPECS[tier()] || {}).free; }
   function tier(){
     if(st.fixedTier) return st.fixedTier;   // add-ons: the plan is not up for change
     if(isPerp()) return st.product === 'tbmq' ? 'tbmqperp' : 'tbperp';
@@ -191,7 +198,7 @@ var NL = (function(){
      total and Due today, so the screen cannot show two of them again. */
   function modDelta(){ return Math.max(0, total() - oldMonthly()); }
   /* the fraction of the current cycle a subscription change is charged for; a
-     perpetual has no cycle, so its callers pass 1 (see the note above renderStep3) */
+     perpetual has no cycle, so its callers pass 1 (see the note above renderReview) */
   function prorateFraction(){
     var pr = (isMod() && !isPerp()) ? prorate(st.changeLic && st.changeLic.event) : null;
     return pr ? pr.fraction : 1;
@@ -201,7 +208,10 @@ var NL = (function(){
   function perpMod(){ return isPerp() && isMod(); }
   function confirmLabel(){
     if(isAddons()) return 'Confirm changes';
-    return isChange() ? 'Confirm change' : (isPerp() ? 'Buy license' : 'Subscribe');
+    if(isChange()) return 'Confirm change';
+    // nothing is bought and nothing is subscribed to — the licence is simply created
+    if(isFree()) return 'Create license';
+    return isPerp() ? 'Buy license' : 'Subscribe';
   }
   function currentCardName(){ return st.oldTier === 'tbmqsub' ? 'TBMQ PE subscription' : st.oldName; }
   function hasAddons(){ return !isPerp() && st.product === 'thingsboard'; }
@@ -236,6 +246,31 @@ var NL = (function(){
     return out;
   }
   function total(){ return (BASE[tier()] || 0) + deltas().reduce(function(a, c){ return a + (c.amt || 0); }, 0); }
+  /* ---- coupon ------------------------------------------------------------------
+     ⚠️ THE RATE IS `inferred` AND THE RULE IS A STUB. Nothing in this repository
+     defines a coupon, a code or a discount, so any code applies the same demo rate —
+     enough to show the recalculation the brief asks for, and flagged so nobody reads
+     20% as a decision. The redemption stub matches the one the licence surface has had
+     since coupons existed there.
+     ⚠️ `total()` stays the LIST figure and the discount is taken off separately: a
+     discount that silently rewrote the subtotal would make the breakdown above it stop
+     adding up, which is the one thing an order summary has to do. */
+  var COUPON_RATE = 0.20;          // inferred
+  /* ⚠️ THE RULE IS A STUB AND IT SAYS SO. Nothing in this repository defines a real
+     coupon, so every code that LOOKS like one is accepted at the same demo rate. What is
+     worth having in a prototype is the shape of a rejection, so one reserved code is
+     always invalid and a malformed one is caught: that is enough to show where the error
+     goes and what it looks like, without pretending there is a catalogue behind it. */
+  function couponError(code){
+    if(!code) return 'Enter a coupon code.';
+    if(!/^[A-Za-z0-9-]{4,20}$/.test(code))
+      return 'Coupon codes are 4–20 letters, numbers or hyphens.';
+    if(code.toUpperCase() === 'EXPIRED') return 'This coupon has expired.';
+    return null;
+  }
+  function couponBase(){ return isMod() ? modDelta() : total(); }
+  function discount(){ return st.coupon ? couponBase() * st.coupon.rate : 0; }
+  function payable(){ return Math.max(0, couponBase() - discount()); }
   /* Add-ons reviews a MODIFICATION, so its review states the delta against the
      configuration the licence arrived with — "from → to" for quantities, added /
      removed for the two add-ons. deltas() cannot do this: it lists everything
@@ -274,13 +309,19 @@ var NL = (function(){
      matters is whether any allowance the platform enforces goes DOWN — that is the
      thing that breaks a running instance if applied today. Plan tier counts too: a
      lower plan lowers the included amounts under everything above it. */
-  var TIER_ORDER = ['maker','prototype','pilot','startup','business'];
+  /* the ladder a plan change is measured against — the two free tiers are its floor,
+     so moving from any paid plan to one of them reads as the downgrade it is */
+  var TIER_ORDER = ['free','noncomm','maker','prototype','pilot','startup','business'];
   function shrinks(){
     var b = st.baseCust;
     if(!b) return false;
     // a lower plan is a shrink by itself, whatever the extras do
     if(isChange()){
-      var from = TIER_ORDER.indexOf(seededTier), to = TIER_ORDER.indexOf(tier());
+      /* ⚠️ `st.oldTier`, not `seededTier`: seededTier follows whatever is being
+         configured, so once the reader picked the new plan it equalled the target and
+         the comparison was always "no change". The licence's own tier is the only
+         stable "from". */
+      var from = TIER_ORDER.indexOf(st.oldTier), to = TIER_ORDER.indexOf(tier());
       if(from >= 0 && to >= 0 && to < from) return true;
     }
     if(cust.devices < b.devices || cust.prod < b.prod || cust.dev < b.dev || cust.ai < b.ai) return true;
@@ -289,37 +330,32 @@ var NL = (function(){
     if(b.offline && !cust.offline) return true;
     return false;
   }
-  /* what the licence will look like once it takes effect — stored on the schedule so
-     applying it later needs no recomputation */
-  function pendingApply(){
-    var t = tier(), e = extras();
-    /* ⚠️ Start from what the licence already has. `extras()` only reports the fields
-       this flow actually shows — a tier with no devices stepper reports 0 devices —
-       so building the target from it alone would silently delete purchased capacity
-       the person never touched. Caught by reading a scheduled record that had lost
-       `devices:'200'`. */
-    var x = {};
-    var had = (st.changeLic && st.changeLic.extras) || {};
-    Object.keys(had).forEach(function(k){ x[k] = had[k]; });
-    if(hasDevices()){ if(e.devices > 0) x.devices = String(e.devices); else delete x.devices; }
-    if(e.prod > 0) x.prod = String(e.prod); else delete x.prod;
-    if(hasDev()){ if(e.dev > 0) x.dev = String(e.dev); else delete x.dev; }
-    if(hasAi()){ if(e.ai > 0) x.ai = e.ai + 'M'; else delete x.ai; }
-    return { tier:t, name:NAME[t] || st.plan, price:money(total()) + ' / mo',
-             extras:Object.keys(x).length ? x : null,
-             edge:hasAddons() ? cust.edge : undefined,
-             trendz:hasAddons() ? cust.trendz : undefined,
-             offline:hasOffline() ? cust.offline : undefined };
-  }
-  function effectiveDate(){ return (st.changeLic && st.changeLic.event) || dayStr(30); }
-
+  /* ⚠️ `pendingApply()` and `effectiveDate()` ARE GONE with the schedule they existed
+     for: one built the licence's future shape to be applied later, the other named the
+     date it would happen. Changes apply now, so the future shape IS the current one and
+     there is no date to compute. (`shrinks()` above survives — the Review step still has
+     to say what is being given up, it just no longer defers it.) */
   function changeSummary(){
     var r = changeRows();
     return r.length ? r.map(function(x){ return x.t; }).join(' \u00b7 ') + '.' : 'License updated.';
   }
   /* seed the flow from the licence it was opened on: current = the plan's included
      amounts plus whatever extras the licence already carries. seededTier is set
-     here so renderStep2 does not reseed over it with the plan minimums. */
+     here so seedCust() does not reseed over it with the plan minimums. */
+  /* What a licence's CURRENT configuration is, read against the tier it is on. Split
+     out of seedFromLicense so change-plan can take a baseline from the OLD plan without
+     also overwriting `cust`, which has to reseed to the NEW plan's minimums. */
+  function licenseCust(lic, t){
+    var i = INCL[t] || { prod:1, ai:0 };
+    var x = lic.extras || {};
+    var n = function(v){ return parseInt(String(v || '0'), 10) || 0; };
+    var prod0 = i.prod + n(x.prod);
+    var devBase = isPerp() ? (isPerpTB() ? PERP_DEV_PER_INSTANCE * prod0 : 0)
+                           : (DEVICE_TIERS[t] || 0);
+    return { prod:prod0, dev:n(x.dev), ai:(i.ai || 0) + n(x.ai),
+             devices:devBase + n(x.devices),
+             edge:!!lic.edge, trendz:!!lic.trendz, offline:!!lic.offline };
+  }
   function seedFromLicense(lic){
     var t = tier(), i = INCL[t] || { prod:1, ai:0 };
     var x = lic.extras || {};
@@ -364,47 +400,76 @@ var NL = (function(){
   // a licence you can change already pays for itself, so change-plan never asks
   // for billing data — only a first purchase can land on the billing step
   function needsBilling(){ return !isChange() && !billingSaved(); }
-  /* Internal step ids stay 1..4 (1 picker · 2 Customize · 3 Review · 4 Billing) so
-     one renderStepN serves every mode. Add-ons has no picker, so it starts at 2
-     and the DISPLAYED index is offset by firstStep() — "Step 1 of 2 · Customize".
-     Nothing hardcodes the count; the progress line reads stepLabels(). */
+  /* ⚠️ THE NUMBERED-STEP NOTE THAT USED TO BE HERE IS GONE with the ids it described.
+     Steps are keys and the list is computed (see steps()); Manage add-ons simply has no
+     'pick' in its list rather than starting at an offset index. */
   /* Two ways to arrive with the picker already answered, and they get the same
      shortened flow: Manage add-ons (the plan is settled by the licence) and a plan
      chosen on the public landing page before the account existed. In both, step 1
      is not "skipped" — it is COMPLETED elsewhere, so counting it would make the
      progress line promise a screen that is never coming. */
   function noPicker(){ return isAddons() || !!st.noPicker; }
-  function firstStep(){ return noPicker() ? 2 : 1; }
-  function stepLabels(){
-    var tail = needsBilling()
-      ? ['Customize', 'Review', 'Payment & Billing']
-      : ['Customize', 'Review & pay'];
-    /* ⚠️ Change plan says "Choose a plan", not "Choose your product and plan": on an
-       existing licence the product is settled and is already named in the header
-       ("Change plan · ThingsBoard Pilot"), so the step must not promise a choice it
-       does not offer. A new purchase keeps the longer label — there it is accurate. */
-    if(noPicker()) return tail;
-    return [isChange() ? 'Choose a plan' : 'Choose your product and plan'].concat(tail);
+
+  /* ---- the step list -----------------------------------------------------------
+     ⚠️ ONE PLACE DECIDES WHICH STEPS EXIST, and everything else reads it: the progress
+     line, the back button, Continue, the commit. Fixed ids 1..4 could not express any
+     of what this flow now needs — Customize is TWO steps, a free plan has neither of
+     them and no billing step, TBMQ subscriptions have no add-ons to show — without
+     arithmetic at every call site, and arithmetic is how a wizard ends up promising
+     "Step 3 of 4" and then showing the last screen. */
+  var STEP_NODE = { pick:'#nlStepPick', capacity:'#nlStepCap', addons:'#nlStepAdd',
+                    review:'#nlStepRev', billing:'#nlStepBill' };
+  /* The add-ons step exists when there is something to TOGGLE. White labeling rides
+     along on it, but it is a stated fact and not a control, so it cannot justify a
+     step of its own — on a tier with no toggles it stays at the end of Capacity. */
+  function hasAddonStep(){ return !isFree() && (hasAddons() || hasOffline()); }
+  function steps(){
+    var s = [];
+    if(!noPicker()) s.push('pick');
+    /* ⚠️ A FREE PLAN HAS NO CAPACITY AND NO ADD-ONS STEP. This follows from the brief
+       rather than extending it: a free plan cannot be added to without becoming a paid
+       one, and the same brief says the flow shows no total and no card. Two steps whose
+       every control would be inert are worse than no steps — they promise a decision
+       and then refuse it. Reported, not assumed silently. */
+    if(!isFree()) s.push('capacity');
+    if(hasAddonStep()) s.push('addons');
+    s.push('review');
+    /* free = nothing to charge, so no billing step even on an account that has no
+       billing data saved */
+    if(needsBilling() && !isFree()) s.push('billing');
+    return s;
   }
-  function totalSteps(){ return stepLabels().length; }
-  function lastStep(){ return firstStep() + totalSteps() - 1; }
-  function isLastStep(){ return st.step === lastStep(); }
-  function stepIndex(){ return st.step - firstStep() + 1; }
+  function stepIdx(){ var i = steps().indexOf(st.step); return i < 0 ? 0 : i; }
+  function totalSteps(){ return steps().length; }
+  function isLastStep(){ return stepIdx() === totalSteps() - 1; }
+  function isFirstStep(){ return stepIdx() === 0; }
+  function stepAt(d){ return steps()[stepIdx() + d] || null; }
+  /* ⚠️ "Choose your plan", not "Choose your product and plan": the product is STATED on
+     this step now (see nlProductStatedHTML), so the label must not promise a choice the
+     step no longer offers — the same reason Change plan says "Choose a plan". */
+  function stepLabel(k){
+    if(k === 'pick') return isChange() ? 'Choose a plan' : 'Choose your plan';
+    if(k === 'capacity') return 'Capacity';
+    if(k === 'addons') return 'Add-ons';
+    if(k === 'review') return steps().indexOf('billing') < 0 ? reviewLabel() : 'Review';
+    return 'Payment & Billing';
+  }
+  /* A free plan commits from the Review step and pays nothing, so the step must not be
+     called "Review & pay" — there is no pay. */
+  function reviewLabel(){ return isFree() ? 'Review' : 'Review & pay'; }
   function renderSteps(){
-    var labels = stepLabels();
     // Back is an icon button here, right before the step label — the footer no
-    // longer carries it (and the Customize step has no footer at all)
-    var back = st.step > firstStep()
+    // longer carries it (and the Customize steps have no footer at all)
+    var back = !isFirstStep()
       ? '<button class="iconbtn ib nl-stepback" id="nlStepBack" aria-label="Back" title="Back">'
         + '<svg class="icon" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>'
       : '';
-    var i = stepIndex();
+    var i = stepIdx() + 1, n = totalSteps();
     $('#nlSteps').innerHTML = '<div class="nl-progress">'
-      + '<div class="nl-ptrack"><span class="nl-pfill" style="width:' + (i / totalSteps() * 100) + '%"></span></div>'
+      + '<div class="nl-ptrack"><span class="nl-pfill" style="width:' + (i / n * 100) + '%"></span></div>'
       + '<div class="nl-plabel">' + back
-      + '<span>Step ' + i + ' of ' + totalSteps() + ' · <b>' + labels[i - 1] + '</b></span></div></div>';
+      + '<span>Step ' + i + ' of ' + n + ' · <b>' + stepLabel(st.step) + '</b></span></div></div>';
   }
-
 
   /* ---- step 1 — choose your product and plan ------------------------------
      Three labeled groups stacked on one screen: Product, then Billing, then the
@@ -422,7 +487,7 @@ var NL = (function(){
   /* `st` IS the selection object the shared picker reads — product, kind and plan
      are the field names it already used. The two extras say what this host adds:
      change-plan locks the first two groups and names the card you are on. */
-  function renderStep1(){
+  function renderStepPick(){
     st.locked = isChange();
     st.currentName = isChange() ? currentCardName() : null;
     renderPlanPicker($('#nlChoices'), $('#nlPlanCards'), st);
@@ -624,10 +689,10 @@ var NL = (function(){
   /* Typing in the devices field must not re-render the step — that would throw the
      caret away mid-number — so only the summary card is repainted. */
   function refreshSummary(){
-    var list = $('#nlStep2 .am-sumlist');
+    var list = $('#nlStepCap .am-sumlist');
     if(!list) return;
     list.innerHTML = summaryHTML();
-    var totalRow = $('#nlStep2 .am-total-row');
+    var totalRow = $('#nlStepCap .am-total-row');
     if(totalRow) totalRow.innerHTML = '<span>' + (isPerp() ? 'One-time total' : 'New monthly')
       + '</span><span>' + money(perpMod() ? modDelta() : total()) + perSuffix() + '</span>';
   }
@@ -655,14 +720,19 @@ var NL = (function(){
     if(!isPerpTB()) return '+$0.10 / mo per extra device';
     return PERP_DEV_PER_INSTANCE.toLocaleString('en-US') + ' devices per production instance';
   }
-  function renderStep2(){
+  /* ⚠️ The seed lives HERE, not inside a render, because TWO steps now read `cust` and
+     whichever of them paints first must not be the only one that can create it. */
+  function seedCust(){
+    var t = tier(), i = INCL[t] || { prod:1, ai:0 };
+    if(seededTier === t) return;
+    cust = { prod:i.prod, dev:0, ai:i.ai, devices:0, edge:false, trendz:false };
+    // devicesIncluded() reads cust.prod, so the floor is set after prod exists
+    cust.devices = devicesIncluded();
+    seededTier = t;
+  }
+  /* ---- CAPACITY: everything measured in a number you can raise ---------------- */
+  function capacityCellsHTML(){
     var t = tier(), i = INCL[t] || { prod:1, ai:0 }, u = units(), spec = TIER_SPECS[t] || { ent:[] };
-    if(seededTier !== t){
-      cust = { prod:i.prod, dev:0, ai:i.ai, devices:0, edge:false, trendz:false };
-      // devicesIncluded() reads cust.prod, so the floor is set after prod exists
-      cust.devices = devicesIncluded();
-      seededTier = t;
-    }
     var per = isPerp() ? ' one-time' : ' / mo';
     var variantA = custVariant() === 'a';
     var cells = '';
@@ -691,43 +761,89 @@ var NL = (function(){
       }
     });
     if(hasDev()) cells += stepCell('dev', 'Development instances', 'Dedicated instances for dev, test, and CI/CD — keeps production data clean.', '+' + money(u.dev) + per + ' each', cust.dev, 0);
-    var addonCells = '';
+    return cells;
+  }
+  /* ---- ADD-ONS: everything that is a switch, plus what the plan simply states ---- */
+  function addonCellsHTML(){
+    var cells = '';
     if(hasAddons()){
-      addonCells += addonRow('edge', 'Edge Computing', 'Edge instances at remote sites for offline processing and auto-sync.', ADD.edge, cust.edge)
+      cells += addonRow('edge', 'Edge Computing', 'Edge instances at remote sites for offline processing and auto-sync.', ADD.edge, cust.edge)
         + addonRow('trendz', 'Trendz Analytics', 'Advanced analytics, custom dashboards, and trend discovery.', ADD.trendz, cust.trendz);
     }
     // a perpetual licence gets one add-on of its own: running without internet
-    if(hasOffline()) addonCells += addonRow('offline', 'Offline Mode', OFFLINE_DESC, null, cust.offline);
-    /* Variant A — one panel, two named sections inside it.
-       Variant B — no section headers at all: the plan banner, then every item as its
-       own card in a single vertical stack (capacity rows and add-ons alike), so each
-       piece of information separates on its own edge instead of by a heading. */
-    /* last in the list, in both variants: it is the one row you cannot act on, so it
-       must not sit among — or above — the ones you can. See featureRow. */
+    if(hasOffline()) cells += addonRow('offline', 'Offline Mode', OFFLINE_DESC, cust.offline == null ? false : cust.offline);
+    return cells;
+  }
+  /* last in the list: it is the one row you cannot act on, so it must not sit among —
+     or above — the ones you can. See featureRow. */
+  function featureCellsHTML(){
     var wlState = whitelabelState();
-    var featureCells = wlState ? featureRow('White labeling', WL_DESC, wlState) : '';
-    var left = variantA
-      ? planSummaryHTML(t, spec)
-        + '<div class="am-sec fs-panel">'
-        +   '<div class="am-sechead"><h4>Capacity</h4></div>'   // what you can buy more of; the plan is named in the card above
-        +   '<div class="am-capgrid">' + cells + '</div>'
-        +   (addonCells ? '<div class="am-sechead am-sechead-sub"><h4>Add-ons</h4></div><div class="am-capgrid">' + addonCells + '</div>' : '')
-        +   (featureCells ? '<div class="am-capgrid am-featgrid">' + featureCells + '</div>' : '')
-        + '</div>'
-      : planSummaryHTML(t, spec)
-        + '<div class="am-sec nl-cardstack">' + cells + addonCells + featureCells + '</div>';
-    $('#nlStep2').innerHTML =
-      '<div class="fs-grid">'
-      + '<div class="fs-col">' + left + '</div>'
+    return wlState ? featureRow('White labeling', WL_DESC, wlState) : '';
+  }
+  /* The two Customize steps are the same screen with different contents, so they are
+     built by one function: a left column of rows and the Calculation summary on the
+     right, carrying this step's own forward action. */
+  function customizeShell(leftHTML, cta){
+    return '<div class="fs-grid">'
+      + '<div class="fs-col">' + leftHTML + '</div>'
       + '<div class="am-sec fs-right">'
       +   '<div class="am-sechead"><h4>Calculation summary</h4></div>'
       +   '<div class="am-figures"><div class="am-sumlist">' + summaryHTML() + '</div>'
       +     '<div class="am-sumrow am-total-row"><span>' + (isPerp() ? 'One-time total' : 'New monthly') + '</span><span>' + money(perpMod() ? modDelta() : total()) + perSuffix() + '</span></div>'
       +   '</div>'
-      +   '<button class="btn fs-nextbtn" id="nlSumNext">Review order</button>'
+      /* ⚠️ An ATTRIBUTE, not an id: two steps render this button now (Capacity and
+         Add-ons), and both were emitting `id="nlSumNext"` — two nodes with one id, so
+         `$('#nlSumNext')` answered with whichever came first in the document, which is
+         the HIDDEN step. Caught by reading the wrong step's label back in a measurement. */
+      +   '<button class="btn fs-nextbtn" data-nlnext>' + cta + '</button>'
       + '</div>'
       + '</div>';
   }
+  /* ---- CUSTOMIZE, STEP ONE OF TWO: capacity ------------------------------------
+     ⚠️ SPLIT FROM ONE STEP, and the reason is the add-ons, not the capacity. In one
+     combined step the switches sat BELOW a long list of steppers, so on a phone the
+     only things on the step you could turn on were the only things you never saw.
+     Splitting puts each of them on a screen that fits.
+     Two variants, switched from the prototype settings panel:
+       A — a plan card on top carries the fixed entitlements as read-only facts,
+           and the controls list holds only what can actually change;
+       B — the fixed entitlements stay as rows, with a lock inside the disabled
+           input instead of a "fixed by …" helper under it.
+     ⚠️ The section HEADINGS inside the panel are gone with the split: the step bar
+     already says "Capacity" / "Add-ons", and a heading repeating the step's own name
+     is the kind of duplication that makes a screen look like it contains two things. */
+  function renderCapacity(){
+    seedCust();
+    var t = tier(), spec = TIER_SPECS[t] || { ent:[] };
+    var variantA = custVariant() === 'a';
+    var cells = capacityCellsHTML();
+    /* when a tier has no toggles at all there is no add-ons step, so the stated
+       feature row has nowhere else to go and stays here */
+    var tail = hasAddonStep() ? '' : featureCellsHTML();
+    var left = variantA
+      ? planSummaryHTML(t, spec)
+        + '<div class="am-sec fs-panel"><div class="am-capgrid">' + cells + '</div>'
+        + (tail ? '<div class="am-capgrid am-featgrid">' + tail + '</div>' : '')
+        + '</div>'
+      : planSummaryHTML(t, spec)
+        + '<div class="am-sec nl-cardstack">' + cells + tail + '</div>';
+    $('#nlStepCap').innerHTML = customizeShell(left, hasAddonStep() ? 'Continue' : 'Review order');
+  }
+  /* ---- CUSTOMIZE, STEP TWO OF TWO: add-ons -------------------------------------
+     ⚠️ NO PLAN CARD HERE, deliberately. It is on the step before this one, where it
+     carries the fixed entitlements variant A needs; repeating it would put the tallest
+     block on the page above the four rows this step exists to show, which is the exact
+     burial the split was made to undo. */
+  function renderAddons(){
+    seedCust();
+    var variantA = custVariant() === 'a';
+    var cells = addonCellsHTML() + featureCellsHTML();
+    var left = variantA
+      ? '<div class="am-sec fs-panel"><div class="am-capgrid">' + cells + '</div></div>'
+      : '<div class="am-sec nl-cardstack">' + cells + '</div>';
+    $('#nlStepAdd').innerHTML = customizeShell(left, 'Review order');
+  }
+
   /* ---- step 3: review ---------------------------------------------------------
      Same two-column grid as step 2 — left column is what is being bought, right
      column is the sticky summary card that carries the action — so this reads as
@@ -738,10 +854,46 @@ var NL = (function(){
      summary. The button either commits (billing data saved) or leads to the
      billing step (none). ---- */
   function termsLine(){
+    // no billing terms where there is no billing
+    if(isFree()) return 'Free plan · no billing. Upgrade at any time.';
     if(isPerp()) return 'One-time payment · includes 12 months of software updates.';
     return 'Billed monthly · auto-pay. Cancel anytime.';
   }
-  function renderStep3(){
+  /* ---- the coupon row: closed · open · applied ---------------------------------
+     Three states in one row, and the row never moves: closed it offers, open it takes
+     the code in place, applied it states what was applied and how to change or remove
+     it. ⚠️ An invalid code is a FIELD ERROR on the input, not a snackbar: the snackbar
+     is for results that are finished and elsewhere, and a rejected code is neither —
+     it is a field that needs correcting, right where the cursor already is.
+     ⚠️ Monochrome, not an error colour: the same departure reported for the alert icon.
+     `.fielderr` is this system's error treatment — the border thickens to ink and the
+     message is ink + bold against faint help text. Adding a hue is one token if that is
+     being revisited. */
+  function couponRowHTML(){
+    if(st.coupon){
+      return '<div class="am-orow nl-couponrow is-applied"><div>'
+        + 'Coupon <b>' + esc(st.coupon.code) + '</b> '
+        + '<span class="muted">\u2212' + Math.round(st.coupon.rate * 100) + '%</span> '
+        + '<button type="button" class="link nl-couponedit" data-couponopen>Change</button>'
+        + '<button type="button" class="link nl-couponedit" data-couponremove>Remove</button>'
+        + '</div><div>\u2212' + money(discount()) + '</div></div>';
+    }
+    if(st.couponOpen){
+      return '<div class="am-orow nl-couponrow is-open"><div class="nl-couponfield">'
+        + '<div class="field' + (st.couponErr ? ' err' : '') + '">'
+        +   '<input type="text" id="nlCouponInput" placeholder="Coupon code" autocomplete="off"'
+        +     ' aria-label="Coupon code" value="' + esc(st.couponDraft || '') + '">'
+        + '</div>'
+        + '<button type="button" class="btn sec" data-couponapply>Apply</button>'
+        + '<button type="button" class="link nl-couponedit" data-couponcancel>Cancel</button>'
+        + (st.couponErr ? '<div class="fielderr nl-couponerr">' + esc(st.couponErr) + '</div>' : '')
+        + '</div><div></div></div>';
+    }
+    return '<div class="am-orow nl-couponrow"><div>'
+      + '<button type="button" class="link" data-couponopen>Apply coupon</button>'
+      + '</div><div></div></div>';
+  }
+  function renderReview(){
     var t = tier();
     var rows = '';
     if(isAddons()){
@@ -776,25 +928,33 @@ var NL = (function(){
       : !prorates ? 'Due today <span class="muted">— one-time, added to this license</span>'
       : 'Due today <span class="muted">— prorated change for the current cycle'
         + (pr ? ' (' + pr.left + ' of ' + pr.cycle + ' days, to ' + pr.end + ')' : '') + '</span>';
-    /* ⚠️ `Math.max(0, …)` is still here and is now CORRECT rather than a silent clamp.
-       A shrinking change is not charged and not credited, because nothing changes
-       today — it takes effect at the end of the period the person already paid for.
-       What used to be wrong was showing "$0.00" with no explanation of why. */
-    var willSchedule = isMod() && shrinks();
+    /* ⚠️ A LOWERING CHANGE IS NO LONGER DEFERRED — it recalculates now, and this is the
+       rule that replaced "it takes effect at the end of the period you paid for".
+       `Math.max(0, …)` inside modDelta() therefore means something different: not "a
+       shrink is not charged because nothing has happened yet", but "a lower bill is not
+       a charge". What today's figure does NOT say is whether the difference is credited
+       back — no policy for that exists in the repository, so the line states the charge
+       and stops. */
+    var lowers = isMod() && shrinks();
     var delta = modDelta();          // one definition, shared with the summary above
     // a perpetual modification charges the delta WHOLE — no fraction of a cycle
-    var dueVal = isMod() ? money(delta * (pr ? pr.fraction : 1)) : money(total());
-    if(willSchedule){
-      dueLabel = 'Due today <span class="muted">— nothing is charged now</span>';
+    var dueVal = isMod() ? money((delta - discount()) * (pr ? pr.fraction : 1)) : money(payable());
+    if(lowers){
+      dueLabel = 'Due today <span class="muted">— nothing to charge for a lower plan</span>';
       dueVal = money(0);
     }
+    /* ⚠️ A FREE PLAN HAS NO MONEY ON THE SCREEN AT ALL: no due row, no card line, no
+       total. Printing "$0.00" would be a figure where there is no transaction. */
+    if(isFree()){ dueLabel = ''; dueVal = ''; }
     // with a card on file the review commits; without one it leads to the billing step
     var cta = isLastStep() ? confirmLabel() : 'Continue to billing';
-    var payline = billingSaved()
+    var payline = isFree()
+      ? 'No payment method needed — this plan is free.'
+      : billingSaved()
       ? (isPerp() ? 'Charged once to' : 'Charged to') + ' Visa ••4242'
         + (isPerp() ? '' : ' · auto-pay') + ' · <button class="link" id="nlPayChange">Change → Payment &amp; Billing</button>'
       : 'You’ll add billing and payment details on the next step.';
-    $('#nlStep3').innerHTML =
+    $('#nlStepRev').innerHTML =
       '<div class="fs-grid">'
       + '<div class="fs-col">'
       /* the SAME card step 2 opens with — see planSummaryHTML */
@@ -805,12 +965,18 @@ var NL = (function(){
          breakdown because it changes how every number under it should be read — the
          "New monthly" line is not what you pay next week, it is what you pay from the
          date named here. */
-      +   (willSchedule
-          ? '<div class="nl-sched"><b>This change takes effect ' + fmtDate(effectiveDate()) + '.</b> '
-            + 'It lowers what this license includes, and the current allowances stay until then — '
-            + 'nothing is removed from a period you have already paid for. '
-            + 'From ' + fmtDate(effectiveDate()) + ' it is billed at ' + money(total()) + ' / mo.'
-            + '<div class="nl-schedwhat">' + esc(changeSummary()) + '</div></div>'
+      /* ⚠️ THIS BOX USED TO SAY THE CHANGE WAS SCHEDULED. Downgrades recalculate
+         immediately now, so the deferral, the future date and the "current allowances
+         stay until then" promise are all gone — but the box is NOT. The step still has
+         to say what is being given up, what the new price is, and when it starts, and
+         "immediately" is a when, not a reason to go silent. The reader is lowering a
+         licence that is running right now; that deserves a sentence whether the date is
+         next month or this second. */
+      +   (lowers
+          ? '<div class="nl-effect"><b>This change takes effect immediately.</b> '
+            + 'It lowers what this license includes, and the new allowances apply from now. '
+            + 'It is billed at ' + money(total()) + ' / mo from today.'
+            + '<div class="nl-effectwhat">' + esc(changeSummary()) + '</div></div>'
           : '')
       +   '<div class="nl-joined">'
       +     '<div class="am-order">'
@@ -828,18 +994,39 @@ var NL = (function(){
          right are the whole truth about this purchase. Keeping them printed the same
          screen's second, larger figure — $6,998 above $1,999 — with nothing to say
          which one was being charged. */
+      /* ⚠️ APPLY COUPON SITS ON THE BASE-PRICE ROW, which is where the portal already
+         puts it on its Summary step — next to the figure it changes, not in a corner of
+         the screen where the reader has to work out what it applies to. A free plan has
+         no price row at all, so it has no coupon. */
       +       (perpMod() ? '' :
                 '<div class="am-orow am-planrow nl-mainline"><div>'
+              /* ⚠️ "Free base" was what the generic rule produced, against a value that
+                 also read "Free" — a base-PRICE label on a row that has no price. A free
+                 plan's row is just the plan. */
               +   (isChange() ? (st.oldName + ' \u2192 ' + (NAME[t] || st.plan))
-                              : ((NAME[t] || st.plan) + ' base'))
-              +   '</div><div>' + money(BASE[t] || 0) + perSuffix() + '</div></div>')
+                              : ((NAME[t] || st.plan) + (isFree() ? '' : ' base')))
+              +   '</div><div>' + (isFree() ? 'Free' : (money(BASE[t] || 0) + perSuffix())) + '</div></div>')
       +       '<div class="am-orow nl-entline"><div>' + entSummary(t) + '</div><div></div></div>'
       +       rows
       /* `isMod()` used to win outright and printed "New monthly" on a PERPETUAL
          modification — a licence that is never billed monthly at all. */
-      +       (perpMod() ? '' :
+      /* ⚠️ THE COUPON IS ITS OWN ROW, DIRECTLY ABOVE THE TOTAL — not an action hung off
+         the base-price line. Hung there it read as a property of that one figure; it
+         applies to the order, and it belongs next to the number it changes.
+         It is also where the input opens, in place: a coupon is a two-second detour,
+         and sending the reader to a dialog and back to find out what it did is longer
+         than the thing itself. */
+      +       (isFree() ? '' : couponRowHTML())
+      +       (perpMod() || isFree() ? '' :
                 '<div class="am-orow am-newmonthly"><div>' + (isPerp() ? 'One-time total' : (isMod() ? 'New monthly' : 'Monthly total'))
-              +   '</div><div>' + money(total()) + perSuffix() + '</div></div>')
+              /* ⚠️ BOTH FIGURES when a coupon is applied: the old price struck through and
+                 the new one beside it. A single recalculated number is correct and says
+                 nothing — the reader applied a coupon to find out what it did, and the
+                 answer is the difference, not the result. */
+              +   '</div><div>' + (st.coupon
+                    ? '<span class="was">' + money(total()) + '</span> '
+                      + money(Math.max(0, total() - discount()))
+                    : money(total())) + perSuffix() + '</div></div>')
       /* ⚠️ THIS CLOSES `.am-order`, and losing it is what broke the Review layout:
          `.nl-terms` fell inside the order list, the remaining two closers went to
          `.am-order` and `.nl-joined`, and `.fs-col` was left open — so `.fs-right`
@@ -849,14 +1036,17 @@ var NL = (function(){
          line of its own is exactly what a range rewrite loses. */
       +     '</div>'
       +     '<div class="nl-terms">' + termsLine()
-      +       '<span class="taxnote nl-taxline">' + TAX_NOTE + '</span></div>'
+      +       (isFree() ? '' : '<span class="taxnote nl-taxline">' + TAX_NOTE + '</span>') + '</div>'
       +   '</div>'
       + '</div>'
       /* right: Due today, the payment context, then the commit — all sitting in
          .fs-right's own padding, the same internal spacing step 2 uses */
       + '<div class="am-sec fs-right">'
-      +   '<div class="nl-duerow"><div class="am-duelabel">' + dueLabel + '</div>'
-      +     '<div class="am-dueval">' + dueVal + '</div></div>'
+      +   (isFree()
+            ? '<div class="nl-free"><b>Nothing will be charged.</b> This plan is free — '
+              + 'there is no payment method to add and no invoice for it.</div>'
+            : '<div class="nl-duerow"><div class="am-duelabel">' + dueLabel + '</div>'
+              + '<div class="am-dueval">' + dueVal + '</div></div>')
       +   '<div class="nl-payline">' + payline + '</div>'
       +   '<button class="btn fs-nextbtn" id="nlCommit">' + cta + '</button>'
       + '</div>'
@@ -966,16 +1156,16 @@ var NL = (function(){
      single `.field` (they sit inside one `.paystripe`), so their messages live in
      their own slots under it and the box is marked as a whole. */
   function paintBillField(name, msg){
-    var slot = $('#nlStep4 [data-nlb-err="' + name + '"]');
+    var slot = $('#nlStepBill [data-nlb-err="' + name + '"]');
     if(slot){ slot.textContent = msg || ''; slot.hidden = !msg; }
-    var input = $('#nlStep4 [data-nlb="' + name + '"]');
+    var input = $('#nlStepBill [data-nlb="' + name + '"]');
     var field = input && input.closest('.field');
     if(!field) return;
     /* the three card subfields share a field: it wears the error state while ANY of
        them is wrong, so clearing one must not clear the box for the other two */
     if(name === 'num' || name === 'exp' || name === 'cvc'){
       var anyBad = ['num', 'exp', 'cvc'].some(function(k){
-        var sl = $('#nlStep4 [data-nlb-err="' + k + '"]');
+        var sl = $('#nlStepBill [data-nlb-err="' + k + '"]');
         return sl && !sl.hidden;
       });
       field.classList.toggle('err', anyBad);
@@ -984,8 +1174,8 @@ var NL = (function(){
     }
   }
   function clearBillErrors(){
-    $$('#nlStep4 [data-nlb-err]').forEach(function(sl){ sl.hidden = true; sl.textContent = ''; });
-    $$('#nlStep4 .field.err').forEach(function(f){ f.classList.remove('err'); });
+    $$('#nlStepBill [data-nlb-err]').forEach(function(sl){ sl.hidden = true; sl.textContent = ''; });
+    $$('#nlStepBill .field.err').forEach(function(f){ f.classList.remove('err'); });
     var sum = $('#nlBillFormErr'); if(sum){ sum.hidden = true; sum.textContent = ''; }
   }
   /* Called by the primary. Paints every failure at once — a form that reveals its
@@ -1010,7 +1200,7 @@ var NL = (function(){
         sum.hidden = false;
       }
     }
-    var first = bad.length && $('#nlStep4 [data-nlb="' + bad[0] + '"]');
+    var first = bad.length && $('#nlStepBill [data-nlb="' + bad[0] + '"]');
     if(first){ first.focus(); if(first.scrollIntoView) first.scrollIntoView({ block:'center' }); }
     return bad.length === 0;
   }
@@ -1019,14 +1209,14 @@ var NL = (function(){
   function syncPayBtn(){
     var b = $('#nlPayNow'); if(b) b.disabled = false;
   }
-  function renderStep4(){
+  function renderBilling(){
     var t = tier();
     var rows = '';
     deltas().forEach(function(c){
       var left = c.unit ? (c.t + ' × ' + money(c.unit)) : c.t;
       rows += '<div class="am-sumrow"><span>' + left + '</span><span>' + money(c.amt) + '</span></div>';
     });
-    $('#nlStep4').innerHTML =
+    $('#nlStepBill').innerHTML =
       '<div class="fs-grid">'
       + '<div class="fs-col">'
       +   '<div class="am-sec fs-panel">'
@@ -1105,24 +1295,23 @@ var NL = (function(){
      value would hide the last row on one of them. */
   function syncPinnedSummary(){
     var phone = window.matchMedia('(max-width:600px)').matches;
-    [2, 3, 4].forEach(function(n){
-      var step = $('#nlStep' + n); if(!step) return;
+    ['capacity', 'addons', 'review', 'billing'].forEach(function(k){
+      var step = $(STEP_NODE[k]); if(!step) return;
       var right = $('.fs-right', step); if(!right) return;
       right.classList.remove('pinned');
       step.classList.remove('haspin');
       if(!phone || step.hidden) return;
-      /* Three steps, three different rules — so this is a switch, not a boolean.
-         ⚠️ Step 4 (Payment & Billing) NEVER pins: this REVERSES the earlier
-         instruction to pin it. Its content is a long form, and a bar carrying the
-         total plus `Subscribe` over a keyboard-driven form competes with the field
-         being typed in.
-         ⚠️ `n !== 3` was the old test, and simply flipping it to `n === 2` was NOT
-         enough: step 4 then fell into the measurement branch below and the
-         measurement pinned it anyway. Each step has to say what it is. */
+      /* Each step says what it is — a switch, not a boolean.
+         ⚠️ Payment & Billing NEVER pins: this REVERSES the earlier instruction to pin
+         it. Its content is a long form, and a bar carrying the total plus `Subscribe`
+         over a keyboard-driven form competes with the field being typed in.
+         ⚠️ Testing by position was the old bug (`n !== 3`, then `n === 2`, and billing
+         still fell into the measurement branch and got pinned anyway). Keys cannot
+         drift like that — a step is named, so its rule is named too. */
       var pin;
-      if(n === 2)      pin = true;                    // always: the total is the point
-      else if(n === 4) pin = false;                   // never: it is a form
-      else {                                          // step 3: measured, once, un-pinned
+      if(k === 'capacity' || k === 'addons') pin = true;   // always: the total is the point
+      else if(k === 'billing') pin = false;                // never: it is a form
+      else {                                               // review: measured, once, un-pinned
         var box = body.getBoundingClientRect();
         pin = right.getBoundingClientRect().bottom > box.bottom + 1;
       }
@@ -1133,7 +1322,7 @@ var NL = (function(){
     });
   }
   window.addEventListener('resize', syncPinnedSummary);
-  /* ⚠️ `resize` alone is not enough. The step-3 decision depends on the height of
+  /* ⚠️ `resize` alone is not enough. The review-step decision depends on the height of
      the scroll box, and that box can change without a window resize — an on-screen
      keyboard, a URL bar collapsing, or a devtools/harness viewport change that
      never dispatches the event (observed). A ResizeObserver on the box itself fires
@@ -1144,13 +1333,21 @@ var NL = (function(){
     new ResizeObserver(function(){ syncPinnedSummary(); }).observe(body);
   }
 
-  function gotoStep(n){
-    st.step = n;
-    if(n === 1) renderStep1();
-    if(n === 2) renderStep2();
-    if(n === 3) renderStep3();
-    if(n === 4) renderStep4();
-    [1, 2, 3, 4].forEach(function(i){ $('#nlStep' + i).hidden = i !== n; });
+  /* ⚠️ Takes a KEY and validates it against the current list: a step that does not
+     exist in this mode (billing on a free plan, add-ons on TBMQ) falls back to the
+     first one rather than hiding every node and showing an empty modal. */
+  function gotoStep(k){
+    var list = steps();
+    if(list.indexOf(k) < 0) k = list[0];
+    st.step = k;
+    if(k === 'pick') renderStepPick();
+    else if(k === 'capacity') renderCapacity();
+    else if(k === 'addons') renderAddons();
+    else if(k === 'review') renderReview();
+    else if(k === 'billing') renderBilling();
+    Object.keys(STEP_NODE).forEach(function(key){
+      var el = $(STEP_NODE[key]); if(el) el.hidden = key !== k;
+    });
     renderSteps();
     if(body) body.scrollTop = 0;
     /* after the step is visible and laid out — a hidden step measures as zero */
@@ -1182,7 +1379,7 @@ var NL = (function(){
                                     phone:bill.phone, country:bill.country, state:bill.state,
                                     city:bill.city, zip:bill.zip, addr:bill.addr, addr2:bill.addr2 });
     }
-    var t = tier(), e = extras(), tot = total();
+    var t = tier(), e = extras(), tot = Math.max(0, total() - discount());
     var seq = storeNextSeq();          // persisted, so ids stay unique across reloads
     var lic = { id:'N' + seq, tier:t,
       product: st.product === 'tbmq' ? 'TBMQ' : 'ThingsBoard',
@@ -1191,8 +1388,10 @@ var NL = (function(){
       label:'', created:todayStr(), status:'active',
       /* a perpetual's updates term runs a year; a subscription renews in a month */
       event: isPerp() ? dayStr(365) : dayStr(30),
-      price: isPerp() ? 'one-time' : (money(tot) + ' / mo'),
-      billing: isPerp() ? 'paid' : 'auto-pay' };
+      /* a free plan carries the word, not a figure: every surface that prints a price
+         reads this string, and "$0.00 / mo" would put a transaction on all of them */
+      price: isFree() ? 'Free' : (isPerp() ? 'one-time' : (money(tot) + ' / mo')),
+      billing: isFree() ? 'none' : (isPerp() ? 'paid' : 'auto-pay') };
     var x = {};
     if(e.devices > 0) x.devices = String(e.devices);
     if(e.prod > 0) x.prod = String(e.prod);
@@ -1206,7 +1405,9 @@ var NL = (function(){
        "NEXT CHARGE" figure, and no evidence anywhere that the money had moved —
        which is the state the participant failed the task in. The amount is what the
        review step showed as due, so the receipt and the order agree. */
-    storeAddInvoice(lic, money(tot), { payment:'Card', auto:!isPerp() });
+    /* ⚠️ …and NOT for a free plan. There is no charge, so an invoice for $0.00 would be
+       a receipt for a payment that never happened — the opposite of the fix above. */
+    if(!isFree()) storeAddInvoice(lic, money(tot), { payment:'Card', auto:!isPerp() });
     st.dirty = false;
     scr.hidden = true;
     /* No success modal: the details surface is where the key lives, so open it and
@@ -1218,22 +1419,12 @@ var NL = (function(){
   }
   function commitChange(){
     var lic = st.changeLic, t = tier(), e = extras();
-    /* ⚠️ A shrinking change is RECORDED, not applied: the licence keeps everything it
-       has until the end of the period it was paid for. See scheduleChange() and the
-       rule above shrinks(). Growth still applies on the spot, prorated. */
-    if(shrinks()){
-      scheduleChange(lic, { kind:isAddons() ? 'addons' : 'plan',
-                            summary:changeSummary(), effective:effectiveDate(),
-                            apply:pendingApply() });
-      st.dirty = false;
-      scr.hidden = true;
-      /* the RESULT goes to the snackbar; the scheduled change itself is state and is
-         stated in the Plan block's own banner (renderScheduled) */
-      Snack.show('Change scheduled for ' + fmtDate(effectiveDate()));
-      if(window.LicenseDetails && LicenseDetails.isOpen()){ LicenseDetails.reopen(lic); return; }
-      openLicenseDetails(lic, null, { refreshHost:true });
-      return;
-    }
+    /* ⚠️ THE DEFERRAL BRANCH IS GONE. A shrinking change used to be RECORDED against a
+       future date and applied later; it now takes effect here with everything else, and
+       there is no second path through this function. What went with it: the scheduled
+       record, the banner in the Plan block that stated it, and the action that cancelled
+       it — a change that happens immediately cannot be cancelled, only changed again.
+       Growth and shrink now differ in one place only: what is due today (see renderReview). */
     // add-ons keeps the plan: only the entitlements and the price move
     var summary = isAddons() ? changeSummary() : null;
     /* ⚠️ Captured BEFORE the licence is mutated: `modDelta()` reads `oldMonthly()`,
@@ -1279,8 +1470,11 @@ var NL = (function(){
        through with no document anywhere — the Invoices count did not move. The rule
        is now the charge, not the kind of flow that made it: if money is taken, there
        is a receipt, on the Invoices page and on this licence's own Invoices tab.
-       Zero is not a charge — a shrink is scheduled and bills nothing today, and it
-       returns above this line anyway. */
+       ⚠️ Zero is not a charge, and that case is now REACHED rather than returned early:
+       a lowering change used to be deferred and left this function before here. It
+       applies immediately now, falls through to this line, and writes no invoice —
+       which is right, because nothing was taken. Whether the difference is owed BACK is
+       a policy question the repository does not answer; see NOTES. */
     if(charged > 0) storeAddInvoice(lic, money(charged), { payment:'Card', auto:false });
     st.dirty = false;
     scr.hidden = true;
@@ -1351,13 +1545,18 @@ var NL = (function(){
     st.changeLic = opts.license || null;
     st.fixedTier = null; st.baseCust = null;
     st.kind = opts.kind === 'perpetual' ? 'perpetual' : 'subscription';
-    st.product = opts.product || 'thingsboard';   // the filter bar always shows a selection
+    /* the host may hand a product in (a card picked on the landing page carries one);
+       otherwise the flow opens on the product the session arrived for */
+    st.product = opts.product || arrivedProduct();
     st.plan = opts.plan || null;
     /* ⚠️ Reset on every open, not only when asked for. `st` outlives one flow — the
        controller is a singleton — so a wizard opened once from the landing hand-off
        would keep the shortened progress line for every later purchase from the
        "Buy a license" button, which DOES have a picker. */
     st.noPicker = !!(opts.skipPicker && opts.plan);
+    /* the coupon belongs to ONE order — `st` outlives a flow, so a code applied to a
+       previous purchase must not be sitting on the next one's Review step */
+    st.coupon = null; st.couponOpen = false; st.couponErr = null; st.couponDraft = '';
     st.dirty = !!(opts.product || opts.plan);   // preselected entry counts as selections made
     seededTier = null;
     cust = { prod:1, dev:0, ai:0, edge:false, trendz:false };
@@ -1382,7 +1581,10 @@ var NL = (function(){
          already carries it. A second line would make every modal header two lines
          tall to serve the minority of licences that have one. */
       setWizardTitle('Manage add-ons', al.product, al.name);
-      gotoStep(2);
+      /* ⚠️ `gotoStep(2)` here was left behind by the move to step KEYS and would have
+         opened an empty modal: 2 is not in the list, so every node hid itself. Add-ons
+         has no picker, so its first step is simply the first of its own list. */
+      gotoStep(steps()[0]);
     } else if(st.mode === 'change' && st.changeLic){
       // change-plan mode: Product and Billing are locked to the licence, and the
       // chooser opens with the current plan marked as such
@@ -1391,14 +1593,20 @@ var NL = (function(){
       st.product = cl.product === 'TBMQ' ? 'tbmq' : 'thingsboard';
       st.plan = null;
       st.oldTier = cl.tier; st.oldName = cl.name;
+      /* ⚠️ THE BASELINE WAS NEVER CAPTURED HERE — only Manage add-ons set it, so
+         `shrinks()` returned false for every plan change and the Review step said
+         nothing at all about a downgrade. Invisible while a downgrade was silently
+         deferred; not invisible now that the step has to state what is being given up. */
+      st.baseCust = licenseCust(cl, cl.tier);
       st.dirty = false;
       // same rule as above: flow · licence, never the label
       setWizardTitle('Change plan', cl.product || 'ThingsBoard', cl.name);
-      gotoStep(1);
+      gotoStep('pick');
     } else {
       // the billing type is chosen inside step 1 now, so the title stays neutral
       setWizardTitle('New license', '', '');
-      gotoStep(opts.startStep && st.plan ? 2 : 1);   // preselected entry lands on Customize
+      // a preselected plan (picked on the landing page) skips the picker it already answered
+      gotoStep(opts.startStep && st.plan ? (steps()[0] === 'pick' ? steps()[1] : steps()[0]) : 'pick');
     }
     scr.hidden = false;
     $('#nlClose').focus();
@@ -1407,23 +1615,25 @@ var NL = (function(){
   /* ---- events (step content re-renders, so everything is delegated) ---- */
   // the step header is re-rendered on every step, so delegate its back button
   $('#nlStepbar').addEventListener('click', function(e){
-    if(e.target.closest('#nlStepBack') && st.step > firstStep()) gotoStep(st.step - 1);
+    if(e.target.closest('#nlStepBack') && !isFirstStep()) gotoStep(stepAt(-1));
   });
 
   body.addEventListener('click', function(e){
     /* the picker reads itself (shared with the landing page); this host decides what
        its two outcomes mean here — narrow the offer, or take the plan and advance */
-    if(st.step === 1){
+    if(st.step === 'pick'){
       var what = planPickerClick(e, st);
-      if(what === 'changed'){ seededTier = null; renderStep1(); return; }
-      if(what === 'picked'){ st.dirty = true; gotoStep(2); return; }
+      if(what === 'changed'){ seededTier = null; renderStepPick(); return; }
+      /* ⚠️ `stepAt(1)` and not a fixed step: a paid plan lands on Capacity, a free one
+         has no Capacity step and lands on Review. */
+      if(what === 'picked'){ st.dirty = true; gotoStep(stepAt(1)); return; }
     }
     // every step acts from the card that carries its total
-    if(e.target.closest('#nlSumNext')){ if(st.step < lastStep()) gotoStep(st.step + 1); return; }
+    if(e.target.closest('[data-nlnext]')){ if(!isLastStep()) gotoStep(stepAt(1)); return; }
     var commit = e.target.closest('#nlCommit');
     if(commit){
       if(isLastStep()) startPurchase(commit);   // billing data on file: commit here
-      else gotoStep(st.step + 1);               // otherwise the billing step is next
+      else gotoStep(stepAt(1));                 // otherwise the billing step is next
       return;
     }
     var payNow = e.target.closest('#nlPayNow');
@@ -1432,7 +1642,7 @@ var NL = (function(){
        Now the submit answers: either it starts, or it paints every failure and puts
        the cursor in the first one. */
     if(payNow){ if(showAllBillErrors()) startPurchase(payNow); return; }
-    var sb = e.target.closest('#nlStep2 .stepper button');
+    var sb = e.target.closest('#nlStepCap .stepper button');
     if(sb){
       var f = sb.closest('.stepper').getAttribute('data-nl-field');
       var min = f === 'dev' ? 0 : ((INCL[tier()] || {})[f] || 0);
@@ -1448,13 +1658,54 @@ var NL = (function(){
         cust.devices = Math.max(devicesIncluded(),
           (cust.devices || 0) + PERP_DEV_PER_INSTANCE * (cust[f] - was));
       }
-      st.dirty = true; renderStep2(); syncPinnedSummary(); return;
+      st.dirty = true; renderCapacity(); syncPinnedSummary(); return;
+    }
+    /* ---- coupon: open · apply · cancel · remove, all on the one row ----
+       ⚠️ The shared `Coupon` DIALOG is no longer used here. It still serves the licence
+       surface, where a coupon is applied against a licence rather than inside an order
+       being read — there the dialog is the whole interaction, here it would interrupt
+       one. One row, three states (see couponRowHTML). */
+    if(e.target.closest('[data-couponopen]')){
+      st.couponOpen = true; st.couponErr = null;
+      st.couponDraft = st.coupon ? st.coupon.code : '';
+      renderReview();
+      var inp = $('#nlCouponInput'); if(inp){ inp.focus(); inp.select(); }
+      return;
+    }
+    if(e.target.closest('[data-couponcancel]')){
+      st.couponOpen = false; st.couponErr = null; renderReview(); return;
+    }
+    if(e.target.closest('[data-couponremove]')){
+      var was = st.coupon && st.coupon.code;
+      st.coupon = null; st.couponOpen = false; st.couponErr = null;
+      st.dirty = true; renderReview();
+      Snack.show('Coupon ' + (was || '') + ' removed');
+      return;
+    }
+    if(e.target.closest('[data-couponapply]')){
+      var field = $('#nlCouponInput');
+      var code = String(field ? field.value : '').trim();
+      st.couponDraft = code;
+      var err = couponError(code);
+      if(err){
+        /* the error lands ON the field and the row stays open — nothing is announced
+           elsewhere, because nothing has finished happening */
+        st.couponErr = err; renderReview();
+        var bad = $('#nlCouponInput'); if(bad) bad.focus();
+        return;
+      }
+      var changing = !!st.coupon;
+      st.coupon = { code:code.toUpperCase(), rate:COUPON_RATE };
+      st.couponOpen = false; st.couponErr = null; st.dirty = true;
+      renderReview();
+      Snack.show('Coupon ' + st.coupon.code + (changing ? ' applied instead' : ' applied'));
+      return;
     }
     if(e.target.closest('#nlPayChange')){ attemptClose(function(){ location.href = 'billing.html'; }); }
   });
   body.addEventListener('change', function(e){
     var cb = e.target.closest('input[data-nl-addon]');
-    if(cb){ cust[cb.getAttribute('data-nl-addon')] = cb.checked; st.dirty = true; renderStep2(); syncPinnedSummary(); return; }
+    if(cb){ cust[cb.getAttribute('data-nl-addon')] = cb.checked; st.dirty = true; renderAddons(); syncPinnedSummary(); return; }
     var selField = e.target.closest('[data-nlb]');
     if(selField){
       var sn = selField.getAttribute('data-nlb');
@@ -1469,16 +1720,16 @@ var NL = (function(){
      while they are still typing the @ is correcting a sentence mid-word. Typing again
      clears the message — it was an answer to a value that no longer exists. */
   body.addEventListener('focusout', function(e){
-    var f = e.target.closest('#nlStep4 [data-nlb]');
+    var f = e.target.closest('#nlStepBill [data-nlb]');
     if(!f) return;
     var n = f.getAttribute('data-nlb');
     if(BILL_RULES[n]) paintBillField(n, billError(n));
   });
   body.addEventListener('input', function(e){
-    var f = e.target.closest('#nlStep4 [data-nlb]');
+    var f = e.target.closest('#nlStepBill [data-nlb]');
     if(!f) return;
     var n = f.getAttribute('data-nlb');
-    var slot = $('#nlStep4 [data-nlb-err="' + n + '"]');
+    var slot = $('#nlStepBill [data-nlb-err="' + n + '"]');
     if(slot && !slot.hidden) paintBillField(n, null);
     var sum = $('#nlBillFormErr');
     if(sum && !sum.hidden && billErrors().length === 0){ sum.hidden = true; sum.textContent = ''; }
@@ -1492,10 +1743,12 @@ var NL = (function(){
       var raw = num.value.replace(/[^0-9]/g, '');
       var n = raw === '' ? NaN : parseInt(raw, 10);
       var bad = !(n >= min);
-      var err = $('#nlStep2 [data-nl-err="' + field + '"]');
+      var err = $('#nlStepCap [data-nl-err="' + field + '"]');
       if(err) err.hidden = !bad;
       num.classList.toggle('is-bad', bad);
-      var next = $('#nlSumNext');
+      /* the forward button of the step the field is ON — scoped, because Capacity and
+         Add-ons each render one and a document-wide lookup would disable the wrong one */
+      var next = $('#nlStepCap [data-nlnext]');
       if(next) next.disabled = bad;
       if(!bad){ cust[field] = n; st.dirty = true; refreshSummary(); }
       return;
@@ -1517,7 +1770,7 @@ var NL = (function(){
        + 50 extra"), so it has to be rebuilt once the number settles. Deliberately on
        FOCUSOUT, not on input: re-rendering the step mid-number throws the caret away,
        which is the whole reason typing only refreshes the summary. */
-    if(isPerpTB() && num.getAttribute('data-nl-num') === 'devices'){ renderStep2(); syncPinnedSummary(); }
+    if(isPerpTB() && num.getAttribute('data-nl-num') === 'devices'){ renderCapacity(); syncPinnedSummary(); }
   });
   body.addEventListener('keydown', function(e){
     if((e.key === 'Enter' || e.key === ' ') && e.target.classList && e.target.classList.contains('nl-select')){ e.preventDefault(); e.target.click(); }
@@ -1530,7 +1783,7 @@ var NL = (function(){
      path rather than being poked into the DOM. Clears any error already on screen,
      because every one of them has just been answered. */
   function fillDemoBilling(){
-    var panel = $('#nlStep4');
+    var panel = $('#nlStepBill');
     // "is the billing step on screen" — the same test the settings panel used to
     // decide whether to offer this at all, so the two cannot disagree
     if(scr.hidden || !panel || panel.hidden) return;
@@ -1549,18 +1802,21 @@ var NL = (function(){
     bill.exp = '12 / 28';
     bill.cvc = '123';
     st.dirty = true;
-    renderStep4();
+    renderBilling();
     clearBillErrors();
   }
 
   return { open: open, openChange: function(lic){ open({ mode:'change', license: lic }); },
            fillDemoBilling: fillDemoBilling,
            // the settings panel switches the Customize variant while it is open
-           refreshCustomize: function(){ if(!scr.hidden && st.step === 2){ renderStep2(); syncPinnedSummary(); } },
+           refreshCustomize: function(){ if(scr.hidden) return;
+             if(st.step === 'capacity'){ renderCapacity(); syncPinnedSummary(); }
+             else if(st.step === 'addons'){ renderAddons(); syncPinnedSummary(); } },
            // the billing-data setting changes the step count under an open wizard
            refreshOpen: function(){
              if(scr.hidden) return;
-             if(st.step > totalSteps()) st.step = totalSteps();
+             /* the step list can shrink under an open wizard (billing data saved on
+                another tab, a free plan chosen): gotoStep validates the key itself */
              gotoStep(st.step);
            } };
 })();
