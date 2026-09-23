@@ -466,21 +466,43 @@
 
     <div class="sg-item" id="homebanner">
       <h3>The Home banner slot <span class="sg-cls">#homeBanner · .gbanner.homebanner</span></h3>
-      <p class="sg-note"><b>One slot, one banner, a stated priority order.</b> An account with three
-        problems does not get three bands pushing its licences off the screen — it gets the most serious
-        one, and that banner <b>says how many other licences need attention</b> and links to them
-        (<code class="sg-cls">licenses.html?attention=1</code>). Stacking them turns the top of Home into
-        a queue nobody reads.</p>
+      <p class="sg-note"><b>One slot, one banner, a stated priority order &mdash; and two shapes inside
+        it.</b> <b>One licence needs attention:</b> two short lines, the fact (licence in bold) and what
+        to do. <b>Several:</b> the banner becomes a short list &mdash; up to three lines, each naming a
+        licence, its problem and its action, in the same priority order &mdash; then <i>and N more</i>
+        linking to the filtered list (<code class="sg-cls">licenses.html?attention=1</code>).</p>
+      <p class="sg-note">&#9888; <b>This supersedes the earlier rule</b> that only the highest-priority
+        condition rendered and the rest became a count. The count told the reader that something else was
+        wrong but not what, so the only way to find out was to go looking. What has <i>not</i> changed is
+        why that rule existed: three stacked <b>banners</b> would push the licence list off the screen.
+        Three <b>lines</b> do not &mdash; measured at 390px, three lines plus the overflow link are 270px,
+        a third of the viewport, entirely above the fold.</p>
+      <p class="sg-note"><b>Home says what is wrong and what fixes it; the explanation lives one click
+        in.</b> The migration sentence (&ldquo;this usually happens after moving a deployment&hellip;&rdquo;)
+        belongs to the licence&rsquo;s own banner and the line above the Instances list, not here &mdash;
+        on Home it was the longest thing in the band and the least useful to someone who already knows
+        what they did.</p>
       <div class="sg-static" style="padding:0;margin-bottom:12px">
         <div class="gbanner homebanner is-blocking">
           <svg class="icon gb-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l9 16H3z"/><path d="M12 9.5v4.2"/><circle cx="12" cy="16.6" r=".9"/></svg>
-          <span class="gb-txt"><b><a class="gb-lic" href="#">On-prem HQ</a> is blocked.</b> 2 production
-            instances are running against 1 allowed on this plan. The license checks in every hour, so it
-            stays blocked until the count is back within its limit. This usually happens after moving a
-            deployment to a new server. If that is what happened, detach the old one.
-            <a class="gb-lic" href="#">3 other licenses need attention</a>.</span>
-          <span class="sp"></span>
-          <button class="gb-act">Manage</button><a class="gb-act sec" href="#">Detach an instance</a>
+          <div class="hb-body">
+            <p class="hb-fact"><b><a class="gb-lic" href="#">On-prem HQ</a> is blocked</b> &mdash; 2 production instances running, 1 allowed.</p>
+            <p class="hb-todo">Raise the limit or detach the extra instance. The license checks in hourly and unblocks at the next check.</p>
+            <div class="hb-acts"><button class="gb-act">Manage</button><a class="gb-act sec" href="#">Detach an instance</a></div>
+          </div>
+        </div>
+      </div>
+      <div class="sg-static" style="padding:0;margin-bottom:12px">
+        <div class="gbanner homebanner is-blocking is-list">
+          <svg class="icon gb-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l9 16H3z"/><path d="M12 9.5v4.2"/><circle cx="12" cy="16.6" r=".9"/></svg>
+          <div class="hb-body">
+            <ul class="hb-list">
+              <li class="hb-item"><span class="hb-txt"><b><a class="gb-lic" href="#">On-prem HQ</a></b> is blocked &mdash; 2 of 1 production instances.</span><button class="gb-act sm">Manage</button></li>
+              <li class="hb-item"><span class="hb-txt">Payment for <b><a class="gb-lic" href="#">Factory A</a></b> failed.</span><button class="gb-act sm">Update payment</button></li>
+              <li class="hb-item"><span class="hb-txt">Software updates for <b><a class="gb-lic" href="#">Warehouse DC</a></b> ended Sep 10, 2026.</span><button class="gb-act sm">Renew updates</button></li>
+              <li class="hb-more"><a class="gb-lic" href="#">and 3 more</a></li>
+            </ul>
+          </div>
         </div>
       </div>
       <p class="sg-note"><b>The order, and the whole inventory.</b> Nothing renders that is not on this
@@ -495,11 +517,14 @@
           <tr><td>5</td><td>Software updates expired</td><td>Renew updates</td><td>yes — returns after 7 days</td></tr>
           <tr><td>6</td><td>Software updates end in 14 days</td><td>Renew updates</td><td>yes — returns at expiry</td></tr>
           <tr><td>7</td><td>Software updates end in 30 days</td><td>Renew updates</td><td>yes — returns at 14 days</td></tr>
-          <tr><td>8</td><td>Never activated by any instance</td><td>Installation instructions</td><td>yes — permanently</td></tr>
-          <tr><td>9</td><td>Community Grant approved</td><td>View license</td><td>yes — permanently</td></tr>
+          <tr><td>8</td><td>Community Grant approved</td><td>View license</td><td>yes — permanently</td></tr>
         </tbody>
       </table></div>
-      <p class="sg-note" style="margin-top:12px"><b>Dismissal is per licence AND per state.</b> The key is
+      <p class="sg-note" style="margin-top:12px"><b>The ✕ on a list dismisses the lines it is
+        showing</b>, each under its own key — so they still return independently, each at its own next
+        threshold. One ✕ per line would put three close buttons in a band four lines tall. And the ✕ is
+        absent whenever <b>any</b> line is blocking, not only when the first one is.</p>
+      <p class="sg-note"><b>Dismissal is per licence AND per state.</b> The key is
         <code class="sg-cls">&lt;licence id&gt;:&lt;state&gt;</code>, so closing one notice can never
         silence a different licence, a different problem, or a <b>later stage of the same one</b>:
         <code class="sg-cls">B11:updates_30</code> and <code class="sg-cls">B11:updates_14</code> are
@@ -517,6 +542,18 @@
         Home is a notification surface, the licence is the record of state.</p>
       <p class="sg-note"><b>A cancelled licence that is still active until its end date gets no banner.</b>
         Nothing needs doing, and the state is already on the licence and in the list.</p>
+      <p class="sg-note">⚠️ <b>&ldquo;Waiting for its first instance&rdquo; is no longer one of these.</b>
+        It was condition 8. A licence that has not been activated yet is a fact about that licence, not
+        something Home has to interrupt with: nothing is broken, nothing is about to stop, and the person
+        who just bought it is already looking at it. The state itself is untouched — the licence's own
+        banner still explains it and links to the installation guide.</p>
+      <p class="sg-note"><b>The same conditions mark the rows in the list</b>, through the same function
+        (<code class="sg-cls">attentionOf</code>) — the banner links into a filtered list, and if the list
+        decided &ldquo;needs attention&rdquo; its own way the two could disagree about which rows belong in
+        it. The marker is the alert icon plus a few words in the status cell; the full sentence is on the
+        licence. ⚠️ The two <b>account-level</b> conditions (no payment method, card expiring) have no
+        licence to mark — they would put the same triangle on every row — so they appear in the banner
+        only.</p>
     </div>
 
     <div class="sg-item" id="instancesview">

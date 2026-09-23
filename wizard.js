@@ -870,6 +870,11 @@ var NL = (function(){
      message is ink + bold against faint help text. Adding a hue is one token if that is
      being revisited. */
   function couponRowHTML(){
+    /* ⚠️ OPEN IS CHECKED FIRST. With `st.coupon` tested before it, `Change` on an applied
+       coupon set the open flag and then rendered the applied row anyway — the button
+       existed, was clickable, and produced nothing. Same class of fault as the row menu
+       that would not open: a state the code can enter and the view cannot show. */
+    if(st.couponOpen) return couponOpenHTML();
     if(st.coupon){
       return '<div class="am-orow nl-couponrow is-applied"><div>'
         + 'Coupon <b>' + esc(st.coupon.code) + '</b> '
@@ -878,20 +883,47 @@ var NL = (function(){
         + '<button type="button" class="link nl-couponedit" data-couponremove>Remove</button>'
         + '</div><div>\u2212' + money(discount()) + '</div></div>';
     }
-    if(st.couponOpen){
-      return '<div class="am-orow nl-couponrow is-open"><div class="nl-couponfield">'
+    return '<div class="am-orow nl-couponrow"><div>'
+      + '<button type="button" class="link" data-couponopen>Apply coupon</button>'
+      + '</div><div></div></div>';
+  }
+  function couponOpenHTML(){
+    return '<div class="am-orow nl-couponrow is-open"><div class="nl-couponfield">'
         + '<div class="field' + (st.couponErr ? ' err' : '') + '">'
         +   '<input type="text" id="nlCouponInput" placeholder="Coupon code" autocomplete="off"'
         +     ' aria-label="Coupon code" value="' + esc(st.couponDraft || '') + '">'
         + '</div>'
         + '<button type="button" class="btn sec" data-couponapply>Apply</button>'
         + '<button type="button" class="link nl-couponedit" data-couponcancel>Cancel</button>'
-        + (st.couponErr ? '<div class="fielderr nl-couponerr">' + esc(st.couponErr) + '</div>' : '')
-        + '</div><div></div></div>';
-    }
-    return '<div class="am-orow nl-couponrow"><div>'
-      + '<button type="button" class="link" data-couponopen>Apply coupon</button>'
+      + (st.couponErr ? '<div class="fielderr nl-couponerr">' + esc(st.couponErr) + '</div>' : '')
       + '</div><div></div></div>';
+  }
+  /* ---- the legal confirmation ---------------------------------------------------
+     ⚠️ IT SITS ON WHICHEVER STEP COMMITS, not on a fixed one. With billing data on file
+     that is Review & pay; without it the flow ends on Payment & Billing, and a consent
+     tick left behind on an earlier screen would be agreed to before the order was.
+     ⚠️ IT FOLLOWS THE VALIDATION RULE THIS FLOW ALREADY HAS: the primary is never
+     disabled. A disabled button cannot say why it is disabled — it cannot even take
+     focus — so the button accepts the press and the answer appears under it.
+     ⚠️ Monochrome, like every other error here: `.fielderr` is this system's error
+     treatment. The brief asked for the error colour; see the report. */
+  var LEGAL_TEXT = 'I have read and agree to the '
+    + '<a class="link" href="license-agreement.html" target="_blank" rel="noopener">ThingsBoard License Agreement</a>. '
+    + 'I confirm I am authorized to accept it on behalf of my organization.';
+  function legalBlockHTML(){
+    return '<label class="nl-legal' + (st.legalErr ? ' err' : '') + '">'
+      + '<input type="checkbox" id="nlLegal"' + (st.legalOk ? ' checked' : '') + '>'
+      + '<span class="nl-legaltxt">' + LEGAL_TEXT + '</span></label>'
+      + (st.legalErr ? '<div class="fielderr nl-legalerr" role="alert">' + esc(st.legalErr) + '</div>' : '');
+  }
+  var LEGAL_ERR = 'Confirm the statement above to issue the license.';
+  /* A modification does not issue a licence — it changes one that was already agreed to
+     — so Change plan and Manage add-ons do not ask again. See the report. */
+  function needsLegal(){ return !isMod(); }
+  function legalBlocked(){
+    if(!needsLegal() || st.legalOk) return false;
+    st.legalErr = LEGAL_ERR;
+    return true;
   }
   function renderReview(){
     var t = tier();
@@ -1048,6 +1080,7 @@ var NL = (function(){
             : '<div class="nl-duerow"><div class="am-duelabel">' + dueLabel + '</div>'
               + '<div class="am-dueval">' + dueVal + '</div></div>')
       +   '<div class="nl-payline">' + payline + '</div>'
+      +   (isLastStep() && needsLegal() ? legalBlockHTML() : '')
       +   '<button class="btn fs-nextbtn" id="nlCommit">' + cta + '</button>'
       + '</div>'
       + '</div>';
@@ -1273,6 +1306,7 @@ var NL = (function(){
       /* the summary sits WITH the button it belongs to, not at the top of a form the
          reader has already scrolled past */
       +   '<div class="formerr" id="nlBillFormErr" role="alert" hidden></div>'
+      +   (needsLegal() ? legalBlockHTML() : '')
       +   '<button class="btn fs-nextbtn" id="nlPayNow">' + confirmLabel() + '</button>'
       + '</div>'
       + '</div>';
@@ -1336,6 +1370,10 @@ var NL = (function(){
   /* ⚠️ Takes a KEY and validates it against the current list: a step that does not
      exist in this mode (billing on a free plan, add-ons on TBMQ) falls back to the
      first one rather than hiding every node and showing an empty modal. */
+  function focusLegal(){
+    var c = $('#nlLegal');
+    if(c){ c.focus(); if(c.scrollIntoView) c.scrollIntoView({ block:'nearest' }); }
+  }
   function gotoStep(k){
     var list = steps();
     if(list.indexOf(k) < 0) k = list[0];
@@ -1557,6 +1595,9 @@ var NL = (function(){
     /* the coupon belongs to ONE order — `st` outlives a flow, so a code applied to a
        previous purchase must not be sitting on the next one's Review step */
     st.coupon = null; st.couponOpen = false; st.couponErr = null; st.couponDraft = '';
+    /* consent belongs to ONE order: `st` outlives a flow, and a box ticked for a
+       previous purchase must not arrive pre-agreed on the next one */
+    st.legalOk = false; st.legalErr = null;
     st.dirty = !!(opts.product || opts.plan);   // preselected entry counts as selections made
     seededTier = null;
     cust = { prod:1, dev:0, ai:0, edge:false, trendz:false };
@@ -1632,8 +1673,9 @@ var NL = (function(){
     if(e.target.closest('[data-nlnext]')){ if(!isLastStep()) gotoStep(stepAt(1)); return; }
     var commit = e.target.closest('#nlCommit');
     if(commit){
-      if(isLastStep()) startPurchase(commit);   // billing data on file: commit here
-      else gotoStep(stepAt(1));                 // otherwise the billing step is next
+      if(!isLastStep()){ gotoStep(stepAt(1)); return; }   // the billing step is next
+      if(legalBlocked()){ renderReview(); focusLegal(); return; }
+      startPurchase(commit);                              // billing data on file: commit here
       return;
     }
     var payNow = e.target.closest('#nlPayNow');
@@ -1641,7 +1683,16 @@ var NL = (function(){
        a rejected order produced nothing at all — no message, no focus, no reason.
        Now the submit answers: either it starts, or it paints every failure and puts
        the cursor in the first one. */
-    if(payNow){ if(showAllBillErrors()) startPurchase(payNow); return; }
+    if(payNow){
+      /* ⚠️ Both answers at once, not one and then the other: a reader who has neither
+         ticked the box nor filled the form should not fix the form, press again, and
+         only then learn about the box. */
+      var legalBad = legalBlocked();
+      var billOk = showAllBillErrors();
+      if(legalBad){ renderBilling(); focusLegal(); return; }
+      if(billOk) startPurchase(payNow);
+      return;
+    }
     var sb = e.target.closest('#nlStepCap .stepper button');
     if(sb){
       var f = sb.closest('.stepper').getAttribute('data-nl-field');
@@ -1704,6 +1755,17 @@ var NL = (function(){
     if(e.target.closest('#nlPayChange')){ attemptClose(function(){ location.href = 'billing.html'; }); }
   });
   body.addEventListener('change', function(e){
+    var legal = e.target.closest('#nlLegal');
+    if(legal){
+      st.legalOk = legal.checked;
+      /* the error answers the moment it is answered — it does not wait for another
+         press to clear itself */
+      if(st.legalOk && st.legalErr){
+        st.legalErr = null;
+        if(st.step === 'billing') renderBilling(); else renderReview();
+      }
+      return;
+    }
     var cb = e.target.closest('input[data-nl-addon]');
     if(cb){ cust[cb.getAttribute('data-nl-addon')] = cb.checked; st.dirty = true; renderAddons(); syncPinnedSummary(); return; }
     var selField = e.target.closest('[data-nlb]');

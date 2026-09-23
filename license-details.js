@@ -624,9 +624,15 @@ function renderLicenseAlert(lic){
     return also.length ? ' This license also has ' + also.join(' and ') + '.' : '';
   }
   if(instOverLimit(lic)){
+    /* ⚠️ THE MIGRATION SENTENCE LIVES HERE, and it did not before. The brief moved it
+       off Home on the understanding that it was already on this banner — it was not,
+       only above the Instances list. Home now says what is wrong and what fixes it;
+       this is the surface that explains HOW a licence ends up over its limit, next to
+       the instances you would act on. One constant, shared with `.inst-hint`. */
     t.innerHTML = '<span class="amsg"><b>Over the production instance limit.</b> '
       + instRunning(lic) + ' running, ' + instAllowed(lic) + ' allowed on this plan \u2014 '
-      + 'this license is blocked until the count is back within its limit.'
+      + 'this license is blocked until the count is back within its limit. '
+      + DETACH_HINT
       + alsoClause('over_limit') + '</span>'
       /* ⚠️ NOT a third "Manage" on one screen. The header already carries the licence's
          `Manage`; this one is about the instance count specifically, so it says so.
@@ -1020,47 +1026,117 @@ function updatesNewExpiry(lic){
   var from = (end != null && end > TODAY_DAY) ? end : TODAY_DAY;
   return dayToDate(from + days);
 }
+/* ---------- Renew software updates, on the Review & pay layout -------------------
+   ⚠️ REBUILT FROM A NARROW DIALOG. It used to be the generic modal: a paragraph, three
+   label/value rows and two help notes, with the price in the footer button. Every one
+   of those facts survives — nothing was dropped — but they are now arranged the way the
+   purchase wizard's last step arranges the same kind of decision, because it IS the same
+   kind of decision: a thing being bought, a total, and a charge.
+     left · block 1   what is being renewed — the licence as it reads now
+     left · block 2   what is being bought, the total, and how it is billed
+     right            Due today, what it is charged to, and the pay button
+   Where each old line went: the term and its price and both dates are ORDER ROWS in
+   block 2; the sentence about how the new term is dated sits under them, because it
+   explains those dates; the tax note joins the billing terms line, where it sits on the
+   wizard's Review; the price becomes Due today on the right, so the figure is stated
+   once as an amount rather than twice as a label and a button.
+   ⚠️ It also carries the legal confirmation — this issues an entitlement, and the same
+   gate applies: the primary is never disabled, it answers. */
+var ruState = { legalOk:false, legalErr:null, licId:null };
+function renewUpdatesHTML(lic){
+  var price = updatesRenewPrice(lic), to = updatesNewExpiry(lic);
+  var lapsed = lic.event && daysUntil(lic.event) < 0;
+  var who = esc(lic.name) + (lic.label ? ' · ' + esc(lic.label) : '');
+  return '<div class="fs-grid ru-grid">'
+    + '<div class="fs-col">'
+    /* block 1 — the licence, exactly as it reads everywhere else */
+    +   '<div class="am-sec fs-panel ru-lic">'
+    +     '<div class="ru-liclead">' + esc(lic.product || 'ThingsBoard') + ' · ' + esc(lic.type) + '</div>'
+    +     '<div class="ru-licname">' + who + '</div>'
+    +   '</div>'
+    /* block 2 — what is being bought */
+    +   '<div class="nl-joined">'
+    +     '<div class="am-order">'
+    +       '<div class="am-orow am-planrow nl-mainline"><div>Software updates · '
+    +         UPDATES_RENEW_MONTHS + ' months</div><div>' + fmtMoney(price) + '</div></div>'
+    +       '<div class="am-orow"><div>' + (lapsed ? 'Updates lapsed' : 'Current term ends')
+              + '</div><div>' + fmtDate(lic.event) + '</div></div>'
+    +       '<div class="am-orow"><div>New term ends</div><div><b>' + fmtDate(to) + '</b></div></div>'
+    +       '<div class="am-orow am-newmonthly"><div>One-time total</div><div>' + fmtMoney(price) + '</div></div>'
+    +     '</div>'
+    /* ⚠️ THE SENTENCE IS THE ONE THE RULE ACTUALLY FOLLOWS. The term runs from the
+       existing end date, so buying early loses nothing — see the note above
+       updatesNewExpiry. A lapsed term has no days left to keep and runs from today. */
+    +     '<div class="nl-terms">'
+    +       (lapsed
+              ? 'Updates have lapsed, so the new term runs ' + UPDATES_RENEW_MONTHS + ' months from today.'
+              : 'The new term starts when the current one ends, on ' + fmtDate(lic.event)
+                + ' \u2014 buying early adds ' + UPDATES_RENEW_MONTHS
+                + ' months to it and loses none of the days you have already paid for.')
+    +       '<span class="taxnote nl-taxline">' + TAX_NOTE + '</span></div>'
+    +   '</div>'
+    + '</div>'
+    + '<div class="am-sec fs-right">'
+    +   '<div class="nl-duerow"><div class="am-duelabel">Due today <span class="muted">— one-time</span></div>'
+    +     '<div class="am-dueval">' + fmtMoney(price) + '</div></div>'
+    +   '<div class="nl-payline">' + (savedCard()
+          ? 'Charged once to ' + esc(savedCard().brand) + ' ••' + esc(savedCard().last4)
+          : 'Charged once to Visa ••4242') + '</div>'
+    +   '<label class="nl-legal' + (ruState.legalErr ? ' err' : '') + '">'
+    +     '<input type="checkbox" id="ruLegal"' + (ruState.legalOk ? ' checked' : '') + '>'
+    +     '<span class="nl-legaltxt">I have read and agree to the '
+    +     '<a class="link" href="license-agreement.html" target="_blank" rel="noopener">ThingsBoard License Agreement</a>. '
+    +     'I confirm I am authorized to accept it on behalf of my organization.</span></label>'
+    +   (ruState.legalErr ? '<div class="fielderr nl-legalerr" role="alert">' + esc(ruState.legalErr) + '</div>' : '')
+    +   '<button class="btn fs-nextbtn" id="ruPay">Pay ' + fmtMoney(price) + '</button>'
+    + '</div>'
+    + '</div>';
+}
 function openRenewUpdatesModal(licId){
   var lic = licById(licId) || activeLicense;
   if(!lic) return;
-  var price = updatesRenewPrice(lic), to = updatesNewExpiry(lic);
-  var lapsed = lic.event && dateKey(lic.event) < dateKey(todayStr());
-  openModal('Renew software updates',
-    '<p>Buy another ' + UPDATES_RENEW_MONTHS + ' months of software updates for <b>'
-    +   esc(lic.name) + (lic.label ? ' \u00b7 ' + esc(lic.label) : '') + '</b>.</p>'
-    + '<div class="row"><span class="l">Software updates &middot; ' + UPDATES_RENEW_MONTHS + ' months</span>'
-    +   '<span class="r"><b>' + fmtMoney(price) + '</b></span></div>'
-    + '<div class="row"><span class="l">' + (lapsed ? 'Updates lapsed' : 'Current term ends') + '</span>'
-    +   '<span class="r">' + fmtDate(lic.event) + '</span></div>'
-    + '<div class="row"><span class="l">New term ends</span><span class="r"><b>' + fmtDate(to) + '</b></span></div>'
-    /* ⚠️ THE REASSURANCE IS THE POINT OF THIS LINE, not a disclaimer. People wait until
-       the last day because they assume buying early throws the remaining days away; the
-       rule is the opposite, so the modal says it where the decision is made. */
-    + (lapsed
-        ? '<div class="cardhelp" style="margin-top:12px">Updates have lapsed, so the new term '
-          + 'runs 12 months from today.</div>'
-        : '<div class="cardhelp" style="margin-top:12px">The new term starts when the current one '
-          + 'ends, on ' + fmtDate(lic.event) + ' \u2014 buying early adds 12 months to it and loses '
-          + 'none of the days you have already paid for.</div>')
-    + '<div class="cardhelp" style="margin-top:10px">' + TAX_NOTE + '</div>');
+  ruState = { legalOk:false, legalErr:null, licId:lic.id };
+  openModal('Renew software updates', renewUpdatesHTML(lic));
+  $('#overlay .modal').classList.add('wide');
   $('#modalCloseBtn').textContent = 'Cancel';
-  modalAction('Pay ' + fmtMoney(price), function(){
-    lic.event = to;
-    /* ⚠️ the STATUS has to move too, or the banner keeps warning about a term that has
-       just been paid for — the exact "form does not change the page" fault this pass
-       is cleaning up elsewhere */
-    if(lic.status === 'updates_expiring') lic.status = 'active';
-    Store.save();
-    storeAddInvoice(lic, fmtMoney(price), { payment:'Card', auto:false });
-    logActivity({ kind:'updated', entityType:'Perpetual', entityName:lic.name, action:'UPDATED',
-      txt:'Software updates were renewed on <b>' + esc(lic.name) + '</b> by ' + portalActor() + '.',
-      delta:'Updates term now ends ' + fmtDate(to) });
-    closeModal();
-    Snack.show('Software updates renewed until ' + fmtDate(to));
-    if(window.LicenseDetails && LicenseDetails.isOpen()) LicenseDetails.reopen(lic);
-    else if(window.LicenseDetails) LicenseDetails.afterChange();
-    });
 }
+/* the dialog's own body is re-rendered on every state change, so both of its controls
+   are delegated rather than bound */
+document.addEventListener('change', function(e){
+  if(!e.target.closest('#ruLegal')) return;
+  ruState.legalOk = e.target.checked;
+  if(ruState.legalOk && ruState.legalErr){
+    ruState.legalErr = null;
+    var l = licById(ruState.licId);
+    if(l) $('#modalBody').innerHTML = renewUpdatesHTML(l);
+  }
+});
+document.addEventListener('click', function(e){
+  if(!e.target.closest('#ruPay')) return;
+  var lic = licById(ruState.licId);
+  if(!lic) return;
+  if(!ruState.legalOk){
+    ruState.legalErr = 'Confirm the statement above to issue the license.';
+    $('#modalBody').innerHTML = renewUpdatesHTML(lic);
+    var c = $('#ruLegal'); if(c) c.focus();
+    return;
+  }
+  var price = updatesRenewPrice(lic), to = updatesNewExpiry(lic);
+  lic.event = to;
+  /* ⚠️ the STATUS has to move too, or the banner keeps warning about a term that has
+     just been paid for — the exact "form does not change the page" fault this pass
+     is cleaning up elsewhere */
+  if(lic.status === 'updates_expiring') lic.status = 'active';
+  Store.save();
+  storeAddInvoice(lic, fmtMoney(price), { payment:'Card', auto:false });
+  logActivity({ kind:'updated', entityType:'Perpetual', entityName:lic.name, action:'UPDATED',
+    txt:'Software updates were renewed on <b>' + esc(lic.name) + '</b> by ' + portalActor() + '.',
+    delta:'Updates term now ends ' + fmtDate(to) });
+  closeModal();
+  Snack.show('Software updates renewed until ' + fmtDate(to));
+  if(window.LicenseDetails && LicenseDetails.isOpen()) LicenseDetails.reopen(lic);
+  else if(window.LicenseDetails) LicenseDetails.afterChange();
+});
 /* one delegated handler for every entry point: the row kebab, the licence header
    menu and the expiring-updates banner all carry `data-renewupdates` */
 document.addEventListener('click', function(e){

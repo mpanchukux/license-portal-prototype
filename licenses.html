@@ -11,19 +11,26 @@
 
 <div id="shellMain">
 <div class="licview" id="licensesView">
-  <h1 class="lic-h1">Licenses</h1>
+  <!-- ⚠️ THE H1 IS STILL HERE, AND IT IS STILL THE PAGE'S ONE HEADING — it is only
+       visually hidden. The page name appeared twice, as the heading and again as the
+       first tab, so the tabs take over the title's visual weight and the standalone
+       heading goes. What must NOT go with it is the structure: a page needs a heading,
+       and a tablist is a tablist, not a title. So both survive, each doing its own job —
+       the h1 for structure and assistive tech, the tabs as tabs. -->
+  <h1 class="lic-h1 vh">Licenses</h1>
 
   <div class="listcard">
 
-  <!-- ⚠️ TWO ROWS, AND THE SPLIT IS BY KIND. Row one is the view toggle alone: it does
-       not filter anything, it decides WHAT IS BEING LISTED, and everything on the row
-       below filters whatever that is. Sharing one line made seven controls compete for
-       1034px (measured: they wanted 1777px, and the bar was already wrapping at 1280),
-       and put a control that changes the subject next to controls that narrow it.
+  <!-- ⚠️ ROW ONE IS THE PAGE TITLE NOW. The view toggle already said "Licenses" one line
+       under an h1 that said "Licenses", so it moved up and took the title's place; it
+       keeps its own type size rather than borrowing the h1's, because a tab that looks
+       like a heading stops looking pressable.
+       It still holds the page's actions on its right — see the note below, and the
+       measurement that put them there rather than in the filter row.
        ⚠️ A VIEW TOGGLE, NOT A NAV DESTINATION: a typical customer runs two to five
        instances, and a top-level page for five rows costs more attention than it
        returns. Same page, same toolbar, two ways of slicing the same data. -->
-  <div class="lic-controls lic-viewrow">
+  <div class="lic-controls lic-viewrow lic-titlerow">
     <div class="tabs lic-viewseg" role="tablist" aria-label="View">
       <button class="tab lic-viewtab on" role="tab" aria-selected="true" data-view="licenses">Licenses</button>
       <button class="tab lic-viewtab" role="tab" aria-selected="false" data-view="instances">Instances</button>
@@ -96,6 +103,8 @@
          discoverable; a second button would just add a control nobody understands. -->
     <p class="inst-hint">Moved a deployment to a new server? Detach the old instance and
       activate the new one with the same key.</p>
+    <!-- states the filter the blocked banner arrived with, and carries the way out of it -->
+    <p class="inst-filter" id="instFilter" hidden></p>
     <div class="tablescroll">
       <table id="instTable">
         <thead id="instAllHead"></thead>

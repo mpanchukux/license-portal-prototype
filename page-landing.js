@@ -25,8 +25,9 @@ var lChoices = $('#landingChoices'), lPlans = $('#landingPlans'),
    heading, the line and the link along with the cards. */
 function renderLanding(){
   $('#landingHead').textContent = landingHeading(lsel);
-  $('#landingLead').textContent = landingLead(lsel);
-  $('#landingSwap').innerHTML = productSwapHTML(lsel);
+  /* the sentence and its escape hatch are ONE line: the link follows the text with a
+     normal word space, so it wraps with it rather than being positioned against it */
+  $('#landingLead').innerHTML = esc(landingLead(lsel)) + ' ' + productSwapHTML(lsel);
   renderPlanPicker(lChoices, lPlans, lsel, lExtra, lBase);
 }
 renderLanding();
@@ -35,7 +36,7 @@ renderLanding();
    delegated listener stopped seeing it — the link rendered, was clickable, and changed
    nothing. Its host listens for it now, through the same `planPickerClick` reading, so
    there is still one interpretation of "the product changed". */
-$('#landingSwap').addEventListener('click', function(e){
+$('#landingLead').addEventListener('click', function(e){
   if(planPickerClick(e, lsel) === 'changed') renderLanding();
 });
 

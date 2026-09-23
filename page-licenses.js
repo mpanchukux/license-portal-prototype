@@ -123,7 +123,7 @@ function syncView(){
   if(cancelSw) cancelSw.hidden = inst;
   var search = $('#licensesView .searchbox input');
   if(search) search.setAttribute('placeholder', inst ? 'Search instances' : 'Search licenses');
-  if(inst) renderInstancesView();
+  if(inst) renderInstancesView(licParams.get('lic') || null);
 }
 $$('#licensesView .lic-viewtab').forEach(function(t){
   t.addEventListener('click', function(){

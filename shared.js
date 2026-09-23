@@ -527,10 +527,10 @@ function bottomNavHTML(){
    which is the whole of requirement "the logo goes to Home instead". */
 function brandHTML(){
   var href = isSignedIn() ? 'index.html' : 'landing.html';
-  return '<a class="dbrand" href="' + href + '" aria-label="ThingsBoard Licenses" title="'
-    + (isSignedIn() ? 'Home' : 'ThingsBoard Licenses') + '">'
+  return '<a class="dbrand" href="' + href + '" aria-label="ThingsBoard License Portal" title="'
+    + (isSignedIn() ? 'Home' : 'ThingsBoard License Portal') + '">'
     + '<div class="mark"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4v16M4 12h16"/></svg></div>'
-    + '<div class="bt">ThingsBoard<span class="bsep">\u00b7</span>Licenses</div>'
+    + '<div class="bt">ThingsBoard<span class="bsep">\u00b7</span>License Portal</div>'
     + '</a>';
 }
 
@@ -860,6 +860,10 @@ function openModal(title, bodyHTML){
 function closeModal(){
   var overlay = $('#overlay');
   overlay.hidden = true;
+  /* ⚠️ The width is per-DIALOG, so it has to come off with the dialog. The renewal
+     dialog opens on the wizard's two-column Review layout and asks for `wide`; without
+     this the next generic dialog — a label edit, a confirm — inherits a 900px box. */
+  $('#overlay .modal').classList.remove('wide');
   // drop any per-dialog buttons injected into the footer (e.g. a confirm)
   $$('#overlay .mf button').forEach(function(b){ if(b.id !== 'modalCloseBtn') b.remove(); });
   $('#modalCloseBtn').textContent = 'Close';

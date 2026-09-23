@@ -462,8 +462,19 @@ th.num,td.num{text-align:right}
 
 /* ---------- the Instances view ------------------------------------------------- */
 .lic-viewseg{flex:none;margin-right:4px}
+/* ---------- a utility the system did not have: hidden from sight, not from the tree --
+   Used by the Licenses page, whose h1 is carried visually by its tabs. Not
+   `display:none` and not `visibility:hidden` — both remove it from the accessibility
+   tree too, which would leave the page with no heading at all. */
+.vh{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;
+  clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+/* the title row sits where the h1 did, so it carries the h1's space above the card */
+.lic-titlerow{margin-top:2px}
 .inst-hint{margin:0;padding:14px 18px;border-bottom:1px solid var(--line2);
   font-size:14px;line-height:1.5;color:var(--mid)}
+.inst-filter{margin:0;padding:12px 18px;border-bottom:1px solid var(--line2);
+  font-size:14px;line-height:1.5;color:var(--ink)}
+.inst-filter[hidden]{display:none}
 .ia-name{font-weight:500}
 .ia-id{font-size:13px;color:var(--faint);max-width:30ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ia-licsub{font-size:13px;color:var(--faint)}
@@ -556,6 +567,37 @@ th[aria-label$="ctions"],th.cellact,td.cellact{width:1%;white-space:nowrap;text-
 .overlay{position:fixed;inset:0;background:rgba(28,28,28,.32);display:flex;align-items:center;justify-content:center;padding:20px;z-index:100}
 .overlay[hidden]{display:none}
 .modal{background:#fff;border:1px solid var(--line);border-radius:8px;max-width:460px;width:100%;box-shadow:0 14px 44px rgba(0,0,0,.18)}
+/* ---------- a dialog that carries the Review layout ------------------------------
+   The renewal dialog is not a question with two buttons — it is an order, and it is
+   laid out like the wizard's last step. That needs the wizard's width, not a 460px
+   confirm box. Added by the dialog that asks for it and removed on close, so no other
+   dialog inherits it. */
+.modal.wide{max-width:900px}
+/* ⚠️ It DOES keep side padding. This was `padding:0` so the two columns could fill the
+   dialog, and they filled it to the millimetre: both panels ran into the modal's own
+   border with no gutter at all, which reads as content that has overflowed rather than
+   content that was laid out. The grey ground needs to show around the white blocks for
+   them to read as blocks — the same relationship the wizard's `.fs-body` (24px) gives
+   the identical grid. 20px here, because this box is 900px rather than 1040. */
+.modal.wide .mb{padding:20px;background:var(--bg)}
+.modal.wide .fs-grid{margin:0}
+/* ⚠️ NO FOOTER BAR on this one. The generic dialog's footer exists to carry its
+   Close/confirm pair; here the commit already lives in the right column, which left a
+   whole bordered band at the bottom holding one `Cancel` — a second way out, given its
+   own storey of the dialog, directly under the button that matters.
+   Two routes out remain and both are standard: the ✕ in the header and Escape. */
+.modal.wide .mf{display:none}
+/* block 1: the licence, stated the way every other surface states it */
+.ru-lic{padding:16px 18px}
+.ru-liclead{font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:var(--mid)}
+.ru-licname{margin-top:2px;font-size:18px;font-weight:500;color:var(--ink)}
+@media (max-width:600px){
+  /* one column, like the wizard's own Review at this width */
+  .modal.wide{max-width:none}
+  .modal.wide .mb{padding:14px}
+  .modal.wide .fs-grid{display:block}
+  .modal.wide .fs-right{margin-top:12px}
+}
 .modal .mh{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line2)}
 .modal .mh h3{margin:0;font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw)}
 .modal .mh .spacer{flex:1}
@@ -943,8 +985,19 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
    it stops centring a grid and becomes a baseline-aligned line: product on the left,
    the quiet swap link on the right. See nlProductStatedHTML for why. */
 .nl-prodrow{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:26px}
-/* the landing page's swap link: under the line it belongs to, on both widths */
-.lp-swap{margin-top:8px}
+/* ---------- the landing lead line -----------------------------------------------
+   ⚠️ IT MUST NOT WRAP AT DESKTOP WIDTH, and the link rides INSIDE it. Under the line the
+   link read as a separate thought; pushed to the far right it floated ~500px from the
+   sentence it answers. Immediately after the text it is what it actually is — the end of
+   that sentence. `.dw-txt` inherits the page's body measure, which is written for
+   paragraphs and broke this one in two, so the measure is lifted for this line only.
+   ⚠️ Below 600px it wraps freely: there is no width at which ~118 characters fit, and a
+   trailing link that wraps onto the last line is still attached to its sentence. Only
+   the link itself is kept unbreakable, so it never splits across two lines. */
+/* ⚠️ `.lp-welcome p` sets `max-width:64ch` and outranks a single class, so the override
+   has to match it — this is the measure that was breaking the line in two. */
+.lp-welcome p.lp-lead{max-width:none}
+.lp-lead .nl-prodswap{margin-left:2px;white-space:nowrap}
 .nl-stated{display:flex;align-items:flex-start;gap:12px;min-width:0}
 .nl-stated .icon{width:24px;height:24px}
 .nl-stated .nl-prodic{color:var(--ink)}    /* stated, not one of two — it is not dimmed */
@@ -1259,16 +1312,29 @@ body[data-page="home"] .dwrap{padding-top:48px}
    One-time: dismissing removes it for the session. */
 .gbanner{display:flex;align-items:center;gap:12px;margin:0 0 26px;border-radius:10px;background:var(--ink);color:#fff;padding:10px 10px 10px 16px;font-size:14px}
 /* ---------- the Home banner slot ----------------------------------------------
-   One band, whatever the condition. It keeps `.gbanner`'s ink fill — in a monochrome
-   system the fill IS the attention signal — and adds only what a multi-line sentence
-   needs: the text may now be two or three lines (the updates sentence is a full one),
-   so the row aligns to the TOP rather than centring a three-line block against a
-   30px button. */
+   One band, whatever the condition, and two shapes inside it: a single problem gets a
+   FACT line and a TODO line, several get one line each. It keeps `.gbanner`'s ink fill —
+   in a monochrome system the fill IS the attention signal — and aligns to the TOP,
+   because the content is now two to four lines against a 30px button. */
 .homebanner{align-items:flex-start;padding:14px 12px 14px 16px;line-height:1.5}
-.homebanner .gb-ic{margin-top:2px}
-.homebanner .gb-txt{flex:1;min-width:0}
-.homebanner .sp{display:none}          /* the text takes the space; the actions do not float */
-.homebanner .gb-act{margin-top:1px}
+.homebanner .gb-ic{margin-top:3px}
+.hb-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+.hb-fact,.hb-todo{margin:0}
+/* the second line is the instruction, so it is quieter than the fact above it —
+   the same relationship a field's help text has to its label */
+.hb-todo{color:rgba(255,255,255,.78)}
+.hb-acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+/* ---- the list form ----
+   No bullets and no markers: every line already starts with a licence name, which is a
+   stronger left edge than a disc, and a bulleted list inside a coloured band reads as a
+   second document. Each line is text + its own action, baseline-aligned. */
+.hb-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.hb-item{display:flex;align-items:baseline;gap:12px}
+.hb-txt{flex:1;min-width:0}
+.hb-more{margin-top:2px}
+/* the per-line action is smaller than a single banner's primary: in a list it is one of
+   three equals, and three full-size buttons would out-weigh the sentences they serve */
+.gb-act.sm{height:26px;padding:0 10px;font-size:14px;flex:none}
 /* a link inside the sentence: underlined, because on an ink band weight alone does not
    separate it from the bold lead-in */
 .gb-lic{color:#fff;text-decoration:underline;text-underline-offset:2px}
@@ -1278,12 +1344,14 @@ body[data-page="home"] .dwrap{padding-top:48px}
   display:inline-flex;align-items:center;text-decoration:none}
 .gb-act.sec:hover{background:rgba(255,255,255,.14)}
 @media (max-width:600px){
-  /* the actions drop under the sentence rather than squeezing it into a column */
-  .homebanner{flex-wrap:wrap}
-  .homebanner .gb-txt{flex:1 1 100%}
-  .homebanner .gb-act{margin-left:34px}
-  .homebanner .gb-x{position:absolute;top:8px;right:8px}
   .homebanner{position:relative}
+  .homebanner .gb-x{position:absolute;top:8px;right:8px}
+  /* ⚠️ The list line stacks its action UNDER its sentence here, rather than shrinking
+     the sentence into a column beside it. Measured at 390: side by side, "Software
+     updates for Broker on-prem end in 13 days." wrapped to three lines against a 26px
+     button, and three such items ran past the fold. */
+  .hb-item{flex-direction:column;align-items:flex-start;gap:4px}
+  .hb-acts{margin-top:2px}
 }
 .gbanner[hidden]{display:none}
 .gbanner .sp{flex:1}
@@ -1318,6 +1386,10 @@ body[data-page="home"] .dwrap{padding-top:48px}
 .pc-head h2{margin:0;font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw)}
 .pc-price{margin-top:9px;font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw);font-variant-numeric:tabular-nums}
 .pc-per{font-size:14px;font-weight:400;color:var(--faint);letter-spacing:0}
+/* the badge keeps the price line's box, so the rows below it stay level across the row
+   of cards; only its own type drops to badge size */
+.pc-price.is-free{display:flex;align-items:center}
+.pc-freebadge{font-size:14px;letter-spacing:0}
 .pc-term{margin-top:5px;font-size:14px;color:var(--mid)}
 .pc-feats{margin-top:13px;flex:1}
 .pc-feat{font-size:14px;color:var(--mid);padding:7px 0;border-bottom:1px dashed var(--line2)}
@@ -1519,10 +1591,15 @@ body[data-page="home"] .dwrap{padding-top:48px}
    occupy the same line and nothing below it moves. That last part is why the open state
    keeps the row's height: a field that pushes the total off a phone screen defeats the
    point of showing what the coupon did. */
-.nl-couponrow .nl-couponfield{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.nl-couponrow .field{margin:0;flex:0 1 200px;min-width:140px}
+/* ⚠️ NO WRAPPING. `flex-wrap:wrap` let Cancel drop to a second line as soon as the row
+   narrowed, which moved the total down with it — on the one row whose job is to sit
+   still above the total. The field SHRINKS instead (`flex:1 1 0` with a small basis),
+   the two controls never shrink, and the row's height is the same in all three states. */
+.nl-couponrow .nl-couponfield{display:flex;align-items:center;gap:8px;flex-wrap:nowrap}
+.nl-couponrow .field{margin:0;flex:1 1 90px;min-width:0}
 .nl-couponrow .field input{height:32px;font-size:14px}
-.nl-couponrow .btn.sec{height:32px;padding:0 14px;font-size:14px}
+.nl-couponrow .btn.sec{height:32px;padding:0 14px;font-size:14px;flex:none}
+.nl-couponrow [data-couponcancel]{flex:none;margin-left:0}
 .nl-couponedit{margin-left:10px;font-size:14px;color:var(--mid)}
 .nl-couponedit:hover{color:var(--ink)}
 /* the error sits under the field, on the row, and takes the whole line so a long
@@ -1535,6 +1612,20 @@ body[data-page="home"] .dwrap{padding-top:48px}
 /* A free plan replaces the whole Due-today block rather than printing $0.00 into it:
    there is no transaction, so there is no figure. */
 .nl-free{font-size:14px;line-height:1.5;color:var(--ink)}
+
+/* ---------- the legal confirmation ----------------------------------------------
+   Directly above the primary, because it is the last thing agreed to before it is
+   pressed. The box aligns to the FIRST LINE of the sentence, not to the block's middle:
+   the sentence is two or three lines here, and a centred box floats beside the second
+   one with nothing to mark. */
+.nl-legal{display:flex;align-items:flex-start;gap:10px;margin:14px 0 10px;cursor:pointer}
+.nl-legal input{flex:none;width:16px;height:16px;margin:2px 0 0;accent-color:var(--ink)}
+.nl-legaltxt{font-size:14px;line-height:1.45;color:var(--mid)}
+.nl-legal .link{color:var(--ink)}
+/* the same error treatment as a field: the mark thickens to ink, the message is ink and
+   bold against the faint sentence above it */
+.nl-legal.err input{outline:2px solid var(--ink);outline-offset:1px}
+.nl-legalerr{margin:0 0 10px}
 
 
 /* the support route in the cancel dialog: quiet, left-aligned, on the keep side */
@@ -1728,7 +1819,17 @@ body.list-empty #pageTitleRow #licNewBtn{display:none !important}
    Row one carries the view toggle alone — it changes the subject, and everything in
    row two narrows it. The gap between them is smaller than the gap under the pair, so
    they read as one toolbar in two bands rather than two toolbars. */
-.lic-viewrow{margin-bottom:10px}
+/* ⚠️ 24px — the SECTION step (`--s-sec` in the settings scale, documented there as
+   "between two sections"), not a fourth number invented for this toolbar. The two rows
+   are two sections of it: one says what is being listed, the other narrows it. 10px was
+   a one-off and read as crowding.
+   ⚠️ Written as a literal because the scale's tokens are declared inside `.setgrid` and
+   the wizard's phone block, not on `:root` — `var(--s-sec)` resolves to nothing here.
+   If that scale is ever promoted to a root token, this is one of its callers. */
+/* ⚠️ Scoped to `.listcard`, because `.listcard .lic-controls{margin:0}` zeroes every
+   toolbar margin inside a card and outranks a single class — the 24px was being set and
+   thrown away, and the measured gap was 0. */
+.listcard .lic-viewrow{margin-bottom:24px}
 .lic-filterrow{margin-bottom:14px}
 /* persistent search input (always-visible, magnifier inside) — standard toolbar element */
 .searchbox{position:relative;flex:none;width:280px;max-width:100%}
@@ -1817,7 +1918,12 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
 /* Status carries the state beneath the chip — one column now answers both "is this
    licence alive" and "until when". Left-aligned to the chip, and the date never wraps. */
 .licstat{display:flex;flex-direction:column;align-items:flex-start;gap:5px}
-.licstat-txt{font-size:14px;color:var(--mid);font-variant-numeric:tabular-nums;white-space:nowrap}
+/* ⚠️ The alert icon lives INSIDE this line, not as a third item in the column above it.
+   As a sibling of the chip it became its own flex row and stacked over the words it
+   qualifies; the mark and the four words it marks are one statement. */
+.licstat-txt{font-size:14px;color:var(--mid);font-variant-numeric:tabular-nums;white-space:nowrap;
+  display:inline-flex;align-items:center;gap:4px}
+.licstat-txt .alertic{margin:0}
 .lic-row.off .lp-name{color:var(--faint)}
 .chip.status.attn{background:var(--ink);color:#fff;border-color:var(--ink)}
 .chip.status.attn .sdot{display:none}
@@ -2796,7 +2902,9 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
      (the filter row below it supplies the separation) and the segment takes the full
      width, which is what it would wrap to anyway. Measured before this: the pair added
      ~18px of dead space above the first card for nothing. */
-  .lic-viewrow{margin-bottom:8px}
+  /* the phone keeps the pair tighter — the rows are stacked blocks there rather than two
+     bands, and 24px of the screen's height is a card */
+  .listcard .lic-viewrow{margin-bottom:12px}
   /* the toggle takes the line it would wrap to anyway; the primary follows on its own,
      which is the arrangement every other list page's primary already has */
   .lic-viewrow .lic-viewseg{flex:1 1 100%;margin-right:0}
