@@ -477,7 +477,7 @@ var DATASETS = {
         txt:'Add-on <b>Edge Computing</b> was enabled on <b>Business</b> (Global) by o.kravets@thingsboard.io.' },
       { kind:'info',    ts:'Aug 08 2026, 00:05', entityType:'Invoice', entityName:'NAWE49WG-0018', actor:'Auto-pay', action:'PAID',
         txt:'Invoice <b>NAWE49WG-0018</b> was paid, charged automatically.' },
-      { kind:'status',  ts:'Aug 05 2026, 08:00', entityType:'License', entityName:'ThingsBoard PE Perpetual License', actor:'System', action:'UPDATES_EXPIRING',
+      { kind:'status',  ts:'Aug 05 2026, 08:00', entityType:'License', entityName:'Perpetual License', actor:'System', action:'UPDATES_EXPIRING',
         txt:'Software updates for the <b>On-prem</b> perpetual license expire on <b>Aug 28, 2026</b>.', delta:'Updates term ends Aug 28 2026' },
       // a large account keeps producing events — enough of them that the Home feed
       // has a second and third batch to load
@@ -637,34 +637,51 @@ var EC_PLANS = {
       /* ⚠️ FIRST, and ThingsBoard-only: TBMQ's sets are untouched. `free:true` travels
          with the card so every surface that renders one — landing, Home, both wizards —
          reads the same flag rather than testing the price string.
-         The qualifier given for each ("up to 100 devices, 1 production instance") rides
-         in `term`, the slot the perpetual card already uses for its one-line condition,
-         so a free card keeps the paid cards' shape without borrowing their rows. */
-      { name:'Free',           price:'Free', per:'', free:true, term:'up to 100 devices, 1 production instance',
-        feats:['100 devices', '1 production instance', '1M AI credits / month'] },
-      { name:'Pilot',     price:'$99',  per:'/ month', badge:'Popular', feats:['100 devices', '100 assets', '1 production instance', '4M AI credits / month', 'Help desk', 'White labeling', 'Device limit is fixed on this plan'] },
-      { name:'Startup',   price:'$299', per:'/ month', feats:['500 devices', '500 assets', '2 production instances', '8M AI credits / month', 'Priority help desk', 'White labeling', 'Device limit is fixed on this plan'] },
-      { name:'Business',  price:'$499', per:'/ month', feats:['1,000 devices', '1,000 assets', '3 production instances', '16M AI credits / month', 'Priority help desk', 'White labeling', '+$0.10 per extra device'] }
+         ⚠️ NO `term`. It read "up to 100 devices, 1 production instance" — which is
+         word for word the first two feature rows directly beneath it. A qualifier that
+         repeats the list it introduces is not a qualifier; it is the same fact printed
+         twice on one card. The rows say it, so the term line went. */
+      { name:'Free',           price:'Free', per:'', free:true,
+        feats:['100 devices', '100 assets', '1 prod instance', '1M AI credits / mo'] },
+      /* ⚠️ `deviceNote` is a NOTE ON THE DEVICES ROW, not a feature of its own. As a
+         seventh bullet "Device limit is fixed on this plan" sat below White labeling,
+         four rows away from the number it qualifies, and read as one more thing you
+         get. It belongs to the count, so it rides with the count — see nlPlanCardHTML,
+         which attaches it to whichever row states the devices. */
+      { name:'Pilot',     price:'$99',  per:'/ month', badge:'Popular',
+        deviceNote:'Device limit is fixed on this plan.',
+        feats:['100 devices', '100 assets', '1 prod instance', '4M AI credits / mo', 'Help desk', 'White labeling'] },
+      { name:'Startup',   price:'$299', per:'/ month',
+        deviceNote:'Device limit is fixed on this plan.',
+        feats:['500 devices', '500 assets', '2 prod instances', '8M AI credits / mo', 'Priority help desk', 'White labeling'] },
+      { name:'Business',  price:'$499', per:'/ month', feats:['1,000 devices', '1,000 assets', '3 prod instances', '16M AI credits / mo', 'Priority help desk', 'White labeling', '+$0.10 per extra device'] }
     ]
   },
   'thingsboard|perpetual': {
     single: true,
-    cards: [ { name:'ThingsBoard PE Perpetual License', price:'$4,999', per:'· one-time', term:'Including 1 year of software updates',
+    /* ⚠️ `Perpetual License`, not `ThingsBoard PE Perpetual License`. The product is
+       already named by the group above the card and by the page's own heading; the card
+       only has to say which of the two ways to pay it is. The old name was also the
+       longest string on the surface and the reason the card needed a track of its own.
+       ⚠️ Safe to rename: `tier()` returns `tbperp` for perpetual directly and never
+       derives a key from this string — see the Non-commercial incident for what it
+       looks like when a name IS the key. */
+    cards: [ { name:'Perpetual License', price:'$4,999', per:'· one-time',
                /* ⚠️ NO "Device limit is fixed on this plan" here. It was wrong: devices ARE
                   addable on perpetual — each purchased production instance brings 5,000
                   more, and extra devices can be added on top. That line belongs only to
                   the subscription plans that genuinely cap (Pilot, Startup). */
-               feats:['5,000 devices included', '5,000 assets', '1 production instance', '5M AI credits / month', 'White labeling', 'All ThingsBoard PE features', 'Add devices and instances at any time'] } ]
+               feats:['5,000 devices included', '5,000 assets', '1 prod instance', '5M AI credits / mo', 'White labeling', 'Add devices and instances at any time'] } ]
   },
   'tbmq|payg': {
     single: true,
     cards: [ { name:'TBMQ PE subscription', price:'$15', per:'/ month',
-               feats:['100 sessions', '100 msg/sec', '1 production instance', 'All TBMQ PE features except White labeling', 'Community support'] } ]
+               feats:['100 sessions', '100 msg/sec', '1 prod instance', 'All TBMQ PE features except White labeling', 'Community support'] } ]
   },
   'tbmq|perpetual': {
     single: true,
     cards: [ { name:'TBMQ PE license', price:'$2,999', per:'· one-time', term:'Including 1 year of software updates',
-               feats:['10,000 sessions', '1,000 msg/sec', '1 production instance', 'White labeling', 'All TBMQ PE features'] } ]
+               feats:['10,000 sessions', '1,000 msg/sec', '1 prod instance', 'White labeling', 'All TBMQ PE features'] } ]
   }
 };
 /* ---------- what two of the feature lines actually mean -----------------------
@@ -678,7 +695,11 @@ var EC_PLANS = {
    ⚠️ MARKED GAP: "assets", "sessions" and "msg/sec" have no description anywhere in
    the repo either. They are left unexplained rather than guessed at. */
 var FEAT_NOTES = [
-  { re:/production instance/i,
+  /* ⚠️ `prod` OR `production`. The plan cards were shortened to "prod instance"
+     (2026-09-24) while the Customize step and the licence's entitlements still print the
+     word in full. A tooltip keyed to one wording disappears the day the other is
+     trimmed — so the pattern matches the stem both spellings share. */
+  { re:/\bprod(uction)? instance/i,
     note:'Production compute for your live deployment — enables clustering and HA.' },
   { re:/AI credits/i,
     note:'Monthly allowance for AI features, counted in blocks of 1M credits.' }
@@ -779,18 +800,18 @@ var PRODUCT_CARDS = [
 ];
 
 /* ---------- shared glyphs + copy ---------- */
-var FCHECK = '<svg class="icon fmark" viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5"/></svg>';
-var KEBAB = '<svg class="icon" viewBox="0 0 24 24" style="fill:currentColor;stroke:none"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg>';
-var COPYSVG = '<svg class="icon" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg>';
-var INFOSVG = '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11.5v4.5"/><path d="M12 8h.01"/></svg>';
+var FCHECK = '<svg class="ic fmark" aria-hidden="true"><use href="assets/icons.svg#ti-check"></use></svg>';
+var KEBAB = '<svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-dots-vertical"></use></svg>';
+var COPYSVG = '<svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-copy"></use></svg>';
+var INFOSVG = '<svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-info-circle"></use></svg>';
 /* the same pencil the Billing card and the licence label already draw — shared here
    so the instance label editor is not a fourth private copy of it */
-var PENSVG = '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
+var PENSVG = '<svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-pencil"></use></svg>';
 /* Marks an action that opens a NEW TAB. ⚠️ Not decoration: a participant opened six
    duplicate tabs because nothing on the page changed when the first one opened behind
    it. The mark makes the behaviour predictable before the click instead of a surprise
    after it — so it belongs on EVERY outbound action, not just the ones that felt odd. */
-var EXTSVG = '<svg class="icon extmark" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6"/><path d="M20 4l-8.5 8.5"/><path d="M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4"/></svg>';
+var EXTSVG = '<svg class="ic extmark" aria-hidden="true"><use href="assets/icons.svg#ti-external-link"></use></svg>';
 var STUB = 'Placeholder — not part of this wireframe spec yet.';
 
 /* ============================================================================
@@ -828,4 +849,4 @@ function extLink(key, text, cls){
 // newest first; standard sentence order: what was done -> from -> to (if any) -> by whom.
 // `delta` is the plain-text change, kept for the raw audit payload only.
 // Activity now lives per-variant in DATASETS (density datasets block above).
-var AUDITSVG = '<svg class="icon" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h5"/></svg>';
+var AUDITSVG = '<svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-file-text"></use></svg>';

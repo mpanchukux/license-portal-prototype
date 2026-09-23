@@ -28,11 +28,8 @@ var Auth = (function(){
      and brand colour is not available to it anyway. The shapes still have to be
      recognisable at 18px, so Google is its G and GitHub is its mark. */
   var SOCIALS = [
-    { k:'google', t:'Google', g:'<path d="M19.25 8.62A8 8 0 1 0 20 12h-6.5"/>' },
-    { k:'github', t:'GitHub', g:'<path d="M9 19c-4 1.2-4-2.2-6-2.7m12 5.4v-3.4c0-1 .1-1.4-.5-2 '
-        + '2.3-.3 4.5-1.2 4.5-5a3.9 3.9 0 0 0-1-2.7 3.6 3.6 0 0 0-.1-2.7s-.9-.3-2.9 1.1a9.9 9.9 0 0 0-5 0'
-        + 'C8 5.6 7.1 5.9 7.1 5.9a3.6 3.6 0 0 0-.1 2.7A3.9 3.9 0 0 0 6 11.3c0 3.8 2.2 4.7 4.5 5'
-        + '-.6.6-.6 1.2-.5 2V21"/>' }
+    { k:'google', t:'Google', ic:'brand-google' },
+        { k:'github', t:'GitHub', ic:'brand-github' }
   ];
 
   /* The two screens differ in their words, their fields and their footer — nothing
@@ -69,7 +66,7 @@ var Auth = (function(){
      desktop the ✕ is all that is in it. */
   +     '<div class="fs-header">'
   +       '<span class="spacer"></span>'
-  +       '<button class="fs-close" id="authClose" aria-label="Close">✕</button>'
+  +       '<button class="fs-close" id="authClose" aria-label="Close"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-x"></use></svg></button>'
   +     '</div>'
   +     '<div class="fs-body authbody" id="authBody"></div>'
   +   '</div>'
@@ -85,7 +82,7 @@ var Auth = (function(){
     return '<div class="auth-social">'
       + SOCIALS.map(function(s){
           return '<button class="btn sec auth-soc" data-auth-social="' + s.k + '">'
-            + '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">' + s.g + '</svg>'
+            + icon(s.ic)
             + '<span>' + s.t + '</span></button>';
         }).join('')
       + '</div>';
@@ -106,11 +103,10 @@ var Auth = (function(){
       + '<label for="' + f.id + '">' + f.label + (f.req ? ' <span class="req">*</span>' : '') + '</label>'
       + '<input id="' + f.id + '" type="' + f.type + '" autocomplete="' + f.ac + '"'
       + (lock ? ' value="' + esc(invited.email) + '" readonly aria-readonly="true"' : '') + '>'
-      + (lock ? '<svg class="icon authlock-ic" viewBox="0 0 24 24" aria-hidden="true">'
-          + '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>' : '')
+      + (lock ? '<svg class="ic authlock-ic" aria-hidden="true"><use href="assets/icons.svg#ti-lock"></use></svg>' : '')
       + (pw ? '<button class="iconbtn ghost ib authpw-eye" data-auth-reveal aria-label="Show password">'
-          + '<svg class="icon eye" viewBox="0 0 24 24"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z"/><circle cx="12" cy="12" r="2.5"/></svg>'
-          + '<svg class="icon eyeoff" viewBox="0 0 24 24" hidden><path d="M10.6 6.1A9.6 9.6 0 0 1 12 6c6.5 0 10 6 10 6a16.9 16.9 0 0 1-2.4 3M6.5 6.6A16.8 16.8 0 0 0 2 12s3.5 6 10 6a9.5 9.5 0 0 0 3.9-.8"/><path d="M3 3l18 18"/></svg>'
+          + '<svg class="ic eye" aria-hidden="true"><use href="assets/icons.svg#ti-eye"></use></svg>'
+          + '<svg class="ic eyeoff" aria-hidden="true"><use href="assets/icons.svg#ti-eye-off"></use></svg>'
           + '</button>' : '')
       + '</div>';
   }

@@ -39,7 +39,7 @@
        filters. Two rows is two things to stick, and the split had no meaning left once
        the tablist went — a toolbar is search, filters and the page's actions. -->
   <div class="lic-controls lic-viewrow lic-filterrow stickybar">
-    <div class="searchbox"><svg class="icon searchglyph" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input type="text" placeholder="Search licenses" aria-label="Search licenses"></div>
+    <div class="searchbox"><svg class="ic searchglyph" aria-hidden="true"><use href="assets/icons.svg#ti-search"></use></svg><input type="text" placeholder="Search licenses" aria-label="Search licenses"></div>
     <div class="lic-typeseg" role="group" aria-label="Filter by product type">
       <button class="typechip" data-type="Subscription" aria-pressed="false">Subscription</button>
       <button class="typechip" data-type="Perpetual" aria-pressed="false">Perpetual</button>
@@ -50,7 +50,7 @@
            the stored state and the desktop switch stay the single source. -->
       <span class="chipdiv mob-only" aria-hidden="true"></span>
       <button class="filterchip cancelchip mob-only" id="licCanceledChip" aria-pressed="false">
-        <svg class="icon cc-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5"/></svg>
+        <svg class="ic cc-check" aria-hidden="true"><use href="assets/icons.svg#ti-check"></use></svg>
         <span>Canceled</span></button>
     </div>
     <label class="lic-toggle"><span class="switch"><input type="checkbox" id="licCanceled"><span class="track"></span></span> Display canceled licenses</label>
@@ -58,7 +58,7 @@
     <!-- ⚠️ On the phone these two are MOVED into the page title row by syncTitleRow, and
          that is why they must stay inside a `.lic-controls`: it is the host the mover
          looks for, and where it puts them back above the breakpoint. -->
-    <button class="iconbtn ib" data-refresh aria-label="Refresh" title="Refresh"><svg class="icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg></button>
+    <button class="iconbtn ib" data-refresh aria-label="Refresh" title="Refresh"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-refresh"></use></svg></button>
     <button class="btn" id="licNewBtn"><span class="lnb-plus" aria-hidden="true">+</span><span class="lnb-txt"> New license</span></button>
   </div>
 
@@ -75,10 +75,10 @@
     <span>Items per page<select aria-label="Items per page"><option>10</option><option>20</option><option>50</option></select></span>
     <span class="range" id="licRange">1–4 of 4</span>
     <span class="pagebtns">
-      <button disabled aria-label="First page">&laquo;</button>
-      <button disabled aria-label="Previous page">&lsaquo;</button>
-      <button disabled aria-label="Next page">&rsaquo;</button>
-      <button disabled aria-label="Last page">&raquo;</button>
+      <button disabled aria-label="First page"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevrons-left"></use></svg></button>
+      <button disabled aria-label="Previous page"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-left"></use></svg></button>
+      <button disabled aria-label="Next page"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-right"></use></svg></button>
+      <button disabled aria-label="Last page"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevrons-right"></use></svg></button>
     </span>
   </div>
   </div>

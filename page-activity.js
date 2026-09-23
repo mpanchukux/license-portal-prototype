@@ -84,7 +84,7 @@ function renderActTypes(){
   var menu = $('#actTypeMenu'); if(!menu) return;
   menu.innerHTML = ACT_TYPES.map(function(t){
     return '<button role="menuitemcheckbox" class="dropcheck" data-acttype="' + t.v + '" aria-checked="true">'
-      + '<svg class="icon cc-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5"/></svg>'
+      + '<svg class="ic cc-check" aria-hidden="true"><use href="assets/icons.svg#ti-check"></use></svg>'
       + '<span>' + t.t + '</span></button>';
   }).join('')
     /* ⚠️ A way back to everything, because a multi-select can be left in a state whose

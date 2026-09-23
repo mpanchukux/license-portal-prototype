@@ -92,9 +92,9 @@ function renderBlockFooters(){
    05:00–11:59 morning · 12:00–17:59 afternoon · 18:00–04:59 evening. */
 function greetingFor(h){ return (h >= 5 && h < 12) ? 'Good morning' : (h >= 12 && h < 18) ? 'Good afternoon' : 'Good evening'; }
 function renderGreeting(){
-  /* the first-run screen greets by name too — it was hardcoded to the demo's owner */
-  var eg = $('#emptyGreeting');
-  if(eg) eg.textContent = 'Welcome, ' + portalFirstName();
+  /* ⚠️ The new-user screen no longer greets: it carries the landing page's head now
+     (see renderEcHead), because it is the same price list and should read as one. The
+     populated dashboard still greets — that one IS the reader's own page. */
   var el = $('#dashGreeting'); if(!el) return;
   el.textContent = greetingFor(new Date().getHours()) + ', ' + portalFirstName();
 }
@@ -176,7 +176,7 @@ function installStickyAction(){
   /* Both labels ship; CSS picks one. On a phone the bar is tight (logo · action ·
      profile on one row), so the copy collapses to an icon plus "Buy". */
   slot.innerHTML = '<button class="btn" id="topbarNewBtn">'
-    + '<svg class="icon tb-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>'
+    + '<svg class="ic tb-ic" aria-hidden="true"><use href="assets/icons.svg#ti-plus"></use></svg>'
     + '<span class="tb-full">Buy a license</span><span class="tb-short">Buy</span></button>';
   $('#topbarNewBtn').addEventListener('click', function(){ NL.open({}); });
   var BAND = 48;                       // px the crossfade takes
@@ -223,10 +223,27 @@ if(dashEmptyV && !dashEmptyV.hidden){
      current plan — the same reason the landing page omits them. */
   // same starting point as the landing page: the product the session arrived for
   var esel = { product:arrivedProduct(), kind:'subscription', plan:null };
+  /* ⚠️ `statedInHead` — the head below names the product, so the picker must not state
+     it a second time above the tabs. Same flag, same reason as the landing page. */
+  esel.statedInHead = true;
+  /* The head is part of the render, not static markup: swapping the product changes the
+     heading, the line and the link along with the cards. */
+  function renderEcHead(){
+    $('#ecHead').textContent = landingHeading(esel);
+    $('#ecLead').textContent = landingLead(esel, { signedIn:true });
+    $('#ecSwap').innerHTML = productSwapHTML(esel);
+  }
   function renderEcPlans(){
-    renderPlanPicker($('#ecChoices'), $('#ecPlans'), esel, $('#ecPlanExtra'), $('#ecBase'));
+    renderEcHead();
+    renderPlanPicker($('#ecChoices'), $('#ecPlans'), esel, $('#ecPlanExtra'));
   }
   renderEcPlans();
+
+  /* the swap link lives in the head, outside the picker, so it needs its own listener
+     — the same split the landing page makes, read through the same function */
+  $('#ecSwap').addEventListener('click', function(e){
+    if(planPickerClick(e, esel) === 'changed') renderEcPlans();
+  });
 
   /* One delegated listener on the whole picker — the cards are re-rendered on every
      product/billing switch, so nothing may be bound to them directly. */

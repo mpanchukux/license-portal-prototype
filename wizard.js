@@ -18,7 +18,7 @@ var WIZARD_HTML = ''
 + '      <h2 class="fs-maintitle" id="nlTitle">New subscription</h2>'
 + '      <span class="spacer"></span>'
 + '      <div class="fs-headactions">'
-+ '        <button class="fs-close" id="nlClose" aria-label="Close">✕</button>'
++ '        <button class="fs-close" id="nlClose" aria-label="Close"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-x"></use></svg></button>'
 + '      </div>'
 + '    </div>'
 + '    <!-- the one stepper: a thin progress line + "Step N of M · Label" -->'
@@ -88,6 +88,11 @@ function openManageAddons(lic){ NL.open({ mode:'addons', license:lic }); }
    that page does not have. Shared builders live in components.js; that is where a
    thing used by four surfaces belongs. wizard.js still USES them: it loads after.
    ============================================================================ */
+
+/* "becomes", between an old value and a new one — used by the change summary and the
+   review line. ⚠️ An icon, not an arrow character: the icon rule has no exception for
+   a mark that happens to sit inside a sentence. */
+var ARROW_IC = '<svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-arrow-right"></use></svg>';
 
 var NL = (function(){
   var scr = $('#nlModal'), body = $('#nlBody');
@@ -329,7 +334,9 @@ var NL = (function(){
        figure rather than priced at a rate borrowed from somewhere else. */
     function qty(f, label, price, show){
       if(!show || cust[f] === b[f]) return;
-      out.push({ t:label + ' ' + qtyLabel(f, b[f]) + ' \u2192 ' + qtyLabel(f, cust[f]),
+      /* ⚠️ The arrow is an ICON, like every other mark here. It reads "becomes", and a
+         character standing in for a mark is exactly what the icon rule forbids. */
+      out.push({ t:label + ' ' + qtyLabel(f, b[f]) + ' ' + ARROW_IC + ' ' + qtyLabel(f, cust[f]),
                  amt: price == null ? null : (cust[f] - b[f]) * price });
     }
     /* ⚠️ A perpetual's devices are NOT priced at DEVICE_UNIT. That is $0.10 PER MONTH
@@ -508,7 +515,7 @@ var NL = (function(){
     // longer carries it (and the Customize steps have no footer at all)
     var back = !isFirstStep()
       ? '<button class="iconbtn ib nl-stepback" id="nlStepBack" aria-label="Back" title="Back">'
-        + '<svg class="icon" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>'
+        + '<svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-left"></use></svg></button>'
       : '';
     var i = stepIdx() + 1, n = totalSteps();
     $('#nlSteps').innerHTML = '<div class="nl-progress">'
@@ -550,8 +557,7 @@ var NL = (function(){
            input instead of a "fixed by …" helper under it.
      Both keep Continue inside the (sticky) summary card and Back in the step
      header, so this step has no bottom footer at all. ---- */
-  var LOCKSVG = '<svg class="icon fs-lockic" viewBox="0 0 24 24" aria-hidden="true">'
-    + '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
+  var LOCKSVG = '<svg class="ic fs-lockic" aria-hidden="true"><use href="assets/icons.svg#ti-lock"></use></svg>';
   /* Entitlements the plan fixes — everything the controls below cannot change.
      ⚠️ Assets is dropped from the wizard entirely (not relevant any more). It still
      lives in TIER_SPECS, so the licence details page and the plan cards still list it;
@@ -1045,7 +1051,7 @@ var NL = (function(){
       ? 'No payment method needed — this plan is free.'
       : billingSaved()
       ? (isPerp() ? 'Charged once to' : 'Charged to') + ' Visa ••4242'
-        + (isPerp() ? '' : ' · auto-pay') + ' · <button class="link" id="nlPayChange">Change → Payment &amp; Billing</button>'
+        + (isPerp() ? '' : ' · auto-pay') + ' · <button class="link" id="nlPayChange">Change <svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-arrow-right"></use></svg> Payment &amp; Billing</button>'
       : 'You’ll add billing and payment details on the next step.';
     $('#nlStepRev').innerHTML =
       '<div class="fs-grid">'
@@ -1105,7 +1111,7 @@ var NL = (function(){
               /* ⚠️ "Free base" was what the generic rule produced, against a value that
                  also read "Free" — a base-PRICE label on a row that has no price. A free
                  plan's row is just the plan. */
-              +   (isChange() ? (st.oldName + ' \u2192 ' + (NAME[t] || st.plan))
+              +   (isChange() ? (st.oldName + ' ' + ARROW_IC + ' ' + (NAME[t] || st.plan))
                               : ((NAME[t] || st.plan) + (isFree() ? '' : ' base')))
               +   '</div><div>' + (isFree() ? 'Free' : (money(BASE[t] || 0) + perSuffix())) + '</div></div>')
       +       '<div class="am-orow nl-entline"><div>' + entSummary(t) + '</div><div></div></div>'
@@ -1370,7 +1376,7 @@ var NL = (function(){
          country below it are the details that qualify it */
       +     '<div class="field"><label for="nlb-num">Card number <span class="req" aria-hidden="true">*</span></label>'
       +       '<div class="paystripe">'
-      +         '<svg class="icon paystripe-glyph" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>'
+      +         '<svg class="ic paystripe-glyph" aria-hidden="true"><use href="assets/icons.svg#ti-credit-card"></use></svg>'
       +         '<input class="ps-num" id="nlb-num" data-nlb="num" type="text" inputmode="numeric" autocomplete="cc-number" placeholder="0000 0000 0000 0000" aria-label="Card number" maxlength="24" value="' + bill.num + '">'
       +         '<input class="ps-exp" data-nlb="exp" type="text" inputmode="numeric" autocomplete="cc-exp" placeholder="MM / YY" aria-label="Expiry date" maxlength="7" inputmode="numeric" value="' + bill.exp + '">'
       +         '<input class="ps-cvc" data-nlb="cvc" type="text" inputmode="numeric" autocomplete="cc-csc" placeholder="CVC" aria-label="Security code" maxlength="4" value="' + bill.cvc + '">'

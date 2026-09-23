@@ -23,16 +23,26 @@
   <div class="listcard listframe">
   <h1 class="lic-h1">Invoices</h1>
   <div class="insttoolbar stickybar">
-    <div class="searchbox"><svg class="icon searchglyph" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input type="text" placeholder="Search invoices" aria-label="Search invoices"></div>
+    <div class="searchbox"><svg class="ic searchglyph" aria-hidden="true"><use href="assets/icons.svg#ti-search"></use></svg><input type="text" placeholder="Search invoices" aria-label="Search invoices"></div>
     <span class="spacer"></span>
-    <button class="iconbtn ib" data-refresh aria-label="Refresh" title="Refresh"><svg class="icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg></button>
+    <button class="iconbtn ib" data-refresh aria-label="Refresh" title="Refresh"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-refresh"></use></svg></button>
   </div>
 
+  <!-- ⚠️ THE TABLE NEEDS ITS WRAPPERS, and their absence is what made this page's side
+       padding disagree with every other list. `.listframe > *` pads its children by
+       18px; on Licenses and Instances that child is a plain div holding `.tablescroll`,
+       so the padding lands on the div and the table fills it. Here the `<table>` WAS the
+       direct child, so the 18px landed on the table element itself — which lays out its
+       own box differently, so the columns, the sticky column rule and the rows all sat
+       on a different inset from the toolbar above them. Same two wrappers as the other
+       two pages now; nothing about the table changed. -->
+  <div id="invoicesList">
+  <div class="tablescroll">
   <table>
     <thead class="stickyhead">
       <tr>
         <th>Invoice #</th>
-        <th class="sortable" aria-sort="descending" tabindex="0">Date <span class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></span></th>
+        <th class="sortable" aria-sort="descending" tabindex="0">Date <span class="arrow" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-down"></use></svg></span></th>
         <th class="num">Amount</th>
         <!-- an auto-charge icon rides next to the status chip for invoices the system
              charged on its own; Payment type said the same thing in a word and spent a
@@ -45,15 +55,17 @@
     <!-- rows come from the dataset — see renderInvoicesPage -->
     <tbody></tbody>
   </table>
+  </div>
   <div class="pager air">
     <span class="spacer"></span>
     <span>Items per page<select aria-label="Items per page"><option>10</option><option>20</option><option>50</option><option>100</option></select></span>
     <span class="range">1–7 of 7</span>
     <span class="pagebtns">
-      <button disabled aria-label="First page">«</button><button disabled aria-label="Previous page">‹</button><button disabled aria-label="Next page">›</button><button disabled aria-label="Last page">»</button>
+      <button disabled aria-label="First page"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevrons-left"></use></svg></button><button disabled aria-label="Previous page"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-left"></use></svg></button><button disabled aria-label="Next page"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-right"></use></svg></button><button disabled aria-label="Last page"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevrons-right"></use></svg></button>
     </span>
   </div>
-  </div>
+  </div><!-- /#invoicesList -->
+  </div><!-- /.listframe -->
 </div>
 </div><!-- /#shellMain -->
 

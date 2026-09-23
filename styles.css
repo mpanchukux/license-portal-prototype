@@ -84,8 +84,28 @@ a{color:inherit}
    which underlines on purpose. */
 .dtopbar a,.dprofmenu a,.settings-panel a{text-decoration:none;font-style:normal}
 :focus-visible{outline:2px solid var(--ink);outline-offset:2px;border-radius:3px}
-.icon{width:16px;height:16px;flex:none;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
-.icon[hidden]{display:none}
+/* ============================================================================
+   ICONS — one source, one placement, three sizes
+   ============================================================================
+   Every icon in the prototype is a <symbol> in assets/icons.svg, generated from
+   @tabler/icons by tools/build-icons.py. Placement is always:
+
+       <svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-NAME"></use></svg>
+
+   ⚠️ NO geometry lives here and none lives in the markup. Stroke, fill, width and
+   joins are baked into the symbol (Tabler's own defaults), so this class sets only the
+   box and lets colour arrive through `currentColor` — an icon is the colour of the text
+   it sits in, always, and no rule anywhere should paint one.
+   ⚠️ THREE SIZES, and 16 is the base. Before this the stylesheet carried thirty
+   bespoke icon sizes between 13 and 26px, most of them a pixel or two apart and none of
+   them decided — they are snapped to the nearest token. See NOTES for the table. */
+:root{--ic-16:16px; --ic-20:20px; --ic-24:24px}
+.ic{display:inline-block;flex:none;width:var(--ic-16);height:var(--ic-16);
+  color:inherit;vertical-align:middle}
+.ic-16{width:var(--ic-16);height:var(--ic-16)}
+.ic-20{width:var(--ic-20);height:var(--ic-20)}
+.ic-24{width:var(--ic-24);height:var(--ic-24)}
+.ic[hidden]{display:none}
 
 /* ---------- app shell ---------- */
 .app{display:grid;grid-template-columns:1fr;min-height:100%}
@@ -99,7 +119,7 @@ a{color:inherit}
 .nav a{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:6px;color:var(--mid);text-decoration:none;font-size:14px;border:1px solid transparent}
 .nav a:hover{background:var(--hover);color:var(--ink)}
 .nav a.on{background:var(--sel);color:var(--ink);font-weight:600;border-color:var(--chromeLine)}
-.nav a.on .icon{stroke-width:1.9}
+.nav a.on .ic{stroke-width:1.9}
 
 .main{display:flex;flex-direction:column;min-width:0}
 .topbar{height:52px;flex:none;display:flex;align-items:center;gap:14px;padding:0 18px;background:var(--chrome);border-bottom:1px solid var(--chromeLine)}
@@ -107,7 +127,7 @@ a{color:inherit}
 .sidebar,.topbar{display:none}
 .topbar .pt{font-size:14px;font-weight:600}
 .topbar .sp{flex:1}
-.iconbutton{width:30px;height:30px;border:1px solid transparent;border-radius:6px;background:transparent;color:var(--mid);display:flex;align-items:center;justify-content:center}
+.iconbutton{width:var(--ic-30);height:var(--ic-30);border:1px solid transparent;border-radius:6px;background:transparent;color:var(--mid);display:flex;align-items:center;justify-content:center}
 .iconbutton:hover{background:var(--hover);color:var(--ink);border-color:var(--chromeLine)}
 .user{display:flex;align-items:center;gap:8px;padding:3px 6px;border-radius:6px;border:1px solid transparent}
 .user:hover{background:var(--hover);border-color:var(--chromeLine)}
@@ -178,7 +198,7 @@ a{color:inherit}
 .fhead{margin:0}
 .features{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .fchip{display:inline-flex;align-items:center;gap:7px;font-size:14px;padding:4px 11px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--ink)}
-.fchip .fmark{width:13px;height:13px;flex:none}
+.fchip .fmark{width:var(--ic-16);height:var(--ic-16);flex:none}
 /* row 2: the label affordance on its own */
 .metarow{display:flex;gap:12px;margin-top:14px;flex-wrap:wrap;align-items:center}
 /* the licence label as description: muted body text right under the title */
@@ -189,7 +209,7 @@ a{color:inherit}
 .labeltext{font-size:var(--t-small-fs);line-height:var(--t-small-lh);letter-spacing:var(--t-small-ls);color:var(--mid)}
 /* the label sits with a pencil beside it; the button stays quiet until hovered */
 .labeledit{width:24px;height:24px;padding:0;border-color:transparent;color:var(--faint)}
-.labeledit .icon{width:14px;height:14px}
+.labeledit .ic{width:var(--ic-16);height:var(--ic-16)}
 .labeledit:hover{color:var(--ink);border-color:var(--line)}
 /* editing state: the input and its Save read as one control pair */
 .labeledit-row{display:inline-flex;align-items:center;gap:8px}
@@ -243,7 +263,7 @@ a{color:inherit}
 .aact-long{display:inline}
 .alert{margin-top:12px;display:flex;align-items:center;gap:9px;font-size:14px;color:var(--ink);background:#f4f4f2;border:1px solid var(--line);border-left:3px solid var(--ink);border-radius:6px;padding:9px 12px}
 .alert[hidden]{display:none}
-.alert .icon{width:17px;height:17px;flex:none}
+.alert .ic{width:var(--ic-16);height:var(--ic-16);flex:none}
 .alert .atxt b{font-weight:600}
 
 .actions{display:flex;gap:9px;margin-top:14px;flex-wrap:wrap;align-items:center}
@@ -338,11 +358,11 @@ a{color:inherit}
 .iconbtn{display:inline-flex;align-items:center;gap:5px;height:var(--btnH);font-size:14px;color:var(--mid);border:1px solid var(--line);border-radius:6px;padding:0 10px;background:#fff}
 .iconbtn:hover{color:var(--ink);border-color:var(--mid);background:var(--hover)}
 .iconbtn.ib{padding:0;width:var(--btnH);justify-content:center}
-.iconbtn .icon{width:15px;height:15px}
+.iconbtn .ic{width:var(--ic-16);height:var(--ic-16)}
 .iconbtn.copied{border-color:var(--ink);color:var(--ink)}
 /* refresh feedback: brief icon spin + a muted "updated" note beside the button */
 @keyframes refspin{to{transform:rotate(360deg)}}
-.iconbtn.spinning .icon{animation:refspin .6s linear;transform-origin:center}
+.iconbtn.spinning .ic{animation:refspin .6s linear;transform-origin:center}
 /* ghost icon button: no fill, no stroke — hover only darkens the glyph */
 .iconbtn.ghost{border-color:transparent;background:transparent}
 .iconbtn.ghost:hover{border-color:transparent;background:transparent;color:var(--ink)}
@@ -411,8 +431,8 @@ th.num,td.num{text-align:right}
    and the glyph box sits lower than the em box's middle because the descender space
    below the baseline stays empty in uppercase. At -4px the icon read as resting on
    the baseline; measured, its centre was 2.46px below the cap centre. */
-.periodhead .infoic{vertical-align:-1.5px;margin-left:4px;width:20px;height:20px}
-.periodhead .infoic .icon{width:13px;height:13px}
+.periodhead .infoic{vertical-align:-1.5px;margin-left:4px;width:var(--ic-20);height:var(--ic-20)}
+.periodhead .infoic .ic{width:var(--ic-16);height:var(--ic-16)}
 /* ⚠️ This icon sits at the RIGHT EDGE of the surface, so it takes the base tooltip's
    right anchoring BACK. `.tip` hangs the bubble off `right:0` precisely so an icon near
    an edge keeps it inside; `.infoic` then flips it to `left:-8px`, which is right for
@@ -437,7 +457,7 @@ th.num,td.num{text-align:right}
 .inst-labelcell .inst-editlabel{opacity:0;transition:opacity .12s}
 .inst-labelcell:hover .inst-editlabel,.inst-editlabel:focus-visible{opacity:1}
 /* the new-tab marker: it rides after the label, at text size, never its own control */
-.extmark{width:13px;height:13px;margin-left:5px;vertical-align:-2px;opacity:.65}
+.extmark{width:var(--ic-16);height:var(--ic-16);margin-left:5px;vertical-align:-2px;opacity:.65}
 
 /* ---------- the ALERT icon: something is wrong ---------------------------------
    ⚠️ Deliberately NOT the info icon. `.infoic` is a hairline ring that explains a
@@ -449,11 +469,14 @@ th.num,td.num{text-align:right}
    colour; this prototype has no hue at all, and one red glyph would be the only colour
    in the product. Reported rather than introduced. */
 .alertic{display:inline-flex;align-items:center;justify-content:center;
-  width:24px;height:24px;margin:-4px 0 -4px 6px;padding:0;
+  width:var(--ic-24);height:var(--ic-24);margin:-4px 0 -4px 6px;padding:0;
   border:0;background:transparent;color:var(--ink);cursor:pointer;vertical-align:-3px}
-.alertic .icon{width:15px;height:15px;fill:var(--ink);stroke:none}
-/* the mark inside the triangle is knocked OUT of the fill, so it reads at 15px */
-.alertic .icon .al-bang{stroke:var(--card);stroke-width:2;fill:var(--card)}
+/* ⚠️ NO paint here any more. The solid triangle and the knocked-out bang inside it are
+   both in the symbol (`ti-alert-triangle-filled`), so this rule sets the box and the
+   colour arrives as `currentColor` from `.alertic` above — the same contract every
+   other icon has. The two declarations that used to fill it, and the `.al-bang` rule
+   that punched the mark back out, are gone with the geometry they were painting. */
+.alertic .ic{width:var(--ic-16);height:var(--ic-16)}
 .alertic:hover,.alertic.show{opacity:.78}
 .alertic:focus-visible{outline:2px solid var(--ink);outline-offset:2px;border-radius:4px}
 
@@ -478,12 +501,19 @@ th.num,td.num{text-align:right}
    both remove it from the accessibility tree too. */
 .vh{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;
   clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
-/* the title row sits where the h1 did, so it carries the h1's space above the card */
-.lic-titlerow{margin-top:2px}
 /* the Instances status filter: the same chip group as the Licenses type filter, so
    "a chip group narrows the list" reads the same way on both pages */
 .inst-statusseg{display:inline-flex;align-items:center;gap:8px}
-.inst-hint{margin:0;padding:14px 18px;border-bottom:1px solid var(--line2);
+/* ⚠️ A QUIET PERSISTENT LINE, not a banner and not a button. The one thing people come
+   here to do and cannot guess is deactivating, and the reason they need it is always the
+   same: they moved a deployment. Copy is what makes the action discoverable; a second
+   button would just add a control nobody understands.
+   ⚠️ It lives in the TITLE ROW now — no border, no full-bleed padding, no line of its
+   own between the toolbar and the rows. */
+.lic-titlerow{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;
+  padding-top:16px;margin-bottom:12px}
+.lic-titlerow > .lic-h1{padding-top:0;margin-bottom:0}
+.inst-hint{margin:0;flex:1;min-width:280px;max-width:62ch;
   font-size:14px;line-height:1.5;color:var(--mid)}
 .inst-filter{margin:0;padding:12px 18px;border-bottom:1px solid var(--line2);
   font-size:14px;line-height:1.5;color:var(--ink)}
@@ -500,7 +530,7 @@ th.num,td.num{text-align:right}
 .dropcheck{display:flex;align-items:center;gap:8px}
 /* the tick is drawn for every row and hidden until the row is on, so the labels do not
    shift sideways as they are ticked */
-.dropcheck .cc-check{width:16px;height:16px;flex:none;opacity:0}
+.dropcheck .cc-check{width:var(--ic-16);height:var(--ic-16);flex:none;opacity:0}
 .dropcheck.is-on .cc-check{opacity:1}
 .dropcheck.is-on{font-weight:500}
 .dropfoot{border-top:1px solid var(--line2);margin-top:5px;padding:7px 10px 2px}
@@ -530,8 +560,8 @@ th.num,td.num{text-align:right}
 .nl-creditnote{margin-top:8px;padding-top:8px;border-top:1px solid var(--line2);color:var(--ink)}
 /* a folded run: the chevron turns when it opens, and the entries it holds sit inside
    the same row rather than becoming rows of their own */
-.fgroup .fg-toggle .icon{transition:transform .12s}
-.fgroup .fg-toggle.is-on .icon{transform:rotate(180deg)}
+.fgroup .fg-toggle .ic{transition:transform .12s}
+.fgroup .fg-toggle.is-on .ic{transform:rotate(180deg)}
 .fg-items{margin:6px 0 0 0;border-left:2px solid var(--line2);padding-left:12px}
 .fg-items[hidden]{display:none}
 .fg-line{padding:3px 0;font-size:14px;color:var(--mid)}
@@ -563,9 +593,9 @@ th.num,td.num{text-align:right}
    toolbar, it is a mark inside a line of text, and it sizes to that line. Its hit
    area is padded out to 24px so a thumb can find it on a phone. */
 .infoic{display:inline-flex;align-items:center;justify-content:center;
-  width:24px;height:24px;margin:-4px 0 -4px 2px;padding:0;
+  width:var(--ic-24);height:var(--ic-24);margin:-4px 0 -4px 2px;padding:0;
   border:0;background:transparent;color:var(--faint);cursor:pointer;vertical-align:-3px}
-.infoic .icon{width:15px;height:15px}
+.infoic .ic{width:var(--ic-16);height:var(--ic-16)}
 /* the name's last word and its icon break as one — see cellTopWithInfo */
 .nobreak{white-space:nowrap}
 .infoic:hover,.infoic.show{color:var(--ink)}
@@ -605,7 +635,7 @@ th.num,td.num{text-align:right}
 th.sortable{cursor:pointer;user-select:none;white-space:nowrap}
 th.sortable:hover{color:var(--mid)}
 th .arrow{display:inline-flex;align-items:center;margin-left:5px;color:var(--faint)}
-th .arrow svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:block}
+th .arrow .ic{width:var(--ic-16);height:var(--ic-16);display:block}
 th[aria-sort="ascending"] .arrow{transform:rotate(180deg)}
 th.chk,td.chk{width:34px;text-align:center;padding-left:8px;padding-right:0}
 input[type=checkbox]{accent-color:var(--ink);width:14px;height:14px;margin:0}
@@ -753,7 +783,7 @@ th[aria-label$="ctions"],th.cellact,td.cellact{width:1%;white-space:nowrap;text-
   padding:11px 12px 11px 14px;background:var(--track);border-radius:8px;
   font-size:14px;line-height:1.4;color:var(--ink)}
 .keynote[hidden]{display:none}
-.keynote .icon{width:17px;height:17px;flex:none;color:var(--mid)}
+.keynote .ic{width:var(--ic-16);height:var(--ic-16);flex:none;color:var(--mid)}
 .keynote > span{flex:1;min-width:0}
 .kn-x{flex:none;width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;
   border:0;background:transparent;border-radius:6px;color:var(--faint);font-size:13px;line-height:1;padding:0}
@@ -785,7 +815,7 @@ th[aria-label$="ctions"],th.cellact,td.cellact{width:1%;white-space:nowrap;text-
   border:0;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;
   z-index:900;box-shadow:0 4px 14px rgba(0,0,0,.28);cursor:pointer}
 .gearfab:hover{background:#000;color:#fff}
-.gearfab .icon{width:22px;height:22px}
+.gearfab .ic{width:var(--ic-24);height:var(--ic-24)}
 .settings-panel{position:fixed;right:16px;bottom:70px;width:256px;background:#fff;border:1px solid var(--line);border-radius:8px;box-shadow:0 12px 32px rgba(0,0,0,.18);z-index:901;padding:14px;max-height:calc(100vh - 100px);overflow-y:auto}
 .settings-panel[hidden]{display:none}
 .settings-panel h4{margin:0 0 3px;font-size:14px}
@@ -918,13 +948,13 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
    stay a column inside it */
 .fs-panel.nl-plansum{display:flex;align-items:flex-start;gap:14px}
 .nl-plansum-ic{flex:none;display:inline-flex;color:var(--mid);margin-top:2px}
-.nl-plansum-ic .icon{width:26px;height:26px}
+.nl-plansum-ic .ic{width:var(--ic-24);height:var(--ic-24)}
 .nl-plansum-tx{display:flex;flex-direction:column;gap:6px;min-width:0}
 .nl-plansum-t{display:block;font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw);color:var(--ink)}
 .nl-plansum-f{display:block;font-size:var(--t-small-fs);line-height:1.55;color:var(--mid)}
 /* variant B — the lock rides inside the disabled input, no helper line below */
 .fs-lockfield{position:relative;display:inline-flex;align-items:center;flex:none}
-.fs-lockic{position:absolute;left:9px;width:13px;height:13px;color:var(--faint);pointer-events:none}
+.fs-lockic{position:absolute;left:9px;width:var(--ic-16);height:var(--ic-16);color:var(--faint);pointer-events:none}
 /* the lock sits absolutely in the left inset (see .fs-lockic), and the padding is
    symmetric so the value centres on the field itself rather than on the space the
    lock leaves over */
@@ -1079,9 +1109,14 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
 /* ⚠️ `.lp-welcome p` sets `max-width:64ch` and outranks a single class, so the override
    has to match it — this is the measure that was breaking the line in two. */
 .lp-welcome p.lp-lead{max-width:none}
-.lp-lead .nl-prodswap{margin-left:2px;white-space:nowrap}
+/* ⚠️ The swap link has its OWN slot at the right of the head row (2026-09-24) — it is
+   no longer the tail of the lead sentence. `.dwelcome` is already a flex row whose text
+   column takes the space, so the link only has to stop shrinking and sit on the same
+   baseline band as the sentence it answers. */
+.lp-swap{flex:none;align-self:flex-end;padding-bottom:2px}
+.lp-swap .nl-prodswap{white-space:nowrap}
 .nl-stated{display:flex;align-items:flex-start;gap:12px;min-width:0}
-.nl-stated .icon{width:24px;height:24px}
+.nl-stated .ic{width:var(--ic-24);height:var(--ic-24)}
 .nl-stated .nl-prodic{color:var(--ink)}    /* stated, not one of two — it is not dimmed */
 /* the link is deliberately quiet: it serves the minority who arrived on the wrong
    product, and must not read as the second half of a choice */
@@ -1102,7 +1137,7 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
   width:10px;height:10px;border-radius:50%;background:var(--ink)}
 .nl-prodcard[disabled] .nl-prodradio{border-color:var(--line2)}
 .nl-prodic{flex:none;display:inline-flex;color:var(--mid)}
-.nl-prodcard .icon{width:24px;height:24px}
+.nl-prodcard .ic{width:var(--ic-24);height:var(--ic-24)}
 .nl-prodtxt{display:flex;flex-direction:column;gap:4px;min-width:0}
 .nl-prodname{font-size:16px;font-weight:500;line-height:1.2}
 .nl-proddesc{font-size:14px;font-weight:400;line-height:1.35;color:var(--mid)}
@@ -1160,6 +1195,38 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
    narrows it and lets the content set the height. The max-height keeps a long
    screen scrollable rather than taller than the viewport. */
 .authbox{width:min(440px,92vw);height:auto;max-height:90vh}
+/* ---------- the Users modal ----------
+   The whole Users surface, which was a page until 2026-09-23. Wider than the auth card
+   because it carries a four-column table, narrower than the wizard because it carries
+   nothing else. Height comes from the content, capped so a long list scrolls inside the
+   sheet rather than growing past the viewport. */
+.usersbox{width:min(820px,92vw);height:auto;max-height:88vh}
+.usersbody{padding:20px 24px 24px;max-width:none}
+/* ---------- NO FRAMES (2026-09-24) ----------
+   ⚠️ The sheet is the only surface. Before this the body held a `.setcard` around the
+   invite row and a `.listcard.listframe` around the table, so the modal was two boxes
+   stacked inside a third inside the sheet — four nested edges to carry one list. Both
+   came from the page this used to be, where a card is how a block separates itself
+   from the page ground; a modal already has an edge, and repeating it inside is the
+   whole "card in a card" the details surface was cleaned of earlier.
+   The table now sits directly on the sheet, and the only lines left are the ones that
+   belong to the table itself — the column rule and the row separators. */
+.usersbody .inviterow{margin-bottom:0}
+.usersbody table{width:100%}
+/* the list starts on its own band, separated by space rather than by a border */
+.usersbody #usersTable{margin-top:22px}
+/* the pager loses the frame's inset: it lines up with the table above it */
+.usersbody .pager{padding-left:0;padding-right:0}
+/* ---------- the header carries the surface-wide action ----------
+   Title · Copy invite link · ✕. The link is a text action, not a button: it sits in a
+   band with a title and a close control, and a filled control there would outrank the
+   thing the sheet is about. */
+.usershead{gap:10px}
+.usershead .invite-link{display:inline-flex;align-items:center;gap:7px;margin-left:0;
+  text-decoration:none;color:var(--ink)}
+.usershead .invite-link:hover{text-decoration:underline;text-underline-offset:2px}
+.usershead .invite-link .ic{width:var(--ic-16);height:var(--ic-16);color:var(--mid)}
+.usershead .invite-link:hover .ic{color:var(--ink)}
 /* the header band is only the way out here — no title, and no band to speak of */
 .authscreen .fs-header{padding:10px 12px;background:transparent;border-bottom:0}
 /* the card's own column: .fs-body's 1040px cap and 24px padding are the wizard's */
@@ -1175,7 +1242,7 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
 /* two equal halves; they are .btn.sec, so the band and the radius come for free */
 .auth-social{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .auth-soc{gap:8px}
-.auth-soc .icon{width:17px;height:17px}
+.auth-soc .ic{width:var(--ic-16);height:var(--ic-16)}
 /* OR: a rule with the word sitting in a gap cut out of it */
 /* ⚠️ `.auth-h-price` and `.auth-ctx` are both GONE. What the visitor chose rides in the
    heading (see signupHeading) and the PRICE no longer rides anywhere on this screen —
@@ -1206,14 +1273,36 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
 /* ---------- Dashboard (Overview): full-width top bar, no sidebar, centered column ---------- */
 .app[hidden],.dashview[hidden],.licview[hidden]{display:none}
 .dashview{display:flex;flex-direction:column;min-height:100%;background:var(--bg)}
-.dtopbar{display:flex;flex:none;padding:0 24px;background:var(--bg)}
-/* the bar is a contained band: white backdrop capped at the container width and
-   centered, so the page background stays visible on both sides. It meets the top
-   edge of the window — no gap above it, square top corners, and the rounding only
-   on the bottom, where the band actually ends. */
-.dtopbar-inner{position:relative;display:flex;align-items:center;gap:14px;height:56px;width:100%;max-width:var(--pageW);margin:0 auto;padding:0 var(--pageX);background:var(--card);border:1px solid var(--line2);border-top:0;border-radius:0 0 10px 10px}
+/* ---------- the top bar spans the window (2026-09-24) ----------
+   ⚠️ REVERSES "the bar is a contained band". It used to be a white card capped at the
+   container width and floating in a 24px gutter, with its bottom corners rounded — the
+   page ground showing on both sides of it. Now the BAND runs edge to edge: the white,
+   the hairline under it and the band's full height belong to the window.
+   ⚠️ The band moved UP a level, and that is the whole change. `.dtopbar` used to be an
+   invisible gutter and `.dtopbar-inner` carried the surface; now `.dtopbar` IS the
+   surface and the inner element is only the content row. Nothing in the markup moved.
+   ⚠️ The CONTENT stays on the page's own column — `--pageW`, centred, same side padding
+   as every page below. A full-bleed band with full-bleed content would put the logo
+   against the left edge of a wide monitor and the profile against the right, detached
+   from everything they sit above. One band, one column. */
+.dtopbar{display:flex;flex:none;padding:0;background:var(--card);
+  border-bottom:1px solid var(--line2)}
+.dtopbar-inner{position:relative;display:flex;align-items:center;gap:14px;height:56px;
+  width:100%;max-width:var(--pageW);margin:0 auto;padding:0 var(--pageX);
+  background:transparent;border:0;border-radius:0}
 .dtopbar .sp{flex:1}
 .dbrand{display:flex;align-items:center;gap:10px}
+/* ---------- the wordmark ----------
+   ⚠️ NOT an .ic. The three icon tokens are square boxes for 24×24 symbols; this is a
+   4.5:1 wordmark, so it is sized by HEIGHT and lets its width follow. It is the one
+   drawing outside the icon sprite (see assets/logo.svg), and it takes its colour the
+   same way everything else does — currentColor, so the bar's ink paints it. */
+/* ⚠️ `aspect-ratio`, not `width:auto`. The source is 1452.9×320, and an <svg> with a
+   viewBox and no width happily filled the flex line — the wordmark stretched across the
+   bar and the nav items landed on top of it. Height is the one dimension set; the ratio
+   supplies the other. */
+.tblogo{height:19px;width:auto;aspect-ratio:1452.9/320;flex:none;color:var(--ink);display:block}
+/* the lockup is one object: no caption beside it, because the file carries its own */
 /* the logo doubles as a Home link — reset it to look identical as a <button> */
 button.dbrand{background:none;border:0;padding:0;color:inherit;font:inherit;cursor:pointer}
 .dbrand .mark{width:26px;height:26px;border:1px solid var(--line);border-radius:6px;display:flex;align-items:center;justify-content:center;background:#fff;color:var(--ink)}
@@ -1281,7 +1370,8 @@ button.dbrand{background:none;border:0;padding:0;color:inherit;font:inherit;curs
 .imp-banner .sp{flex:1}
 .imp-return{height:26px;padding:0 12px;border:0;border-radius:6px;background:#fff;color:var(--ink);font:inherit;font-size:14px;cursor:pointer;flex:none}
 .imp-return:hover{background:var(--hover)}
-body.impersonating .dtopbar-inner{border-bottom-left-radius:0;border-bottom-right-radius:0}
+/* ⚠️ The rule that squared the bar's bottom corners while the impersonation band sits
+   under it is gone with the corners — the bar is a full-width band with none. */
 /* legal pages: long-form reading */
 .legal{max-width:800px}
 .legal p{margin:0 0 14px;font-size:var(--t-body-fs);line-height:1.6;color:var(--ink)}
@@ -1346,7 +1436,7 @@ body[data-page="home"] .dwrap{padding-top:48px}
 .dblock-link{display:inline-flex;align-items:center;gap:5px;color:inherit;text-decoration:none}
 .dblock-link:hover{text-decoration:underline;text-underline-offset:3px}
 .dbh-chev{display:inline-flex;align-items:center;color:var(--faint);transition:transform .15s ease,color .15s ease}
-.dbh-chev svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:block}
+.dbh-chev .ic{width:var(--ic-16);height:var(--ic-16);display:block}
 .dblock-link:hover .dbh-chev{transform:translateX(2px);color:var(--mid)}
 /* Every preview block ends with the way into its full page, and the button says
    how much is behind it. Centred, like the feed's own Load more. */
@@ -1383,7 +1473,7 @@ body[data-page="home"] .dwrap{padding-top:48px}
 .dblock-foot .dblock-open:hover{border-color:transparent;background:var(--hover);color:var(--ink)}
 .gstatus{display:flex;align-items:flex-start;gap:14px;margin-top:20px;border:1px solid var(--line2);border-radius:10px;background:var(--card);padding:16px 18px}
 .gstatus[hidden]{display:none}
-.gstatus .gs-ic{width:22px;height:22px;margin-top:2px;color:var(--mid)}
+.gstatus .gs-ic{width:var(--ic-24);height:var(--ic-24);margin-top:2px;color:var(--mid)}
 .gs-h{font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw);color:var(--ink)}
 .gs-b{margin:6px 0 0;max-width:720px;font-size:14px;line-height:1.6;color:var(--mid)}
 .gs-f{margin-top:10px}
@@ -1410,10 +1500,17 @@ body[data-page="home"] .dwrap{padding-top:48px}
    No bullets and no markers: every line already starts with a licence name, which is a
    stronger left edge than a disc, and a bulleted list inside a coloured band reads as a
    second document. Each line is text + its own action, baseline-aligned. */
-.hb-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
-.hb-item{display:flex;align-items:baseline;gap:12px}
-.hb-txt{flex:1;min-width:0}
-.hb-more{margin-top:2px}
+/* ⚠️ `.hb-list` and the `.is-list` variant are GONE with the list form (2026-09-24).
+   What is left of them is `.hb-more`, which changed job: it was the last ROW of the
+   list, and it is now the count that ends the fact sentence. */
+/* ⚠️ A plain list item, not a flex row. It was `display:flex` with the sentence on
+   the left and a `.gb-act.sm` on the right; the action came off the list form
+   (2026-09-23), so the row, the gap and the `.hb-txt` flex child that filled it all
+   went with it — the sentence is the whole line now, and it wraps as text should. */
+
+/* the count rides at the end of the sentence, not under it — a normal word space
+   before it, and it never breaks away from the words it follows */
+.hb-more{margin-left:8px;white-space:nowrap}
 /* the per-line action is smaller than a single banner's primary: in a list it is one of
    three equals, and three full-size buttons would out-weigh the sentences they serve */
 .gb-act.sm{height:26px;padding:0 10px;font-size:14px;flex:none}
@@ -1428,16 +1525,16 @@ body[data-page="home"] .dwrap{padding-top:48px}
 @media (max-width:600px){
   .homebanner{position:relative}
   .homebanner .gb-x{position:absolute;top:8px;right:8px}
-  /* ⚠️ The list line stacks its action UNDER its sentence here, rather than shrinking
-     the sentence into a column beside it. Measured at 390: side by side, "Software
-     updates for Broker on-prem end in 13 days." wrapped to three lines against a 26px
-     button, and three such items ran past the fold. */
-  .hb-item{flex-direction:column;align-items:flex-start;gap:4px}
+  /* ⚠️ The rule that stacked each list line's action under its sentence is GONE with
+     the action itself (2026-09-23). Its reason is worth keeping, because it is half of
+     why the buttons went: measured at 390, a sentence beside a 26px button wrapped to
+     three lines, and three such items ran past the fold. A sentence with a link in it
+     costs one row instead of two and needs no rule here at all. */
   .hb-acts{margin-top:2px}
 }
 .gbanner[hidden]{display:none}
 .gbanner .sp{flex:1}
-.gbanner .gb-ic{width:18px;height:18px;color:#fff}
+.gbanner .gb-ic{width:var(--ic-20);height:var(--ic-20);color:#fff}
 .gb-txt{font-size:14px;color:#fff}
 .gb-act{height:26px;padding:0 12px;border:0;border-radius:6px;background:#fff;color:var(--ink);font:inherit;font-size:14px;cursor:pointer;flex:none}
 .gb-act:hover{background:var(--hover)}
@@ -1463,10 +1560,17 @@ body[data-page="home"] .dwrap{padding-top:48px}
    choose between them are hidden, not removed — the phone still needs them, because
    stacking nine cards is a very long page. Same markup on both, CSS decides. */
 .plangroups{display:grid;gap:34px;margin-top:20px}
+/* ⚠️ LEFT, not centred (2026-09-24). Centred worked while the heading floated above a
+   slice of a shared row; inside a frame of its own it is the frame's label, and a label
+   starts where its box starts — the same line the cards inside it start on. */
 .plangroup-h{margin:0 0 4px}
-.pg-t{margin:0;font-family:var(--font-ui);font-size:var(--t-h3-fs,18px);
+/* the name and its info icon are one object: the icon must not wrap away from the word */
+.pg-t{margin:0;display:inline-flex;align-items:center;gap:2px;
+  font-family:var(--font-ui);font-size:var(--t-h3-fs,18px);
   line-height:1.3;font-weight:500;color:var(--ink)}
-.pg-d{margin:4px 0 0;max-width:74ch;font-size:var(--t-small-fs);line-height:1.55;color:var(--mid)}
+/* ⚠️ `.pg-d` is GONE — the sentence lives in the heading's info icon now. The rule is
+   removed rather than emptied so nothing is left styling an element that is not
+   rendered. */
 .pg-note{margin-top:12px}
 /* the group's own grid keeps the margin the standalone one had; the wrapper owns the
    space between groups */
@@ -1474,6 +1578,72 @@ body[data-page="home"] .dwrap{padding-top:48px}
 /* ⚠️ ABOVE 600px THE TABS STAND DOWN. The group headings say what they said, and a
    control that repeats the labels beside it reads as a second, disagreeing choice. */
 @media(min-width:601px){ .nl-billrow{display:none} }
+/* ---------- ONE ROW: subscriptions, then perpetual (2026-09-24) ------------------
+   ⚠️ This REVERSES "перпетуал окремим рядом, 560px" from the pass two days earlier.
+   That decision was a measurement (see below); this one is the requirement — the two
+   ways to pay read as one offer scanned left to right, not as a primary row and an
+   afterthought under it.
+
+   The two groups are laid out by ONE grid, not by two that happen to line up: the
+   wrapper owns `--pg-cols` columns (one per card on the surface) and each group claims
+   `--pg-start` / `--pg-span` of them, both set in renderPlanPicker. That is what keeps
+   every card the same width across a group boundary.
+
+   ⚠️ `display:contents` on the group, so its heading and its grid become items of the
+   OUTER grid. Without it the two groups are two independent boxes and their headings
+   are two independent heights — a one-line description beside a two-line one would
+   start the cards at different heights, which is exactly the misalignment the single
+   row is meant to remove. Rows are explicit (1 heading · 2 cards · 3 note) so nothing
+   depends on auto-placement guessing.
+
+   ⚠️ FROM 1081px ONLY. Below it `.plangrid` is already overridden to three columns and
+   then one, because five cards across stop being readable — at 1280 five-across gives
+   each card 203px of box and 167px of content, and the perpetual name
+   (`ThingsBoard PE Perpetual License`, 315.9px at 20/500) takes THREE lines in that.
+   It is legible and it is what was asked for; at 1024 it would not be. Below the
+   breakpoint the groups stack exactly as they did. */
+/* ---------- each group is a FRAME (2026-09-24) ----------
+   The two ways to pay are two objects on one row: a bordered card each, holding its own
+   label and its own plan cards. Separated, but side by side — which is the whole point,
+   since the row is read across. */
+@media(min-width:601px){
+  .plangroups > .plangroup{background:var(--card);border:1px solid var(--line2);
+    border-radius:12px;padding:var(--pg-pad, 18px)}
+  .plangroups > .plangroup > .plangroup-h{margin-bottom:0}
+  .plangroups > .plangroup > .plangrid{margin-top:14px}
+}
+/* ---------- ONE ROW: the frames sit side by side --------------------------------
+   ⚠️ FLEX, NOT GRID, and the reason is the frames' padding. The previous version made
+   the groups `display:contents` so their cards joined one outer grid — which is what
+   kept every card the same width. A frame cannot do that: it has a box, and its padding
+   eats into whatever track it spans. Two frames of unequal card count then produce
+   unequal cards (measured: 4-card frame 195px, 1-card frame 171px on a 1072 grid).
+   The fix is to let the FREE space be shared and the fixed parts be declared:
+     basis  = the frame's own overhead — 2 paddings + the gaps between its own cards
+     grow   = its card count
+   Flex hands each frame `span × C` of what is left over, so C is identical in both and
+   every card on the surface is the same width whatever frame it is in. */
+@media(min-width:1081px){
+  /* ⚠️ `--pg-cardgap` is the ONE number for the gaps inside a frame, and the flex
+     basis above is computed from it — narrowing it here widens every card by the space
+     it gives back, in both frames, without a second edit. That is what the token was
+     for. The gap BETWEEN the two frames stays 16px: it separates two objects, while
+     this separates cards within one. */
+  .plangroups.two{--pg-pad:18px; --pg-cardgap:10px;
+    display:flex; align-items:stretch; gap:16px}
+  .plangroups.two > .plangroup{
+    flex:var(--pg-span) 0 calc(2 * var(--pg-pad)
+      + (var(--pg-span) - 1) * var(--pg-cardgap));
+    min-width:0}
+  .plangroups.two .plangrid{grid-auto-flow:row;
+    grid-template-columns:repeat(var(--pg-span), minmax(0, 1fr));
+    gap:var(--pg-cardgap)}
+  /* ⚠️ The single-card group loses its 560px track here. That width exists to stop the
+     perpetual name wrapping when the card stands alone on its own row; inside its frame
+     the card fills the frame, and 560px would blow the row out. */
+  .plangroups.two .plangrid.one{grid-template-columns:repeat(var(--pg-span), minmax(0, 1fr));
+    justify-content:stretch}
+}
 /* single-plan states: one card, not stretched across a four-column track.
    ⚠️ 560px, and it was 380 CENTRED. Measured at 1280 (grid 1072, card padding 36):
    the perpetual card's name — `ThingsBoard PE Perpetual License` — is 315.9px at
@@ -1482,7 +1652,10 @@ body[data-page="home"] .dwrap{padding-top:48px}
    Left-aligned rather than centred, because it is now the content of a labelled group
    and a centred card under a left-aligned heading reads as unrelated to it. */
 .plangrid.one{grid-auto-flow:row;grid-template-columns:minmax(0,560px);justify-content:start}
-.plancard{position:relative;display:flex;flex-direction:column;margin-top:0;padding:16px 18px}
+/* ⚠️ 12/14, down from 16/18. Five cards are read ACROSS, so the padding is paid five
+   times over on every horizontal scan — and inside a frame that already insets them by
+   18px, the card's own inset was a second margin around the same content. */
+.plancard{position:relative;display:flex;flex-direction:column;margin-top:0;padding:12px 14px}
 /* Change plan: "Current plan" is a strip on the current card's top edge; its
    height is reserved above EVERY card (empty elsewhere) so card heights match
    and the plan names stay on one horizontal line */
@@ -1514,8 +1687,8 @@ body[data-page="home"] .dwrap{padding-top:48px}
    text rather than sitting with it. Re-measure with a Range over the text node if the
    card's font size ever changes — the text's line box, not the row's, is what it has
    to line up with. */
-.pc-feat .infoic{width:20px;height:20px;margin-left:3px;vertical-align:-1px}
-.pc-feat .infoic .icon{width:13px;height:13px}
+.pc-feat .infoic{width:var(--ic-20);height:var(--ic-20);margin-left:3px;vertical-align:-1px}
+.pc-feat .infoic .ic{width:var(--ic-16);height:var(--ic-16)}
 /* the tax line — same muted weight wherever it appears */
 /* ⚠️ `.nl-plansum-inc` and `.am-lockwhy` are GONE, each with the thing it styled:
    White labeling left the plan card for a block of its own (featureRow), and the
@@ -1557,12 +1730,18 @@ body[data-page="home"] .dwrap{padding-top:48px}
    ⚠️ THE FRAME LOSES ITS OWN PADDING and the children take it back. A sticky child
    cannot sit inside a padded box and still meet the frame's edge — it would stop
    15px down and leave a stripe of card showing above it while rows passed behind. */
-.listframe{padding:0;overflow:visible}
+/* ⚠️ `padding-bottom` on the frame, not a margin under the pager. The pager is not
+   always the last thing in the block (a feed ends with its own "load more" row), and a
+   frame that ends flush on its border reads as cut off whatever is last. */
+.listframe{padding:0 0 14px;overflow:visible}
 .listframe > *{padding-left:18px;padding-right:18px}
 .listframe > .tablescroll,.listframe > div > .tablescroll{padding-left:0;padding-right:0}
 /* the page title is the frame's first child and scrolls away with the content — it is
    in the block, not in the part of it that stays */
 .listframe > .lic-h1{padding-top:16px;margin-bottom:12px}
+/* the title row is the frame's first child where a page has one, and takes the same
+   inset as a bare title would */
+.listframe > .lic-titlerow{padding-left:18px;padding-right:18px}
 .stickybar{position:sticky;top:0;z-index:12;background:var(--card);
   padding-top:15px;padding-bottom:15px;
   /* ⚠️ THE DIVIDER, AND IT IS FULL WIDTH BY CONSTRUCTION. The frame has no padding of
@@ -1575,7 +1754,13 @@ body[data-page="home"] .dwrap{padding-top:48px}
    reliable target, and each needs its OWN background or the rows show through the
    gaps between them. Each also carries the grey line, for the same reason: a border on
    the row would leave gaps between the cells. */
+/* ⚠️ The column row breathes more than a body row. 8px top and bottom was the table's
+   own cell padding, which is right for a row you read past and too tight for a row that
+   STOPS and sits over the content. Set on `.stickyhead` rather than on stick, so the
+   height never changes underneath the reader — a padding that grew when the row stuck
+   would shove every row below it down by the difference at the moment of sticking. */
 .stickyhead th{position:sticky;top:var(--barH,0px);z-index:11;background:var(--card);
+  padding-top:13px;padding-bottom:13px;
   border-bottom:1px solid var(--stickyLine)}
 
 /* ---------- the line and the shadow ----------
@@ -1602,6 +1787,22 @@ body[data-page="home"] .dwrap{padding-top:48px}
 .listframe.is-stuck .stickybar::after{opacity:1}
 .listframe.is-stuck:has(.stickyhead th) .stickybar::after{opacity:0}
 .listframe.is-stuck .stickyhead th::after{opacity:1}
+
+/* ---------- stuck: the line and the shadow run the FULL width of the block ----------
+   ⚠️ The toolbar's divider spans the frame edge to edge, and the column row's did not:
+   the table sits inside an 18px-padded wrapper, so its line stopped 18px short on both
+   sides while the line directly above it did not. Measured at 1280: toolbar divider
+   105..1175, column rule 123..1157 — an 18px step on each side, visible precisely when
+   both are on screen, which is the stuck state.
+   The fix moves the LINE into the same pseudo-element as the shadow, so one element
+   carries both and one pair of offsets stretches both past the table on the end cells.
+   ⚠️ The `th` border is only hidden WHILE STUCK — unstuck it is the ordinary column
+   rule and belongs at table width, like every other rule in the table. */
+.listframe.is-stuck .stickyhead th{border-bottom-color:transparent}
+.listframe.is-stuck .stickyhead th::after{
+  top:calc(100% - 1px);border-top:1px solid var(--stickyLine)}
+.listframe.is-stuck .stickyhead th:first-child::after{left:-18px}
+.listframe.is-stuck .stickyhead th:last-child::after{right:-18px}
 
 /* ---------- the same pattern inside the licence panel ----------
    ⚠️ A DIFFERENT SCROLL, and that is the only difference. The panel's tab bar is its
@@ -1721,7 +1922,7 @@ body[data-page="home"] .dwrap{padding-top:48px}
 .authlocked{position:relative}
 .authlocked input{background:var(--bg);color:var(--mid);padding-right:38px;cursor:default}
 .authlocked input:focus{border-color:var(--line)}
-.authlock-ic{position:absolute;right:11px;bottom:11px;width:18px;height:18px;
+.authlock-ic{position:absolute;right:11px;bottom:11px;width:var(--ic-20);height:var(--ic-20);
   color:var(--faint);pointer-events:none}
 
 /* ================= the field error state =================
@@ -1941,7 +2142,7 @@ body.list-empty #pageTitleRow #licNewBtn{display:none !important}
    while a change is in flight, so the field never carries two explanations. */
 .emailpend{margin-top:6px;display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;font-size:14px;color:var(--faint)}
 .emailpend[hidden]{display:none}
-.emailpend-ic{width:14px;height:14px;color:var(--faint)}
+.emailpend-ic{width:var(--ic-16);height:var(--ic-16);color:var(--faint)}
 .emailpend-v{font:inherit;font-size:14px;text-align:left;color:var(--mid);background:none;border:0;padding:0;cursor:pointer}
 .emailpend-v:hover{color:var(--ink)}
 .emailpend-sep{color:var(--line)}
@@ -2009,7 +2210,7 @@ body.list-empty #pageTitleRow #licNewBtn{display:none !important}
 /* composed card field (Stripe Elements style): glyph + number + expiry + CVC in one box */
 .paystripe{display:flex;align-items:center;gap:10px;height:var(--btnH);border:1px solid var(--line);border-radius:6px;padding:0 10px;background:#fff}
 .paystripe:focus-within{border-color:var(--ink)}
-.paystripe-glyph{color:var(--faint);flex:none;width:16px;height:16px}
+.paystripe-glyph{color:var(--faint);flex:none;width:var(--ic-16);height:var(--ic-16)}
 .paystripe input{border:0;outline:0;background:transparent;font:inherit;font-size:14px;color:var(--ink);padding:0;height:100%;font-variant-numeric:tabular-nums}
 .paystripe .ps-num{flex:1;min-width:0}
 .paystripe .ps-exp{width:62px;flex:none}
@@ -2034,7 +2235,7 @@ body.list-empty #pageTitleRow #licNewBtn{display:none !important}
 .lic-filterrow{margin-bottom:14px}
 /* persistent search input (always-visible, magnifier inside) — standard toolbar element */
 .searchbox{position:relative;flex:none;width:280px;max-width:100%}
-.searchbox .searchglyph{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:var(--faint);pointer-events:none}
+.searchbox .searchglyph{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:var(--ic-16);height:var(--ic-16);color:var(--faint);pointer-events:none}
 .searchbox input{font:inherit;font-size:14px;width:100%;height:var(--btnH);border:1px solid var(--line);border-radius:6px;padding:0 10px 0 32px;background:#fff;color:var(--ink);outline:none}
 .searchbox input:focus{border-color:var(--ink)}
 /* the clear control — inside the field, trailing edge, only when there is text */
@@ -2043,7 +2244,7 @@ body.list-empty #pageTitleRow #licNewBtn{display:none !important}
   display:inline-flex;align-items:center;justify-content:center;border-radius:6px;cursor:pointer}
 .searchclear:hover{color:var(--ink);background:var(--hover)}
 .searchclear[hidden]{display:none}
-.searchclear .icon{width:15px;height:15px}
+.searchclear .ic{width:var(--ic-16);height:var(--ic-16)}
 .searchbox input{padding-right:36px}
 .searchbox input::placeholder{color:var(--faint)}
 .lic-toggle{display:inline-flex;align-items:center;height:var(--btnH);gap:9px;font-size:14px;color:var(--mid);cursor:pointer;margin-left:12px}
@@ -2112,7 +2313,7 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
    sits at --faint and only firms up when pointed at. A manual purchase shows nothing. */
 .autoic{display:inline-flex;align-items:center;color:var(--faint)}
 .autoic:hover,.autoic:focus-visible{color:var(--mid)}
-.autoic .icon{width:14px;height:14px;stroke-width:1.8}
+.autoic .ic{width:var(--ic-16);height:var(--ic-16);stroke-width:1.8}
 .pill.attn{background:var(--ink);color:#fff;border-color:var(--ink);font-weight:600}
 /* inactive (canceled) status: muted, not attention */
 .pill.off{border-color:var(--line);color:var(--faint);background:#fff}
@@ -2256,6 +2457,11 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
      explicit about ("full-screen page on mobile"). Restated here so the modifier
      does not outrank the breakpoint. */
   .fs-box.authbox{width:100vw;height:100vh;max-height:none;border:0;border-radius:0}
+  /* ⚠️ Same reason as `.authbox` right above: `.fs-box` goes full-viewport at this
+     width, but a two-class modifier outranks it even from a later media query, so the
+     820px card would stay centred on a phone. Restated, not relied upon. */
+  .fs-box.usersbox{width:100vw;height:100vh;max-height:none;border:0;border-radius:0}
+  .usersbody{padding:16px var(--pageX) 24px}
   .authbody{padding:0 20px 32px;display:flex;flex-direction:column;justify-content:center;flex:1}
   .auth-h{font-size:var(--t-h2-sm-fs);line-height:var(--t-h2-sm-lh);letter-spacing:var(--t-h2-sm-ls)}
 
@@ -2266,11 +2472,15 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
      destination in the bottom bar covers it, and the row is tight. Navigation
      itself has moved to the bottom bar (see .bnav). */
   .dtopbar{padding:0}
+  /* ⚠️ NO border here any more. The phone bar was already full-bleed and drew its own
+     hairline; since the desktop bar became a full-width band (2026-09-24) the BAND
+     draws one too, and the two stacked into a 2px seam at this width. The band owns
+     the line on both breakpoints now; the content row owns none. */
   .dtopbar-inner{display:grid;grid-template-columns:auto 1fr auto auto;
     grid-template-areas:"back title act prof";
     align-items:center;height:56px;max-width:none;margin:0;
     column-gap:8px;padding:0 8px 0 12px;
-    border:0;border-bottom:1px solid var(--chromeLine);border-radius:0}
+    border:0;border-radius:0}
   .dtopbar .sp{display:none}                 /* the grid does the spacing now */
   /* ⚠️ The logo sits in the phone app bar, reversing a much earlier pass that hid it
      ("Home in the bottom bar is the logo's job"). With the page title moved onto the
@@ -2289,7 +2499,7 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
     width:44px;height:44px;margin-left:-6px;color:var(--mid);border-radius:6px}
   .tb-back[hidden]{display:none}             /* empty leading slot on a top-level page */
   .tb-back:hover{color:var(--ink);background:var(--hover)}
-  .tb-back .icon{width:22px;height:22px}
+  .tb-back .ic{width:var(--ic-24);height:var(--ic-24)}
   .tb-title{grid-area:title;margin:0;min-width:0;
     font-family:var(--font-ui);font-size:var(--t-h2-sm-fs);line-height:var(--t-h2-sm-lh);
     font-weight:var(--t-h2-sm-fw);letter-spacing:var(--t-h2-sm-ls);color:var(--ink);
@@ -2304,7 +2514,7 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
   .tb-refresh{grid-area:refresh;width:44px;height:44px;padding:0;border:0;
     background:transparent;color:var(--mid);border-radius:6px;
     align-items:center;justify-content:center;cursor:pointer}
-  .tb-refresh .icon{width:22px;height:22px}
+  .tb-refresh .ic{width:var(--ic-24);height:var(--ic-24)}
   .tb-refresh:hover{color:var(--ink);background:var(--hover)}
   /* only the four list pages have anything to refresh */
   body[data-page="licenses"] .tb-refresh,
@@ -2320,11 +2530,11 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
      only scrolling brings it into the bar, as an icon-only +. */
   .tb-full,.tb-short{display:none}
   #topbarNewBtn{width:44px;padding:0;gap:0}
-  #topbarNewBtn .tb-ic{display:block;width:20px;height:20px}
+  #topbarNewBtn .tb-ic{display:block;width:var(--ic-20);height:var(--ic-20)}
   /* the profile control becomes a user glyph: the name stays in the accessibility
      tree (clipped, not display:none) so the button keeps its accessible name */
   .dprofbtn{position:relative;width:44px;padding:0;justify-content:center}
-  .dprof-ic{display:block;width:22px;height:22px}
+  .dprof-ic{display:block;width:var(--ic-24);height:var(--ic-24)}
   .dprof-caret{display:none}
   .dprofbtn .dprof-name{position:absolute;width:1px;height:1px;overflow:hidden;
     clip-path:inset(50%);white-space:nowrap}
@@ -2589,7 +2799,7 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
   /* the leading glyph stays: in a monochrome prototype it is the only thing that
      says "warning" before the sentence is read, and the tone cannot do it. 20px to
      match the row glyphs below, so all three columns of text start on one edge. */
-  #subAlert > .icon{flex:none;align-self:center;width:20px;height:20px}
+  #subAlert > .ic{flex:none;align-self:center;width:var(--ic-20);height:var(--ic-20)}
   #subAlert .atxt{display:contents}
   #subAlert .amsg{flex:1;min-width:0;line-height:1.45;font-size:14px}
   /* the action: a real text button, vertically centred against the message, and
@@ -2706,7 +2916,7 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
   .keyline #revealBtn,.keyline #installBtn,.keyline #copyBtn{flex:none;align-self:center;
     width:44px;height:44px;padding:0;border:0;border-radius:10px;
     background:var(--sel);color:var(--ink);justify-content:center}
-  .keyline #revealBtn .icon,.keyline #installBtn .icon,.keyline #copyBtn .icon{width:20px;height:20px}
+  .keyline #revealBtn .ic,.keyline #installBtn .ic,.keyline #copyBtn .ic{width:var(--ic-20);height:var(--ic-20)}
   .keyline #revealBtn:hover,.keyline #installBtn:hover,.keyline #copyBtn:hover{color:var(--ink);background:var(--hover)}
   /* ⚠️ Filled buttons cannot sit shoulder to shoulder — the 2px gap that packed
      three bare glyphs into the row now reads as one long bar. 6px separates them,
@@ -2718,7 +2928,7 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
      (The trio's shared rule sits above; nothing extra is needed for copy alone.) */
   /* the leading glyph of either row — 20px, muted, never a filled tile */
   .rowic{flex:none;display:inline-flex;align-items:center;color:var(--mid)}
-  .rowic .icon{width:20px;height:20px}
+  .rowic .ic{width:var(--ic-20);height:var(--ic-20)}
   .rowvalue .rowtxt{flex:1;min-width:0}
 
   /* ---------- zone 4: one primary, full width, nothing beside it ---------- */
@@ -2957,7 +3167,7 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
     transform:translateX(-38%);opacity:.5;
     transition:transform .15s ease,opacity .15s ease}
   .gearfab:hover,.gearfab:focus-visible,.gearfab.on{transform:translateX(0);opacity:1}
-  .gearfab .icon{width:18px;height:18px;margin-left:6px}
+  .gearfab .ic{width:var(--ic-20);height:var(--ic-20);margin-left:6px}
   .settings-panel{right:auto;left:16px;bottom:calc(var(--bnavH) + 70px);
     width:auto;max-width:calc(100vw - 32px);max-height:calc(100vh - var(--bnavH) - 110px)}
 
@@ -3039,8 +3249,8 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
     display:inline-flex;align-items:center;justify-content:center;
     border:0;border-radius:6px;background:transparent;color:var(--mid)}
   .pagetitlerow [data-refresh]:hover,.pagetitlerow #secBackBtn:hover{color:var(--ink);background:var(--hover)}
-  .pagetitlerow [data-refresh] .icon,.pagetitlerow #secBackBtn{font-size:20px}
-  .pagetitlerow [data-refresh] .icon{width:22px;height:22px}
+  .pagetitlerow [data-refresh] .ic,.pagetitlerow #secBackBtn{font-size:20px}
+  .pagetitlerow [data-refresh] .ic{width:var(--ic-24);height:var(--ic-24)}
   /* the primary keeps its emphasis — it is the one filled thing on the line */
   .pagetitlerow #licNewBtn{background:var(--ink);color:#fff;font-size:22px;line-height:1}
   .pagetitlerow #licNewBtn:hover{background:var(--ink)}
@@ -3195,9 +3405,9 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
     color:var(--mid);font:inherit;font-size:14px;white-space:nowrap;cursor:pointer}
   /* the check occupies no width until it means something, so the chip does not
      jump when it is pressed */
-  .cancelchip .cc-check{width:0;height:16px;opacity:0;transition:width .12s ease}
+  .cancelchip .cc-check{width:0;height:var(--ic-16);opacity:0;transition:width .12s ease}
   .cancelchip.is-on{border-color:var(--ink);background:var(--sel);color:var(--ink);font-weight:500}
-  .cancelchip.is-on .cc-check{width:16px;opacity:1}
+  .cancelchip.is-on .cc-check{width:var(--ic-16);opacity:1}
   /* Activity's period control is a chip in that same row */
   .insttoolbar .perctl{flex:none}
   .insttoolbar .perbtn{min-height:40px;border-radius:999px;padding:0 14px}
@@ -3274,7 +3484,7 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
   .bnav-item.on{font-weight:400}             /* the label alone carries the weight */
   .bn-ic{display:inline-flex;align-items:center;justify-content:center;
     width:44px;height:26px;border-radius:999px;transition:background .12s}
-  .bn-ic .icon{width:22px;height:22px}
+  .bn-ic .ic{width:var(--ic-24);height:var(--ic-24)}
   .bn-lb{font-size:14px;line-height:1.15;max-width:100%;
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .bnav-item.on{color:var(--ink)}
@@ -3383,7 +3593,7 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
      The row-gap alone now carries it, which lands at ~12px of visual space. */
   tr.lic-row .licstat-mob{grid-area:st;display:flex;align-items:center;gap:8px;
     margin-top:2px;font-size:var(--t-body-sm-fs);color:var(--mid);font-variant-numeric:tabular-nums}
-  tr.lic-row .licstat-mob .icon{width:18px;height:18px;flex:none;color:var(--faint)}
+  tr.lic-row .licstat-mob .ic{width:var(--ic-20);height:var(--ic-20);flex:none;color:var(--faint)}
   tr.lic-row > td.cellact{display:contents}
   tr.lic-row > td.cellact .lic-actions{display:contents}
   tr.lic-row > td.cellact .menu{display:none}         /* no ⋮ in these cards */
@@ -3402,10 +3612,10 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
      cards of the same list. 44 is the touch floor this file holds everywhere else,
      so the smaller one grows rather than the larger one shrinking. */
   tr.lic-row .lic-copy{grid-area:copy;justify-self:end;align-self:center;margin-top:2px;
-    width:44px;height:44px;padding:0;justify-content:center;
+    width:var(--ic-44);height:var(--ic-44);padding:0;justify-content:center;
     border:0;border-radius:10px;background:var(--sel);color:var(--ink)}
   tr.lic-row .lic-copy:hover{background:var(--hover);color:var(--ink)}
-  tr.lic-row .lic-copy .icon{width:20px;height:20px}
+  tr.lic-row .lic-copy .ic{width:var(--ic-20);height:var(--ic-20)}
   /* the invoice card's pair gets the same treatment, for the same reason */
   tr.inv-row .ra-act{width:44px;height:44px;border:0;border-radius:10px;
     background:var(--sel);color:var(--ink)}
@@ -3466,7 +3676,7 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
      Headroom: the pair grows 90px → 96px, and the number cell reserves 110px on its
      right, so nothing collides; measured 125px of clear space to the number's text. */
   tr.inv-row .rowactions{display:flex;gap:8px;align-items:center}
-  tr.inv-row .ra-act .ra-ic{width:22px;height:22px}
+  tr.inv-row .ra-act .ra-ic{width:var(--ic-24);height:var(--ic-24)}
 
   /* band 2 opens with the product line, and its top border is the divider */
   tr.inv-row > td.lic-prodcell{grid-area:prod;padding:var(--cardpad) var(--cardpad) 0;
@@ -3510,7 +3720,7 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
   tr.inv-row .statwrap{flex-direction:row-reverse}
   /* 14px was a desktop table's aside; on the card it sits beside a 14px chip label
      and was the smallest mark on the row. 18px reads as a peer of the chip. */
-  tr.inv-row .autoic .icon{width:18px;height:18px}
+  tr.inv-row .autoic .ic{width:var(--ic-20);height:var(--ic-20)}
 
   /* the two icon-buttons themselves — shared with any other .rowactions on a phone */
   /* same tertiary treatment on the invoice card's two actions — bare glyphs in a
@@ -3519,7 +3729,7 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
     justify-content:center;border:0;border-radius:6px;
     background:transparent;color:var(--mid);text-decoration:none}
   .rowactions .ra-act:hover{color:var(--ink);background:var(--hover)}
-  .ra-act .ra-ic{display:block;width:20px;height:20px}
+  .ra-act .ra-ic{display:block;width:var(--ic-20);height:var(--ic-20)}
   .ra-act .ra-txt{display:none}
   .rowactions .mob-only{display:inline-flex}
 }
@@ -3627,5 +3837,20 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
     box-shadow:0 3px 14px rgba(0,0,0,.16)}
   .totop[hidden]{display:none}
   .totop:hover{color:var(--ink);border-color:var(--mid)}
-  .totop .icon{width:20px;height:20px}
+  .totop .ic{width:var(--ic-20);height:var(--ic-20)}
 }
+
+/* the styleguide's own warning marker: the same triangle the product uses, inline in
+   prose. ⚠️ It exists because the rule has no exception for documentation — the page
+   that states "no emoji, ever" cannot be the one page printing one. */
+.sg-warn{display:inline-flex;align-items:center;gap:2px;margin-right:4px;vertical-align:-2px;color:var(--ink)}
+
+/* ---------- the styleguide's icon inventory ---------- */
+.sg-sprite{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:4px;margin-top:12px}
+.sg-ic{margin:0;padding:14px 6px 10px;display:flex;flex-direction:column;align-items:center;gap:8px;
+  border:1px solid var(--line2);border-radius:8px;background:var(--card);min-width:0}
+.sg-ic figcaption{font-size:14px;color:var(--mid);text-align:center;word-break:break-word;line-height:1.3}
+.sg-ic:hover{border-color:var(--ink)}
+.sg-code{margin:10px 0 0;padding:12px 14px;border:1px solid var(--line2);border-radius:8px;
+  background:var(--card);font-family:var(--font-mono);font-size:14px;line-height:1.55;
+  color:var(--ink);overflow-x:auto;white-space:pre}

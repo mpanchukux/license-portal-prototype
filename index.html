@@ -42,7 +42,7 @@
            dash states and :nth-of-type would then flip the colours. Inert on desktop. -->
       <div class="dblock band">
         <!-- the heading itself navigates: one target per block, no separate link -->
-        <div class="dblock-head"><h2><a class="dblock-link" href="licenses.html">Licenses<span class="dbh-chev" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span></a></h2>
+        <div class="dblock-head"><h2><a class="dblock-link" href="licenses.html">Licenses<span class="dbh-chev" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-right"></use></svg></span></a></h2>
         </div>
         <div class="tablescroll">
           <table id="dashLicTable">
@@ -57,13 +57,13 @@
 
       <!-- Recent invoices — same columns and order as the Invoices page -->
       <div class="dblock noband">
-        <div class="dblock-head"><h2><a class="dblock-link" href="invoices.html">Recent invoices<span class="dbh-chev" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span></a></h2>
+        <div class="dblock-head"><h2><a class="dblock-link" href="invoices.html">Recent invoices<span class="dbh-chev" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-right"></use></svg></span></a></h2>
         </div>
         <table>
           <thead>
             <tr>
               <th>Invoice #</th>
-              <th class="sortable" aria-sort="descending" tabindex="0">Date <span class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></span></th>
+              <th class="sortable" aria-sort="descending" tabindex="0">Date <span class="arrow" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-down"></use></svg></span></th>
               <th class="num">Amount</th>
               <th>Status</th>
               <!-- Status carries the auto-charge icon for invoices the system charged
@@ -84,7 +84,7 @@
            they live on their own page (nav → Users). The feed shows the latest few
            and grows in place as you reach its end (see renderDashFeed). -->
       <div class="dblock band" id="dashActBlock">
-        <div class="dblock-head"><h2><a class="dblock-link" href="activity.html">Recent activity<span class="dbh-chev" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span></a></h2>
+        <div class="dblock-head"><h2><a class="dblock-link" href="activity.html">Recent activity<span class="dbh-chev" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-right"></use></svg></span></a></h2>
         </div>
         <div class="feed" id="dashFeed"></div>
         <!-- lazy load: the sentinel appends the next batch when it scrolls into
@@ -106,20 +106,27 @@
            direct children become columns, and the description was rendering to the
            RIGHT of the title instead of under it. Every other head on the site wraps
            its text for exactly this reason; this one did not. -->
-      <div class="dwelcome">
+      <!-- ⚠️ THE SAME HEAD AS THE LANDING PAGE (2026-09-24), filled by the same two
+           builders. It used to greet by name and say "you don't have any licenses yet",
+           which described the reader's INBOX; this screen is a price list, and the two
+           surfaces that show a price list now say the same thing in the same place.
+           ⚠️ Both lines depend on the selected product, so both are filled by JS and
+           re-filled when the product is swapped — see renderEcHead.
+           ⚠️ Because the head NAMES the product, the picker's own product row stands
+           down (`statedInHead`), exactly as it does on the landing page. -->
+      <div class="dwelcome lp-welcome">
         <div class="dw-txt">
-          <h1 id="emptyGreeting">Welcome</h1>
-          <!-- no "ThingsBoard ·" prefix: the product is chosen in the picker below, so
-               naming one up here contradicted the choice the screen is asking for. -->
-          <p>You don't have any licenses yet. Start with one of these.</p>
+          <h1 class="lp-sect" id="ecHead"></h1>
+          <p id="ecLead" class="lp-lead"></p>
         </div>
+        <div class="lp-swap" id="ecSwap"></div>
       </div>
 
       <!-- Community Grant under review. Shown only in the "grant pending" state.
            It reports status and asks for nothing: the switchers and plan cards
            below stay fully live, so buying is never blocked by an application. -->
       <div class="gstatus" id="grantPending" role="status" hidden>
-        <svg class="icon gs-ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5l3 2"/></svg>
+        <svg class="ic gs-ic" aria-hidden="true"><use href="assets/icons.svg#ti-clock"></use></svg>
         <div>
           <div class="gs-h">Your Community Grant is almost ready</div>
           <p class="gs-b">The automatic checks are done. A deployment this size is confirmed by someone on our team &mdash; you'll hear from us within five working days. A copy was sent to mpanchuk@thingsboard.io. Your deployment keeps running as is until then.</p>
@@ -139,9 +146,6 @@
         <div class="plangroups" id="ecPlans"></div>
         <!-- the single-set note stays immediately under the cards: it is about them -->
         <div id="ecPlanExtra"></div>
-        <!-- ⚠️ Same slot, same order as the landing page. Moving it there and not here
-             would split two screens an earlier pass deliberately made identical. -->
-        <div id="ecBase"></div>
       </div>
 
     </div>

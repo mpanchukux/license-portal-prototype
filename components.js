@@ -81,16 +81,13 @@ function stateText(p){
 /* ⚠️ Declared HERE, above its first use, not down beside autoChargeIcon(). `var`
    hoists the name but not the value, so with the declaration below this line
    CYCLESVG was assigned `undefined` and every licence card lost its glyph. */
-var AUTOSVG = '<svg class="icon" viewBox="0 0 24 24"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>';
+var AUTOSVG = icon('repeat');
 var CYCLESVG = AUTOSVG;
-var UPDSVG = '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">'
-  + '<path d="M12 3l7.5 3v6c0 4.2-3 7.4-7.5 9-4.5-1.6-7.5-4.8-7.5-9V6z"/>'
-  + '<path d="M8.75 11.75l2.4 2.4 4.1-4.6"/></svg>';
+var UPDSVG = icon('shield-check');
 /* the licence-details header uses the same two glyphs for its renewal row, plus a
    key for the row above it — leading icons instead of caps labels (see the ≤600px
    details-header block). */
-var KEYSVG = '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">'
-  + '<circle cx="8" cy="15" r="4"/><path d="M11 12l8-8"/><path d="M17 4h3v3"/></svg>';
+var KEYSVG = icon('key');
 /* The phone card's bottom line: glyph, then the meaning AND the date in words.
    ⚠️ It used to print the bare date and let the icon carry the meaning alone —
    which asked the reader to know the glyph vocabulary, and left "Sep 02, 2026"
@@ -172,9 +169,11 @@ function attentionOf(lic){
    if the rule is being revisited.
 
    ⚠️ The label is SHORT, by instruction: the full sentence is on the licence page. */
-var ALERTSVG = '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">'
-  + '<path d="M12 3.2l9.2 16.3H2.8z"/><path class="al-bang" d="M12 9.4v4.4"/>'
-  + '<circle class="al-bang" cx="12" cy="16.7" r="1"/></svg>';
+/* ⚠️ The FILLED triangle, on purpose. The prototype carries state by weight and fill —
+   never by colour — so the attention marker has to be a solid shape; the outline
+   version of the same icon is what a quiet, non-urgent note looks like, and using it
+   here would say the opposite of what the row means. */
+var ALERTSVG = icon('alert-triangle-filled');
 function alertIcon(p){
   var a = attentionOf(p);
   if(!a) return '';
@@ -230,8 +229,8 @@ function autoChargeIcon(v){
    the words, a phone card reads three icon-buttons — and the third one, the way to
    the licence, only exists on the phone: on desktop that job belongs to the Product
    cell, which is a link already. */
-var DLSVG   = '<svg class="icon ra-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11"/><path d="M8 12l4 4 4-4"/><path d="M5 20h14"/></svg>';
-var VIEWSVG = '<svg class="icon ra-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 4h7v7"/><path d="M20 4l-9 9"/><path d="M18 13v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h5"/></svg>';
+var DLSVG   = '<svg class="ic ra-ic" aria-hidden="true"><use href="assets/icons.svg#ti-download"></use></svg>';
+var VIEWSVG = '<svg class="ic ra-ic" aria-hidden="true"><use href="assets/icons.svg#ti-external-link"></use></svg>';
 /* ~~invOpenLicenseAction~~ removed: the phone card's third action was a way to the
    licence, and the card's product line is now that link on both breakpoints — the
    desktop Product cell always was. Two ways to the same place on one card is noise.
@@ -290,7 +289,7 @@ function userRow(u){
      sat off-screen entirely and dragging sideways moved the whole page. The class lets
      it become a card the same way the licence and invoice rows already do. */
   return '<tr class="user-row"><td>'+u.name+'</td><td>'+u.email+'</td><td>'+fmtDate(u.created)+'</td>'
-    + '<td class="cellact"><span class="rowactions"><button class="link" data-loginas="'+u.email+'">Login as →</button><button class="link" data-deluser="'+u.email+'">Delete</button></span></td></tr>';
+    + '<td class="cellact"><span class="rowactions"><button class="link" data-loginas="'+u.email+'">Log in as<svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-arrow-right"></use></svg></button><button class="link" data-deluser="'+u.email+'">Delete</button></span></td></tr>';
 }
 function menuItems(p, opts){
   var type = p && typeof p === 'object' ? p.type : p;
@@ -472,9 +471,7 @@ function paymentMethodHTML(opts){
    Centres are 12 apart on r=9 now (overlapping by a third, the proportion the real
    mark uses), so two discs are legible at badge size and the darker lens between them
    does the work the two brand colours do. */
-var MASTERCARD_MARK = '<svg class="brandmark" viewBox="0 0 40 24" role="img" aria-label="Mastercard">'
-  + '<circle cx="14" cy="12" r="9" fill="currentColor" fill-opacity=".36"/>'
-  + '<circle cx="26" cy="12" r="9" fill="currentColor" fill-opacity=".36"/></svg>';
+var MASTERCARD_MARK = '<svg class="ic brandmark" role="img" aria-label="Mastercard"><use href="assets/icons.svg#ti-brand-mastercard"></use></svg>';
 function brandBadgeHTML(brand){
   if(String(brand).toUpperCase() === 'MASTERCARD')
     return '<span class="brandbadge brandbadge-mark">' + MASTERCARD_MARK + '</span>';
@@ -741,7 +738,7 @@ function feedGroupItem(a, i){
     +   '</div>'
     +   '<button class="iconbtn ib fg-toggle" data-fgroup aria-expanded="false"'
     +     ' aria-label="Show the ' + a.count + ' checks" title="Show the individual checks">'
-    +     '<svg class="icon" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button>'
+    +     '<svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-down"></use></svg></button>'
     + '</div>'
     /* ⚠️ EVERY ENTRY KEEPS ITS OWN PAYLOAD BUTTON. Folding is a display decision — the
        individual checks are still individual events, and an event whose raw record
@@ -857,10 +854,10 @@ function pagerHTML(id, sizes){
     + '</select></span>'
     + '<span class="range">0 of 0</span>'
     + '<span class="pagebtns">'
-    +   '<button disabled aria-label="First page">&laquo;</button>'
-    +   '<button disabled aria-label="Previous page">&lsaquo;</button>'
-    +   '<button disabled aria-label="Next page">&rsaquo;</button>'
-    +   '<button disabled aria-label="Last page">&raquo;</button>'
+    +   '<button disabled aria-label="First page"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevrons-left"></use></svg></button>'
+    +   '<button disabled aria-label="Previous page"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-left"></use></svg></button>'
+    +   '<button disabled aria-label="Next page"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-right"></use></svg></button>'
+    +   '<button disabled aria-label="Last page"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevrons-right"></use></svg></button>'
     + '</span></div>';
 }
 
@@ -1127,8 +1124,7 @@ function wireSearch(inputSel, opts){
     clearBtn.type = 'button';
     clearBtn.className = 'searchclear';
     clearBtn.setAttribute('aria-label', 'Clear search');
-    clearBtn.innerHTML = '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">'
-      + '<path d="M6 6l12 12M18 6L6 18"/></svg>';
+    clearBtn.innerHTML = '<svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-x"></use></svg>';
     clearBtn.hidden = true;
     box.appendChild(clearBtn);
     clearBtn.addEventListener('click', function(){
@@ -1269,13 +1265,13 @@ function guardLinks(){
 var PRODUCT_CHOICES = [
   { v:'thingsboard', t:'ThingsBoard', short:'devices, dashboards, rule engine',
     d:'IoT platform — devices, dashboards, rule engine',
-    g:'<circle cx="12" cy="12" r="3"/><circle cx="12" cy="4" r="1.5"/><circle cx="12" cy="20" r="1.5"/>'
-      + '<circle cx="4" cy="12" r="1.5"/><circle cx="20" cy="12" r="1.5"/>'
-      + '<path d="M12 9V5.5M12 15v3.5M9 12H5.5M15 12h3.5"/>' },
+    ic:'topology-star' },
   { v:'tbmq', t:'TBMQ', short:'MQTT broker for reliable message streaming',
     d:'MQTT broker for reliable message streaming',
-    g:'<circle cx="7" cy="17" r="1.6"/><path d="M7 11.5A5.5 5.5 0 0 1 12.5 17"/>'
-      + '<path d="M7 6A11 11 0 0 1 18 17"/>' }
+    /* ⚠️ `rss`, not `broadcast`. The drawing the prototype already had — a dot with two
+       arcs springing from it — IS Tabler's rss glyph; broadcast is concentric rings and
+       would have been a different mark. Keeping the one we had was the explicit call. */
+    ic:'rss' }
 ];
 /* ---------- the product is STATED, not chosen ---------------------------------
    ⚠️ THIS REPLACES THE TWO-CARD SELECTOR, and the reason is about where the reader
@@ -1311,10 +1307,16 @@ function productOf(sel){
   return PRODUCT_CHOICES.filter(function(o){ return o.v === v; })[0] || PRODUCT_CHOICES[0];
 }
 function landingHeading(sel){ return 'Buy and manage ' + productOf(sel).t + ' licenses'; }
-function landingLead(sel){
+/* ⚠️ ONE clause differs between the two surfaces that use this line, and it is the one
+   that cannot be true on both: "You'll need an account to buy a plan" is the reason a
+   signed-out visitor is told to sign up, and on Home the reader IS signed in — the
+   account is how they got there. Everything before it is the same sentence, so the
+   clause is a flag rather than a second string that would drift.
+   ⚠️ Nothing is invented to replace it: the sentence simply ends earlier. */
+function landingLead(sel, opts){
   var p = productOf(sel);
-  return 'Self-managed ' + p.t + ' \u2014 ' + p.short
-    + '. You\u2019ll need an account to buy a plan.';
+  var line = 'Self-managed ' + p.t + ' \u2014 ' + p.short + '.';
+  return (opts && opts.signedIn) ? line : line + ' You\u2019ll need an account to buy a plan.';
 }
 /* Just the escape hatch, for a surface that has stated the product in its own heading.
    ⚠️ Same builder as the full row below, so the two cannot word it differently. */
@@ -1335,7 +1337,7 @@ function nlProductStatedHTML(sel){
   var other = PRODUCT_CHOICES.filter(function(o){ return o.v !== cur.v; })[0];
   return '<div class="nl-prodrow">'
     + '<div class="nl-stated">'
-    +   '<span class="nl-prodic"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true">' + cur.g + '</svg></span>'
+    +   '<span class="nl-prodic">' + icon(cur.ic, { size:24 }) + '</span>'
     +   '<span class="nl-prodtxt"><span class="nl-prodname">' + cur.t + '</span>'
     +   '<span class="nl-proddesc">' + cur.d + '</span></span>'
     + '</div>'
@@ -1365,8 +1367,12 @@ function nlProductStatedHTML(sel){
    moved into the baseline block; what stays is when you are charged and what you can
    change, which is what a billing tab is for. See BILLING_MODE_NOTE in data.js. */
 var BILLING_CHOICES = [
-  { v:'subscription', t:'Subscription', d:BILLING_MODE_NOTE.subscription },
-  { v:'perpetual',    t:'Perpetual',    d:BILLING_MODE_NOTE.perpetual }
+  /* ⚠️ `Pay-as-you-go`, not `Subscription`. The word has to say how you PAY, because
+     the thing it labels is one of two ways to pay — and "Subscription" was also the
+     value in the licence row's Type column, so the same word named a billing model on
+     one surface and a licence kind on another. */
+  { v:'subscription', t:'Pay-as-you-go', d:BILLING_MODE_NOTE.subscription },
+  { v:'perpetual',    t:'Perpetual',     d:BILLING_MODE_NOTE.perpetual }
 ];
 /* ⚠️⚠️ THE TABS ARE A PHONE CONTROL NOW (2026-09-23), and this REVERSES the note
    above. That note argued the heading was redundant because "it said the same thing the
@@ -1434,8 +1440,13 @@ function nlPlanCardHTML(c, set, sel){
        about — on the one breakpoint where the cards are stacked and have the width to
        spare. The tap still works; it is just not the only way to read it.
        The Customize step keeps its descriptions as body text on both; see stepCell. */
+    /* ⚠️ `deviceNote` is attached to whichever row STATES THE DEVICES, not appended as
+       a row of its own — a cap belongs to the number it caps. The match is on the row
+       naming devices and not on a position, because the device row is first on some
+       cards and not on others. `featNote` keeps supplying the generic per-term
+       explanations; a card's own note wins where both would apply. */
     + '<div class="pc-feats">' + c.feats.map(function(f){
-        var n = featNote(f);
+        var n = (c.deviceNote && /\bdevices?\b/i.test(f)) ? c.deviceNote : featNote(f);
         return '<div class="pc-feat">' + textWithInfo(f, n)
           + (n ? '<span class="pc-featnote">' + n + '</span>' : '') + '</div>';
       }).join('') + '</div>'
@@ -1471,68 +1482,23 @@ function planPickerKey(sel){
    enumerates what a TBMQ PE licence includes — the cards name the set and stop — so
    the block says that plainly instead of writing broker features that nobody has
    approved. Do not fill this in from memory of the product. */
-/* ⚠️ TBMQ HAS NO BASELINE BLOCK AT ALL NOW. It used to render a marked GAP — a block
-   saying the TBMQ baseline had not been written — which was honest but put an admission
-   of missing copy on a selling page. The block is removed for TBMQ rather than filled
-   in: writing broker features nobody has approved is the one thing worse than the gap.
-   ThingsBoard keeps its block unchanged. When the TBMQ copy exists, this returns a
-   second branch and nothing else changes. */
-function baselineFor(sel){
-  var product = sel.product || 'thingsboard';
-  if(product !== 'thingsboard') return null;
-  return { title:'Included in every plan', intro:PLANS_INCLUDE_NOTE, items:PE_FEATURES };
-}
-function baselineBlockHTML(sel){
-  var b = baselineFor(sel);
-  if(!b) return '';
-  return '<div class="nl-pe baseline' + (b.gap ? ' is-gap' : '') + '">'
-    + '<div class="nl-pe-h">' + b.title + '</div>'
-    + (b.intro ? '<p class="nl-pe-intro">' + b.intro + '</p>' : '')
-    + (b.items
-        /* ⚠️ The description is WRAPPED so the phone can drop it. Measured at 390 before
-           this: the full block ran 530px of an 844px viewport and pushed the first plan
-           card to y=1112 — entirely below the fold, so the page showed a list of
-           features and no prices. On the phone the names alone carry the point; the
-           descriptions are there for someone comparing, and comparing happens on a
-           screen where the cards are visible too. */
-        ? '<div class="nl-pe-body">'
-          + b.items.map(function(f){
-              return '<div class="nl-pe-item"><b>' + f[0] + '</b>'
-                + '<span class="nl-pe-d"> — ' + f[1] + '</span></div>';
-            }).join('')
-          + '</div>'
-        : '')
-    + '</div>';
-}
-
-/* What hangs UNDER the grid. Only the single-set note now: the features block moved
-   ABOVE the cards, where it describes what they have in common before you read what
-   separates them. This note is about the cards themselves, so it stayed below them. */
-function planPickerExtraHTML(set, sel){
-  /* ⚠️ The single-set note MOVED INTO THE GROUP (see planGroupHTML). It says "you can
-     fine-tune capacity before checkout", which is about one card's set — and with two
-     groups on the surface, hanging it under both would attach it to the four-card group
-     as well, where it is not what the reader needs to know. It still renders here when
-     the surface holds exactly one group, i.e. a locked Change plan.
-     The tax line stays: it qualifies every price above it, in both groups — one of the
-     three surfaces TAX_NOTE appears on, the others being Review and Billing. */
-  var one = planGroupsFor(sel).length === 1;
-  return (one && set.single ? '<div class="pc-note center">' + EC_SINGLE_NOTE + '</div>' : '')
-    + '<p class="taxnote">' + TAX_NOTE + '</p>';
-}
-/* `extraEl` is optional: pass it on a selling surface (the landing page and the
-   new-user screen on Home), omit it in the wizard. Everything above the grid is
-   identical for all three by construction — there is no second copy to drift. */
-/* `baseEl` is the slot between the tabs and the cards. Like `extraEl` it is optional:
-   the wizard passes neither, because its step 1 is a choice and not a sales page. */
-/* ---------- the two billing models, on one surface ------------------------------
-   ⚠️ A GROUP IS A LABEL, A SENTENCE AND A GRID, and the label is the point: with both
-   models on screen at once there is no control naming them, so the heading has to do
-   it. A reader should see in one look that there are two ways to pay and what each
-   one is — which is the job the tabs used to do for one model at a time.
+/* ⚠️ `Included in every plan` IS GONE (2026-09-24), block and builders both —
+   `baselineFor`, `baselineBlockHTML` and the `baseEl` slot they filled. It listed what
+   every plan shares, above the cards, so the cards could carry only what differs. What
+   it actually did on the page was stand between the heading and the prices: the reader
+   arrived to buy and met a feature list first. The cards still name what differs, which
+   is what a price comparison is for.
+   ⚠️ `PLANS_INCLUDE_NOTE` and `PE_FEATURES` stay in data.js — the copy is written and
+   approved, and the TBMQ gap it documented is still an open question in NOTES. Nothing
+   renders them today; that is a deliberate state, not an oversight. */
+/* ---------- the two billing models, side by side --------------------------------
+   ⚠️ A GROUP IS A LABEL AND A GRID, and the label is the point: with both models on
+   screen at once there is no control naming them, so the heading has to do it. A reader
+   should see in one look that there are two ways to pay — which is the job the tabs used
+   to do for one model at a time.
    `single` rides on the set, so a one-card group (both of TBMQ's, and ThingsBoard's
-   perpetual) gets the wide single-card treatment rather than a card stretched across
-   a four-column track. */
+   perpetual) gets the single-card treatment rather than a card stretched across a
+   four-column track. */
 function planGroupsFor(sel){
   var product = sel.product || 'thingsboard';
   /* ⚠️ A LOCKED SELECTION GETS ONE GROUP, and it must. `locked` is Change plan — an
@@ -1546,27 +1512,47 @@ function planGroupsFor(sel){
              set: EC_PLANS[product + '|' + (k === 'perpetual' ? 'perpetual' : 'payg')] };
   }).filter(function(g){ return g.set && g.set.cards.length; });
 }
-function planGroupHTML(g, sel, many){
+/* `pos` is the group's place in the ONE row the wide layout lays out: `span` is how
+   many cards it holds, which is what the frame's flex weight is computed from (see the
+   `.plangroups.two` block — the free space is shared by card count so a card is the
+   same width in either frame). `start` is kept for the same reason the numbers are
+   carried at all: only this function knows how many cards a product has. */
+function planGroupHTML(g, sel, many, pos){
   var set = g.set;
   var hasCur = !!sel.currentName && set.cards.some(function(c){ return c.name === sel.currentName; });
-  return '<section class="plangroup" data-bill="' + g.kind + '">'
-    /* ⚠️ The heading is hidden on the phone when there are two groups — the tab above
-       already names the one on screen, and two labels for one choice is the duplication
-       the tabs were introduced to remove. It stays in the tree either way. */
+  return '<section class="plangroup" data-bill="' + g.kind + '"'
+    + (pos ? ' style="--pg-start:' + pos.start + ';--pg-span:' + pos.span + '"' : '') + '>'
+    /* ⚠️ The model's sentence lives IN THE INFO ICON beside the name, not on a line
+       under it. As a line it was as wide as the group's own frame — one line over four
+       cards, three over one — so the two headings came out different heights and the
+       descriptions competed with the prices they sit above.
+       ⚠️ The heading is hidden on the phone when there are two groups: the tabs above
+       already name the one on screen AND carry the same sentence as visible text, which
+       is the half of this that a touch device needs. */
     + '<div class="plangroup-h">'
-    +   '<h3 class="pg-t">' + g.choice.t + '</h3>'
-    +   '<p class="pg-d">' + g.choice.d + '</p>'
+    +   '<h3 class="pg-t">' + g.choice.t + infoIcon(g.choice.t, g.choice.d) + '</h3>'
     + '</div>'
     + '<div class="plangrid' + (set.single ? ' one' : '') + (hasCur ? ' withcur' : '') + '">'
     +   set.cards.map(function(c){ return nlPlanCardHTML(c, set, sel); }).join('')
     + '</div>'
-    /* the "fine-tune capacity" note belongs to a single-card group, which is the only
-       kind that has nothing to compare against — so it hangs under that group rather
-       than under the whole surface the way it did when a surface WAS one set */
-    + (set.single && many ? '<p class="pc-note pg-note">' + EC_SINGLE_NOTE + '</p>' : '')
     + '</section>';
 }
-function renderPlanPicker(choicesEl, gridEl, sel, extraEl, baseEl){
+/* ⚠️ NOTHING HANGS UNDER THE GRID (2026-09-24). Two lines used to:
+     · `EC_SINGLE_NOTE` ("you can fine-tune capacity before checkout") — it answered a
+       question nobody has yet while choosing, and the Customize step it describes is
+       the very next screen, which shows rather than promises;
+     · `TAX_NOTE` — still shown where tax is actually settled (Review, Billing & payment
+       and the licence's invoice block). Under a price list it qualified numbers nobody
+       is paying yet.
+   Kept as the one place that decides what goes under the grid, so `extraEl` stays wired
+   and the answer is written down rather than implied by absence.
+   ⚠️ Both constants are still used elsewhere — do not delete them. */
+function planPickerExtraHTML(set, sel){
+  return '';
+}
+/* ⚠️ `baseEl` is gone from the signature with the block it filled. Callers that still
+   pass a fifth argument are harmless, but there is nothing left to put in it. */
+function renderPlanPicker(choicesEl, gridEl, sel, extraEl){
   var set = EC_PLANS[planPickerKey(sel)];
   /* ⚠️ `sel.locked` means "this is an EXISTING licence" — Change plan. Neither of the
      choices above the grid can change on one: a ThingsBoard subscription does not
@@ -1581,7 +1567,6 @@ function renderPlanPicker(choicesEl, gridEl, sel, extraEl, baseEl){
      compare the others against. See nlPlanCardHTML. */
   choicesEl.hidden = !!sel.locked;
   choicesEl.innerHTML = sel.locked ? '' : (nlProductStatedHTML(sel) + nlBillTabsHTML(sel));
-  if(baseEl) baseEl.innerHTML = baselineBlockHTML(sel);
   /* ⚠️ `gridEl` HOLDS GROUPS NOW, not cards, and it is no longer itself a `.plangrid` —
      the grids moved one level down, one per group. Anything that styled this node as
      the grid has to move with them.
@@ -1593,8 +1578,19 @@ function renderPlanPicker(choicesEl, gridEl, sel, extraEl, baseEl){
   var groups = planGroupsFor(sel);
   gridEl.className = 'plangroups' + (groups.length > 1 ? ' two' : '');
   gridEl.setAttribute('data-bill', sel.kind === 'perpetual' ? 'perpetual' : 'subscription');
+  /* ⚠️ ONE ROW ON THE WIDE LAYOUT (2026-09-24): subscriptions left to right, then the
+     perpetual card, all on the same line. The row is as many columns as there are
+     cards in total, and each group claims a slice of it — so the two groups are laid
+     out by the SAME grid and the cards cannot end up different widths.
+     Counted here rather than in CSS because only this function knows how many cards
+     each product has: ThingsBoard is 4 + 1, TBMQ is 1 + 1. */
+  var col = 1;
+  var total = groups.reduce(function(n, g){ return n + g.set.cards.length; }, 0);
+  gridEl.style.setProperty('--pg-cols', total);
   gridEl.innerHTML = groups.map(function(g){
-    return planGroupHTML(g, sel, groups.length > 1);
+    var pos = { start:col, span:g.set.cards.length };
+    col += pos.span;
+    return planGroupHTML(g, sel, groups.length > 1, pos);
   }).join('');
   if(extraEl) extraEl.innerHTML = planPickerExtraHTML(set, sel);
 }
@@ -1872,39 +1868,10 @@ function homeBannerCopy(c){
   }
   return null;
 }
-/* The list form: ONE sentence, and one action. Deliberately shorter than the fact line
-   above — in a list the reader is deciding which problem to open first, not reading
-   about any of them. */
-function homeBannerLine(c){
-  var lic = c.lic, nm = bannerLicLink(lic);
-  var renew = '<button class="gb-act sm" data-renewupdates="' + esc(lic.id) + '">Renew updates</button>';
-  switch(c.state){
-    case 'blocked':
-      return { txt:'<b>' + nm + '</b> is blocked — ' + instRunning(lic) + ' of '
-          + instAllowed(lic) + ' production instances.',
-        act:'<button class="gb-act sm" data-manage="' + esc(lic.id) + '">Manage</button>' };
-    case 'payment_failed':
-      return { txt:'Payment for <b>' + nm + '</b> failed.',
-        act:'<button class="gb-act sm" data-paycard>Update payment</button>' };
-    case 'no_card':
-      return { txt:'No payment method on file.',
-        act:'<a class="gb-act sm" href="billing.html">Add payment method</a>' };
-    case 'card_expiring':
-      return { txt:cardLabel() + ' expires ' + fmtDate(dayToDate(c.expDay - 1)) + '.',
-        act:'<button class="gb-act sm" data-paycard>Update payment</button>' };
-    case 'updates_expired':
-      return { txt:'Software updates for <b>' + nm + '</b> ended ' + fmtDate(lic.event) + '.', act:renew };
-    case 'updates_14':
-      return { txt:'Software updates for <b>' + nm + '</b> end in ' + c.days
-          + ' day' + (c.days === 1 ? '' : 's') + '.', act:renew };
-    case 'updates_30':
-      return { txt:'Software updates for <b>' + nm + '</b> end ' + fmtDate(lic.event) + '.', act:renew };
-    case 'grant':
-      return { txt:'Your Community Grant is ready.',
-        act:'<button class="gb-act sm" data-invlic="' + esc(lic.id) + '">View license</button>' };
-  }
-  return null;
-}
+/* ⚠️ `homeBannerLine` IS GONE (2026-09-24) with the list form it built — the one-line
+   phrasing of an alert, shorter than the fact line, for when several were stacked. The
+   banner shows one alert in full now, so there is nothing that needs a short form.
+   The per-state copy that survives is `homeBannerCopy` below. */
 /* the card, named the way the Billing page names it */
 function cardLabel(){
   var c = savedCard();
@@ -1919,13 +1886,9 @@ function cardLabel(){
    rows you would act on. */
 var DETACH_HINT = 'This usually happens after moving a deployment to a new server. '
   + 'If that is what happened, deactivate the old one.';
-var BANNER_MAX_LINES = 3;
 function bannerIcon(blocking){
-  return '<svg class="icon gb-ic" viewBox="0 0 24 24" aria-hidden="true">'
-    + (blocking
-        ? '<path d="M12 3l9 16H3z"/><path d="M12 9.5v4.2"/><circle cx="12" cy="16.6" r=".9"/>'
-        : '<circle cx="12" cy="12" r="9"/><path d="M12 7.5V13"/><circle cx="12" cy="16.4" r=".9"/>')
-    + '</svg>';
+  /* a triangle when something is stopped, a circle when it is only coming */
+  return icon(blocking ? 'alert-triangle' : 'alert-circle', { cls:'gb-ic' });
 }
 function renderHomeBanner(){
   var slot = $('#homeBanner');
@@ -1933,39 +1896,44 @@ function renderHomeBanner(){
   var items = homeBannerVisible();
   if(!items.length){ slot.hidden = true; slot.innerHTML = ''; return; }
   var blocking = items.some(function(c){ return BANNER_BLOCKING[c.state]; });
-  /* ⚠️ The ✕ is absent whenever ANY line is blocking, not only when the first is. A
-     banner carrying "payment failed" on its second line must not be closable because
-     its first line happens to be dismissible. */
-  var dismissKeys = blocking ? [] : items.slice(0, BANNER_MAX_LINES).map(bannerKey);
-  var body;
-  if(items.length === 1){
-    var copy = homeBannerCopy(items[0]);
-    if(!copy){ slot.hidden = true; return; }
-    body = '<p class="hb-fact">' + copy.fact + '</p>'
-      + '<p class="hb-todo">' + copy.todo + '</p>'
-      + '<div class="hb-acts">' + copy.act + '</div>';
-  } else {
-    var shown = items.slice(0, BANNER_MAX_LINES);
-    var rest = items.length - shown.length;
-    body = '<ul class="hb-list">'
-      + shown.map(function(c){
-          var l = homeBannerLine(c);
-          return l ? '<li class="hb-item"><span class="hb-txt">' + l.txt + '</span>' + l.act + '</li>' : '';
-        }).join('')
-      /* the overflow is the ONLY thing that stays a count — three lines is where a
-         banner stops being readable at a glance, which is the point of the cap */
-      + (rest > 0
-          ? '<li class="hb-more"><a class="gb-lic" href="licenses.html?attention=1">and '
-            + rest + ' more</a></li>'
-          : '')
-      + '</ul>';
-  }
-  slot.className = 'gbanner homebanner' + (blocking ? ' is-blocking' : '')
-    + (items.length > 1 ? ' is-list' : '');
+  /* ⚠️ The ✕ dismisses THE ONE ON SCREEN, and only it. While the banner listed three,
+     one ✕ closing all three was the honest reading of "I have seen these"; with a single
+     alert shown there is exactly one thing that has been seen, and the next most urgent
+     takes its place immediately — which is what should happen.
+     ⚠️ Still absent whenever the shown alert is blocking: something that is stopping
+     work is not something a reader gets to file away. */
+  var dismissKeys = blocking ? [] : [bannerKey(items[0])];
+
+  /* ⚠️⚠️ ONE ALERT, ALWAYS — the list form is gone (2026-09-24), and with it the
+     three-line cap. The banner now shows the single most urgent condition in full (the
+     fact, what fixes it and its action) and turns everything else into one count.
+
+     What this reverses: the list existed so several licences in trouble were all named
+     at once, on the argument that a reader triaging wants to see the set. Against it:
+     a banner is one statement, and three of them stacked made the reader choose before
+     they had read anything — while the top line, which is the one that is actually
+     stopping work, lost the two supporting lines (the todo and the action) that the
+     single form gives it. The set is still reachable, and reachable in one click.
+
+     ⚠️ `items` is ALREADY sorted by seriousness and deduplicated per licence, so
+     `items[0]` is "the most urgent", not "the first one found" — see
+     `attentionConditions` and `homeBannerVisible`. */
+  var copy = homeBannerCopy(items[0]);
+  if(!copy){ slot.hidden = true; return; }
+  var rest = items.length - 1;
+  /* the count sits AFTER the sentence, on the same line, so it reads as the end of the
+     statement rather than a second announcement under it */
+  var more = rest > 0
+    ? '<a class="gb-lic hb-more" href="licenses.html?attention=1">and ' + rest + ' more</a>'
+    : '';
+  var body = '<p class="hb-fact">' + copy.fact + more + '</p>'
+    + '<p class="hb-todo">' + copy.todo + '</p>'
+    + '<div class="hb-acts">' + copy.act + '</div>';
+  slot.className = 'gbanner homebanner' + (blocking ? ' is-blocking' : '');
   slot.innerHTML = bannerIcon(blocking)
     + '<div class="hb-body">' + body + '</div>'
     + (dismissKeys.length
-        ? '<button class="gb-x" data-bannerx="' + esc(dismissKeys.join('|')) + '" aria-label="Dismiss">✕</button>'
+        ? '<button class="gb-x" data-bannerx="' + esc(dismissKeys.join('|')) + '" aria-label="Dismiss"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-x"></use></svg></button>'
         : '');
   slot.hidden = false;
 }

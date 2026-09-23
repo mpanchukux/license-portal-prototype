@@ -161,3 +161,41 @@ $('#sgWizStep').innerHTML = '<div class="nl-progress">'
 $('#sgSplit').addEventListener('click', function(e){ e.preventDefault(); openStub('Split button'); });
 // tables and menus on this page use the same delegated handlers as the product,
 // so the row kebab opens for real — nothing extra to wire
+
+/* ---------- the icon set, rendered from the sprite itself ----------------------
+   ⚠️ Read from `assets/icons.svg`, not from a list typed here. A hand-kept inventory
+   is a second source of truth that goes stale the first time the sprite changes, and
+   the whole point of this page is that the available set is VISIBLE rather than
+   remembered. Fetching it means the page cannot disagree with the file. */
+(function(){
+  var host = $('#sgSprite'); if(!host) return;
+
+  $('#sgIcSizes').innerHTML = [16, 20, 24].map(function(s){
+    return '<div class="sg-cell">' + icon('device-desktop', { size:s === 16 ? 0 : s })
+      + '<span class="sg-cls">' + (s === 16 ? '.ic' : '.ic-' + s) + '</span></div>';
+  }).join('');
+
+  /* the same icon three times, inheriting three different text colours */
+  $('#sgIcColour').innerHTML = ['var(--ink)', 'var(--mid)', 'var(--faint)'].map(function(c){
+    return '<div class="sg-cell" style="color:' + c + '">' + icon('alert-circle', { size:20 })
+      + '<span class="sg-cls">' + c + '</span></div>';
+  }).join('');
+
+  fetch('assets/icons.svg').then(function(r){ return r.text(); }).then(function(txt){
+    /* ⚠️ Capture the name, do not slice the match — `id="ti-` is seven characters and
+       counting them by hand produced `i-activity`, which pointed every <use> at a
+       symbol that does not exist. The boxes still measured 24px, so a size check saw
+       nothing wrong; only the names gave it away. */
+    var ids = [];
+    txt.replace(/id="ti-([a-z0-9-]+)"/g, function(_, n){ ids.push(n); });
+    ids.sort();
+    host.innerHTML = ids.map(function(id){
+      return '<figure class="sg-ic"><svg class="ic ic-24" aria-hidden="true">'
+        + '<use href="assets/icons.svg#ti-' + id + '"></use></svg>'
+        + '<figcaption>' + id + '</figcaption></figure>';
+    }).join('');
+    var h = $('#icons .sg-h2');
+    if(h) h.insertAdjacentHTML('afterend',
+      '<p class="sg-note sg-spritecount"><b>' + ids.length + ' icons</b> in the sprite.</p>');
+  });
+})();

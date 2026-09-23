@@ -101,7 +101,12 @@ $$('#instancesView .inst-statusseg .typechip').forEach(function(chip){
     instStatus = instStatus === v ? null : v;    // pressing the pressed one clears it
     $$('#instancesView .inst-statusseg .typechip').forEach(function(c){
       var on = c.getAttribute('data-status') === instStatus;
-      c.classList.toggle('on', on);
+      /* ⚠️ `is-on`, not `on`. `.typechip` is styled by `.typechip.is-on` — the class
+         this page set was never in the stylesheet, so Healthy and Stale filtered the
+         rows correctly and never LOOKED pressed. The same control on the Licenses page
+         has always written `is-on`; this was one filter group disagreeing with the
+         other about its own class name. */
+      c.classList.toggle('is-on', on);
       c.setAttribute('aria-pressed', on ? 'true' : 'false');
     });
     renderInstancesPage();

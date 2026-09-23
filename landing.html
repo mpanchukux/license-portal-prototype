@@ -24,20 +24,20 @@
            section the reader was already looking at. The H1 now says what the page is
            FOR, in the same style the section title used — see .lp-sect / --t-h1-*. -->
       <!-- ⚠️ BOTH LINES ARE FILLED BY JS, because both depend on which product the
-           session arrived for (see landingHeading / landingLead). The swap link sits
-           DIRECTLY BENEATH the line rather than to its right: right-aligned it would
-           float ~500px away from the sentence it belongs to on a wide screen, reading
-           as page chrome instead of an answer to "but I wanted the other one". Beneath,
-           it behaves the same at 1280 and at 390. -->
+           session arrived for (see landingHeading / landingLead).
+           ⚠️ THE SWAP LINK IS ON THE RIGHT NOW, and this reverses the note that used to
+           stand here twice: it argued the link had to end the sentence, because at the
+           far right it "floats ~500px from the sentence it answers". That objection is
+           real and it is the cost being paid — what is bought is a head row that reads
+           as one line instead of a sentence that grows a tail, and a link that sits
+           where a page-level switch is looked for. It keeps its own slot in the row
+           (see .lp-swap), so the sentence beside it never has to make room. -->
       <div class="dwelcome lp-welcome">
         <div class="dw-txt">
           <h1 class="lp-sect" id="landingHead"></h1>
-          <!-- ⚠️ ONE LINE, and the link is INSIDE it — not a block under it and not pushed
-               to the far right. Under the line it read as a separate thought; at the far
-               right it floated ~500px from the sentence it answers. Immediately after the
-               text it is what it actually is: the end of that sentence. -->
           <p id="landingLead" class="lp-lead"></p>
         </div>
+        <div class="lp-swap" id="landingSwap"></div>
       </div>
 
       <!-- The purchase wizard's step 1, rendered on the page instead of in a modal:
@@ -56,7 +56,6 @@
              prices come first, and the baseline reads as the footnote to the row above
              rather than as a wall in front of it. Same node, same renderer as the
              new-user screen on Home. -->
-        <div id="landingBase"></div>
       </div>
 
     </div>

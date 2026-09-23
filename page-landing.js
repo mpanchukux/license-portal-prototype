@@ -17,7 +17,7 @@
 var lsel = { product:arrivedProduct(), kind:'subscription', plan:null, statedInHead:true };
 
 var lChoices = $('#landingChoices'), lPlans = $('#landingPlans'),
-    lExtra = $('#landingExtra'), lBase = $('#landingBase');
+    lExtra = $('#landingExtra');
 /* The fourth argument is what makes this a SELLING surface rather than a step in a
    flow: the PE card on a multi-card set, the sizing note on a single one. Home's
    new-user screen passes its own node to the same renderer; the wizard passes none. */
@@ -25,10 +25,13 @@ var lChoices = $('#landingChoices'), lPlans = $('#landingPlans'),
    heading, the line and the link along with the cards. */
 function renderLanding(){
   $('#landingHead').textContent = landingHeading(lsel);
-  /* the sentence and its escape hatch are ONE line: the link follows the text with a
-     normal word space, so it wraps with it rather than being positioned against it */
-  $('#landingLead').innerHTML = esc(landingLead(lsel)) + ' ' + productSwapHTML(lsel);
-  renderPlanPicker(lChoices, lPlans, lsel, lExtra, lBase);
+  /* ⚠️ The sentence and the swap link are TWO slots now, not one line. The link used to
+     follow the lead text with a word space so the two wrapped together; it sits at the
+     right end of the head row instead (2026-09-24, by request). Keeping them separate
+     is what stops a long lead sentence pushing the link onto a line of its own. */
+  $('#landingLead').textContent = landingLead(lsel);
+  $('#landingSwap').innerHTML = productSwapHTML(lsel);
+  renderPlanPicker(lChoices, lPlans, lsel, lExtra);
 }
 renderLanding();
 
@@ -36,7 +39,7 @@ renderLanding();
    delegated listener stopped seeing it — the link rendered, was clickable, and changed
    nothing. Its host listens for it now, through the same `planPickerClick` reading, so
    there is still one interpretation of "the product changed". */
-$('#landingLead').addEventListener('click', function(e){
+$('#landingSwap').addEventListener('click', function(e){
   if(planPickerClick(e, lsel) === 'changed') renderLanding();
 });
 

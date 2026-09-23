@@ -14,6 +14,29 @@
    Scripts sit at the end of <body>, so this runs with the DOM already parsed.
    ============================================================================ */
 
+/* ---------- icons ----------------------------------------------------------------
+   ONE place that knows how an icon is placed, for every piece of markup this codebase
+   builds in JS. The HTML files write the same shape by hand:
+
+       <svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-NAME"></use></svg>
+
+   `size` is 16 (the default, omitted), 20 or 24 — the only three there are.
+   `cls` adds the hooks a surface already styles by (`gb-ic`, `searchglyph`, …).
+   ⚠️ `label` decides the accessibility contract, and it is not cosmetic: an icon that
+   carries meaning ON ITS OWN gets `role="img"` and a name; an icon sitting beside a
+   text label is decoration and is hidden from the reader, because announcing it would
+   read the same thing twice.
+   ⚠️ The href is RELATIVE, like every other path here — the site has to work from a
+   subfolder (GitHub Pages, and the /site/ mirror it is checked in). */
+function icon(name, opt){
+  opt = opt || {};
+  var cls = 'ic' + (opt.size ? ' ic-' + opt.size : '') + (opt.cls ? ' ' + opt.cls : '');
+  var a11y = opt.label
+    ? ' role="img" aria-label="' + String(opt.label).replace(/"/g, '&quot;') + '"'
+    : ' aria-hidden="true"';
+  return '<svg class="' + cls + '"' + a11y + '><use href="assets/icons.svg#ti-' + name + '"></use></svg>';
+}
+
 /* ---------- helpers ---------- */
 function $(s, r){ return (r || document).querySelector(s); }
 function $$(s, r){ return Array.prototype.slice.call((r || document).querySelectorAll(s)); }
@@ -530,28 +553,32 @@ function signOut(){ setSession('out'); }
    new decision, not a flag to re-enable. */
 var NAV_ITEMS = [
   { key:'home',     href:'index.html',    label:'Home',
-    ic:'<path d="M4 10.5L12 4l8 6.5V20h-5.5v-6h-5v6H4z"/>' },
+    ic:'home' },
   { key:'licenses', href:'licenses.html', label:'Licenses',
-    ic:'<circle cx="9" cy="15" r="3"/><path d="M11.2 12.8L19 5"/><path d="M15.5 5H19v3.5"/>' },
+    ic:'key' },
   /* ⚠️ A DESTINATION SINCE 2026-09-23, reversing "a view toggle, NOT a nav destination"
      on the Licenses page. Directly after Licenses, because it is the same subject
      sliced by deployment. See the measurement note above about what a sixth item does
      to the phone. */
   { key:'instances', href:'instances.html', label:'Instances',
-    ic:'<rect x="3" y="4" width="18" height="6" rx="1.5"/><rect x="3" y="14" width="18" height="6" rx="1.5"/>'
-      + '<path d="M6.5 7h.01M6.5 17h.01"/>' },
+    ic:'server' },
   { key:'invoices', href:'invoices.html', label:'Invoices',
-    ic:'<path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9.5 8.5h5M9.5 12.5h5"/>' },
+    ic:'receipt' },
   { key:'activity', href:'activity.html', label:'Activity',
-    ic:'<path d="M3 12h4l2.5-6 3 12 2.5-6h6"/>' },
-  /* ⚠️ BACK in the destination strip (2026-09-17), reversing the pass that moved it
-     into a nested level of the profile menu. That level put `Log in as` and Delete —
-     the two most destructive actions in the portal — one hover away, inside a
-     control that does not exist on touch and stopped scaling after a handful of
-     rows. Both now live only on the Users page, where the subject is on screen. */
-  { key:'users',    href:'users.html',    label:'Users',
-    ic:'<circle cx="9" cy="8" r="3.2"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/>'
-      + '<path d="M16.5 5.5a3 3 0 0 1 0 5.6"/><path d="M17.5 19a5.4 5.4 0 0 0-1.6-3.8"/>' },
+    ic:'activity' },
+  /* ⚠️ USERS IS NOT HERE ANY MORE (2026-09-23), and this is the second reversal of
+     the same question, so both answers are worth keeping.
+     It was moved OUT of the strip once, into a nested hover level of the profile menu.
+     That was wrong for a reason that still stands: it put `Log in as` and Delete — the
+     two most destructive actions in the portal — behind a hover, which does not exist
+     on touch, and which stopped scaling after a handful of rows. It came BACK into the
+     strip 2026-09-17 to fix exactly that.
+     It now leaves again, but NOT to a hover level: the profile menu's Users item opens
+     a MODAL carrying the whole surface (see UsersModal). That answers the old objection
+     — a modal is not a hover, it is the same content the page had, and both destructive
+     actions sit in its table with the subject on screen — while taking back a strip slot
+     that a sixth destination had made tight on the phone. `Instances` stops being
+     truncated at 390 as a side effect. */
 ];
 
 function navItemsHTML(extraClass){
@@ -578,8 +605,7 @@ function bottomNavHTML(){
   return '<nav class="bnav" id="bottomNav" aria-label="Primary">'
     + NAV_ITEMS.map(function(n){
         return '<a class="tnav-item bnav-item" data-nav="' + n.key + '" href="' + n.href + '">'
-          + '<span class="bn-ic"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true">'
-          + n.ic + '</svg></span>'
+          + '<span class="bn-ic">' + icon(n.ic, { size:24 }) + '</span>'
           + '<span class="bn-lb">' + n.label + '</span></a>';
       }).join('')
     + '</nav>';
@@ -591,8 +617,18 @@ function brandHTML(){
   var href = isSignedIn() ? 'index.html' : 'landing.html';
   return '<a class="dbrand" href="' + href + '" aria-label="ThingsBoard License Portal" title="'
     + (isSignedIn() ? 'Home' : 'ThingsBoard License Portal') + '">'
-    + '<div class="mark"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4v16M4 12h16"/></svg></div>'
-    + '<div class="bt">ThingsBoard<span class="bsep">\u00b7</span>License Portal</div>'
+  /* ⚠️ THE REAL WORDMARK, not a drawn stand-in. It replaces both halves of what was
+     here — a circle-and-cross placeholder in a bordered box, and the words beside it —
+     because the supplied file already carries the mark AND the name. It is recoloured
+     to `currentColor` by tools/build-logo.py (the brand file is white, for a dark
+     ground; this prototype's ground is light), so the ink comes from CSS.
+     ⚠️ It is the ONE drawing that is not from the icon sprite, and it lives in its own
+     file so that exception is a named file rather than a hole in the rule. */
+  /* ⚠️ The mark is the WHOLE lockup — it already sets "License Portal" under the
+     product name, so the separate caption that used to sit beside it is gone. Keeping
+     both printed the words twice and pushed the second copy under the nav strip. */
+    + '<svg class="tblogo" role="img" aria-label="ThingsBoard License Portal">'
+    +   '<use href="assets/logo.svg#tb-logo"></use></svg>'
     + '</a>';
 }
 
@@ -627,7 +663,7 @@ function chromeHTML(){
      arrow on a detail page — see syncAppBar, which fills both from the body's
      data-title / data-back. */
   +   '<a class="tb-back" id="tbBack" aria-label="Back" hidden>'
-  +     '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>'
+  +     '<svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-left"></use></svg>'
   +   '</a>'
   +   '<h2 class="tb-title" id="tbTitle"></h2>'
   +   brandHTML()
@@ -642,19 +678,21 @@ function chromeHTML(){
      spinner handler picks it up with no extra wiring, and the page's own in-content
      refresh button is hidden at this width instead of being moved. */
   +   '<button class="tb-refresh" id="topbarRefresh" data-refresh aria-label="Refresh" title="Refresh">'
-  +     '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">'
-  +       '<path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg>'
+  +     '<svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-refresh"></use></svg>'
   +   '</button>'
   +   '<div class="dprofile">'
   +     '<button class="dprofbtn" id="dashProfBtn" aria-haspopup="true" aria-expanded="false">'
-  +       '<svg class="icon dprof-ic" viewBox="0 0 24 24" aria-hidden="true">'
-  +         '<circle cx="12" cy="8.5" r="3.5"/><path d="M5 20c0-3.6 3.1-5.5 7-5.5s7 1.9 7 5.5"/></svg>'
+  +       '<svg class="ic dprof-ic" aria-hidden="true"><use href="assets/icons.svg#ti-user"></use></svg>'
   +       '<span class="dprof-name">' + esc(portalName()) + '</span>'
-  +       '<span class="dprof-caret" aria-hidden="true">▾</span>'
+  +       '<span class="dprof-caret"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-down"></use></svg></span>'
   +     '</button>'
   +     '<div class="dprofmenu" id="dashProfMenu" role="menu" hidden>'
   +       '<a role="menuitem" href="account.html">Account</a>'
   +       '<a role="menuitem" href="billing.html">Payment &amp; Billing</a>'
+  /* Who else can get in is an account fact, so it sits with Account and Billing.
+     ⚠️ A button, not a link: there is no Users page any longer — it opens the modal
+     that replaced it. */
+  +       '<button role="menuitem" id="usersMenuBtn">Users</button>'
   /* Support, in the one menu that is on every page. ⚠️ Above the separator, with the
      other account-level things: it is not a destructive action and not a way out. */
   +       '<a role="menuitem" href="' + EXT.support + '" target="_blank" rel="noopener">Help &amp; support' + EXTSVG + '</a>'
@@ -673,7 +711,7 @@ function chromeHTML(){
      top" is a page gesture, not a piece of chrome. Bottom-right, opposite the
      prototype's own gear, and lifted clear of the bottom navigation bar. */
   + '<button class="totop" id="toTopBtn" aria-label="Scroll to top" hidden>'
-  +   '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5"/><path d="M6 11l6-6 6 6"/></svg>'
+  +   '<svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-arrow-up"></use></svg>'
   + '</button>'
   // impersonation banner: persists across pages until Return is clicked
   + '<div class="imp-wrap" id="impBanner" hidden>'
@@ -809,7 +847,7 @@ function settingsBodyHTML(){
 
   // ---- always: chrome-wide variant, dev actions, and the reference page
   out += group('Reference',
-    '<a class="sp-opt" href="styleguide.html"><span>Design system → styleguide</span></a>');
+    '<a class="sp-opt" href="styleguide.html"><span>Design system <svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-arrow-right"></use></svg> styleguide</span></a>');
   /* ⚠️ `Confirm email change` is RENDERED ONLY while a change is pending — not
      rendered-and-disabled. It used to be a permanent disabled button, which is the
      same mistake the whole panel just stopped making: a control that is always there
@@ -826,10 +864,7 @@ function settingsBodyHTML(){
 function settingsHTML(){
   return '<button class="gearfab" id="gearBtn" aria-haspopup="dialog" aria-expanded="false" aria-label="Prototype settings" title="Prototype settings">'
     /* a real gear: a toothed ring around a hub, not a sun of spokes */
-    + '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">'
-    +   '<circle cx="12" cy="12" r="3"/>'
-    +   '<path d="M12 2.6l1.3 2.2 2.5-.5.5 2.5 2.2 1.3-1.4 2.1 1.4 2.1-2.2 1.3-.5 2.5-2.5-.5L12 21.4l-1.3-2.2-2.5.5-.5-2.5-2.2-1.3 1.4-2.1-1.4-2.1 2.2-1.3.5-2.5 2.5.5z"/>'
-    + '</svg>'
+    + '<svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-settings"></use></svg>'
     + '</button>'
     + '<div class="settings-panel" id="settingsPanel" role="dialog" aria-label="Prototype settings" hidden>'
     +   '<h4>Prototype settings</h4>'
@@ -846,12 +881,12 @@ function modalsHTML(){
   + '<div class="overlay" id="overlay" hidden>'
   +   '<div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">'
   +     '<div class="mh"><h3 id="modalTitle">Title</h3><span class="spacer"></span>'
-  +       '<button class="mclose" id="modalClose" aria-label="Close">✕</button></div>'
+  +       '<button class="mclose" id="modalClose" aria-label="Close"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-x"></use></svg></button></div>'
   +     '<div class="mb" id="modalBody"></div>'
   +     '<div class="mf"><button class="btn sec" id="modalCloseBtn">Close</button></div>'
   +   '</div>'
   + '</div>'
-  + PAY_MODAL_HTML + COUPON_MODAL_HTML;
+  + PAY_MODAL_HTML + COUPON_MODAL_HTML + USERS_MODAL_HTML;
 }
 
 /* ---------- inject ---------- */
@@ -872,8 +907,9 @@ function injectChrome(){
    the H1, because Home's H1 is a greeting and the bar must still say "Home".
    data-back turns the leading slot into a back arrow; without it the slot stays
    empty, which is what a top-level destination should show. */
-var TB_CHEVRON = '<path d="M15 5l-7 7 7 7"/>';
-var TB_CLOSE   = '<path d="M6 6l12 12M18 6L6 18"/>';
+/* the leading app-bar slot is either a way back or a way out, and it swaps in place */
+var TB_CHEVRON = 'chevron-left';
+var TB_CLOSE   = 'x';
 function syncAppBar(){
   var t = $('#tbTitle'), b = $('#tbBack');
   /* ⚠️ The bar carries NO page title — the page does, right under the header. The
@@ -891,7 +927,12 @@ function syncAppBar(){
        same screen says the same thing rather than inventing a second gesture. */
     var close = document.body.getAttribute('data-backicon') === 'close';
     var svg = $('svg', b);
-    if(svg) svg.innerHTML = close ? TB_CLOSE : TB_CHEVRON;
+    /* ⚠️ Swap the <use> target, not the geometry: there is no geometry here any more.
+       Both names are symbols in the sprite. */
+    if(svg){
+      var u = svg.querySelector('use');
+      if(u) u.setAttribute('href', 'assets/icons.svg#ti-' + (close ? TB_CLOSE : TB_CHEVRON));
+    }
     b.setAttribute('aria-label', close ? 'Close' : 'Back');
   }
 }
@@ -998,6 +1039,12 @@ function wireGlobal(){
      injected once per page and never re-rendered, so there is nothing to delegate for. */
   var soBtn = $('#signOutBtn');
   if(soBtn) soBtn.addEventListener('click', function(){ closeAllMenus(); signOut(); });
+
+  /* Users: same binding style, same reason — `#dashProfMenu` calls stopPropagation on
+     click (that is how a click inside it avoids the document listener that closes it),
+     so nothing inside that menu ever reaches a document-level delegate. */
+  var usersBtn = $('#usersMenuBtn');
+  if(usersBtn) usersBtn.addEventListener('click', function(){ closeAllMenus(); UsersModal.open(); });
 
   // not-yet-specced actions
   document.addEventListener('click', function(e){
@@ -1539,7 +1586,7 @@ var Snack = (function(){
   function show(text, ms){
     var h = el();
     h.innerHTML = '<span class="snack-t"></span>'
-      + '<button type="button" class="snack-x" aria-label="Dismiss">\u2715</button>';
+      + '<button type="button" class="snack-x" aria-label="Dismiss"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-x"></use></svg></button>';
     $('.snack-t', h).textContent = text;
     $('.snack-x', h).addEventListener('click', hide);
     h.hidden = false;
@@ -1698,13 +1745,13 @@ var PAY_MODAL_HTML = ''
 + '    <div class="paymodal-h">'
 + '      <h3 id="payTitle">Update payment method</h3>'
 + '      <span class="sp"></span>'
-+ '      <button class="paymodal-x" id="payClose" aria-label="Close">✕</button>'
++ '      <button class="paymodal-x" id="payClose" aria-label="Close"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-x"></use></svg></button>'
 + '    </div>'
 + '    <div class="paymodal-b">'
 + '      <div class="field">'
 + '        <label>Card number</label>'
 + '        <div class="paystripe" id="payCardBox">'
-+ '          <svg class="icon paystripe-glyph" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>'
++ '          <svg class="ic paystripe-glyph" aria-hidden="true"><use href="assets/icons.svg#ti-credit-card"></use></svg>'
 + '          <input class="ps-num" id="payNum" type="text" inputmode="numeric" autocomplete="cc-number" placeholder="0000 0000 0000 0000" aria-label="Card number" maxlength="24">'
 + '          <input class="ps-exp" id="payExp" type="text" inputmode="numeric" autocomplete="cc-exp" placeholder="MM / YY" aria-label="Expiry date" maxlength="7">'
 + '          <input class="ps-cvc" id="payCvc" type="text" inputmode="numeric" autocomplete="cc-csc" placeholder="CVC" aria-label="Security code" maxlength="4">'
@@ -1740,7 +1787,7 @@ var COUPON_MODAL_HTML = ''
 + '    <div class="paymodal-h">'
 + '      <h3 id="couponTitle">Apply coupon</h3>'
 + '      <span class="sp"></span>'
-+ '      <button class="paymodal-x" id="couponClose" aria-label="Close">✕</button>'
++ '      <button class="paymodal-x" id="couponClose" aria-label="Close"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-x"></use></svg></button>'
 + '    </div>'
 + '    <div class="paymodal-b">'
 + '      <div class="field">'
@@ -1816,6 +1863,98 @@ var Coupon = (function(){
    building chrome and wiring behaviours for a document that is already navigating
    away — cheap, but it also runs page scripts against a state they were guarded out
    of, and any error from that lands in the console as a real-looking failure. */
+/* ============================================================================
+   USERS — the whole surface, in a modal, on every page
+   ============================================================================
+   Was `users.html` + `page-users.js` until 2026-09-23. It is the same content, not a
+   summary of it: the invite card and the table with `Log in as` and Delete on each row.
+   The page is deleted — a destination nothing links to is a second source of truth
+   waiting to drift, and this prototype has deleted one of those before.
+
+   It lives in shared.js rather than a file of its own because it is opened from the
+   PROFILE MENU, which is chrome and therefore on every page — the same reason the pay
+   and coupon modals are here. It rides `.fs-screen` / `.fs-box`, so it is a centred
+   modal above 600px and a full-screen sheet below it, exactly like the wizard and the
+   auth surface; `.usersbox` only narrows it and lets the content set its height.
+
+   ⚠️ The ids are the page's own, kept deliberately: the page is gone, so nothing can
+   collide with them, and keeping them means the invite controller and `wireSearch`
+   below are the page's code moved, not rewritten.
+   ============================================================================ */
+var USERS_MODAL_HTML = ''
++ '<div class="fs-screen usersscreen" id="usersModal" role="dialog" aria-modal="true"'
++   ' aria-labelledby="usersModalTitle" hidden>'
++   '<div class="fs-box usersbox">'
+/* ⚠️ THREE things in the header, in this order: the title, the one action that is
+   about the whole surface rather than about a row, and the way out. `Copy invite link`
+   came UP here from the invite row (2026-09-24): it is not part of typing addresses —
+   it is the other way to invite, and putting it beside the field made the row read as
+   one control with two buttons. One copy-link now serves both states, which is also
+   why the invite row below could stop being mounted twice. */
++     '<div class="fs-header usershead">'
++       '<h2 class="fs-maintitle" id="usersModalTitle">Users</h2>'
++       '<span class="spacer"></span>'
++       '<button class="link invite-link" data-invitelink>'
++         '<svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-link"></use></svg>'
++         '<span>Copy invite link</span>'
++       '</button>'
++       '<button class="fs-close" id="usersModalClose" aria-label="Close"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-x"></use></svg></button>'
++     '</div>'
++     '<div class="fs-body usersbody">'
+
+/* ============================================================================
+   BACKEND DEPENDENCIES assumed by the invite controls (mocked in the store):
+   invitation records carrying a single-use token, an expiry and a revoked flag;
+   server-side burning of the token on redemption; and mail delivery for the email
+   path. See mintInvite / inviteByToken / inviteURL above.
+   ============================================================================ */
+
+/* ⚠️ ONE MOUNT, not two. The surface used to hold a whole second copy of the invite
+   card — a `solo` one and a `compact` one inside the table state — because the two
+   states were two nodes and only one was ever in the layout. They are not two nodes
+   any more: the invite row is ALWAYS here and only the table comes and goes, so the
+   duplicate is gone and with it the pair of ids the controller had to keep in step. */
++       '<p class="solo-line" id="usersSoloLine" hidden>You’re the only person with access. Invite users by sending link to the e-mail or copy invite link and send directly.</p>'
++       '<div class="inviterow" id="usersInvite">'
++         '<input type="email" class="invite-in" id="usersEmail" autocomplete="off"'
++           ' placeholder="Add comma separated emails to invite" aria-label="Emails to invite">'
++         '<button class="btn invite-go" data-invite>Invite</button>'
++       '</div>'
+/* ⚠️ The message slot is ALWAYS in the layout, empty or not: toggled with visibility,
+   not `hidden`, so an error cannot change the block's height. Problems only —
+   confirmations go to the snackbar and leave. */
++       '<p class="invite-msg" id="usersMsg"></p>'
++       '<p class="invite-note">Anyone you invite gets full access to your licenses, invoices and payment method.</p>'
+
+/* The list. ⚠️ NO TOOLBAR: search and refresh were removed 2026-09-24. Both were
+   list-page furniture that came along when this was a page — the account's own people
+   are a short, known list you read rather than query, and there is nothing to refresh
+   in a demo whose only writer is the row above. `wireSearch` went with the field.
+   ⚠️ NO FRAME EITHER: the table sat in `.listcard.listframe` and the invite row in a
+   `.setcard`, so the modal was three stacked boxes inside a fourth. The sheet is the
+   only surface now; everything below sits directly on it. */
++       '<div id="usersTable" hidden>'
++         '<table>'
++           '<thead><tr>'
++             '<th>Name</th><th>Email</th>'
++             '<th class="sortable" aria-sort="descending" tabindex="0">Added <span class="arrow" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-down"></use></svg></span></th>'
++             '<th aria-label="User actions"></th>'
++           '</tr></thead>'
++           '<tbody></tbody>'
++         '</table>'
++         '<div class="pager air">'
++           '<span class="spacer"></span>'
++           '<span>Items per page<select aria-label="Items per page"><option>10</option><option>20</option><option>50</option><option>100</option></select></span>'
++           '<span class="range"></span>'
++           '<span class="pagebtns">'
++             '<button disabled aria-label="First page"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevrons-left"></use></svg></button><button disabled aria-label="Previous page"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-left"></use></svg></button><button disabled aria-label="Next page"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-right"></use></svg></button><button disabled aria-label="Last page"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevrons-right"></use></svg></button>'
++           '</span>'
++         '</div>'
++       '</div>'
++     '</div>'
++   '</div>'
++ '</div>';
+
 if(guardSession()){
   injectChrome();
   wireGlobal();
@@ -2025,11 +2164,14 @@ function wireStickyFrames(){
 /* ---------- users: the actions, shared by every surface that lists them ----------
    Users is a nested level inside the profile menu, which is chrome — so add,
    delete and log-in-as live here rather than in page-users.js. */
-/* One surface reads the user list now: the Users page. Kept as a function rather
-   than inlined because `storeDeleteUser` and the invite row both have to restate
-   whatever is mounted, and on any other page that is nothing at all. */
+/* One surface reads the user list: the Users MODAL, and it is injected on every page
+   (2026-09-23 — it used to be `users.html`, which existed on one). So this no longer
+   has to test whether anything is mounted; it restates the one surface there is.
+   ⚠️ Still a function, and still called rather than inlined: `storeDeleteUser` and the
+   invite row both have to restate the table after they change it, and neither should
+   know how that table is built. */
 function refreshUsersSurfaces(){
-  if(typeof renderUsersPage === 'function') renderUsersPage();   // only on users.html
+  if(window.UsersModal) UsersModal.render();
 }
 
 function openDeleteUser(email){
@@ -2085,3 +2227,167 @@ document.addEventListener('click', function(e){
    is the one place the subject — the people — is already on screen. What stays here
    is what every page needs: the invitation records above, and the delegated
    [data-loginas] / [data-deluser] handlers, which the table's rows use. */
+
+
+/* ============================================================================
+   UsersModal — the controller the Users page used to be
+   ============================================================================
+   Every behaviour below is `page-users.js` moved, not rewritten: the two states, the
+   invite row mounted in both, the search. What changed is only the host — the surface
+   is now injected on every page and shown on demand, so this runs AFTER the boot block
+   above, when `injectChrome` has put the markup in the document.
+   ============================================================================ */
+var UsersModal = (function(){
+  var scr = $('#usersModal');
+  if(!scr) return { open:function(){}, close:function(){}, render:function(){} };
+  var lastFocus = null;
+
+  /* ---------- which state ----------
+     Only the TABLE comes and goes now. The invite row, its note and the header's
+     copy-link are on screen either way, so "solo" is down to one extra sentence. */
+  function solo(){ return (DATA().users || []).length < 2; }
+
+  function render(){
+    var isSolo = solo();
+    var line = $('#usersSoloLine'), tbl = $('#usersTable');
+    if(line) line.hidden = !isSolo;
+    if(tbl)  tbl.hidden  = isSolo;
+    if(isSolo) return;
+
+    var b = $('#usersTable tbody'); if(!b) return;
+    var us = DATA().users.slice().sort(function(a, c){ return dateKey(c.created) - dateKey(a.created); });
+    b.innerHTML = us.map(userRow).join('');
+    var r = $('#usersTable .pager .range');
+    if(r) r.textContent = '1–' + us.length + ' of ' + us.length;
+  }
+
+  /* ---------- the invite row ----------
+     the same loose test the sign-up field uses: the prototype has no address book to
+     check against, so "could this be an address" is as far as it can honestly go */
+  var EMAIL_RE = /^[^\s@,;]+@[^\s@,;]+\.[^\s@,;]+$/;
+
+  function parse(v){
+    var seen = {}, bad = [], ok = [];
+    v.split(/[,;\s]+/).forEach(function(raw){
+      var e = raw.trim(); if(!e) return;
+      if(!EMAIL_RE.test(e)){ bad.push(e); return; }
+      if(seen[e.toLowerCase()]) return;              // typed twice is asked once
+      seen[e.toLowerCase()] = 1; ok.push(e);
+    });
+    return { ok:ok, bad:bad };
+  }
+  /* Duplicate detection is against who ALREADY HAS ACCESS, not against who has been
+     invited: an outstanding invitation is not access, and telling someone their
+     colleague "already has access" because a link is in flight would be false. */
+  function hasAccess(email){
+    return (DATA().users || []).some(function(u){ return u.email.toLowerCase() === email.toLowerCase(); });
+  }
+  /* ⚠️ The slot never leaves the layout — `visibility`, not `hidden` — so showing or
+     clearing a message cannot change the block's height. PROBLEMS only; confirmations
+     go to the snackbar, which is outside the layout entirely. */
+  function say(html){
+    var el = $('#usersMsg'); if(!el) return;
+    el.innerHTML = html || '';
+    el.classList.toggle('on', !!html);
+  }
+  /* one line, always — the slot reserved for it is one line tall */
+  function dupesText(d){
+    return d.length === 1
+      ? '<b>' + esc(d[0]) + '</b> already has access.'
+      : '<b>' + d.length + ' of these</b> already have access.';
+  }
+  function dupesPhrase(d){ return d.length === 1 ? d[0] : d.length; }
+  function badText(b){
+    return b.length === 1
+      ? '<b>' + esc(b[0]) + '</b> is not an email address.'
+      : '<b>' + b.length + ' entries</b> are not email addresses.';
+  }
+
+  function invite(){
+    var input = $('#usersEmail'), p = parse(input.value);
+    if(!p.ok.length && !p.bad.length){ say(null); return; }
+
+    var dupes = p.ok.filter(hasAccess), fresh = p.ok.filter(function(e){ return !hasAccess(e); });
+    if(!fresh.length){ say(dupesText(dupes)); return; }
+
+    fresh.forEach(function(em){
+      mintInvite(em);                                     // single-use token, 7-day expiry
+      /* ⚠️ `pending:true` and NO name: an invitation is not a person yet — there is no
+         name, no join date, and nothing anyone should be able to do to them. The row
+         says the one true thing (this address was invited) and waits. */
+      storeAddUser({ email:em, pending:true, created:todayStr() });
+    });
+    refreshUsersSurfaces();
+
+    input.value = '';
+    /* ⚠️ The confirmation is a SNACKBAR, not a line under the field: it reports a
+       finished event whose result is already on screen — the new rows — so it has no
+       reason to stay, and no reason to occupy the block's height. */
+    var sent = fresh.length === 1
+      ? 'Invitation sent to ' + fresh[0]
+      : 'Invitations sent to ' + fresh.length + ' people';
+    Snack.show(sent + (dupes.length ? ' · ' + dupesPhrase(dupes) + ' already had access' : ''));
+    /* whatever was not an address stays in the field, and the reason stays with it */
+    if(p.bad.length){ input.value = p.bad.join(' '); say(badText(p.bad)); }
+    else say(null);
+  }
+
+  /* ---- Copy invite link: one click, and that is the whole interaction ----------
+     It lives in the HEADER now, beside the title: it is the other way to invite, not a
+     second button belonging to the field. `mintInvite(null)` still writes a single-use
+     record with a 7-day expiry, and `inviteByToken` still refuses a spent, revoked or
+     expired one. */
+  function copyLink(){
+    var rec = mintInvite(null);                           // no address: an open single-use door
+    var url = inviteURL(rec.token);
+    var done = function(){ Snack.show('Invite link copied'); };
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(url).then(done, done);
+    } else { done(); }
+    logActivity({ kind:'user', entityType:'Invitation', entityName:rec.token, action:'LINK_CREATED',
+      txt:'A single-use invite link was created by ' + portalActor() + '.' });
+  }
+
+  /* one listener on the whole sheet: the copy-link is in the header, the Invite button
+     in the body, and the table is re-rendered under both */
+  scr.addEventListener('click', function(e){
+    if(e.target.closest('[data-invite]')){ invite(); return; }
+    if(e.target.closest('[data-invitelink]')){ copyLink(); return; }
+  });
+  var inp = $('#usersEmail');
+  inp.addEventListener('keydown', function(e){
+    if(e.key === 'Enter'){ e.preventDefault(); invite(); }
+  });
+  // typing again clears the previous answer: a stale "already has access" beside a
+  // field you are editing is answering a question you stopped asking
+  inp.addEventListener('input', function(){ say(null); });
+
+  /* ---------- open / close ---------- */
+  function open(){
+    lastFocus = document.activeElement;
+    render();                              // the list may have changed since last time
+    scr.hidden = false;
+    $('#usersModalClose').focus();
+  }
+  function close(){
+    scr.hidden = true;
+    if(lastFocus && lastFocus.focus) lastFocus.focus();
+  }
+  $('#usersModalClose').addEventListener('click', close);
+  scr.addEventListener('click', function(e){ if(e.target === scr) close(); });
+  /* ⚠️ CAPTURE phase, and that is the whole fix. `Log in as` and Delete open the
+     generic dialog ON TOP of this surface, so Escape has to peel that one first — the
+     usual guard for it is `$('#overlay').hidden`, which is what every other Escape
+     handler in the prototype tests. In the bubble phase that guard LIES: `wireGlobal`
+     registered its own Escape handler at boot, long before this file reached its end,
+     so on the same keypress the generic one runs first, hides `#overlay`, and by the
+     time this one looks the overlay is already hidden — both layers close at once.
+     Measured: one Escape over the delete dialog closed the dialog AND the Users modal.
+     Capture runs document-down, so this handler sees the state as it was when the key
+     was pressed, and stands aside while a dialog is open. */
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape' && !scr.hidden && $('#overlay').hidden) close();
+  }, true);
+
+  return { open:open, close:close, render:render };
+})();
