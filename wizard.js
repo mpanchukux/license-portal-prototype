@@ -54,6 +54,12 @@ var WIZARD_HTML = ''
 /* one modal per page — Manage add-ons is a mode of this same wizard, not a
    second surface, so there is nothing else to inject */
 document.body.insertAdjacentHTML('beforeend', WIZARD_HTML);
+/* The frame this shell wears (A dialog / B inset / C full screen) is a stored setting,
+   so it has to be on the node from the first paint rather than from the first open —
+   otherwise the styleguide-style flash of A before B is the first thing a reviewer
+   comparing the three sees. `applyWizardPresent` lives in shared.js, which loads
+   before this file. */
+applyWizardPresent();
 
 /* ---------- Manage add-ons ---------- */
 /* Manage add-ons runs the purchase wizard in add-ons mode: same shell, header,
@@ -1789,6 +1795,10 @@ var NL = (function(){
       // a preselected plan (picked on the landing page) skips the picker it already answered
       gotoStep(opts.startStep && st.plan ? (steps()[0] === 'pick' ? steps()[1] : steps()[0]) : 'pick');
     }
+    /* cheap, and it closes the one gap the inject-time call leaves: the setting can be
+       changed from the panel on a page that never opened a wizard, and the attribute
+       is the only thing carrying it */
+    applyWizardPresent();
     scr.hidden = false;
     $('#nlClose').focus();
   }
@@ -1979,6 +1989,50 @@ var NL = (function(){
   });
   $('#nlClose').addEventListener('click', function(){ attemptClose(); });
   document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && !scr.hidden && $('#overlay').hidden) attemptClose(); });
+
+  /* ---- the three ways out, and they are not the same in all three frames --------
+     ⚠️ THE BACKDROP CLICK IS NEW. It was missing from this wizard while the generic
+     dialog, the details modal and the Users modal all had it — a gap nobody noticed
+     because the ✕ is always there. It is added here because presentation C is the
+     case that makes it matter: C has NO backdrop, so the ✕ and Escape are the only
+     exits and both have to work, and the only way to know they carry that weight is
+     to say what the other two get instead.
+     The guard is written out rather than relied on: in C the box fills the frame, so
+     `e.target === scr` cannot happen — but a rule that holds by accident of layout is
+     one refactor away from not holding. It also goes through attemptClose, so a
+     click outside a half-finished flow asks before discarding it, like every other
+     way out of this modal. */
+  scr.addEventListener('click', function(e){
+    if(e.target !== scr) return;              // the backdrop itself, not the box on it
+    if(wizardPresent() === 'c') return;       // C has no backdrop to click
+    attemptClose();
+  });
+
+  /* ---- focus stays inside -------------------------------------------------------
+     ⚠️ Also new, and also the same reason: a full-screen modal with focus able to
+     wander onto the page underneath is a keyboard user tabbing through a page they
+     cannot see. Return focus is already handled — forceClose() puts it back on
+     whatever opened the wizard.
+     Two things this deliberately does NOT trap:
+       · while `#overlay` is up (the unsaved-changes confirm), that dialog owns the
+         keyboard — the same guard Escape uses, and for the same reason;
+       · the ⚙ gear, which is prototype scaffolding sitting above every layer. The
+         trap is a keydown listener ON the modal, so it only ever redirects a Tab that
+         started inside: clicking the gear moves focus out and nothing fights it. A
+         reviewer can still switch presentation with a wizard open. */
+  function tabbables(){
+    return $$('a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),'
+      + 'textarea:not([disabled]),[tabindex]:not([tabindex="-1"])', scr)
+      .filter(function(n){ return n.offsetWidth || n.offsetHeight || n.getClientRects().length; });
+  }
+  scr.addEventListener('keydown', function(e){
+    if(e.key !== 'Tab' || scr.hidden || !$('#overlay').hidden) return;
+    var f = tabbables();
+    if(!f.length) return;
+    var first = f[0], last = f[f.length - 1], on = document.activeElement;
+    if(e.shiftKey && (on === first || !scr.contains(on))){ e.preventDefault(); last.focus(); }
+    else if(!e.shiftKey && on === last){ e.preventDefault(); first.focus(); }
+  });
 
   /* Demo shortcut for the ⚙ panel. Writes into `bill` — the same object the fields
      read on render — and repaints the step, so the values land through the normal

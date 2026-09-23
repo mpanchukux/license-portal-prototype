@@ -758,6 +758,11 @@ function settingsContext(){
        modal mounted over any list */
     details: page === 'license' || !!(lic && !lic.hidden && $('#licModal #appView')),
     wizard: !!(nl && !nl.hidden),
+    /* ⚠️ The NODE, not its state. The presentation setting has to be reachable
+       BEFORE a wizard is open — you set the frame, then open one to look at it —
+       and #nlModal exists on exactly the pages that load wizard.js. `wizard` above
+       stays what it was: the settings that repaint an OPEN flow need it open. */
+    wizardPage: !!nl,
     /* the billing step specifically, not just "a wizard is open": the autofill below
        has nothing to fill on the other three steps, and a panel action that does
        nothing where it appears is the thing this panel was cleaned up to stop doing */
@@ -808,6 +813,18 @@ function settingsBodyHTML(){
   /* ---- the wizard's own options. `Billing data` decides whether the flow has a
      billing step at all, so it belongs to the wizard — and it also drives the
      Payment & Billing page, which is why it appears in both contexts. */
+  /* ---- the frame the purchase wizard wears. Scoped to `wizardPage` rather than
+     `wizard`: the point of the setting is to compare presentations, and you choose
+     one before opening a flow as often as while looking at it. It applies to all
+     three modes of this wizard at once — they are one modal. */
+  if(c.wizardPage){
+    out += group('Purchase modal', WIZARD_PRESENTS.map(function(o){
+      return '<label class="sp-opt"><input type="radio" name="wizardPresent" value="' + o[0] + '"'
+        + (wizardPresent() === o[0] ? ' checked' : '') + '><span>' + o[1] + '</span></label>';
+    }).join('')
+      + '<div class="sp-hint">Desktop only \u2014 below 600px all three are the same full-screen sheet.</div>');
+  }
+
   if(c.wizard){
     out += group('Customize step',
       '<label class="sp-opt"><input type="radio" name="custVariant" value="a"' + (custVariant() === 'a' ? ' checked' : '') + '><span>A — Plan card</span></label>'
@@ -1261,6 +1278,28 @@ function wireTabs(){
    and one that chose A keeps it. The key is not in the seed, so nothing about the
    stored state changes and the store key does not need a bump. */
 function custVariant(){ return Store.get('custVariant') === 'a' ? 'a' : 'b'; }
+/* ---------- the purchase modal's PRESENTATION: A dialog · B inset · C full screen --
+   One shell, three frames. The steps, the content and the controller are identical in
+   all three; only .fs-box's size and the backdrop change (see the CSS block of the
+   same name). Stored, so the choice survives a reload and a page change, and cleared
+   by Reset demo data along with everything else in the key.
+   ⚠️ A is the default and the shape of that test says so: only an explicit 'b' or 'c'
+   opts out, exactly as custVariant() and licDetailsMode() do, so a browser that has
+   never opened the panel gets what the product ships. Not in the seed, so no store
+   bump — an unknown value reads as A.
+   ⚠️ BELOW 600px THE THREE ARE ONE. Every .fs-screen is a full-screen sheet on the
+   phone, so the setting has nothing to change there; the panel says so, because the
+   alternative is someone testing it on a phone and reporting it broken. */
+function wizardPresent(){ var v = Store.get('wizardPresent'); return (v === 'b' || v === 'c') ? v : 'a'; }
+var WIZARD_PRESENTS = [['a', 'A \u2014 Dialog (default)'], ['b', 'B \u2014 Inset'], ['c', 'C \u2014 Full screen']];
+/* The wizard is the only surface carrying the attribute; it is set where the node is
+   born (wizard.js, right after the markup is injected), on every open, and whenever
+   the panel writes a new value. Pages that never load wizard.js have no node and this
+   is a no-op on them. */
+function applyWizardPresent(){
+  var nl = $('#nlModal');
+  if(nl) nl.setAttribute('data-present', wizardPresent());
+}
 /* the product every selling surface opens on — see the `arrived` note in the seed */
 function arrivedProduct(){ return Store.get('arrived') === 'tbmq' ? 'tbmq' : 'thingsboard'; }
 // How a licence row presents its details: its own page (A) or a modal over the
@@ -1495,6 +1534,12 @@ function wireSettingsPanel(){
       case 'arrived':
         Store.set('arrived', r.value);
         location.reload();
+        return;
+      /* the frame is an attribute, so it applies to an OPEN wizard without a
+         re-render — nothing about the steps or the state depends on it */
+      case 'wizardPresent':
+        Store.set('wizardPresent', r.value);
+        applyWizardPresent();
         return;
       // switching the Customize variant re-renders whichever flow is open
       case 'custVariant':

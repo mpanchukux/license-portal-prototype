@@ -461,6 +461,42 @@
         </div></div>
       </div>
     </div>
+    <div class="sg-item">
+      <h3>Wizard box &mdash; three presentations <span class="sg-cls">.fs-screen[data-present]</span></h3>
+      <p class="sg-note">One pattern, not three. The steps, the content, the state and the controller are the
+        same in all three; a single attribute on the wizard&rsquo;s <code>.fs-screen</code> changes the frame and
+        nothing else. All three modes of the purchase wizard &mdash; new licence, Change plan, Manage add-ons
+        &mdash; wear whichever one is set, because they are one modal.</p>
+      <p class="sg-note"><b>The rule: the frame grows, the working column does not.</b> The inset variant caps
+        its working area at the width the dialog has today (<code>--fs-work</code>, 1040px) and centres it, so the
+        plan cards and the summary rail keep their measure instead of stretching across the window. Empty margin
+        inside a wide frame is the pattern working, not a gap to fill. The header band and the step label span the
+        whole frame &mdash; they are its edges &mdash; while their contents ride the same column as the body.</p>
+      <div class="sg-presrow">
+        <div>
+          <div class="sg-presvp"><div class="sg-presframe a"><div class="sg-preswork"></div></div></div>
+          <div class="sg-presk">A &middot; Dialog</div>
+          <div class="sg-presd">Default. A centred box on a dimmed, blurred backdrop. Frame and working column
+            are the same width, which is why the rule is invisible here.</div>
+        </div>
+        <div>
+          <div class="sg-presvp"><div class="sg-presframe b"><div class="sg-preswork"></div></div></div>
+          <div class="sg-presk">B &middot; Inset</div>
+          <div class="sg-presd">The frame insets <code>--fs-inset</code> (38px) from every edge, so a band of page
+            stays visible all round; the backdrop keeps its dim and blur. The column does not move.</div>
+        </div>
+        <div>
+          <div class="sg-presvp"><div class="sg-presframe c"><div class="sg-preswork"></div></div></div>
+          <div class="sg-presk">C &middot; Full screen</div>
+          <div class="sg-presd">The frame is the viewport: no backdrop, no page behind. The close control and
+            Escape are the only ways out, because there is no backdrop left to click.</div>
+        </div>
+      </div>
+      <p class="sg-note" style="margin-top:14px">What holds in all three: the step header stays put while the body
+        scrolls, Escape closes, focus is trapped inside and returns to whatever opened the wizard. Backdrop click
+        closes A and B only. <b>Below 600px there is no difference</b> &mdash; every wizard box is already a
+        full-screen sheet on the phone, so the setting has nothing to change there.</p>
+    </div>
   </section>
 
   <!-- ============================ STEPPER ============================ -->

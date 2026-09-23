@@ -821,6 +821,9 @@ th[aria-label$="ctions"],th.cellact,td.cellact{width:1%;white-space:nowrap;text-
 .settings-panel h4{margin:0 0 3px;font-size:14px}
 .settings-panel .sp-note{font-size:14px;color:var(--faint);margin-bottom:12px}
 .settings-panel .sp-label{font-size:14px;color:var(--mid);margin-bottom:8px}
+/* a sentence that belongs to ONE group, not to the panel — .sp-note is the
+   panel's own subtitle and carries its bottom margin */
+.settings-panel .sp-hint{font-size:14px;line-height:1.45;color:var(--faint);margin:5px 4px 2px}
 /* grouped page picker in the settings panel */
 .sp-pick{display:flex;flex-direction:column;gap:1px}
 .sp-grouphead{font-size:14px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin:6px 0 3px}
@@ -975,7 +978,7 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
 .fs-headback[hidden]{display:none}
 /* review step: white itemised card, Due today carries the payment line */
 .fs-screen .am-order{background:var(--card)}
-.fs-body{padding:24px;width:100%;max-width:1040px;margin:0 auto;flex:1;min-height:0;overflow:auto;overscroll-behavior:contain}
+.fs-body{padding:24px;width:100%;max-width:var(--fs-work,1040px);margin:0 auto;flex:1;min-height:0;overflow:auto;overscroll-behavior:contain}
 .fs-grid{display:grid;grid-template-columns:2fr 1fr;gap:24px;align-items:start}
 .fs-col{min-width:0}
 .fs-screen .am-cell{background:#fff;border:0;padding:0}
@@ -1027,6 +1030,52 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
 .am-addcheck{width:17px;height:17px;flex:none;accent-color:var(--ink);margin:0;cursor:pointer}
 .fs-screen .am-addcheck{width:17px;height:17px}
 @media(max-width:900px){.fs-grid{grid-template-columns:1fr}.fs-right{position:static}}
+
+/* ---------- the purchase modal: THREE PRESENTATIONS, one shell ------------------
+   A · Dialog (default) — the centred box above. B · Inset — the box grows to within
+   a band of every viewport edge. C · Full screen — the box IS the viewport.
+   These are a prototype comparison, not three builds: the steps, the content, the
+   state and the controller are the same in all three, and `data-present` on the
+   wizard's own .fs-screen is the whole difference. The ⚙ panel writes it; the store
+   remembers it.
+
+   ⚠️ THE RULE THAT MAKES B WORK — THE FRAME GROWS, THE WORKING COLUMN DOES NOT.
+   `.fs-body` already caps itself at --fs-work and centres, and that existing cap is
+   what keeps the plan cards and the summary rail at the measure they were designed
+   for when the frame is 1800px wide. The empty margin either side of the content
+   inside an inset frame IS the pattern; it is not a gap waiting to be filled.
+
+   The parts that are not `.fs-body` — the header band and the step label — span the
+   FRAME, because they are the frame's own edges (a white band, a hairline, a
+   progress track). Their CONTENTS ride the working column instead, or the title and
+   the ✕ end up 400px away from the content they belong to. There is no wrapper
+   element inside either band to cap, so the column is made with padding.
+
+   ⚠️ SCOPED TO min-width:601px, and nothing below it needs writing: every .fs-screen
+   is already a full-screen sheet on the phone (see the ≤600px block), so all three
+   variants are identical there BY CONSTRUCTION rather than by a rule kept in step.
+   ⚠️ PERCENTAGES, NEVER vw. `.fs-screen` is fixed at inset:0, so 100% of it is the
+   viewport WITHOUT the scrollbar; 100vw includes the scrollbar, and the difference
+   is a horizontal scrollbar on every page that scrolls.
+   ⚠️ The attribute is on #nlModal ALONE. Three surfaces ride .fs-screen — this
+   wizard, the licence-details modal and the Users modal — and only the wizard was
+   asked for the comparison; the selectors are written generically so a second
+   surface can opt in by carrying the attribute, not by gaining a rule. */
+.fs-screen{--fs-work:1040px;--fs-inset:38px}
+@media (min-width:601px){
+  /* B — a band of page stays visible all round; the backdrop keeps its dim and blur */
+  .fs-screen[data-present="b"] .fs-box{
+    width:calc(100% - var(--fs-inset)*2);height:calc(100% - var(--fs-inset)*2);max-width:none}
+  /* C — the box is the viewport, so there is no backdrop left to dim or blur */
+  .fs-screen[data-present="c"]{background:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+  .fs-screen[data-present="c"] .fs-box{
+    width:100%;height:100%;max-width:none;border:0;border-radius:0;box-shadow:none}
+  /* both grown frames: band full width, band CONTENTS on the working column */
+  .fs-screen[data-present="b"] .fs-header,.fs-screen[data-present="c"] .fs-header,
+  .fs-screen[data-present="b"] .nl-plabel,.fs-screen[data-present="c"] .nl-plabel{
+    padding-left:max(24px,calc((100% - var(--fs-work))/2 + 24px));
+    padding-right:max(24px,calc((100% - var(--fs-work))/2 + 24px))}
+}
 /* ---------- New license flow (stepped; rides the manage-modal chrome) ---------- */
 /* the stepper: a thin full-width track directly under the header hairline,
    then one padded label row — "Step N of 4 · Plan" */
@@ -2395,6 +2444,26 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
 .sg-static .overlay,.sg-static .payoverlay,.sg-static .fs-screen{position:static;background:none;backdrop-filter:none;-webkit-backdrop-filter:none;padding:0;display:block}
 .sg-static .fs-box{width:100%;height:auto;max-height:none}
 .sg-static .fs-body{max-height:230px}
+/* the three-presentation diagram: a viewport, the frame inside it, and the working
+   column inside that. The column is drawn at the SAME share of the viewport in all
+   three cells (its per-variant width is that share expressed against each frame), so
+   the diagram says the one thing the pattern turns on: the frame grows, the column
+   does not. Greys only — it is a diagram, not a picture. */
+.sg-presrow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.sg-presvp{position:relative;aspect-ratio:16/10;border:1px dashed var(--line);border-radius:6px;
+  background:var(--track);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.sg-presframe{background:#fff;border:1px solid var(--ink);border-radius:4px;
+  display:flex;align-items:stretch;justify-content:center;overflow:hidden}
+.sg-presframe.a{width:58%;height:78%}
+.sg-presframe.b{width:92%;height:88%}
+.sg-presframe.c{width:100%;height:100%;border-radius:0;border-width:0}
+.sg-preswork{background:var(--card);border-left:1px dashed var(--line);border-right:1px dashed var(--line)}
+.sg-presframe.a .sg-preswork{width:100%;border:0}
+.sg-presframe.b .sg-preswork{width:63%}
+.sg-presframe.c .sg-preswork{width:58%}
+.sg-presk{margin-top:10px;font-size:14px;font-weight:600;color:var(--ink)}
+.sg-presd{margin-top:3px;font-size:14px;line-height:1.5;color:var(--mid)}
+@media(max-width:600px){.sg-presrow{grid-template-columns:1fr}}
 .sg-flag{border-left:3px solid var(--ink);background:#fff;padding:10px 14px;font-size:14px;color:var(--mid);margin-top:12px}
 
 /* ============================================================================
