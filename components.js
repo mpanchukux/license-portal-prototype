@@ -1905,30 +1905,49 @@ function renderHomeBanner(){
   var dismissKeys = blocking ? [] : [bannerKey(items[0])];
 
   /* ⚠️⚠️ ONE ALERT, ALWAYS — the list form is gone (2026-09-24), and with it the
-     three-line cap. The banner now shows the single most urgent condition in full (the
-     fact, what fixes it and its action) and turns everything else into one count.
+     three-line cap. The banner shows the single most urgent condition and turns
+     everything else into one count.
 
      What this reverses: the list existed so several licences in trouble were all named
      at once, on the argument that a reader triaging wants to see the set. Against it:
      a banner is one statement, and three of them stacked made the reader choose before
-     they had read anything — while the top line, which is the one that is actually
-     stopping work, lost the two supporting lines (the todo and the action) that the
-     single form gives it. The set is still reachable, and reachable in one click.
-
-     ⚠️ `items` is ALREADY sorted by seriousness and deduplicated per licence, so
-     `items[0]` is "the most urgent", not "the first one found" — see
-     `attentionConditions` and `homeBannerVisible`. */
+     they had read anything. The set is still reachable, and reachable in one click.
+     ⚠️ HOW MUCH of that one condition is shown now depends on whether it is alone —
+     see the two shapes below. */
   var copy = homeBannerCopy(items[0]);
   if(!copy){ slot.hidden = true; return; }
   var rest = items.length - 1;
-  /* the count sits AFTER the sentence, on the same line, so it reads as the end of the
-     statement rather than a second announcement under it */
-  var more = rest > 0
-    ? '<a class="gb-lic hb-more" href="licenses.html?attention=1">and ' + rest + ' more</a>'
-    : '';
-  var body = '<p class="hb-fact">' + copy.fact + more + '</p>'
-    + '<p class="hb-todo">' + copy.todo + '</p>'
-    + '<div class="hb-acts">' + copy.act + '</div>';
+  /* ⚠️⚠️ TWO SHAPES, AND THE SECOND ONE IS DELIBERATELY POORER (2026-09-24).
+     ONE alert  — the whole thing: the fact, what fixes it, and its actions.
+     SEVERAL    — the most urgent alert's FACT and one control, `and N more`. No todo
+                  line, no action buttons.
+     The reason is that an action button is an answer, and an answer is only honest when
+     the reader has seen the question it answers. With four licences in trouble, a
+     `Renew updates` button beside the top sentence acts on ONE of them while looking
+     like it settles the banner — and the three the reader has not been shown are the
+     ones they would have wanted to triage first. So when there is more than one, the
+     banner stops offering to fix anything and offers to show the set instead; every
+     action is one click away, on a surface that names what it acts on.
+     ⚠️ The todo line goes with them, and that is the same rule, not a second one: it is
+     the sentence that tells you what the action does. A "what fixes it" with no way to
+     do it is an instruction to go and find the control yourself.
+     ⚠️ `items` is ALREADY sorted by seriousness and deduplicated per licence, so
+     `items[0]` is "the most urgent", not "the first one found" — see
+     `attentionConditions` and `homeBannerVisible`. */
+  var body;
+  if(rest > 0){
+    /* ⚠️ A CONTROL, not the tail of the sentence. It used to be an inline link riding
+       the end of the fact line, which is where a count belongs when the banner also has
+       real actions under it — it had to stay out of their way. It is the only thing to
+       press now, so it stands in the action row where a reader looks for one. */
+    body = '<p class="hb-fact">' + copy.fact + '</p>'
+      + '<div class="hb-acts"><a class="gb-act hb-more" href="licenses.html?attention=1">and '
+        + rest + ' more</a></div>';
+  } else {
+    body = '<p class="hb-fact">' + copy.fact + '</p>'
+      + '<p class="hb-todo">' + copy.todo + '</p>'
+      + '<div class="hb-acts">' + copy.act + '</div>';
+  }
   slot.className = 'gbanner homebanner' + (blocking ? ' is-blocking' : '');
   slot.innerHTML = bannerIcon(blocking)
     + '<div class="hb-body">' + body + '</div>'

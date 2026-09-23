@@ -510,11 +510,16 @@ th.num,td.num{text-align:right}
    button would just add a control nobody understands.
    ⚠️ It lives in the TITLE ROW now — no border, no full-bleed padding, no line of its
    own between the toolbar and the rows. */
-.lic-titlerow{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;
-  padding-top:16px;margin-bottom:12px}
+/* ⚠️ THE HINT IS A DESCRIPTION UNDER THE TITLE, NOT A COLUMN BESIDE IT (2026-09-24).
+   It was a baseline-aligned flex row — heading left, sentence right — which reads as two
+   things placed near each other and, at narrow widths, wrapped into a second line that
+   started at the heading's right edge for no reason a reader could see. Stacked, it is
+   what the page's standing advice actually is: the subtitle of the heading above it.
+   ⚠️ NO `max-width` any more. The sentence spans the frame; the previous 62ch cap was
+   there to stop it eating the heading's row, and there is no row to share now. */
+.lic-titlerow{padding-top:16px;margin-bottom:12px}
 .lic-titlerow > .lic-h1{padding-top:0;margin-bottom:0}
-.inst-hint{margin:0;flex:1;min-width:280px;max-width:62ch;
-  font-size:14px;line-height:1.5;color:var(--mid)}
+.inst-hint{margin:4px 0 0;font-size:14px;line-height:1.5;color:var(--mid)}
 .inst-filter{margin:0;padding:12px 18px;border-bottom:1px solid var(--line2);
   font-size:14px;line-height:1.5;color:var(--ink)}
 
@@ -1557,9 +1562,12 @@ body[data-page="home"] .dwrap{padding-top:48px}
    (2026-09-23), so the row, the gap and the `.hb-txt` flex child that filled it all
    went with it — the sentence is the whole line now, and it wraps as text should. */
 
-/* the count rides at the end of the sentence, not under it — a normal word space
-   before it, and it never breaks away from the words it follows */
-.hb-more{margin-left:8px;white-space:nowrap}
+/* ⚠️ THE COUNT IS A CONTROL, NOT THE TAIL OF A SENTENCE (2026-09-24). It rode the end
+   of the fact line while the banner also carried real actions underneath — a count has
+   to stay out of their way. In the several-alerts shape it is the ONLY thing to press,
+   so it stands in the action row, wearing `.gb-act` like any other banner action. The
+   three properties here are what an <a> needs to sit in that button box. */
+.hb-more{display:inline-flex;align-items:center;text-decoration:none;white-space:nowrap}
 /* the per-line action is smaller than a single banner's primary: in a list it is one of
    three equals, and three full-size buttons would out-weigh the sentences they serve */
 .gb-act.sm{height:26px;padding:0 10px;font-size:14px;flex:none}
