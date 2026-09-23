@@ -11,45 +11,34 @@
 
 <div id="shellMain">
 <div class="licview" id="licensesView">
-  <!-- ⚠️ THE H1 IS STILL HERE, AND IT IS STILL THE PAGE'S ONE HEADING — it is only
-       visually hidden. The page name appeared twice, as the heading and again as the
-       first tab, so the tabs take over the title's visual weight and the standalone
-       heading goes. What must NOT go with it is the structure: a page needs a heading,
-       and a tablist is a tablist, not a title. So both survive, each doing its own job —
-       the h1 for structure and assistive tech, the tabs as tabs. -->
-  <h1 class="lic-h1 vh">Licenses</h1>
+  <!-- ⚠️ VISIBLE AGAIN. The heading was `.vh` because the view tabs had taken over its
+       weight — the page name appeared twice, as an h1 and as the first tab. The tabs are
+       gone (Instances is its own destination now), so there is nothing left to carry the
+       title and the heading goes back to being one.
+       ⚠️ `.vh` now has NO USERS in the product. It stays in the stylesheet and in the
+       styleguide as a utility, because the reason it exists — hiding a heading from
+       sight without taking it out of the accessibility tree — is not specific to tabs. -->
 
-  <div class="listcard">
+  <!-- ⚠️ ONE FRAME, and it used to be two cards with the table's own header floating
+       inside the second. Toolbar, column row and rows are one block now: they are one
+       thing to read and, on scroll, one thing that stays. Nothing loose sits between the
+       title and this frame.
+       ⚠️ `.stickybar` is the toolbar and `.stickyhead` the column row — see the sticky
+       pattern in the styleguide. The offset the column row sticks at is the toolbar's
+       measured height (`--barH`, set by wireStickyFrame), not a constant: this toolbar
+       is a different height on every page and wraps at narrow widths. -->
+  <!-- ⚠️ THE TITLE IS INSIDE THE FRAME. It was above it, and the frame began at the
+       toolbar; the page then read as a loose heading followed by a box. One block now:
+       title, toolbar, column row, rows. The title still SCROLLS AWAY — it is in the
+       frame, not in the sticky part of it. -->
+  <div class="listcard listframe">
+  <h1 class="lic-h1">Licenses</h1>
 
-  <!-- ⚠️ ROW ONE IS THE PAGE TITLE NOW. The view toggle already said "Licenses" one line
-       under an h1 that said "Licenses", so it moved up and took the title's place; it
-       keeps its own type size rather than borrowing the h1's, because a tab that looks
-       like a heading stops looking pressable.
-       It still holds the page's actions on its right — see the note below, and the
-       measurement that put them there rather than in the filter row.
-       ⚠️ A VIEW TOGGLE, NOT A NAV DESTINATION: a typical customer runs two to five
-       instances, and a top-level page for five rows costs more attention than it
-       returns. Same page, same toolbar, two ways of slicing the same data. -->
-  <div class="lic-controls lic-viewrow lic-titlerow">
-    <div class="tabs lic-viewseg" role="tablist" aria-label="View">
-      <button class="tab lic-viewtab on" role="tab" aria-selected="true" data-view="licenses">Licenses</button>
-      <button class="tab lic-viewtab" role="tab" aria-selected="false" data-view="instances">Instances</button>
-    </div>
-    <span class="spacer"></span>
-    <!-- ⚠️ THE ACTIONS SIT ON ROW ONE, and this is the one place the two-row split was
-         asked for differently — "the tab menu alone". Two reasons, and the second is
-         measured. First: row two is meant to be "search and all filters", and neither
-         Refresh nor + New license is a filter; leaving them there kept the crowding the
-         split was for, just on a shorter line. Second, the phone: the primary renders
-         as a full-width 48px block, and inside the filter row it pushed the first row
-         of the list to y=372 on an 844px screen — the toolbar alone was 236px, 28% of
-         the viewport. On row one it costs nothing extra, because that row exists
-         anyway. Measured after: 176px. -->
-    <button class="iconbtn ib" data-refresh aria-label="Refresh" title="Refresh"><svg class="icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg></button>
-    <button class="btn" id="licNewBtn"><span class="lnb-plus" aria-hidden="true">+</span><span class="lnb-txt"> New license</span></button>
-  </div>
-
-  <div class="lic-controls lic-filterrow">
+  <!-- ⚠️ ONE TOOLBAR ROW, and it was two. Row one held refresh and + New license with an
+       empty left half where the view tablist used to be; row two held search and the
+       filters. Two rows is two things to stick, and the split had no meaning left once
+       the tablist went — a toolbar is search, filters and the page's actions. -->
+  <div class="lic-controls lic-viewrow lic-filterrow stickybar">
     <div class="searchbox"><svg class="icon searchglyph" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input type="text" placeholder="Search licenses" aria-label="Search licenses"></div>
     <div class="lic-typeseg" role="group" aria-label="Filter by product type">
       <button class="typechip" data-type="Subscription" aria-pressed="false">Subscription</button>
@@ -59,22 +48,24 @@
            NOT .typechip — that class is the mutually-exclusive product group, and
            this one is an independent on/off. It mirrors #licCanceled either way, so
            the stored state and the desktop switch stay the single source. -->
-      <!-- a hairline between the two KINDS of filter: the pair above is one
-           mutually-exclusive group, this one is an independent toggle. Identical
-           chips side by side implied they behaved the same way. -->
       <span class="chipdiv mob-only" aria-hidden="true"></span>
       <button class="filterchip cancelchip mob-only" id="licCanceledChip" aria-pressed="false">
         <svg class="icon cc-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5"/></svg>
         <span>Canceled</span></button>
     </div>
     <label class="lic-toggle"><span class="switch"><input type="checkbox" id="licCanceled"><span class="track"></span></span> Display canceled licenses</label>
-  </div>
+    <span class="spacer"></span>
+    <!-- ⚠️ On the phone these two are MOVED into the page title row by syncTitleRow, and
+         that is why they must stay inside a `.lic-controls`: it is the host the mover
+         looks for, and where it puts them back above the breakpoint. -->
+    <button class="iconbtn ib" data-refresh aria-label="Refresh" title="Refresh"><svg class="icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg></button>
+    <button class="btn" id="licNewBtn"><span class="lnb-plus" aria-hidden="true">+</span><span class="lnb-txt"> New license</span></button>
   </div>
 
-  <div class="listcard" id="licensesList">
+  <div id="licensesList">
   <div class="tablescroll">
     <table id="prodTable">
-      <thead id="prodHead"></thead>
+      <thead id="prodHead" class="stickyhead"></thead>
       <tbody id="prodBody"></tbody>
     </table>
   </div>
@@ -84,37 +75,14 @@
     <span>Items per page<select aria-label="Items per page"><option>10</option><option>20</option><option>50</option></select></span>
     <span class="range" id="licRange">1–4 of 4</span>
     <span class="pagebtns">
-      <button disabled aria-label="First page">«</button>
-      <button disabled aria-label="Previous page">‹</button>
-      <button disabled aria-label="Next page">›</button>
-      <button disabled aria-label="Last page">»</button>
+      <button disabled aria-label="First page">&laquo;</button>
+      <button disabled aria-label="Previous page">&lsaquo;</button>
+      <button disabled aria-label="Next page">&rsaquo;</button>
+      <button disabled aria-label="Last page">&raquo;</button>
     </span>
   </div>
   </div>
 
-  <!-- ============================ INSTANCES VIEW ============================
-       The same data sliced by deployment instead of by licence. Nothing about plans
-       or money lives here: this view answers "what is running, where, on what
-       version, and did it report in". -->
-  <div class="listcard" id="instancesList" hidden>
-    <!-- ⚠️ A QUIET PERSISTENT LINE, not a banner and not a button. The one thing people
-         come to this view to do and cannot guess is detaching, and the reason they need
-         it is always the same: they moved a deployment. Copy is what makes the action
-         discoverable; a second button would just add a control nobody understands. -->
-    <p class="inst-hint">Moved a deployment to a new server? Detach the old instance and
-      activate the new one with the same key.</p>
-    <!-- states the filter the blocked banner arrived with, and carries the way out of it -->
-    <p class="inst-filter" id="instFilter" hidden></p>
-    <div class="tablescroll">
-      <table id="instTable">
-        <thead id="instAllHead"></thead>
-        <tbody id="instAllBody"></tbody>
-      </table>
-    </div>
-    <div class="pager">
-      <span class="spacer"></span>
-      <span class="range" id="instRange">0 of 0</span>
-    </div>
   </div>
 
 </div>

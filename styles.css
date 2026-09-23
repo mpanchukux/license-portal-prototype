@@ -120,7 +120,14 @@ a{color:inherit}
 .menu .pop button{display:block;width:100%;text-align:left;padding:7px 9px;border:0;background:transparent;border-radius:6px;font-size:14px;color:var(--ink)}
 .menu .pop button:hover{background:var(--hover)}
 
-.content{padding:0;overflow:auto}
+/* ⚠️ `overflow:visible`, and it was `auto`. In page mode that made THIS the nearest
+   scroll container for everything inside the licence surface — and since it has no
+   height limit it never actually scrolled, so a sticky tab bar inside it had nothing
+   to stick to and simply sat where it was drawn. The page's scroller is `#shellMain`
+   and the modal's is `.fs-body`; this element is neither, and saying so out loud is
+   what makes the tab bar stick in both. (The modal already overrode it to visible for
+   the same reason — that override is now the rule.) */
+.content{padding:0;overflow:visible}
 /* the shared page container; .sheet is the details page's instance */
 .sheet{width:100%}
 
@@ -460,20 +467,87 @@ th.num,td.num{text-align:right}
 .verline.is-behind .ver-run{font-weight:500}
 .ver-latest,.ver-mixed{font-size:13px;color:var(--faint);font-variant-numeric:tabular-nums}
 
-/* ---------- the Instances view ------------------------------------------------- */
-.lic-viewseg{flex:none;margin-right:4px}
+/* ---------- the Instances page --------------------------------------------------
+   ⚠️ `.lic-viewseg` LIVED HERE and is gone with the Licenses/Instances tablist — the
+   segment had exactly one user and Instances is its own destination now. */
 /* ---------- a utility the system did not have: hidden from sight, not from the tree --
-   Used by the Licenses page, whose h1 is carried visually by its tabs. Not
-   `display:none` and not `visibility:hidden` — both remove it from the accessibility
-   tree too, which would leave the page with no heading at all. */
+   ⚠️ NO USERS IN THE PRODUCT since the Licenses tabs went (its h1 is visible again).
+   Kept, because the reason it exists — hiding a heading from sight without taking it
+   out of the accessibility tree — is not specific to that page, and it is documented
+   in the styleguide as a utility. Not `display:none` and not `visibility:hidden`:
+   both remove it from the accessibility tree too. */
 .vh{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;
   clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
 /* the title row sits where the h1 did, so it carries the h1's space above the card */
 .lic-titlerow{margin-top:2px}
+/* the Instances status filter: the same chip group as the Licenses type filter, so
+   "a chip group narrows the list" reads the same way on both pages */
+.inst-statusseg{display:inline-flex;align-items:center;gap:8px}
 .inst-hint{margin:0;padding:14px 18px;border-bottom:1px solid var(--line2);
   font-size:14px;line-height:1.5;color:var(--mid)}
 .inst-filter{margin:0;padding:12px 18px;border-bottom:1px solid var(--line2);
   font-size:14px;line-height:1.5;color:var(--ink)}
+
+/* ---------- activity: the type chips and the folded check row --------------------
+   The chips are INDEPENDENT on/off, not a mutually-exclusive group — a reader
+   narrowing a log usually wants two kinds at once, not one. Same `.filterchip` the
+   Licenses page's Canceled chip uses, so "on" looks the same in both places. */
+/* ---------- the event-type dropdown ----------------------------------------------
+   ⚠️ This REPLACES four chips and the toolbar row they needed. The same trigger as the
+   period control beside it, and a menu of checkable rows rather than a menu of choices:
+   ticking one does not dismiss it, because choosing two kinds is two clicks. */
+.acttypemenu{min-width:240px}
+.dropcheck{display:flex;align-items:center;gap:8px}
+/* the tick is drawn for every row and hidden until the row is on, so the labels do not
+   shift sideways as they are ticked */
+.dropcheck .cc-check{width:16px;height:16px;flex:none;opacity:0}
+.dropcheck.is-on .cc-check{opacity:1}
+.dropcheck.is-on{font-weight:500}
+.dropfoot{border-top:1px solid var(--line2);margin-top:5px;padding:7px 10px 2px}
+.dropfoot .link{font-size:14px}
+/* the tax line inside the Calculation summary: it qualifies the total directly above
+   it, so it sits in the same card rather than under it */
+.am-taxline{margin:10px 0 0;font-size:13px;line-height:1.4}
+/* "(optional)" inside a label: the same faint weight as help text, so the label still
+   reads as one line rather than two words fighting */
+.help-inline{font-weight:400;color:var(--faint)}
+
+/* ---------- account credit -------------------------------------------------------
+   Its own block on Billing, and two rows inside the wizard. The amount carries the
+   weight a figure needs; everything around it stays quiet, because a balance is a fact
+   and not an action. */
+.creditcard{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;
+  border:1px solid var(--line);border-radius:6px;padding:14px 16px;background:var(--card)}
+.credit-amt{font-size:22px;font-weight:500;font-variant-numeric:tabular-nums;color:var(--ink)}
+.credit-note,.credit-none{font-size:14px;line-height:1.5;color:var(--mid)}
+/* the wizard's own three-line summary: what came off, what the card takes, what is left */
+.nl-creditsum{margin:12px 0 4px;border-top:1px solid var(--line2);padding-top:10px}
+.nl-crow{display:flex;justify-content:space-between;gap:12px;font-size:14px;padding:2px 0}
+.nl-crow.muted span{color:var(--faint)}
+.nl-creditrow div:last-child{white-space:nowrap}
+/* the statement on the Review of a downgrade — inside the effect box, set apart from
+   the sentence above it because it is the other side of the trade */
+.nl-creditnote{margin-top:8px;padding-top:8px;border-top:1px solid var(--line2);color:var(--ink)}
+/* a folded run: the chevron turns when it opens, and the entries it holds sit inside
+   the same row rather than becoming rows of their own */
+.fgroup .fg-toggle .icon{transition:transform .12s}
+.fgroup .fg-toggle.is-on .icon{transform:rotate(180deg)}
+.fg-items{margin:6px 0 0 0;border-left:2px solid var(--line2);padding-left:12px}
+.fg-items[hidden]{display:none}
+.fg-line{padding:3px 0;font-size:14px;color:var(--mid)}
+.fg-lrow{display:flex;align-items:center;gap:10px}
+.fg-time{flex:none;min-width:150px;font-variant-numeric:tabular-nums}
+.fg-txt{flex:1;min-width:0}
+/* smaller than the row's own audit button: it belongs to ONE ENTRY inside a row, not to
+   the row — folding is a display decision, and it must not cost an entry its record */
+.fg-audit{flex:none;width:28px;height:28px}
+.fg-line .fi-audit{margin-top:4px}
+@media (max-width:600px){
+  /* the time moves above the sentence; the payload button stays on the sentence's line */
+  .fg-lrow{flex-wrap:wrap;gap:0 10px}
+  .fg-time{min-width:0;flex:1 1 100%;font-size:13px;color:var(--faint)}
+  .fg-txt{flex:1}
+}
 .inst-filter[hidden]{display:none}
 .ia-name{font-weight:500}
 .ia-id{font-size:13px;color:var(--faint);max-width:30ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -778,7 +852,15 @@ th[aria-label$="ctions"],th.cellact,td.cellact{width:1%;white-space:nowrap;text-
     box-shadow:0 4px 14px rgba(0,0,0,.16)}
   .licmodal .fs-close:hover{background:var(--hover)}
   /* the body starts at the sheet's own top now that no band precedes it */
-  .licmodal .fs-body{padding-top:8px}
+  /* ⚠️ THE 8px IS A MARGIN ON THE CONTENT, NOT PADDING ON THE SCROLLER, and the
+     difference only became visible with a sticky tab bar. Padding on a scroll container
+     insets its SCROLLPORT: `top:0` then resolves 8px down, so the tab bar stopped 8px
+     short of the top and rows travelled through the strip above it — measured, the bar
+     parked at 8.0px and would not go higher however far the panel scrolled. As a margin
+     the same 8px sits at the top of the content, scrolls away with it, and leaves the
+     scrollport edge where the sticky offset expects it. */
+  .licmodal .fs-body{padding-top:0}
+  .licmodal .fs-body > .app{margin-top:8px}
 }
 .licmodal .canvas{background:transparent;border:0;border-radius:0;overflow:visible}
 /* the content spans the modal rather than the page container (--pageW capped it
@@ -968,7 +1050,7 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
 /* ⚠️ This used to be `margin-top:0`: the plan-count row sat between the heading
    and the grid and supplied the whole gap. With the count deleted (2026-09-01) the
    cards butted straight into the heading, so the step owns its own step again. */
-#nlModal .plangrid{margin-top:24px}
+#nlModal .plangroups{margin-top:24px}
 /* wizard step 1 — three levels, no boxes and no section labels:
      1. the product picker: one compact pill segmented control, centred;
      2. a heading naming what the grid shows, with the billing toggle on its right;
@@ -1069,7 +1151,7 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
    every part of it is the wizard's own component, and a landing-only override would
    be exactly the drift the shared template exists to prevent. */
 .planpicker{margin-top:28px}
-.planpicker .plangrid{margin-top:24px}
+.planpicker .plangroups{margin-top:24px}
 
 /* ---------- auth: one box, two screens ----------
    Rides .fs-screen / .fs-box, so it is already a centred modal above 600px and a
@@ -1373,8 +1455,33 @@ body[data-page="home"] .dwrap{padding-top:48px}
   gap:14px;margin-top:20px;align-items:stretch}
 @media(max-width:1080px){.plangrid{grid-auto-flow:row;grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:760px){.plangrid{grid-auto-flow:row;grid-template-columns:1fr}}
-/* single-plan states: centered card, not stretched */
-.plangrid.one{grid-auto-flow:row;grid-template-columns:minmax(0,380px);justify-content:center}
+/* ============================================================================
+   BOTH BILLING MODELS ON ONE SURFACE — the groups
+   ============================================================================
+   ⚠️ THE SWITCHER IS A PHONE CONTROL (2026-09-24). Above 600px the two models sit
+   together, each with its own label and one-line description; the tabs that used to
+   choose between them are hidden, not removed — the phone still needs them, because
+   stacking nine cards is a very long page. Same markup on both, CSS decides. */
+.plangroups{display:grid;gap:34px;margin-top:20px}
+.plangroup-h{margin:0 0 4px}
+.pg-t{margin:0;font-family:var(--font-ui);font-size:var(--t-h3-fs,18px);
+  line-height:1.3;font-weight:500;color:var(--ink)}
+.pg-d{margin:4px 0 0;max-width:74ch;font-size:var(--t-small-fs);line-height:1.55;color:var(--mid)}
+.pg-note{margin-top:12px}
+/* the group's own grid keeps the margin the standalone one had; the wrapper owns the
+   space between groups */
+.plangroup .plangrid{margin-top:14px}
+/* ⚠️ ABOVE 600px THE TABS STAND DOWN. The group headings say what they said, and a
+   control that repeats the labels beside it reads as a second, disagreeing choice. */
+@media(min-width:601px){ .nl-billrow{display:none} }
+/* single-plan states: one card, not stretched across a four-column track.
+   ⚠️ 560px, and it was 380 CENTRED. Measured at 1280 (grid 1072, card padding 36):
+   the perpetual card's name — `ThingsBoard PE Perpetual License` — is 315.9px at
+   20px/500, so it needs 352px of content to stay on one line; 380px gave it 344 and
+   broke it, and five-across would have given it 167 and broken it into three lines.
+   Left-aligned rather than centred, because it is now the content of a labelled group
+   and a centred card under a left-aligned heading reads as unrelated to it. */
+.plangrid.one{grid-auto-flow:row;grid-template-columns:minmax(0,560px);justify-content:start}
 .plancard{position:relative;display:flex;flex-direction:column;margin-top:0;padding:16px 18px}
 /* Change plan: "Current plan" is a strip on the current card's top edge; its
    height is reserved above EVERY card (empty elsewhere) so card heights match
@@ -1438,6 +1545,86 @@ body[data-page="home"] .dwrap{padding-top:48px}
 .pager.air{margin-top:40px}
 /* list pages framed like the dashboard blocks: white card, gray border, rounded */
 .listcard{background:var(--card);border:1px solid var(--line2);border-radius:10px;padding:15px 18px;margin-top:16px}
+
+/* ============================================================================
+   THE STICKY LIST BLOCK — one frame, two things that stay
+   ============================================================================
+   ⚠️ THE SCROLL CONTAINER IS `#shellMain`, NOT THE DOCUMENT. The app bar is a flex
+   sibling ABOVE that container, so it is not `position:fixed` and needs no offset
+   maths: `top:0` inside the frame resolves to the bottom edge of the app bar, which
+   is exactly where the toolbar is asked to stop. Anything that hard-codes a header
+   height here will be wrong the first time the bar changes.
+   ⚠️ THE FRAME LOSES ITS OWN PADDING and the children take it back. A sticky child
+   cannot sit inside a padded box and still meet the frame's edge — it would stop
+   15px down and leave a stripe of card showing above it while rows passed behind. */
+.listframe{padding:0;overflow:visible}
+.listframe > *{padding-left:18px;padding-right:18px}
+.listframe > .tablescroll,.listframe > div > .tablescroll{padding-left:0;padding-right:0}
+/* the page title is the frame's first child and scrolls away with the content — it is
+   in the block, not in the part of it that stays */
+.listframe > .lic-h1{padding-top:16px;margin-bottom:12px}
+.stickybar{position:sticky;top:0;z-index:12;background:var(--card);
+  padding-top:15px;padding-bottom:15px;
+  /* ⚠️ THE DIVIDER, AND IT IS FULL WIDTH BY CONSTRUCTION. The frame has no padding of
+     its own and its children carry theirs, so this border spans the frame edge to edge
+     rather than stopping 18px short the way a rule inside a padded box would. It marks
+     the end of the toolbar whether or not anything is stuck; when the block IS stuck it
+     is also the line the shadow comes off. */
+  border-bottom:1px solid var(--line2)}
+/* ⚠️ `th`, not `thead`. A sticky `thead` is honoured unevenly; the cells are the
+   reliable target, and each needs its OWN background or the rows show through the
+   gaps between them. Each also carries the grey line, for the same reason: a border on
+   the row would leave gaps between the cells. */
+.stickyhead th{position:sticky;top:var(--barH,0px);z-index:11;background:var(--card);
+  border-bottom:1px solid var(--stickyLine)}
+
+/* ---------- the line and the shadow ----------
+   A depth cue, not a border — but it needs a border to come off. The stuck block ends
+   on a grey line, and the shadow falls from that line, so the fixed part reads as
+   sitting ABOVE the rows rather than being spliced into them.
+
+   ⚠️⚠️ THE SHADOW WAS INVISIBLE, and the reason is arithmetic, not opacity. It was
+   `box-shadow:0 6px 12px -8px` on a pseudo-element 8px tall: a spread of −8 shrinks the
+   shadow box by 8px on every side, so an 8px-tall box had a shadow box of height
+   8 − 16 = −8 and the browser drew nothing at all. It was a correct-looking value on an
+   element too thin to carry it. A GRADIENT has no such trap — it renders exactly the
+   band it describes — so that is what the token is now. */
+:root{
+  --stickyLine:var(--line2);
+  --stickyShadow:linear-gradient(to bottom,rgba(28,28,28,.16),rgba(28,28,28,.06) 45%,rgba(28,28,28,0))}
+.listframe .stickybar::after,.listframe .stickyhead th::after{
+  content:"";position:absolute;left:0;right:0;top:100%;height:7px;
+  pointer-events:none;opacity:0;transition:opacity .12s;
+  background:var(--stickyShadow)}
+/* ⚠️ The shadow is drawn by whichever row is LAST in the stuck block — under the
+   column row when there is one, under the toolbar when there is not (Activity is a
+   feed). Two shadows stacked would read as two blocks. */
+.listframe.is-stuck .stickybar::after{opacity:1}
+.listframe.is-stuck:has(.stickyhead th) .stickybar::after{opacity:0}
+.listframe.is-stuck .stickyhead th::after{opacity:1}
+
+/* ---------- the same pattern inside the licence panel ----------
+   ⚠️ A DIFFERENT SCROLL, and that is the only difference. The panel's tab bar is its
+   list header: it names the three areas and it has to stay while their rows go past.
+   In modal mode the scroller is `.fs-body` (which already carries
+   `overscroll-behavior:contain`, so reaching its end does not start scrolling the page
+   behind it); in page mode it is `#shellMain`, the same as everywhere else. One
+   behaviour, one token, two containers — see wireStickyTabs. */
+#appView .tabs{position:sticky;top:0;z-index:11;background:var(--card)}
+#appView .tabs::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:8px;
+  pointer-events:none;opacity:0;transition:opacity .12s;box-shadow:var(--stickyShadow)}
+#appView .tabs.is-stuck::after{opacity:1}
+
+/* ⚠️ A HORIZONTAL SCROLLER IS A STICKY CONTAINER TOO, and that is the whole reason
+   this class is toggled from script instead of being a plain rule. `overflow-x:auto`
+   computes `overflow-y` to `auto` as well, so a `thead` inside `.tablescroll` sticks
+   to THAT box — which has no height limit, so it never sticks to anything the reader
+   can see. The wrapper therefore only becomes a scroller when the table genuinely
+   overflows it (narrow desktop windows); when the table fits, the wrapper is inert
+   and the column row sticks to the page. Sideways scrolling and a stuck column row
+   cannot both happen, and this picks whichever the width actually calls for. */
+.tablescroll{overflow:visible}
+.tablescroll.is-scrollable{overflow-x:auto}
 .listcard .lic-controls,.listcard .insttoolbar{margin:0}
 .listcard .pager{margin-top:18px;padding-bottom:0}
 .listcard .feed{margin-top:0}
@@ -1659,9 +1846,23 @@ td.eb-cell .emptybox{border:0}
    controls that answer no question. It all comes back with the first row.
    `:has()` picks the wrapper by what is inside it, so the toolbar's own card goes
    rather than collapsing to an empty bordered strip. */
-body.list-empty .listcard:has(.lic-controls),
-body.list-empty .listcard:has(.insttoolbar),
+/* ⚠️⚠️ THIS TARGETED THE TOOLBAR'S OWN CARD, and that card is now the whole frame.
+   The selectors were `.listcard:has(.lic-controls)` / `:has(.insttoolbar)` — written
+   when the toolbar had a card of its own and the table had another, so hiding the first
+   left the second showing the empty state. Merged into one frame, the same selectors
+   matched THAT, and an account with nothing in it would have rendered a page with no
+   frame, no empty state and nothing to read. The subject was always the toolbar, so
+   the selector now says the toolbar. */
+body.list-empty .stickybar,
+body.list-empty .listcard:has(> .lic-controls):not(.listframe),
+body.list-empty .listcard:has(> .insttoolbar):not(.listframe),
 body.list-empty .pager,
+/* ⚠️ The Instances hint goes with them. It tells you to deactivate the old instance
+   after moving a deployment — advice about a thing an account with no instances does
+   not have, printed directly above a box saying there are none. The empty state
+   already explains how an instance appears, which is the only thing worth saying
+   here. */
+body.list-empty .inst-hint,
 body.list-empty thead{display:none}
 /* the two controls the phone relocates into the page header row (syncTitleRow) */
 body.list-empty #pageTitleRow [data-refresh],
@@ -1793,7 +1994,7 @@ body.list-empty #pageTitleRow #licNewBtn{display:none !important}
    data still flows (see meterRow / DETAILS_HTML). Delete this one rule to bring the
    column back; nothing else has to change. */
 .plantable .usecol{display:none}
-.tablescroll{overflow-x:auto}
+/* ⚠️ moved to the sticky block above: it is now conditional (`.is-scrollable`) */
 .paymodal{background:#fff;border:1px solid var(--line);border-radius:10px;width:min(560px,96vw);box-shadow:0 18px 48px rgba(0,0,0,.20);display:flex;flex-direction:column}
 .paymodal-h{display:flex;align-items:center;gap:12px;padding:20px 24px;border-bottom:1px solid var(--line2)}
 .paymodal-h h3{margin:0;font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw)}
@@ -2107,6 +2308,7 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
   .tb-refresh:hover{color:var(--ink);background:var(--hover)}
   /* only the four list pages have anything to refresh */
   body[data-page="licenses"] .tb-refresh,
+  body[data-page="instances"] .tb-refresh,
   body[data-page="invoices"] .tb-refresh,
   body[data-page="activity"] .tb-refresh,
   body[data-page="users"] .tb-refresh{display:inline-flex}
@@ -2190,17 +2392,59 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
   /* No sideways scrolling for the main lists: each row is a card, and the column
      heads go away with the columns. Applies to the licence row and the invoice row
      wherever they render — same component, same treatment. */
-  .tablescroll{overflow-x:visible}
-  table:has(.lic-row) thead,table:has(.inv-row) thead,table:has(.user-row) thead{display:none}
-  .lic-row,.inv-row,.user-row{display:block;position:relative;
+  .tablescroll,.tablescroll.is-scrollable{overflow-x:visible}   /* rows are cards here */
+  /* ---------- the sticky block on a phone ----------
+     ⚠️ ONLY THE COLUMN ROW STICKS; the toolbar scrolls away with the title. Three stuck
+     rows would take a third of the screen, and search and filters are used once a
+     session here — the column row is the one that has to stay to keep a scrolled list
+     readable.
+     ⚠️⚠️ WHICH, ON FOUR OF THE FIVE PAGES, MEANS NOTHING STICKS AT ALL — and that is
+     not a bug in this rule. Licenses, Instances, Invoices and Users turn their rows
+     into cards at this width and hide `thead` with them, and Activity is a feed with no
+     column row anywhere. So the rule is honoured and currently has no visible subject.
+     It is written out rather than skipped because the day one of these lists keeps its
+     columns on a phone, the behaviour is already decided. */
+  .listframe .stickybar{position:static;padding-top:0;padding-bottom:0}
+  .listframe .stickybar::after{display:none}
+  .listframe .stickyhead th{top:0}
+  /* ⚠️ The children give the padding BACK here, rather than the frame taking it: at
+     this width the frame is not a surface at all (rule above), so 18px of inset on its
+     children would push the toolbar and the row cards off the page's own margin. */
+  .listframe > *{padding-left:0;padding-right:0}
+  table:has(.lic-row) thead,table:has(.inv-row) thead,table:has(.user-row) thead,
+  table:has(.inst-row) thead{display:none}
+  .lic-row,.inv-row,.user-row,.inst-row{display:block;position:relative;
     border:1px solid var(--line2);border-radius:10px;padding:12px;
     margin-bottom:10px;background:var(--card)}
-  .lic-row:last-child,.inv-row:last-child,.user-row:last-child{margin-bottom:0}
+  .lic-row:last-child,.inv-row:last-child,.user-row:last-child,.inst-row:last-child{margin-bottom:0}
   /* ⚠️ `tr.` on the front is load-bearing: .dblock table td sets an 11px cell
      padding at the same specificity, and without the extra type selector every
      line of the card keeps a 22px band of dead space (measured: 42px lines). */
-  tr.lic-row > td,tr.inv-row > td,tr.user-row > td{display:block;width:auto;padding:0;border:0;
+  tr.lic-row > td,tr.inv-row > td,tr.user-row > td,tr.inst-row > td{display:block;width:auto;padding:0;border:0;
     white-space:normal;text-align:left}
+
+  /* ---------- the Instances row becomes a card ----------
+     ⚠️ This row had NO card treatment at all, because it had no class to hang one on —
+     see instAllRow. At 390px the five columns each took a fifth of the screen and the
+     licence name wrapped to six lines.
+     Reading order is the deployment, then the licence it draws on, then the three facts
+     that answer "is it healthy" on one line: when it last reported, what it runs, and
+     its state. The kebab pins to the corner, the way the licence card's does. */
+  tr.inst-row{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;
+    padding-right:44px}
+  tr.inst-row > td:nth-child(1){order:1;flex:0 0 100%}          /* name + id */
+  tr.inst-row > td:nth-child(2){order:2;flex:0 0 100%;margin-top:6px}   /* licence */
+  tr.inst-row > td:nth-child(3){order:3;color:var(--faint);font-size:14px;margin-top:6px}
+  tr.inst-row > td:nth-child(4){order:4;margin-top:6px}          /* version */
+  tr.inst-row > td:nth-child(5){order:5;margin-top:6px}          /* status pill */
+  /* the id is a 36-character uuid: it must wrap or ellipsize, never widen the card */
+  .inst-row .ia-id{max-width:100%}
+  .inst-row .ia-lic{font-size:14px}
+  .inst-row .ia-licsub{color:var(--faint)}
+  .inst-row .verline{flex-direction:row;align-items:baseline;gap:8px;flex-wrap:wrap}
+  tr.inst-row > td.cellact{position:absolute;top:8px;right:8px;
+    width:auto;margin:0;padding:0;text-align:right}
+  .inst-row > td.cellact .lic-actions{gap:2px}
 
   /* ---------- the Users row becomes a card ----------
      ⚠️ This page had been skipped entirely: only Home and the licence pages were
@@ -2629,6 +2873,21 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
   .nl-billtabs{align-self:stretch;
     margin-left:calc(-1 * var(--pageX));margin-right:calc(-1 * var(--pageX));
     padding-left:var(--pageX);padding-right:var(--pageX)}
+  /* ---------- the phone keeps the switcher ----------
+     ⚠️ BOTH GROUPS ARE IN THE DOM at every width; here the tabs decide which one is
+     seen. Rendering both and hiding one keeps a single reading of the choice — the
+     alternative is a phone-only code path, which is the kind only the phone can catch
+     when it breaks. */
+  .plangroups[data-bill="subscription"] .plangroup[data-bill="perpetual"],
+  .plangroups[data-bill="perpetual"] .plangroup[data-bill="subscription"]{display:none}
+  /* ⚠️ The heading goes ONLY when a tab is there to say the same word. A locked Change
+     plan renders one group and no tabs, and then the heading is the only label. */
+  .plangroups.two .plangroup-h{display:none}
+  .plangroups{gap:0}
+  .plangroup .plangrid{margin-top:0}
+  /* alone in its row, a single card takes the screen like every other card here */
+  .plangrid.one{grid-template-columns:1fr}
+  #nlModal .plangroups{margin-top:var(--s-grp)}
   #nlModal .plangrid{margin-top:var(--s-grp);gap:var(--s-card)}
   /* the plan cards were transparent, so they dissolved into the gray sheet ground */
   #nlModal .plangrid > .plancard{background:var(--card)}
@@ -2736,7 +2995,11 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
     border-radius:0;border-left:0;border-right:0}
   .listcard,.setcard{padding-left:var(--pageX);padding-right:var(--pageX)}
   /* the toolbar's own wrapper is not a surface at all (see below), so it must not
-     take the negative margin — its controls would hang off both edges */
+     take the negative margin — its controls would hang off both edges.
+     ⚠️ `.listframe` is that wrapper now: the toolbar and the list share one card, and
+     on the phone the rows carry their own card each, so the frame around them has
+     nothing left to draw. */
+  .listframe,
   .listcard:has(> .lic-controls),.listcard:has(> .insttoolbar){
     margin-left:0;margin-right:0;padding-left:0;padding-right:0}
 
@@ -2893,6 +3156,7 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
      list's own card must keep its surface. `:has()` is the only way to tell them
      apart without touching four HTML files, and it is already used elsewhere in
      this file (the invoice card's divider). */
+  .listframe,
   .listcard:has(> .lic-controls),.listcard:has(> .insttoolbar){
     background:transparent;border:0;border-radius:0;padding:0;margin-bottom:16px;
     overflow:visible}
@@ -2905,18 +3169,17 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
   /* the phone keeps the pair tighter — the rows are stacked blocks there rather than two
      bands, and 24px of the screen's height is a card */
   .listcard .lic-viewrow{margin-bottom:12px}
-  /* the toggle takes the line it would wrap to anyway; the primary follows on its own,
-     which is the arrangement every other list page's primary already has */
-  .lic-viewrow .lic-viewseg{flex:1 1 100%;margin-right:0}
-  .lic-viewrow .lic-viewtab{flex:1}
+  /* ⚠️ The two `.lic-viewseg` / `.lic-viewtab` rules that were here went with the
+     tablist. The spacer still stands down, so what is left of the row — refresh and the
+     primary — takes the arrangement every other list page's primary already has. */
   .lic-viewrow .spacer{display:none}
   .searchbox{width:100%;min-width:0;flex:0 0 100%;order:1}
   /* the chip row: one line, scrolls sideways, no scrollbar furniture */
-  .lic-typeseg,.insttoolbar .perctl{order:2}
-  .lic-typeseg{display:flex;gap:8px;flex:0 0 100%;min-width:0;
+  .lic-typeseg,.inst-statusseg,.insttoolbar .perctl{order:2}
+  .lic-typeseg,.inst-statusseg{display:flex;gap:8px;flex:0 0 100%;min-width:0;
     overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
-  .lic-typeseg::-webkit-scrollbar{display:none}
-  .lic-typeseg > *{flex:none}
+  .lic-typeseg::-webkit-scrollbar,.inst-statusseg::-webkit-scrollbar{display:none}
+  .lic-typeseg > *,.inst-statusseg > *{flex:none}
   /* the switch and its sentence are replaced by the Canceled chip in the row above */
   .lic-toggle{display:none}
   .filterchip,.typechip{min-height:40px}

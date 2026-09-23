@@ -85,7 +85,7 @@ var Store = (function(){
      no company name at all. That store would render a half-empty consolidated section
      and print an invoice missing the company. Bumping is cheaper than a migration for
      a prototype, and unlike a migration it cannot half-succeed. */
-  var KEY = 'tb-license-portal-demo-v14';   // v14: B16 (expired updates) + B12 moved to the 30-day stage
+  var KEY = 'tb-license-portal-demo-v16';   // v16: Non-commercial removed from the offer and the specs
   function clone(o){ return JSON.parse(JSON.stringify(o)); }
   /* ⚠️ The snapshot is taken ONCE and then shifted to today. Doing it here rather than
      at render time means every surface reads the same stored dates, and a browser left
@@ -140,6 +140,13 @@ var Store = (function(){
       /* who signed up in this browser — { email, name }. Events log against it, so a
          purchase made by a new account is not attributed to the demo's own address. */
       account: null,
+      /* ⚠️ ACCOUNT CREDIT — one number, not a ledger of entries. What a ledger would add
+         is a history of why the balance moved, and that history already exists: every
+         change that creates or spends credit writes an activity entry saying so. A
+         second record of the same events is a second thing that can disagree with the
+         first. If credit ever needs to expire per-entry, THAT is when it becomes a
+         list. Stored in whole currency units, like every other amount here. */
+      credit: 0,
       seq: 0                      // counter behind generated licence ids and keys
     };
   }
@@ -237,6 +244,13 @@ function logActivity(e){
     actor: e.actor || portalActor(), action: e.action, txt: e.txt
   };
   if(e.delta) a.delta = e.delta;
+  /* ⚠️ WHICH LICENCE this event is about, when the caller knows. Without it the
+     licence's own Activity tab could not show a single thing that had actually been
+     logged — it had to synthesise a history from the licence object, so a plan change
+     recorded here appeared on the Activity page and nowhere near the licence it
+     changed. Optional on purpose: an account-level event (a user invited, a password
+     changed) genuinely has no licence. */
+  if(e.licId) a.licId = e.licId;
   DATA().activity.unshift(a);          // newest first, the order the feed reads in
   Store.save();
   // the feed is on screen on Home and on the Activity page — repaint if we are there
@@ -250,7 +264,7 @@ function storeCancelLicense(id){
   if(l){
     l.status = 'canceled';
     Store.save();
-    logActivity({ kind:'canceled', entityType:'Subscription', entityName:l.name, action:'CANCELED',
+    logActivity({ kind:'canceled', licId:l.id, entityType:'Subscription', entityName:l.name, action:'CANCELED',
       txt:'Subscription <b>' + esc(l.name) + '</b>' + (l.label ? ' (' + esc(l.label) + ')' : '')
         + ' was canceled by ' + portalActor() + ' — active until <b>' + fmtDate(l.event) + '</b>.' });
     /* the RESULT leaves on its own; the licence's own "Canceled · active until …" is
@@ -281,10 +295,39 @@ function invoicesSorted(list){
   return (list || DATA().invoices).slice()
     .sort(function(a, b){ return dateKey(b.date) - dateKey(a.date); });
 }
+/* ---------- account credit ------------------------------------------------------
+   Created when a change gives back what was already paid for and not used; spent on the
+   next purchase before the card is touched. */
+function accountCredit(){ return +(Store.get('credit') || 0); }
+function addCredit(amount, entry){
+  if(!(amount > 0)) return 0;
+  Store.set('credit', Math.round((accountCredit() + amount) * 100) / 100);
+  if(entry) logActivity(entry);
+  return amount;
+}
+/* Spends up to `amount` and returns what was actually taken — the caller needs the real
+   figure, because it is what the summary and the invoice both print. */
+function useCredit(amount){
+  var used = Math.min(accountCredit(), Math.max(0, amount));
+  if(used > 0) Store.set('credit', Math.round((accountCredit() - used) * 100) / 100);
+  return Math.round(used * 100) / 100;
+}
 function storeAddInvoice(lic, amount, opts){
   opts = opts || {};
   var inv = { num:invoiceNumber(), licId:lic.id, date:todayStr(), amount:amount,
               status:'Paid', payment:opts.payment || 'Card', auto:!!opts.auto };
+  /* ⚠️ CREDIT IS RECORDED ON THE INVOICE, and it has to be. An invoice is the record of
+     what was CHARGED: if $60 of a $299 order came off the balance, a document saying
+     $299 misstates what the card took, and one saying $239 hides where the rest went.
+     Both figures, or the document cannot be reconciled against either the order or the
+     card statement. */
+  if(opts.credit > 0){ inv.credit = opts.credit; inv.charged = opts.charged; }
+  /* ⚠️ A ONE-TIME DISCOUNT IS RECORDED HERE OR NOWHERE. The coupon lives in the wizard's
+     own state and dies with the flow; the invoice is the only durable record that this
+     charge was not the list price, and without the original figure the document cannot
+     be reconciled against the licence's price. Three numbers, because two cannot be
+     checked: what it would have been, what came off, what was paid. */
+  if(opts.original){ inv.original = opts.original; inv.discount = opts.discount; inv.couponCode = opts.couponCode; }
   DATA().invoices.unshift(inv);
   Store.save();
   return inv;
@@ -292,7 +335,7 @@ function storeAddInvoice(lic, amount, opts){
 function storeAddLicense(lic){
   DATA().licenses.unshift(lic);
   Store.save();
-  logActivity({ kind:'created', entityType:lic.type, entityName:lic.name, action:'ADDED',
+  logActivity({ kind:'created', licId:lic.id, entityType:lic.type, entityName:lic.name, action:'ADDED',
     txt:esc(lic.type) + ' <b>' + esc(lic.name) + '</b> was created by ' + portalActor() + '.' });
 }
 function storeAddUser(u){
@@ -368,7 +411,7 @@ function setLicenseLabel(lic, val){
   lic.label = String(val || '').trim();
   Store.save();                        // the object came out of the store, so this persists it
   if(lic.label !== was){
-    logActivity({ kind:'updated', entityType:'Label', entityName:lic.name, action:'UPDATED',
+    logActivity({ kind:'updated', licId:lic.id, entityType:'Label', entityName:lic.name, action:'UPDATED',
       txt: lic.label
         ? ('Label <b>' + esc(lic.label) + '</b> was set on <b>' + esc(lic.name) + '</b> by ' + portalActor() + '.')
         : ('Label was cleared on <b>' + esc(lic.name) + '</b> by ' + portalActor() + '.') });
@@ -477,6 +520,10 @@ function signOut(){ setSession('out'); }
    header, and Users is NOT a destination — it is a nested level inside the profile
    menu, where "who can get in" belongs with the account. Four destinations, on both
    breakpoints.
+   ⚠️ THE COUNT IN THIS PARAGRAPH IS HISTORY: it said "four destinations" from the
+   pass that hid Users, Users came back 2026-09-17 making five, and Instances makes
+   SIX (2026-09-23). Six is a deliberate, measured choice and not a clean fit — see
+   bottomNavHTML.
    ⚠️ This was a switchable variant ('v1' put Users in the nav and the title in the
    bar). The alternative is gone — array, getters, body class, CSS branches, stored
    key and settings group all removed. If a comparison is ever needed again it is a
@@ -486,6 +533,13 @@ var NAV_ITEMS = [
     ic:'<path d="M4 10.5L12 4l8 6.5V20h-5.5v-6h-5v6H4z"/>' },
   { key:'licenses', href:'licenses.html', label:'Licenses',
     ic:'<circle cx="9" cy="15" r="3"/><path d="M11.2 12.8L19 5"/><path d="M15.5 5H19v3.5"/>' },
+  /* ⚠️ A DESTINATION SINCE 2026-09-23, reversing "a view toggle, NOT a nav destination"
+     on the Licenses page. Directly after Licenses, because it is the same subject
+     sliced by deployment. See the measurement note above about what a sixth item does
+     to the phone. */
+  { key:'instances', href:'instances.html', label:'Instances',
+    ic:'<rect x="3" y="4" width="18" height="6" rx="1.5"/><rect x="3" y="14" width="18" height="6" rx="1.5"/>'
+      + '<path d="M6.5 7h.01M6.5 17h.01"/>' },
   { key:'invoices', href:'invoices.html', label:'Invoices',
     ic:'<path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9.5 8.5h5M9.5 12.5h5"/>' },
   { key:'activity', href:'activity.html', label:'Activity',
@@ -506,9 +560,17 @@ function navItemsHTML(extraClass){
       + '" href="' + n.href + '">' + n.label + '</a>';
   }).join('');
 }
-/* The phone's primary navigation: a bottom bar, not a drawer. Five destinations
-   at the same level are what a bottom bar is for — a drawer hid all five behind a
-   press and put "Users" out of sight. Same items, same `data-nav`, same
+/* The phone's primary navigation: a bottom bar, not a drawer. Destinations at the
+   same level are what a bottom bar is for — a drawer hid all of them behind a press
+   and put "Users" out of sight.
+   ⚠️⚠️ SIX ITEMS DO NOT FIT CLEANLY, and that is a decision, not an oversight.
+   Measured at the 14px type floor (which is the floor, so it did not move): the bar
+   splits evenly, so six cells are 65px at 390px and the label box is 61px.
+   "Instances" is 59.6px wide — it clears 390px by 1.4px, and clips at 375px (−1.1),
+   at 360px (−3.6) and, with "Licenses" and "Invoices", at 320px (−10.3). Five cells
+   were 78px with 24px of slack, which is what the old "five of them fit" note meant.
+   Accepted as-is pending further passes on the bar; nothing was shrunk or renamed to
+   make room. Same items, same `data-nav`, same
    `.tnav-item` class, so syncTopNav marks the current one here too and there is
    still one source of truth. Hidden above 600px by CSS; the desktop strip is
    hidden below it. */
@@ -712,6 +774,15 @@ function settingsBodyHTML(){
     out += group('Customize step',
       '<label class="sp-opt"><input type="radio" name="custVariant" value="a"' + (custVariant() === 'a' ? ' checked' : '') + '><span>A — Plan card</span></label>'
       + '<label class="sp-opt"><input type="radio" name="custVariant" value="b"' + (custVariant() === 'b' ? ' checked' : '') + '><span>B — Locked inputs (default)</span></label>');
+  }
+  /* ⚠️ A demo lever for a state that is otherwise unreachable in one sitting: to see a
+     purchase spend credit you would first have to downgrade something, and the credit a
+     downgrade produces depends on where in its cycle that licence happens to be. This
+     puts a known balance on the account so the applied-credit purchase can be shown. */
+  if(c.billing || c.wizard){
+    out += group('Account credit',
+      '<label class="sp-opt"><input type="radio" name="credit" value="0"' + (accountCredit() ? '' : ' checked') + '><span>None</span></label>'
+      + '<label class="sp-opt"><input type="radio" name="credit" value="120"' + (accountCredit() ? ' checked' : '') + '><span>$120.00 balance</span></label>');
   }
   if(c.wizard || c.billing){
     out += group('Billing data',
@@ -1312,7 +1383,7 @@ function recoverFailedPayments(){
       l.status = 'active';
       l.updated = todayStr();
       if(fixed.indexOf(l.id) < 0) fixed.push(l.id);
-      logActivity({ kind:'updated', entityType:'License', entityName:l.name, action:'PAYMENT_RECOVERED',
+      logActivity({ kind:'updated', licId:l.id, entityType:'License', entityName:l.name, action:'PAYMENT_RECOVERED',
         txt:'Payment succeeded on <b>' + esc(l.label || l.name) + '</b> after the payment method was updated — the license is active again.' });
     });
   });
@@ -1356,6 +1427,12 @@ function wireSettingsPanel(){
         Store.set('dash', r.value);
         if(document.body.getAttribute('data-page') === 'home') location.reload();
         else location.href = 'index.html';
+        return;
+      /* the balance changes what a purchase charges, so an open wizard has to repaint */
+      case 'credit':
+        Store.set('credit', +r.value || 0);
+        if(typeof renderCreditBlock === 'function') renderCreditBlock();
+        if(window.NL && NL.refreshOpen) NL.refreshOpen();
         return;
       // billing data drives how many steps the wizard has; re-render it if it is open
       case 'billingData':
@@ -1743,6 +1820,7 @@ if(guardSession()){
   injectChrome();
   wireGlobal();
   syncTitleRow();
+  wireStickyFrames();
 }
 
 /* ---------- the page title row (phone) ----------------------------------------
@@ -1834,6 +1912,115 @@ function syncTitleRow(){
     });
 }
 window.addEventListener('resize', syncTitleRow);
+
+/* ============================================================================
+   THE STICKY LIST BLOCK — the measuring half of the pattern in styles.css
+   ============================================================================
+   Three jobs, and each exists because CSS alone gets it wrong here:
+
+   1 · THE COLUMN ROW'S OFFSET. It sticks beneath the toolbar, and the toolbar is a
+       different height on every page — taller on Licenses, which carries chips and a
+       switch, and taller again at any width where it wraps. A constant would leave a
+       gap on one page and overlap on another, so the measured height goes into
+       `--barH` and is re-measured whenever the bar changes size.
+
+   2 · WHETHER THE TABLE WRAPPER SCROLLS. ⚠️ `overflow-x:auto` makes the wrapper a
+       sticky container in BOTH axes, and a `thead` inside it then sticks to a box with
+       no height limit — which is to say, to nothing the reader can see. So the wrapper
+       is only made scrollable when the table actually overflows it. Measured: at
+       1280px every list table fits; at 660px the Licenses table is 874px against a
+       574px box, which is what the wrapper was put there for. Below 600px rows are
+       cards and the question does not arise.
+
+   3 · THE SHADOW. ⚠️ Not "scrollTop > 0": on a page whose title is tall the toolbar has
+       not reached the top yet, and a shadow under an unstuck block is a line drawn for
+       no reason. The test is whether the bar has actually arrived at the container's
+       top edge, which is a rect comparison and cannot disagree with what is on screen.
+
+   The licence panel uses the same function with its own scroller — see
+   LicenseDetails; `.fs-body` is a separate scroll from the page. */
+/* ⚠️ WHERE A STUCK ELEMENT ACTUALLY COMES TO REST, which is not the scroller's top
+   edge. A scroll container's PADDING insets its scrollport, and a sticky child's `top`
+   resolves against that inset — so on a container with `padding-top:8px` the element
+   parks at 8px and a test against the raw edge never fires. Caught on the licence
+   panel, where the modal body carried exactly that. Reading both the padding and the
+   element's own `top` means the test says "stuck" when the eye does. */
+function stickyLine(scroller, el){
+  var pad = parseFloat(getComputedStyle(scroller).paddingTop) || 0;
+  var off = parseFloat(getComputedStyle(el).top) || 0;
+  return scroller.getBoundingClientRect().top + pad + off;
+}
+function wireStickyFrame(frame, scroller){
+  if(!frame || !scroller || frame.__sticky) return;
+  frame.__sticky = true;
+  var bar = frame.querySelector('.stickybar');
+  var wrap = frame.querySelector('.tablescroll');
+  var table = wrap && wrap.querySelector('table');
+
+  function measure(){
+    if(bar) frame.style.setProperty('--barH', Math.round(bar.getBoundingClientRect().height) + 'px');
+    if(wrap && table){
+      /* compare against the wrapper's own content box, and do it with the scroller off,
+         or a wrapper that is already scrolling reports a clientWidth narrowed by its
+         own scrollbar and never switches back */
+      wrap.classList.remove('is-scrollable');
+      if(table.scrollWidth > wrap.clientWidth + 1) wrap.classList.add('is-scrollable');
+    }
+  }
+  function syncShadow(){
+    if(!bar) return;
+    var stuck = scroller.scrollTop > 0
+      && bar.getBoundingClientRect().top <= stickyLine(scroller, bar) + 0.5;
+    frame.classList.toggle('is-stuck', stuck);
+  }
+  function sync(){ measure(); syncShadow(); }
+
+  scroller.addEventListener('scroll', syncShadow, { passive:true });
+  window.addEventListener('resize', sync);
+  /* ⚠️ THE TABLE IS OBSERVED TOO, and leaving it out is what made the first version
+     wrong: this runs at boot, from the chrome, and the page module that fills the
+     tbody has not loaded yet — so the overflow test ran against an empty table, found
+     it narrow, and left the wrapper inert on a list that would need it. */
+  if(window.ResizeObserver){
+    var ro = new ResizeObserver(sync);
+    if(bar) ro.observe(bar);
+    if(table) ro.observe(table);
+  }
+  sync();
+}
+/* The licence panel's tab bar: the same stuck-block behaviour with no column row under
+   it and no table to measure, against whichever container actually scrolls. */
+function wireStickyTabs(tabs, scroller){
+  if(!tabs || !scroller) return;
+  function sync(){
+    tabs.classList.toggle('is-stuck', scroller.scrollTop > 0
+      && tabs.getBoundingClientRect().top <= stickyLine(scroller, tabs) + 0.5);
+  }
+  scroller.addEventListener('scroll', sync, { passive:true });
+  window.addEventListener('resize', sync);
+  sync();
+}
+/* ⚠️ Walk up for the scroll container rather than naming it: the same surface is
+   mounted in a modal (`.fs-body`) and in a page (`#shellMain`), and hard-coding either
+   leaves the other with a tab bar that scrolls away.
+   ⚠️ IT MUST NOT TEST `scrollHeight > clientHeight`. That was the first version, and it
+   was wrong for the reason the check looked right: this runs at MOUNT, when the panel
+   has been filled but not yet laid out at its final height, so `.fs-body` measured as
+   not-yet-scrollable and the walk fell through to the page — which, in a modal, is the
+   one container that is explicitly not scrolling. Overflow alone is the right test now
+   that `.content` no longer claims to be a scroller. */
+function scrollParent(el){
+  for(var p = el.parentElement; p; p = p.parentElement){
+    var o = getComputedStyle(p).overflowY;
+    if(o === 'auto' || o === 'scroll') return p;
+  }
+  return $('#shellMain') || document.scrollingElement;
+}
+/* every list page has at most one frame, and the page scroll is always #shellMain */
+function wireStickyFrames(){
+  var scroller = $('#shellMain');
+  if(scroller) $$('#shellMain .listframe').forEach(function(f){ wireStickyFrame(f, scroller); });
+}
 
 /* ---------- users: the actions, shared by every surface that lists them ----------
    Users is a nested level inside the profile menu, which is chrome — so add,

@@ -37,6 +37,17 @@
 
     <div class="setdiv"></div>
 
+    <!-- ⚠️ CREDIT IS ITS OWN SECTION, not a line inside the payment method. A card is
+         how money leaves; credit is money the account already holds — they answer
+         different questions, and a balance tucked under "Payment method" reads as a
+         property of the card, which it is not. Filled by renderCreditBlock. -->
+    <div class="setsec" id="creditSec">
+      <div class="setcard-h"><h2>Account credit</h2><span class="setcard-hint">Applied to your next purchase before your card is charged</span></div>
+      <div class="creditcard" id="creditCard"></div>
+    </div>
+
+    <div class="setdiv"></div>
+
     <!-- ⚠️ ONE section for the company, and it lives HERE. Account used to carry a
          "Company details" card — company name, description and a full address — while
          this page carried "Billing address" with the same country / state / city / ZIP /
@@ -54,6 +65,11 @@
     <div class="setsec">
       <div class="setcard-h"><h2>Company details</h2><span class="setcard-hint">Printed on every invoice</span></div>
       <div class="field"><label for="bill-company">Company name</label><input id="bill-company" data-field="company" type="text" value="ThingsBoard"></div>
+      <!-- ⚠️ The tax number sits WITH the company name and address, not in a section of
+           its own: it is one of the identifying details an invoice prints, and every
+           other one of them is here. Optional — not every buyer is registered for tax,
+           and a required field would block the ones who are not. -->
+      <div class="field"><label for="bill-taxid">Tax number <span class="help-inline">(optional)</span></label><input id="bill-taxid" data-field="taxId" type="text" placeholder="e.g. DE123456789" value=""></div>
       <div class="field"><label for="bill-descr">Description</label><textarea id="bill-descr" data-field="descr">IoT platform provider.</textarea></div>
       <div class="field2">
         <div class="field"><label for="bill-email">Billing email</label><input id="bill-email" data-field="email" type="email" value="hello@thingsboard.io"></div>

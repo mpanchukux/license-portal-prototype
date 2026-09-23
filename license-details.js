@@ -223,13 +223,78 @@ var DETAILS_HTML = ''
 + ''
 + '          <!-- tab bar for the three data areas -->'
 + '          <div class="tabs" role="tablist" aria-label="Details areas">'
-+ '            <button class="tab" role="tab" id="tab-invoices" aria-controls="panel-invoices" aria-selected="true" tabindex="0">Invoices</button>'
-+ '            <button class="tab" role="tab" id="tab-prod" aria-controls="panel-prod" aria-selected="false" tabindex="-1">Instances</button>'
+/* ⚠️ INSTANCES FIRST. The tab order is Instances · Invoices · Activity — what is
+   RUNNING on this licence before what it cost. The panels below are in the same order:
+   `aria-controls` would make any order work, but a tablist whose panels are sourced in
+   a different sequence is a trap for the next person reading the file. */
++ '            <button class="tab" role="tab" id="tab-prod" aria-controls="panel-prod" aria-selected="true" tabindex="0">Instances</button>'
++ '            <button class="tab" role="tab" id="tab-invoices" aria-controls="panel-invoices" aria-selected="false" tabindex="-1">Invoices</button>'
 + '            <button class="tab" role="tab" id="tab-logs" aria-controls="panel-audit" aria-selected="false" tabindex="-1">Activity</button>'
 + '          </div>'
 + ''
++ '          <!-- Instances -->'
++ '          <div class="panel" id="panel-prod" role="tabpanel" aria-labelledby="tab-prod">'
++ '            <div class="section">'
++ '              <!-- type switcher (same segmented style as the Licenses "Type" filter) + toolbar -->'
++ '              <div class="insttoolbar">'
+/* ⚠️ The Instances search was REMOVED, not wired. It would have filtered two
+   hardcoded rows that are identical for every licence — theatre, and a control that
+   survives to a demo either works or is not there. It comes back with real instance
+   data; see NOTES. */
++ '                <div class="lic-typeseg" role="group" aria-label="Instance type">'
++ '                  <button class="typechip is-on" data-insttype="prod" aria-pressed="true">Production</button>'
++ '                  <button class="typechip" data-insttype="dev" aria-pressed="false">Development</button>'
++ '                </div>'
++ '                <span class="spacer"></span>'
++ '                <button class="iconbtn ib" data-refresh aria-label="Refresh" title="Refresh"><svg class="icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg></button>'
++ '              </div>'
++ ''
++ '              <!-- ⚠️ RENDERED, not written. This used to be two hardcoded rows —'
++ '                   the same two ids, the same blank labels, the same dates, for every'
++ '                   licence in the product. Now both tables are filled by'
++ '                   renderInstances() from the licence\'s own `instances`. -->'
++ '              <p class="inst-note" id="instNote"></p>'
++ '              <div class="insttype" data-insttype="prod">'
++ '                <table class="insttable">'
++ '                  <thead>'
++ '                    <tr>'
++ '                      <th>Instance ID</th>'
++ '                      <th>Label</th>'
++ '                      <th>Status</th>'
++ '                      <th>Last activity time</th>'
++ '                      <th class="sortable" aria-sort="descending" tabindex="0">Created time <span class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></span></th>'
++ '                      <th aria-label="Actions"></th>'
++ '                    </tr>'
++ '                  </thead>'
++ '                  <tbody id="instBodyProd"></tbody>'
++ '                </table>'
++ pagerHTML('instPagerProd')
++ '              </div>'
++ ''
++ '              <div class="insttype" data-insttype="dev" hidden>'
++ '                <table class="insttable" id="instTableDev">'
++ '                  <thead>'
++ '                    <tr>'
++ '                      <th>Instance ID</th><th>Label</th><th>Status</th>'
++ '                      <th>Last activity time</th><th>Created time</th><th aria-label="Actions"></th>'
++ '                    </tr>'
++ '                  </thead>'
++ '                  <tbody id="instBodyDev"></tbody>'
++ '                </table>'
+/* ⚠️ THE DEV TABLE HAD NO PAGER AT ALL. Prod had one (markup only, and inert); dev had
+   nothing, so the two halves of the same tab disagreed about whether a long list was
+   possible. Same builder as every other pager here now. */
++ pagerHTML('instPagerDev')
++ '              </div>'
++ ''
++ '              <!-- Community Grant: nothing has connected with the new key yet, so the'
++ '                   whole tab is this one line (toolbar and tables hidden) -->'
++ '              <div class="emptybox" id="grantInstEmpty" hidden>An instance appears here after it connects using this license key.</div>'
++ '            </div>'
++ '          </div>'
++ ''
 + '          <!-- Invoices -->'
-+ '          <div class="panel" id="panel-invoices" role="tabpanel" aria-labelledby="tab-invoices">'
++ '          <div class="panel" id="panel-invoices" role="tabpanel" aria-labelledby="tab-invoices" hidden>'
 + '            <div class="section">'
 + '              <!-- recurring billing: subscription only -->'
 + '              <div class="billgrid" data-page="sub">'
@@ -290,73 +355,6 @@ var DETAILS_HTML = ''
 + ''
 + '              <!-- inferred: a grant is free, so it has no invoices at all -->'
 + '              <div class="emptybox" id="grantInvEmpty" hidden>No invoices &mdash; the Community Grant is free.</div>'
-+ '            </div>'
-+ '          </div>'
-+ ''
-+ '          <!-- Instances -->'
-+ '          <div class="panel" id="panel-prod" role="tabpanel" aria-labelledby="tab-prod" hidden>'
-+ '            <div class="section">'
-+ '              <!-- type switcher (same segmented style as the Licenses "Type" filter) + toolbar -->'
-+ '              <div class="insttoolbar">'
-/* ⚠️ The Instances search was REMOVED, not wired. It would have filtered two
-   hardcoded rows that are identical for every licence — theatre, and a control that
-   survives to a demo either works or is not there. It comes back with real instance
-   data; see NOTES. */
-+ '                <div class="lic-typeseg" role="group" aria-label="Instance type">'
-+ '                  <button class="typechip is-on" data-insttype="prod" aria-pressed="true">Production</button>'
-+ '                  <button class="typechip" data-insttype="dev" aria-pressed="false">Development</button>'
-+ '                </div>'
-+ '                <span class="spacer"></span>'
-+ '                <button class="iconbtn ib" data-refresh aria-label="Refresh" title="Refresh"><svg class="icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg></button>'
-+ '              </div>'
-+ ''
-+ '              <!-- ⚠️ RENDERED, not written. This used to be two hardcoded rows —'
-+ '                   the same two ids, the same blank labels, the same dates, for every'
-+ '                   licence in the product. Now both tables are filled by'
-+ '                   renderInstances() from the licence\'s own `instances`. -->'
-+ '              <p class="inst-note" id="instNote"></p>'
-+ '              <div class="insttype" data-insttype="prod">'
-+ '                <table class="insttable">'
-+ '                  <thead>'
-+ '                    <tr>'
-+ '                      <th>Instance ID</th>'
-+ '                      <th>Label</th>'
-+ '                      <th>Status</th>'
-+ '                      <th>Last activity time</th>'
-+ '                      <th class="sortable" aria-sort="descending" tabindex="0">Created time <span class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></span></th>'
-+ '                      <th aria-label="Actions"></th>'
-+ '                    </tr>'
-+ '                  </thead>'
-+ '                  <tbody id="instBodyProd"></tbody>'
-+ '                </table>'
-+ '                <div class="pager instpager" id="instPagerProd">'
-+ '                  <span class="spacer"></span>'
-+ '                  <span>Items per page<select aria-label="Items per page"><option>10</option><option>20</option><option>50</option><option>100</option></select></span>'
-+ '                  <span class="range" id="instRangeProd">0 of 0</span>'
-+ '                  <span class="pagebtns">'
-+ '                    <button disabled aria-label="First page">&laquo;</button>'
-+ '                    <button disabled aria-label="Previous page">&lsaquo;</button>'
-+ '                    <button disabled aria-label="Next page">&rsaquo;</button>'
-+ '                    <button disabled aria-label="Last page">&raquo;</button>'
-+ '                  </span>'
-+ '                </div>'
-+ '              </div>'
-+ ''
-+ '              <div class="insttype" data-insttype="dev" hidden>'
-+ '                <table class="insttable" id="instTableDev">'
-+ '                  <thead>'
-+ '                    <tr>'
-+ '                      <th>Instance ID</th><th>Label</th><th>Status</th>'
-+ '                      <th>Last activity time</th><th>Created time</th><th aria-label="Actions"></th>'
-+ '                    </tr>'
-+ '                  </thead>'
-+ '                  <tbody id="instBodyDev"></tbody>'
-+ '                </table>'
-+ '              </div>'
-+ ''
-+ '              <!-- Community Grant: nothing has connected with the new key yet, so the'
-+ '                   whole tab is this one line (toolbar and tables hidden) -->'
-+ '              <div class="emptybox" id="grantInstEmpty" hidden>An instance appears here after it connects using this license key.</div>'
 + '            </div>'
 + '          </div>'
 + ''
@@ -938,11 +936,13 @@ function instRow(i){
     + '<td>' + fmtDateTime(i.seen) + '</td>'
     + '<td>' + fmtDate(i.created) + '</td>'
     /* ⚠️ THE SAME ROW MENU AS THE INSTANCES VIEW, from the same builder. An instance row
-       is an instance row: if Detach lives on it in one table and not the other, the
+       is an instance row: if Deactivate lives on it in one table and not the other, the
        reader has to learn which table is the one that can act. One builder, so the two
-       cannot drift — and Detach still has exactly one implementation behind it. */
+       cannot drift — and each action still has exactly one implementation behind it. */
     + '<td class="cellact"><div class="lic-actions">' + instRowMenu(i) + '</div></td></tr>';
 }
+/* one page position per table, reset when another licence is opened (see resetSurface) */
+var licInstPage = { prod:{ page:1, size:10, total:0 }, dev:{ page:1, size:10, total:0 } };
 function renderInstances(lic){
   var prod = instancesOf(lic, 'prod'), dev = instancesOf(lic, 'dev');
   var note = $('#instNote');
@@ -956,15 +956,23 @@ function renderInstances(lic){
   }
   var pb = $('#instBodyProd');
   if(pb) pb.innerHTML = prod.length
-    ? prod.map(instRow).join('')
+    ? pageSlice(prod, licInstPage.prod).map(instRow).join('')
     : '<tr><td colspan="6" class="emptybox">Instances appear here automatically when a deployment is activated with this license.</td></tr>';
   var db = $('#instBodyDev');
   if(db) db.innerHTML = dev.length
-    ? dev.map(instRow).join('')
+    ? pageSlice(dev, licInstPage.dev).map(instRow).join('')
     : '<tr><td colspan="6" class="emptybox">No development instances are running with this license.</td></tr>';
-  var pager = $('#instPagerProd'); if(pager) pager.hidden = !prod.length;
-  var range = $('#instRangeProd');
-  if(range) range.textContent = prod.length ? ('1\u2013' + prod.length + ' of ' + prod.length) : '0 of 0';
+  if(!prod.length) licInstPage.prod.total = 0;
+  if(!dev.length)  licInstPage.dev.total  = 0;
+  var pp = $('#instPagerProd'); if(pp) pp.hidden = !prod.length;
+  var dp = $('#instPagerDev');  if(dp) dp.hidden = !dev.length;
+  syncPager('#instPagerProd', licInstPage.prod);
+  syncPager('#instPagerDev',  licInstPage.dev);
+  /* ⚠️ Wired HERE, not at load: the panel's markup is mounted per host, so the pager
+     nodes do not exist until a licence is opened. `wirePager` guards against a second
+     binding on the same node, which is what makes calling it on every render safe. */
+  wirePager('#instPagerProd', licInstPage.prod, function(){ renderInstances(lic); });
+  wirePager('#instPagerDev',  licInstPage.dev,  function(){ renderInstances(lic); });
 }
 
 /* An instance label is set the same way a licence label is — a small dialog, the same
@@ -986,7 +994,7 @@ function openInstanceLabelModal(instId){
     i.label = String(inp.value || '').trim();
     Store.save();
     if(i.label !== was){
-      logActivity({ kind:'updated', entityType:'Instance', entityName:(i.label || i.id), action:'UPDATED',
+      logActivity({ kind:'updated', licId:lic.id, entityType:'Instance', entityName:(i.label || i.id), action:'UPDATED',
         txt: i.label
           ? ('Label <b>' + esc(i.label) + '</b> was set on an instance of <b>' + esc(lic.name) + '</b> by ' + portalActor() + '.')
           : ('Label was cleared on an instance of <b>' + esc(lic.name) + '</b> by ' + portalActor() + '.') });
@@ -1083,7 +1091,9 @@ function renewUpdatesHTML(lic){
           ? 'Charged once to ' + esc(savedCard().brand) + ' ••' + esc(savedCard().last4)
           : 'Charged once to Visa ••4242') + '</div>'
     +   '<label class="nl-legal' + (ruState.legalErr ? ' err' : '') + '">'
-    +     '<input type="checkbox" id="ruLegal"' + (ruState.legalOk ? ' checked' : '') + '>'
+    /* same reason as the wizard's box: a stable id is subject to the browser's own
+       form-state restoration, and a restored tick is a consent nobody gave */
+    +     '<input type="checkbox" id="ruLegal" autocomplete="off"' + (ruState.legalOk ? ' checked' : '') + '>'
     +     '<span class="nl-legaltxt">I have read and agree to the '
     +     '<a class="link" href="license-agreement.html" target="_blank" rel="noopener">ThingsBoard License Agreement</a>. '
     +     'I confirm I am authorized to accept it on behalf of my organization.</span></label>'
@@ -1097,6 +1107,7 @@ function openRenewUpdatesModal(licId){
   if(!lic) return;
   ruState = { legalOk:false, legalErr:null, licId:lic.id };
   openModal('Renew software updates', renewUpdatesHTML(lic));
+  var box = $('#ruLegal'); if(box) box.checked = false;   // whatever the browser restored
   $('#overlay .modal').classList.add('wide');
   $('#modalCloseBtn').textContent = 'Cancel';
 }
@@ -1129,7 +1140,7 @@ document.addEventListener('click', function(e){
   if(lic.status === 'updates_expiring') lic.status = 'active';
   Store.save();
   storeAddInvoice(lic, fmtMoney(price), { payment:'Card', auto:false });
-  logActivity({ kind:'updated', entityType:'Perpetual', entityName:lic.name, action:'UPDATED',
+  logActivity({ kind:'updated', licId:lic.id, entityType:'Perpetual', entityName:lic.name, action:'UPDATED',
     txt:'Software updates were renewed on <b>' + esc(lic.name) + '</b> by ' + portalActor() + '.',
     delta:'Updates term now ends ' + fmtDate(to) });
   closeModal();
@@ -1382,6 +1393,12 @@ var LicenseDetails = (function(){
     if(mountedIn === host) return;
     host.innerHTML = DETAILS_HTML;
     mountedIn = host;
+    /* ⚠️ WIRED PER MOUNT, not once at load: the same markup is mounted into two hosts
+       and the scroller differs between them — `.fs-body` in the modal, `#shellMain` on
+       the page. Binding at definition time would have caught whichever host happened to
+       exist first and left the other with a tab bar that scrolls away. */
+    var tabs = host.querySelector('#appView .tabs');
+    if(tabs && typeof wireStickyTabs === 'function') wireStickyTabs(tabs, scrollParent(tabs));
   }
   /* ⚠️ The surface KEPT the previous licence's scroll position and selected tab.
      `mount()` moves the same DOM between hosts, so nothing was ever reset — open one
@@ -1390,7 +1407,12 @@ var LicenseDetails = (function(){
      phone that means the panel gives no sign of which licence you are in.
      Both belong to the licence you WERE looking at, so both are dropped on every open. */
   function resetSurface(){
-    var first = $('#tab-invoices');
+    /* ⚠️ THE FIRST TAB, whichever it is — not `#tab-invoices` by name. Reordering the
+       tab bar left this pointing at what is now the SECOND tab, so every open reset the
+       surface to Invoices while the markup said Instances: the order changed and the
+       default silently did not follow it. Reading the tablist means the two cannot
+       disagree again. */
+    var first = $('#appView .tabs .tab');
     if(first) selectTab(first);
   }
   /* ⚠️ SEPARATE from the tab reset, and called AFTER the surface is on screen.

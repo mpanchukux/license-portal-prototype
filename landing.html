@@ -46,7 +46,8 @@
            renderPlanPicker in wizard.js — this page is its second host, not a copy. -->
       <div class="planpicker" id="landingPicker">
         <div id="landingChoices"></div>
-        <div class="plangrid" id="landingPlans"></div>
+        <!-- ⚠️ `.plangroups`, not `.plangrid`: this node holds the two billing GROUPS now, and each group holds its own grid. renderPlanPicker rewrites the class either way, but a lying class in the source is how the next reader loses an hour. -->
+        <div class="plangroups" id="landingPlans"></div>
         <!-- the single-set note stays immediately under the cards: it is about them -->
         <div id="landingExtra"></div>
         <!-- ⚠️ BELOW the cards. It was between the tabs and the grid for one pass — the

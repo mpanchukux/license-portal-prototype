@@ -2,6 +2,10 @@
    page-licenses.js — the licence list: one product-first table rendered from the
    current dataset, a mutually-exclusive Type filter, the canceled toggle and the
    split "+ New license" button. Row behaviour is shared with the Home block.
+   ⚠️ THE INSTANCES VIEW LEFT THIS FILE (2026-09-23). It was a second slicing of the
+   same data behind a tablist that also stood in for the page title, and it had to hide
+   half the shared toolbar to work. It is `instances.html` / `page-instances.js` now;
+   the row builders stayed in components.js, where the licence panel also reads them.
    ============================================================================ */
 
 /* Type filter: null = nothing selected = every licence shown. */
@@ -9,10 +13,12 @@ var licType = null;
 /* Cancelled licences are out of the way until asked for. The choice is a stored
    setting like the dashboard state, so it survives navigation and refresh. */
 var licShowCanceled = !!Store.get('showCanceled');
-/* ⚠️ Two URL parameters, and BOTH arrive from a Home banner rather than from a menu:
-   `?attention=1` is where "3 other licenses need attention" lands, and
-   `?view=instances` is where the blocked banner's detach route lands. They exist so a
-   banner can hand the reader a filtered surface instead of a list to search. */
+/* ⚠️ ONE URL parameter now, and it arrives from a Home banner rather than from a menu:
+   `?attention=1` is where "3 other licenses need attention" lands. It exists so a
+   banner can hand the reader a filtered surface instead of a list to search.
+   ⚠️ `?view=instances` WAS THE SECOND ONE and is gone with the view toggle — the
+   blocked banner's route is `instances.html?lic=…` now. A stale link carrying the old
+   parameter lands on a plain Licenses page, which is wrong but not broken. */
 var licParams = new URLSearchParams(location.search);
 var licAttentionOnly = licParams.get('attention') === '1';
 /* Does this licence have something wrong with it? One reading, shared with the Home
@@ -101,37 +107,6 @@ if(licNewBtn) licNewBtn.addEventListener('click', function(){ NL.open({}); });
 document.addEventListener('click', function(e){
   if(e.target.closest('#licEmptyBuy')) NL.open({});
 });
-
-/* ---------- Licenses / Instances: one page, two slicings ---------------------
-   ⚠️ The toolbar is SHARED, so controls that mean nothing in the other view have to
-   stand down: the type chips and the canceled switch filter licences, and an instance
-   has neither a type nor a cancellation. They are hidden rather than disabled — a
-   control that cannot act and cannot explain itself is the thing this prototype keeps
-   removing. Search stays: it works on rows, and both views have rows. */
-var licView = licParams.get('view') === 'instances' ? 'instances' : 'licenses';
-function syncView(){
-  var inst = licView === 'instances';
-  $('#licensesList').hidden = inst;
-  $('#instancesList').hidden = !inst;
-  $$('#licensesView .lic-viewtab').forEach(function(t){
-    var on = t.getAttribute('data-view') === licView;
-    t.classList.toggle('on', on);
-    t.setAttribute('aria-selected', on ? 'true' : 'false');
-  });
-  var typeSeg = $('#licensesView .lic-typeseg'), cancelSw = $('#licensesView .lic-toggle');
-  if(typeSeg) typeSeg.hidden = inst;
-  if(cancelSw) cancelSw.hidden = inst;
-  var search = $('#licensesView .searchbox input');
-  if(search) search.setAttribute('placeholder', inst ? 'Search instances' : 'Search licenses');
-  if(inst) renderInstancesView(licParams.get('lic') || null);
-}
-$$('#licensesView .lic-viewtab').forEach(function(t){
-  t.addEventListener('click', function(){
-    licView = t.getAttribute('data-view');
-    syncView();
-  });
-});
-syncView();
 
 /* ---------- search: plan name, product, type and label ---------------------- */
 wireSearch('#licensesView .searchbox input', {

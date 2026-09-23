@@ -113,6 +113,66 @@ function licenseKeyMask(key){
   return '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' + tail;
 }
 
+/* ---------- instance check-ins as ACTIVITY --------------------------------------
+   The licence checks in every hour, and every check is logged. That is ~24 entries per
+   instance per day — a demo account with nineteen instances produces roughly four
+   hundred a day — which is exactly why the Activity page needs grouping and a type
+   filter, and why these are DERIVED rather than stored.
+
+   ⚠️ DERIVED, NOT SEEDED. Writing hundreds of rows into the store per day would bloat
+   it, go stale the moment the clock moved, and make "reset demo data" a different demo
+   every time. They are computed from what the instance already carries — when it last
+   reported (`agoMin`) and its id — so the same account always produces the same history
+   and it is always relative to now.
+
+   ⚠️ WHAT A FAILURE CAN SAY, and nothing more. Three causes are expressible from the
+   data this prototype actually has; everything else a real portal would report (bad
+   credentials, a version the licence does not cover, a quota refusal) has nothing
+   behind it here and is NOT invented. See NOTES for the list. */
+var CHECK_WINDOW_DAYS = 3;           // how far back the derived history runs
+var CHECK_FAIL = {
+  unreachable:  'the portal could not reach the instance',
+  connection:   'the connection failed',
+  blocked:      'the license is blocked — running instances exceed the plan'
+};
+/* A stable pseudo-random from a string: the same instance always fails at the same
+   hours, so the demo does not reshuffle itself between two screenshots. */
+function checkHash(str, n){
+  var h = 2166136261;
+  for(var i = 0; i < str.length; i++){ h ^= str.charCodeAt(i); h = (h * 16777619) >>> 0; }
+  return (h + n * 2654435761) >>> 0;
+}
+/* Every check for one instance, newest first, over the window. */
+function instanceChecks(lic, inst){
+  var out = [];
+  var hours = CHECK_WINDOW_DAYS * 24;
+  var blocked = instOverLimit(lic);
+  for(var h = 0; h < hours; h++){
+    var minsAgo = (inst.agoMin || 0) + h * 60;
+    if(minsAgo > hours * 60) break;
+    var r = checkHash(inst.id, h) % 100;
+    /* ⚠️ A BLOCKED LICENCE FAILS EVERY CHECK, and that is not decoration: it is what
+       "blocked until the count is back within its limit" MEANS, and the log is where a
+       person would go to see it happening. */
+    var why = blocked ? 'blocked' : (r < 3 ? 'unreachable' : (r < 5 ? 'connection' : null));
+    out.push({ kind: why ? 'check_fail' : 'check_ok',
+      ts: agoStamp(minsAgo), tsMin: minsAgo,
+      entityType:'Instance', entityName: inst.label || inst.id,
+      instId: inst.id, licId: lic.id, licName: lic.label || lic.name,
+      actor:'System', action: why ? 'CHECK_FAILED' : 'CHECK_OK', why: why || null });
+  }
+  return out;
+}
+/* Every check across the account, and the per-licence slice of the same thing. */
+function allChecks(licId){
+  var out = [];
+  (DATA().licenses || []).forEach(function(l){
+    if(licId && l.id !== licId) return;
+    (l.instances || []).forEach(function(i){ out = out.concat(instanceChecks(l, i)); });
+  });
+  return out;
+}
+
 /* ---------- product versions ---------------------------------------------------
    ⚠️ BOTH OF THESE ARE `inferred`. Nothing in this repository carried a version number
    of any kind before this pass — not a running one, not a released one — so the
@@ -277,7 +337,6 @@ var TIER_SPECS = {
      device-limit line are all absent on purpose, not by omission.
      `free:true` is what every surface tests: no price, no billing step, no total. */
   free:     { name:'Free',           price:'Free', free:true, wl:false, ent:[['Devices','100'],['Production instances','1'],['AI credits','1M','/ month']] },
-  noncomm:  { name:'Non-commercial', price:'Free', free:true, wl:false, ent:[['Devices','1,000'],['Production instances','Unlimited'],['AI credits','1M','/ month']] },
   pilot:    { name:'Pilot',     price:'$99.00',  wl:true,  ent:[['Devices','100'],['Assets','100'],['Production instances','1'],['AI credits','4M','/ month']] },
   startup:  { name:'Startup',   price:'$299.00', wl:true,  ent:[['Devices','500'],['Assets','500'],['Production instances','2'],['AI credits','8M','/ month']] },
   business: { name:'Business',  price:'$499.00', wl:true,  ent:[['Devices','1,000'],['Assets','1,000'],['Production instances','3'],['AI credits','16M','/ month']] },
@@ -559,7 +618,14 @@ var DEMO_INSTANCES = {
 
 /* ---------- plan cards for the new-user screen and the wizard ---------- */
 var EC_PLANS = {
-  /* ⚠️ Maker ($10) and Prototype ($39) were REMOVED from the offer (2026-09-01) —
+  /* ⚠️ Non-commercial was REMOVED from the offer (2026-09-23). Unlike Maker and
+     Prototype below, its SPEC went too, and the difference is the installed base: five
+     demo licences sit on Maker/Prototype and still have to render their entitlements,
+     and NOT ONE sits on Non-commercial (checked: no `tier:'noncomm'` anywhere in
+     DATASETS). A spec nothing can reach is not a compatibility shim, it is a dead row.
+     Licences a reviewer created on it before this pass go with the store bump.
+     ThingsBoard subscriptions are now Free · Pilot · Startup · Business.
+     ⚠️ Maker ($10) and Prototype ($39) were REMOVED from the offer (2026-09-01) —
      they are no longer sold. Only these purchase CARDS went: `TIER_SPECS.maker` and
      `TIER_SPECS.prototype` stay, because licences already on those plans still have
      to render their entitlements on the details page. Do not "clean up" the specs
@@ -576,8 +642,6 @@ var EC_PLANS = {
          so a free card keeps the paid cards' shape without borrowing their rows. */
       { name:'Free',           price:'Free', per:'', free:true, term:'up to 100 devices, 1 production instance',
         feats:['100 devices', '1 production instance', '1M AI credits / month'] },
-      { name:'Non-commercial', price:'Free', per:'', free:true, term:'up to 1,000 devices, non-commercial only',
-        feats:['1,000 devices', 'Unlimited production instances', '1M AI credits / month'] },
       { name:'Pilot',     price:'$99',  per:'/ month', badge:'Popular', feats:['100 devices', '100 assets', '1 production instance', '4M AI credits / month', 'Help desk', 'White labeling', 'Device limit is fixed on this plan'] },
       { name:'Startup',   price:'$299', per:'/ month', feats:['500 devices', '500 assets', '2 production instances', '8M AI credits / month', 'Priority help desk', 'White labeling', 'Device limit is fixed on this plan'] },
       { name:'Business',  price:'$499', per:'/ month', feats:['1,000 devices', '1,000 assets', '3 production instances', '16M AI credits / month', 'Priority help desk', 'White labeling', '+$0.10 per extra device'] }
@@ -677,7 +741,7 @@ var UPDATES_RENEW_MONTHS = 12;
    wizard.js's IIFE, which meant anything outside the wizard that needed a licence's
    price — the updates purchase, for one — had to re-derive it from a display string.
    wizard.js now reads this instead of keeping its own copy. */
-var TIER_BASE = { free:0, noncomm:0, maker:10, prototype:39, pilot:99, startup:299, business:499,
+var TIER_BASE = { free:0, maker:10, prototype:39, pilot:99, startup:299, business:499,
                   tbmqsub:15, tbperp:4999, tbmqperp:2999, grant:0 };
 function tierBase(t){ return TIER_BASE[t] || 0; }
 // intro sentence of the PE card — same wording on every plan surface

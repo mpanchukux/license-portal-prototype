@@ -124,10 +124,11 @@ $('#sgSpace').innerHTML = SPACE.map(function(s){
    current plan (strip, no CTA), card 3 plain. */
 (function(){
   var set = EC_PLANS['thingsboard|payg'];
-  /* ⚠️ PICKED BY NAME, not `slice(0, 3)`. The set now leads with the two free plans, so
-     a positional slice showed Free, Non-commercial and Pilot — three cards, but only one
-     of the two SHAPES the component has. One free card and two paid ones show both, and
-     the row keeps its three states. */
+  /* ⚠️ PICKED BY NAME, not `slice(0, 3)`. The set leads with the free plan, so a
+     positional slice would show Free, Pilot and Startup anyway TODAY — and would
+     silently change the specimen the next time the offer is reordered, which is what
+     happened when Non-commercial was removed. One free card and two paid ones show both
+     SHAPES the component has, and the row keeps its three states. */
   function card(n){ return set.cards.filter(function(c){ return c.name === n; })[0]; }
   var cards = [card('Free'), card('Pilot'), card('Startup')];
   var sel = { product:'thingsboard', kind:'subscription',

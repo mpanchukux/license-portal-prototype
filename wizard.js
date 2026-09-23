@@ -34,7 +34,9 @@ var WIZARD_HTML = ''
 + '           Each offer card carries its own action, so this step needs no footer. -->'
 + '      <div id="nlStepPick">'
 + '        <div id="nlChoices"></div>'
-+ '        <div class="plangrid" id="nlPlanCards"></div>'
+/* ⚠️ `.plangroups`, not `.plangrid` — this node holds the billing GROUPS now and each
+   group holds its own grid. On Change plan it holds exactly one (see planGroupsFor). */
++ '        <div class="plangroups" id="nlPlanCards"></div>'
 + '      </div>'
 + '      <!-- CAPACITY — what you can buy more of: devices, instances, AI credits -->'
 + '      <div id="nlStepCap" hidden></div>'
@@ -162,11 +164,34 @@ var NL = (function(){
   /* ⚠️ Read from the SPEC, not from the price string or the plan name. `free:true` is the
      one fact three different behaviours hang off — no billing step, no total, and a
      Review that says nothing is charged — so it must not be re-derived three times. */
-  function isFree(){ return !!(TIER_SPECS[tier()] || {}).free; }
+  /* ⚠️ ANY PLAN PRICED AT ZERO IS FREE, not only one carrying the flag. The flag stays
+     because it is what the offer data declares, but the flow must not depend on someone
+     remembering to set it: a plan whose base price is zero cannot be charged for, and a
+     checkout that asks for a card anyway is asking for nothing. Both tests, so a new
+     free plan is free by arithmetic even if its spec is incomplete. */
+  function isFree(){
+    var t = tier();
+    if((TIER_SPECS[t] || {}).free) return true;
+    return !isPerp() && !isMod() && !!st.plan && (BASE[t] || 0) === 0;
+  }
+  /* ⚠️ THE PLAN NAME IS NOT THE TIER KEY, and assuming it was is what broke the whole
+     Non-commercial flow. `tier()` lowercased the card's name and used it as the key:
+     "Pilot" → `pilot` works by luck, "Non-commercial" → `non-commercial` matched
+     nothing. With no spec the plan had no entitlements, no base price and — because
+     `isFree()` reads `spec.free` — was not free either: it ran the full five-step paid
+     checkout and asked for a company, an address and a card to charge $0.00.
+     ⚠️ THE MAP IS EMPTY NOW and stays anyway. Non-commercial was its only entry and
+     the plan is gone (2026-09-23), so every remaining name — Free, Pilot, Startup,
+     Business — happens to lowercase to its own key again. That is the coincidence the
+     map exists to survive: the next plan named in two words re-opens the same bug, and
+     the fix is one line here instead of a day finding it. */
+  var PLAN_TIER = {};
   function tier(){
     if(st.fixedTier) return st.fixedTier;   // add-ons: the plan is not up for change
     if(isPerp()) return st.product === 'tbmq' ? 'tbmqperp' : 'tbperp';
-    return st.product === 'tbmq' ? 'tbmqsub' : String(st.plan || '').toLowerCase();
+    if(st.product === 'tbmq') return 'tbmqsub';
+    var key = String(st.plan || '').toLowerCase();
+    return PLAN_TIER[key] || key;
   }
   function units(){ return isPerp() ? (st.product === 'tbmq' ? UNITS.perpMQ : UNITS.perpTB) : UNITS.sub; }
   function isChange(){ return st.mode === 'change'; }
@@ -268,6 +293,27 @@ var NL = (function(){
     if(code.toUpperCase() === 'EXPIRED') return 'This coupon has expired.';
     return null;
   }
+  /* ---- credit ---------------------------------------------------------------------
+     ⚠️ WHAT A DOWNGRADE GIVES BACK. The change applies immediately, so the part of this
+     period that was paid for at the higher rate and will now not be used is returned —
+     as credit on the account, not as a refund to the card. It is the same proration the
+     charge side already uses, run the other way: the difference in monthly rate times
+     the fraction of the cycle still ahead.
+     ⚠️ A PERPETUAL HAS NO CYCLE, so it has nothing unused to give back — `prorate()`
+     returns null and this returns 0, which is the honest answer rather than a figure
+     invented from the updates date. */
+  function downgradeCredit(){
+    if(!isMod() || isPerp()) return 0;
+    var drop = oldMonthly() - total();
+    if(!(drop > 0)) return 0;
+    return Math.round(drop * prorateFraction() * 100) / 100;
+  }
+  /* What this order can take off the balance: never more than the balance, never more
+     than the order. */
+  function creditApplied(){
+    if(isMod()) return 0;                    // a modification is charged as a delta; see the report
+    return Math.min(accountCredit(), Math.max(0, total() - discount()));
+  }
   function couponBase(){ return isMod() ? modDelta() : total(); }
   function discount(){ return st.coupon ? couponBase() * st.coupon.rate : 0; }
   function payable(){ return Math.max(0, couponBase() - discount()); }
@@ -311,7 +357,7 @@ var NL = (function(){
      lower plan lowers the included amounts under everything above it. */
   /* the ladder a plan change is measured against — the two free tiers are its floor,
      so moving from any paid plan to one of them reads as the downgrade it is */
-  var TIER_ORDER = ['free','noncomm','maker','prototype','pilot','startup','business'];
+  var TIER_ORDER = ['free','maker','prototype','pilot','startup','business'];
   function shrinks(){
     var b = st.baseCust;
     if(!b) return false;
@@ -790,6 +836,12 @@ var NL = (function(){
       +   '<div class="am-sechead"><h4>Calculation summary</h4></div>'
       +   '<div class="am-figures"><div class="am-sumlist">' + summaryHTML() + '</div>'
       +     '<div class="am-sumrow am-total-row"><span>' + (isPerp() ? 'One-time total' : 'New monthly') + '</span><span>' + money(perpMod() ? modDelta() : total()) + perSuffix() + '</span></div>'
+      /* ⚠️ THE TAX LINE BELONGS WHEREVER A TOTAL IS, and these two steps were the gap:
+         the Calculation summary showed "New monthly $299.00" on Capacity and again on
+         Add-ons with nothing qualifying it, so a reader met the figure twice before the
+         first mention that it excludes tax. One constant, one wording, every surface
+         that shows money before payment. */
+      +     (isFree() ? '' : '<p class="taxnote am-taxline">' + TAX_NOTE + '</p>')
       +   '</div>'
       /* ⚠️ An ATTRIBUTE, not an id: two steps render this button now (Capacity and
          Add-ons), and both were emitting `id="nlSumNext"` — two nodes with one id, so
@@ -911,8 +963,16 @@ var NL = (function(){
     + '<a class="link" href="license-agreement.html" target="_blank" rel="noopener">ThingsBoard License Agreement</a>. '
     + 'I confirm I am authorized to accept it on behalf of my organization.';
   function legalBlockHTML(){
+    /* ⚠️ `autocomplete="off"` IS THE FIX, not decoration. The model is reset on every
+       open — measured, and a second wizard does start unticked — but a checkbox with a
+       stable id is also subject to the browser's own FORM-STATE RESTORATION: on a
+       reload or a back-navigation Chrome re-checks a control it remembers, whatever the
+       markup says, and the first click then UNTICKS it. That is the one mechanism that
+       can produce a pre-ticked consent here, and it is the one thing the markup can
+       refuse. Belt and braces: the property is also cleared after render (see
+       clearLegalBox), because a restored state is applied to the node, not to the HTML. */
     return '<label class="nl-legal' + (st.legalErr ? ' err' : '') + '">'
-      + '<input type="checkbox" id="nlLegal"' + (st.legalOk ? ' checked' : '') + '>'
+      + '<input type="checkbox" id="nlLegal" autocomplete="off"' + (st.legalOk ? ' checked' : '') + '>'
       + '<span class="nl-legaltxt">' + LEGAL_TEXT + '</span></label>'
       + (st.legalErr ? '<div class="fielderr nl-legalerr" role="alert">' + esc(st.legalErr) + '</div>' : '');
   }
@@ -970,7 +1030,8 @@ var NL = (function(){
     var lowers = isMod() && shrinks();
     var delta = modDelta();          // one definition, shared with the summary above
     // a perpetual modification charges the delta WHOLE — no fraction of a cycle
-    var dueVal = isMod() ? money((delta - discount()) * (pr ? pr.fraction : 1)) : money(payable());
+    var dueVal = isMod() ? money((delta - discount()) * (pr ? pr.fraction : 1))
+      : money(Math.max(0, payable() - creditApplied()));
     if(lowers){
       dueLabel = 'Due today <span class="muted">— nothing to charge for a lower plan</span>';
       dueVal = money(0);
@@ -1008,6 +1069,15 @@ var NL = (function(){
           ? '<div class="nl-effect"><b>This change takes effect immediately.</b> '
             + 'It lowers what this license includes, and the new allowances apply from now. '
             + 'It is billed at ' + money(total()) + ' / mo from today.'
+            /* ⚠️ WHAT THEY GET BACK, AT THE MOMENT THEY DECIDE. The person is giving
+               something up on this screen; the credit is the other half of that trade,
+               and stating it afterwards in a snackbar would be telling them once the
+               decision was already made. */
+            + (downgradeCredit() > 0
+                ? '<div class="nl-creditnote"><b>' + money(downgradeCredit())
+                  + ' will be added to your account credit</b> — the part of this period '
+                  + 'you have already paid for and will not use. It comes off your next purchase.</div>'
+                : '')
             + '<div class="nl-effectwhat">' + esc(changeSummary()) + '</div></div>'
           : '')
       +   '<div class="nl-joined">'
@@ -1049,6 +1119,12 @@ var NL = (function(){
          and sending the reader to a dialog and back to find out what it did is longer
          than the thing itself. */
       +       (isFree() ? '' : couponRowHTML())
+      /* the balance comes off the order here, above the total it changes — the same
+         place and the same shape as the coupon row */
+      +       (creditApplied() > 0
+                ? '<div class="am-orow nl-creditrow"><div>Account credit applied</div>'
+                  + '<div>\u2212' + money(creditApplied()) + '</div></div>'
+                : '')
       +       (perpMod() || isFree() ? '' :
                 '<div class="am-orow am-newmonthly"><div>' + (isPerp() ? 'One-time total' : (isMod() ? 'New monthly' : 'Monthly total'))
               /* ⚠️ BOTH FIGURES when a coupon is applied: the old price struck through and
@@ -1059,6 +1135,15 @@ var NL = (function(){
                     ? '<span class="was">' + money(total()) + '</span> '
                       + money(Math.max(0, total() - discount()))
                     : money(total())) + perSuffix() + '</div></div>')
+      /* ⚠️ NEXT TO THE DISCOUNTED FIGURE, not in a footnote. Someone reading a number
+         lower than the plan's price will take it for the price unless told otherwise —
+         and the moment to tell them is while they are looking at it, not on the invoice
+         a month later. A perpetual has no "next", so it is not told about one. */
+      +       (st.coupon && !isPerp() && !isFree()
+                ? '<div class="am-orow nl-oncenote"><div>Discount applies to this charge only — '
+                  + 'from ' + fmtDate(dayStr(30)) + ' this license is billed at '
+                  + money(total()) + ' / mo.</div><div></div></div>'
+                : '')
       /* ⚠️ THIS CLOSES `.am-order`, and losing it is what broke the Review layout:
          `.nl-terms` fell inside the order list, the remaining two closers went to
          `.am-order` and `.nl-joined`, and `.fs-col` was left open — so `.fs-right`
@@ -1080,6 +1165,15 @@ var NL = (function(){
             : '<div class="nl-duerow"><div class="am-duelabel">' + dueLabel + '</div>'
               + '<div class="am-dueval">' + dueVal + '</div></div>')
       +   '<div class="nl-payline">' + payline + '</div>'
+      /* ⚠️ Three figures, because one would not be enough to check: what came off the
+         balance, what the card is taking, and what is left for next time. */
+      +   (creditApplied() > 0
+            ? '<div class="nl-creditsum">'
+              + '<div class="nl-crow"><span>Credit applied</span><span>\u2212' + money(creditApplied()) + '</span></div>'
+              + '<div class="nl-crow"><span>Charged to card</span><span>' + money(Math.max(0, payable() - creditApplied())) + '</span></div>'
+              + '<div class="nl-crow muted"><span>Credit remaining</span><span>' + money(accountCredit() - creditApplied()) + '</span></div>'
+              + '</div>'
+            : '')
       +   (isLastStep() && needsLegal() ? legalBlockHTML() : '')
       +   '<button class="btn fs-nextbtn" id="nlCommit">' + cta + '</button>'
       + '</div>'
@@ -1370,6 +1464,13 @@ var NL = (function(){
   /* ⚠️ Takes a KEY and validates it against the current list: a step that does not
      exist in this mode (billing on a free plan, add-ons on TBMQ) falls back to the
      first one rather than hiding every node and showing an empty modal. */
+  /* ⚠️ A pre-ticked consent is not consent, so this runs after every render that can
+     contain the box: whatever the browser restored, the node ends up agreeing with the
+     model, and the model starts every flow at false. */
+  function clearLegalBox(){
+    var c = $('#nlLegal');
+    if(c) c.checked = !!st.legalOk;
+  }
   function focusLegal(){
     var c = $('#nlLegal');
     if(c){ c.focus(); if(c.scrollIntoView) c.scrollIntoView({ block:'nearest' }); }
@@ -1383,6 +1484,7 @@ var NL = (function(){
     else if(k === 'addons') renderAddons();
     else if(k === 'review') renderReview();
     else if(k === 'billing') renderBilling();
+    clearLegalBox();
     Object.keys(STEP_NODE).forEach(function(key){
       var el = $(STEP_NODE[key]); if(el) el.hidden = key !== k;
     });
@@ -1418,6 +1520,9 @@ var NL = (function(){
                                     city:bill.city, zip:bill.zip, addr:bill.addr, addr2:bill.addr2 });
     }
     var t = tier(), e = extras(), tot = Math.max(0, total() - discount());
+    /* spent BEFORE the invoice is written, so the document records the real split */
+    var credit = useCredit(Math.min(accountCredit(), tot));
+    var charged = Math.max(0, tot - credit);
     var seq = storeNextSeq();          // persisted, so ids stay unique across reloads
     var lic = { id:'N' + seq, tier:t,
       product: st.product === 'tbmq' ? 'TBMQ' : 'ThingsBoard',
@@ -1428,7 +1533,13 @@ var NL = (function(){
       event: isPerp() ? dayStr(365) : dayStr(30),
       /* a free plan carries the word, not a figure: every surface that prints a price
          reads this string, and "$0.00 / mo" would put a transaction on all of them */
-      price: isFree() ? 'Free' : (isPerp() ? 'one-time' : (money(tot) + ' / mo')),
+      /* ⚠️ THE LIST PRICE, NOT THE DISCOUNTED ONE. A coupon discounts the charge it is
+         applied to and nothing after it, so writing the discounted figure here made the
+         reduction permanent: every surface that reads `lic.price` — the row, the Plan
+         block, Next charge — would have gone on quoting it as the plan's price forever.
+         The discount lives on the INVOICE for the charge it applied to, which is the
+         only place it is a fact. */
+      price: isFree() ? 'Free' : (isPerp() ? 'one-time' : (money(total()) + ' / mo')),
       billing: isFree() ? 'none' : (isPerp() ? 'paid' : 'auto-pay') };
     var x = {};
     if(e.devices > 0) x.devices = String(e.devices);
@@ -1445,7 +1556,12 @@ var NL = (function(){
        review step showed as due, so the receipt and the order agree. */
     /* ⚠️ …and NOT for a free plan. There is no charge, so an invoice for $0.00 would be
        a receipt for a payment that never happened — the opposite of the fix above. */
-    if(!isFree()) storeAddInvoice(lic, money(tot), { payment:'Card', auto:!isPerp() });
+    if(!isFree()) storeAddInvoice(lic, money(tot), { payment:'Card', auto:!isPerp(),
+      credit:credit, charged:money(charged),
+      /* the durable record of a one-time discount: nothing else survives the flow */
+      original: st.coupon ? money(total()) : null,
+      discount: st.coupon ? money(discount()) : null,
+      couponCode: st.coupon ? st.coupon.code : null });
     st.dirty = false;
     scr.hidden = true;
     /* No success modal: the details surface is where the key lives, so open it and
@@ -1457,6 +1573,8 @@ var NL = (function(){
   }
   function commitChange(){
     var lic = st.changeLic, t = tier(), e = extras();
+    // measured against the licence as it stands, so it has to be read first
+    var creditOnCommit = downgradeCredit();
     /* ⚠️ THE DEFERRAL BRANCH IS GONE. A shrinking change used to be RECORDED against a
        future date and applied later; it now takes effect here with everything else, and
        there is no second path through this function. What went with it: the scheduled
@@ -1491,15 +1609,24 @@ var NL = (function(){
     if(Object.keys(x).length){ lic.extras = x; } else { delete lic.extras; }
     if(hasAddons()){ lic.edge = cust.edge; lic.trendz = cust.trendz; }
     if(hasOffline()) lic.offline = cust.offline;
+    /* ⚠️ Captured BEFORE the mutation is saved, for the same reason `charged` is: it
+       reads oldMonthly(), which is computed from the state being replaced. */
+    var backCredit = creditOnCommit;
     Store.save();                      // the licence object was mutated in place
+    if(backCredit > 0) addCredit(backCredit, {
+      kind:'info', licId:lic.id, entityType:'Account credit', entityName:money(backCredit),
+      action:'CREDITED',
+      txt:'<b>' + money(backCredit) + '</b> was credited to the account from <b>'
+        + esc(lic.label || lic.name) + '</b> — the unused part of the current period.',
+      delta:'Balance now ' + money(accountCredit() + backCredit) });
     /* Both modification modes land here, and they are different events: add-ons
        changed the capacity, change-plan moved the licence to another plan. */
     if(isAddons()){
-      logActivity({ kind:'updated', entityType:'Add-on', entityName:lic.name, action:'UPDATED',
+      logActivity({ kind:'updated', licId:lic.id, entityType:'Add-on', entityName:lic.name, action:'UPDATED',
         txt:'Capacity was changed on <b>' + esc(lic.name) + '</b> by ' + portalActor() + '.',
         delta: summary });
     } else {
-      logActivity({ kind:'updated', entityType:'Plan', entityName:lic.name, action:'UPDATED',
+      logActivity({ kind:'updated', licId:lic.id, entityType:'Plan', entityName:lic.name, action:'UPDATED',
         txt:'Plan was changed from <b>' + esc(st.oldName) + '</b> to <b>' + esc(lic.name)
           + '</b> on <b>' + esc(lic.label || lic.name) + '</b> by ' + portalActor() + '.' });
     }
@@ -1569,6 +1696,13 @@ var NL = (function(){
     openModal('You have unsaved changes.',
       '<p>' + what + ' If you leave now, your selections will be lost.</p>');
     var foot = $('#overlay .mf');
+    /* ⚠️ THE DIALOG CAN BE ASKED FOR TWICE. `openModal` refills the title and body but
+       leaves the footer alone, and this appends to it — so a second attempt while the
+       first confirm is still open stacked a SECOND "Leave without saving" beside the
+       first. Seen in a screenshot, not in a measurement: both buttons work, so nothing
+       misbehaved; the dialog just offered the same way out twice. Any button this
+       function injected earlier goes before it injects another. */
+    $$('#nlLeaveBtn', foot).forEach(function(b){ b.remove(); });
     var leave = document.createElement('button');
     leave.type = 'button'; leave.className = 'btn ter'; leave.id = 'nlLeaveBtn'; leave.textContent = 'Leave without saving';
     foot.insertBefore(leave, $('#modalCloseBtn'));

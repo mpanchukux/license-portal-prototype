@@ -146,7 +146,12 @@ var Auth = (function(){
        this heading answers "what am I signing up for", and the price is a term of the
        purchase, which the review step states in full before anyone pays. What the
        reader is checking here is that they picked the right PLAN. */
-    return esc(base) + ' to buy ' + esc(product) + ' ' + esc(card.name);
+    /* ⚠️ "buy" IS WRONG FOR A FREE PLAN, and it was reaching the one reader least able
+       to shrug it off: someone choosing Free is told, on the first
+       screen, that they are about to buy something. The verb follows the price — free
+       plans are GOT, paid ones are bought. */
+    var free = card.free || !card.price || String(card.price).toLowerCase() === 'free';
+    return esc(base) + (free ? ' to get ' : ' to buy ') + esc(product) + ' ' + esc(card.name);
   }
   function render(){
     var s = SCREENS[mode];

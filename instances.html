@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Instances — ThingsBoard License Portal</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="instances" data-nav="instances" data-title="Instances">
+
+<div id="shellMain">
+<div class="licview" id="instancesView">
+  <!-- ⚠️ ONE FRAME: toolbar, column row and rows are one block, so they are one thing to
+       read and, on scroll, one thing that stays. Nothing loose between the title and the
+       frame. `.stickybar` is the toolbar, `.stickyhead` the column row; the offset the
+       column row sticks at is the toolbar's MEASURED height (`--barH`), because this
+       toolbar is a different height on every page and wraps at narrow widths. -->
+  <!-- ⚠️ THE TITLE IS INSIDE THE FRAME. It was above it, and the frame began at the
+       toolbar; the page then read as a loose heading followed by a box. One block now:
+       title, toolbar, column row, rows. The title still SCROLLS AWAY — it is in the
+       frame, not in the sticky part of it. -->
+  <div class="listcard listframe">
+  <!-- ⚠️ A PLAIN h1, not a tablist carrying the title: the Licenses page hides its
+       heading because the view tabs took its weight, and this page has no tabs. -->
+  <h1 class="lic-h1">Instances</h1>
+  <div class="insttoolbar stickybar">
+    <div class="searchbox"><svg class="icon searchglyph" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input type="text" placeholder="Search instances" aria-label="Search instances"></div>
+    <!-- ⚠️ STATUS IS THE ONE HONEST PARTITION HERE. The Licenses toolbar filters by
+         product type and by cancellation, and an instance has neither — which is why
+         both stood down when this was a view on that page. What an instance does have
+         is the thing its own column already states: is it reporting. Same
+         mutually-exclusive `.typechip` group as the Licenses type filter, so "a chip
+         group narrows the list" means the same thing on both pages.
+         ⚠️ Version is NOT a filter, though the column is here: "behind latest" is a
+         fact about a release, not a state of the deployment, and a reader after it is
+         after one licence's instances rather than every old one in the account. -->
+    <div class="inst-statusseg" role="group" aria-label="Filter by status">
+      <button class="typechip" data-status="Healthy" aria-pressed="false">Healthy</button>
+      <button class="typechip" data-status="Stale" aria-pressed="false">Stale</button>
+    </div>
+    <span class="spacer"></span>
+    <button class="iconbtn ib" data-refresh aria-label="Refresh" title="Refresh"><svg class="icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg></button>
+  </div>
+
+  <div id="instancesList">
+    <!-- ⚠️ A QUIET PERSISTENT LINE, not a banner and not a button. The one thing people
+         come here to do and cannot guess is deactivating, and the reason they need it is
+         always the same: they moved a deployment. Copy is what makes the action
+         discoverable; a second button would just add a control nobody understands. -->
+    <p class="inst-hint">Moved a deployment to a new server? Deactivate the old instance and
+      activate the new one with the same key.</p>
+    <!-- states the filter the blocked banner arrived with, and carries the way out of it -->
+    <p class="inst-filter" id="instFilter" hidden></p>
+    <div class="tablescroll">
+      <table id="instTable">
+        <thead id="instAllHead" class="stickyhead"></thead>
+        <tbody id="instAllBody"></tbody>
+      </table>
+    </div>
+    <!-- ⚠️ A FULL PAGER, and it was a range label on its own. Nineteen instances against
+         a ten-row page is two pages, and the surface had no way to reach the second. -->
+    <div class="pager air">
+      <span class="spacer"></span>
+      <span>Items per page<select aria-label="Items per page"><option>10</option><option>20</option><option>50</option><option>100</option></select></span>
+      <span class="range">0 of 0</span>
+      <span class="pagebtns">
+        <button disabled aria-label="First page">&laquo;</button>
+        <button disabled aria-label="Previous page">&lsaquo;</button>
+        <button disabled aria-label="Next page">&rsaquo;</button>
+        <button disabled aria-label="Last page">&raquo;</button>
+      </span>
+    </div>
+  </div>
+
+</div>
+</div><!-- /#shellMain -->
+
+<script src="data.js"></script>
+<script src="shared.js"></script>
+<!-- ⚠️ `wizard.js` and `license-details.js` are loaded here for the same reason the
+     Invoices page loads them: the License column links to the licence that owns the
+     row, and the delegated interceptor in components.js only opens that licence as a
+     panel `if(window.LicenseDetails)`. Without them the guard fails silently and the
+     link follows its href to the old full-page surface, so this one route would land
+     somewhere every other route in the product does not. `wizard.js` comes with it
+     because the panel's own actions call into `NL`. -->
+<script src="components.js"></script>
+<script src="wizard.js"></script>
+<script src="license-details.js"></script>
+<script src="page-instances.js"></script>
+</body>
+</html>

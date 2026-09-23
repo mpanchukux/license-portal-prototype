@@ -210,6 +210,68 @@
       <p class="sg-note" style="margin-top:12px">Sortable header: <code class="sg-cls">th.sortable[aria-sort]</code> ·
         row actions: <code class="sg-cls">.cellact .lic-actions</code> · pager: <code class="sg-cls">.pager</code></p>
     </div>
+
+    <div class="sg-item" id="stickyblock">
+      <h3>The sticky list block <span class="sg-cls">.listframe</span></h3>
+      <p class="sg-note"><b>One frame, and it used to be two cards.</b> The toolbar had a card, the table had
+        another, and the column row floated inside the second. Toolbar, column row and rows are now one
+        block: <b>one thing to read, and on scroll one thing that stays.</b> Nothing loose sits between the
+        page title and the frame. Every list page uses it &mdash; Licenses, Instances, Invoices, Activity,
+        Users &mdash; and so does the licence panel&rsquo;s tab bar, in its own scroll.</p>
+      <p class="sg-note"><b>What happens on scroll.</b> The app bar is already fixed. The page title scrolls
+        away like any content. The toolbar (<code class="sg-cls">.stickybar</code> &mdash; search, filters,
+        refresh, the primary action) stops at the bottom edge of the app bar; the column row
+        (<code class="sg-cls">.stickyhead</code>) stops directly beneath it. Rows pass under both, for the
+        whole length of the list.</p>
+      <p class="sg-note">⚠️ <b>The scroll container is <code class="sg-cls">#shellMain</code>, not the
+        document.</b> The app bar is a sibling ABOVE that container rather than a fixed overlay, so
+        <code class="sg-cls">top:0</code> already means &ldquo;under the app bar&rdquo; and no header height
+        is ever hard-coded. ⚠️ The column row&rsquo;s own offset is the toolbar&rsquo;s <b>measured</b>
+        height (<code class="sg-cls">--barH</code>): the toolbar is a different height on every page and
+        taller again wherever it wraps, so a constant would gap on one page and overlap on another.</p>
+      <p class="sg-note">⚠️⚠️ <b>A horizontal scroller is a sticky container too.</b>
+        <code class="sg-cls">overflow-x:auto</code> on the table wrapper computes <code
+        class="sg-cls">overflow-y</code> to <code class="sg-cls">auto</code> as well, and a column row
+        inside it then sticks to a box with no height limit &mdash; which is to say, to nothing anyone can
+        see. So the wrapper is only made scrollable when the table actually overflows it
+        (<code class="sg-cls">.tablescroll.is-scrollable</code>, set from script). Measured: every list
+        table fits at 1280px; at 660px the Licenses table is 874px against a 574px box.
+        <b>Sideways scrolling and a stuck column row cannot both happen</b>, and the width decides which.</p>
+
+      <h4 style="margin:18px 0 8px">The shadow <span class="sg-cls">--stickyShadow</span></h4>
+      <p class="sg-note"><b>A depth cue, not a border.</b> It appears only once content has actually gone
+        under the block and is gone at rest. One token, used by the page frames and by the licence
+        panel&rsquo;s tab bar:</p>
+      <div class="listcard" style="padding:0;max-width:520px">
+        <div style="padding:12px 16px;background:var(--card);border-radius:10px 10px 0 0;position:relative">
+          <b style="font-size:14px">Stuck block</b>
+          <span style="position:absolute;left:0;right:0;bottom:-1px;height:8px;box-shadow:var(--stickyShadow)"></span>
+        </div>
+        <div style="padding:12px 16px;color:var(--faint);font-size:14px">a row passing underneath</div>
+        <div style="padding:12px 16px;color:var(--faint);font-size:14px">another row</div>
+      </div>
+      <p class="sg-note" style="margin-top:12px">⚠️ <b>Drawn by whichever row is LAST in the stuck block</b>
+        &mdash; under the column row where there is one, under the toolbar where there is not (Activity is a
+        feed). Two stacked shadows would read as two blocks.</p>
+      <p class="sg-note">⚠️ <b>&ldquo;Stuck&rdquo; is not &ldquo;scrolled at all.&rdquo;</b> On a page with a
+        tall title the toolbar has not arrived yet, and a shadow under an unstuck block is a line drawn for
+        no reason &mdash; so the test is a rect comparison against where the element actually comes to rest.
+        ⚠️ And that resting line is <b>not the container&rsquo;s top edge</b>: a scroll container&rsquo;s
+        padding insets its scrollport, so a sticky child parks that far down. Caught on the licence panel,
+        whose body carried <code class="sg-cls">padding-top:8px</code> &mdash; the tab bar stopped 8px short
+        and rows travelled through the strip above it. The 8px is a margin on the content now.</p>
+
+      <h4 style="margin:18px 0 8px">Below 600px</h4>
+      <p class="sg-note"><b>Only the column row sticks; the toolbar scrolls away with the title.</b> Three
+        stuck rows would take a third of a phone screen, and search and filters are used once a session
+        there &mdash; the column row is the one that has to stay for a scrolled list to stay readable.</p>
+      <p class="sg-note">⚠️⚠️ <b>Which, on every list today, means nothing sticks at all &mdash; and that is
+        not a bug in the rule.</b> Licenses, Instances, Invoices and Users turn their rows into cards at this
+        width and hide <code class="sg-cls">thead</code> with them; Activity is a feed with no column row
+        anywhere. The rule is written out rather than skipped because the day one of these lists keeps its
+        columns on a phone, the behaviour is already decided. ⚠️ The frame is also <b>not a surface</b> at
+        this width: the rows carry a card each, so the box around them has nothing left to draw.</p>
+    </div>
   </section>
 
   <!-- ============================ CARDS ============================ -->
@@ -234,6 +296,40 @@
         one-line condition. It gets no extra rows: a free card lists only what was stated for it, so it is
         visibly shorter than a paid one, and that difference is information rather than a gap to fill.</p>
       <div class="plangrid" id="sgPlans"></div>
+
+      <h4 style="margin:22px 0 8px">Two billing models, one surface <span class="sg-cls">.plangroups</span></h4>
+      <p class="sg-note">⚠️⚠️ <b>THE SWITCHER IS A PHONE-ONLY PATTERN (2026-09-23), and this reverses the
+        entry that stood here.</b> That one argued the <code class="sg-cls">Subscription / Perpetual</code>
+        tabs replaced a heading because &ldquo;the active tab says the same thing&rdquo; &mdash; true only
+        while one model could be on screen at a time. Above 600px both models now sit on the same surface,
+        so there is no active tab to speak for them: each group carries its own
+        <b>label and one-line description</b>, and the sentence each tab used to hold is what now tells the
+        two apart. <b>A reader should see in one look that there are two ways to pay and what each one
+        is.</b></p>
+      <p class="sg-note"><b>Subscription first, with its cards; Perpetual beneath, on its own row.</b>
+        ⚠️ Measured at 1280 (grid 1072, gap 14, card padding 36): four subscription cards come to
+        <b>257.5px</b> each. Putting the perpetual card in the same row makes five at <b>203.2px</b> &mdash;
+        and its name, <i>ThingsBoard PE Perpetual License</i>, is 315.9px at 20px/500, so it would wrap to
+        <b>three lines</b> while <i>Business</i>, the longest subscription name, is 80.9px and notices
+        nothing. The card that is alone and has to read as an equal way to pay would have been the worst-off
+        of the five. On its own row it takes <b>560px</b> and its name fits on one line.</p>
+      <p class="sg-note">⚠️ <b>A pick carries its group's billing model.</b> While the tabs chose the model,
+        the grid only ever held cards of the chosen one, so picking a card could safely say nothing about it.
+        With both groups on one surface it cannot: a perpetual card picked while the model still said
+        <i>subscription</i> sent <code class="sg-cls">tier()</code> to derive a key from the card's NAME,
+        find no spec, read a base price of 0 &mdash; and sell a <b>$4,999 licence as Free</b>. The group
+        states the model and the pick reads it from the group.</p>
+      <p class="sg-note">⚠️ <b>Change plan gets ONE group.</b> A monthly subscription does not become a
+        perpetual licence by picking a card &mdash; that is a different licence and a different purchase
+        &mdash; so a locked selection renders only its own model, and the other is not offered.</p>
+      <p class="sg-note"><b>Below 600px the tabs come back and do real work.</b> Stacking nine cards is a
+        very long page. Both groups are in the DOM at every width; the phone hides the inactive one and the
+        group headings go with it, because the tab above already names what is on screen. <b>Same markup
+        both ways</b> &mdash; the alternative is a phone-only code path, which is the kind only the phone
+        can catch when it breaks.</p>
+      <p class="sg-note"><b>TBMQ gets the same treatment</b> and it changes more there: its two sets are one
+        card each (<i>TBMQ PE subscription</i>, $15 / month &middot; <i>TBMQ PE license</i>, $2,999
+        one-time), so until now the second was reachable only by finding a tab. Both groups render at 560px.</p>
     </div>
     <div class="sg-item">
       <h3>Stated product</h3>
@@ -366,6 +462,68 @@
         payload <code class="sg-cls">.fi-audit</code> (toggled by the row's icon button).
         No event icon: the sentence already opens with what happened.</p>
     </div>
+
+    <div class="sg-item" id="groupedcheck">
+      <h3>Folded check run <span class="sg-cls">.fitem.fgroup</span></h3>
+      <p class="sg-note">The licence checks in <b>every hour</b>, and every check is logged — a handful of
+        instances produce hundreds of entries a day. Consecutive <b>successful</b> checks <b>for the same
+        instance</b> fold into one row carrying the instance, the count and the period they cover, and the
+        row opens to the individual entries. <b>Nothing is hidden; the noise is folded.</b></p>
+      <div class="listcard" style="padding:6px 16px">
+        <div class="fitem fgroup">
+          <div class="fi-row">
+            <div class="fi-body">
+              <div class="fi-meta">Sep 23, 2026, 12:21</div>
+              <div class="fi-txt"><b>36 successful checks</b> for instance <b>HQ primary</b> &mdash; Sep 22, 2026, 01:21 to Sep 23, 2026, 12:21.</div>
+            </div>
+            <button class="iconbtn ib fg-toggle" aria-label="Show the checks"><svg class="icon" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button>
+          </div>
+          <div class="fg-items"><div class="fg-line"><span class="fg-time">Sep 23, 2026, 12:21</span><span class="fg-txt">Checked in successfully.</span></div><div class="fg-line"><span class="fg-time">Sep 23, 2026, 11:21</span><span class="fg-txt">Checked in successfully.</span></div></div>
+        </div>
+        <div class="fitem">
+          <div class="fi-row"><div class="fi-body">
+            <div class="fi-meta">Sep 23, 2026, 12:20</div>
+            <div class="fi-txt"><b>Check failed</b> for instance <b>HQ node 2</b> &mdash; the license is blocked &mdash; running instances exceed the plan.</div>
+          </div></div>
+        </div>
+      </div>
+      <p class="sg-note" style="margin-top:12px">&#9888; <b>A failure never folds</b>, even between two
+        successes: it is the entry the reader is scanning for, and a count would hide it. It stands as its
+        own row and <b>names the cause in the row itself</b> — nothing has to be expanded to find out why.
+        ⚠️ <b>&ldquo;Consecutive&rdquo; means consecutive for that INSTANCE</b>, not in the merged feed:
+        nineteen instances reporting hourly interleave by timestamp, so strict adjacency would fold
+        nothing at all.</p>
+      <p class="sg-note">&#9888; <b>Every folded entry keeps its own payload button.</b> Folding is a
+        display decision — the individual checks are still individual events, and an event whose raw
+        record cannot be opened is less of a record than the ungrouped one beside it. The group row
+        itself has none: it is a summary, not an event.</p>
+      <p class="sg-note">The <b>type filter</b> sits beside the period control as a single
+        <b>multi-select dropdown</b> (<code class="sg-cls">.acttypemenu</code>) — instance checks, licence
+        and plan changes, purchases and billing, user operations. ⚠️ It was four chips and needed a
+        toolbar row of its own; as one control it reads as a pair with the period, which asks the same
+        kind of question about the same list. <b>The menu does not close on a tick</b>: choosing two kinds
+        is two clicks, and a menu that shuts after the first turns one decision into two round trips.
+        All four start on — hiding a type by default would make the page quietly incomplete — and
+        <i>Select all</i> is the way back from any state.</p>
+    </div>
+
+    <div class="sg-item" id="credit">
+      <h3>Account credit <span class="sg-cls">.creditcard</span></h3>
+      <p class="sg-note">When a change lowers what is paid, the part of the period already paid for and
+        no longer used becomes <b>credit on the account</b> rather than being lost. It appears in three
+        places, and each answers a different question: on the <b>Review of the change</b> (what do I get
+        back for giving this up), on <b>Billing</b> as its own block (what do I hold), and on the
+        <b>next purchase</b> (what did it just save me).</p>
+      <div class="creditcard" style="max-width:520px">
+        <span class="credit-amt">$333.33</span>
+        <span class="credit-note">Applied automatically to your next purchase.</span>
+      </div>
+      <p class="sg-note" style="margin-top:12px">&#9888; <b>Its own block, never inside the payment
+        method.</b> A card is how money leaves; credit is money the account already holds. A balance
+        tucked under &ldquo;Payment method&rdquo; reads as a property of the card, which it is not.</p>
+      <p class="sg-note"><b>The purchase shows three figures, not one:</b> what came off the balance, what
+        the card is taking, and what is left. One number cannot be checked against anything.</p>
+    </div>
   </section>
 
   <!-- ============================ TOOLTIPS ============================ -->
@@ -487,8 +645,8 @@
           <svg class="icon gb-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l9 16H3z"/><path d="M12 9.5v4.2"/><circle cx="12" cy="16.6" r=".9"/></svg>
           <div class="hb-body">
             <p class="hb-fact"><b><a class="gb-lic" href="#">On-prem HQ</a> is blocked</b> &mdash; 2 production instances running, 1 allowed.</p>
-            <p class="hb-todo">Raise the limit or detach the extra instance. The license checks in hourly and unblocks at the next check.</p>
-            <div class="hb-acts"><button class="gb-act">Manage</button><a class="gb-act sec" href="#">Detach an instance</a></div>
+            <p class="hb-todo">Raise the limit or deactivate the extra instance. The license checks in hourly and unblocks at the next check.</p>
+            <div class="hb-acts"><button class="gb-act">Manage</button><a class="gb-act sec" href="#">Deactivate an instance</a></div>
           </div>
         </div>
       </div>
@@ -557,16 +715,32 @@
     </div>
 
     <div class="sg-item" id="instancesview">
-      <h3>The Instances view <span class="sg-cls">#instancesList</span></h3>
-      <p class="sg-note"><b>A view, not a nav destination.</b> A typical customer runs two to five
-        instances; a top-level page for five rows costs more attention than it returns. The Licenses page
-        carries a <code class="sg-cls">.lic-viewseg</code> toggle — same page, same toolbar, two ways of
-        slicing the same data. Columns: instance · licence · last check-in · version · status. <b>Nothing
-        about plans or money lives here</b> — that is what the licence row is for.</p>
-      <p class="sg-note"><b>The shared toolbar has to stand down.</b> The type chips and the canceled
-        switch filter <em>licences</em>, and an instance has neither a type nor a cancellation, so they are
-        hidden in this view rather than left disabled. Search stays: both views are rows.</p>
-      <p class="sg-note"><b>Detach lives on the instance row and nowhere else.</b> The blocked banner does
+      <h3>The Instances page <span class="sg-cls">instances.html</span></h3>
+      <p class="sg-note">⚠️ <b>A DESTINATION SINCE 2026-09-23, and it used to be the opposite.</b> This
+        entry read &ldquo;a view, not a nav destination&rdquo; and argued it: a typical customer runs two
+        to five instances, and a top-level page for five rows costs more attention than it returns. What
+        changed is not the count but the arrangement — the toggle borrowed the Licenses toolbar and then
+        had to hide half of it, and it stood in for that page&rsquo;s title as well. <b>A slice that needs
+        the host page&rsquo;s controls switched off is not a slice.</b> Columns are unchanged: instance ·
+        licence · last check-in · version · status. <b>Nothing about plans or money lives here</b> — that
+        is what the licence row is for.</p>
+      <p class="sg-note"><b>It filters by the one thing an instance has.</b> The Licenses toolbar filters
+        by product type and by cancellation, and an instance has neither — which is exactly why both stood
+        down when this was a view on that page. What an instance does have is the state its own column
+        already states, so the toolbar is search plus a <code class="sg-cls">.inst-statusseg</code> chip
+        pair (Healthy / Stale), the same mutually-exclusive group as the Licenses type filter.
+        ⚠️ <b>Version is not a filter</b>, though the column is here: &ldquo;behind latest&rdquo; is a fact
+        about a release, not a state of the deployment.</p>
+      <p class="sg-note">⚠️ <b>The empty state offers nothing, and that is the point.</b> Every other empty
+        state here carries the next step; an instance is not something you create in the portal, so the
+        only honest line is how one appears — a deployment somewhere activates itself with a key. <b>No
+        action.</b></p>
+      <p class="sg-note">⚠️ <b>On the phone the row is a card</b> (<code class="sg-cls">.inst-row</code>),
+        and it had none until the split: it was the one list row in the product with no class to hang the
+        treatment on, so at 390px its five columns each took a fifth of the screen and a long licence name
+        wrapped to six lines. Reading order is the deployment, the licence it draws on, then the three
+        facts that answer &ldquo;is it healthy&rdquo; on one line.</p>
+      <p class="sg-note"><b>Deactivate and Delete live on the instance row and nowhere else.</b> The blocked banner does
         not implement a second one — it <em>routes</em> here, the same way the payment-failed banner routes
         to the card modal. Discovery is handled by copy, in two places: the blocked banner
         (&ldquo;This usually happens after moving a deployment to a new server…&rdquo;) and a quiet

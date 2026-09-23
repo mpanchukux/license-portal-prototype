@@ -3,32 +3,123 @@
    items themselves come from components.js (Home renders the same ones).
    ============================================================================ */
 
+/* ⚠️ The type filter starts with EVERYTHING selected — including instance checks.
+   Hiding a type by default would make the page quietly incomplete: a reader who never
+   opens the filter would never learn that the checks are there, which is the opposite
+   of what a log is for. The noise is handled by FOLDING the successful ones, not by
+   dropping them. */
+var actTypes = ACT_TYPES.map(function(t){ return t.v; });
+/* ⚠️ THE FEED IS PAGED NOW, and it had to be: instance check-ins are derived, so this
+   page renders well over a thousand entries on the demo account — measured at 22,093px
+   of scroll. The pager markup was already in the page and could not move.
+   ⚠️ While a SEARCH is active the page renders everything and the pager stands down —
+   `wireSearch` filters rows that are already in the DOM, so searching one page of many
+   would search ten rows and report the rest missing. See pageSlice in components.js. */
+var actPage = { page:1, size:10, total:0 };
+function actQuery(){
+  var i = $('#activityView .searchbox input');
+  return i ? i.value.trim() : '';
+}
 function renderActFeed(){
   var el = $('#actFeed'); if(!el) return;
-  var all = DATA().activity;
+  var all = activityFeed({ types:actTypes });
+  var everything = activityFeed({});
   var list = filterFeedByPeriod(all, actPeriod);
   /* ⚠️ TWO different empties, and the old code only had one. "No events in the
      selected period" was shown to a brand-new account, which has no events in ANY
      period — it described a filter the reader had not set and implied that widening
      it would help. Nothing has ever happened is a different sentence with no action:
      activity is a side effect of using the account, not something to go and create. */
-  if(!all.length){
+  /* ⚠️ "Nothing has ever happened" is measured against EVERYTHING, not against the
+     current filters — otherwise unticking every type would tell a busy account that it
+     has never done anything. The two narrower empties describe the filter the reader
+     set, and say which one. */
+  if(!everything.length){
     el.innerHTML = emptyStateHTML({
       title:'Nothing has happened yet.',
       line:'Purchases, plan changes, and user activity are recorded here.'
     });
+  } else if(!all.length){
+    el.innerHTML = '<div class="emptybox">No events of the selected types.</div>';
   } else if(!list.length){
     el.innerHTML = '<div class="emptybox">No events in the selected period.</div>';
   } else {
-    el.innerHTML = list.map(function(a, i){ return feedItem(a, i); }).join('');
+    var searching = !!actQuery();
+    var rows = searching ? list : pageSlice(list, actPage);
+    if(searching) actPage.total = list.length;
+    el.innerHTML = rows.map(function(a, i){ return feedRow(a, i); }).join('');
   }
-  syncListEmpty(!all.length);
-  var r = $('#activityView .pager .range');
-  if(r) r.textContent = list.length ? ('1–' + list.length + ' of ' + list.length) : '0 of 0';
+  syncListEmpty(!everything.length);
+  var pg = $('#activityView .pager');
+  if(pg) pg.hidden = !!actQuery() || !list.length;
+  syncPager('#activityView .pager', actPage);
 }
+/* ---------- the type filter -------------------------------------------------------
+   ⚠️ ONE DROPDOWN, NOT FOUR CHIPS. Four chips was four controls for one question, and
+   they took a whole toolbar row to ask it — next to a period control that asks the same
+   KIND of question ("how much of the log") from a single button. One trigger stating the
+   current answer, with the choices inside, makes the two filters read as a pair.
+   It is MULTI-select: a reader narrowing a log usually wants two kinds at once
+   ("changes and purchases"), so the menu holds checkboxes and stays open while they are
+   used. It closes on the next click outside, like every other dropdown here. */
+function actTypeLabel(){
+  if(actTypes.length === ACT_TYPES.length) return 'All event types';
+  if(!actTypes.length) return 'No event types';
+  if(actTypes.length === 1){
+    var one = ACT_TYPES.filter(function(t){ return t.v === actTypes[0]; })[0];
+    return one ? one.t : '1 type';
+  }
+  return actTypes.length + ' event types';
+}
+function renderActTypes(){
+  var lbl = $('#actTypeLabel');
+  if(lbl) lbl.textContent = actTypeLabel();
+  $$('#actTypeMenu [data-acttype]').forEach(function(row){
+    var on = actTypes.indexOf(row.getAttribute('data-acttype')) >= 0;
+    row.setAttribute('aria-checked', on ? 'true' : 'false');
+    row.classList.toggle('is-on', on);
+  });
+}
+(function(){
+  var menu = $('#actTypeMenu'); if(!menu) return;
+  menu.innerHTML = ACT_TYPES.map(function(t){
+    return '<button role="menuitemcheckbox" class="dropcheck" data-acttype="' + t.v + '" aria-checked="true">'
+      + '<svg class="icon cc-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5"/></svg>'
+      + '<span>' + t.t + '</span></button>';
+  }).join('')
+    /* ⚠️ A way back to everything, because a multi-select can be left in a state whose
+       way out is four more clicks. */
+    + '<div class="dropfoot"><button class="link" id="actTypeAll">Select all</button></div>';
+  menu.addEventListener('click', function(e){
+    var all = e.target.closest('#actTypeAll');
+    if(all){
+      actTypes = ACT_TYPES.map(function(t){ return t.v; });
+      renderActTypes(); renderActFeed();
+      return;
+    }
+    var row = e.target.closest('[data-acttype]'); if(!row) return;
+    /* ⚠️ The menu does NOT close on a tick. Choosing two kinds is two clicks, and a menu
+       that shuts after the first turns one decision into two round trips. */
+    e.stopPropagation();
+    var v = row.getAttribute('data-acttype'), i = actTypes.indexOf(v);
+    if(i >= 0) actTypes.splice(i, 1); else actTypes.push(v);
+    renderActTypes();
+    renderActFeed();
+  });
+  renderActTypes();
+})();
+
 renderActFeed();
 wireFeedAudit('#activityView');
 wirePeriod('#actPeriod', actPeriod, renderActFeed);
+wirePager('#activityView .pager', actPage, renderActFeed);
+/* ⚠️ Bound BEFORE wireSearch, and the order is the whole trick: this re-renders the
+   feed (everything while there is a query, one page when there is not) and the
+   listener wireSearch adds next then hides the non-matches in what was just drawn. */
+(function(){
+  var i = $('#activityView .searchbox input');
+  if(i) i.addEventListener('input', renderActFeed);
+})();
 
 /* ---------- search: event text, entity name and actor, as ONE query ----------
    All three at once, against the stripped text of the entry — the feed stores HTML,

@@ -16,8 +16,12 @@ if(!pageLic) pageLic = licFromNamed(params.get('tier') || 'prototype');
    decides both the highlighted nav item and where back goes. Invoices is a real
    origin now: an invoice's Product cell links here. */
 var ORIGINS = {
-  home:     { nav:'home',     href:'index.html',    label:'Back to Home' },
-  invoices: { nav:'invoices', href:'invoices.html', label:'Back to Invoices' }
+  home:      { nav:'home',      href:'index.html',     label:'Back to Home' },
+  invoices:  { nav:'invoices',  href:'invoices.html',  label:'Back to Invoices' },
+  /* the Instances page's License column links here too, and without an entry it fell
+     to the default and offered "Back to Licenses" — a way back to a page the reader
+     had not come from */
+  instances: { nav:'instances', href:'instances.html', label:'Back to Instances' }
 };
 var origin = ORIGINS[params.get('from')] || { nav:'licenses', href:'licenses.html', label:'Back to Licenses' };
 

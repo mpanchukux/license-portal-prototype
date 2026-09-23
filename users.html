@@ -63,17 +63,18 @@
       <p class="invite-note">Anyone you invite gets full access to your licenses, invoices and payment method.</p>
     </div>
 
-    <div class="listcard">
-    <div class="insttoolbar">
+    <!-- ⚠️ ONE FRAME: toolbar, column row and rows are one block. The invite card above
+         stays OUTSIDE it and scrolls away — it is how the list grows, not a control for
+         reading the list, and sticking it would pin a text field to the top of a table. -->
+    <div class="listcard listframe">
+    <div class="insttoolbar stickybar">
       <div class="searchbox"><svg class="icon searchglyph" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input type="text" placeholder="Search users" aria-label="Search users"></div>
       <span class="spacer"></span>
       <button class="iconbtn ib" data-refresh aria-label="Refresh" title="Refresh"><svg class="icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg></button>
     </div>
-    </div>
 
-    <div class="listcard">
     <table>
-      <thead>
+      <thead class="stickyhead">
         <tr>
           <th>Name</th>
           <th>Email</th>

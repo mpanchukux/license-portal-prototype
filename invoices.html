@@ -11,18 +11,25 @@
 
 <div id="shellMain">
 <div class="licview" id="invoicesView">
+  <!-- ⚠️ ONE FRAME: toolbar, column row and rows are one block, so they are one thing to
+       read and, on scroll, one thing that stays. Nothing loose between the title and the
+       frame. `.stickybar` is the toolbar, `.stickyhead` the column row; the offset the
+       column row sticks at is the toolbar's MEASURED height (`--barH`), because this
+       toolbar is a different height on every page and wraps at narrow widths. -->
+  <!-- ⚠️ THE TITLE IS INSIDE THE FRAME. It was above it, and the frame began at the
+       toolbar; the page then read as a loose heading followed by a box. One block now:
+       title, toolbar, column row, rows. The title still SCROLLS AWAY — it is in the
+       frame, not in the sticky part of it. -->
+  <div class="listcard listframe">
   <h1 class="lic-h1">Invoices</h1>
-  <div class="listcard">
-  <div class="insttoolbar">
+  <div class="insttoolbar stickybar">
     <div class="searchbox"><svg class="icon searchglyph" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input type="text" placeholder="Search invoices" aria-label="Search invoices"></div>
     <span class="spacer"></span>
     <button class="iconbtn ib" data-refresh aria-label="Refresh" title="Refresh"><svg class="icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg></button>
   </div>
-  </div>
 
-  <div class="listcard">
   <table>
-    <thead>
+    <thead class="stickyhead">
       <tr>
         <th>Invoice #</th>
         <th class="sortable" aria-sort="descending" tabindex="0">Date <span class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></span></th>

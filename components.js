@@ -635,6 +635,235 @@ function renderFeed(sel, limit){
   el.innerHTML = list.map(function(a, idx){ return feedItem(a, idx); }).join('');
 }
 
+/* ============================================================================
+   ACTIVITY: what belongs where, how checks are folded, and the type filter
+   ============================================================================
+   ⚠️ THE TWO LOGS ARE DIFFERENT THINGS, and one of them was not reading the log at all.
+   The Activity PAGE is the account's whole history: every hourly check, succeeded or
+   failed, plus user operations, purchases and changes. The licence's Activity TAB is
+   scoped to one licence: what changed about what that licence covers, and what its own
+   instances did. */
+var ACT_TYPES = [
+  { v:'checks',   t:'Instance checks' },
+  { v:'license',  t:'License and plan changes' },
+  { v:'billing',  t:'Purchases and billing' },
+  { v:'users',    t:'User operations' }
+];
+/* Which of the four a row belongs to. Read from what the entry already carries —
+   `kind` and `entityType` — rather than stamped onto every writer, so an event logged
+   anywhere in the prototype lands in the right bucket without its author knowing the
+   filter exists. */
+function actType(a){
+  /* ⚠️ `check_group` BELONGS HERE TOO. Folding happens before filtering, so by the time
+     a row reaches this function a run of successes is no longer a `check_ok` — and
+     without this line every folded group fell through to the default and was filtered
+     as a licence change: selecting "Instance checks" alone showed only the failures. */
+  if(a.kind === 'check_ok' || a.kind === 'check_fail' || a.kind === 'check_group') return 'checks';
+  var e = String(a.entityType || '');
+  if(e === 'Invoice' || e === 'Payment method') return 'billing';
+  if(e === 'User' || e === 'Session') return 'users';
+  return 'license';
+}
+/* ---- folding the successful checks ---------------------------------------------
+   ⚠️ CONSECUTIVE MEANS "consecutive FOR THAT INSTANCE", not consecutive in the merged
+   feed. Nineteen instances reporting every hour interleave by timestamp, so strict
+   adjacency in the combined list would almost never repeat the same instance and would
+   fold nothing at all. A run is a maximal sequence of that instance's own successes,
+   broken by one of its failures.
+   ⚠️ A FAILURE NEVER JOINS A GROUP, even between two successes — it is the one entry
+   the reader is scanning for, and folding it into a count would hide it. It stays its
+   own row and says why in the row itself.
+   Nothing is removed: the run keeps its entries and the row expands to them. */
+function foldChecks(checks){
+  var byInst = {};
+  checks.forEach(function(c){
+    (byInst[c.instId] = byInst[c.instId] || []).push(c);
+  });
+  var out = [];
+  Object.keys(byInst).forEach(function(id){
+    var list = byInst[id].slice().sort(function(a, b){ return a.tsMin - b.tsMin; });  // newest first
+    var run = [];
+    function flush(){
+      if(!run.length) return;
+      out.push(run.length === 1 ? run[0] : { kind:'check_group', items:run.slice(),
+        ts: run[0].ts, tsMin: run[0].tsMin, entityType:'Instance', entityName: run[0].entityName,
+        instId: run[0].instId, licId: run[0].licId, licName: run[0].licName,
+        actor:'System', action:'CHECK_OK', count: run.length,
+        from: run[run.length - 1].ts, to: run[0].ts });
+      run = [];
+    }
+    list.forEach(function(c){
+      if(c.kind === 'check_fail'){ flush(); out.push(c); }
+      else run.push(c);
+    });
+    flush();
+  });
+  return out;
+}
+/* The whole feed a surface shows: stored events plus derived checks, folded, filtered
+   and newest first. `licId` scopes it to one licence for the details tab. */
+function activityFeed(opts){
+  opts = opts || {};
+  var stored = (DATA().activity || []).filter(function(a){
+    return !opts.licId || a.licId === opts.licId;
+  });
+  /* ⚠️ AN EMPTY SELECTION MEANS EMPTY, not "no filter". `opts.types.length` as the gate
+     made unticking the last chip fall back to showing everything — the filter appeared
+     to reset itself, which is the opposite of what the reader just asked for. The test
+     is whether the caller PASSED a selection, not whether the selection is non-empty. */
+  var filtered = !!opts.types;
+  var wantChecks = !filtered || opts.types.indexOf('checks') >= 0;
+  var checks = wantChecks ? allChecks(opts.licId || null) : [];
+  var folded = opts.group === false ? checks : foldChecks(checks);
+  var all = stored.concat(folded);
+  if(filtered)
+    all = all.filter(function(a){ return opts.types.indexOf(actType(a)) >= 0; });
+  return all.sort(function(a, b){ return feedMinute(b) - feedMinute(a); });
+}
+/* ---- the rows ---- */
+function checkRowText(a){
+  if(a.kind === 'check_fail')
+    return '<b>Check failed</b> for instance <b>' + esc(a.entityName) + '</b> — '
+      + (CHECK_FAIL[a.why] || 'the check did not complete') + '.';
+  if(a.kind === 'check_group')
+    return '<b>' + a.count + ' successful checks</b> for instance <b>' + esc(a.entityName)
+      + '</b> — ' + fmtDateTime(a.from) + ' to ' + fmtDateTime(a.to) + '.';
+  return 'Instance <b>' + esc(a.entityName) + '</b> checked in successfully.';
+}
+/* A folded run renders as one row that opens to its own entries — the count is a
+   summary, not a replacement. */
+function feedGroupItem(a, i){
+  return '<div class="fitem fgroup">'
+    + '<div class="fi-row">'
+    +   '<div class="fi-body">'
+    +     '<div class="fi-meta">' + fmtDateTime(a.ts) + '</div>'
+    +     '<div class="fi-txt">' + checkRowText(a) + '</div>'
+    +   '</div>'
+    +   '<button class="iconbtn ib fg-toggle" data-fgroup aria-expanded="false"'
+    +     ' aria-label="Show the ' + a.count + ' checks" title="Show the individual checks">'
+    +     '<svg class="icon" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button>'
+    + '</div>'
+    /* ⚠️ EVERY ENTRY KEEPS ITS OWN PAYLOAD BUTTON. Folding is a display decision — the
+       individual checks are still individual events, and an event whose raw record
+       cannot be opened is less of a record than the ungrouped one beside it. The group
+       row itself has no audit button: it is a summary, not an event. */
+    + '<div class="fg-items" hidden>'
+    +   a.items.map(function(c, n){
+          var rec = { ts:c.ts, entityType:c.entityType, entityName:c.entityName,
+                      actor:c.actor, action:c.action, kind:c.kind,
+                      txt:'Instance <b>' + esc(c.entityName) + '</b> checked in successfully.' };
+          return '<div class="fg-line">'
+            + '<div class="fg-lrow">'
+            +   '<span class="fg-time">' + fmtDateTime(c.ts) + '</span>'
+            +   '<span class="fg-txt">Checked in successfully.</span>'
+            +   '<button class="iconbtn ib fg-audit" data-audit data-i="' + i + '-' + n + '"'
+            +     ' aria-expanded="false" aria-label="Show details" title="Show details">' + AUDITSVG + '</button>'
+            + '</div>'
+            + '<pre class="fi-audit" hidden>' + esc(auditJson(rec)) + '</pre>'
+            + '</div>';
+        }).join('')
+    + '</div>'
+    + '</div>';
+}
+/* One entry point for every feed row, so a surface never has to know which kind it is */
+function feedRow(a, i){
+  if(a.kind === 'check_group') return feedGroupItem(a, i);
+  if(a.kind === 'check_ok' || a.kind === 'check_fail'){
+    var copy = { ts:a.ts, txt:checkRowText(a), entityType:a.entityType, entityName:a.entityName,
+                 actor:a.actor, action:a.action, kind:a.kind };
+    if(a.why) copy.reason = CHECK_FAIL[a.why];
+    return feedItem(copy, i);
+  }
+  return feedItem(a, i);
+}
+/* the expander on a folded run — delegated, because feeds are re-rendered */
+document.addEventListener('click', function(e){
+  var b = e.target.closest('[data-fgroup]');
+  if(!b) return;
+  var box = b.closest('.fgroup').querySelector('.fg-items');
+  var open = box.hidden;
+  box.hidden = !open;
+  b.setAttribute('aria-expanded', open ? 'true' : 'false');
+  b.classList.toggle('is-on', open);
+});
+
+/* ============================================================================
+   PAGINATION — one controller, for pagers that were markup only
+   ============================================================================
+   ⚠️ THE BUTTONS WERE NOT DEAD, THEY WERE DISABLED, and the difference is why this
+   went unnoticed: with fewer rows than a page, greyed-out arrows are the honest
+   answer. Activity broke that — derived check-ins put well over a thousand entries in
+   the feed, and the page rendered every one of them under a pager that said
+   "1–1400 of 1400" and could not move.
+
+   ⚠️ SEARCH AND PAGING CANNOT BOTH BE ON. `wireSearch` filters by hiding rows that are
+   already in the DOM, so a search across page 1 of 140 would search ten rows and call
+   the rest absent. While there is a query the surface renders EVERYTHING and the pager
+   stands down; clearing the query puts it back. That is the honest pairing — the other
+   one is a search box that quietly lies about how much it looked at. */
+function pageSlice(list, st){
+  st.total = list.length;
+  var last = Math.max(1, Math.ceil(st.total / st.size));
+  if(st.page > last) st.page = last;
+  if(st.page < 1) st.page = 1;
+  return list.slice((st.page - 1) * st.size, st.page * st.size);
+}
+function syncPager(sel, st){
+  var el = $(sel); if(!el) return;
+  var last = Math.max(1, Math.ceil(st.total / st.size));
+  var from = st.total ? (st.page - 1) * st.size + 1 : 0;
+  var to = Math.min(st.total, st.page * st.size);
+  var r = el.querySelector('.range');
+  if(r) r.textContent = st.total ? (from + '\u2013' + to + ' of ' + st.total) : '0 of 0';
+  var b = el.querySelectorAll('.pagebtns button');
+  if(b.length === 4){
+    b[0].disabled = b[1].disabled = st.page <= 1;
+    b[2].disabled = b[3].disabled = st.page >= last;
+  }
+  var sz = el.querySelector('select');
+  if(sz && sz.value !== String(st.size)) sz.value = String(st.size);
+}
+/* ⚠️ Bound ONCE per pager and guarded, because several of these live inside surfaces
+   that are re-rendered (the licence panel remounts its whole markup). A second
+   listener on the same node would advance the page twice per click. */
+function wirePager(sel, st, rerender){
+  var el = $(sel); if(!el || el.__pager) return;
+  el.__pager = true;
+  var sz = el.querySelector('select');
+  if(sz){
+    sz.value = String(st.size);
+    sz.addEventListener('change', function(){
+      st.size = +sz.value || 10; st.page = 1; rerender();
+    });
+  }
+  el.addEventListener('click', function(e){
+    var b = e.target.closest('.pagebtns button');
+    if(!b || b.disabled) return;
+    var last = Math.max(1, Math.ceil(st.total / st.size));
+    var lbl = b.getAttribute('aria-label') || '';
+    if(/First/i.test(lbl))         st.page = 1;
+    else if(/Previous/i.test(lbl)) st.page = Math.max(1, st.page - 1);
+    else if(/Next/i.test(lbl))     st.page = Math.min(last, st.page + 1);
+    else if(/Last/i.test(lbl))     st.page = last;
+    rerender();
+  });
+}
+/* the markup, so four surfaces cannot end up with four slightly different pagers */
+function pagerHTML(id, sizes){
+  return '<div class="pager air" id="' + id + '">'
+    + '<span class="spacer"></span>'
+    + '<span>Items per page<select aria-label="Items per page">'
+    +   (sizes || [10,20,50,100]).map(function(n){ return '<option>' + n + '</option>'; }).join('')
+    + '</select></span>'
+    + '<span class="range">0 of 0</span>'
+    + '<span class="pagebtns">'
+    +   '<button disabled aria-label="First page">&laquo;</button>'
+    +   '<button disabled aria-label="Previous page">&lsaquo;</button>'
+    +   '<button disabled aria-label="Next page">&rsaquo;</button>'
+    +   '<button disabled aria-label="Last page">&raquo;</button>'
+    + '</span></div>';
+}
+
 /* ---------- period filter (Activity page + the licence's Activity tab) ---------- */
 var actPeriod = { mode:'all', from:null, to:null };
 var licPeriod = { mode:'all', from:null, to:null };
@@ -684,6 +913,20 @@ function licenseActivity(lic){
       actor: v.auto ? 'Auto-pay' : who, action:'PAID',
       txt:'Invoice <b>'+v.num+'</b> was paid' + (v.auto ? ', charged automatically.' : ' by '+who+'.') });
   });
+  /* ⚠️ THE STORED LOG JOINS IN, and it did not before. Everything above is SYNTHESISED
+     from the licence object, so a plan change, a capacity purchase, a renewal or a
+     deactivated instance — all of them written to the log with this licence's id —
+     appeared on the Activity page and nowhere in the licence's own tab. The tab was a
+     reconstruction of what could be inferred, not a record of what happened.
+     Deduped on `ADDED`: a licence bought in this session logs its own creation, and the
+     synthesised opener above would then say it twice. */
+  var stored = (DATA().activity || []).filter(function(a){ return a.licId === lic.id; });
+  if(stored.some(function(a){ return a.action === 'ADDED'; }))
+    acts = acts.filter(function(a){ return a.action !== 'ADDED'; });
+  acts = acts.concat(stored);
+  /* and the licence's own instances' checks — scoped to this licence, folded the same
+     way the Activity page folds them */
+  acts = acts.concat(foldChecks(allChecks(lic.id)));
   // newest first, like every other feed: the pushes and unshifts above are built by
   // kind, not by date, and the paid events land last however old they are
   acts.sort(function(a,b){ return feedMinute(b)-feedMinute(a); });
@@ -693,7 +936,7 @@ function renderLicFeed(lic){
   var el = $('#licFeed'); if(!el) return;
   var list = filterFeedByPeriod(licenseActivity(lic), licPeriod);
   el.innerHTML = list.length
-    ? list.map(function(a,i){ return feedItem(a, 'lic'+i); }).join('')
+    ? list.map(function(a,i){ return feedRow(a, 'lic'+i); }).join('')
     : '<div class="emptybox">No events in the selected period.</div>';
 }
 
@@ -705,7 +948,11 @@ function wireFeedAudit(rootSel){
   host.addEventListener('click', function(e){
     var btn = e.target.closest('[data-audit]');
     if(!btn) return;
-    var item = btn.closest('.fitem'), pre = item && item.querySelector('.fi-audit');
+    /* ⚠️ NEAREST OWNER, not the row. A folded run now carries an audit button on every
+       entry inside it as well as being a `.fitem` itself, so looking up to `.fitem` and
+       taking its FIRST `.fi-audit` opened the same payload whichever entry was pressed.
+       `.fg-line` is listed first: `closest` walks outward and stops at the first match. */
+    var item = btn.closest('.fg-line, .fitem'), pre = item && item.querySelector('.fi-audit');
     if(!pre) return;
     var open = pre.hidden;
     pre.hidden = !open;
@@ -1121,6 +1368,16 @@ var BILLING_CHOICES = [
   { v:'subscription', t:'Subscription', d:BILLING_MODE_NOTE.subscription },
   { v:'perpetual',    t:'Perpetual',    d:BILLING_MODE_NOTE.perpetual }
 ];
+/* ⚠️⚠️ THE TABS ARE A PHONE CONTROL NOW (2026-09-23), and this REVERSES the note
+   above. That note argued the heading was redundant because "it said the same thing the
+   active tab says" — true while only one group could be on screen. Both groups sit on
+   the same surface above 600px, so there is no active one to speak for them, and the
+   sentence each tab carried is what tells the two apart. The headings came back and
+   took the descriptions with them; see planGroupHTML.
+   ⚠️ The markup is UNCHANGED and still rendered on every width — CSS hides the row
+   above 600px. Emitting it always is what lets the phone keep the switcher working
+   exactly as it does today, off the same `data-nl-bill` reading, with no second
+   control and no second code path. */
 function nlBillTabsHTML(sel){
   var locked = !!sel.locked, perp = sel.kind === 'perpetual';
   var active = perp ? BILLING_CHOICES[1] : BILLING_CHOICES[0];
@@ -1252,9 +1509,15 @@ function baselineBlockHTML(sel){
    ABOVE the cards, where it describes what they have in common before you read what
    separates them. This note is about the cards themselves, so it stayed below them. */
 function planPickerExtraHTML(set, sel){
-  /* the tax line sits with the prices it qualifies — one of the three surfaces
-     TAX_NOTE appears on, the others being the Review and Billing steps */
-  return (set.single ? '<div class="pc-note center">' + EC_SINGLE_NOTE + '</div>' : '')
+  /* ⚠️ The single-set note MOVED INTO THE GROUP (see planGroupHTML). It says "you can
+     fine-tune capacity before checkout", which is about one card's set — and with two
+     groups on the surface, hanging it under both would attach it to the four-card group
+     as well, where it is not what the reader needs to know. It still renders here when
+     the surface holds exactly one group, i.e. a locked Change plan.
+     The tax line stays: it qualifies every price above it, in both groups — one of the
+     three surfaces TAX_NOTE appears on, the others being Review and Billing. */
+  var one = planGroupsFor(sel).length === 1;
+  return (one && set.single ? '<div class="pc-note center">' + EC_SINGLE_NOTE + '</div>' : '')
     + '<p class="taxnote">' + TAX_NOTE + '</p>';
 }
 /* `extraEl` is optional: pass it on a selling surface (the landing page and the
@@ -1262,6 +1525,47 @@ function planPickerExtraHTML(set, sel){
    identical for all three by construction — there is no second copy to drift. */
 /* `baseEl` is the slot between the tabs and the cards. Like `extraEl` it is optional:
    the wizard passes neither, because its step 1 is a choice and not a sales page. */
+/* ---------- the two billing models, on one surface ------------------------------
+   ⚠️ A GROUP IS A LABEL, A SENTENCE AND A GRID, and the label is the point: with both
+   models on screen at once there is no control naming them, so the heading has to do
+   it. A reader should see in one look that there are two ways to pay and what each
+   one is — which is the job the tabs used to do for one model at a time.
+   `single` rides on the set, so a one-card group (both of TBMQ's, and ThingsBoard's
+   perpetual) gets the wide single-card treatment rather than a card stretched across
+   a four-column track. */
+function planGroupsFor(sel){
+  var product = sel.product || 'thingsboard';
+  /* ⚠️ A LOCKED SELECTION GETS ONE GROUP, and it must. `locked` is Change plan — an
+     existing licence — and a monthly subscription does not become a perpetual licence
+     by picking a card: that is a different licence and a different purchase. Showing
+     the other model here would offer a swap the flow cannot perform. */
+  var kinds = sel.locked ? [sel.kind === 'perpetual' ? 'perpetual' : 'subscription']
+                         : ['subscription', 'perpetual'];
+  return kinds.map(function(k){
+    return { kind:k, choice:BILLING_CHOICES.filter(function(o){ return o.v === k; })[0],
+             set: EC_PLANS[product + '|' + (k === 'perpetual' ? 'perpetual' : 'payg')] };
+  }).filter(function(g){ return g.set && g.set.cards.length; });
+}
+function planGroupHTML(g, sel, many){
+  var set = g.set;
+  var hasCur = !!sel.currentName && set.cards.some(function(c){ return c.name === sel.currentName; });
+  return '<section class="plangroup" data-bill="' + g.kind + '">'
+    /* ⚠️ The heading is hidden on the phone when there are two groups — the tab above
+       already names the one on screen, and two labels for one choice is the duplication
+       the tabs were introduced to remove. It stays in the tree either way. */
+    + '<div class="plangroup-h">'
+    +   '<h3 class="pg-t">' + g.choice.t + '</h3>'
+    +   '<p class="pg-d">' + g.choice.d + '</p>'
+    + '</div>'
+    + '<div class="plangrid' + (set.single ? ' one' : '') + (hasCur ? ' withcur' : '') + '">'
+    +   set.cards.map(function(c){ return nlPlanCardHTML(c, set, sel); }).join('')
+    + '</div>'
+    /* the "fine-tune capacity" note belongs to a single-card group, which is the only
+       kind that has nothing to compare against — so it hangs under that group rather
+       than under the whole surface the way it did when a surface WAS one set */
+    + (set.single && many ? '<p class="pc-note pg-note">' + EC_SINGLE_NOTE + '</p>' : '')
+    + '</section>';
+}
 function renderPlanPicker(choicesEl, gridEl, sel, extraEl, baseEl){
   var set = EC_PLANS[planPickerKey(sel)];
   /* ⚠️ `sel.locked` means "this is an EXISTING licence" — Change plan. Neither of the
@@ -1278,9 +1582,20 @@ function renderPlanPicker(choicesEl, gridEl, sel, extraEl, baseEl){
   choicesEl.hidden = !!sel.locked;
   choicesEl.innerHTML = sel.locked ? '' : (nlProductStatedHTML(sel) + nlBillTabsHTML(sel));
   if(baseEl) baseEl.innerHTML = baselineBlockHTML(sel);
-  var hasCur = !!sel.currentName && set.cards.some(function(c){ return c.name === sel.currentName; });
-  gridEl.className = 'plangrid' + (set.single ? ' one' : '') + (hasCur ? ' withcur' : '');
-  gridEl.innerHTML = set.cards.map(function(c){ return nlPlanCardHTML(c, set, sel); }).join('');
+  /* ⚠️ `gridEl` HOLDS GROUPS NOW, not cards, and it is no longer itself a `.plangrid` —
+     the grids moved one level down, one per group. Anything that styled this node as
+     the grid has to move with them.
+     ⚠️ `data-bill` carries the ACTIVE model for the phone: both groups are always in
+     the DOM, and below 600px CSS shows only the one the tabs point at. Rendering both
+     and hiding one is what keeps the switcher working off the same single reading —
+     the alternative is a second code path that only the phone runs, and only the phone
+     can catch when it breaks. */
+  var groups = planGroupsFor(sel);
+  gridEl.className = 'plangroups' + (groups.length > 1 ? ' two' : '');
+  gridEl.setAttribute('data-bill', sel.kind === 'perpetual' ? 'perpetual' : 'subscription');
+  gridEl.innerHTML = groups.map(function(g){
+    return planGroupHTML(g, sel, groups.length > 1);
+  }).join('');
   if(extraEl) extraEl.innerHTML = planPickerExtraHTML(set, sel);
 }
 /* One reading of a click inside the picker, so the two hosts cannot disagree about
@@ -1301,8 +1616,24 @@ function planPickerClick(e, sel){
     if(wantK === sel.kind) return null;
     sel.kind = wantK; sel.plan = null; return 'changed';
   }
+  /* ⚠️ Still scoped to `.plangrid`, and it still has to be: product cards carry
+     `.nl-select` too, so an unscoped match reads a product card as a plan. The grids
+     are one level deeper now (inside `.plangroup`) but the class is the same, so this
+     reading did not have to change. */
   var pick = e.target.closest('[data-nl-pick], .plangrid .nl-select');
   if(pick){
+    /* ⚠️⚠️ THE CARD NOW CARRIES THE BILLING MODEL, and forgetting that sold a $4,999
+       perpetual licence as Free. While the tabs chose the model, the grid only ever
+       held cards of the chosen one, so a pick could safely say nothing about it. With
+       both groups on one surface a perpetual card can be picked while `kind` still
+       says `subscription` — and then `tier()` derives its key from the card's NAME,
+       finds no spec for "thingsboard pe perpetual license", reads a base price of 0
+       and concludes the plan is free. Straight to Review, "Free", no charge.
+       ⚠️ Exactly the class of bug the Non-commercial name-as-key fault was: a value
+       inferred from a string because the thing that knew it was somewhere else. The
+       group states the model; the pick reads it from the group. */
+    var grp = pick.closest('.plangroup');
+    if(grp && grp.getAttribute('data-bill')) sel.kind = grp.getAttribute('data-bill');
     sel.plan = pick.getAttribute('data-nl-pick') || pick.getAttribute('data-plan');
     return 'picked';
   }
@@ -1505,10 +1836,10 @@ function homeBannerCopy(c){
     case 'blocked':
       return { fact:'<b>' + nm + ' is blocked</b> — ' + instRunning(lic)
           + ' production instances running, ' + instAllowed(lic) + ' allowed.',
-        todo:'Raise the limit or detach the extra instance. The license checks in hourly '
+        todo:'Raise the limit or deactivate the extra instance. The license checks in hourly '
           + 'and unblocks at the next check.',
         act:'<button class="gb-act" data-manage="' + esc(lic.id) + '">Manage</button>'
-          + '<a class="gb-act sec" href="licenses.html?view=instances&amp;lic=' + esc(lic.id) + '">Detach an instance</a>' };
+          + '<a class="gb-act sec" href="instances.html?lic=' + esc(lic.id) + '">Deactivate an instance</a>' };
     case 'payment_failed':
       return { fact:'<b>Payment for ' + nm + ' failed</b> — ' + cardLabel() + ' was declined.',
         todo:'Update the payment method before ' + fmtDate(lic.event) + ' to keep the subscription active.',
@@ -1580,14 +1911,14 @@ function cardLabel(){
   return c ? (c.brand + ' ending ' + c.last4) : 'Your card';
 }
 /* ⚠️ `DETACH_HINT` NO LONGER APPEARS ON HOME. The sentence — "this usually happens
-   after moving a deployment to a new server; if that is what happened, detach the old
-   one" — is still the thing that makes detaching discoverable, and it still lives in
+   after moving a deployment to a new server; if that is what happened, deactivate the
+   old one" — is still the thing that makes deactivating discoverable, and it still lives in
    two places: the licence's own banner and the quiet line above the Instances list
    (`.inst-hint` in licenses.html). It came off Home because Home says what is wrong and
    what fixes it; the explanation of how you got there belongs one click in, next to the
    rows you would act on. */
 var DETACH_HINT = 'This usually happens after moving a deployment to a new server. '
-  + 'If that is what happened, detach the old one.';
+  + 'If that is what happened, deactivate the old one.';
 var BANNER_MAX_LINES = 3;
 function bannerIcon(blocking){
   return '<svg class="icon gb-ic" viewBox="0 0 24 24" aria-hidden="true">'
@@ -1651,7 +1982,7 @@ document.addEventListener('click', function(e){
   }
   /* Manage, from a banner rather than a row: it opens the SAME wizard the row menu and
      the licence page open, on that licence, and its first step is Capacity — which is
-     the other legitimate way out of a block, raising the limit instead of detaching.
+     the other legitimate way out of a block, raising the limit instead of deactivating.
      ⚠️ It used to emit `data-modal="add-ons"`, whose handler calls
      `openManageAddons(activeLicense)` — and on Home there IS no active licence, so the
      button did nothing at all. */
@@ -1670,7 +2001,8 @@ document.addEventListener('click', function(e){
    Columns answer one question each: which deployment · under which licence · did it
    report · what is it running · is it healthy. Plans and money are deliberately
    absent — that is what the licence row is for. */
-/* ⚠️ `licId` — the banner's "Detach an instance" route. It landed on the tab UNFILTERED,
+/* ⚠️ `licId` — the banner's "Deactivate an instance" route (`instances.html?lic=…`
+   since the split; it was `licenses.html?view=instances&lic=…`). It landed UNFILTERED,
    which handed the reader nineteen rows and the job of finding the two that belonged to
    the blocked licence: a route that technically arrives and practically does not. */
 function allInstances(licId){
@@ -1699,10 +2031,20 @@ function agoText(min){
 function instAllRow(r){
   var i = r.inst, l = r.lic, id = esc(i.id);
   var behind = cmpVersion(i.version, LATEST_VERSION) < 0;
-  return '<tr data-instid="' + id + '" data-licid="' + esc(l.id) + '">'
+  /* ⚠️ `.inst-row` EARNS ITS CLASS ON THE PHONE. Every other list row here carries one
+     (`.lic-row`, `.inv-row`, `.user-row`) and the ≤600px block turns those into stacked
+     cards; this row never had one, so at 390px its five columns squeezed instead —
+     "Production — Central Europe manufacturing cluster, building 4" wrapped to six
+     lines in a 100px column. It was survivable while this was a tab most people never
+     opened; it is a destination now. */
+  return '<tr class="inst-row" data-instid="' + id + '" data-licid="' + esc(l.id) + '">'
     + '<td><div class="ia-name">' + (i.label ? esc(i.label) : '<span class="muted">Unnamed</span>') + '</div>'
     +   '<div class="ia-id mono"><span class="inst-id" title="' + id + '">' + id + '</span></div></td>'
-    + '<td class="ia-lic"><a class="link" href="' + licenseHref(l, 'licenses') + '" data-invlic="' + esc(l.id) + '">'
+    /* ⚠️ `'instances'` is the ORIGIN, and it used to say `'licenses'`. The panel
+       intercepts this link on every surface that loads LicenseDetails, so the href is
+       only the fallback — but the fallback is exactly the case where being sent back to
+       a page you did not come from is the whole of the damage. */
+    + '<td class="ia-lic"><a class="link" href="' + licenseHref(l, 'instances') + '" data-invlic="' + esc(l.id) + '">'
     +   esc(l.label || l.name) + '</a><div class="ia-licsub">' + esc(l.product || '') + ' · ' + esc(l.type) + '</div></td>'
     + '<td>' + agoText(i.agoMin) + '</td>'
     + '<td class="lic-ver"><div class="verline' + (behind ? ' is-behind' : '') + '">'
@@ -1711,7 +2053,7 @@ function instAllRow(r){
     + instStatusCell(i)
     + '<td class="cellact"><div class="lic-actions">' + instRowMenu(i) + '</div></td></tr>';
 }
-/* ⚠️ Detach is in the row's own menu and NOWHERE ELSE. The blocked banner does not
+/* ⚠️ Deactivate and Delete are in the row's own menu and NOWHERE ELSE. The blocked banner does not
    implement a second one — it routes here, exactly the way the payment-failed banner
    routes to the card modal. One action, one implementation, one confirmation. */
 /* ⚠️ THE MARKUP CONTRACT IS `.menu` > trigger + `.pop`, and getting it wrong is how a
@@ -1728,9 +2070,16 @@ function instRowMenu(i){
     +   '<button role="menuitem" data-instlabel="' + id + '">Rename</button>'
     +   '<button role="menuitem" data-instcopy="' + id + '">Copy instance ID</button>'
     +   '<button role="menuitem" data-instopenlic="' + id + '">Open license</button>'
-    +   '<button role="menuitem" data-instdetach="' + id + '">Detach</button>'
+    +   '<button role="menuitem" data-instoff="' + id + '">Deactivate</button>'
+    +   '<button role="menuitem" data-instdel="' + id + '">Delete</button>'
     + '</div></div>';
 }
+/* ⚠️ THIS IS NO LONGER THE INSTANCES PAGE'S RENDERER. The page has its own
+   (`renderInstancesPage`, which knows about its status filter, its `?lic=` and its
+   pager) and it REBINDS this name to itself, so the delegated row actions below —
+   which call `renderInstancesView()` after a deactivate or a delete — repaint the
+   filtered list rather than a fresh unfiltered one. What is left here is the fallback
+   for any surface that has the table markup and no page module. */
 function renderInstancesView(licId){
   var head = $('#instAllHead'), body = $('#instAllBody');
   if(!head || !body) return;
@@ -1743,13 +2092,13 @@ function renderInstancesView(licId){
     var l = licId && licById(licId);
     note.hidden = !l;
     if(l) note.innerHTML = 'Showing instances of <b>' + esc(l.label || l.name) + '</b>.'
-      + ' <a class="link" href="licenses.html?view=instances">Show all instances</a>';
+      + ' <a class="link" href="instances.html">Show all instances</a>';
   }
   body.innerHTML = rows.length
     ? rows.map(instAllRow).join('')
     : emptyStateRow(6, { title:'No instances yet.',
         line:'An instance appears here the first time a deployment checks in with one of your license keys.' });
-  var r = $('#instRange');
+  var r = $('#instancesView .pager .range');
   if(r) r.textContent = rows.length ? ('1–' + rows.length + ' of ' + rows.length) : '0 of 0';
 }
 /* Find an instance anywhere in the account, with the licence that owns it. */
@@ -1760,54 +2109,91 @@ function findInstance(instId){
   });
   return hit;
 }
-/* ---------- detach --------------------------------------------------------------
-   ⚠️ DESTRUCTIVE TREATMENT, because this turns off live infrastructure. The dialog
-   NAMES the instance — there is no "are you sure?" about an unnamed thing when the
-   whole point is choosing the right one of several — and it says what happens to the
-   server and WHEN: it keeps running until its next check-in, and then stops. At an
-   hourly cadence that is within the hour, which is the fact that makes this a decision
-   rather than a click. */
-function openDetachModal(instId, after){
-  var hit = findInstance(instId);
-  if(!hit) return;
-  var i = hit.inst, l = hit.lic;
-  var who = i.label || 'this instance';
-  openModal('Detach instance',
-    '<p>Detach <b>' + esc(who) + '</b> from <b>' + esc(l.label || l.name) + '</b>?</p>'
+/* ---------- deactivate and delete ------------------------------------------------
+   ⚠️ ONE ACTION BECAME TWO, and the split is what the data can actually do. `Detach`
+   named a single operation and hid the difference between cutting the link and losing
+   the record: someone moving a deployment wants the first, someone cleaning up a server
+   that is gone wants the second, and one verb served both badly.
+   ⚠️ `Deactivate` IS THE VERB, because it is the inverse of `activate` — which is how an
+   instance comes into existence here ("activate a deployment with this key"). A portal
+   whose two directions are `activate` and `detach` makes the reader work out that they
+   are opposites.
+   The difference lives in the COPY, not in the verb's weight: both name the instance,
+   both say when the server stops. Only `Delete` says the record is gone, and only
+   `Delete` gets the destructive treatment. */
+function instanceDialogBody(i, l, extra){
+  return '<p>' + extra.lead + '</p>'
     + '<div class="row"><span class="l">Instance ID</span><span class="r mono">' + esc(i.id) + '</span></div>'
     + '<div class="row"><span class="l">Last check-in</span><span class="r">' + agoText(i.agoMin) + '</span></div>'
-    + '<p>The server keeps running until its next check-in, within the hour, and then '
-    + 'stops. The license seat is freed immediately, so another deployment can be '
-    + 'activated with the same key straight away.</p>');
-  $('#modalCloseBtn').textContent = 'Keep instance';
-  var foot = $('#overlay .mf');
+    + '<p>' + extra.body + '</p>';
+}
+function openDeactivateModal(instId, after){
+  var hit = findInstance(instId);
+  if(!hit) return;
+  var i = hit.inst, l = hit.lic, who = i.label || 'this instance';
+  openModal('Deactivate instance', instanceDialogBody(i, l, {
+    lead:'Deactivate <b>' + esc(who) + '</b> on <b>' + esc(l.label || l.name) + '</b>?',
+    /* ⚠️ It reads as reversible because it IS: the record survives, and saying so is the
+       whole difference between this dialog and the one below. */
+    body:'The server keeps running until its next check-in, within the hour, and then '
+      + 'stops. The instance stays in the portal and can be reconnected later, and the '
+      + 'license seat is freed immediately — another deployment can use the same key '
+      + 'straight away.'
+  }));
+  $('#modalCloseBtn').textContent = 'Cancel';
   var confirm = document.createElement('button');
-  confirm.type = 'button'; confirm.className = 'btn ter'; confirm.textContent = 'Detach instance';
-  foot.appendChild(confirm);
+  confirm.type = 'button'; confirm.className = 'btn'; confirm.textContent = 'Deactivate instance';
+  $('#overlay .mf').appendChild(confirm);
+  confirm.addEventListener('click', function(){
+    i.active = false;
+    l.updated = todayStr();
+    Store.save();
+    logActivity({ kind:'updated', licId:l.id, entityType:'Instance', entityName:(i.label || i.id), action:'DEACTIVATED',
+      txt:'Instance <b>' + esc(i.label || i.id) + '</b> was deactivated on <b>'
+        + esc(l.label || l.name) + '</b> by ' + portalActor() + '.',
+      delta:'Stops at its next check-in; record kept' });
+    closeModal();
+    Snack.show('Instance deactivated — it stops at its next check-in');
+    if(typeof after === 'function') after();
+  });
+}
+function openDeleteInstanceModal(instId, after){
+  var hit = findInstance(instId);
+  if(!hit) return;
+  var i = hit.inst, l = hit.lic, who = i.label || 'this instance';
+  openModal('Delete instance', instanceDialogBody(i, l, {
+    lead:'Delete <b>' + esc(who) + '</b> from <b>' + esc(l.label || l.name) + '</b>?',
+    body:'The record is removed permanently, with its check-in history. The server '
+      + 'keeps running until its next check-in, within the hour, and then stops — if it '
+      + 'is still running, deactivate it instead so it can be reconnected.'
+  }));
+  $('#modalCloseBtn').textContent = 'Keep instance';
+  var confirm = document.createElement('button');
+  confirm.type = 'button'; confirm.className = 'btn ter'; confirm.textContent = 'Delete instance';
+  $('#overlay .mf').appendChild(confirm);
   confirm.addEventListener('click', function(){
     l.instances = (l.instances || []).filter(function(x){ return x.id !== i.id; });
     l.updated = todayStr();
     Store.save();
-    logActivity({ kind:'updated', entityType:'Instance', entityName:(i.label || i.id), action:'DETACHED',
-      txt:'Instance <b>' + esc(i.label || i.id) + '</b> was detached from <b>'
+    logActivity({ kind:'updated', licId:l.id, entityType:'Instance', entityName:(i.label || i.id), action:'DELETED',
+      txt:'Instance <b>' + esc(i.label || i.id) + '</b> was deleted from <b>'
         + esc(l.label || l.name) + '</b> by ' + portalActor() + '.',
-      delta:'Stops at its next check-in' });
+      delta:'Record removed permanently' });
     closeModal();
-    Snack.show('Instance detached — it stops at its next check-in');
+    Snack.show('Instance deleted');
     if(typeof after === 'function') after();
   });
 }
 document.addEventListener('click', function(e){
-  var d = e.target.closest('[data-instdetach]');
-  if(d){
-    closeAllMenus();
-    openDetachModal(d.getAttribute('data-instdetach'), function(){
-      if(typeof renderInstancesView === 'function') renderInstancesView();
-      if(window.LicenseDetails && LicenseDetails.isOpen()) LicenseDetails.reopen(activeLicense);
-      else if(window.LicenseDetails) LicenseDetails.afterChange();
-    });
-    return;
+  function afterInstanceChange(){
+    if(typeof renderInstancesView === 'function') renderInstancesView();
+    if(window.LicenseDetails && LicenseDetails.isOpen()) LicenseDetails.reopen(activeLicense);
+    else if(window.LicenseDetails) LicenseDetails.afterChange();
   }
+  var off = e.target.closest('[data-instoff]');
+  if(off){ closeAllMenus(); openDeactivateModal(off.getAttribute('data-instoff'), afterInstanceChange); return; }
+  var del = e.target.closest('[data-instdel]');
+  if(del){ closeAllMenus(); openDeleteInstanceModal(del.getAttribute('data-instdel'), afterInstanceChange); return; }
   var o = e.target.closest('[data-instopenlic]');
   if(o){
     closeAllMenus();
@@ -1816,9 +2202,18 @@ document.addEventListener('click', function(e){
   }
 });
 /* ============ Invoice actions: mock PDF view + real download ============ */
+/* ⚠️ THE STORED RECORD FIRST, the row only as a fallback. This read the three visible
+   cells and nothing else — which was survivable while an invoice WAS its three cells,
+   and stopped being so the moment one could carry a discount or applied credit: those
+   are on the record and on no row, so the document printed a total with no sign of how
+   it got there. The row stays as the fallback for a table built from something other
+   than the store (the styleguide's specimen). */
 function rowInvoiceData(btn){
   var tr = btn.closest('tr'), tds = tr ? tr.querySelectorAll('td') : [];
-  return { num: tds[0] ? tds[0].textContent.trim() : 'INVOICE',
+  var num = tds[0] ? tds[0].textContent.trim() : 'INVOICE';
+  var rec = (DATA().invoices || []).filter(function(v){ return v.num === num; })[0];
+  if(rec) return rec;
+  return { num: num,
            date: tds[1] ? tds[1].textContent.trim() : '',
            amount: tds[2] ? tds[2].textContent.trim() : '' };
 }
@@ -1841,6 +2236,8 @@ function invoiceParty(){
   var line = function(v, fb){ return (v && String(v).trim()) || fb; };
   return {
     company: line(b.company, 'ThingsBoard'),
+    /* no fallback: an invoice must not print a tax number nobody entered */
+    taxId:   (b.taxId && String(b.taxId).trim()) || '',
     email:   line(b.email, 'hello@thingsboard.io'),
     addr:    line(b.addr, '500 7th Avenue'),
     addr2:   line(b.addr2, ''),
@@ -1865,6 +2262,9 @@ function mockInvoiceUrl(d){
     + 'td{padding:12px 0;border-bottom:1px dashed #e2e2e2}.num{text-align:right}'
     + '.tot{margin-top:18px;display:flex;justify-content:flex-end;gap:40px;font-weight:700;font-size:16px}'
     + '.ft{margin-top:40px;color:#999;font-size:12px}'
+    + '.disc{margin-top:26px;max-width:320px;font-size:13px}'
+    + '.disc div{display:flex;justify-content:space-between;padding:4px 0}'
+    + '.disc .tot{border-top:1px solid #ddd;margin-top:4px;padding-top:8px;font-weight:600}'
     + '.bill{margin-top:34px;font-size:13px;line-height:1.55}.bill .muted{text-transform:uppercase;letter-spacing:.08em;font-size:11px;margin-bottom:4px}'
     + '@media print{body{background:#fff}.page{border:0;box-shadow:none;margin:0}}</style></head><body>'
     + '<div class="page"><div class="hd"><div><h1>ThingsBoard</h1><div class="muted">Licenses · thingsboard.io</div></div>'
@@ -1878,7 +2278,16 @@ function mockInvoiceUrl(d){
           + '<div>' + esc(b.addr) + '</div>'
           + (b.addr2 ? '<div>' + esc(b.addr2) + '</div>' : '')
           + '<div>' + esc(b.cityline) + '</div><div>' + esc(b.country) + '</div>'
+          + (b.taxId ? '<div>Tax number: ' + esc(b.taxId) + '</div>' : '')
           + '<div class="muted">' + esc(b.email) + '</div></div>'; })()
+    /* the discount, where the money it changed is — an invoice that prints only the paid
+       amount cannot be reconciled against the licence's price */
+    + (d.original
+        ? '<div class="disc"><div><span>Subtotal</span><span>' + esc(d.original) + '</span></div>'
+          + '<div><span>Discount' + (d.couponCode ? ' (' + esc(d.couponCode) + ')' : '') + '</span>'
+          + '<span>\u2212' + esc(d.discount) + '</span></div>'
+          + '<div class="tot"><span>Paid</span><span>' + esc(d.amount) + '</span></div></div>'
+        : '')
     + '<div class="ft">Paid · ' + esc(invoicePaidWith()) + ' · This is a prototype mock document, not a real invoice.</div></div></body></html>';
   var blob = new Blob([html], { type:'text/html' });
   var url = URL.createObjectURL(blob);
@@ -1916,9 +2325,14 @@ function downloadInvoice(d, btn){
     b.addr
   ].concat(b.addr2 ? [b.addr2] : []).concat([
     b.cityline,
-    b.country,
+    b.country
+  ]).concat(b.taxId ? ['Tax number: ' + b.taxId] : []).concat([
     b.email, '',
-    'ThingsBoard Professional Edition - license charge',
+    'ThingsBoard Professional Edition - license charge'
+  ]).concat(d.original ? [
+    'Subtotal: ' + d.original,
+    'Discount' + (d.couponCode ? ' (' + d.couponCode + ')' : '') + ': -' + d.discount
+  ] : []).concat([
     'Amount: ' + d.amount, '',
     'Total: ' + d.amount, '',
     'Paid - ' + invoicePaidWith().replace(/\u2022/g, '*'),

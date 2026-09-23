@@ -135,7 +135,8 @@
            is self-managed only, so Community/Public/Private are implicit context. -->
       <div class="planpicker" id="ecPicker">
         <div id="ecChoices"></div>
-        <div class="plangrid" id="ecPlans"></div>
+        <!-- ⚠️ `.plangroups`, not `.plangrid`: this node holds the two billing GROUPS now, and each group holds its own grid. renderPlanPicker rewrites the class either way, but a lying class in the source is how the next reader loses an hour. -->
+        <div class="plangroups" id="ecPlans"></div>
         <!-- the single-set note stays immediately under the cards: it is about them -->
         <div id="ecPlanExtra"></div>
         <!-- ⚠️ Same slot, same order as the landing page. Moving it there and not here
