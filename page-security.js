@@ -58,8 +58,7 @@ wirePageSave('#securityView', '#secSaveBtn', {
     Store.set('passwordChangedAt', todayStr());
     ['current', 'next', 'confirm'].forEach(function(k){ $('#sec-' + k).value = ''; secPaint(k, null); });
     renderLastChanged();
-    logActivity({ kind:'user', entityType:'Account', entityName:portalActor(), action:'PASSWORD_CHANGED',
-      txt:'The account password was changed by ' + portalActor() + '.' });
+    logActivity({ type:'account.password_changed', f:{} });
     return true;
   }
 });

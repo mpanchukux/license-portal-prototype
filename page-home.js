@@ -106,7 +106,7 @@ function renderDashFeed(){
   var el = $('#dashFeed'); if(!el) return;
   var all = DATA().activity, list = all.slice(0, dashFeedShown);
   el.innerHTML = list.length
-    ? list.map(function(a, i){ return feedItem(a, i); }).join('')
+    ? list.map(function(a, i){ return activityEntry(a, 'global', i); }).join('')
     : '<div class="emptybox">No activity yet.</div>';
   var more = $('#dashFeedMore'); if(more) more.hidden = all.length <= dashFeedShown;
 }

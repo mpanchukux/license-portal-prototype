@@ -391,10 +391,12 @@ function productCell(p, opts){
     +   (bare ? '' : '<div class="lp-head mob-only">' + (p.product || '') + ' &middot; ' + p.name + '</div>')
     +   (p.label && !bare ? '<div class="lic-prodlabel">' + esc(p.label) + '</div>' : '')
     + '</div>';
-  // TBD: the product / edition mark goes here. A plain filled square until we have
-  // the artwork — it holds the space and the alignment, and reads as a placeholder
-  // without a dashed outline drawing attention to itself.
-  var inner = (bare ? '' : '<span class="lp-ic" aria-hidden="true"></span>') + txt;
+  /* ⚠️ THE ARTWORK ARRIVED (2026-09-24). This was a plain filled square holding the
+     space — the comment here said "TBD: the product / edition mark goes here" — and
+     every licence row in the product carried a grey box where its product should be.
+     `.lp-ic` keeps its name and its box so the alignment it was holding is unchanged. */
+  var inner = (bare ? '' : '<span class="lp-ic" aria-hidden="true">'
+    + productMark(p.product) + '</span>') + txt;
   /* The flex row lives inside the cell, never on it: a <td> that becomes a flex
      container stops being a table cell and takes the column widths with it.
      opts.link makes that row a real anchor to this licence's details — keyboard
@@ -590,47 +592,130 @@ function cancelFromRow(btn, after){
 
 
 /* ---------- activity feed ---------- */
-function auditJson(a){
-  var et = a.entityType.toUpperCase().replace(/ /g, '_');
-  var payload = {
-    createdTime: isoFromTs(a.ts),
-    entityType: et,
-    entityName: a.entityName,
-    userName: a.actor,
-    actionType: a.action,
-    actionData: {
-      entity: {
-        id: { entityType: et, id: "784f394c-42b6-435a-983c-b7beff2784f9" },
-        name: a.entityName,
-        type: a.entityType,
-        tenantId: "1f2e6c40-9a2b-11ee-b9d1-0242ac120002",
-        additionalInfo: { source: "license-portal" }
-      }
-    }
-  };
-  if(a.delta) payload.actionData.change = a.delta.replace(/<[^>]+>/g, '');
-  return JSON.stringify(payload, null, 2);
-}
+/* ⚠️ `auditJson` IS GONE (2026-09-24), and with it the JSON dump the expander used to
+   print. A raw payload answered a question the person paying the bills never asked,
+   and — because `stripText` reads `textContent` — it was also the thing search was
+   really matching: `784f394c`, a uuid that appeared only inside the dump, matched all
+   298 rows. The expander now shows named from/to rows (`activityDetailHTML`), and only
+   for the types that have something to show. */
 // No event icon: the kind of event is already the first words of the sentence, so
 // the item starts at the container edge with its timestamp.
-function feedItem(a, i){
+/* ============================================================================
+   THE ACTIVITY ENTRY — one component, every surface
+   ============================================================================
+   `activityEntry(rec, scope, i)` is the only thing in the product that turns an event
+   record into an activity row. Home's block, the Activity page, the licence's own tab
+   and the styleguide all call it; none of them assembles a row.
+
+   INPUT
+     rec    { type, ts, actor, f:{…values…}, detail:[[label,from,to]…] | [[label,value]…] }
+     scope  'global'  — the account-wide feed (Activity page, Home block)
+            'license' — a licence's own tab, where the licence is already on the page
+     i      a key for the expander, unique within the surface
+
+   OUTPUT  timestamp · sentence (which ends in "by …" when a person did it) · the
+           expandable detail, when the type has one.
+
+   ⚠️ EMPHASIS IS THE COMPONENT'S JOB, not the copy's. The template names ONE
+   placeholder as the entity and this wraps exactly that one. Values — plans, amounts,
+   dates, counts — stay plain, so the bold column reads as a list of names and nothing
+   else competes with it.
+   ⚠️ `scope` is why the same event has two renderings and not two strings: the bracketed
+   segment of the template is dropped for 'license'. */
+function activitySeg(t, scope){
+  /* [ … ] is kept in the global feed and dropped in a licence's own tab */
+  return scope === 'license' ? t.replace(/\[[^\]]*\]/g, '') : t.replace(/[\[\]]/g, '');
+}
+/* The sentence as PLAIN TEXT — what search matches, and what the emphasised version is
+   built from. Returns null for a type the map does not know, so a bad record is visible
+   as a missing row rather than as a half-built one. */
+function activitySentence(rec, scope){
+  var spec = ACTIVITY_TEXT[rec && rec.type];
+  if(!spec) return null;
+  var f = rec.f || {};
+  /* ⚠️ `{by}` IS FILLED HERE, not in the copy, so the clause is worded once for all
+     28 types — and so an event with no human actor drops it without the template
+     needing a second version of itself. */
+  return activitySeg(spec.t, scope).replace(/\{(\w+)\}/g, function(_, k){
+    if(k === 'by') return rec.actor ? (' by ' + rec.actor) : '';
+    return f[k] == null ? '' : String(f[k]);
+  }).replace(/\s+/g, ' ').trim();
+}
+/* The same sentence with the entity emphasised. Built by splitting the plain sentence on
+   the entity's own value, so the markup can only ever land on that value — there is no
+   second template and no place for a stray tag to enter. */
+function activitySentenceHTML(rec, scope){
+  var spec = ACTIVITY_TEXT[rec && rec.type];
+  var plain = activitySentence(rec, scope);
+  if(plain == null) return null;
+  var val = spec.entity ? (rec.f || {})[spec.entity] : null;
+  if(!val) return esc(plain);
+  val = String(val);
+  var at = plain.indexOf(val);
+  if(at < 0) return esc(plain);          // the entity was in the dropped segment
+  return esc(plain.slice(0, at)) + '<b>' + esc(val) + '</b>' + esc(plain.slice(at + val.length));
+}
+/* The detail block. ⚠️ IT IS NOT THE RAW RECORD (decided 2026-09-24) and it is NOT
+   BEHIND A BUTTON (2026-09-24, second pass): once the payload became five words of
+   English instead of a JSON dump, a click to reveal it was a click to reveal nothing
+   surprising. `detail` is a list of [field, from, to] — or [field, value] where nothing
+   changed — and a type with nothing to show renders no block at all.
+   ⚠️ IT MUST NOT REPEAT THE SENTENCE. The sentence carries the headline change, because
+   "what changed, from and to" is a sentence slot in the anatomy; the detail carries what
+   the sentence left out. A `Plan: Startup → Business` row under "Plan changed from
+   Startup to Business" is the same fact printed twice, which is what prompted this pass. */
+function activityDetailHTML(rec){
+  var d = rec && rec.detail;
+  if(!d || !d.length) return '';
+  return '<dl class="fi-detail">' + d.map(function(row){
+    var val = row.length > 2
+      /* ⚠ THE ARROW IS AN ICON, like every other mark here — a character standing in
+         for a mark is exactly what the icon rule forbids, and the checker caught this
+         one the moment it was written. */
+      ? esc(String(row[1])) + ' <span class="fd-arrow">' + ARROW_IC + '</span> <b>' + esc(String(row[2])) + '</b>'
+      : esc(String(row[1]));
+    return '<div class="fd-row"><dt>' + esc(String(row[0])) + '</dt><dd>' + val + '</dd></div>';
+  }).join('') + '</dl>';
+}
+function activityEntry(rec, scope, i){
+  var html = activitySentenceHTML(rec, scope);
+  if(html == null) return '';
+  var det = activityDetailHTML(rec);
+  /* ⚠️ ONE TYPE KEEPS A DISCLOSURE, and it is not a detail: a folded run's `detail` IS
+     the entries it folded — thirty-six of them on one instance — and folding exists
+     precisely so a feed of 298 rows does not print them. Inlining that would undo the
+     fold. So the control stays here and nowhere else, and it is labelled as what it is:
+     show the checks, not show the details. */
+  var fold = !!rec.fold && det;
   return '<div class="fitem">'
     + '<div class="fi-row">'
     +   '<div class="fi-body">'
-    +     '<div class="fi-meta">' + fmtDateTime(a.ts) + '</div>'
-    +     '<div class="fi-txt">' + a.txt + '</div>'
+    /* ⚠️ NO SEPARATE ACTOR SLOT. The actor is inside the sentence (see `{by}`), and
+       printing it in both places would put the same name on the row twice. */
+    +     '<div class="fi-meta">' + fmtDateTime(rec.ts) + '</div>'
+    +     '<div class="fi-txt">' + html + '</div>'
+    +     (det && !fold ? det : '')
     +   '</div>'
-    +   '<button class="iconbtn ib" data-audit data-i="' + i + '" aria-expanded="false" aria-label="Show details" title="Show details">' + AUDITSVG + '</button>'
+    +   (fold
+        ? '<button class="iconbtn ib" data-audit data-i="' + i + '" aria-expanded="false"'
+          + ' aria-label="Show the ' + (rec.f && rec.f.count ? rec.f.count + ' ' : '')
+          + 'checks" title="Show the individual checks">' + AUDITSVG + '</button>'
+        : '')
     + '</div>'
-    + '<pre class="fi-audit" hidden>' + esc(auditJson(a)) + '</pre>'
+    + (fold ? '<div class="fi-audit" hidden>' + det + '</div>' : '')
     + '</div>';
 }
-function renderFeed(sel, limit){
-  var el = $(sel); if(!el) return;
-  var all = DATA().activity;
-  var list = typeof limit === 'number' ? all.slice(0, limit) : all;
-  el.innerHTML = list.map(function(a, idx){ return feedItem(a, idx); }).join('');
+/* What SEARCH matches: the sentence and the actor, and nothing else.
+   ⚠️ This is the whole point of the plain-text map. Search used to run
+   `stripText(node.innerHTML)`, and `textContent` includes the hidden expander — so the
+   raw JSON dump was searchable and the sentence was not the thing being matched.
+   Measured before this pass: `784f394c` (a uuid that appears only inside the dump)
+   matched all 298 rows, as did `actionType` and `createdTime`. */
+function activityHaystack(rec, scope){
+  /* the sentence already contains the actor, so it is the whole haystack */
+  return (activitySentence(rec, scope) || '').toLowerCase();
 }
+
 
 /* ============================================================================
    ACTIVITY: what belongs where, how checks are folded, and the type filter
@@ -655,11 +740,12 @@ function actType(a){
      a row reaches this function a run of successes is no longer a `check_ok` — and
      without this line every folded group fell through to the default and was filtered
      as a licence change: selecting "Instance checks" alone showed only the failures. */
-  if(a.kind === 'check_ok' || a.kind === 'check_fail' || a.kind === 'check_group') return 'checks';
-  var e = String(a.entityType || '');
-  if(e === 'Invoice' || e === 'Payment method') return 'billing';
-  if(e === 'User' || e === 'Session') return 'users';
-  return 'license';
+  /* ⚠️ READ FROM THE TYPE'S OWN PREFIX. This used to test `kind` and then fall back to
+     `entityType` strings — two spellings of the same question, and the reason a folded
+     group was filtered as a licence change until a third branch was added for it. The
+     prefix cannot disagree with the type it is part of. */
+  var pre = String((a && a.type) || '').split('.')[0];
+  return ACTIVITY_BUCKET[pre] || 'license';
 }
 /* ---- folding the successful checks ---------------------------------------------
    ⚠️ CONSECUTIVE MEANS "consecutive FOR THAT INSTANCE", not consecutive in the merged
@@ -682,15 +768,21 @@ function foldChecks(checks){
     var run = [];
     function flush(){
       if(!run.length) return;
-      out.push(run.length === 1 ? run[0] : { kind:'check_group', items:run.slice(),
-        ts: run[0].ts, tsMin: run[0].tsMin, entityType:'Instance', entityName: run[0].entityName,
-        instId: run[0].instId, licId: run[0].licId, licName: run[0].licName,
-        actor:'System', action:'CHECK_OK', count: run.length,
-        from: run[run.length - 1].ts, to: run[0].ts });
+      /* ⚠️ A GROUP IS AN ORDINARY ENTRY with many detail rows — it is not a second kind
+         of row any more. `feedGroupItem` used to build its own markup, its own toggle
+         and a nested audit button per child; all of that is `detail` now, so the
+         component renders a run of check-ins with the same code as everything else. */
+      out.push(run.length === 1 ? run[0] : {
+        type:'instance.checks_grouped', fold:true,
+        ts: run[0].ts, tsMin: run[0].tsMin,
+        f: { entity: run[0].f.entity, count: run.length,
+             from: fmtDateTime(run[run.length - 1].ts), to: fmtDateTime(run[0].ts) },
+        instId: run[0].instId, licId: run[0].licId,
+        detail: run.map(function(c){ return [fmtDateTime(c.ts), 'Checked in']; }) });
       run = [];
     }
     list.forEach(function(c){
-      if(c.kind === 'check_fail'){ flush(); out.push(c); }
+      if(c.type === 'instance.check_failed'){ flush(); out.push(c); }
       else run.push(c);
     });
     flush();
@@ -718,61 +810,9 @@ function activityFeed(opts){
   return all.sort(function(a, b){ return feedMinute(b) - feedMinute(a); });
 }
 /* ---- the rows ---- */
-function checkRowText(a){
-  if(a.kind === 'check_fail')
-    return '<b>Check failed</b> for instance <b>' + esc(a.entityName) + '</b> — '
-      + (CHECK_FAIL[a.why] || 'the check did not complete') + '.';
-  if(a.kind === 'check_group')
-    return '<b>' + a.count + ' successful checks</b> for instance <b>' + esc(a.entityName)
-      + '</b> — ' + fmtDateTime(a.from) + ' to ' + fmtDateTime(a.to) + '.';
-  return 'Instance <b>' + esc(a.entityName) + '</b> checked in successfully.';
-}
 /* A folded run renders as one row that opens to its own entries — the count is a
    summary, not a replacement. */
-function feedGroupItem(a, i){
-  return '<div class="fitem fgroup">'
-    + '<div class="fi-row">'
-    +   '<div class="fi-body">'
-    +     '<div class="fi-meta">' + fmtDateTime(a.ts) + '</div>'
-    +     '<div class="fi-txt">' + checkRowText(a) + '</div>'
-    +   '</div>'
-    +   '<button class="iconbtn ib fg-toggle" data-fgroup aria-expanded="false"'
-    +     ' aria-label="Show the ' + a.count + ' checks" title="Show the individual checks">'
-    +     '<svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-down"></use></svg></button>'
-    + '</div>'
-    /* ⚠️ EVERY ENTRY KEEPS ITS OWN PAYLOAD BUTTON. Folding is a display decision — the
-       individual checks are still individual events, and an event whose raw record
-       cannot be opened is less of a record than the ungrouped one beside it. The group
-       row itself has no audit button: it is a summary, not an event. */
-    + '<div class="fg-items" hidden>'
-    +   a.items.map(function(c, n){
-          var rec = { ts:c.ts, entityType:c.entityType, entityName:c.entityName,
-                      actor:c.actor, action:c.action, kind:c.kind,
-                      txt:'Instance <b>' + esc(c.entityName) + '</b> checked in successfully.' };
-          return '<div class="fg-line">'
-            + '<div class="fg-lrow">'
-            +   '<span class="fg-time">' + fmtDateTime(c.ts) + '</span>'
-            +   '<span class="fg-txt">Checked in successfully.</span>'
-            +   '<button class="iconbtn ib fg-audit" data-audit data-i="' + i + '-' + n + '"'
-            +     ' aria-expanded="false" aria-label="Show details" title="Show details">' + AUDITSVG + '</button>'
-            + '</div>'
-            + '<pre class="fi-audit" hidden>' + esc(auditJson(rec)) + '</pre>'
-            + '</div>';
-        }).join('')
-    + '</div>'
-    + '</div>';
-}
 /* One entry point for every feed row, so a surface never has to know which kind it is */
-function feedRow(a, i){
-  if(a.kind === 'check_group') return feedGroupItem(a, i);
-  if(a.kind === 'check_ok' || a.kind === 'check_fail'){
-    var copy = { ts:a.ts, txt:checkRowText(a), entityType:a.entityType, entityName:a.entityName,
-                 actor:a.actor, action:a.action, kind:a.kind };
-    if(a.why) copy.reason = CHECK_FAIL[a.why];
-    return feedItem(copy, i);
-  }
-  return feedItem(a, i);
-}
 /* the expander on a folded run — delegated, because feeds are re-rendered */
 document.addEventListener('click', function(e){
   var b = e.target.closest('[data-fgroup]');
@@ -887,28 +927,35 @@ function filterFeedByPeriod(list, per){
 function tsFrom(created, time){ return String(created) + ', ' + time; }
 function licenseActivity(lic){
   var who='mpanchuk@thingsboard.io', noun = lic.type==='Perpetual' ? 'License' : 'Subscription';
+  var nm = lic.label || lic.name;
+  /* ⚠️ THESE ARE RECORDS, NOT SENTENCES. Every one of them used to carry its own `txt`
+     with its own markup, which is how the same event ended up worded one way here and
+     another way in the stored log — six such pairs, listed in NOTES. They now hand the
+     component the same `type` the live writers hand it, so the two cannot drift. */
   // the grant has exactly one event of its own: it was issued
-  if(lic.grant) return [{ kind:'created', ts: tsFrom(lic.created,'09:02'), entityType:'License', entityName:lic.name,
-    actor:'System', action:'GRANT_ISSUED',
-    txt:'<b>'+lic.name+'</b> was issued to '+who+' — license key created.', delta:'Community Grant issued' }];
+  if(lic.grant) return [{ type:'license.grant_issued', ts: tsFrom(lic.created,'09:02'),
+    f:{ entity:nm } }];
   var acts = [];
-  acts.push({ kind:'created', ts: tsFrom(lic.created,'09:14'), entityType:noun, entityName:lic.name, actor:who, action:'ADDED',
-    txt:noun+' <b>'+lic.name+'</b> was created by '+who+'.' });
-  if(lic.label) acts.push({ kind:'updated', ts: tsFrom(lic.created,'09:22'), entityType:noun, entityName:lic.name, actor:who, action:'UPDATED',
-    txt:'Label <b>'+esc(lic.label)+'</b> was set by '+who+'.', delta:'label = '+lic.label });
-  if(lic.status==='payment_failed') acts.unshift({ kind:'status', ts:'18 Aug 2026, 07:12', entityType:noun, entityName:lic.name, actor:'System', action:'PAYMENT_FAILED',
-    txt:'Payment failed — card Visa ••4242 was declined.', delta:'Auto-pay charge failed' });
-  if(lic.status==='updates_expiring') acts.unshift({ kind:'status', ts:'05 Aug 2026, 08:00', entityType:'License', entityName:lic.name, actor:'System', action:'UPDATES_EXPIRING',
-    txt:'Software updates expire on <b>'+fmtDate(lic.event)+'</b>.', delta:'Updates term ends '+lic.event });
-  if(lic.status==='canceled') acts.unshift({ kind:'status', ts:'19 Aug 2026, 09:00', entityType:noun, entityName:lic.name, actor:who, action:'CANCELED',
-    txt:'Subscription was canceled — active until <b>'+fmtDate(lic.event)+'</b>.', delta:'Canceled; active until '+lic.event });
-  /* The invoices this licence produced. Same sentence the Activity page uses, so
-     "charged automatically" reads identically wherever the event surfaces — and an
-     invoice the viewer paid themselves names them instead. */
+  acts.push({ type:'license.created', ts: tsFrom(lic.created,'09:14'), actor:who,
+    f:{ kind:noun, entity:nm } });
+  if(lic.label) acts.push({ type:'license.labeled', ts: tsFrom(lic.created,'09:22'), actor:who,
+    f:{ entity:lic.name, label:lic.label } });
+  /* ⚠️ THE CARD IS READ, NOT TYPED. This said `Visa ••4242` in the string — a literal,
+     so a licence whose account is on another card described the wrong one. */
+  if(lic.status==='payment_failed') acts.unshift({ type:'license.payment_failed', ts:'Aug 18 2026, 07:12',
+    f:{ entity:nm, card:cardLabel() } });
+  if(lic.status==='updates_expiring') acts.unshift({ type:'license.updates_expiring', ts:'Aug 05 2026, 08:00',
+    f:{ entity:nm, until:fmtDate(lic.event) } });
+  if(lic.status==='canceled') acts.unshift({ type:'license.canceled', ts:'Aug 19 2026, 09:00', actor:who,
+    f:{ entity:nm, until:fmtDate(lic.event) } });
+  /* The invoices this licence produced. An auto-charge is its OWN type, not this one
+     with the name left off — see ACTIVITY_TEXT. */
   invoicesSorted().filter(function(v){ return v.licId === lic.id; }).forEach(function(v){
-    acts.push({ kind:'info', ts: tsFrom(v.date, '00:05'), entityType:'Invoice', entityName:v.num,
-      actor: v.auto ? 'Auto-pay' : who, action:'PAID',
-      txt:'Invoice <b>'+v.num+'</b> was paid' + (v.auto ? ', charged automatically.' : ' by '+who+'.') });
+    acts.push(v.auto
+      ? { type:'billing.invoice_autopaid', ts: tsFrom(v.date, '00:05'),
+          f:{ entity:v.num, amount:v.amount } }
+      : { type:'billing.invoice_paid', ts: tsFrom(v.date, '00:05'), actor:who,
+          f:{ entity:v.num, amount:v.amount } });
   });
   /* ⚠️ THE STORED LOG JOINS IN, and it did not before. Everything above is SYNTHESISED
      from the licence object, so a plan change, a capacity purchase, a renewal or a
@@ -918,8 +965,8 @@ function licenseActivity(lic){
      Deduped on `ADDED`: a licence bought in this session logs its own creation, and the
      synthesised opener above would then say it twice. */
   var stored = (DATA().activity || []).filter(function(a){ return a.licId === lic.id; });
-  if(stored.some(function(a){ return a.action === 'ADDED'; }))
-    acts = acts.filter(function(a){ return a.action !== 'ADDED'; });
+  if(stored.some(function(a){ return a.type === 'license.created'; }))
+    acts = acts.filter(function(a){ return a.type !== 'license.created'; });
   acts = acts.concat(stored);
   /* and the licence's own instances' checks — scoped to this licence, folded the same
      way the Activity page folds them */
@@ -929,12 +976,35 @@ function licenseActivity(lic){
   acts.sort(function(a,b){ return feedMinute(b)-feedMinute(a); });
   return acts;
 }
+/* what the licence tab currently shows, in render order — the haystack for its search */
+var licRendered = [];
+/* one page position for the licence tab, reset when another licence opens */
+var licFeedPage = { page:1, size:10, total:0 };
+function licFeedQuery(){
+  var i = $('#panel-audit .searchbox input');
+  return i ? i.value.trim() : '';
+}
 function renderLicFeed(lic){
   var el = $('#licFeed'); if(!el) return;
   var list = filterFeedByPeriod(licenseActivity(lic), licPeriod);
-  el.innerHTML = list.length
-    ? list.map(function(a,i){ return feedRow(a, 'lic'+i); }).join('')
-    : '<div class="emptybox">No events in the selected period.</div>';
+  if(!list.length){
+    licRendered = [];
+    el.innerHTML = '<div class="emptybox">No events in the selected period.</div>';
+  } else {
+    /* ⚠️ Search and paging stand down for each other, the same pairing the Activity page
+       uses: `wireSearch` filters rows already in the DOM, so searching page 1 of 15 would
+       search ten entries and call the rest absent. */
+    var searching = !!licFeedQuery();
+    var rows = searching ? list : pageSlice(list, licFeedPage);
+    if(searching) licFeedPage.total = list.length;
+    licRendered = rows;
+    el.innerHTML = rows.map(function(a,i){ return activityEntry(a, 'license', 'lic'+i); }).join('');
+  }
+  var pg = $('#licFeedPager');
+  if(pg) pg.hidden = !!licFeedQuery() || !list.length;
+  syncPager('#licFeedPager', licFeedPage);
+  /* wired on every render and guarded inside, because the panel remounts its markup */
+  wirePager('#licFeedPager', licFeedPage, function(){ renderLicFeed(lic); });
 }
 
 /* The details icon expands the raw action-data payload in place (toggle, and
@@ -1135,8 +1205,12 @@ function wireSearch(inputSel, opts){
   function run(){
     var q = input.value.trim().toLowerCase();
     var items = opts.items(), shown = 0;
-    items.forEach(function(el){
-      var hit = !q || opts.text(el).indexOf(q) >= 0;
+    /* ⚠️ The INDEX is passed too, and it is what lets a surface match a record instead
+       of the node: the Activity feed hands back the sentence its component built, rather
+       than scraping the rendered row (which includes the hidden expander). Table
+       surfaces ignore the second argument and keep reading the row. */
+    items.forEach(function(el, idx){
+      var hit = !q || opts.text(el, idx).indexOf(q) >= 0;
       el.hidden = !hit;
       if(hit) shown++;
     });
@@ -1337,7 +1411,7 @@ function nlProductStatedHTML(sel){
   var other = PRODUCT_CHOICES.filter(function(o){ return o.v !== cur.v; })[0];
   return '<div class="nl-prodrow">'
     + '<div class="nl-stated">'
-    +   '<span class="nl-prodic">' + icon(cur.ic, { size:24 }) + '</span>'
+    +   '<span class="nl-prodic">' + (productMark(cur.v) || icon(cur.ic, { size:24 })) + '</span>'
     +   '<span class="nl-prodtxt"><span class="nl-prodname">' + cur.t + '</span>'
     +   '<span class="nl-proddesc">' + cur.d + '</span></span>'
     + '</div>'
@@ -2135,10 +2209,12 @@ function openDeactivateModal(instId, after){
     i.active = false;
     l.updated = todayStr();
     Store.save();
-    logActivity({ kind:'updated', licId:l.id, entityType:'Instance', entityName:(i.label || i.id), action:'DEACTIVATED',
-      txt:'Instance <b>' + esc(i.label || i.id) + '</b> was deactivated on <b>'
-        + esc(l.label || l.name) + '</b> by ' + portalActor() + '.',
-      delta:'Stops at its next check-in; record kept' });
+    logActivity({ type:'instance.deactivated', licId:l.id,
+      f:{ entity:(i.label || i.id), license:(l.label || l.name) },
+      /* no `Status` row: the sentence already says deactivated. What it does not say
+         is what happens to the server and to the record. */
+      detail:[['Server', 'Stops at its next check-in'],
+              ['Record', 'Kept — can be reconnected']] });
     closeModal();
     Snack.show('Instance deactivated — it stops at its next check-in');
     if(typeof after === 'function') after();
@@ -2162,10 +2238,10 @@ function openDeleteInstanceModal(instId, after){
     l.instances = (l.instances || []).filter(function(x){ return x.id !== i.id; });
     l.updated = todayStr();
     Store.save();
-    logActivity({ kind:'updated', licId:l.id, entityType:'Instance', entityName:(i.label || i.id), action:'DELETED',
-      txt:'Instance <b>' + esc(i.label || i.id) + '</b> was deleted from <b>'
-        + esc(l.label || l.name) + '</b> by ' + portalActor() + '.',
-      delta:'Record removed permanently' });
+    logActivity({ type:'instance.deleted', licId:l.id,
+      f:{ entity:(i.label || i.id), license:(l.label || l.name) },
+      detail:[['Server', 'Stops at its next check-in'],
+              ['Record', 'Removed permanently']] });
     closeModal();
     Snack.show('Instance deleted');
     if(typeof after === 'function') after();

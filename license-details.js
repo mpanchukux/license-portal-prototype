@@ -386,6 +386,10 @@ var DETAILS_HTML = ''
 + '              </div>'
 + '              <!-- this licence\'s events only — same feed cards as the Activity page -->'
 + '              <div class="feed" id="licFeed"></div>'
+/* ⚠️ PAGED, like the Activity page (2026-09-24). Derived check-ins make this tab long —
+   a blocked licence produced 147 entries — and inside a modal that is an endless scroll
+   with no end in sight and no way to jump. Same shared controller as every other pager. */
++ pagerHTML('licFeedPager')
 + '            </div>'
 + '          </div>'
 + ''
@@ -633,11 +637,15 @@ function renderLicenseAlert(lic){
       + instRunning(lic) + ' running, ' + instAllowed(lic) + ' allowed on this plan \u2014 '
       + 'this license is blocked until the count is back within its limit. '
       + DETACH_HINT
-      + alsoClause('over_limit') + '</span>'
-      /* ⚠️ NOT a third "Manage" on one screen. The header already carries the licence's
-         `Manage`; this one is about the instance count specifically, so it says so.
-         Same wizard, named for what it is being opened to change. */
-      + alertAction('Manage', 'Manage instances', 'data-modal="add-ons"');
+      + alsoClause('over_limit') + '</span>';
+      /* ⚠️ NO ACTION ON THIS ONE (2026-09-24). It carried `Manage instances`, and the
+         note here argued for it — but that argument was about which of three Manages it
+         was, not about whether the banner needed one. You are already ON this licence:
+         the Instances tab is on the same screen, with the rows and their menus. A button
+         that opens a wizard to raise the limit competes with the thing the reader came
+         to do, and the header's own `Manage` is still there for the other way out.
+         The banner states the block and the way out of it in words; the surface under it
+         is the way. */
     al.hidden = false;
     return;
   }
@@ -926,14 +934,20 @@ function instStatusCell(i){
 function instRow(i){
   var id = esc(i.id);
   return '<tr data-instid="' + id + '">'
+    /* ⚠️ A GHOST BUTTON, not a framed one. `.iconbtn.ib` is the 40px control that stands
+       in a toolbar; inside a table cell, beside the value it copies, the frame reads as a
+       second cell. It keeps its tooltip, its label and its 40px hit area — only the box
+       goes (see `.ghostbtn`). */
     + '<td class="mono"><span class="inst-id" title="' + id + '">' + id + '</span>'
-    +   '<button class="iconbtn ib tip inst-copy" data-instcopy="' + id + '"'
+    +   '<button class="ghostbtn tip inst-copy" data-instcopy="' + id + '"'
     +     ' aria-label="Copy instance ID" data-tip="Copy instance ID">' + COPYSVG + '</button></td>'
+    /* ⚠️ NO HOVER PENCIL IN THIS CELL (2026-09-24). Renaming lives in the row's own
+       menu and nowhere else — the same rule Deactivate and Delete already follow. A
+       control that only exists while the pointer is over the cell does not exist on
+       touch at all, and it made the Label column the one cell in the table that acted. */
     + '<td class="inst-labelcell">'
     +   (i.label ? '<span class="inst-label">' + esc(i.label) + '</span>'
-                 : '<span class="muted">&mdash;</span>')
-    +   '<button class="iconbtn ib tip inst-editlabel" data-instlabel="' + id + '"'
-    +     ' aria-label="Edit label" data-tip="Edit label">' + PENSVG + '</button></td>'
+                 : '<span class="muted">&mdash;</span>') + '</td>'
     + instStatusCell(i)
     + '<td>' + fmtDateTime(i.seen) + '</td>'
     + '<td>' + fmtDate(i.created) + '</td>'
@@ -996,10 +1010,14 @@ function openInstanceLabelModal(instId){
     i.label = String(inp.value || '').trim();
     Store.save();
     if(i.label !== was){
-      logActivity({ kind:'updated', licId:lic.id, entityType:'Instance', entityName:(i.label || i.id), action:'UPDATED',
-        txt: i.label
-          ? ('Label <b>' + esc(i.label) + '</b> was set on an instance of <b>' + esc(lic.name) + '</b> by ' + portalActor() + '.')
-          : ('Label was cleared on an instance of <b>' + esc(lic.name) + '</b> by ' + portalActor() + '.') });
+      /* the new name is in the sentence; the one it replaced is not */
+      logActivity(i.label
+        ? { type:'instance.renamed', licId:lic.id,
+            f:{ entity:i.label, license:(lic.label || lic.name) },
+            detail: was ? [['Previous name', was]] : null }
+        : { type:'instance.name_cleared', licId:lic.id,
+            f:{ entity:i.id, license:(lic.label || lic.name) },
+            detail:[['Previous name', was]] });
     }
     renderInstances(lic);
     closeModal();
@@ -1142,9 +1160,11 @@ document.addEventListener('click', function(e){
   if(lic.status === 'updates_expiring') lic.status = 'active';
   Store.save();
   storeAddInvoice(lic, fmtMoney(price), { payment:'Card', auto:false });
-  logActivity({ kind:'updated', licId:lic.id, entityType:'Perpetual', entityName:lic.name, action:'UPDATED',
-    txt:'Software updates were renewed on <b>' + esc(lic.name) + '</b> by ' + portalActor() + '.',
-    delta:'Updates term now ends ' + fmtDate(to) });
+  logActivity({ type:'license.updates_renewed', licId:lic.id,
+    f:{ entity:(lic.label || lic.name), until:fmtDate(to) },
+    /* the new term is in the sentence; what it replaced, and what it cost, are not */
+    detail:[['Previous term', fmtDate(lic.event)],
+            ['Charged', fmtMoney(price)]] });
   closeModal();
   Snack.show('Software updates renewed until ' + fmtDate(to));
   if(window.LicenseDetails && LicenseDetails.isOpen()) LicenseDetails.reopen(lic);
@@ -1337,9 +1357,13 @@ function wireDetailsOnce(){
   (function(){
     var box = $('#panel-audit .searchbox input');
     if(!box || typeof wireSearch !== 'function') return;
+    /* before wireSearch, so the rows exist by the time it filters them — the feed
+       re-renders to everything while a query is present (see renderLicFeed) */
+    box.addEventListener('input', function(){ if(activeLicense) renderLicFeed(activeLicense); });
     wireSearch('#panel-audit .searchbox input', {
       items: function(){ return $$('#licFeed > *').filter(function(n){ return !n.classList.contains('noresults'); }); },
-      text:  function(n){ return stripText(n.innerHTML); },
+      /* the record, not the node — same reason as the Activity page */
+      text:  function(n, idx){ var r = licRendered[idx]; return r ? activityHaystack(r, 'license') : ''; },
       host:  function(){ return $('#licFeed'); },
       empty: function(q){ return noResultsHTML(q); }
     });
@@ -1409,6 +1433,10 @@ var LicenseDetails = (function(){
      phone that means the panel gives no sign of which licence you are in.
      Both belong to the licence you WERE looking at, so both are dropped on every open. */
   function resetSurface(){
+    /* ⚠️ A DIFFERENT LICENCE IS A DIFFERENT LIST: page 2 of the last one means nothing
+       here, and the reader would open a panel already scrolled past its own beginning. */
+    if(typeof licInstPage !== 'undefined'){ licInstPage.prod.page = 1; licInstPage.dev.page = 1; }
+    if(typeof licFeedPage !== 'undefined') licFeedPage.page = 1;
     /* ⚠️ THE FIRST TAB, whichever it is — not `#tab-invoices` by name. Reordering the
        tab bar left this pointing at what is now the SECOND tab, so every open reset the
        surface to Invoices while the markup said Instances: the order changed and the

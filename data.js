@@ -133,7 +133,10 @@ var CHECK_WINDOW_DAYS = 3;           // how far back the derived history runs
 var CHECK_FAIL = {
   unreachable:  'the portal could not reach the instance',
   connection:   'the connection failed',
-  blocked:      'the license is blocked — running instances exceed the plan'
+  /* ⚠️ NO DASH INSIDE A REASON. The sentence that carries it already ends in one —
+     "Check failed for instance X — {reason}." — so a reason with its own em-dash printed
+     two in one sentence. Seen on screen, not reasoned about. */
+  blocked:      'running instances exceed the plan'
 };
 /* A stable pseudo-random from a string: the same instance always fails at the same
    hours, so the demo does not reshuffle itself between two screenshots. */
@@ -155,11 +158,13 @@ function instanceChecks(lic, inst){
        "blocked until the count is back within its limit" MEANS, and the log is where a
        person would go to see it happening. */
     var why = blocked ? 'blocked' : (r < 3 ? 'unreachable' : (r < 5 ? 'connection' : null));
-    out.push({ kind: why ? 'check_fail' : 'check_ok',
+    /* ⚠️ NO `actor`. A check is the licence reporting to the portal; nobody did it, and
+       an absent name is how the entry says so (decided 2026-09-24). The record carries
+       facts only — `type` and `f` — and the wording lives in ACTIVITY_TEXT. */
+    out.push({ type: why ? 'instance.check_failed' : 'instance.check_ok',
       ts: agoStamp(minsAgo), tsMin: minsAgo,
-      entityType:'Instance', entityName: inst.label || inst.id,
-      instId: inst.id, licId: lic.id, licName: lic.label || lic.name,
-      actor:'System', action: why ? 'CHECK_FAILED' : 'CHECK_OK', why: why || null });
+      f: { entity: inst.label || inst.id, reason: why ? CHECK_FAIL[why] : null },
+      instId: inst.id, licId: lic.id });
   }
   return out;
 }
@@ -341,7 +346,10 @@ var TIER_SPECS = {
   startup:  { name:'Startup',   price:'$299.00', wl:true,  ent:[['Devices','500'],['Assets','500'],['Production instances','2'],['AI credits','8M','/ month']] },
   business: { name:'Business',  price:'$499.00', wl:true,  ent:[['Devices','1,000'],['Assets','1,000'],['Production instances','3'],['AI credits','16M','/ month']] },
   tbmqsub:  { name:'PE subscription', price:'$15.00', wl:false, ent:[['Sessions','100'],['Messages / sec','100'],['Production instances','1']] },
-  tbperp:   { name:'PE Perpetual License', price:'one-time', perp:true, wl:true, ent:[['Devices','5,000'],['Assets','5,000'],['Production instances','1'],['AI credits','5M','/ month']] },
+  /* ⚠️ `Perpetual License`, not `PE Perpetual License`. This string IS the License
+     column on the Licenses table and the plan name on the licence page; the edition is
+     already carried by the product mark and the Product column beside it. */
+  tbperp:   { name:'Perpetual License', price:'one-time', perp:true, wl:true, ent:[['Devices','5,000'],['Assets','5,000'],['Production instances','1'],['AI credits','5M','/ month']] },
   tbmqperp: { name:'PE license', price:'one-time', perp:true, wl:true, ent:[['Sessions','10,000'],['Messages / sec','1,000'],['Production instances','1']] },
   // Community Grant — free, no expiry, nothing recurring. perp:true puts it on the
   // perpetual-style details layout (no renewal, no next charge, no add-ons).
@@ -374,17 +382,21 @@ var DATASETS = {
       // the first charge of A2, on the day it was bought — also manual
       { num:'NAWE49WG-0001', licId:'A2', date:'Jul 22 2026', amount:'$15.00', status:'Paid', payment:'Card',     auto:false }
     ],
+    /* ⚠️ RECORDS, NOT SENTENCES. Every seeded row used to carry its own `txt` with its
+       own <b> tags — which is how the same event came to be worded one way here and
+       another way by the live writer (six such pairs, listed in NOTES). A row now states
+       facts; ACTIVITY_TEXT states the words. */
     activity: [
-      { kind:'created', ts:'Aug 17 2026, 16:20', entityType:'Subscription', entityName:'Maker', actor:'mpanchuk@thingsboard.io', action:'ADDED',
-        txt:'Subscription <b>Maker</b> was created by mpanchuk@thingsboard.io.' },
-      { kind:'created', ts:'Aug 10 2026, 09:14', entityType:'Subscription', entityName:'Prototype', actor:'mpanchuk@thingsboard.io', action:'ADDED',
-        txt:'Subscription <b>Prototype</b> was created by mpanchuk@thingsboard.io.' },
-      { kind:'updated', ts:'Jul 28 2026, 15:02', entityType:'Payment method', entityName:'Visa ••4242', actor:'mpanchuk@thingsboard.io', action:'UPDATED',
-        txt:'Payment method was added by mpanchuk@thingsboard.io.' },
-      { kind:'info', ts:'Jul 22 2026, 11:41', entityType:'Invoice', entityName:'NAWE49WG-0001', actor:'mpanchuk@thingsboard.io', action:'PAID',
-        txt:'Invoice <b>NAWE49WG-0001</b> was paid by mpanchuk@thingsboard.io.' },
-      { kind:'created', ts:'Jul 22 2026, 11:40', entityType:'Subscription', entityName:'TBMQ PE', actor:'mpanchuk@thingsboard.io', action:'ADDED',
-        txt:'Subscription <b>TBMQ PE</b> was created by mpanchuk@thingsboard.io.' }
+      { type:'license.created', ts:'Aug 17 2026, 16:20', actor:'mpanchuk@thingsboard.io',
+        f:{ kind:'Subscription', entity:'Maker' } },
+      { type:'license.created', ts:'Aug 10 2026, 09:14', actor:'mpanchuk@thingsboard.io',
+        f:{ kind:'Subscription', entity:'Prototype' } },
+      { type:'billing.card_added', ts:'Jul 28 2026, 15:02', actor:'mpanchuk@thingsboard.io',
+        f:{ card:'Visa ending 4242' } },
+      { type:'billing.invoice_paid', ts:'Jul 22 2026, 11:41', actor:'mpanchuk@thingsboard.io',
+        f:{ entity:'NAWE49WG-0001', amount:'$15.00' } },
+      { type:'license.created', ts:'Jul 22 2026, 11:40', actor:'mpanchuk@thingsboard.io',
+        f:{ kind:'Subscription', entity:'TBMQ PE' } }
     ]
   },
   B: {
@@ -404,8 +416,8 @@ var DATASETS = {
       { id:'B7',  tier:'prototype',product:'ThingsBoard', type:'Subscription', name:'Prototype', label:'Demo',         created:'Jul 20 2026', updated:'Jul 30 2026', status:'active',         event:'Sep 03 2026', price:'$39.00 / mo',  billing:'auto-pay' },
       { id:'B8',  tier:'tbmqsub',  product:'TBMQ',        type:'Subscription', name:'PE subscription', label:'MQTT prod',    created:'Jun 30 2026', updated:'Jul 12 2026', status:'active',   event:'Sep 10 2026', price:'$15.00 / mo', billing:'auto-pay' },
       { id:'B9',  tier:'tbmqsub',  product:'TBMQ',        type:'Subscription', name:'PE subscription', label:'MQTT staging', created:'Jul 05 2026', updated:'Jul 05 2026', status:'active',   event:'Sep 10 2026', price:'$15.00 / mo', billing:'auto-pay' },
-      { id:'B10', tier:'tbperp',   product:'ThingsBoard', type:'Perpetual',    name:'PE Perpetual License', label:'On-prem HQ',    created:'Jul 27 2026', updated:'Jul 27 2026', status:'active',           event:'Jul 27 2027', price:'one-time', billing:'paid' },
-      { id:'B11', tier:'tbperp',   product:'ThingsBoard', type:'Perpetual',    name:'PE Perpetual License', label:'Plant B',       created:'Sep 01 2025', updated:'Aug 05 2026', status:'updates_expiring', event:'Sep 01 2026', price:'one-time', billing:'paid' },
+      { id:'B10', tier:'tbperp',   product:'ThingsBoard', type:'Perpetual',    name:'Perpetual License', label:'On-prem HQ',    created:'Jul 27 2026', updated:'Jul 27 2026', status:'active',           event:'Jul 27 2027', price:'one-time', billing:'paid' },
+      { id:'B11', tier:'tbperp',   product:'ThingsBoard', type:'Perpetual',    name:'Perpetual License', label:'Plant B',       created:'Sep 01 2025', updated:'Aug 05 2026', status:'updates_expiring', event:'Sep 01 2026', price:'one-time', billing:'paid' },
       /* ⚠️ Its updates term is ~25 days out ON PURPOSE: it is the only licence in the
          demo that exercises the 30-day stage of the updates warning. The three stages
          are 30 / 14 / expired, and without one licence sitting in each the banner's
@@ -429,7 +441,7 @@ var DATASETS = {
          ⚠️ `status:'active'` and NOT a stored "expired" status — the state is DERIVED
          from the date, the same way over-the-instance-limit is derived from a count.
          A stored flag can be forgotten on a licence; a comparison cannot. */
-      { id:'B16', tier:'tbperp',   product:'ThingsBoard', type:'Perpetual',    name:'PE Perpetual License', label:'Warehouse DC',  created:'Aug 07 2024', updated:'Aug 07 2025', status:'active',           event:'Aug 07 2026', price:'one-time', billing:'paid' },
+      { id:'B16', tier:'tbperp',   product:'ThingsBoard', type:'Perpetual',    name:'Perpetual License', label:'Warehouse DC',  created:'Aug 07 2024', updated:'Aug 07 2025', status:'active',           event:'Aug 07 2026', price:'one-time', billing:'paid' },
       { id:'B15', tier:'grant',    product:'ThingsBoard', type:'Grant',        name:'Community Grant', label:'Research cluster', created:'Aug 19 2026', updated:'Aug 19 2026', status:'awaiting_checkin', event:'', price:'Free', billing:'\u2014', grant:true, limits:'6,050 devices &middot; 2 production servers' }
     ],
     users: [
@@ -466,39 +478,51 @@ var DATASETS = {
       { num:'NAWE49WG-0016', licId:'B2',  date:'Aug 02 2026', amount:'$299.00',   status:'Paid', payment:'Auto-pay', auto:true  },
       { num:'NAWE49WG-0015', licId:'B3',  date:'Jul 28 2026', amount:'$299.00',   status:'Paid', payment:'Auto-pay', auto:true  }
     ],
+    /* ⚠️ RECORDS, NOT SENTENCES — see the note on account A. Two seeded shapes were
+       retired here rather than given a type of their own:
+       • "Add-on Edge Computing was enabled on Business" folded into
+         `license.capacity_changed`, which is what the live flow actually writes. Keeping
+         both would have kept the pair the inventory flagged — one idea, two wordings —
+         and invented a type no writer produces. What changed is in the detail.
+       • the invoice amounts are the REAL ones from the invoices array below; the old
+         strings named no figure at all. */
     activity: [
-      { kind:'created', ts:'Aug 18 2026, 10:26', entityType:'User', entityName:'Nina Rossi', actor:'mpanchuk@thingsboard.io', action:'ADDED',
-        txt:'User <b>Nina Rossi</b> was invited by mpanchuk@thingsboard.io.' },
-      { kind:'status',  ts:'Aug 18 2026, 07:12', entityType:'Subscription', entityName:'Startup', actor:'System', action:'PAYMENT_FAILED',
-        txt:'Payment failed for <b>Startup</b> (Production) — card Visa ••4242 was declined.', delta:'Auto-pay charge of $299.00 failed' },
-      { kind:'status',  ts:'Aug 15 2026, 14:03', entityType:'Subscription', entityName:'Pilot', actor:'i.petrenko@thingsboard.io', action:'UPDATED',
-        txt:'Plan was changed from <b>Prototype</b> to <b>Pilot</b> on <b>Factory A</b> by i.petrenko@thingsboard.io.', delta:'Plan changed from Prototype to Pilot' },
-      { kind:'updated', ts:'Aug 12 2026, 09:31', entityType:'Subscription', entityName:'Business', actor:'o.kravets@thingsboard.io', action:'UPDATED',
-        txt:'Add-on <b>Edge Computing</b> was enabled on <b>Business</b> (Global) by o.kravets@thingsboard.io.' },
-      { kind:'info',    ts:'Aug 08 2026, 00:05', entityType:'Invoice', entityName:'NAWE49WG-0018', actor:'Auto-pay', action:'PAID',
-        txt:'Invoice <b>NAWE49WG-0018</b> was paid, charged automatically.' },
-      { kind:'status',  ts:'Aug 05 2026, 08:00', entityType:'License', entityName:'Perpetual License', actor:'System', action:'UPDATES_EXPIRING',
-        txt:'Software updates for the <b>On-prem</b> perpetual license expire on <b>Aug 28, 2026</b>.', delta:'Updates term ends Aug 28 2026' },
+      { type:'user.invited', ts:'Aug 18 2026, 10:26', actor:'mpanchuk@thingsboard.io',
+        f:{ entity:'n.rossi@thingsboard.io' } },
+      { type:'license.payment_failed', ts:'Aug 18 2026, 07:12',
+        f:{ entity:'Production', card:'Visa ending 4242' },
+        detail:[['Charge', '$299.00'], ['Attempt', 'Auto-pay']] },
+      /* no `Plan` detail row: the sentence already says from Prototype to Pilot */
+      { type:'license.plan_changed', ts:'Aug 15 2026, 14:03', actor:'i.petrenko@thingsboard.io',
+        f:{ entity:'Factory A', from:'Prototype', to:'Pilot' },
+        detail:[['Devices', '100', '500'], ['Production instances', '1', '2']] },
+      { type:'license.capacity_changed', ts:'Aug 12 2026, 09:31', actor:'o.kravets@thingsboard.io',
+        f:{ entity:'Global' }, detail:[['Edge Computing', 'Off', 'On']] },
+      { type:'billing.invoice_autopaid', ts:'Aug 08 2026, 00:05',
+        f:{ entity:'NAWE49WG-0018', amount:'$499.00' } },
+      { type:'license.updates_expiring', ts:'Aug 05 2026, 08:00',
+        f:{ entity:'On-prem', until:'Aug 28, 2026' } },
       // a large account keeps producing events — enough of them that the Home feed
       // has a second and third batch to load
-      { kind:'updated', ts:'Aug 04 2026, 16:48', entityType:'License', entityName:'Business', actor:'o.kravets@thingsboard.io', action:'UPDATED',
-        txt:'Label <b>Production — Central Europe manufacturing cluster, building 4</b> was set on <b>Business</b> by o.kravets@thingsboard.io.', delta:'label = Production — Central Europe manufacturing cluster, building 4' },
-      { kind:'created', ts:'Aug 02 2026, 11:05', entityType:'User', entityName:'Dev User', actor:'mpanchuk@thingsboard.io', action:'ADDED',
-        txt:'User <b>Dev User</b> was invited by mpanchuk@thingsboard.io.' },
-      { kind:'info',    ts:'Aug 02 2026, 00:05', entityType:'Invoice', entityName:'NAWE49WG-0016', actor:'Auto-pay', action:'PAID',
-        txt:'Invoice <b>NAWE49WG-0016</b> was paid, charged automatically.' },
-      { kind:'updated', ts:'Jul 30 2026, 13:22', entityType:'Subscription', entityName:'Prototype', actor:'i.petrenko@thingsboard.io', action:'UPDATED',
-        txt:'Add-on <b>Trendz Analytics</b> was enabled on <b>Prototype</b> (Demo) by i.petrenko@thingsboard.io.' },
-      { kind:'status',  ts:'Jul 28 2026, 09:10', entityType:'Subscription', entityName:'Prototype', actor:'mpanchuk@thingsboard.io', action:'CANCELED',
-        txt:'Subscription <b>Prototype</b> (Sandbox) was canceled by mpanchuk@thingsboard.io — active until <b>Sep 05, 2026</b>.', delta:'Canceled; active until Sep 05 2026' },
-      { kind:'created', ts:'Jul 24 2026, 15:40', entityType:'Subscription', entityName:'Pilot', actor:'mpanchuk@thingsboard.io', action:'ADDED',
-        txt:'Subscription <b>Pilot</b> was created by mpanchuk@thingsboard.io.' },
-      { kind:'updated', ts:'Jul 20 2026, 08:57', entityType:'Payment method', entityName:'Visa ••4242', actor:'mpanchuk@thingsboard.io', action:'UPDATED',
-        txt:'Payment method was updated by mpanchuk@thingsboard.io.' },
-      { kind:'created', ts:'Jul 15 2026, 10:12', entityType:'Subscription', entityName:'Maker', actor:'i.petrenko@thingsboard.io', action:'ADDED',
-        txt:'Subscription <b>Maker</b> was created by i.petrenko@thingsboard.io.' },
-      { kind:'info',    ts:'Jul 12 2026, 00:05', entityType:'Invoice', entityName:'NAWE49WG-0012', actor:'Auto-pay', action:'PAID',
-        txt:'Invoice <b>NAWE49WG-0012</b> was paid, charged automatically.' }
+      /* first label on this licence, so there is no previous one and no detail at all */
+      { type:'license.labeled', ts:'Aug 04 2026, 16:48', actor:'o.kravets@thingsboard.io',
+        f:{ entity:'Business', label:'Production — Central Europe manufacturing cluster, building 4' } },
+      { type:'user.invited', ts:'Aug 02 2026, 11:05', actor:'mpanchuk@thingsboard.io',
+        f:{ entity:'dev@thingsboard.io' } },
+      { type:'billing.invoice_autopaid', ts:'Aug 02 2026, 00:05',
+        f:{ entity:'NAWE49WG-0016', amount:'$299.00' } },
+      { type:'license.capacity_changed', ts:'Jul 30 2026, 13:22', actor:'i.petrenko@thingsboard.io',
+        f:{ entity:'Demo' }, detail:[['Trendz Analytics', 'Off', 'On']] },
+      { type:'license.canceled', ts:'Jul 28 2026, 09:10', actor:'mpanchuk@thingsboard.io',
+        f:{ entity:'Sandbox', until:'Sep 05, 2026' } },
+      { type:'license.created', ts:'Jul 24 2026, 15:40', actor:'mpanchuk@thingsboard.io',
+        f:{ kind:'Subscription', entity:'Pilot' } },
+      { type:'billing.card_updated', ts:'Jul 20 2026, 08:57', actor:'mpanchuk@thingsboard.io',
+        f:{ card:'Visa ending 4242' } },
+      { type:'license.created', ts:'Jul 15 2026, 10:12', actor:'i.petrenko@thingsboard.io',
+        f:{ kind:'Subscription', entity:'Maker' } },
+      { type:'billing.invoice_autopaid', ts:'Jul 12 2026, 00:05',
+        f:{ entity:'NAWE49WG-0012', amount:'$299.00' } }
     ]
   },
   /* G — Community Grant approved. One licence, and it is an ordinary row: the
@@ -515,8 +539,8 @@ var DATASETS = {
     ],
     invoices: [],
     activity: [
-      { kind:'created', ts:'Aug 19 2026, 09:02', entityType:'License', entityName:'Community Grant', actor:'System', action:'GRANT_ISSUED',
-        txt:'<b>Community Grant</b> was issued to mpanchuk@thingsboard.io — license key created.', delta:'Community Grant issued' }
+      /* no actor: the grant is issued to you, not by you */
+      { type:'license.grant_issued', ts:'Aug 19 2026, 09:02', f:{ entity:'Community Grant' } }
     ]
   },
   /* N — a genuinely NEW account: nothing bought, nobody invited, nothing logged.
@@ -680,7 +704,9 @@ var EC_PLANS = {
   },
   'tbmq|perpetual': {
     single: true,
-    cards: [ { name:'TBMQ PE license', price:'$2,999', per:'· one-time', term:'Including 1 year of software updates',
+    /* ⚠️ No `term`, like the ThingsBoard perpetual card beside it — the asymmetry that
+       NOTES flagged as open is closed the same way it was on the other card. */
+    cards: [ { name:'TBMQ PE license', price:'$2,999', per:'· one-time',
                feats:['10,000 sessions', '1,000 msg/sec', '1 prod instance', 'White labeling', 'All TBMQ PE features'] } ]
   }
 };
@@ -711,6 +737,102 @@ function featNote(text){
   return '';
 }
 
+/* ============================================================================
+   ACTIVITY COPY — one map, plain text, no markup
+   ============================================================================
+   Every activity entry in the product is worded here and rendered by ONE component
+   (`activityEntry` in components.js). Nothing else builds an activity row.
+
+   ⚠️ NO HTML IN A STRING, EVER. The copy says what happened; the component decides
+   what is emphasised. That is not a style preference — it is what lets search match
+   the sentence directly instead of scraping it back out of the DOM, and it is what
+   keeps "one bold per entry" a rule the copy cannot break by accident.
+
+   TEMPLATE SYNTAX, and there are only two marks:
+     {name}    a value from the record's `f` object.
+     [ … ]     a segment DROPPED in the licence's own tab. Whatever the licence page
+               already states about itself is redundant inside it — usually the licence
+               clause, which is why instance events bracket `on {license}` and keep the
+               instance itself.
+   `entity` names the placeholder the component wraps in emphasis. One per type, and it
+   is the thing a reader scans for: the licence label, the instance label, the user's
+   email, the invoice number. Never a value, never a date, never an amount.
+
+   ⚠️ THE ACTOR IS IN THE SENTENCE, as `{by}`, and the template says WHERE. A first
+   draft put it in a slot of its own beside the timestamp; that lost too much — "Plan
+   changed from Startup to Business" reads as something that happened, not as something
+   somebody did, and in a shared account who did it is half the entry. Restored
+   2026-09-24 on request.
+   ⚠️ `{by}` IS A MARK, NOT A SUFFIX, because several sentences carry a trailing clause
+   after an em-dash: appending the actor would produce "active until Sep 05, 2026 by
+   Mariia". The component fills the mark with " by {actor}" or with nothing.
+   ⚠️ NOTHING when there is no human — a machine event has no `actor` at all rather than
+   saying "System" (decided 2026-09-24, and unchanged by the above). That is why check-ins,
+   expiries and auto-charges carry no `{by}` in their templates: the absence of a name is
+   what says nobody did it.
+
+   ⚠️ VOICE: past tense, agentless, no auxiliary. `Plan changed from X to Y`, never
+   `Plan was changed`. Where English has no agentless active form the participle stands
+   alone (`User … removed.`) — see NOTES for the list where this is a compromise and not
+   a choice. */
+var ACTIVITY_TEXT = {
+
+  /* ---- licences ---------------------------------------------------------- */
+  'license.created':          { t:'{kind}[ {entity}] created{by}.', entity:'entity' },
+  'license.canceled':         { t:'Subscription[ {entity}] canceled{by} — active until {until}.', entity:'entity' },
+  'license.labeled':          { t:'Label set to {label}[ on {entity}]{by}.', entity:'entity' },
+  'license.label_cleared':    { t:'Label cleared[ on {entity}]{by}.', entity:'entity' },
+  'license.plan_changed':     { t:'Plan changed from {from} to {to}[ on {entity}]{by}.', entity:'entity' },
+  'license.capacity_changed': { t:'Capacity changed[ on {entity}]{by}.', entity:'entity' },
+  'license.updates_renewed':  { t:'Software updates renewed[ on {entity}]{by} — term ends {until}.', entity:'entity' },
+  'license.updates_expiring': { t:'Software updates[ on {entity}] end {until}.', entity:'entity' },
+  /* ⚠️ The card is IN the sentence, not behind the expander: a failure carries its
+     reason where the failure is read. Same rule as the check failures below. */
+  'license.payment_failed':   { t:'Payment failed[ on {entity}] — {card} declined.', entity:'entity' },
+  'license.payment_recovered':{ t:'Payment succeeded[ on {entity}] after the payment method changed.', entity:'entity' },
+  /* ⚠️ `License issued`, not `Community Grant issued`: the grant licence is NAMED
+     "Community Grant", so naming the product in the copy printed it twice — checked
+     against the data, which is what that check is for. */
+  'license.grant_issued':     { t:'License issued[ for {entity}] — key created.', entity:'entity' },
+
+  /* ---- instances --------------------------------------------------------- */
+  /* ⚠️ The ENTITY is the instance and the BRACKET is the licence. In a licence's tab
+     the licence is what the page already says; the instance is still news. */
+  'instance.deactivated':     { t:'Instance {entity} deactivated[ on {license}]{by}.', entity:'entity' },
+  'instance.deleted':         { t:'Instance {entity} deleted[ from {license}]{by}.', entity:'entity' },
+  /* ⚠️ BOTH NAME THE INSTANCE, and the first draft of these did not — the template
+     carried the new label but not the entity, so the row had no emphasis and the global
+     feed could not say WHICH instance was renamed. Caught by rendering every type
+     before any call site was moved. */
+  'instance.renamed':         { t:'Instance renamed to {entity}[ on {license}]{by}.', entity:'entity' },
+  'instance.name_cleared':    { t:'Instance {entity} name cleared[ on {license}]{by}.', entity:'entity' },
+  'instance.check_ok':        { t:'Instance {entity} checked in.', entity:'entity' },
+  'instance.check_failed':    { t:'Check failed for instance {entity} — {reason}.', entity:'entity' },
+  'instance.checks_grouped':  { t:'{count} successful checks for instance {entity}, {from} to {to}.', entity:'entity' },
+
+  /* ---- users and the account --------------------------------------------- */
+  'user.invited':             { t:'Invitation sent to {entity}{by}.', entity:'entity' },
+  'user.removed':             { t:'User {entity} removed{by}.', entity:'entity' },
+  'user.session_started':     { t:'Session started as {entity}{by}.', entity:'entity' },
+  'user.session_ended':       { t:'Session as {entity} ended{by}.', entity:'entity' },
+  'user.invite_link_created': { t:'Single-use invite link created{by}.', entity:null },
+  'account.password_changed': { t:'Account password changed{by}.', entity:null },
+
+  /* ---- billing ------------------------------------------------------------ */
+  'billing.invoice_paid':     { t:'Invoice {entity} paid{by} — {amount}.', entity:'entity' },
+  /* ⚠️ A SEPARATE TYPE, not `invoice_paid` with the name left off. "Charged
+     automatically" is a fact the reader wants — it says the money left without anyone
+     touching it — and it cannot be carried by an empty `{by}`, which says only that we
+     do not know who. */
+  'billing.invoice_autopaid': { t:'Invoice {entity} charged automatically — {amount}.', entity:'entity' },
+  'billing.credit_added':     { t:'Account credit rose by {amount}[ from {entity}] — the unused part of the current period.', entity:'entity' },
+  'billing.card_added':       { t:'Payment method added{by} — {card}.', entity:'card' },
+  'billing.card_updated':     { t:'Payment method changed to {card}{by}.', entity:'card' }
+};
+/* Which filter bucket a type belongs to, and which styleguide group it is shown under.
+   ⚠️ Read from the type's own PREFIX, not from a second table that can disagree with it. */
+var ACTIVITY_BUCKET = { license:'license', instance:'checks', user:'users', account:'users', billing:'billing' };
+
 /* ---------- tax ---------------------------------------------------------------
    ⚠️ COPY PENDING CONFIRMATION FROM THE TEAM — recorded in NOTES.md as such. Nothing
    in the repo states a tax position, and a buyer sees no mention of tax anywhere
@@ -718,6 +840,31 @@ function featNote(text){
    sentence that can be written without inventing a rule; it says where the number is
    settled rather than what it will be. One constant, three surfaces. */
 var TAX_NOTE = 'Prices exclude tax. Tax, where applicable, is calculated at checkout.';
+/* ---------- the product marks -------------------------------------------------
+   ⚠️ THE SECOND DELIBERATE EXCEPTION TO THE SPRITE, after the wordmark. These are
+   BRAND ARTWORK, not icons: they carry their own colour and cannot be recoloured by
+   `currentColor`, which is the whole contract `assets/icons.svg` is built on. They are
+   raster because that is what was supplied. The icon checker does not flag them — it
+   looks for drawing elements and glyphs, and an `<img>` is neither — so the exception
+   is named here rather than left to be inferred from the checker staying green.
+   ⚠️ Keyed by the same string `lic.product` and `PRODUCT_CHOICES[].v` use, so a licence
+   row and the purchase wizard cannot end up marking the same product differently. */
+var PRODUCT_LOGO = {
+  thingsboard: 'assets/logo-thingsboard.png',
+  ThingsBoard: 'assets/logo-thingsboard.png',
+  tbmq:        'assets/logo_tbmq.png',
+  TBMQ:        'assets/logo_tbmq.png'
+};
+/* ⚠️ `alt=""`: the product is named in words beside every one of these, so a screen
+   reader that also announced the mark would say it twice. */
+function productMark(product, cls){
+  var src = PRODUCT_LOGO[product];
+  if(!src) return '';
+  return '<img class="prodmark' + (cls ? ' ' + cls : '') + '" src="' + src + '" alt="" aria-hidden="true">';
+}
+
+/* the one arrow mark in the product: the wizard's change rows and the activity detail */
+var ARROW_IC = '<svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-arrow-right"></use></svg>';
 
 var EC_SINGLE_NOTE = 'You can fine-tune capacity before checkout.';
 /* ⚠️ The SHORT billing-mode line, split out of the tab descriptions below. What is left

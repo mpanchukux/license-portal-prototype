@@ -23,7 +23,7 @@
       <a href="#tokens">Tokens</a><a href="#buttons">Buttons</a><a href="#inputs">Inputs</a>
       <a href="#chips">Status chips</a><a href="#table">Table</a><a href="#cards">Cards</a>
       <a href="#modals">Modals</a><a href="#stepper">Wizard stepper</a><a href="#banners">Banners</a>
-      <a href="#feed">Feed entry</a><a href="#tooltip">Tooltips</a><a href="#infoicon">Info icon</a><a href="#empty">Empty states</a><a href="#solo">Solo state</a><a href="#empty">No results</a><a href="#alerticon">Alert icon</a><a href="#homebanner">Home banner</a><a href="#instancesview">Instances view</a><a href="#messages">Messages</a><a href="#sheet">Bottom sheet</a><a href="#snack">Snackbar</a>
+      <a href="#feed">Activity</a><a href="#tooltip">Tooltips</a><a href="#infoicon">Info icon</a><a href="#empty">Empty states</a><a href="#solo">Solo state</a><a href="#empty">No results</a><a href="#alerticon">Alert icon</a><a href="#homebanner">Home banner</a><a href="#instancesview">Instances view</a><a href="#messages">Messages</a><a href="#sheet">Bottom sheet</a><a href="#snack">Snackbar</a>
       <a href="index.html"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-left"></use></svg> back to the portal</a>
     </nav>
   </div>
@@ -368,9 +368,16 @@
         three lines in that width, while <i>Business</i>, the longest subscription name, is 80.9px and
         notices nothing. So the card was given a row of its own at 560px. The single row was then asked for
         anyway, because two ways to pay should read as <b>one offer scanned left to right</b> rather than a
-        main row with an afterthought under it. The cost was paid down instead: the card is now called
+        main row with an afterthought under it. The cost was paid down twice. First the card was renamed to
         <i>Perpetual License</i> &mdash; the product is already named by the group above it and by the page
-        heading, so the card only has to say which way to pay it is.</p>
+        heading, so the card only has to say which way to pay it is. That still was not enough: at
+        <code class="sg-cls">--pageW:1120px</code> a five-across row gave each card 190.4px, whose heading
+        box is 160.4px, and even the shortened name needs 165.3px &mdash; <b>short by 4.9px</b>, so it
+        wrapped to two lines anyway. So the page column itself went to <b>1180px</b> (2026-09-24): gaps and
+        frame padding are fixed, so every pixel added there lands in the cards, and +60 gives each one +12
+        and the heading 7.1px of slack. <span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <b>That number moves every page in the
+        product</b>, not only this row &mdash; the topbar's content row, every list page, this styleguide
+        and the impersonation banner all read <code class="sg-cls">--pageW</code>.</p>
       <p class="sg-note"><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <b>A pick carries its group's billing model.</b> While the tabs chose the model,
         the grid only ever held cards of the chosen one, so picking a card could safely say nothing about it.
         With both groups on one surface it cannot: a perpetual card picked while the model still said
@@ -546,77 +553,83 @@
 
   <!-- ============================ FEED ============================ -->
   <section class="sg-sec" id="feed">
-    <h2>Feed entry</h2>
-    <p>The activity feed is a list of sentences, not a table. Emphasis falls only on the object of the
-      action and on changed values; the actor's email stays plain.</p>
+    <h2>Activity</h2>
+    <p>Every activity entry in the product renders through <b>one component</b>
+      (<code class="sg-cls">activityEntry</code>), from <b>one copy map</b>
+      (<code class="sg-cls">ACTIVITY_TEXT</code>). Home&rsquo;s block, the Activity page and a
+      licence&rsquo;s own tab all call it; <b>no page assembles a row</b>. Everything below is rendered by
+      that component from that map &mdash; nothing on this page is retyped, so it cannot fall behind the
+      thing it documents.</p>
+
     <div class="sg-item">
-      <div class="listcard" style="padding:6px 16px"><div id="sgFeed"></div></div>
-      <p class="sg-note" style="margin-top:12px"><code class="sg-cls">.fitem</code> · timestamp
-        <code class="sg-cls">.fi-meta</code> · sentence <code class="sg-cls">.fi-txt</code> ·
-        payload <code class="sg-cls">.fi-audit</code> (toggled by the row's icon button).
-        No event icon: the sentence already opens with what happened.</p>
+      <h3>Anatomy</h3>
+      <p class="sg-note"><b>Timestamp &middot; what it is about &middot; what happened &middot; what
+        changed, from and to &middot; who did it.</b> A reason or an amount sits <b>inside the
+        sentence</b>, never only behind the expander &mdash; a failure that hides its cause behind a click
+        is a failure you have to go and ask about.</p>
+      <p class="sg-note"><b>One bold per entry, always the same thing.</b> In the account-wide feed the
+        <b>entity</b> is bold &mdash; the licence label, the instance label, the user&rsquo;s email, the
+        invoice number. Everything else is plain, <b>values included</b>. That gives a scannable column of
+        names and keeps bold meaning one thing.
+        <span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> Two entries have no bold at all, and that is correct: a password change and an invite link
+        have no named subject but the account itself.</p>
+      <p class="sg-note"><b>In a licence&rsquo;s own tab the entity is dropped, not bolded again</b> &mdash;
+        the page already says which licence you are in. Same event, two renderings; that is what the scope
+        argument is for. In the map it is one template: the bracketed segment
+        (<code class="sg-cls">[ on {entity}]</code>) is what the licence scope removes.
+        <span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> For an <b>instance</b> event the bracket holds the <em>licence</em> and the instance stays
+        bold &mdash; what the page already states is what goes.</p>
+      <p class="sg-note"><b>Voice.</b> Past tense, no auxiliary: <i>Plan changed from Startup to
+        Business</i>, never <i>Plan was changed</i>. One sentence, ending in a period. No
+        &ldquo;successfully&rdquo;, no adjectives. Dates use the product&rsquo;s one format,
+        <code class="sg-cls">Sep 13, 2026, 07:12</code>.
+        <span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <b>Eleven of the twenty-nine reach true active voice</b>; the rest stand as
+        participles with the auxiliary dropped, because English has no agentless active for
+        &ldquo;user removed&rdquo;. Active: <i>plan changed</i>, <i>capacity changed</i>, <i>updates
+        end</i>, <i>payment failed</i>, <i>payment succeeded</i>, <i>instance checked in</i>, <i>check
+        failed</i>, <i>credit rose</i>, <i>payment method changed to</i>, <i>session ended</i>,
+        <i>password changed</i>. One entry &mdash; the folded run &mdash; has no finite verb at all.
+        The boundary is a judgement, not a measurement: &ldquo;session ended&rdquo; is counted active
+        because it reads intransitively. <b>It is a compromise, not a choice</b>, and it is the one
+        rule on this page the copy does not fully meet.</p>
+      <p class="sg-note"><b>Who did it is in the sentence</b>, as <code class="sg-cls">{by}</code>, and the
+        template says where &mdash; several sentences carry a trailing clause after an em-dash, and
+        appending the actor would produce &ldquo;active until Sep 05, 2026 by Mariia&rdquo;.
+        <span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <b>A machine event has no actor at all</b>, rather than saying &ldquo;System&rdquo;: check-ins,
+        expiries, automatic charges and the credit a downgrade returns simply end. The absence of a name is
+        what says nobody did it.</p>
+      <p class="sg-note"><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <b>No HTML in a string, ever.</b> The copy says what happened; the
+        component decides what is emphasised. That is what lets search match the sentence directly &mdash;
+        before this, search read <code class="sg-cls">textContent</code>, which included the hidden
+        expander, so a uuid that appeared only inside the raw payload matched <b>all 298 rows</b>.</p>
+      <p class="sg-note"><b>The expander is not a raw record.</b> It shows named
+        <b>field &middot; from &rarr; to</b> rows, and only for the types that have something to show; a
+        type with no detail gets <b>no button</b>. A grouped run expands to the entries it folded.</p>
     </div>
 
-    <div class="sg-item" id="groupedcheck">
-      <h3>Folded check run <span class="sg-cls">.fitem.fgroup</span></h3>
-      <p class="sg-note">The licence checks in <b>every hour</b>, and every check is logged — a handful of
-        instances produce hundreds of entries a day. Consecutive <b>successful</b> checks <b>for the same
-        instance</b> fold into one row carrying the instance, the count and the period they cover, and the
-        row opens to the individual entries. <b>Nothing is hidden; the noise is folded.</b></p>
-      <div class="listcard" style="padding:6px 16px">
-        <div class="fitem fgroup">
-          <div class="fi-row">
-            <div class="fi-body">
-              <div class="fi-meta">Sep 23, 2026, 12:21</div>
-              <div class="fi-txt"><b>36 successful checks</b> for instance <b>HQ primary</b> &mdash; Sep 22, 2026, 01:21 to Sep 23, 2026, 12:21.</div>
-            </div>
-            <button class="iconbtn ib fg-toggle" aria-label="Show the checks"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-down"></use></svg></button>
-          </div>
-          <div class="fg-items"><div class="fg-line"><span class="fg-time">Sep 23, 2026, 12:21</span><span class="fg-txt">Checked in successfully.</span></div><div class="fg-line"><span class="fg-time">Sep 23, 2026, 11:21</span><span class="fg-txt">Checked in successfully.</span></div></div>
-        </div>
-        <div class="fitem">
-          <div class="fi-row"><div class="fi-body">
-            <div class="fi-meta">Sep 23, 2026, 12:20</div>
-            <div class="fi-txt"><b>Check failed</b> for instance <b>HQ node 2</b> &mdash; the license is blocked &mdash; running instances exceed the plan.</div>
-          </div></div>
-        </div>
-      </div>
-      <p class="sg-note" style="margin-top:12px"><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <b>A failure never folds</b>, even between two
-        successes: it is the entry the reader is scanning for, and a count would hide it. It stands as its
-        own row and <b>names the cause in the row itself</b> — nothing has to be expanded to find out why.
-        <span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <b>&ldquo;Consecutive&rdquo; means consecutive for that INSTANCE</b>, not in the merged feed:
-        nineteen instances reporting hourly interleave by timestamp, so strict adjacency would fold
-        nothing at all.</p>
-      <p class="sg-note"><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <b>Every folded entry keeps its own payload button.</b> Folding is a
-        display decision — the individual checks are still individual events, and an event whose raw
-        record cannot be opened is less of a record than the ungrouped one beside it. The group row
-        itself has none: it is a summary, not an event.</p>
-      <p class="sg-note">The <b>type filter</b> sits beside the period control as a single
-        <b>multi-select dropdown</b> (<code class="sg-cls">.acttypemenu</code>) — instance checks, licence
-        and plan changes, purchases and billing, user operations. <span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> It was four chips and needed a
-        toolbar row of its own; as one control it reads as a pair with the period, which asks the same
-        kind of question about the same list. <b>The menu does not close on a tick</b>: choosing two kinds
-        is two clicks, and a menu that shuts after the first turns one decision into two round trips.
-        All four start on — hiding a type by default would make the page quietly incomplete — and
-        <i>Select all</i> is the way back from any state.</p>
+    <div class="sg-item">
+      <h3>Licences <span class="sg-cls">license.*</span></h3>
+      <div class="listcard sg-actlist" data-actgroup="license"></div>
     </div>
-
-    <div class="sg-item" id="credit">
-      <h3>Account credit <span class="sg-cls">.creditcard</span></h3>
-      <p class="sg-note">When a change lowers what is paid, the part of the period already paid for and
-        no longer used becomes <b>credit on the account</b> rather than being lost. It appears in three
-        places, and each answers a different question: on the <b>Review of the change</b> (what do I get
-        back for giving this up), on <b>Billing</b> as its own block (what do I hold), and on the
-        <b>next purchase</b> (what did it just save me).</p>
-      <div class="creditcard" style="max-width:520px">
-        <span class="credit-amt">$333.33</span>
-        <span class="credit-note">Applied automatically to your next purchase.</span>
-      </div>
-      <p class="sg-note" style="margin-top:12px"><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <b>Its own block, never inside the payment
-        method.</b> A card is how money leaves; credit is money the account already holds. A balance
-        tucked under &ldquo;Payment method&rdquo; reads as a property of the card, which it is not.</p>
-      <p class="sg-note"><b>The purchase shows three figures, not one:</b> what came off the balance, what
-        the card is taking, and what is left. One number cannot be checked against anything.</p>
+    <div class="sg-item">
+      <h3>Instances <span class="sg-cls">instance.*</span></h3>
+      <p class="sg-note">Check-ins are <b>derived, not stored</b> &mdash; the licence reports hourly, so a
+        nineteen-instance account would otherwise write hundreds of rows a day. Consecutive <b>successful</b>
+        checks <b>for the same instance</b> fold into one entry carrying the count and the period, and it
+        expands to the individual entries. <span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <b>A failure never folds</b>, even between two successes:
+        it is the entry the reader is scanning for, and it names its cause in the sentence.</p>
+      <div class="listcard sg-actlist" data-actgroup="instance"></div>
+    </div>
+    <div class="sg-item">
+      <h3>Users and the account <span class="sg-cls">user.* &middot; account.*</span></h3>
+      <div class="listcard sg-actlist" data-actgroup="user"></div>
+    </div>
+    <div class="sg-item">
+      <h3>Billing <span class="sg-cls">billing.*</span></h3>
+      <p class="sg-note"><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> An <b>automatic charge is its own type</b>, not a paid-invoice entry with
+        the name left off: &ldquo;charged automatically&rdquo; is a fact the reader wants, and an empty
+        actor can only say that we do not know who.</p>
+      <div class="listcard sg-actlist" data-actgroup="billing"></div>
     </div>
   </section>
 

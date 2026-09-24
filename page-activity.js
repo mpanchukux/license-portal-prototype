@@ -20,6 +20,8 @@ function actQuery(){
   var i = $('#activityView .searchbox input');
   return i ? i.value.trim() : '';
 }
+/* the records currently on screen, in render order — what search reads instead of the DOM */
+var actRendered = [];
 function renderActFeed(){
   var el = $('#actFeed'); if(!el) return;
   var all = activityFeed({ types:actTypes });
@@ -47,7 +49,8 @@ function renderActFeed(){
     var searching = !!actQuery();
     var rows = searching ? list : pageSlice(list, actPage);
     if(searching) actPage.total = list.length;
-    el.innerHTML = rows.map(function(a, i){ return feedRow(a, i); }).join('');
+    actRendered = rows;
+    el.innerHTML = rows.map(function(a, i){ return activityEntry(a, 'global', i); }).join('');
   }
   syncListEmpty(!everything.length);
   var pg = $('#activityView .pager');
@@ -124,9 +127,14 @@ wirePager('#activityView .pager', actPage, renderActFeed);
 /* ---------- search: event text, entity name and actor, as ONE query ----------
    All three at once, against the stripped text of the entry — the feed stores HTML,
    and matching inside markup would hit a tag name as readily as a word. */
+/* ⚠️ MATCHES THE RECORD, NOT THE NODE. This was `stripText(n.innerHTML)`, and
+   `textContent` includes the hidden expander — so the JSON dump was the haystack and
+   the sentence was not. Measured before the change: `784f394c`, a uuid that appears
+   only inside that dump, matched all 298 rows, as did `actionType` and `createdTime`.
+   The rows render in the same order as the list they came from, so index lines them up. */
 wireSearch('#activityView .searchbox input', {
   items: function(){ return $$('#actFeed > *').filter(function(n){ return !n.classList.contains('noresults'); }); },
-  text:  function(n){ return stripText(n.innerHTML); },
+  text:  function(n, idx){ var r = actRendered[idx]; return r ? activityHaystack(r, 'global') : ''; },
   host:  function(){ return $('#actFeed'); },
   empty: function(q){ return noResultsHTML(q); }
 });

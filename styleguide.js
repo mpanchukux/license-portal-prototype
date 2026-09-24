@@ -149,11 +149,120 @@ $('#sgWizStep').innerHTML = '<div class="nl-progress">'
   + '<div class="nl-ptrack"><span class="nl-pfill" style="width:25%"></span></div>'
   + '<div class="nl-plabel">Step 1 of 4 · <b>Choose your plan</b></div></div>';
 
-/* ---------- feed entries, from the real renderer ---------- */
+/* ---------- ACTIVITY: every type, from the one component -----------------------
+   ⚠️ THE LIST IS DRIVEN BY `ACTIVITY_TEXT`, not written out here. Iterating the map is
+   what makes this page unable to fall behind: a type added to the map appears here on
+   the next load, and a type whose sample is missing shows as a gap rather than as a
+   row somebody remembered to retype.
+   ⚠️ The SAMPLE VALUES are the only thing this file owns, and they are data, never
+   sentences — the wording comes from the map and the markup from the component, exactly
+   as it does in the product. */
 (function(){
-  var sample = Store.get('datasets').B.activity.slice(0, 3);
-  $('#sgFeed').innerHTML = sample.map(function(a, i){ return feedItem(a, 'sg' + i); }).join('');
-  wireFeedAudit('#sgFeed');
+  var HUMAN = 'mpanchuk@thingsboard.io';
+  /* [ actor, fields, detail?, whereItOccurs ] */
+  var S = {
+    'license.created':          [HUMAN, { kind:'Subscription', entity:'Factory A' }, null,
+      'A licence is bought — the purchase wizard commits.'],
+    'license.canceled':         [HUMAN, { entity:'Sandbox', until:'Sep 05, 2026' }, null,
+      'Cancel, from the licence panel or the row menu.'],
+    'license.labeled':          [HUMAN, { entity:'Business', label:'Production EU' },
+      [['Previous label', 'EU pilot']], 'The label field on the licence panel.'],
+    'license.label_cleared':    [HUMAN, { entity:'Business' }, [['Previous label', 'Production EU']],
+      'The same field, emptied.'],
+    'license.plan_changed':     [HUMAN, { entity:'Factory A', from:'Startup', to:'Business' },
+      [['Devices', '500', '1,000'], ['Production instances', '2', '3']],
+      'Change plan — the wizard in change mode.'],
+    'license.capacity_changed': [HUMAN, { entity:'Global' },
+      [['Production instances', '2', '3'], ['Edge Computing', 'Off', 'On']],
+      'Manage add-ons — the same wizard, add-ons mode.'],
+    'license.updates_renewed':  [HUMAN, { entity:'On-prem HQ', until:'Sep 24, 2027' },
+      [['Previous term', 'Sep 11, 2026'], ['Charged', '$1,999.60']],
+      'Renew software updates, on a perpetual.'],
+    'license.updates_expiring': [null, { entity:'Warehouse DC', until:'Sep 11, 2026' }, null,
+      'The system, as a perpetual\u2019s updates term runs out. No actor.'],
+    'license.payment_failed':   [null, { entity:'Factory A', card:'Visa ending 4242' },
+      [['Charge', '$299.00'], ['Attempt', 'Auto-pay']],
+      'An auto-pay charge is declined. No actor.'],
+    'license.payment_recovered':[null, { entity:'Factory A' }, null,
+      'The retry succeeds after the card is replaced. No actor.'],
+    'license.grant_issued':     [null, { entity:'Community Grant' }, null,
+      'A Community Grant is approved. No actor.'],
+
+    'instance.deactivated':     [HUMAN, { entity:'HQ node 2', license:'On-prem HQ' },
+      [['Server', 'Stops at its next check-in'], ['Record', 'Kept — can be reconnected']],
+      'Deactivate, from the instance row menu.'],
+    'instance.deleted':         [HUMAN, { entity:'HQ node 2', license:'On-prem HQ' },
+      [['Server', 'Stops at its next check-in'], ['Record', 'Removed permanently']],
+      'Delete, from the same menu.'],
+    'instance.renamed':         [HUMAN, { entity:'HQ primary', license:'On-prem HQ' },
+      [['Previous name', '8e2a6c04']], 'Rename, from the same menu.'],
+    'instance.name_cleared':    [HUMAN, { entity:'8e2a6c04', license:'On-prem HQ' },
+      [['Previous name', 'HQ primary']], 'The same dialog, emptied.'],
+    'instance.check_ok':        [null, { entity:'HQ primary' }, null,
+      'Derived hourly from the instance. Shown alone only when a failure breaks the run.'],
+    'instance.check_failed':    [null, { entity:'HQ node 2', reason:CHECK_FAIL.connection }, null,
+      'Derived. Never folds — it is the entry being scanned for.'],
+    'instance.checks_grouped':  [null, { entity:'HQ primary', count:36,
+      from:'Sep 22, 2026, 01:21', to:'Sep 23, 2026, 12:21' },
+      [['Sep 23, 2026, 12:21', 'Checked in'], ['Sep 23, 2026, 11:21', 'Checked in'],
+       ['Sep 23, 2026, 10:21', 'Checked in']],
+      'A run of consecutive successes for one instance, folded.'],
+
+    'user.invited':             [HUMAN, { entity:'n.rossi@thingsboard.io' }, null,
+      'The invite field in the Users modal.'],
+    'user.removed':             [HUMAN, { entity:'dev@thingsboard.io' }, null,
+      'Delete, on a user row.'],
+    'user.session_started':     [HUMAN, { entity:'i.petrenko@thingsboard.io' }, null,
+      'Log in as, on a user row.'],
+    'user.session_ended':       [HUMAN, { entity:'i.petrenko@thingsboard.io' }, null,
+      'Return, from the impersonation banner.'],
+    'user.invite_link_created': [HUMAN, {}, null,
+      'Copy invite link, in the Users modal header. No entity — nothing is named yet.'],
+    'account.password_changed': [HUMAN, {}, null,
+      'The Security page. No entity — the subject is the account.'],
+
+    'billing.invoice_paid':     [HUMAN, { entity:'NAWE49WG-0018', amount:'$299.00' }, null,
+      'A charge the person made themselves.'],
+    'billing.invoice_autopaid': [null, { entity:'NAWE49WG-0016', amount:'$299.00' }, null,
+      'A recurring charge. No actor — and its own type, not this one without a name.'],
+    'billing.credit_added':     [null, { entity:'Factory A', amount:'$120.00' },
+      [['Balance', '$0.00', '$120.00']],
+      'A downgrade returns the unused part of the period. No actor.'],
+    'billing.card_added':       [HUMAN, { card:'Visa ending 4242' }, null,
+      'The first card, on Payment & Billing.'],
+    'billing.card_updated':     [HUMAN, { card:'Visa ending 6411' }, null,
+      'Replacing it.']
+  };
+  var TS = 'Sep 13 2026, 07:12';
+  $$('.sg-actlist').forEach(function(box){
+    var pre = box.getAttribute('data-actgroup');
+    var keys = Object.keys(ACTIVITY_TEXT).filter(function(k){
+      var p = k.split('.')[0];
+      return p === pre || (pre === 'user' && p === 'account');
+    });
+    box.innerHTML = keys.map(function(k, n){
+      var d = S[k];
+      if(!d) return '<div class="sg-actrow"><p class="sg-note">'
+        + '<span class="sg-warn"><svg class="ic" aria-hidden="true">'
+        + '<use href="assets/icons.svg#ti-alert-triangle"></use></svg></span>'
+        + ' no sample for <code class="sg-cls">' + k + '</code></p></div>';
+      var rec = { type:k, ts:TS, actor:d[0], f:d[1] };
+      if(d[2]) rec.detail = d[2];
+      if(k === 'instance.checks_grouped') rec.fold = true;   // the one disclosure left
+      /* ⚠️ BOTH SCOPES, and only when they differ — a second copy of an identical
+         sentence would teach the opposite of the rule it is there to show. */
+      var lic = activitySentence(rec, 'license'), glob = activitySentence(rec, 'global');
+      return '<div class="sg-actrow">'
+        + '<div class="sg-actkey"><code class="sg-cls">' + k + '</code>'
+        +   '<span class="sg-actwhere">' + d[3] + '</span></div>'
+        + activityEntry(rec, 'global', pre + n)
+        + (lic === glob ? ''
+            : '<div class="sg-actscope"><span class="sg-actlabel">In the licence&rsquo;s own tab</span>'
+              + activityEntry(rec, 'license', pre + n + 'L') + '</div>')
+        + '</div>';
+    }).join('');
+    wireFeedAudit('.sg-actlist[data-actgroup="' + pre + '"]');
+  });
 })();
 
 /* ---------- the two live demos on this page ---------- */

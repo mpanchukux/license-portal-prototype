@@ -108,7 +108,7 @@ var Store = (function(){
      no company name at all. That store would render a half-empty consolidated section
      and print an invoice missing the company. Bumping is cheaper than a migration for
      a prototype, and unlike a migration it cannot half-succeed. */
-  var KEY = 'tb-license-portal-demo-v16';   // v16: Non-commercial removed from the offer and the specs
+  var KEY = 'tb-license-portal-demo-v19';   // v19: seeded activity details no longer repeat their sentence
   function clone(o){ return JSON.parse(JSON.stringify(o)); }
   /* ⚠️ The snapshot is taken ONCE and then shifted to today. Doing it here rather than
      at render time means every surface reads the same stored dates, and a browser left
@@ -260,13 +260,18 @@ function nowTs(){
   var d = new Date(), p2 = function(n){ return ('0' + n).slice(-2); };
   return todayStr() + ', ' + p2(d.getHours()) + ':' + p2(d.getMinutes());
 }
+/* ⚠️ A RECORD, NOT A SENTENCE. Callers hand over facts — `type`, the values in `f`,
+   and an optional `detail` — and the wording is decided once, in ACTIVITY_TEXT, by the
+   one component that renders activity. Nothing here builds markup, and the store never
+   holds any: that is what lets search match the sentence instead of scraping it back
+   out of the DOM, and it is what makes a copy change one edit instead of sixteen.
+   ⚠️ `noActor` for the events nobody performs — an automatic retry, a credit the system
+   draws from a change. Their sentence simply ends, which is how the absence of a name
+   says "nobody did this" (decided 2026-09-24). */
 function logActivity(e){
-  var a = {
-    kind: e.kind, ts: nowTs(),
-    entityType: e.entityType, entityName: e.entityName,
-    actor: e.actor || portalActor(), action: e.action, txt: e.txt
-  };
-  if(e.delta) a.delta = e.delta;
+  var a = { type: e.type, ts: nowTs(), f: e.f || {} };
+  if(!e.noActor) a.actor = e.actor || portalActor();
+  if(e.detail && e.detail.length) a.detail = e.detail;
   /* ⚠️ WHICH LICENCE this event is about, when the caller knows. Without it the
      licence's own Activity tab could not show a single thing that had actually been
      logged — it had to synthesise a history from the licence object, so a plan change
@@ -287,9 +292,8 @@ function storeCancelLicense(id){
   if(l){
     l.status = 'canceled';
     Store.save();
-    logActivity({ kind:'canceled', licId:l.id, entityType:'Subscription', entityName:l.name, action:'CANCELED',
-      txt:'Subscription <b>' + esc(l.name) + '</b>' + (l.label ? ' (' + esc(l.label) + ')' : '')
-        + ' was canceled by ' + portalActor() + ' — active until <b>' + fmtDate(l.event) + '</b>.' });
+    logActivity({ type:'license.canceled', licId:l.id,
+      f:{ entity:(l.label || l.name), until:fmtDate(l.event) } });
     /* the RESULT leaves on its own; the licence's own "Canceled · active until …" is
        state and belongs to the slot below the panel header */
     Snack.show('Subscription canceled \u2014 active until ' + fmtDate(l.event));
@@ -358,14 +362,13 @@ function storeAddInvoice(lic, amount, opts){
 function storeAddLicense(lic){
   DATA().licenses.unshift(lic);
   Store.save();
-  logActivity({ kind:'created', licId:lic.id, entityType:lic.type, entityName:lic.name, action:'ADDED',
-    txt:esc(lic.type) + ' <b>' + esc(lic.name) + '</b> was created by ' + portalActor() + '.' });
+  logActivity({ type:'license.created', licId:lic.id,
+    f:{ kind:lic.type, entity:(lic.label || lic.name) } });
 }
 function storeAddUser(u){
   DATA().users.push(u);
   Store.save();
-  logActivity({ kind:'user', entityType:'User', entityName:u.name || u.email, action:'INVITED',
-    txt:'User <b>' + esc(u.name || u.email) + '</b> was invited by ' + portalActor() + '.' });
+  logActivity({ type:'user.invited', f:{ entity:(u.email || u.name) } });
 }
 
 /* ---------- invitations ------------------------------------------------------
@@ -421,8 +424,7 @@ function storeDeleteUser(email){
     ds[k].users = ds[k].users.filter(function(u){ return u.email !== email; });
   });
   Store.save();
-  logActivity({ kind:'user', entityType:'User', entityName:email, action:'DELETED',
-    txt:'User <b>' + esc(email) + '</b> was removed by ' + portalActor() + '.' });
+  logActivity({ type:'user.removed', f:{ entity:email } });
 }
 /* A label is the one field the demo lets you edit, from three places: the pencil
    on the details surface, that surface's ⋮, and a row's ⋮ in the table. It writes
@@ -434,10 +436,15 @@ function setLicenseLabel(lic, val){
   lic.label = String(val || '').trim();
   Store.save();                        // the object came out of the store, so this persists it
   if(lic.label !== was){
-    logActivity({ kind:'updated', licId:lic.id, entityType:'Label', entityName:lic.name, action:'UPDATED',
-      txt: lic.label
-        ? ('Label <b>' + esc(lic.label) + '</b> was set on <b>' + esc(lic.name) + '</b> by ' + portalActor() + '.')
-        : ('Label was cleared on <b>' + esc(lic.name) + '</b> by ' + portalActor() + '.') });
+    /* two types, not one string with a fork in it — the copy map holds both wordings */
+    /* ⚠️ The detail says only what the sentence does not. "Label set to X" already
+       names the new value, so the row that adds something is the one it replaced — and
+       when there was nothing to replace, there is no row at all. */
+    logActivity(lic.label
+      ? { type:'license.labeled', licId:lic.id, f:{ entity:lic.name, label:lic.label },
+          detail: was ? [['Previous label', was]] : null }
+      : { type:'license.label_cleared', licId:lic.id, f:{ entity:lic.name },
+          detail:[['Previous label', was]] });
   }
   repaintLabelSurfaces();
   /* an action result, so it leaves on its own rather than sitting in the panel */
@@ -1150,8 +1157,7 @@ function wireGlobal(){
   if(impRet) impRet.addEventListener('click', function(){
     var was = Store.get('impersonating');
     Store.set('impersonating', null);
-    if(was) logActivity({ kind:'user', entityType:'Session', entityName:was, action:'LOGIN_AS_END',
-      txt:'Session as <b>' + esc(was) + '</b> was ended by ' + portalActor() + '.' });
+    if(was) logActivity({ type:'user.session_ended', f:{ entity:was } });
     $('#impBanner').hidden = true;
     document.body.classList.remove('impersonating');
   });
@@ -1469,8 +1475,9 @@ function recoverFailedPayments(){
       l.status = 'active';
       l.updated = todayStr();
       if(fixed.indexOf(l.id) < 0) fixed.push(l.id);
-      logActivity({ kind:'updated', licId:l.id, entityType:'License', entityName:l.name, action:'PAYMENT_RECOVERED',
-        txt:'Payment succeeded on <b>' + esc(l.label || l.name) + '</b> after the payment method was updated — the license is active again.' });
+      /* no actor: the charge is retried by the system, not pressed by anyone */
+      logActivity({ type:'license.payment_recovered', licId:l.id, noActor:true,
+        f:{ entity:(l.label || l.name) } });
     });
   });
   if(fixed.length) Store.save();
@@ -2242,8 +2249,7 @@ function impersonate(email){
      everything done inside it happens under someone else's name. Both ends are
      logged (see the Return handler in shared.js) — a start without an end leaves
      "how long did this last" unanswered. */
-  logActivity({ kind:'user', entityType:'Session', entityName:email, action:'LOGIN_AS',
-    txt:'Session was started as <b>' + esc(email) + '</b> by ' + portalActor() + '.' });
+  logActivity({ type:'user.session_started', f:{ entity:email } });
 }
 function openLoginAs(email){
   openModal('Log in as', '<p>Log in as <b>' + email + '</b>? You will see and manage the portal on their behalf until you return to your own account.</p>');
@@ -2389,8 +2395,7 @@ var UsersModal = (function(){
     if(navigator.clipboard && navigator.clipboard.writeText){
       navigator.clipboard.writeText(url).then(done, done);
     } else { done(); }
-    logActivity({ kind:'user', entityType:'Invitation', entityName:rec.token, action:'LINK_CREATED',
-      txt:'A single-use invite link was created by ' + portalActor() + '.' });
+    logActivity({ type:'user.invite_link_created', f:{} });
   }
 
   /* one listener on the whole sheet: the copy-link is in the header, the Invite button

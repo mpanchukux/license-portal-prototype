@@ -21,7 +21,15 @@
   --btnH:40px;
   --backW:40px; --backGap:12px; --contentX:74px;  /* 22px head padding + 40 + 12 — the gutter is one --btnH wide */
   /* one shared page container: same width, same side padding, centred */
-  --pageW:1120px; --pageX:24px; --pageY:28px;
+  /* ⚠️ 1120 → 1180 (2026-09-24), and the number is driven by ONE measurement, not by
+     taste: at 1120 the five-across plan row gives each card 190.4px, whose heading box is
+     160.4px, and `Perpetual License` needs 165.3px at 20px/500 — short by 4.9px, so it
+     wrapped to two lines. Gaps and frame padding are fixed, so every pixel added here
+     goes into the cards: +60 gives each card +12 and the heading 7.1px of slack, enough
+     that a font fallback does not put it back on two lines.
+     ⚠️ This moves EVERY page: the topbar's content row, all `.licview` pages, the
+     styleguide and the impersonation banner all read it. Measured after, on all of them. */
+  --pageW:1180px; --pageX:24px; --pageY:28px;
   /* ---- Type scale: the only text levels. 14px floor. Weight grows with size; 700 only for display/h1. ---- */
   --font-ui:'Ubuntu',ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   --font-mono:'Ubuntu Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
@@ -454,8 +462,16 @@ th.num,td.num{text-align:right}
 /* the id column keeps its width; the full value is in `title` and on the clipboard */
 .inst-id{display:inline-block;max-width:22ch;overflow:hidden;text-overflow:ellipsis;
   white-space:nowrap;vertical-align:-4px}
-.inst-labelcell .inst-editlabel{opacity:0;transition:opacity .12s}
-.inst-labelcell:hover .inst-editlabel,.inst-editlabel:focus-visible{opacity:1}
+/* ⚠️ `.inst-editlabel` IS GONE with the hover pencil it revealed (2026-09-24). Renaming
+   is a row-menu action now, like every other thing you can do to an instance.
+   ⚠️ A GHOST ICON BUTTON: the hit area and the focus ring of `.iconbtn.ib` without its
+   frame, for an icon that sits beside a value inside a cell rather than in a toolbar. */
+.ghostbtn{display:inline-flex;align-items:center;justify-content:center;
+  width:var(--btnH);height:var(--btnH);flex:none;padding:0;margin:0;
+  background:none;border:0;border-radius:6px;color:var(--mid);cursor:pointer}
+.ghostbtn:hover{color:var(--ink);background:var(--hover)}
+.ghostbtn:focus-visible{outline:2px solid var(--ink);outline-offset:-2px}
+.ghostbtn .ic{width:16px;height:16px}
 /* the new-tab marker: it rides after the label, at text size, never its own control */
 .extmark{width:var(--ic-16);height:var(--ic-16);margin-left:5px;vertical-align:-2px;opacity:.65}
 
@@ -518,6 +534,11 @@ th.num,td.num{text-align:right}
    ⚠️ NO `max-width` any more. The sentence spans the frame; the previous 62ch cap was
    there to stop it eating the heading's row, and there is no row to share now. */
 .lic-titlerow{padding-top:16px;margin-bottom:12px}
+/* ⚠️ The buy button's mark is for the PHONE, where the title row shows it alone; on the
+   desktop the words are the button and a leading glyph would only crowd them. It exists
+   at all because the "+" character it replaced is a glyph the icon rule forbids — and
+   without something in its place the phone's icon-only button would have been empty. */
+.lnb-ic{display:none}
 .lic-titlerow > .lic-h1{padding-top:0;margin-bottom:0}
 .inst-hint{margin:4px 0 0;font-size:14px;line-height:1.5;color:var(--mid)}
 .inst-filter{margin:0;padding:12px 18px;border-bottom:1px solid var(--line2);
@@ -955,7 +976,8 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
 /* the card is now glyph + text block, so it lays out as a row; the two text lines
    stay a column inside it */
 .fs-panel.nl-plansum{display:flex;align-items:flex-start;gap:14px}
-.nl-plansum-ic{flex:none;display:inline-flex;color:var(--mid);margin-top:2px}
+/* the two slots that hold a product mark size it here; `.prodmark` fills its box */
+.nl-plansum-ic{flex:none;display:inline-flex;color:var(--mid);margin-top:2px;width:24px;height:24px}
 .nl-plansum-ic .ic{width:var(--ic-24);height:var(--ic-24)}
 .nl-plansum-tx{display:flex;flex-direction:column;gap:6px;min-width:0}
 .nl-plansum-t{display:block;font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw);color:var(--ink)}
@@ -1190,7 +1212,7 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
   left:50%;top:50%;transform:translate(-50%,-50%);
   width:10px;height:10px;border-radius:50%;background:var(--ink)}
 .nl-prodcard[disabled] .nl-prodradio{border-color:var(--line2)}
-.nl-prodic{flex:none;display:inline-flex;color:var(--mid)}
+.nl-prodic{flex:none;display:inline-flex;color:var(--mid);width:24px;height:24px}
 .nl-prodcard .ic{width:var(--ic-24);height:var(--ic-24)}
 .nl-prodtxt{display:flex;flex-direction:column;gap:4px;min-width:0}
 .nl-prodname{font-size:16px;font-weight:500;line-height:1.2}
@@ -1776,6 +1798,43 @@ body[data-page="home"] .dwrap{padding-top:48px}
 /* list pages framed like the dashboard blocks: white card, gray border, rounded */
 .listcard{background:var(--card);border:1px solid var(--line2);border-radius:10px;padding:15px 18px;margin-top:16px}
 
+/* ---------- the activity entry's detail -------------------------------------------
+   ⚠️ INLINE, NOT BEHIND A BUTTON (2026-09-24). While it was a JSON dump it had to be
+   hidden; as five words of English it is just the rest of the entry, and a click to
+   reveal it was a click to reveal nothing surprising.
+   ⚠️ ON A LIGHT GREY GROUND (2026-09-24, on request). The first version of this was a
+   bare indented list, on the argument that a framed block on every entry would turn a
+   feed of 298 rows into 298 boxes. Seen on screen it read as a continuation of the
+   sentence rather than as the change it describes; a recessed panel separates the two
+   without adding a border. `--bg` is the page's own ground, so this is the same grey the
+   product already uses for a quiet inset — and it works in both places the feed appears,
+   because the surface under it is white in both (the Activity page's `.listframe` and
+   the licence panel's `.fs-box` — measured, since the panel's default ground is grey and
+   a grey-on-grey panel would have vanished there).
+   Tabular figures so the values line up down the column the way the rule asks. */
+.fi-detail{margin:6px 0 2px;padding:8px 12px;background:var(--bg);border-radius:6px}
+.fd-row{display:flex;gap:14px;padding:1px 0;font-size:14px;line-height:1.5}
+.fd-row dt{flex:0 0 150px;color:var(--faint)}
+.fd-row dd{margin:0;flex:1;min-width:0;color:var(--mid);font-variant-numeric:tabular-nums}
+.fd-row dd b{color:var(--ink);font-weight:500}
+.fd-arrow{color:var(--faint);padding:0 2px}
+/* inside the one disclosure left — a folded run's own entries — the panel is the
+   separation, so the rule that used to do it goes */
+.fi-audit .fi-detail{margin-top:8px}
+@media (max-width:600px){
+  /* the label column would leave nothing for the value at this width */
+  .fd-row{display:block;padding:2px 0}
+  .fd-row dt{font-size:13px}
+  .fi-detail{padding:8px 10px}
+}
+/* the styleguide's per-type specimen: the key and where it occurs, then the entry */
+.sg-actrow{padding:14px 0;border-bottom:1px dashed var(--line2)}
+.sg-actrow:last-child{border-bottom:0}
+.sg-actkey{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 12px;margin-bottom:2px}
+.sg-actwhere{font-size:13px;color:var(--faint)}
+.sg-actscope{margin-top:2px;padding-left:14px;border-left:2px solid var(--line2)}
+.sg-actlabel{display:block;font-size:13px;color:var(--faint);padding-left:2px}
+
 /* ============================================================================
    THE STICKY LIST BLOCK — one frame, two things that stay
    ============================================================================
@@ -2339,11 +2398,17 @@ td.lic-prodcell{min-width:250px}
    only (the label under it is a description, not part of the target's name). */
 a.lp-cell{text-decoration:none;color:inherit}
 a.lp-cell:hover .lp-name{text-decoration:underline;text-underline-offset:2px}
-a.lp-cell:hover .lp-ic{background:var(--line2)}
+/* (the placeholder's hover tint went with the placeholder) */
 /* TBD: placeholder for the product / edition mark — a plain filled square, no
    outline: the dashed border read as a control rather than as a waiting slot.
    Two text lines tall, top-aligned by .lp-cell. */
-.lp-ic{width:40px;height:40px;flex:none;background:var(--track);border-radius:6px}
+/* ⚠️ The box keeps its size and the ground goes: it was a filled placeholder square
+   while the artwork was missing, and a grey plate behind a logo would read as a second
+   shape. The mark sits inside it, so every alignment the square was holding is kept. */
+.lp-ic{width:40px;height:40px;flex:none;border-radius:6px;display:flex;
+  align-items:center;justify-content:center;overflow:hidden}
+/* one rule for the product artwork wherever it appears — row, picker, wizard summary */
+.prodmark{display:block;width:100%;height:100%;object-fit:contain}
 /* The cell has a floor (min-width above) and the text a ceiling: auto table layout
    hands a column with long content as much width as it likes, and a label is meant
    to wrap onto a second line rather than stretch the table. 230px keeps
@@ -3332,6 +3397,7 @@ a.lp-cell:hover .lp-ic{background:var(--line2)}
   .pagetitlerow #licNewBtn{background:var(--ink);color:#fff;font-size:22px;line-height:1}
   .pagetitlerow #licNewBtn:hover{background:var(--ink)}
   .pagetitlerow .lnb-txt{display:none}          /* icon-only here */
+  .pagetitlerow #licNewBtn .lnb-ic{display:inline-flex}
   /* ⚠️ Refresh has LEFT the app bar again (it was moved there in the previous pass).
      The bar keeps the logo and the avatar only. */
   .tb-refresh{display:none !important}

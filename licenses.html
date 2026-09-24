@@ -59,7 +59,11 @@
          that is why they must stay inside a `.lic-controls`: it is the host the mover
          looks for, and where it puts them back above the breakpoint. -->
     <button class="iconbtn ib" data-refresh aria-label="Refresh" title="Refresh"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-refresh"></use></svg></button>
-    <button class="btn" id="licNewBtn"><span class="lnb-plus" aria-hidden="true">+</span><span class="lnb-txt"> New license</span></button>
+    <!-- ⚠️ THE MARK IS AN ICON, not a "+" character (the icon rule), and it is hidden
+         above 600px: on the desktop the words are the button. On the phone the title
+         row shows the mark alone — so removing the character without putting a mark in
+         its place would have left an empty black square there. -->
+    <button class="btn" id="licNewBtn"><svg class="ic lnb-ic" aria-hidden="true"><use href="assets/icons.svg#ti-plus"></use></svg><span class="lnb-txt">Buy a license</span></button>
   </div>
 
   <div id="licensesList">

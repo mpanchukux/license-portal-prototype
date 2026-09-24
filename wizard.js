@@ -98,7 +98,11 @@ function openManageAddons(lic){ NL.open({ mode:'addons', license:lic }); }
 /* "becomes", between an old value and a new one — used by the change summary and the
    review line. ⚠️ An icon, not an arrow character: the icon rule has no exception for
    a mark that happens to sit inside a sentence. */
-var ARROW_IC = '<svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-arrow-right"></use></svg>';
+/* ⚠️ `ARROW_IC` MOVED TO data.js. It lived here, and the activity detail in
+   components.js needs it — but `wizard.js` is not loaded on the Activity page, so the
+   first expander opened there would have thrown. data.js is loaded by every page.
+   Caught before it shipped only because the icon checker forced the literal arrow out
+   of the string and into this constant. */
 
 var NL = (function(){
   var scr = $('#nlModal'), body = $('#nlBody');
@@ -125,7 +129,11 @@ var NL = (function(){
      no figure and contributes nothing to the total; the review lists it without an
      amount rather than showing a made-up $0.00. */
   var NAME = { maker:'Maker', prototype:'Prototype', pilot:'Pilot', startup:'Startup', business:'Business',
-               tbmqsub:'PE subscription', tbperp:'PE Perpetual License', tbmqperp:'PE license' };
+  /* ⚠️ `tbperp` renamed with the data (2026-09-24). This map sets `lic.name` on a
+     purchase and on a plan change, so leaving it would have named a licence bought today
+     differently from the three seeded ones — the rename would have created the drift it
+     was meant to remove. TBMQ's two are untouched: their cards were not renamed. */
+               tbmqsub:'PE subscription', tbperp:'Perpetual License', tbmqperp:'PE license' };
   var MAXQ = { prod:20, dev:20, ai:99 };
   /* Business is the one plan whose device count is not fixed: extra devices are
      sold at $0.10 each. A stepper is the wrong control at this scale — you do not
@@ -394,6 +402,30 @@ var NL = (function(){
      date it would happen. Changes apply now, so the future shape IS the current one and
      there is no date to compute. (`shrinks()` above survives — the Review step still has
      to say what is being given up, it just no longer defers it.) */
+  /* ⚠️ The DETAIL rows for an activity entry, and they cannot be `changeRows()`:
+     that one builds display strings with an ICON inside them (`ARROW_IC`), and an
+     activity detail is plain data the component renders. Same source, same order, same
+     labels — the difference is that this returns [field, from, to] and lets the
+     component draw the arrow. */
+  function changeDetail(){
+    var b = st.baseCust, out = [];
+    if(!b) return out;
+    function row(f, label, show){
+      if(!show || cust[f] === b[f]) return;
+      out.push([label, qtyLabel(f, b[f]), qtyLabel(f, cust[f])]);
+    }
+    row('devices', 'Devices', hasDevices());
+    row('prod', 'Production instances', true);
+    row('dev', 'Development instances', hasDev());
+    row('ai', 'AI credits', hasAi());
+    if(hasAddons()){
+      if(cust.edge !== b.edge)     out.push(['Edge Computing', b.edge ? 'On' : 'Off', cust.edge ? 'On' : 'Off']);
+      if(cust.trendz !== b.trendz) out.push(['Trendz Analytics', b.trendz ? 'On' : 'Off', cust.trendz ? 'On' : 'Off']);
+    }
+    if(hasOffline() && cust.offline !== b.offline)
+      out.push(['Offline Mode', b.offline ? 'On' : 'Off', cust.offline ? 'On' : 'Off']);
+    return out;
+  }
   function changeSummary(){
     var r = changeRows();
     return r.length ? r.map(function(x){ return x.t; }).join(' \u00b7 ') + '.' : 'License updated.';
@@ -594,13 +626,16 @@ var NL = (function(){
        in the order breakdown — so repeating them said nothing, while what the
        product actually IS was said only on step 1 and then dropped.
        Same string the step-1 cards use (PRODUCT_CHOICES), so there is one source. */
-    var desc = '', glyph = '';
-    PRODUCT_CHOICES.forEach(function(o){ if(o.v === st.product){ desc = o.d; glyph = o.g; } });
-    /* the same product glyph the step-1 radio cards lead with, so the card that
-       names your purchase carries the same mark from step 1 through to review */
+    var desc = '';
+    PRODUCT_CHOICES.forEach(function(o){ if(o.v === st.product){ desc = o.d; } });
+    /* ⚠️ THIS WAS RENDERING `undefined`. It read `o.g`, the inline-SVG field that the
+       icon migration replaced with `o.ic` — so the mark had been an empty `<svg>` with
+       the string "undefined" inside it, in the old `.icon` class that no longer exists.
+       Invisible, so nobody saw it. Now it is the product's own artwork, the same one the
+       licence rows and the picker use. */
     return '<div class="fs-panel nl-plansum">'
       + '<span class="nl-plansum-ic" aria-hidden="true">'
-      +   '<svg class="icon" viewBox="0 0 24 24">' + glyph + '</svg></span>'
+      +   productMark(st.product) + '</span>'
       + '<span class="nl-plansum-tx">'
       +   '<span class="nl-plansum-t">' + product + ' ' + (NAME[t] || st.plan) + ' · ' + (isPerp() ? 'Perpetual' : 'Subscription') + '</span>'
       +   '<span class="nl-plansum-f">' + desc + '</span>'
@@ -1625,22 +1660,26 @@ var NL = (function(){
        reads oldMonthly(), which is computed from the state being replaced. */
     var backCredit = creditOnCommit;
     Store.save();                      // the licence object was mutated in place
+    /* ⚠️ `noActor`: the credit is a consequence the system draws from the change, not
+       something anyone pressed — and the change itself is logged beside it with the
+       person's name on it. */
     if(backCredit > 0) addCredit(backCredit, {
-      kind:'info', licId:lic.id, entityType:'Account credit', entityName:money(backCredit),
-      action:'CREDITED',
-      txt:'<b>' + money(backCredit) + '</b> was credited to the account from <b>'
-        + esc(lic.label || lic.name) + '</b> — the unused part of the current period.',
-      delta:'Balance now ' + money(accountCredit() + backCredit) });
+      type:'billing.credit_added', licId:lic.id, noActor:true,
+      f:{ entity:(lic.label || lic.name), amount:money(backCredit) },
+      /* ⚠️ `Balance`, not `Account credit`. The sentence states the AMOUNT ADDED and
+         this states the BALANCE — two different quantities that happen to be the same
+         number when the balance started at zero, which is exactly when the label made it
+         read as the same fact twice. */
+      detail:[['Balance', money(accountCredit()), money(accountCredit() + backCredit)]] });
     /* Both modification modes land here, and they are different events: add-ons
        changed the capacity, change-plan moved the licence to another plan. */
     if(isAddons()){
-      logActivity({ kind:'updated', licId:lic.id, entityType:'Add-on', entityName:lic.name, action:'UPDATED',
-        txt:'Capacity was changed on <b>' + esc(lic.name) + '</b> by ' + portalActor() + '.',
-        delta: summary });
+      logActivity({ type:'license.capacity_changed', licId:lic.id,
+        f:{ entity:(lic.label || lic.name) }, detail: changeDetail() });
     } else {
-      logActivity({ kind:'updated', licId:lic.id, entityType:'Plan', entityName:lic.name, action:'UPDATED',
-        txt:'Plan was changed from <b>' + esc(st.oldName) + '</b> to <b>' + esc(lic.name)
-          + '</b> on <b>' + esc(lic.label || lic.name) + '</b> by ' + portalActor() + '.' });
+      logActivity({ type:'license.plan_changed', licId:lic.id,
+        f:{ entity:(lic.label || lic.name), from:st.oldName, to:lic.name },
+        detail: [['Plan', st.oldName, lic.name]].concat(changeDetail()) });
     }
     /* ⚠️ EVERY CHARGE PRODUCES AN INVOICE, not just a first purchase. A $93.33
        proration on an upgrade and a $1,999 one-time capacity purchase both went

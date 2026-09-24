@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fail if anything draws its own icon.
+"""Fail if anything draws its own icon, or builds an activity row outside the component.
 
 Rule (NOTES, "Іконки"): icons come only from assets/icons.svg, placed with
 <svg class="ic ..."><use href="assets/icons.svg#ti-NAME"></use></svg>.
@@ -11,6 +11,10 @@ icon, no second library.
 
 ⚠️ assets/icons.svg is the ONE file allowed to contain drawing elements; it is generated
 by tools/build-icons.py and never edited by hand.
+
+Second rule (NOTES, "Activity"): every activity entry renders through activityEntry(),
+worded from ACTIVITY_TEXT. No activity string may contain a tag, and nothing outside
+components.js may assemble an activity row.
 """
 import glob, io, os, re, sys
 
@@ -108,6 +112,64 @@ def strip_comments(src, is_html):
     return ''.join(out)
 
 
+# ---- activity ---------------------------------------------------------------------
+# A tag inside a string in the copy map. Scanned over the ACTIVITY_TEXT block only, so a
+# '<' elsewhere in data.js is not this rule's business.
+ACT_TAG = re.compile(r"t\s*:\s*'[^']*<[^']*'")
+# The row builders the component replaced. Named, not guessed: a generic "looks like a
+# feed row" search would either miss the next one or flag the component itself.
+ACT_BUILDERS = re.compile(r'\bfunction\s+(feedItem|feedRow|feedGroupItem|checkRowText)\b')
+# The class the component emits. Anything else writing it is assembling a row by hand.
+ACT_MARKUP = re.compile('[\'"]<div class=.fitem')
+
+
+def activity_findings():
+    """Fail if the activity component is bypassed.
+
+    Two ways to bypass it, and both have happened in this codebase's history:
+      * put markup in the copy, so the sentence decides its own emphasis;
+      * build the row in a page, so one surface drifts from the others.
+
+    The copy map is read by BRACE DEPTH, not by a line range: a range stops covering the
+    map the first time somebody adds a type below where it was drawn.
+    """
+    out = []
+    data = io.open(os.path.join(ROOT, 'data.js'), encoding='utf-8').read()
+    at = data.find('var ACTIVITY_TEXT')
+    if at < 0:
+        return [('data.js', 0, 'ACTIVITY_TEXT missing', 'the activity copy map is gone')]
+    start = data.index('{', at)
+    depth = 0
+    end = start
+    for k in range(start, len(data)):
+        if data[k] == '{':
+            depth += 1
+        elif data[k] == '}':
+            depth -= 1
+            if depth == 0:
+                end = k
+                break
+    block = data[start:end]
+    base = data[:start].count('\n') + 1
+    for m in ACT_TAG.finditer(block):
+        out.append(('data.js', base + block[:m.start()].count('\n'),
+                    'tag inside an activity string', m.group()[:90]))
+    for p in files():
+        rel = os.path.relpath(p, ROOT)
+        if rel == SPRITE:
+            continue
+        src = strip_comments(io.open(p, encoding='utf-8').read(), rel.endswith('.html'))
+        for i, line in enumerate(src.split('\n'), 1):
+            b = ACT_BUILDERS.search(line)
+            if b:
+                out.append((rel, i, 'activity row built outside the component',
+                            b.group(1) + '() is gone - call activityEntry()'))
+            if rel != 'components.js' and ACT_MARKUP.search(line):
+                out.append((rel, i, 'activity markup outside components.js',
+                            line.strip()[:90]))
+    return out
+
+
 def files():
     out = []
     for pat in ('*.html', '*.js'):
@@ -117,7 +179,7 @@ def files():
 
 def main():
     verbose = '-v' in sys.argv
-    findings = []
+    findings = list(activity_findings())
     for p in files():
         rel = os.path.relpath(p, ROOT)
         if rel == SPRITE:
@@ -138,6 +200,7 @@ def main():
 
     if not findings:
         print('icons: clean - no drawing elements or glyphs outside %s' % SPRITE)
+        print('activity: clean - no tags in the copy map, no rows built outside the component')
         return 0
 
     by_file = {}
