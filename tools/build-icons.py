@@ -33,7 +33,13 @@ SEARCH = [os.path.join(ROOT, 'node_modules', '@tabler', 'icons', 'icons')]
 # ---------------------------------------------------------------------------
 ICONS = [
     # navigation and structure
-    'home', 'key', 'server', 'receipt', 'activity', 'user', 'settings',
+    # ⚠️ The five destinations were renamed 2026-09-24, and the swap is one-for-one:
+    #   home -> smart-home · server -> server-2 · receipt -> file-invoice
+    #   activity -> history-toggle
+    # The four they replace had exactly ONE reader each (NAV_ITEMS), so they leave
+    # with them rather than sitting in a closed set nothing draws.
+    'smart-home', 'key', 'server-2', 'file-invoice', 'history-toggle',
+    'user', 'settings',
     # direction
     'chevron-left', 'chevron-right', 'chevron-down', 'chevron-up',
     'chevrons-left', 'chevrons-right', 'arrow-up', 'arrow-right',

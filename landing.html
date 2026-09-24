@@ -9,7 +9,19 @@
 </head>
 <!-- data-public: readable signed out. It is also the ONE page that is unreachable
      signed in — both directions of that rule live in guardSession(). -->
-<body data-page="landing" data-public>
+<body data-page="landing" data-public data-mesh>
+
+
+<!-- The same animated mesh gradient Home carries, and the same reasons: decoration
+     only (aria-hidden, pointer-events:none), on its own layer under everything, and
+     OUTSIDE #shellMain so the top bar can rest on it — #shellMain is the scroll box
+     and clips to its own edges. `data-mesh` on the body is what turns on the ground
+     rules and the glass bar; wireMeshHeader() in shared.js does the scrolling.
+     One renderer, one set of rules, three surfaces — see the "Home: animated mesh
+     gradient" block in styles.css. -->
+<div class="meshbg" aria-hidden="true">
+  <span class="mb-lav"></span><span class="mb-cream2"></span><span class="mb-cream"></span><span class="mb-lav2"></span>
+</div>
 
 <div id="shellMain">
 <div class="dashview" id="landingView">
@@ -58,6 +70,11 @@
              new-user screen on Home. -->
       </div>
 
+      <!-- The pricing page's FAQ, under the plans, switching with the product.
+           Filled by renderFAQ (faq.js) from the same render that redraws the head and
+           the cards, so one product switch changes all three at once. -->
+      <div class="faqsect" id="landingFaq"></div>
+
     </div>
   </div>
 </div>
@@ -68,6 +85,7 @@
 <script src="components.js"></script>
 <script src="wizard.js"></script>
 <script src="auth.js"></script>
+<script src="faq.js"></script>
 <script src="page-landing.js"></script>
 </body>
 </html>

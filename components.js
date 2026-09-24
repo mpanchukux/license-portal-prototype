@@ -395,8 +395,13 @@ function productCell(p, opts){
      space — the comment here said "TBD: the product / edition mark goes here" — and
      every licence row in the product carried a grey box where its product should be.
      `.lp-ic` keeps its name and its box so the alignment it was holding is unchanged. */
+  /* ⚠️ `licenseMark(p)`, not `productMark(p.product)` (2026-09-24): the square is keyed
+     on the whole licence now — product AND billing kind AND whether the plan is free or
+     a grant — because the supplied artwork is colour-coded on exactly those three. The
+     wizard and the product picker still take `productMark`: they are choosing a PRODUCT,
+     and there is no licence yet to have a kind. */
   var inner = (bare ? '' : '<span class="lp-ic" aria-hidden="true">'
-    + productMark(p.product) + '</span>') + txt;
+    + licenseMark(p) + '</span>') + txt;
   /* The flex row lives inside the cell, never on it: a <td> that becomes a flex
      container stops being a table cell and takes the column widths with it.
      opts.link makes that row a real anchor to this licence's details — keyboard
@@ -1479,8 +1484,12 @@ function nlPlanCardHTML(c, set, sel){
   // Current plan = a strip sitting on the card's top edge (see .pc-strip)
   var strip = current ? '<div class="pc-strip">Current plan</div>' : '';
   var badge = !current && c.badge ? '<span class="pill">' + c.badge + '</span>' : '';
-  // primary on the popular plan, or on the only card when the pair leaves one
-  var primary = set.cards.length === 1 || c.badge === 'Popular';
+  /* ⚠️ ONE PRIMARY ON THE SURFACE, and it is the Popular card. The `set.cards.length === 1`
+     clause is GONE (2026-09-24, by request): in practice the only one-card set is the
+     perpetual group, so that clause made the perpetual Select a filled button standing
+     opposite the payg row's single filled Pilot — two primaries competing across one
+     offer. A group of one is not a reason to shout. */
+  var primary = c.badge === 'Popular';
   var cta = current ? ''
     : '<button class="btn' + (primary ? '' : ' sec') + ' pc-cta" data-nl-pick="' + c.name + '">Select</button>';
   return '<div class="dblock plancard ' + (current ? 'nl-current' : 'nl-select') + (on ? ' on' : '')
@@ -1521,8 +1530,14 @@ function nlPlanCardHTML(c, set, sel){
        explanations; a card's own note wins where both would apply. */
     + '<div class="pc-feats">' + c.feats.map(function(f){
         var n = (c.deviceNote && /\bdevices?\b/i.test(f)) ? c.deviceNote : featNote(f);
-        return '<div class="pc-feat">' + textWithInfo(f, n)
-          + (n ? '<span class="pc-featnote">' + n + '</span>' : '') + '</div>';
+        /* ⚠️ The tick is `aria-hidden` and carries NO meaning of its own: every row in
+           this list is included, so a mark that says "included" says the same thing on
+           every line. It is there to give the list a shape now that the dashed rules
+           between rows are gone — decoration doing the job the rules used to do. */
+        return '<div class="pc-feat">'
+          + icon('check', { cls:'pc-tick' })
+          + '<span class="pc-feattxt">' + textWithInfo(f, n)
+          + (n ? '<span class="pc-featnote">' + n + '</span>' : '') + '</span></div>';
       }).join('') + '</div>'
     + (c.foot ? '<div class="pc-note">' + c.foot + '</div>' : '')
     + cta

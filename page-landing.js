@@ -32,6 +32,8 @@ function renderLanding(){
   $('#landingLead').textContent = landingLead(lsel);
   $('#landingSwap').innerHTML = productSwapHTML(lsel);
   renderPlanPicker(lChoices, lPlans, lsel, lExtra);
+  /* the answers follow the product the same way the prices do */
+  renderFAQ($('#landingFaq'), lsel.product);
 }
 renderLanding();
 

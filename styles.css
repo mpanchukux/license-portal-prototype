@@ -18,6 +18,11 @@
   --line:#c9c9c9; --line2:#e2e2e2; --bg:#f4f4f2; --card:#ffffff;
   --fill:#3d3d3d; --track:#e6e6e6;
   --chrome:#efefec; --chromeLine:#dcdcd8; --hover:#f0f0ee; --sel:#e4e4e0;
+  /* The flat page ground the Home mesh gradient fades into. Named so the two
+     candidates live in one place: cool near-white by default, cool beige beside it.
+     ⚠️ Scoped to Home today (the only page with the gradient) — every other page is
+     still on --bg. Making it the whole site's ground is one rule, not a hunt. */
+  --page-bg:#F4F7FB;        /* alternative: #F6F5F1 — cool beige */
   --btnH:40px;
   --backW:40px; --backGap:12px; --contentX:74px;  /* 22px head padding + 40 + 12 — the gutter is one --btnH wide */
   /* one shared page container: same width, same side padding, centred */
@@ -279,7 +284,11 @@ a{color:inherit}
 .btn:hover{background:#000}
 /* the page's primary action, standing beside its h1 — the largest button we have.
    16px is the body token: bigger than the rest without reaching a heading size. */
-.btn.xl{height:48px;font-size:16px;padding:0 22px}
+/* ⚠️ 48 -> 56, padding 22 -> 34 (2026-09-24, by request). The named exception to the
+   two-number size ladder gets larger still: it is the only control that stands beside
+   an h1 rather than in a toolbar, so --btnH has never applied to it. Nothing else in
+   the product may take this height. */
+.btn.xl{height:56px;font-size:16px;padding:0 34px}
 /* No height of their own: primary, secondary and destructive are all the band (--btnH,
    40px). One height for every button that is not the page's own primary action. */
 .btn.sec{background:#fff;color:var(--ink);border-color:var(--line)}
@@ -1151,6 +1160,8 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
 .nl-success-f .btn{width:100%}
 /* selectable cards: choices stay visible, selection = ink ring (no dropdowns) */
 .nl-select{cursor:pointer}
+/* product cards still have a border to colour; the PLAN cards do not any more and
+   restate both states as rings — see .plancard */
 .nl-select:hover{border-color:var(--mid)}
 .nl-select.on{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
 /* ⚠️ This used to be `margin-top:0`: the plan-count row sat between the heading
@@ -1291,6 +1302,19 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
 .usersbody table{width:100%}
 /* the list starts on its own band, separated by space rather than by a border */
 .usersbody #usersTable{margin-top:22px}
+/* the list's name. h2 is the sheet's title, so the list one step below it takes h2-sm —
+   the same step a block heading takes everywhere else. */
+.users-th{margin:0 0 2px;font-family:var(--font-ui);font-size:var(--t-h2-sm-fs);
+  line-height:var(--t-h2-sm-lh);letter-spacing:var(--t-h2-sm-ls);font-weight:var(--t-h2-sm-fw)}
+/* ⚠️ Answered state of Copy invite link. It goes to INK — the link's resting colour is
+   the quiet one, and for two seconds this is not an offer, it is a result. No width is
+   reserved: `Link copied!` is shorter than `Copy invite link`, so the header cannot grow,
+   and the one thing that would be wrong here — the row reflowing under the pointer —
+   cannot happen. */
+.usershead .invite-link.done,
+.usershead .invite-link.done .ic{color:var(--ink)}
+.usershead .invite-link.done{cursor:default;text-decoration:none}
+
 /* the pager loses the frame's inset: it lines up with the table above it */
 .usersbody .pager{padding-left:0;padding-right:0}
 /* ---------- the header carries the surface-wide action ----------
@@ -1363,8 +1387,14 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
    from everything they sit above. One band, one column. */
 .dtopbar{display:flex;flex:none;padding:0;background:var(--card);
   border-bottom:1px solid var(--line2)}
+/* ⚠️ THE BAR'S CONTENT LEAVES THE PAGE COLUMN (2026-09-24, by request), and that
+   reverses the note above it: the logo and the profile now sit 80px from the WINDOW's
+   edges, not on the 1180 column the content below keeps. So the bar is deliberately no
+   longer aligned with the page under it — that alignment was the whole argument for
+   --pageW here, and it is the thing being traded away for a header that uses the width
+   it has. The column below is untouched; only this row moved. */
 .dtopbar-inner{position:relative;display:flex;align-items:center;gap:14px;height:56px;
-  width:100%;max-width:var(--pageW);margin:0 auto;padding:0 var(--pageX);
+  width:100%;margin:0;padding:0 80px;
   background:transparent;border:0;border-radius:0}
 .dtopbar .sp{flex:1}
 .dbrand{display:flex;align-items:center;gap:10px}
@@ -1377,7 +1407,11 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
    viewBox and no width happily filled the flex line — the wordmark stretched across the
    bar and the nav items landed on top of it. Height is the one dimension set; the ratio
    supplies the other. */
-.tblogo{height:19px;width:auto;aspect-ratio:1452.9/320;flex:none;color:var(--ink);display:block}
+/* 19 -> 26 -> 32px (2026-09-24, by request, twice). Height is still the only dimension
+   set and the ratio still supplies the other; 32 in a 56px bar leaves 12 of air above
+   and below, which is the floor before the lockup starts crowding the band.
+   ⚠️ The phone bar is the same 56px and does not override this — checked, it fits. */
+.tblogo{height:32px;width:auto;aspect-ratio:1452.9/320;flex:none;color:var(--ink);display:block}
 /* the lockup is one object: no caption beside it, because the file carries its own */
 /* the logo doubles as a Home link — reset it to look identical as a <button> */
 button.dbrand{background:none;border:0;padding:0;color:inherit;font:inherit;cursor:pointer}
@@ -1385,11 +1419,54 @@ button.dbrand{background:none;border:0;padding:0;color:inherit;font:inherit;curs
 .dbrand .bt{font-size:14px;font-weight:700;line-height:1.1}
 .dbrand .bt .bsep{color:var(--faint);font-weight:400;margin:0 6px}
 /* top-bar nav — same treatment as the old sidebar items, laid out horizontally */
-/* centred on the bar itself, so the logo/profile widths don't shift it */
-.tnav{position:absolute;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:2px}
-.tnav-item{padding:7px 11px;border:1px solid transparent;border-radius:6px;background:transparent;color:var(--mid);font:inherit;font-size:14px}
+/* ⚠️ CENTRED ON THE BAR, not between the things beside it. The logo cell and the
+   trailing group both take `flex:1 1 0`, so they resolve to the SAME width however
+   wide their contents are — and an element between two equal cells sits on the
+   container's centre line by construction. Both other ways were tried and both were
+   wrong for a reason worth keeping: absolute centring (left:50%) is truly centred
+   but paints over the profile once the bar runs out of room, and plain equal SPACERS
+   centre the strip in the leftover GAP, which drifts the moment the logo and the
+   actions differ in width — they do, by about 60px.
+   ⚠️ `min-width:0` on both cells is what lets them shrink instead of forcing the bar
+   wider than the window at small sizes. */
+/* ⚠️ REWORKED 2026-09-24 from a reference. Three things changed and the type did not:
+   the item carries its icon, the selected one is an INK PILL with white text instead of
+   a grey bordered cell, and the corner went from 6px to a full round. The 14px label and
+   its weight are exactly what they were — the ask was the selected state and the icons.
+   ⚠️ The pill is the one place in the chrome that fills with ink, and it does not
+   collide with the attention convention: an attention chip is ink on a white surface
+   inside content, this is the CURRENT destination in a navigation strip. Nothing about
+   it says urgency, and nothing else in the strip is filled. */
+/* ⚠️ `min-width:max-content`, NOT 0. With 0 the equal cells keep their equality by
+   CRUSHING what is in them: measured at 1024 with the hero button docked, both cells
+   resolved to 131px and `Buy a license` and `Mariia Panchuk` each wrapped onto two
+   lines inside a 56px bar. max-content makes the floor the content itself, so the two
+   cells stay equal while there is room and the strip simply stops being centred when
+   there is not — off-centre beats wrapped. */
+.dtopbar-inner > .dbrand{flex:1 1 0;min-width:max-content;justify-content:flex-start}
+.tb-trail{flex:1 1 0;min-width:max-content;display:flex;align-items:center;justify-content:flex-end;gap:14px}
+.tnav{display:flex;align-items:center;gap:6px;flex:none}
+.tnav-item{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border:0;
+  border-radius:999px;background:transparent;color:var(--mid);font:inherit;font-size:14px}
+/* the icon takes the item's colour like every other icon in the product — currentColor,
+   so the pill's white and the strip's grey both arrive without a rule painting a glyph */
+.tnav-item .ic{flex:none}
 .tnav-item:hover{background:var(--hover);color:var(--ink)}
-.tnav-item.on{background:var(--sel);border-color:var(--chromeLine);color:var(--ink);font-weight:600}
+.tnav-item.on{background:var(--ink);color:#fff;font-weight:600}
+.tnav-item.on:hover{background:var(--ink);color:#fff}
+.tnav-item:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+/* ---- below the page's own design width, the bar gives back what it can ----
+   ⚠️ 1200 is not a taste line: the content column is --pageW 1180 plus 2x--pageX, so
+   1228 is the narrowest window the LAYOUT was drawn for. Under it the bar is carrying
+   a full-width 160px of padding and a five-item strip it no longer has room for.
+   Measured at 1024 with the hero docked: logo 118 + strip 575 + actions 300 = 993 in
+   864 of usable bar. Padding back to the page gutter and a tighter strip bring the
+   strip to 519 and the total to 937 in 976 — it fits, with the type untouched. */
+@media (max-width:1199px){
+  .dtopbar-inner{padding:0 var(--pageX)}
+  .tnav{gap:2px}
+  .tnav-item{padding:8px 12px;gap:6px}
+}
 /* Mobile-only pieces, hidden by default. ⚠️ The menu selector needs three classes:
    `.menu .pop button` sets display:block at (0,2,1), so a plainer `.mob-only` rule
    would lose to it and the item would show on desktop. */
@@ -1420,8 +1497,28 @@ button.dbrand{background:none;border:0;padding:0;color:inherit;font:inherit;curs
 .tb-act:empty{display:none}
 .tb-act.on{transform:none;pointer-events:auto}
 .dprofile{position:relative}
-.dprofbtn{display:inline-flex;align-items:center;gap:9px;padding:4px 12px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--ink);font:inherit;font-size:14px}
-.dprofbtn:hover{border-color:var(--mid);background:var(--hover)}
+/* ⚠️ A TEXT DROPDOWN, not a pill (2026-09-24, by request): no stroke, no white fill.
+   It is the last thing in a bar that is itself glass at rest, and a bordered white pill
+   was the only opaque object left floating on the gradient.
+   ⚠️ What it loses in outline it has to keep in AFFORDANCE, so the caret stays and the
+   hover darkens the whole control to ink — with no box, colour and the caret are all
+   that say this opens something. The focus ring is stated explicitly for the same
+   reason: `:focus-visible` was inheriting a ring drawn against a border that is gone. */
+.dprofbtn{display:inline-flex;align-items:center;gap:9px;padding:4px 2px;border:0;
+  border-radius:6px;background:transparent;color:var(--ink);font:inherit;font-size:14px}
+/* ⚠️ INK AT REST, NOT --mid, and this is a measurement not a preference: on a bar that
+   is glass at rest the name sits directly on the mesh, and --mid measured 3.92:1 against
+   the lavender pool — under AA for 14px. Ink is ~12:1 on the same ground. It is also the
+   only text left in the bar with no box of its own, so it has the least help. */
+/* ⚠️ The HOVER is an underline, not a fill. With the pill gone there is no box to tint,
+   and adding one back on hover would reintroduce exactly the white shape that was asked
+   to go — an underline is the affordance a text control already owns. The caret stays
+   quiet so the name reads first and the control still says it opens. */
+.dprofbtn:hover .dprof-name,
+.dprofbtn[aria-expanded="true"] .dprof-name{text-decoration:underline;text-underline-offset:3px}
+.dprofbtn .dprof-caret{color:var(--mid)}
+.dprofbtn:hover .dprof-caret{color:var(--ink)}
+.dprofbtn:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
 /* ---------- Users as a nested level inside the profile menu ----------
    Desktop: the submenu flies out beside its row. Phone: the profile menu is
    already a bottom sheet, so this becomes a second-level sheet (see the ≤600px
@@ -1461,6 +1558,151 @@ button.dbrand{background:none;border:0;padding:0;color:inherit;font:inherit;curs
 /* Home opens with the greeting line, so it gets more room under the top-bar band
    than the shared --pageY gives the list pages */
 body[data-page="home"] .dwrap{padding-top:48px}
+
+/* ---------- Home: animated mesh gradient ------------------------------------
+   ⚠️⚠️ THE ONE PLACE IN THIS PROTOTYPE THAT IS NOT MONOCHROME, and it is a named
+   exception rather than a hole in the rule: asked for explicitly, with the four
+   colours and their corners given. It is decoration on a layer BEHIND the page
+   ground — it carries no state, nothing reads it, and nothing is distinguished by
+   it. Everything that says something stays monochrome.
+
+   ⚠️ FOUR ROUND POOLS, NOT FOUR CORNERS, AND THEY ARE STAGGERED. Two builds failed
+   here and both failed the same way. Cores ON the corners, stretched to 160% of the
+   zone's width, make the falloff almost entirely horizontal — and a horizontal falloff
+   across a band 944 wide and 240 tall reads as STRIPES, a left-to-right ramp with
+   straight vertical seams. Making the blobs circles was necessary but not sufficient:
+   four circles on a symmetric 2x2 grid still change colour only sideways within the
+   part of the band you can see, so it still ramped. What reads as a mesh is circles
+   whose centres are OFF the grid — none of the four shares a row or a column — so the
+   colour turns in both axes inside those 240px and the arcs of the pools are visible
+   as arcs. Measured against the reference on a stand at the real proportions.
+
+   ⚠️ PEAK ALPHA IS 0.72, NOT 1. At full strength the corners were the loudest thing on
+   a page whose whole palette is grey. The blobs never reach their own colour; the
+   strongest lavender the page can show is 0.72 of it over --page-bg.
+
+   ⚠️ TWO COLOURS NOW, NOT FOUR (2026-09-24). The mint and the pink on the right were
+   replaced by the lavender and the cream from the left, so the whole band is one pair
+   used twice. The classes were RENAMED with them — `.mb-mint` / `.mb-pink` became
+   `.mb-cream2` / `.mb-lav2` — because a class that still said `mint` while painting
+   cream is the kind of lie that costs the next reader an hour.
+     lavender #BDC1FF -> #C5C8F7   S x0.75   (rgb 197 200 247)
+     cream    #FFF8E5             untouched  (rgb 255 248 229)
+   ⚠️ THE PAIR IS LAID OUT DIAGONALLY, not mirrored: lavender upper-LEFT and lower-RIGHT,
+   cream lower-LEFT and upper-RIGHT. Mirroring it (lavender across the top, cream across
+   the bottom) makes a two-colour band change in one axis only, which in a strip 240px
+   tall is a vertical ramp — the exact failure the staggered pools were built to avoid.
+   ⚠️ Cream is the brief's own value, untouched: at S=1 L=0.94 it is already within a
+   hair of white, so desaturating it would move it, and only it, onto the page ground.
+
+   THE LAYER lives at BODY level, not inside #shellMain, so it runs under the top bar
+   (#shellMain is the scroll box and clips to its own edges). It is pushed up by the
+   scroll offset in page-home.js, so it still scrolls away with the page. 33vh of
+   colour plus 15vh of fade; the fade is a mask, so the colour thins into --page-bg
+   instead of ending at an edge.
+
+   ⚠️ NO filter:blur ANYWHERE HERE. A blur on an animated element makes the browser
+   re-rasterise the layer every frame; the soft edge comes from the gradient's own
+   stops instead, which costs nothing to move.
+
+   ⚠️ EVERY BLOB ENDS IN `rgb(R G B / 0)`, NEVER the `transparent` keyword. In
+   premultiplied interpolation `transparent` is transparent BLACK, so a ramp to it
+   drags every colour through grey — that is exactly the "mud" a four-colour mesh
+   shows in the middle, and it is a one-token fix, not a tuning problem. */
+.meshbg{
+  /* Pool diameter, and the four pool CENTRES. ⚠️ The centres are in PIXELS on the
+     vertical axis and per cent on the horizontal, because that is what they are
+     measuring: sideways they have to spread with the window, but downwards they have
+     to stay inside the ~240px of zone that is ever ON SCREEN before Home's first card
+     covers the rest — and that 240 is a pixel fact, the same stack of bar plus head on
+     every viewport. Put the y in vh and a short window slides the two lower pools out
+     of sight. The diameter is clamped for the same reason: left as a bare per cent it
+     grows past 1400px on a wide monitor, the pools swallow each other, and the band is
+     a left-to-right ramp again. */
+  --blob:clamp(420px,57%,620px);
+  --y1:30px; --y2:20px; --y3:210px; --y4:160px;
+  position:absolute; inset:0 0 auto; height:48vh;
+  z-index:-1; pointer-events:none; overflow:hidden;
+  -webkit-mask-image:linear-gradient(to bottom,#000 0,#000 33vh,rgba(0,0,0,0) 48vh);
+          mask-image:linear-gradient(to bottom,#000 0,#000 33vh,rgba(0,0,0,0) 48vh);
+}
+/* left/top name the pool's CENTRE; the -50%/-50% moves the box onto it. It is in the
+   base transform AND in every keyframe, because an animation replaces the whole
+   property — drop it from a keyframe and the pool jumps a radius sideways. */
+.meshbg span{
+  position:absolute; display:block; width:var(--blob); aspect-ratio:1; border-radius:50%;
+  transform:translate(-50%,-50%);
+  will-change:transform;
+  animation:34s ease-in-out infinite alternate;
+}
+.meshbg .mb-lav  {left:12%; top:var(--y1);  background:radial-gradient(circle closest-side,rgb(197 200 247/.72) 0%,rgb(197 200 247/.65) 32%,rgb(197 200 247/0) 100%); animation-name:meshDriftA; animation-duration:34s; animation-delay:-3s}
+.meshbg .mb-cream2{left:78%; top:var(--y2);  background:radial-gradient(circle closest-side,rgb(255 248 229/.72) 0%,rgb(255 248 229/.65) 32%,rgb(255 248 229/0) 100%); animation-name:meshDriftB; animation-duration:39s; animation-delay:-11s}
+.meshbg .mb-cream{left:32%; top:var(--y3); background:radial-gradient(circle closest-side,rgb(255 248 229/.72) 0%,rgb(255 248 229/.65) 32%,rgb(255 248 229/0) 100%); animation-name:meshDriftC; animation-duration:31s; animation-delay:-19s}
+.meshbg .mb-lav2 {left:95%; top:var(--y4);  background:radial-gradient(circle closest-side,rgb(197 200 247/.72) 0%,rgb(197 200 247/.65) 32%,rgb(197 200 247/0) 100%); animation-name:meshDriftD; animation-duration:37s; animation-delay:-7s}
+/* Transform only — translate and a little scale, nothing that touches layout or paint.
+   Four different paths, four different durations and four NEGATIVE delays: the delays
+   start each pool part-way through its own cycle, so the drift is already out of phase
+   on the first frame instead of separating over the first minute. Amplitude is small on
+   purpose — the background should breathe, not travel. */
+@keyframes meshDriftA{from{transform:translate(-50%,-50%) translate3d(-3%,-2%,0) scale(1)}    to{transform:translate(-50%,-50%) translate3d(4%,3%,0) scale(1.08)}}
+@keyframes meshDriftB{from{transform:translate(-50%,-50%) translate3d(3.5%,1.5%,0) scale(1.06)} to{transform:translate(-50%,-50%) translate3d(-4%,-3%,0) scale(1)}}
+@keyframes meshDriftC{from{transform:translate(-50%,-50%) translate3d(-2%,3%,0) scale(1.05)}  to{transform:translate(-50%,-50%) translate3d(3.5%,-2%,0) scale(1)}}
+@keyframes meshDriftD{from{transform:translate(-50%,-50%) translate3d(3%,-3%,0) scale(1)}     to{transform:translate(-50%,-50%) translate3d(-3.5%,2%,0) scale(1.07)}}
+/* the gradient is the point; the drift is not. Reduced motion keeps the picture and
+   drops the movement — and drops will-change with it, so no layer is held for nothing.
+   ⚠️ The centring transform has to be restated here: `animation:none` takes the
+   keyframes away, and the base rule's own transform is what is left. */
+@media (prefers-reduced-motion: reduce){
+  .meshbg span{animation:none;will-change:auto;transform:translate(-50%,-50%)}
+}
+
+/* ---- the grounds that would otherwise paint over the layer ----
+   ⚠️ `[data-mesh]`, NOT `[data-page="home"]`: the same gradient and the same glass
+   bar are on THREE surfaces now — Home signed in, Home's first run and the signed-out
+   landing page — and those are two different `data-page` values. The attribute names
+   the one thing the rules actually depend on: this page carries a `.meshbg`.
+   ⚠️ BODY must form a stacking context (isolation), or the z-index:-1 layer escapes to
+   the root and the body background paints over it. Everything from the bar down then
+   has to be transparent for the layer to be seen — each of these is a BACKGROUND
+   change, not a change to anyone's stacking. The cards (.dblock) keep their white: the
+   gradient is meant to show around them, not through them. */
+body[data-mesh]{position:relative;isolation:isolate;background:var(--page-bg)}
+body[data-mesh] #shellMain,
+body[data-mesh] .dashview,
+body[data-mesh] .shellfoot{background:transparent}
+
+/* ---- the top bar rests ON the gradient, and only grounds itself once it has to ----
+   ⚠️ At rest the bar is a sheet of glass: no fill, no hairline, the mesh runs straight
+   under it. The moment the page moves, content starts passing beneath the bar, so it
+   takes the card fill and its hairline back — the same scroll that hands the hero's
+   `Buy a license` up into it. The threshold is the first few pixels of scroll rather
+   than the button hand-off itself, because the first-run Home has NO hero button: tying
+   the fill to the hand-off would leave that state with plan cards sliding under clear
+   glass. page-home.js sets `.docked`. */
+body[data-mesh] .dtopbar{
+  background:transparent;border-bottom-color:transparent;
+  transition:background-color .18s ease,border-color .18s ease;
+}
+body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(--line2)}
+
+/* ⚠️ THE PHONE MEASURES THE ZONE IN PIXELS, NOT IN vh, and that is not a stylistic
+   preference. On the phone Home's first block is a FULL-BLEED white surface — no
+   gutters for the colour to keep showing through — and it starts 197px down the
+   viewport, while a 33vh mask is still fully opaque there. The result was the one thing
+   the gradient is not allowed to have: a hard horizontal line across the whole screen.
+   The bar plus the head above that surface is a fixed stack, so its height is a PIXEL
+   fact, not a share of the viewport — colour to 130px, gone by the 197 where the
+   surface begins. States that carry a lead line or a banner push that surface further
+   down and simply get flat ground before it, never an edge. */
+@media (max-width:600px){
+  .meshbg{
+    --blob:clamp(230px,82%,330px);
+    --y1:24px; --y2:16px; --y3:140px; --y4:108px;
+    height:200px;
+    -webkit-mask-image:linear-gradient(to bottom,#000 0,#000 130px,rgba(0,0,0,0) 197px);
+            mask-image:linear-gradient(to bottom,#000 0,#000 130px,rgba(0,0,0,0) 197px);
+  }
+}
 /* welcome text and the page-level action sit on one row */
 .dwelcome{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
 .dwelcome .dw-txt{flex:1;min-width:0}
@@ -1686,8 +1928,20 @@ body[data-page="home"] .dwrap{padding-top:48px}
    label and its own plan cards. Separated, but side by side — which is the whole point,
    since the row is read across. */
 @media(min-width:601px){
-  .plangroups > .plangroup{background:var(--card);border:1px solid var(--line2);
-    border-radius:12px;padding:var(--pg-pad, 18px)}
+  /* ⚠️ NO STROKE (2026-09-24, by request): the frame is told apart from the page by its
+     white fill alone, now that the cards inside it are the page's own light ground. The
+     two grounds are what separate the three levels — page, frame, card — so a line
+     around the middle one was a third signal saying what the fill already said. */
+  .plangroups > .plangroup{background:var(--card);border:0;
+    border-radius:16px;corner-shape:squircle;padding:var(--pg-pad, 18px)}
+  /* ⚠️ COLUMN FLEX, so the grid can take the height the frame was given. The frames are
+     stretched to the same height by the row below, but a `block` child does not grow
+     into that height — measured at 1600: both frames 475, the payg grid 400 and the
+     perpetual grid 385, so the lone perpetual card sat 15px short and its Select was
+     15px above the other four. `flex:1` on the grid, `stretch` on the grid's items, and
+     every Select on the surface lands on one line. */
+  .plangroups > .plangroup{display:flex;flex-direction:column}
+  .plangroups > .plangroup > .plangrid{flex:1}
   .plangroups > .plangroup > .plangroup-h{margin-bottom:0}
   .plangroups > .plangroup > .plangrid{margin-top:14px}
 }
@@ -1734,13 +1988,25 @@ body[data-page="home"] .dwrap{padding-top:48px}
 /* ⚠️ 12/14, down from 16/18. Five cards are read ACROSS, so the padding is paid five
    times over on every horizontal scan — and inside a frame that already insets them by
    18px, the card's own inset was a second margin around the same content. */
-.plancard{position:relative;display:flex;flex-direction:column;margin-top:0;padding:12px 14px}
+/* ⚠️ THE CARD IS A SHAPE, NOT A BOX (2026-09-24, by request): the page's own light
+   ground instead of white, no stroke at all, and a much larger corner.
+   ⚠️ `corner-shape:squircle` is the iOS-style continuous curve, and it is PURE
+   progressive enhancement — a browser without it still gets the 20px radius and the
+   card is merely rounder rather than squircled. Nothing is positioned against the
+   curve, so there is nothing to fall back to.
+   ⚠️ THE STROKE LEAVING TAKES THE SELECTED AND HOVER STATES WITH IT, so both are
+   restated below as INSET RINGS. A ring is not a border: it costs no layout, which is
+   why a selected card no longer has to be 1px smaller than an unselected one. */
+.plancard{position:relative;display:flex;flex-direction:column;margin-top:0;padding:16px 16px;
+  background:var(--page-bg);border:0;border-radius:20px;corner-shape:squircle}
+.plangrid .nl-select:hover{box-shadow:inset 0 0 0 1px var(--line)}
+.plangrid .nl-select.on{box-shadow:inset 0 0 0 2px var(--ink)}
 /* Change plan: "Current plan" is a strip on the current card's top edge; its
    height is reserved above EVERY card (empty elsewhere) so card heights match
    and the plan names stay on one horizontal line */
 .plangrid.withcur{--stripH:24px}
 .plangrid.withcur .plancard{margin-top:var(--stripH)}
-.pc-strip{position:absolute;bottom:calc(100% - 1px);left:12px;display:inline-flex;align-items:center;height:calc(var(--stripH) + 1px);padding:0 10px;background:var(--card);border:1px solid var(--line2);border-bottom:0;border-radius:8px 8px 0 0;font-family:var(--font-ui);font-size:var(--t-label-fs);letter-spacing:var(--t-label-ls);font-weight:var(--t-label-fw);text-transform:uppercase;color:var(--mid);white-space:nowrap}
+.pc-strip{position:absolute;bottom:calc(100% - 1px);left:12px;display:inline-flex;align-items:center;height:calc(var(--stripH) + 1px);padding:0 10px;background:var(--page-bg);border:0;border-radius:10px 10px 0 0;font-family:var(--font-ui);font-size:var(--t-label-fs);letter-spacing:var(--t-label-ls);font-weight:var(--t-label-fw);text-transform:uppercase;color:var(--mid);white-space:nowrap}
 .pc-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-height:22px}
 .pc-head h2{margin:0;font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw)}
 .pc-price{margin-top:9px;font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw);font-variant-numeric:tabular-nums}
@@ -1751,8 +2017,13 @@ body[data-page="home"] .dwrap{padding-top:48px}
 .pc-freebadge{font-size:14px;letter-spacing:0}
 .pc-term{margin-top:5px;font-size:14px;color:var(--mid)}
 .pc-feats{margin-top:13px;flex:1}
-.pc-feat{font-size:14px;color:var(--mid);padding:7px 0;border-bottom:1px dashed var(--line2)}
-.pc-feat:last-child{border-bottom:0}
+/* ⚠️ THE DASHED RULE IS GONE and the 7px padding STAYS: the rhythm of the list was
+   never the rules, it was the spacing, and removing both would have closed the list up.
+   The tick takes the rule's job of giving each line a left edge to start from. */
+.pc-feat{display:flex;gap:8px;font-size:14px;color:var(--mid);padding:7px 0}
+/* 2px lifts the 16px glyph onto the cap height of a 14px line rather than its box */
+.pc-tick{flex:none;margin-top:2px;color:var(--faint)}
+.pc-feattxt{min-width:0}
 .pc-cta{width:100%;margin-top:14px}
 /* a feature line's explanation: under it, quieter, and it must not make the row read
    as two features */
@@ -1812,7 +2083,13 @@ body[data-page="home"] .dwrap{padding-top:48px}
    the licence panel's `.fs-box` — measured, since the panel's default ground is grey and
    a grey-on-grey panel would have vanished there).
    Tabular figures so the values line up down the column the way the rule asks. */
-.fi-detail{margin:6px 0 2px;padding:8px 12px;background:var(--bg);border-radius:6px}
+/* ⚠️ HALF THE ROW, NOT ALL OF IT (2026-09-24). Stretched to the full width of the feed
+   the grey panel read as a second surface under the entry — a band as wide as the page
+   holding two short values — instead of as an aside belonging to the sentence above it.
+   The panel is sized by what is IN it, and what is in it is a label column and a value:
+   half the row is already more than either needs. Capped rather than fixed, so a short
+   detail still shrinks to its content. */
+.fi-detail{margin:6px 0 2px;padding:8px 12px;background:var(--bg);border-radius:6px;max-width:50%}
 .fd-row{display:flex;gap:14px;padding:1px 0;font-size:14px;line-height:1.5}
 .fd-row dt{flex:0 0 150px;color:var(--faint)}
 .fd-row dd{margin:0;flex:1;min-width:0;color:var(--mid);font-variant-numeric:tabular-nums}
@@ -1825,7 +2102,8 @@ body[data-page="home"] .dwrap{padding-top:48px}
   /* the label column would leave nothing for the value at this width */
   .fd-row{display:block;padding:2px 0}
   .fd-row dt{font-size:13px}
-  .fi-detail{padding:8px 10px}
+  /* half of 375px leaves nothing for a value, so the cap comes off with the columns */
+  .fi-detail{padding:8px 10px;max-width:none}
 }
 /* the styleguide's per-type specimen: the key and where it occurs, then the entry */
 .sg-actrow{padding:14px 0;border-bottom:1px dashed var(--line2)}
@@ -2558,6 +2836,14 @@ a.lp-cell:hover .lp-name{text-decoration:underline;text-underline-offset:2px}
      So the sentence is shown and the glyph steps aside. Scoped to `.pc-feat`: the
      pattern itself keeps its tap behaviour everywhere else, including the styleguide
      specimen. */
+  /* ⚠️ THE CARD GOES BACK TO WHITE ON THE PHONE, and it is not a taste exception: the
+     light-blue fill works because the card sits INSIDE a white frame, and the frames are
+     a desktop thing (`.plangroups > .plangroup` is behind min-width:601px). Below it the
+     card sits straight on the page — which, on the two surfaces that carry the mesh, is
+     the very same --page-bg. Measured: card rgb(244,247,251) on body rgb(244,247,251),
+     i.e. no card at all. The rule the fills encode is three levels, page < frame < card;
+     with no frame there are two, and the card takes the top one. */
+  .plancard{background:var(--card)}
   .pc-feat .infoic{display:none}
   .pc-featnote{display:block;margin-top:3px;font-size:14px;line-height:1.4;color:var(--faint)}
 
@@ -2624,6 +2910,12 @@ a.lp-cell:hover .lp-name{text-decoration:underline;text-underline-offset:2px}
     column-gap:8px;padding:0 8px 0 12px;
     border:0;border-radius:0}
   .dtopbar .sp{display:none}                 /* the grid does the spacing now */
+  /* ⚠️ The desktop bar wraps its trailing items so the strip can be centred between
+     two equal cells. Here `.dtopbar-inner` is a GRID and those same three children
+     ARE its named areas, so the wrapper has to stop being a box: `display:contents`
+     takes it out of the box tree and the grid sees `act`, the refresh and `prof`
+     exactly as it did before the wrapper existed. */
+  .tb-trail{display:contents}
   /* ⚠️ The logo sits in the phone app bar, reversing a much earlier pass that hid it
      ("Home in the bottom bar is the logo's job"). With the page title moved onto the
      page the bar's leading slot was simply empty, and an app bar with nothing on the
@@ -3997,3 +4289,88 @@ a.lp-cell:hover .lp-name{text-decoration:underline;text-underline-offset:2px}
 .sg-code{margin:10px 0 0;padding:12px 14px;border:1px solid var(--line2);border-radius:8px;
   background:var(--card);font-family:var(--font-mono);font-size:14px;line-height:1.55;
   color:var(--ink);overflow-x:auto;white-space:pre}
+
+/* ---------- the pricing page's FAQ block (faq.js) -----------------------------
+   Reproduces the section that closes thingsboard.io/pricing: a title, a category rail
+   down the left, an accordion on the right, six answers and a `Load more FAQ`. The
+   REFERENCE is a dark marketing page; what is reproduced is the layout and the
+   behaviour — the palette, the type ladder and the 40px control band are this
+   prototype's, as they are for every other surface ported into it.
+   Mounted on the two selling surfaces only: the landing page and Home's first run. */
+.faqsect{margin-top:44px}
+.faq-h{margin:0 0 18px;font-family:var(--font-ui);font-size:var(--t-h2-fs);
+  line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw)}
+/* 260 is the rail: the longest label (`Trials, Cancellations & Refunds`) sets it, and
+   it holds every category of both products on one line each. */
+.faq-grid{display:grid;grid-template-columns:260px minmax(0,1fr);gap:24px;align-items:start}
+
+/* ---- the rail ----
+   ⚠️ The active item is named by a BAR and by weight, not by a fill of its own colour:
+   the reference uses a light accent stripe, and the nearest true thing this product has
+   is the ink rule it already uses for a current item. `--sel` is the same grey a chosen
+   row takes everywhere else. */
+.faq-rail{display:flex;flex-direction:column}
+.faq-cat{display:block;width:100%;text-align:left;border:0;border-left:3px solid transparent;
+  background:transparent;padding:10px 14px;font:var(--t-small-fw) var(--t-small-fs)/var(--t-small-lh) var(--font-ui);
+  color:var(--mid);cursor:pointer;border-radius:0 6px 6px 0}
+.faq-cat:hover{background:var(--hover);color:var(--ink)}
+.faq-cat.on{border-left-color:var(--ink);background:var(--sel);color:var(--ink);font-weight:500}
+.faq-cat:focus-visible{outline:2px solid var(--ink);outline-offset:-2px}
+
+/* ---- the accordion ----
+   One card per question, the question itself the control. The chevron turns instead of
+   swapping glyphs: one symbol, two states, which is the same thing `.dbh-chev` does. */
+.faq-i{border:1px solid var(--line2);border-radius:8px;background:var(--card);margin-bottom:8px}
+.faq-qh{margin:0;font:inherit}
+.faq-q{display:flex;align-items:center;gap:14px;width:100%;text-align:left;border:0;background:transparent;
+  padding:14px 16px;cursor:pointer;color:var(--ink);
+  font:500 var(--t-body-fs)/var(--t-body-lh) var(--font-ui)}
+.faq-q > span{flex:1;min-width:0}
+.faq-q:hover{background:var(--hover);border-radius:8px}
+.faq-q:focus-visible{outline:2px solid var(--ink);outline-offset:-2px;border-radius:8px}
+.faq-chev{flex:none;color:var(--mid);transition:transform .15s ease}
+.faq-q[aria-expanded="true"] .faq-chev{transform:rotate(180deg)}
+/* ⚠️ THE OPEN ITEM IS DIVIDED, not just taller (2026-09-24, from a reference). A
+   question and its answer inside one box, with nothing between them, read as one long
+   paragraph that happens to start bold. The rule is inset to the TEXT's left edge, not
+   the box's, so it lines up with both the question above it and the answer below —
+   which is why it lives on `.faq-a` as a margin plus a border rather than on the card. */
+.faq-a{margin:0 16px;padding:13px 0 16px;border-top:1px solid var(--line2);
+  font-size:var(--t-small-fs);line-height:1.6;color:var(--mid)}
+/* open items step forward by a stronger hairline — the reference marks them with an
+   accent outline, and the nearest true thing in a monochrome system is one line darker */
+.faq-i:has(> .faq-qh > .faq-q[aria-expanded="true"]){border-color:var(--line)}
+.faq-a p{margin:0 0 10px}
+.faq-a p:last-child,.faq-a ul:last-child{margin-bottom:0}
+.faq-a ul{margin:0 0 10px;padding-left:20px}
+.faq-a li{margin:3px 0}
+.faq-a b{color:var(--ink);font-weight:500}
+.faq-a a{color:var(--ink);text-decoration:underline;text-underline-offset:2px}
+/* the one arrow inside the copy — a navigation path — is the sprite's chevron, sized
+   and nudged onto the baseline of the sentence it sits in */
+.faq-arrow{vertical-align:-2px;color:var(--faint)}
+
+/* ---- six, then the rest ----
+   The cap is a class on the list, not a class per item: `Load more` drops it and the
+   answers already open stay open. */
+.faq-list.capped .faq-i:nth-child(n+7){display:none}
+.faq-more{display:block;width:100%;height:var(--btnH);border:1px dashed var(--line);
+  border-radius:6px;background:transparent;color:var(--ink);cursor:pointer;
+  font:500 var(--t-small-fs)/1 var(--font-ui);margin-top:4px}
+.faq-more:hover{background:var(--hover);border-style:solid}
+.faq-more[hidden]{display:none}
+
+@media (max-width:600px){
+  /* the rail becomes a scroller above the answers: eight labels down the side of a
+     375px screen would leave the questions a column too narrow to read */
+  .faq-grid{grid-template-columns:minmax(0,1fr);gap:14px}
+  .faq-rail{flex-direction:row;gap:6px;overflow-x:auto;padding-bottom:4px;
+    scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .faq-rail::-webkit-scrollbar{display:none}
+  .faq-cat{width:auto;flex:none;white-space:nowrap;border-left:0;border-radius:999px;
+    border:1px solid var(--line2);padding:8px 14px}
+  .faq-cat.on{border-color:var(--ink);background:var(--sel)}
+  .faq-q{font-size:var(--t-body-sm-fs);padding:12px 14px;gap:10px}
+  .faq-a{padding:0 14px 12px}
+  .faqsect{margin-top:32px}
+}

@@ -7,7 +7,22 @@
 <title>Home — ThingsBoard License Portal</title>
 <link rel="stylesheet" href="styles.css">
 </head>
-<body data-page="home" data-nav="home" data-title="Home">
+<body data-page="home" data-nav="home" data-title="Home" data-mesh>
+
+<!-- Animated mesh gradient behind the top of Home. Decoration only: aria-hidden, not
+     focusable, pointer-events:none, and it paints on its own layer UNDER everything —
+     no content node and no content z-index was touched to make room for it.
+     ⚠️ IT SITS OUTSIDE #shellMain, and that is the whole reason the top bar can rest on
+     it: #shellMain is the SCROLL BOX, it clips to its own edges, so a layer inside it
+     can never reach the 56px of bar above it. At body level it runs under the bar, and
+     page-home.js pushes it up by the scroll offset so it still scrolls away with the
+     page instead of sticking to the viewport.
+     Why body has to isolate, why the bar and .dashview drop their ground, and why the
+     blobs are shaped the way they are: the "Home: animated mesh gradient" block of
+     styles.css says it once. -->
+<div class="meshbg" aria-hidden="true">
+  <span class="mb-lav"></span><span class="mb-cream2"></span><span class="mb-cream"></span><span class="mb-lav2"></span>
+</div>
 
 <div id="shellMain">
 <div class="dashview" id="dashView">
@@ -148,6 +163,11 @@
         <div id="ecPlanExtra"></div>
       </div>
 
+      <!-- The same FAQ block the landing page shows, and for the same reason: this
+           screen IS a price list, shown to an account that has not bought yet. One
+           renderer, one copy set, switched by the product chosen above. -->
+      <div class="faqsect" id="ecFaq"></div>
+
     </div>
   </div>
 </div>
@@ -158,6 +178,7 @@
 <script src="components.js"></script>
 <script src="wizard.js"></script>
 <script src="license-details.js"></script>
+<script src="faq.js"></script>
 <script src="page-home.js"></script>
 </body>
 </html>

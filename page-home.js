@@ -145,6 +145,10 @@ wireFeedAudit('#dashView');
   }
 })();
 
+/* ⚠️ The mesh layer's scroll and the bar's docking used to be wired HERE. They moved
+   to `wireMeshHeader()` in shared.js when the landing page got the same gradient:
+   two copies of one scroll handler is how two surfaces start behaving differently. */
+
 /* one button for both create flows — the billing type is a switcher in step 1 */
 (function(){
   var btn = $('#dashNewBtn');
@@ -236,6 +240,8 @@ if(dashEmptyV && !dashEmptyV.hidden){
   function renderEcPlans(){
     renderEcHead();
     renderPlanPicker($('#ecChoices'), $('#ecPlans'), esel, $('#ecPlanExtra'));
+    /* the answers follow the product the same way the prices do */
+    renderFAQ($('#ecFaq'), esel.product);
   }
   renderEcPlans();
 

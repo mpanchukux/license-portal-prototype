@@ -108,7 +108,7 @@ var Store = (function(){
      no company name at all. That store would render a half-empty consolidated section
      and print an invoice missing the company. Bumping is cheaper than a migration for
      a prototype, and unlike a migration it cannot half-succeed. */
-  var KEY = 'tb-license-portal-demo-v19';   // v19: seeded activity details no longer repeat their sentence
+  var KEY = 'tb-license-portal-demo-v22';   // v22: the Free row seeds against the file's date anchor, not today's
   function clone(o){ return JSON.parse(JSON.stringify(o)); }
   /* ⚠️ The snapshot is taken ONCE and then shifted to today. Doing it here rather than
      at render time means every surface reads the same stored dates, and a browser left
@@ -560,7 +560,7 @@ function signOut(){ setSession('out'); }
    new decision, not a flag to re-enable. */
 var NAV_ITEMS = [
   { key:'home',     href:'index.html',    label:'Home',
-    ic:'home' },
+    ic:'smart-home' },
   { key:'licenses', href:'licenses.html', label:'Licenses',
     ic:'key' },
   /* ⚠️ A DESTINATION SINCE 2026-09-23, reversing "a view toggle, NOT a nav destination"
@@ -568,11 +568,11 @@ var NAV_ITEMS = [
      sliced by deployment. See the measurement note above about what a sixth item does
      to the phone. */
   { key:'instances', href:'instances.html', label:'Instances',
-    ic:'server' },
+    ic:'server-2' },
   { key:'invoices', href:'invoices.html', label:'Invoices',
-    ic:'receipt' },
+    ic:'file-invoice' },
   { key:'activity', href:'activity.html', label:'Activity',
-    ic:'activity' },
+    ic:'history-toggle' },
   /* ⚠️ USERS IS NOT HERE ANY MORE (2026-09-23), and this is the second reversal of
      the same question, so both answers are worth keeping.
      It was moved OUT of the strip once, into a nested hover level of the profile menu.
@@ -588,10 +588,16 @@ var NAV_ITEMS = [
      truncated at 390 as a side effect. */
 ];
 
+/* ⚠️ THE STRIP CARRIES ICONS NOW (2026-09-24), off the SAME `ic` the phone's bottom bar
+   already used — one glyph per destination, named once in NAV_ITEMS. The bar and the
+   strip cannot drift apart because neither owns its own list.
+   `aria-hidden`: the label is right there, and a read-out icon would say it twice. */
 function navItemsHTML(extraClass){
   return NAV_ITEMS.map(function(n){
     return '<a class="tnav-item' + (extraClass ? ' ' + extraClass : '') + '" data-nav="' + n.key
-      + '" href="' + n.href + '">' + n.label + '</a>';
+      + '" href="' + n.href + '">'
+      + icon(n.ic, { size:20 })
+      + '<span class="tn-lb">' + n.label + '</span></a>';
   }).join('');
 }
 /* The phone's primary navigation: a bottom bar, not a drawer. Destinations at the
@@ -674,8 +680,21 @@ function chromeHTML(){
   +   '</a>'
   +   '<h2 class="tb-title" id="tbTitle"></h2>'
   +   brandHTML()
+  /* ⚠️ THE STRIP IS CENTRED ON THE BAR ITSELF, and this group is what makes that true
+     without an absolute position. The logo cell and this trailing group both take
+     `flex:1 1 0`, so they are ALWAYS the same width whatever is in them — which puts
+     the strip on the bar's own centre line rather than on the centre of what is left
+     over between two unequal clusters. Absolute centring gave the same result until the
+     bar went full-width and every item grew an icon: at a 944px window the strip ran
+     under the profile button and ate `Activity`. Equal flex cells cannot do that —
+     when the room genuinely runs out the cells shrink and the strip is pushed, never
+     painted over.
+     ⚠️ THE GROUP IS FOR THE DESKTOP BAR ONLY. On the phone `.dtopbar-inner` is a GRID
+     whose named areas ARE these three children, so a wrapper would drop all three into
+     one implicit cell. The ≤600px block gives it `display:contents`, which takes the
+     wrapper out of the box tree and hands them straight back to the grid. */
   +   '<nav class="tnav" aria-label="Primary">' + nav + '</nav>'
-  +   '<span class="sp"></span>'
+  +   '<div class="tb-trail">'
   +   '<div class="tb-act" id="topbarAction"></div>'
   /* Refresh, as a trailing app-bar action beside the avatar — phone only, and only
      on the list pages (CSS decides from body[data-page]; see the ≤600px block).
@@ -709,6 +728,7 @@ function chromeHTML(){
      opened a stub dialog would be the surface telling a lie about itself. */
   +       '<button role="menuitem" id="signOutBtn">Sign out</button>'
   +     '</div>'
+  +   '</div>'
   +   '</div>'
   +   '</div>'
   + '</header>'
@@ -1986,6 +2006,12 @@ var USERS_MODAL_HTML = ''
    `.setcard`, so the modal was three stacked boxes inside a fourth. The sheet is the
    only surface now; everything below sits directly on it. */
 +       '<div id="usersTable" hidden>'
+/* ⚠️ The table gets a NAME (2026-09-24). Everything above it is about letting people
+   IN — a field, an Invite button, a copy-link in the header — so the list underneath
+   read as the result of that row rather than as its own thing. `Who has access` says
+   what the rows are, and it is the same word the duplicate check already uses when it
+   refuses an address (`already has access`), so the surface names the fact once. */
++         '<h3 class="users-th">Who has access</h3>'
 +         '<table>'
 +           '<thead><tr>'
 +             '<th>Name</th><th>Email</th>'
@@ -1994,22 +2020,57 @@ var USERS_MODAL_HTML = ''
 +           '</tr></thead>'
 +           '<tbody></tbody>'
 +         '</table>'
-+         '<div class="pager air">'
-+           '<span class="spacer"></span>'
-+           '<span>Items per page<select aria-label="Items per page"><option>10</option><option>20</option><option>50</option><option>100</option></select></span>'
-+           '<span class="range"></span>'
-+           '<span class="pagebtns">'
-+             '<button disabled aria-label="First page"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevrons-left"></use></svg></button><button disabled aria-label="Previous page"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-left"></use></svg></button><button disabled aria-label="Next page"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-right"></use></svg></button><button disabled aria-label="Last page"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevrons-right"></use></svg></button>'
-+           '</span>'
-+         '</div>'
+/* ⚠️ NO PAGER (2026-09-24), and that is a decision about the LIST, not about the
+   control. The account's own people are a short, known set — the demo's largest
+   account carries four — so a pager here was a page-sized instrument on a list that
+   never fills one page: an `Items per page` select offering 100, a range reading
+   `1-4 of 4`, and four arrows that could never be anything but disabled. It went the
+   same way search and refresh went when this stopped being a page.
+   ⚠️ If this list can ever grow past a screen, the answer is the shared pager
+   controller (`pageSlice`/`syncPager`/`wirePager`), not this markup back. */
 +       '</div>'
 +     '</div>'
 +   '</div>'
 + '</div>';
 
+
+/* ---------- the mesh layer scrolls, and the bar grounds itself ------------------
+   Two things off ONE scroll read, because they are the same moment seen twice. Called
+   from the boot block below, and a no-op on every page without a `.meshbg` — which is
+   why it can live here instead of being copied into page-home.js and page-landing.js.
+
+   ⚠️ THE LAYER IS AT BODY LEVEL, so it does not scroll on its own. It has to be there:
+   #shellMain is the scroll box and clips to its own edges, so a layer inside it could
+   never reach the 56px of bar above it, and the bar could never rest on the gradient.
+   The cost is this line — one transform write per scroll event, matching the offset —
+   and the clamp keeps it from running off into numbers nothing can see.
+
+   ⚠️ THE BAR DOCKS ON SCROLL, NOT ON THE HAND-OFF. The hero's `Buy a license` moves up
+   into the bar ~120px in (see installStickyAction); content starts passing under the
+   bar at 1px. Two of the three surfaces that carry the mesh have no hero button at all
+   — the first-run Home and the landing page — so a fill tied to the hand-off would
+   leave their cards sliding under clear glass. One rule covers all three: the bar is
+   glass while nothing is behind it, and a surface the moment something is. */
+function wireMeshHeader(){
+  var shell = $('#shellMain'), bar = $('.dtopbar'), mesh = $('.meshbg');
+  if(!shell || !bar || !mesh) return;
+  var meshH = mesh.offsetHeight;
+  function sync(){
+    var y = shell.scrollTop;
+    bar.classList.toggle('docked', y > 4);
+    // clamped: past its own height the layer is off screen and the number stops mattering
+    mesh.style.transform = 'translate3d(0,' + (-Math.min(y, meshH)) + 'px,0)';
+  }
+  // the height is a vh (or a phone px constant), so it only changes when the window does
+  window.addEventListener('resize', function(){ meshH = mesh.offsetHeight; sync(); });
+  shell.addEventListener('scroll', sync);
+  sync();
+}
+
 if(guardSession()){
   injectChrome();
   wireGlobal();
+  wireMeshHeader();
   syncTitleRow();
   wireStickyFrames();
 }
@@ -2308,8 +2369,6 @@ var UsersModal = (function(){
     var b = $('#usersTable tbody'); if(!b) return;
     var us = DATA().users.slice().sort(function(a, c){ return dateKey(c.created) - dateKey(a.created); });
     b.innerHTML = us.map(userRow).join('');
-    var r = $('#usersTable .pager .range');
-    if(r) r.textContent = '1–' + us.length + ' of ' + us.length;
   }
 
   /* ---------- the invite row ----------
@@ -2388,21 +2447,46 @@ var UsersModal = (function(){
      second button belonging to the field. `mintInvite(null)` still writes a single-use
      record with a 7-day expiry, and `inviteByToken` still refuses a spent, revoked or
      expired one. */
-  function copyLink(){
+  /* ⚠️ THE ANSWER IS THE BUTTON, NOT A SNACKBAR (2026-09-24). Copying a link is the one
+     action here whose whole result is invisible — nothing on screen changes, the proof is
+     in a clipboard — so the confirmation has to be read exactly where the eye already is.
+     A snackbar puts it in the far corner of the window: you click in the sheet's header
+     and the answer appears somewhere else, which is why it kept being missed. The button
+     becomes `Link copied!` with a tick for two seconds and then goes back to offering the
+     action. Same pattern as inviting people to a Figma file.
+     ⚠️ `restore` is held on the closure and cleared on re-entry: clicking twice inside the
+     two seconds must not leave a timer that reverts the label while it is still true. */
+  var copyTimer = null;
+  function copyLink(btn){
     var rec = mintInvite(null);                           // no address: an open single-use door
     var url = inviteURL(rec.token);
-    var done = function(){ Snack.show('Invite link copied'); };
+    /* ⚠️ `.catch` is not decoration: writeText REJECTS when the document is not focused,
+       and an unhandled rejection is the only trace it leaves. The feedback below is
+       optimistic either way — same as the snackbar it replaced, which also fired on the
+       failure path — because the prototype has nothing truer to report. */
     if(navigator.clipboard && navigator.clipboard.writeText){
-      navigator.clipboard.writeText(url).then(done, done);
-    } else { done(); }
+      navigator.clipboard.writeText(url).catch(function(){});
+    }
     logActivity({ type:'user.invite_link_created', f:{} });
+    if(!btn) return;
+    var label = btn.querySelector('span'), use = btn.querySelector('use');
+    btn.classList.add('done');
+    if(label) label.textContent = 'Link copied!';
+    if(use) use.setAttribute('href', 'assets/icons.svg#ti-check');
+    clearTimeout(copyTimer);
+    copyTimer = setTimeout(function(){
+      btn.classList.remove('done');
+      if(label) label.textContent = 'Copy invite link';
+      if(use) use.setAttribute('href', 'assets/icons.svg#ti-link');
+    }, 2000);
   }
 
   /* one listener on the whole sheet: the copy-link is in the header, the Invite button
      in the body, and the table is re-rendered under both */
   scr.addEventListener('click', function(e){
     if(e.target.closest('[data-invite]')){ invite(); return; }
-    if(e.target.closest('[data-invitelink]')){ copyLink(); return; }
+    var cl = e.target.closest('[data-invitelink]');
+    if(cl){ copyLink(cl); return; }
   });
   var inp = $('#usersEmail');
   inp.addEventListener('keydown', function(e){

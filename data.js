@@ -416,7 +416,7 @@ var DATASETS = {
       { id:'B7',  tier:'prototype',product:'ThingsBoard', type:'Subscription', name:'Prototype', label:'Demo',         created:'Jul 20 2026', updated:'Jul 30 2026', status:'active',         event:'Sep 03 2026', price:'$39.00 / mo',  billing:'auto-pay' },
       { id:'B8',  tier:'tbmqsub',  product:'TBMQ',        type:'Subscription', name:'PE subscription', label:'MQTT prod',    created:'Jun 30 2026', updated:'Jul 12 2026', status:'active',   event:'Sep 10 2026', price:'$15.00 / mo', billing:'auto-pay' },
       { id:'B9',  tier:'tbmqsub',  product:'TBMQ',        type:'Subscription', name:'PE subscription', label:'MQTT staging', created:'Jul 05 2026', updated:'Jul 05 2026', status:'active',   event:'Sep 10 2026', price:'$15.00 / mo', billing:'auto-pay' },
-      { id:'B10', tier:'tbperp',   product:'ThingsBoard', type:'Perpetual',    name:'Perpetual License', label:'On-prem HQ',    created:'Jul 27 2026', updated:'Jul 27 2026', status:'active',           event:'Jul 27 2027', price:'one-time', billing:'paid' },
+      { id:'B10', tier:'tbperp',   product:'ThingsBoard', type:'Perpetual',    name:'Perpetual License', label:'On-prem HQ',    created:'Jul 27 2026', updated:'Jul 27 2026', status:'active',           event:'Jul 27 2027', price:'one-time', billing:'paid', extras:{ prod:'1' } },
       { id:'B11', tier:'tbperp',   product:'ThingsBoard', type:'Perpetual',    name:'Perpetual License', label:'Plant B',       created:'Sep 01 2025', updated:'Aug 05 2026', status:'updates_expiring', event:'Sep 01 2026', price:'one-time', billing:'paid' },
       /* ⚠️ Its updates term is ~25 days out ON PURPOSE: it is the only licence in the
          demo that exercises the 30-day stage of the updates warning. The three stages
@@ -441,18 +441,30 @@ var DATASETS = {
          ⚠️ `status:'active'` and NOT a stored "expired" status — the state is DERIVED
          from the date, the same way over-the-instance-limit is derived from a count.
          A stored flag can be forgotten on a licence; a comparison cannot. */
+      /* ⚠️ THE FREE-PLAN ROW, added 2026-09-24 so Home's five cover every mark in the
+         set. A free subscription has no renewal and no charge — same shape as the grant
+         two lines down: `event:''`, `price:'Free'`, and no billing method. It is
+         `awaiting_checkin` because nothing has been installed against it yet, which is
+         also what puts it in Home's five: attnRank ranks that state 2, above the plain
+         `active` rows. The state is SILENT in the row (it is not in ATTN_LABEL, so no
+         marker and no banner) — it only decides the order.
+         ⚠️ Seeded in mid-August, not 'today': every date in this file is SHIFTED at load
+         (see shiftDemoDates), currently by +36 days, so a row seeded on the real today
+         renders a month into the future. The anchor to seed against is the file's, not
+         the calendar's. */
+      { id:'B17', tier:'free',     product:'ThingsBoard', type:'Subscription', name:'Free',      label:'Evaluation',    created:'Aug 12 2026', updated:'Aug 12 2026', status:'awaiting_checkin', event:'', price:'Free', billing:'\u2014' },
       { id:'B16', tier:'tbperp',   product:'ThingsBoard', type:'Perpetual',    name:'Perpetual License', label:'Warehouse DC',  created:'Aug 07 2024', updated:'Aug 07 2025', status:'active',           event:'Aug 07 2026', price:'one-time', billing:'paid' },
       { id:'B15', tier:'grant',    product:'ThingsBoard', type:'Grant',        name:'Community Grant', label:'Research cluster', created:'Aug 19 2026', updated:'Aug 19 2026', status:'awaiting_checkin', event:'', price:'Free', billing:'\u2014', grant:true, limits:'6,050 devices &middot; 2 production servers' }
     ],
     users: [
+      /* ⚠️ FOUR, not eight (2026-09-24). The count is what the surface is sized for: the
+         Users modal lost its pager in the same pass, and a pager went away because the
+         account's own people are a short, known list. Eight rows needed one; four do not.
+         The four kept are the oldest four, so `Added` still sorts to something meaningful. */
       { name:'Mariia Panchuk', email:'mpanchuk@thingsboard.io',  created:'Jul 17 2026' },
       { name:'A. Admin',       email:'a.admin@thingsboard.io',   created:'Jul 20 2026' },
       { name:'Dev User',       email:'dev@thingsboard.io',       created:'Aug 02 2026' },
-      { name:'Olena Kravets',  email:'o.kravets@thingsboard.io', created:'Aug 05 2026' },
-      { name:'Ivan Petrenko',  email:'i.petrenko@thingsboard.io',created:'Aug 09 2026' },
-      { name:'Sara Lee',       email:'s.lee@thingsboard.io',     created:'Aug 12 2026' },
-      { name:'Tom Fischer',    email:'t.fischer@thingsboard.io', created:'Aug 15 2026' },
-      { name:'Nina Rossi',     email:'n.rossi@thingsboard.io',   created:'Aug 18 2026' }
+      { name:'Olena Kravets',  email:'o.kravets@thingsboard.io', created:'Aug 05 2026' }
     ],
     invoices: [
       { num:'NAWE49WG-0021', licId:'B13', date:'Aug 18 2026', amount:'$499.00',   status:'Paid', payment:'Auto-pay', auto:true  },
@@ -573,10 +585,11 @@ var DATASETS = {
    right-hand comment on each row is `running / allowed`; `allowed` is what
    instAllowed() computes from TIER_SPECS plus purchased extras.
 
-   ⚠️ EXACTLY ONE licence is over its limit on purpose — B10, 2 running against 1
-   allowed. Every other row here was checked against its own limit so that the
-   over-limit state means something when you find it, rather than being the accident
-   it was before (every perpetual showed two instances against a limit of one).
+   ⚠️ EXACTLY ONE licence is over its limit on purpose — B8 since 2026-09-24, 2 running
+   against 1 allowed (it was B10). Every other row here was checked against its own
+   limit so that the over-limit state means something when you find it, rather than
+   being the accident it was before (every perpetual showed two instances against a
+   limit of one).
 
    `agoMin` is how long ago the instance last reported, and `seen` is derived from it
    at load. Values sit well clear of the stale threshold in both directions — minutes
@@ -607,11 +620,18 @@ var DEMO_INSTANCES = {
   /* STALE: five days without a report, against a one-hour cadence */
   B6:  [ inst('5d2b8e47-6f01-4a93-8c15-7b3e9d4a2f60', 'Maker box',    7200, 'Jul 15 2026', 'prod', '3.7.2') ],     // 1 / 1 — STALE
   B7:  [ inst('7f4c1a68-3b97-4e02-a5d8-9c6b2e0f4713', 'Demo',         41, 'Jul 20 2026', 'prod', '3.9.0') ],       // 1 / 1
-  B8:  [ inst('0b6e3d95-8c24-4f71-b9a0-4e1d7c5a8362', 'MQTT prod',    8,  'Jun 30 2026', 'prod', '3.9.4') ],       // 1 / 1
+  /* ⚠️ THE over-limit licence, moved here from B10 (2026-09-24). A TBMQ subscription
+     that includes one production instance and is running two. There is still EXACTLY
+     ONE over-limit licence in the demo — the state did not multiply, it changed row,
+     because Home's five now lead with a TBMQ subscription rather than a perpetual. */
+  B8:  [ inst('0b6e3d95-8c24-4f71-b9a0-4e1d7c5a8362', 'MQTT prod',    8,  'Jun 30 2026', 'prod', '3.9.4'),
+         inst('d41f7a06-2e58-4b93-8c07-5a9e1d3b6f20', 'MQTT prod 2',  13, 'Aug 21 2026', 'prod', '3.9.4') ],     // 2 / 1 — OVER LIMIT
   B9:  [ inst('2c9a5f80-4d13-4b67-8e92-1a7f3c6d0b54', 'MQTT staging', 16, 'Jul 05 2026', 'prod', '3.9.3') ],       // 1 / 1
-  /* ⚠️ THE deliberate over-limit licence: a perpetual that includes one production
-     instance and is running two. This is the only one, and it is what the blocked
-     banner, the Home attention row and the detach route are all demonstrated on. */
+  /* ⚠️ NO LONGER over its limit (2026-09-24): it still runs two production instances,
+     but the licence now carries a purchased extra one (`extras.prod` on B10), so it is
+     2 of 2. Both instances and their whole check history are kept — the state moved to
+     B8 by giving B8 a second instance, not by taking one away from here. */
+  B17: [],                                                                                                         // 0 / 1 — never activated
   B10: [ inst('6e0d2b73-5a89-4c14-9f37-8b2e6a1d4053', 'HQ node 1',    6,  'Jul 27 2026', 'prod', '3.8.1'),
          inst('4b8f1e06-2c75-4d93-a610-7e5c3b9f2841', 'HQ node 2',    4,  'Aug 02 2026', 'prod', '3.8.1') ],       // 2 / 1 — OVER
   /* the updates case: a perpetual well behind the current release, which is what the
@@ -855,6 +875,55 @@ var PRODUCT_LOGO = {
   tbmq:        'assets/logo_tbmq.png',
   TBMQ:        'assets/logo_tbmq.png'
 };
+/* ---------- the LICENCE mark: product x billing kind x plan ---------------------
+   ⚠️ SIX MARKS, NOT TWO, and the difference carries meaning the row did not carry
+   before: the artwork is colour-coded, so the square in front of a licence now says
+   which product it is AND how it was bought, before a single word is read. Supplied as
+   a set (2026-09-24) with the coding fixed in the design file:
+     Subscription  blue     TB_Subscription   TBMQ_Subscription
+     Perpetual     navy     TB_Perpetual      TBMQ_Perpetual
+     Free          green    TB_Free           (TBMQ has no free plan)
+     Grant         purple   TB_Grant          (TBMQ has no grant)
+
+   ⚠️ THE KEY IS NOT THE PLAN NAME. `Free` is a PLAN inside Subscription, not a billing
+   kind, so keying off the words would break the moment a plan is renamed. It reads
+   `TIER_SPECS[lic.tier].free` — the same flag the price list uses to decide a card says
+   `Free` instead of a number — and `.grant` the same way. One fact, one source.
+
+   ⚠️ THIS IS THE COLOUR EXCEPTION GROWING, and it is named rather than assumed. The
+   prototype is monochrome by hard rule; brand artwork was already the second exception
+   after the wordmark (see PRODUCT_LOGO below). What is new is that colour now DISTINGUISHES
+   — six squares instead of two — which the rule says state must never do. It is tolerable
+   only because nothing is carried by the colour ALONE: every one of these sits beside the
+   product, the billing kind and the plan in words, in the same cell. If that ever stops
+   being true, this becomes a real violation and not an exception.
+
+   ⚠️ Falls back to the plain product logo, never to nothing: an unknown combination
+   (a new product, a kind nobody added a square for) must still mark its row. */
+var LICENSE_MARK = {
+  'ThingsBoard|Subscription': 'assets/TB_Subscription.png',
+  'ThingsBoard|Perpetual':    'assets/TB_Perpetual.png',
+  'ThingsBoard|Grant':        'assets/TB_Grant.png',
+  'ThingsBoard|Free':         'assets/TB_Free.png',
+  'TBMQ|Subscription':        'assets/TBMQ_Subscription.png',
+  'TBMQ|Perpetual':           'assets/TBMQ_Perpetual.png'
+};
+function licenseMarkSrc(lic){
+  if(!lic || typeof lic !== 'object') return null;
+  var spec = TIER_SPECS[lic.tier] || {};
+  var kind = spec.grant || lic.grant ? 'Grant' : spec.free ? 'Free' : (lic.type || '');
+  return LICENSE_MARK[lic.product + '|' + kind]
+      || LICENSE_MARK[lic.product + '|' + (lic.type || '')]
+      || null;
+}
+/* ⚠️ `alt=""` for the same reason productMark uses it: the product, the billing kind and
+   the plan are all spelled out in the cell beside the square. */
+function licenseMark(lic, cls){
+  var src = licenseMarkSrc(lic);
+  if(!src) return productMark(lic && lic.product, cls);
+  return '<img class="prodmark' + (cls ? ' ' + cls : '') + '" src="' + src + '" alt="" aria-hidden="true">';
+}
+
 /* ⚠️ `alt=""`: the product is named in words beside every one of these, so a screen
    reader that also announced the mark would say it twice. */
 function productMark(product, cls){
