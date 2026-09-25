@@ -76,7 +76,7 @@ function openDeleteConfirm(){
   $('#modalCloseBtn').textContent = 'Cancel';
   var foot = $('#overlay .mf');
   var del = document.createElement('button');
-  del.type = 'button'; del.className = 'btn'; del.id = 'delConfirmBtn';
+  del.type = 'button'; del.className = 'btn btn--primary btn--md btn--destructive'; del.id = 'delConfirmBtn';
   del.textContent = 'Delete account'; del.disabled = true;
   foot.appendChild(del);
   var inp = $('#delConfirm');

@@ -30,14 +30,36 @@ function attnRank(l){
    no first check-in yet) are not statuses; they are the banner on the details page,
    which carries the date and the action. Same rule as statusChipHTML. The date the
    attention state is about rides under the chip now (see statusCell). */
-function statusChip(l){
+/* ⚠️⚠️ THE WORD ITSELF IS COLOURED, AND THE ICON IS GONE (2026-09-25, second pass, by
+   request). One pass ago this was a 20px icon beside an ink word; before that, an
+   outlined pill. What is left is the word in its own colour and nothing else.
+   ⚠️⚠️ COLOUR IS NOW THE ONLY VISUAL CARRIER IN THIS CELL, and that is a real change to
+   the accessibility position this file took yesterday — which was "three signals move
+   together: the word, the SHAPE of the glyph, and the colour; drop the colour and it
+   still reads". The shape is gone, so two are left: the colour, and the WORD.
+   The word is what saves it. `Active` / `Canceled` / `Blocked` are not three tints of
+   one label — they are three different strings, and a reader who sees no colour at all
+   still reads the status correctly. That is the whole of the defence, and it is why the
+   colour may never become the only difference between two states: the moment two
+   statuses share a word and differ only in hue, this cell fails.
+   ⚠️ `Blocked` IS INFERRED. The reference covers Active and Canceled; Blocked is the
+   third value this chip has always had, and leaving it an ink pill between two icon
+   marks would have been one column speaking two languages. It takes the alert colour
+   because it is the one status that means "act now".
+   ⚠️ `Canceled`, one L. The reference writes "Cancelled"; every other surface in the
+   product — the menu item, the cancel dialog, the activity copy, `.pill.off` — spells it
+   with one, and a status that disagrees with the dialog that sets it is worse than a
+   spelling preference. Flagged rather than silently changed. */
+function statusMark(l){
   var st = l && typeof l === 'object' ? l.status : l;
-  if(st==='canceled') return '<span class="pill off">Canceled</span>';
+  if(st==='canceled')
+    return '<span class="statmark is-off">Canceled</span>';
   /* ⚠️ The one attention state that IS a status — see statusChipHTML. A row that says
      `Active` while its own state line says "Over instance limit · 2 of 1" is the list
      contradicting itself in two adjacent cells. */
-  if(typeof l === 'object' && instOverLimit(l)) return '<span class="pill attn">Blocked</span>';
-  return '<span class="pill">Active</span>';
+  if(typeof l === 'object' && instOverLimit(l))
+    return '<span class="statmark is-alert">Blocked</span>';
+  return '<span class="statmark is-ok">Active</span>';
 }
 /* What the next date means depends on the licence: a subscription renews, a
    perpetual stops receiving updates, a cancelled subscription runs out, and a
@@ -106,8 +128,14 @@ function stateMobile(p){
    On the phone the chip goes too — the card's left stripe carries the status — and
    only the date line survives, in its icon form. */
 function statusCell(p){
-  return '<td><div class="licstat">' + statusChip(p)
-    + '<div class="licstat-txt">' + alertIcon(p) + stateText(p) + '</div>'
+  /* ⚠️ THE ALERT TRIANGLE IS GONE FROM THIS COLUMN (2026-09-25, by request). It was the
+     row's only carrier of WHY — its tooltip held the whole sentence ("2 production
+     instances running, 1 allowed…") — and that sentence is not lost: it is the banner at
+     the top of the licence details page, which is where the full wording has always
+     lived. What the row keeps is the words: `Payment failed`, `Over instance limit`.
+     ⚠️ `alertIcon` had exactly one reader — this cell — so it goes with the triangle. */
+  return '<td><div class="licstat">' + statusMark(p)
+    + '<div class="licstat-txt">' + stateText(p) + '</div>'
     + '<div class="licstat-mob mob-only">' + stateMobile(p) + '</div></div></td>';
 }
 /* ---------- what a licence row says is wrong ------------------------------------
@@ -174,16 +202,10 @@ function attentionOf(lic){
    version of the same icon is what a quiet, non-urgent note looks like, and using it
    here would say the opposite of what the row means. */
 var ALERTSVG = icon('alert-triangle-filled');
-function alertIcon(p){
-  var a = attentionOf(p);
-  if(!a) return '';
-  /* ONE marker, several reasons: the glyph is the same whatever the condition, and the
-     words beside it say which. `.tip` gives it hover on a pointer device AND the
-     delegated tap below 600px — the same contract the info icon runs on, because touch
-     has no hover. */
-  return '<button type="button" class="alertic tip wide" data-tip="' + esc(a.tip) + '"'
-    + ' aria-label="' + esc(a.label) + '">' + ALERTSVG + '</button>';
-}
+/* ⚠️ `alertIcon` IS GONE (2026-09-25) with the triangle it drew. It had exactly one
+   reader — the licence row's Status cell — and that cell stopped showing it by request.
+   Its tooltip text (`ATTN_TIP`) is NOT dead: the licence details banner still reads it,
+   which is where the full sentence always lived. */
 /* The running version against the latest released — the comparison IS the argument,
    which is why the two sit in one cell and not in two columns.
    ⚠️ A licence with no instances has no running version: nothing has reported one, and
@@ -198,11 +220,34 @@ function alertIcon(p){
    is what lets a reader scan a column of triangles and believe them.
    ⚠️ The mark never travels alone: the number is beside it either way, and `behind`
    also prints `latest x.y.z`. State is not carried by the glyph. */
+/* ⚠️⚠️ THE CELL SAYS ONE THING NOW: which version is running, and whether it is the
+   latest (2026-09-25, by request). The `latest 3.9.4` line under the number is GONE —
+   the comparison is the mark, and the number it is compared against is a detail you ask
+   for. It moved into the alert's tooltip, and only the alert has one: there is nothing
+   to ask about a licence that is already current.
+   ⚠️ A REAL BUTTON when it carries the tooltip — hover
+   on a pointer device, focus for the keyboard, and the delegated tap below 600px where
+   there is no hover. A `title` would have had none of the three.
+   ⚠️ ONE MARK, NOT TWO. The up-to-date state has no glyph at all, so there is no pair of
+   shapes to tell apart and no colour doing the telling: either there is an alert or
+   there is not. Presence, then colour, then the tooltip behind it.
+   ⚠️ The circled exclamation, NOT a triangle. A triangle means "something is broken,
+   act now" in this product (see the attention marker); running an older release is the
+   step below that — worth knowing, nothing stopped. */
+var VER_LATEST_TIP = function(){ return 'The latest product version is ' + LATEST_VERSION + '.'; };
 function versionMark(behind){
-  return behind
-    ? '<span class="verm is-behind" role="img" aria-label="Behind the latest release">'
-      + icon('alert-circle') + '</span>'
-    : '<span class="verm" role="img" aria-label="Up to date">' + icon('circle-check') + '</span>';
+  /* ⚠️ NOTHING AT ALL WHEN THE VERSION IS CURRENT (2026-09-25, second pass, by request).
+     The green tick is gone: it marked the ordinary case, so a column of ticks said
+     "normal" nineteen times to make one exclamation stand out — and the exclamation
+     stands out better with nothing beside it. Silence is the up-to-date state now.
+     ⚠️ Returns an EMPTY STRING, not a placeholder. `.ver-run` is an inline-flex with a
+     gap, and a gap only applies BETWEEN children — so an absent mark costs the number no
+     leading space and the column stays flush. Checked, not assumed. */
+  if(!behind) return '';
+  var tip = VER_LATEST_TIP();
+  return '<button type="button" class="verm is-behind tip wide" data-tip="' + esc(tip) + '"'
+    + ' aria-label="Behind the latest release. ' + esc(tip) + '">'
+    + icon('alert-circle', { size:20 }) + '</button>';
 }
 function versionCell(p){
   var v = licenseVersion(p);
@@ -210,11 +255,13 @@ function versionCell(p){
   var behind = cmpVersion(v, LATEST_VERSION) < 0;
   return '<td class="lic-ver"><div class="verline' + (behind ? ' is-behind' : '') + '">'
     + '<span class="ver-run">' + versionMark(behind) + esc(v) + '</span>'
-    + (behind ? '<span class="ver-latest">latest ' + esc(LATEST_VERSION) + '</span>' : '')
     + '</div>'
-    /* only when the instances disagree: the licence-level number is the LOWEST of
-       them, so without this the reader cannot tell one laggard from a whole estate */
-    + (versionMixed(p) ? '<div class="ver-mixed">across ' + instRunning(p) + ' instances</div>' : '')
+    /* ⚠️ `across N instances` IS GONE FROM THE LIST (2026-09-25, by request): the column
+       is one line and carries no second sentence. It said something true and unsaid
+       elsewhere — the licence's figure is the LOWEST of its instances, so one laggard
+       and a whole estate print the same number — and that fact now lives ONLY in the
+       licence details header, which has the room for it. If the details header ever
+       drops it too, the prototype stops saying it anywhere. */
     + '</td>';
 }
 function nextCharge(ds){
@@ -244,23 +291,46 @@ function autoChargeIcon(v){
    the words, a phone card reads three icon-buttons — and the third one, the way to
    the licence, only exists on the phone: on desktop that job belongs to the Product
    cell, which is a link already. */
-var DLSVG   = '<svg class="ic ra-ic" aria-hidden="true"><use href="assets/icons.svg#ti-download"></use></svg>';
-var VIEWSVG = '<svg class="ic ra-ic" aria-hidden="true"><use href="assets/icons.svg#ti-external-link"></use></svg>';
+/* ⚠️ `DLSVG` and `VIEWSVG` ARE GONE (2026-09-25): the invoice row's two actions are
+   icon-only buttons from the component now, so their glyphs come from `icon()` like
+   every other one and there is nothing left for a hand-rolled `<svg>` string to do. */
 /* ~~invOpenLicenseAction~~ removed: the phone card's third action was a way to the
    licence, and the card's product line is now that link on both breakpoints — the
    desktop Product cell always was. Two ways to the same place on one card is noise.
-   To bring it back: an <a class="iconbtn ib tip ra-open"> to licenseHref(lic,
+   To bring it back: an <a class="btn btn--secondary btn--md btn--icon tip ra-open"> to licenseHref(lic,
    'invoices'), appended in invRow's .rowactions. */
+/* ⚠️ THE SAME STATUS PATTERN AS A LICENCE ROW (2026-09-25, by request): no outline, the
+   WORD in the colour of its state. `statmark` is the licence table's own builder, so the
+   two columns cannot drift — an invoice that went through takes `--status-ok`, one that
+   did not takes `--status-alert`.
+   ⚠️ THE TEST IS "DID IT GO THROUGH", not a list of known strings. `Paid` is the only
+   success the data has today; anything else — `Past due` now, a refund or a dispute
+   later — is something to look at, and defaulting an UNKNOWN status to green would be
+   the one direction that lies. */
+function invStatusMark(v){
+  var st = v.status || 'Paid';
+  return '<span class="statmark ' + (st === 'Paid' ? 'is-ok' : 'is-alert') + '">' + esc(st) + '</span>';
+}
 function invRow(v, opts){
   opts = opts || {};
-  var pill = v.status==='Past due' ? '<span class="pill attn">Past due</span>' : '<span class="pill">'+(v.status||'Paid')+'</span>';
+  /* ⚠️ ICON-ONLY, BOTH OF THEM (2026-09-25, by request). They were text buttons that
+     carried a hidden glyph and swapped to icons on the phone — one control with two
+     shapes, decided by a breakpoint. Now they are one shape everywhere, and the words
+     they lost come back as the tooltip every other icon button here uses. */
+  /* ⚠️ SECONDARY, not ghost (2026-09-25, by request). The licence row's copy button is
+     secondary and these two sat beside it as bare glyphs — two kinds of control for the
+     same kind of job, one table apart. Every icon button in a list row is the quiet
+     filled one now. */
+  var dl = button({ variant:'secondary', size:'md', icon:'download', cls:'tip ra-act',
+                    ariaLabel:'Download PDF',
+                    attrs:'data-dlinv data-tip="Download PDF"' });
+  var view = button({ variant:'secondary', size:'md', icon:'external-link', cls:'tip ra-act',
+                      ariaLabel:'View invoice (opens in a new tab)', href:'#',
+                      attrs:'data-viewinv target="_blank" rel="noopener" data-tip="View invoice"' });
   return '<tr class="inv-row"><td class="mono">'+v.num+'</td><td>'+fmtDate(v.date)+'</td><td class="num">'+v.amount+'</td>'
-    + '<td><span class="statwrap">'+pill+autoChargeIcon(v)+'</span></td>'
+    + '<td><span class="statwrap">'+invStatusMark(v)+autoChargeIcon(v)+'</span></td>'
     + (opts.noProduct ? '' : invProductCell(v, opts))
-    + '<td class="cellact"><span class="rowactions">'
-    +   '<button class="link ra-act" data-dlinv aria-label="Download PDF">' + DLSVG + '<span class="ra-txt">Download PDF</span></button>'
-    +   '<a class="link ra-act" data-viewinv target="_blank" rel="noopener" href="#" aria-label="View invoice (opens in a new tab)">' + VIEWSVG + '<span class="ra-txt">View invoice' + EXTSVG + '</span></a>'
-    + '</span></td></tr>';
+    + '<td class="cellact"><span class="rowactions">' + dl + view + '</span></td></tr>';
 }
 // how many columns invRow produces — the empty-state row has to span them
 function invCols(opts){ return (opts && opts.noProduct) ? 5 : 6; }
@@ -349,10 +419,10 @@ function actionsCell(p, opts){
   // a grant cannot be changed, cancelled or topped up — the key is all there is,
   // so its row carries the copy action and no overflow menu (inferred)
   if(p && p.grant) return '<td class="cellact"><div class="lic-actions">'
-    + '<button class="iconbtn ib tip lic-copy" aria-label="Copy license key" data-tip="Copy license key">' + COPYSVG + '</button></div></td>';
+    + '<button class="btn btn--secondary btn--md btn--icon tip lic-copy" aria-label="Copy license key" data-tip="Copy license key">' + COPYSVG + '</button></div></td>';
   return '<td class="cellact"><div class="lic-actions">'
-    + '<button class="iconbtn ib tip lic-copy" aria-label="Copy license key" data-tip="Copy license key">' + COPYSVG + '</button>'
-    + '<div class="menu"><button class="iconbtn ib" aria-haspopup="true" aria-expanded="false" aria-label="More actions">' + KEBAB + '</button>'
+    + '<button class="btn btn--secondary btn--md btn--icon tip lic-copy" aria-label="Copy license key" data-tip="Copy license key">' + COPYSVG + '</button>'
+    + '<div class="menu"><button class="btn btn--menu btn--md btn--icon" aria-haspopup="true" aria-expanded="false" aria-label="More actions">' + KEBAB + '</button>'
     + '<div class="pop" role="menu" hidden>' + menuItems(p, opts) + '</div></div></div></td>';
 }
 function rowOpen(p){
@@ -655,7 +725,12 @@ function openCancelModal(lic, after){
     + '<p>The subscription stays active until <b>' + end + '</b>. After that its instances will stop.</p>');
   var foot = $('#overlay .mf');
   var confirm = document.createElement('button');
-  confirm.type='button'; confirm.className='btn ter'; confirm.id='cancelConfirmBtn'; confirm.textContent='Cancel subscription';
+  /* ⚠️ DESTRUCTIVE TONE, and this reverses the inversion the usability session caught:
+     the confirm was `.btn.ter` — underlined grey text — so the destructive action looked
+     LESS like a button than the "Keep subscription" beside it. Tone, not variant: it is
+     still the dialog's primary. */
+  confirm.type='button'; confirm.className='btn btn--primary btn--md btn--destructive';
+  confirm.id='cancelConfirmBtn'; confirm.textContent='Cancel subscription';
   foot.appendChild(confirm);
   $('#modalCloseBtn').textContent = 'Keep subscription';
   /* ⚠️ Quiet, and on the KEEP side — not beside the destructive button. People cancel
@@ -781,29 +856,81 @@ function activityEntry(rec, scope, i){
   var html = activitySentenceHTML(rec, scope);
   if(html == null) return '';
   var det = activityDetailHTML(rec);
-  /* ⚠️ ONE TYPE KEEPS A DISCLOSURE, and it is not a detail: a folded run's `detail` IS
-     the entries it folded — thirty-six of them on one instance — and folding exists
-     precisely so a feed of 298 rows does not print them. Inlining that would undo the
-     fold. So the control stays here and nowhere else, and it is labelled as what it is:
-     show the checks, not show the details. */
-  var fold = !!rec.fold && det;
+  /* ⚠️ NO TYPE KEEPS A DISCLOSURE ANY MORE. This used to argue the opposite — that the
+     folded run had to keep its expander because its `detail` was the thirty-six entries
+     it folded. It is removed rather than inlined: see foldChecks. Checked across all 29
+     types in ACTIVITY_TEXT — `instance.checks_grouped` is the ONLY one produced by
+     grouping, so "does any other group need expanding" has no other candidate. A group
+     is a run of IDENTICAL successes by construction (a failure ends a run, and so does a
+     gap), which is what makes a count able to stand for it. */
+  /* ⚠️ THE ROW PRINTS THE TIME, NOT THE DATE-TIME (2026-09-25, by request). The date
+     moved up to the group heading (`activityList`), and a row that repeated it would
+     print the same date on every row under a heading that already says it once. It is
+     also why the slot moved to the RIGHT: a leading timestamp made every sentence start
+     at a different x, and the one thing a reader scans a log for — what happened — was
+     the column that never lined up.
+     ⚠️ `activityEntry` IS NO LONGER SELF-SUFFICIENT because of this: on its own it says
+     16:20 with no day. Every surface goes through `activityList`, which supplies the day;
+     the styleguide is the one caller that does not, and it shows the component rather
+     than a feed. */
+  /* ⚠️⚠️ NOTHING IN A FEED ENTRY IS BEHIND A CLICK ANY MORE (2026-09-25, by request).
+     The last disclosure was the folded run of checks, and its payload is gone with it —
+     not inlined, GONE: see foldChecks for why the list said nothing the summary had not.
+     What `detail` holds for every other type was already inline; it simply has no
+     `hidden` branch to sit beside now.
+     ⚠️ `i` is kept in the signature and unused on purpose — it was the expander's key,
+     and four call sites pass it. Removing it is a separate, wider edit. */
   return '<div class="fitem">'
     + '<div class="fi-row">'
     +   '<div class="fi-body">'
     /* ⚠️ NO SEPARATE ACTOR SLOT. The actor is inside the sentence (see `{by}`), and
        printing it in both places would put the same name on the row twice. */
-    +     '<div class="fi-meta">' + fmtDateTime(rec.ts) + '</div>'
     +     '<div class="fi-txt">' + html + '</div>'
-    +     (det && !fold ? det : '')
+    +     det
     +   '</div>'
-    +   (fold
-        ? '<button class="iconbtn ib" data-audit data-i="' + i + '" aria-expanded="false"'
-          + ' aria-label="Show the ' + (rec.f && rec.f.count ? rec.f.count + ' ' : '')
-          + 'checks" title="Show the individual checks">' + AUDITSVG + '</button>'
-        : '')
+    +   '<div class="fi-time">' + esc(activityTime(rec.ts)) + '</div>'
     + '</div>'
-    + (fold ? '<div class="fi-audit" hidden>' + det + '</div>' : '')
     + '</div>';
+}
+/* ============================================================================
+   THE FEED — entries grouped under the day they happened
+   ============================================================================
+   ⚠️ ONE BUILDER FOR EVERY FEED (2026-09-25, by request), for the same reason
+   `activityEntry` is one builder for every row: Home, the Activity page and a licence's
+   own tab all show the same feed at different lengths, and a grouping that only two of
+   them had would be a third rendering of the same component.
+
+   The shape is three columns: the DAY in a gutter of its own on the left, the sentence
+   in the middle, the TIME at the right edge. The day is printed once per run of entries
+   that share it — the feeds are already sorted newest-first by minute (`feedMinute`), so
+   a run is contiguous and this never has to sort or bucket anything.
+
+   ⚠️ IT GROUPS WHAT IT IS GIVEN, and that is deliberate: the caller has already paged,
+   filtered and searched, so a day heading describes the rows actually on screen. A page
+   that starts mid-day repeats the heading on the next page, which is correct — that page
+   also starts mid-day.
+   ⚠️ `activityEntry` can return '' for a record whose type the copy map does not know.
+   Such a record must not open a day of its own, so the heading is written only once an
+   entry under it has actually been built. */
+function activityDay(rec){ return String(rec && rec.ts).split(', ')[0]; }
+function activityTime(ts){ var q = String(ts).split(', '); return q.length === 2 ? q[1] : ''; }
+function activityList(rows, scope, keyPrefix){
+  var pre = keyPrefix == null ? '' : keyPrefix;
+  var out = '', day = null, open = false;
+  (rows || []).forEach(function(rec, n){
+    var html = activityEntry(rec, scope, pre + n);
+    if(!html) return;
+    var d = activityDay(rec);
+    if(d !== day){
+      if(open) out += '</div></div>';
+      day = d;
+      out += '<div class="fday"><div class="fday-date">' + esc(fmtDate(d)) + '</div>'
+           + '<div class="fday-items">';
+      open = true;
+    }
+    out += html;
+  });
+  return open ? out + '</div></div>' : out;
 }
 /* What SEARCH matches: the sentence and the actor, and nothing else.
    ⚠️ This is the whole point of the plain-text map. Search used to run
@@ -856,7 +983,22 @@ function actType(a){
    ⚠️ A FAILURE NEVER JOINS A GROUP, even between two successes — it is the one entry
    the reader is scanning for, and folding it into a count would hide it. It stays its
    own row and says why in the row itself.
-   Nothing is removed: the run keeps its entries and the row expands to them. */
+
+   ⚠️⚠️ A RUN IS UNBROKEN, AND A GAP ENDS IT (2026-09-25, by request). Two things break a
+   run now: a failure, and a MISSING slot. The cadence is recorded — `CHECKIN_INTERVAL_H`
+   — so the test is against the interval the product states rather than inferred from the
+   spacing of the stamps, with `checkGapMin()` absorbing jitter (see data.js for why the
+   threshold is 1.5x and not equality).
+   This is the one thing the summary cannot say on its own: "4 successful checks, 08:57
+   to 11:57" is true whether or not 10:57 happened, and the reader cannot tell. Two
+   groups with a hole between them say it by STRUCTURE — which is why the expansion was
+   never the answer to it.
+
+   ⚠️⚠️ NOTHING EXPANDS ANY MORE. The group used to carry every entry it folded as
+   `detail` and open to them. The list repeated what the summary already said: the checks
+   are hourly and the summary prints the count and both ends, so every line in it was
+   derivable, and each one carried the same two words. It is REMOVED, not hidden behind
+   a click — see `activityEntry`. */
 function foldChecks(checks){
   var byInst = {};
   checks.forEach(function(c){
@@ -868,22 +1010,24 @@ function foldChecks(checks){
     var run = [];
     function flush(){
       if(!run.length) return;
-      /* ⚠️ A GROUP IS AN ORDINARY ENTRY with many detail rows — it is not a second kind
-         of row any more. `feedGroupItem` used to build its own markup, its own toggle
-         and a nested audit button per child; all of that is `detail` now, so the
-         component renders a run of check-ins with the same code as everything else. */
+      /* ⚠️ A GROUP IS AN ORDINARY ENTRY — no `fold`, no `detail`, nothing a surface has
+         to treat as a second kind of row. What it carries is what it says: which
+         instance, how many, and the two ends of the run. */
       out.push(run.length === 1 ? run[0] : {
-        type:'instance.checks_grouped', fold:true,
+        type:'instance.checks_grouped',
         ts: run[0].ts, tsMin: run[0].tsMin,
         f: { entity: run[0].f.entity, count: run.length,
              from: fmtDateTime(run[run.length - 1].ts), to: fmtDateTime(run[0].ts) },
-        instId: run[0].instId, licId: run[0].licId,
-        detail: run.map(function(c){ return [fmtDateTime(c.ts), 'Checked in']; }) });
+        instId: run[0].instId, licId: run[0].licId });
       run = [];
     }
     list.forEach(function(c){
-      if(c.type === 'instance.check_failed'){ flush(); out.push(c); }
-      else run.push(c);
+      if(c.type === 'instance.check_failed'){ flush(); out.push(c); return; }
+      /* `list` runs newest-first and `tsMin` is minutes AGO, so the previous entry is
+         the more recent one and the delta below is how far back this one sits from it. */
+      var prev = run[run.length - 1];
+      if(prev && (c.tsMin - prev.tsMin) >= checkGapMin()) flush();
+      run.push(c);
     });
     flush();
   });
@@ -909,20 +1053,12 @@ function activityFeed(opts){
     all = all.filter(function(a){ return opts.types.indexOf(actType(a)) >= 0; });
   return all.sort(function(a, b){ return feedMinute(b) - feedMinute(a); });
 }
-/* ---- the rows ---- */
-/* A folded run renders as one row that opens to its own entries — the count is a
-   summary, not a replacement. */
-/* One entry point for every feed row, so a surface never has to know which kind it is */
-/* the expander on a folded run — delegated, because feeds are re-rendered */
-document.addEventListener('click', function(e){
-  var b = e.target.closest('[data-fgroup]');
-  if(!b) return;
-  var box = b.closest('.fgroup').querySelector('.fg-items');
-  var open = box.hidden;
-  box.hidden = !open;
-  b.setAttribute('aria-expanded', open ? 'true' : 'false');
-  b.classList.toggle('is-on', open);
-});
+/* ⚠️ THE `[data-fgroup]` HANDLER IS GONE (2026-09-25). It was already dead before this
+   pass — nothing had emitted `data-fgroup` or `.fgroup` since the folded run stopped
+   building its own markup, so `closest('.fgroup')` would have returned null and thrown
+   if the attribute had ever come back. It is removed here because it belonged to the
+   expander this pass took out, and its stylesheet block (`.fg-line`, `.fg-lrow`,
+   `.fg-time`, `.fg-txt`, `.fg-audit`, `.fg-items`, `.fg-toggle`) went with it. */
 
 /* ============================================================================
    PAGINATION — one controller, for pagers that were markup only
@@ -986,6 +1122,8 @@ function wirePager(sel, st, rerender){
   });
 }
 /* the markup, so four surfaces cannot end up with four slightly different pagers */
+var PAGER_BTNS = [['First page','chevrons-left'], ['Previous page','chevron-left'],
+                  ['Next page','chevron-right'], ['Last page','chevrons-right']];
 function pagerHTML(id, sizes){
   return '<div class="pager air" id="' + id + '">'
     + '<span class="spacer"></span>'
@@ -993,11 +1131,15 @@ function pagerHTML(id, sizes){
     +   (sizes || [10,20,50,100]).map(function(n){ return '<option>' + n + '</option>'; }).join('')
     + '</select></span>'
     + '<span class="range">0 of 0</span>'
+    /* ⚠️ THE FOUR PAGER BUTTONS GO THROUGH THE COMPONENT (2026-09-25). They were
+       classless `<button>`s with their own 40px box in `.pagebtns button` — which is
+       `secondary md icon` and always was. Their `disabled` now behaves like every other
+       disabled button instead of having its own rule. */
     + '<span class="pagebtns">'
-    +   '<button disabled aria-label="First page"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevrons-left"></use></svg></button>'
-    +   '<button disabled aria-label="Previous page"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-left"></use></svg></button>'
-    +   '<button disabled aria-label="Next page"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-right"></use></svg></button>'
-    +   '<button disabled aria-label="Last page"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevrons-right"></use></svg></button>'
+    +   PAGER_BTNS.map(function(b){
+          return button({ variant:'secondary', size:'md', icon:b[1], ariaLabel:b[0],
+                          disabled:true });
+        }).join('')
     + '</span></div>';
 }
 
@@ -1098,7 +1240,7 @@ function renderLicFeed(lic){
     var rows = searching ? list : pageSlice(list, licFeedPage);
     if(searching) licFeedPage.total = list.length;
     licRendered = rows;
-    el.innerHTML = rows.map(function(a,i){ return activityEntry(a, 'license', 'lic'+i); }).join('');
+    el.innerHTML = activityList(rows, 'license', 'lic');
   }
   var pg = $('#licFeedPager');
   if(pg) pg.hidden = !!licFeedQuery() || !list.length;
@@ -1107,26 +1249,9 @@ function renderLicFeed(lic){
   wirePager('#licFeedPager', licFeedPage, function(){ renderLicFeed(lic); });
 }
 
-/* The details icon expands the raw action-data payload in place (toggle, and
-   more than one can stay open). Delegated, so re-rendered feeds keep working. */
-function wireFeedAudit(rootSel){
-  var host = $(rootSel);
-  if(!host) return;
-  host.addEventListener('click', function(e){
-    var btn = e.target.closest('[data-audit]');
-    if(!btn) return;
-    /* ⚠️ NEAREST OWNER, not the row. A folded run now carries an audit button on every
-       entry inside it as well as being a `.fitem` itself, so looking up to `.fitem` and
-       taking its FIRST `.fi-audit` opened the same payload whichever entry was pressed.
-       `.fg-line` is listed first: `closest` walks outward and stops at the first match. */
-    var item = btn.closest('.fg-line, .fitem'), pre = item && item.querySelector('.fi-audit');
-    if(!pre) return;
-    var open = pre.hidden;
-    pre.hidden = !open;
-    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-    btn.classList.toggle('is-on', open);
-  });
-}
+/* ⚠️ `wireFeedAudit` IS GONE (2026-09-25) along with the last expander in the feed.
+   It toggled `.fi-audit`, and before that the raw JSON payload; there is now nothing in
+   an activity entry that is hidden until clicked. `AUDITSVG` went with it. */
 
 /* ---------- period control ---------- */
 var PER_LABEL = { all:'All time','24h':'Last 24 hours','7d':'Last 7 days','30d':'Last 30 days',custom:'Custom range' };
@@ -1323,6 +1448,10 @@ function wireSearch(inputSel, opts){
         slot = host.lastElementChild;
       }
     }
+    /* ⚠️ For a list whose rows are not all items: the Instances page hides group
+       headings whose every row was filtered out. Runs after the slot, so a surface that
+       wants to read the final state sees it. */
+    if(opts.after) opts.after(q, shown);
   }
   input.addEventListener('input', run);
   /* delegated on the document: the block is created and destroyed as you type, so
@@ -1395,7 +1524,7 @@ function guardLinks(){
       '<p>Your edits on this page haven\u2019t been saved yet. If you leave now, they\u2019ll be lost.</p>');
     $('#modalCloseBtn').textContent = 'Stay';
     var leave = document.createElement('button');
-    leave.type = 'button'; leave.className = 'btn ter'; leave.textContent = 'Leave without saving';
+    leave.type = 'button'; leave.className = 'btn btn--text btn--md'; leave.textContent = 'Leave without saving';
     leave.addEventListener('click', function(){ pageDirty = false; location.href = href; });
     $('#overlay .mf').insertBefore(leave, $('#modalCloseBtn'));
     $('#modalCloseBtn').focus();
@@ -1494,13 +1623,27 @@ function landingLead(sel, opts){
 }
 /* Just the escape hatch, for a surface that has stated the product in its own heading.
    ⚠️ Same builder as the full row below, so the two cannot word it differently. */
+/* ⚠️ THE LINK SITS ON A FRAME NOW, WITH THE OTHER PRODUCT'S MARK (2026-09-25, by
+   request). It was a bare quiet link at the right of the head row. What the frame buys
+   is that the offer is an OBJECT — a reader scanning the row sees a thing to act on
+   rather than a sentence that trails off — and the mark answers "instead of what" before
+   the words do.
+   ⚠️ THE MARK IS THE OTHER PRODUCT'S, not this page's. The row already says which
+   product you are on, twice; the only new fact here is which one you would be going to.
+   ⚠️ `aria-hidden` on it: the link names the product in words right beside it, so a
+   screen reader that also announced the logo would say it twice. */
 function productSwapHTML(sel){
   var cur = productOf(sel);
   var other = PRODUCT_CHOICES.filter(function(o){ return o.v !== cur.v; })[0];
-  return other
-    ? '<button type="button" class="link nl-prodswap" data-nl-product="' + other.v + '">'
-      + 'Need ' + other.t + ' instead?</button>'
-    : '';
+  if(!other) return '';
+  /* ⚠️ THE WHOLE FRAME IS THE BUTTON (2026-09-25, by request). It was a box containing a
+     mark and an underlined link, so the thing you could press was the words and the frame
+     around them was decoration — two targets' worth of surface with one target in it.
+     Through `button()` like everything else, with the mark in the leading slot. */
+  return button({ variant:'secondary', size:'md', cls:'lp-swapbox nl-prodswap',
+    iconHTML: productMark(other.v),
+    label: 'Need ' + other.t + ' instead?',
+    attrs: 'data-nl-product="' + other.v + '"' });
 }
 /* ⚠️ A SWITCHER AGAIN IN THE MODAL (2026-09-25, by request), and this reverses the
    "state the product, offer an escape link" decision — but ONLY here. The two selling
@@ -1606,9 +1749,14 @@ function nlPlanCardHTML(c, set, sel){
      button says what actually happens next: sign-up opens and the choice is carried
      through it. Everywhere else the word stays `Select`, because there the click really
      does select. See `lsel.cta` in page-landing.js. */
-  var cta = current ? ''
-    : '<button class="btn' + (primary ? '' : ' sec') + ' pc-cta" data-nl-pick="' + c.name + '">'
-      + esc(sel.cta || 'Select') + '</button>';
+  /* ⚠️ THROUGH THE COMPONENT, not through a concatenated class. It was
+     `'btn' + (primary ? '' : ' sec')` — a class assembled by string arithmetic, which is
+     exactly the shape the checker cannot verify and the shape that let five spellings of
+     "make this one quieter" exist. The VARIANT is the choice: a recommended plan takes
+     primary, the rest take secondary. */
+  var cta = current ? '' : button({
+    variant: primary ? 'primary' : 'secondary', size:'md', cls:'pc-cta',
+    label: sel.cta || 'Select', attrs:'data-nl-pick="' + esc(c.name) + '"' });
   return '<div class="dblock plancard ' + (current ? 'nl-current' : 'nl-select') + (on ? ' on' : '')
     + (popular ? ' is-popular' : '')
     + '" data-plan="' + c.name + '" role="button" tabindex="' + (current ? '-1' : '0') + '"'
@@ -2049,37 +2197,37 @@ function homeBannerCopy(c){
           + ' production instances running, ' + instAllowed(lic) + ' allowed.',
         todo:'Raise the limit or deactivate the extra instance. The license checks in hourly '
           + 'and unblocks at the next check.',
-        act:'<button class="gb-act" data-manage="' + esc(lic.id) + '">Manage</button>'
-          + '<a class="gb-act sec" href="instances.html?lic=' + esc(lic.id) + '">Deactivate an instance</a>' };
+        act:'<button class="btn btn--primary btn--sm gb-act" data-manage="' + esc(lic.id) + '">Manage</button>'
+          + '<a class="btn btn--secondary btn--sm gb-act" href="instances.html?lic=' + esc(lic.id) + '">Deactivate an instance</a>' };
     case 'payment_failed':
       return { fact:'<b>Payment for ' + nm + ' failed</b> — ' + cardLabel() + ' was declined.',
         todo:'Update the payment method before ' + fmtDate(lic.event) + ' to keep the subscription active.',
-        act:'<button class="gb-act" data-paycard>Update payment method</button>' };
+        act:'<button class="btn btn--primary btn--sm gb-act" data-paycard>Update payment method</button>' };
     case 'no_card':
       return { fact:'<b>No payment method on file.</b>',
         todo:'You have an active paid license, and its next charge will fail without one.',
-        act:'<a class="gb-act" href="billing.html">Add payment method</a>' };
+        act:'<a class="btn btn--primary btn--sm gb-act" href="billing.html">Add payment method</a>' };
     case 'card_expiring':
       return { fact:'<b>' + cardLabel() + ' expires ' + fmtDate(dayToDate(c.expDay - 1)) + '.</b>',
         todo:'That is before your next charge, so it will be declined.',
-        act:'<button class="gb-act" data-paycard>Update payment method</button>' };
+        act:'<button class="btn btn--primary btn--sm gb-act" data-paycard>Update payment method</button>' };
     case 'updates_expired':
       return { fact:'<b>Software updates for ' + nm + ' ended on ' + fmtDate(lic.event) + '.</b>',
         todo:UPDATES_LOSS,
-        act:'<button class="gb-act" data-renewupdates="' + esc(lic.id) + '">Renew updates</button>' };
+        act:'<button class="btn btn--primary btn--sm gb-act" data-renewupdates="' + esc(lic.id) + '">Renew updates</button>' };
     case 'updates_14':
       return { fact:'<b>Software updates for ' + nm + ' end on ' + fmtDate(lic.event)
           + ', in ' + c.days + ' day' + (c.days === 1 ? '' : 's') + '.</b>',
         todo:UPDATES_LOSS,
-        act:'<button class="gb-act" data-renewupdates="' + esc(lic.id) + '">Renew updates</button>' };
+        act:'<button class="btn btn--primary btn--sm gb-act" data-renewupdates="' + esc(lic.id) + '">Renew updates</button>' };
     case 'updates_30':
       return { fact:'<b>Software updates for ' + nm + ' end on ' + fmtDate(lic.event) + '.</b>',
         todo:UPDATES_LOSS,
-        act:'<button class="gb-act" data-renewupdates="' + esc(lic.id) + '">Renew updates</button>' };
+        act:'<button class="btn btn--primary btn--sm gb-act" data-renewupdates="' + esc(lic.id) + '">Renew updates</button>' };
     case 'grant':
       return { fact:'<b>Your Community Grant is ready</b> — the license key has been issued.',
         todo:'Open the license to copy its key.',
-        act:'<button class="gb-act" data-invlic="' + esc(lic.id) + '">View license</button>' };
+        act:'<button class="btn btn--primary btn--sm gb-act" data-invlic="' + esc(lic.id) + '">View license</button>' };
   }
   return null;
 }
@@ -2156,7 +2304,7 @@ function renderHomeBanner(){
        real actions under it — it had to stay out of their way. It is the only thing to
        press now, so it stands in the action row where a reader looks for one. */
     body = '<p class="hb-fact">' + copy.fact + '</p>'
-      + '<div class="hb-acts"><a class="gb-act hb-more" href="licenses.html?attention=1">and '
+      + '<div class="hb-acts"><a class="btn btn--primary btn--sm gb-act hb-more" href="licenses.html?attention=1">and '
         + rest + ' more</a></div>';
   } else {
     body = '<p class="hb-fact">' + copy.fact + '</p>'
@@ -2167,7 +2315,7 @@ function renderHomeBanner(){
   slot.innerHTML = bannerIcon(blocking)
     + '<div class="hb-body">' + body + '</div>'
     + (dismissKeys.length
-        ? '<button class="gb-x" data-bannerx="' + esc(dismissKeys.join('|')) + '" aria-label="Dismiss"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-x"></use></svg></button>'
+        ? '<button class="btn btn--ghost btn--md btn--icon gb-x" data-bannerx="' + esc(dismissKeys.join('|')) + '" aria-label="Dismiss"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-x"></use></svg></button>'
         : '');
   slot.hidden = false;
 }
@@ -2217,10 +2365,25 @@ function allInstances(licId){
      reading from the bottom, and the stale rows collect there */
   return out.sort(function(a, b){ return (a.inst.agoMin || 0) - (b.inst.agoMin || 0); });
 }
+/* ---------- the instance row: ONE set of cells, two column orders -----------------
+   ⚠️ THE CELLS ARE THE SHARED THING, not the row. The flat list and the grouped list
+   want different columns in a different order, and the way that stays one component is
+   that each cell is a function and a row is an ORDER of them. A second `<td>` spelling
+   of the same fact is how two lists drift apart.
+   FLAT     Instance · License · Last check-in · Version · Status · actions
+   GROUPED  Instance · Status · Version · Last check-in · actions
+   ⚠️ Grouped drops License because the group heading above it IS the licence — printing
+   it again on every row is the duplication the grouping exists to remove. */
 function instAllHeadHTML(){
   return '<tr><th>Instance</th><th>License</th><th>Last check-in</th>'
     + '<th>Version</th><th>Status</th><th aria-label="Actions"></th></tr>';
 }
+function instGroupHeadHTML(){
+  return '<tr><th>Instance</th><th>Status</th><th>Version</th>'
+    + '<th>Last check-in</th><th aria-label="Actions"></th></tr>';
+}
+/* how many columns a body-spanning cell (empty state, no-results) has to cross */
+function instColSpanFor(grouped){ return grouped ? 5 : 6; }
 /* how long ago, in words — "12 minutes ago" reads as health; a timestamp has to be
    subtracted from the current time before it says anything */
 function agoText(min){
@@ -2230,30 +2393,59 @@ function agoText(min){
   if(h < 48) return Math.round(h) + ' hour' + (Math.round(h) === 1 ? '' : 's') + ' ago';
   return Math.round(h / 24) + ' days ago';
 }
-function instAllRow(r){
-  var i = r.inst, l = r.lic, id = esc(i.id);
+/* ⚠️ A GHOST COPY BUTTON BESIDE THE ID (2026-09-25, by request). The licence panel's
+   own instance table has carried exactly this — `.ghostbtn.tip.inst-copy` with
+   `data-instcopy` — since the id column was added; this is the same button on the
+   Instances page, not a second one. The id is a 36-character uuid that the cell
+   ellipsizes, so the clipboard is the only way to get the whole of it, and the row menu
+   was the only route to the clipboard.
+   ⚠️ `.tip` is what turns into "Instance ID copied" on press (see copyValue). */
+function instNameCell(i){
+  var id = esc(i.id);
+  return '<td><div class="ia-name">' + (i.label ? esc(i.label) : '<span class="muted">Unnamed</span>') + '</div>'
+    + '<div class="ia-id mono"><span class="inst-id" title="' + id + '">' + id + '</span>'
+    +   '<button class="btn btn--ghost btn--md btn--icon tip inst-copy" data-instcopy="' + id + '"'
+    +     ' aria-label="Copy instance ID" data-tip="Copy instance ID">' + COPYSVG + '</button></div></td>';
+}
+/* ⚠️ `'instances'` is the ORIGIN, and it used to say `'licenses'`. The panel intercepts
+   this link on every surface that loads LicenseDetails, so the href is only the fallback
+   — but the fallback is exactly the case where being sent back to a page you did not
+   come from is the whole of the damage. */
+function instLicCell(l){
+  return '<td class="ia-lic"><a class="link" href="' + licenseHref(l, 'instances') + '" data-invlic="' + esc(l.id) + '">'
+    + esc(l.label || l.name) + '</a><div class="ia-licsub">' + esc(l.product || '') + ' · ' + esc(l.type) + '</div></td>';
+}
+function instAgoCell(i){ return '<td>' + agoText(i.agoMin) + '</td>'; }
+function instVerCell(i){
   var behind = cmpVersion(i.version, LATEST_VERSION) < 0;
-  /* ⚠️ `.inst-row` EARNS ITS CLASS ON THE PHONE. Every other list row here carries one
-     (`.lic-row`, `.inv-row`, `.user-row`) and the ≤600px block turns those into stacked
-     cards; this row never had one, so at 390px its five columns squeezed instead —
-     "Production — Central Europe manufacturing cluster, building 4" wrapped to six
-     lines in a 100px column. It was survivable while this was a tab most people never
-     opened; it is a destination now. */
-  return '<tr class="inst-row" data-instid="' + id + '" data-licid="' + esc(l.id) + '">'
-    + '<td><div class="ia-name">' + (i.label ? esc(i.label) : '<span class="muted">Unnamed</span>') + '</div>'
-    +   '<div class="ia-id mono"><span class="inst-id" title="' + id + '">' + id + '</span></div></td>'
-    /* ⚠️ `'instances'` is the ORIGIN, and it used to say `'licenses'`. The panel
-       intercepts this link on every surface that loads LicenseDetails, so the href is
-       only the fallback — but the fallback is exactly the case where being sent back to
-       a page you did not come from is the whole of the damage. */
-    + '<td class="ia-lic"><a class="link" href="' + licenseHref(l, 'instances') + '" data-invlic="' + esc(l.id) + '">'
-    +   esc(l.label || l.name) + '</a><div class="ia-licsub">' + esc(l.product || '') + ' · ' + esc(l.type) + '</div></td>'
-    + '<td>' + agoText(i.agoMin) + '</td>'
-    + '<td class="lic-ver"><div class="verline' + (behind ? ' is-behind' : '') + '">'
-    +   '<span class="ver-run">' + (i.version ? versionMark(behind) : '') + esc(i.version || '—') + '</span>'
-    +   (behind ? '<span class="ver-latest">latest ' + esc(LATEST_VERSION) + '</span>' : '') + '</div></td>'
-    + instStatusCell(i)
-    + '<td class="cellact"><div class="lic-actions">' + instRowMenu(i) + '</div></td></tr>';
+  return '<td class="lic-ver"><div class="verline' + (behind ? ' is-behind' : '') + '">'
+    + '<span class="ver-run">' + (i.version ? versionMark(behind) : '') + esc(i.version || '—') + '</span>'
+    + '</div></td>';
+}
+function instActCell(i){
+  return '<td class="cellact"><div class="lic-actions">' + instRowMenu(i) + '</div></td>';
+}
+/* ⚠️ `.inst-row` EARNS ITS CLASS ON THE PHONE. Every other list row here carries one
+   (`.lic-row`, `.inv-row`, `.user-row`) and the ≤600px block turns those into stacked
+   cards; this row never had one, so at 390px its five columns squeezed instead —
+   "Production — Central Europe manufacturing cluster, building 4" wrapped to six
+   lines in a 100px column. It was survivable while this was a tab most people never
+   opened; it is a destination now. */
+function instRowOpen(r, cls){
+  return '<tr class="inst-row' + (cls ? ' ' + cls : '') + '" data-instid="' + esc(r.inst.id)
+    + '" data-licid="' + esc(r.lic.id) + '">';
+}
+function instAllRow(r){
+  return instRowOpen(r) + instNameCell(r.inst) + instLicCell(r.lic) + instAgoCell(r.inst)
+    + instVerCell(r.inst) + instStatusCell(r.inst) + instActCell(r.inst) + '</tr>';
+}
+/* ⚠️ KEEPS `.inst-row` AND ADDS ONE. Everything already bound to an instance row — the
+   kebab, the search, the ≤600px card base — reads `.inst-row`, and the second class is
+   only what the phone needs to re-order five cells instead of six. */
+function instGroupRow(r, cls){
+  return instRowOpen(r, 'instg-row' + (cls ? ' ' + cls : '')) + instNameCell(r.inst)
+    + instStatusCell(r.inst) + instVerCell(r.inst) + instAgoCell(r.inst)
+    + instActCell(r.inst) + '</tr>';
 }
 /* ⚠️ Deactivate and Delete are in the row's own menu and NOWHERE ELSE. The blocked banner does not
    implement a second one — it routes here, exactly the way the payment-failed banner
@@ -2267,13 +2459,17 @@ function instAllRow(r){
    (see actionsCell), so there is one contract and not two. */
 function instRowMenu(i){
   var id = esc(i.id);
-  return '<div class="menu"><button class="iconbtn ib" aria-haspopup="true" aria-expanded="false" aria-label="Instance actions">' + KEBAB + '</button>'
+  return '<div class="menu"><button class="btn btn--menu btn--md btn--icon" aria-haspopup="true" aria-expanded="false" aria-label="Instance actions">' + KEBAB + '</button>'
     + '<div class="pop" role="menu" hidden>'
-    +   '<button role="menuitem" data-instlabel="' + id + '">Rename</button>'
+    /* ⚠️ `Edit label`, not `Rename` (2026-09-25, by request). The thing it edits is the
+       LABEL — the dialog is called "Edit instance label", the field is Label, and the
+       column header is the instance's name. "Rename" implied the id could change, and
+       the id is the one thing about an instance nobody can change. */
+    +   '<button role="menuitem" data-instlabel="' + id + '">Edit label</button>'
     +   '<button role="menuitem" data-instcopy="' + id + '">Copy instance ID</button>'
     +   '<button role="menuitem" data-instopenlic="' + id + '">Open license</button>'
     +   '<button role="menuitem" data-instoff="' + id + '">Deactivate</button>'
-    +   '<button role="menuitem" data-instdel="' + id + '">Delete</button>'
+    +   '<button type="button" role="menuitem" class="danger" data-instdel="' + id + '">Delete</button>'
     + '</div></div>';
 }
 /* ⚠️ THIS IS NO LONGER THE INSTANCES PAGE'S RENDERER. The page has its own
@@ -2344,7 +2540,7 @@ function openDeactivateModal(instId, after){
   }));
   $('#modalCloseBtn').textContent = 'Cancel';
   var confirm = document.createElement('button');
-  confirm.type = 'button'; confirm.className = 'btn'; confirm.textContent = 'Deactivate instance';
+  confirm.type = 'button'; confirm.className = 'btn btn--primary btn--md'; confirm.textContent = 'Deactivate instance';
   $('#overlay .mf').appendChild(confirm);
   confirm.addEventListener('click', function(){
     i.active = false;
@@ -2373,7 +2569,7 @@ function openDeleteInstanceModal(instId, after){
   }));
   $('#modalCloseBtn').textContent = 'Keep instance';
   var confirm = document.createElement('button');
-  confirm.type = 'button'; confirm.className = 'btn ter'; confirm.textContent = 'Delete instance';
+  confirm.type = 'button'; confirm.className = 'btn btn--primary btn--md btn--destructive'; confirm.textContent = 'Delete instance';
   $('#overlay .mf').appendChild(confirm);
   confirm.addEventListener('click', function(){
     l.instances = (l.instances || []).filter(function(x){ return x.id !== i.id; });
@@ -2403,7 +2599,19 @@ document.addEventListener('click', function(e){
     closeAllMenus();
     var hit = findInstance(o.getAttribute('data-instopenlic'));
     if(hit) openLicenseDetails(hit.lic, 'licenses');
+    return;
   }
+  /* ⚠️ COPY MOVED HERE FROM THE LICENCE PANEL (2026-09-25). It was bound to `instPanel`,
+     so `Copy instance ID` in the row menu worked inside the panel and was INERT on the
+     Instances page — the markup was shared, the wiring was not. Both surfaces build the
+     menu from `instRowMenu`, and the new ghost button beside the id carries the same
+     attribute, so both now come from one place.
+     ⚠️ `data-instlabel` (Rename) deliberately did NOT move: `openInstanceLabelModal`
+     reads `activeLicense` and repaints through the panel's `renderInstances`, so on the
+     Instances page it would open nothing and repaint nothing. It is reported as a
+     finding rather than half-wired here — see NOTES. */
+  var c = e.target.closest('[data-instcopy]');
+  if(c){ closeAllMenus(); copyValue(c.getAttribute('data-instcopy'), 'Instance ID', c); return; }
 });
 /* ============ Invoice actions: mock PDF view + real download ============ */
 /* ⚠️ THE STORED RECORD FIRST, the row only as a fallback. This read the three visible

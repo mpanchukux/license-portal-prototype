@@ -30,31 +30,31 @@
   <div class="insttoolbar stickybar">
     <div class="searchbox"><svg class="ic searchglyph" aria-hidden="true"><use href="assets/icons.svg#ti-search"></use></svg><input type="text" placeholder="Search activity" aria-label="Search activity"></div>
     <div class="dropwrap perctl">
-      <button class="btn sec perbtn" aria-haspopup="true" aria-expanded="false" aria-label="Period"><b class="perlabel">All time</b> <svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-down"></use></svg></button>
+      <button class="btn btn--secondary btn--md perbtn" aria-haspopup="true" aria-expanded="false" aria-label="Period"><b class="perlabel">All time</b> <svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-down"></use></svg></button>
       <div class="dropmenu permenu" hidden>
-                    <button data-period="all">All time</button>
-                    <button data-period="24h">Last 24 hours</button>
-                    <button data-period="7d">Last 7 days</button>
-                    <button data-period="30d">Last 30 days</button>
-                    <button data-period="custom">Custom range&hellip;</button>
+                    <button type="button" role="menuitemradio" data-period="all">All time</button>
+                    <button type="button" role="menuitemradio" data-period="24h">Last 24 hours</button>
+                    <button type="button" role="menuitemradio" data-period="7d">Last 7 days</button>
+                    <button type="button" role="menuitemradio" data-period="30d">Last 30 days</button>
+                    <button type="button" role="menuitemradio" data-period="custom">Custom range&hellip;</button>
                     <div class="percustom">
                       <div class="perrow">
                         <input type="date" class="perfrom" aria-label="From date">
                         <span class="permid">to</span>
                         <input type="date" class="perto" aria-label="To date">
                       </div>
-                      <button class="btn sec perapply">Apply</button>
+                      <button class="btn btn--secondary btn--md perapply">Apply</button>
                     </div>
                   </div>
     </div>
     <!-- multi-select: the trigger states the current answer, the menu holds the four
          kinds and stays open while they are ticked (see renderActTypes) -->
     <div class="dropwrap perctl acttypectl">
-      <button class="btn sec perbtn" aria-haspopup="true" aria-expanded="false" aria-label="Event types"><b id="actTypeLabel">All event types</b> <svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-down"></use></svg></button>
+      <button class="btn btn--secondary btn--md perbtn" aria-haspopup="true" aria-expanded="false" aria-label="Event types"><b id="actTypeLabel">All event types</b> <svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-down"></use></svg></button>
       <div class="dropmenu acttypemenu" id="actTypeMenu" role="menu" hidden></div>
     </div>
     <span class="spacer"></span>
-    <button class="iconbtn ib" data-refresh aria-label="Refresh" title="Refresh"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-refresh"></use></svg></button>
+    <button class="btn btn--secondary btn--md btn--icon" data-refresh aria-label="Refresh" title="Refresh"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-refresh"></use></svg></button>
   </div>
 
   <!-- chronological feed, rendered from ACTIVITY (newest first) -->
@@ -64,7 +64,7 @@
     <span>Items per page<select aria-label="Items per page"><option>10</option><option>20</option><option>50</option><option>100</option></select></span>
     <span class="range" id="actRange">1–5 of 5</span>
     <span class="pagebtns">
-      <button disabled aria-label="First page"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevrons-left"></use></svg></button><button disabled aria-label="Previous page"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-left"></use></svg></button><button disabled aria-label="Next page"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-right"></use></svg></button><button disabled aria-label="Last page"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevrons-right"></use></svg></button>
+      <button type="button" class="btn btn--secondary btn--md btn--icon" disabled aria-disabled="true" aria-label="First page"><svg class="ic btn-ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevrons-left"></use></svg></button><button type="button" class="btn btn--secondary btn--md btn--icon" disabled aria-disabled="true" aria-label="Previous page"><svg class="ic btn-ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-left"></use></svg></button><button type="button" class="btn btn--secondary btn--md btn--icon" disabled aria-disabled="true" aria-label="Next page"><svg class="ic btn-ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-right"></use></svg></button><button type="button" class="btn btn--secondary btn--md btn--icon" disabled aria-disabled="true" aria-label="Last page"><svg class="ic btn-ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevrons-right"></use></svg></button>
     </span>
   </div>
   </div>

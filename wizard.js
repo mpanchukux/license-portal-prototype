@@ -18,7 +18,7 @@ var WIZARD_HTML = ''
 + '      <h2 class="fs-maintitle" id="nlTitle">Buy a license</h2>'
 + '      <span class="spacer"></span>'
 + '      <div class="fs-headactions">'
-+ '        <button class="fs-close" id="nlClose" aria-label="Close"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-x"></use></svg></button>'
++ '        <button class="btn btn--ghost btn--md btn--icon fs-close" id="nlClose" aria-label="Close"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-x"></use></svg></button>'
 + '      </div>'
 + '    </div>'
 + '    <!-- the one stepper: a thin progress line + "Step N of M · Label" -->'
@@ -533,7 +533,6 @@ var NL = (function(){
   function stepIdx(){ var i = steps().indexOf(st.step); return i < 0 ? 0 : i; }
   function totalSteps(){ return steps().length; }
   function isLastStep(){ return stepIdx() === totalSteps() - 1; }
-  function isFirstStep(){ return stepIdx() === 0; }
   function stepAt(d){ return steps()[stepIdx() + d] || null; }
   /* ⚠️ "Choose your plan", not "Choose your product and plan": the product is STATED on
      this step now (see nlProductStatedHTML), so the label must not promise a choice the
@@ -567,15 +566,21 @@ var NL = (function(){
      old bar could only tell you the number after you had committed to the plan.
      ⚠️ THE LIST IS `steps()`, so it still cannot disagree with the flow. Nothing here
      knows how many steps there are.
-     ⚠️ DONE STEPS ARE NOT CLICKABLE, and that is deliberate rather than unfinished: a
-     stepper you can see all of invites clicking, but jumping backwards has to decide
-     what happens to what was entered after the target — and that is a flow decision, not
-     a stepper one. Back still moves one step at a time and is the only way back. */
+     ⚠️ DONE STEPS ARE CLICKABLE (2026-09-25, by request), and this closes the debt the
+     previous note opened rather than ignoring it. The worry was "jumping backwards has
+     to decide what happens to what was entered after the target" — measured, it decides
+     nothing, because there was never anything to decide: `gotoStep` only re-renders and
+     shows a step, and Back already reached the same steps one at a time without
+     discarding a thing. A jump of three is three Backs. What the flow DOES reset is
+     seeded state on a plan change (`seededTier = null` in the pick handler), and that
+     branch is untouched and still the only thing that clears anything.
+     ⚠️ THE BACK CHEVRON IS GONE with it. It moved one step at a time and was the only
+     way back; now every step behind you is its own way back, and a chevron beside a
+     stepper that is already a row of targets is a second control for the one question.
+     ⚠️ ONLY the done ones are buttons. The current step is where you are and upcoming
+     ones cannot be jumped to — a stepper that let you skip Capacity would be offering a
+     shortcut past the thing the next step is computed from. */
   function renderSteps(){
-    var back = !isFirstStep()
-      ? '<button class="iconbtn ib nl-stepback" id="nlStepBack" aria-label="Back" title="Back">'
-        + '<svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-left"></use></svg></button>'
-      : '';
     var here = stepIdx();
     var items = steps().map(function(k, n){
       var done = n < here, cur = n === here;
@@ -583,14 +588,16 @@ var NL = (function(){
         ? '<span class="nl-smark is-done">' + icon('check') + '</span>'
         : '<span class="nl-smark' + (cur ? ' is-cur' : '') + '">'
           + ('0' + (n + 1)).slice(-2) + '</span>';
-      return '<div class="nl-step' + (done ? ' is-done' : '') + (cur ? ' is-cur' : '') + '"'
-        + (cur ? ' aria-current="step"' : '') + '>'
-        + mark
+      var inner = mark
         + '<span class="nl-stxt"><span class="nl-sname">' + esc(stepLabel(k)) + '</span>'
-        +   '<span class="nl-sdesc">' + esc(stepDesc(k)) + '</span></span>'
-        + '</div>';
+        +   '<span class="nl-sdesc">' + esc(stepDesc(k)) + '</span></span>';
+      /* a real <button>, so the keyboard and the focus ring come from the element */
+      if(done) return '<button type="button" class="nl-step is-done" data-nl-step="' + k + '"'
+        + ' title="Back to ' + esc(stepLabel(k)) + '">' + inner + '</button>';
+      return '<div class="nl-step' + (cur ? ' is-cur' : '') + '"'
+        + (cur ? ' aria-current="step"' : '') + '>' + inner + '</div>';
     }).join('');
-    $('#nlSteps').innerHTML = back + '<div class="nl-steps">' + items + '</div>';
+    $('#nlSteps').innerHTML = '<div class="nl-steps">' + items + '</div>';
   }
 
   /* ---- step 1 — choose your product and plan ------------------------------
@@ -742,9 +749,9 @@ var NL = (function(){
               : '<div class="am-celltop">' + label + '</div>'
                 + (desc ? '<div class="fs-celldesc">' + desc + '</div>' : '')) + '</div>'
       + '<div class="stepper" data-nl-field="' + field + '">'
-      + '<button type="button" data-dir="-1"' + minus + ' aria-label="Decrease ' + label + '">−</button>'
+      + '<button type="button" class="stepbtn" data-dir="-1"' + minus + ' aria-label="Decrease ' + label + '">−</button>'
       + '<span class="val" aria-live="polite">' + qtyLabel(field, val) + '</span>'
-      + '<button type="button" data-dir="1"' + plus + ' aria-label="Increase ' + label + '">+</button></div></div>'
+      + '<button type="button" class="stepbtn" data-dir="1"' + plus + ' aria-label="Increase ' + label + '">+</button></div></div>'
       + '<div class="am-cardprice">' + priceNote + '</div></div>';
   }
   /* Add-ons sit in the same rows as the steppers: text left, control on the right
@@ -925,7 +932,7 @@ var NL = (function(){
          Add-ons), and both were emitting `id="nlSumNext"` — two nodes with one id, so
          `$('#nlSumNext')` answered with whichever came first in the document, which is
          the HIDDEN step. Caught by reading the wrong step's label back in a measurement. */
-      +   '<button class="btn fs-nextbtn" data-nlnext>' + cta + '</button>'
+      +   '<button class="btn btn--primary btn--md fs-nextbtn" data-nlnext>' + cta + '</button>'
       + '</div>'
       + '</div>';
   }
@@ -1023,7 +1030,7 @@ var NL = (function(){
         +   '<input type="text" id="nlCouponInput" placeholder="Coupon code" autocomplete="off"'
         +     ' aria-label="Coupon code" value="' + esc(st.couponDraft || '') + '">'
         + '</div>'
-        + '<button type="button" class="btn sec" data-couponapply>Apply</button>'
+        + '<button type="button" class="btn btn--secondary btn--md" data-couponapply>Apply</button>'
         + '<button type="button" class="link nl-couponedit" data-couponcancel>Cancel</button>'
       + (st.couponErr ? '<div class="fielderr nl-couponerr">' + esc(st.couponErr) + '</div>' : '')
       + '</div><div></div></div>';
@@ -1253,7 +1260,7 @@ var NL = (function(){
               + '</div>'
             : '')
       +   (isLastStep() && needsLegal() ? legalBlockHTML() : '')
-      +   '<button class="btn fs-nextbtn" id="nlCommit">' + cta + '</button>'
+      +   '<button class="btn btn--primary btn--md fs-nextbtn" id="nlCommit">' + cta + '</button>'
       + '</div>'
       + '</div>';
   }
@@ -1479,7 +1486,7 @@ var NL = (function(){
          reader has already scrolled past */
       +   '<div class="formerr" id="nlBillFormErr" role="alert" hidden></div>'
       +   (needsLegal() ? legalBlockHTML() : '')
-      +   '<button class="btn fs-nextbtn" id="nlPayNow">' + confirmLabel() + '</button>'
+      +   '<button class="btn btn--primary btn--md fs-nextbtn" id="nlPayNow">' + confirmLabel() + '</button>'
       + '</div>'
       + '</div>';
     syncPayBtn();
@@ -1758,11 +1765,15 @@ var NL = (function(){
       : esc(flow);
   }
   function startPurchase(btn){
-    if(!btn || btn.disabled) return;
-    btn.style.width = Math.ceil(btn.getBoundingClientRect().width) + 'px';   // label keeps width
-    btn.disabled = true;
-    btn.innerHTML = '<span class="nl-spin" aria-hidden="true"></span>';
-    // no restore: committing replaces this surface with the licence details
+    if(!btn || btn.disabled || btn.classList.contains('is-busy')) return;
+    /* ⚠️ NO INLINE WIDTH AND NO `innerHTML` SWAP any more. The component hides the label
+       with `visibility`, so the label is still in the layout and the box is still its own
+       width — a measured `style.width` is a snapshot that goes wrong the moment the label
+       changes, and replacing the content threw the accessible name away.
+       ⚠️ THIS CALL SITE OPTS OUT OF RESTORING, explicitly. Restoring is the component's
+       default (`runButtonBusy`); here the surface behind the button is replaced by the
+       licence details a second and a half later, so there is nothing to restore it to. */
+    setButtonBusy(btn, true);
     setTimeout(commitPurchase, 1500);
   }
 
@@ -1786,7 +1797,7 @@ var NL = (function(){
        function injected earlier goes before it injects another. */
     $$('#nlLeaveBtn', foot).forEach(function(b){ b.remove(); });
     var leave = document.createElement('button');
-    leave.type = 'button'; leave.className = 'btn ter'; leave.id = 'nlLeaveBtn'; leave.textContent = 'Leave without saving';
+    leave.type = 'button'; leave.className = 'btn btn--text btn--md'; leave.id = 'nlLeaveBtn'; leave.textContent = 'Leave without saving';
     foot.insertBefore(leave, $('#modalCloseBtn'));
     $('#modalCloseBtn').textContent = 'Stay';
     leave.addEventListener('click', function(){ closeModal(); forceClose(); if(afterFn) afterFn(); });
@@ -1874,9 +1885,16 @@ var NL = (function(){
   }
 
   /* ---- events (step content re-renders, so everything is delegated) ---- */
-  // the step header is re-rendered on every step, so delegate its back button
+  // the stepper is rebuilt on every step, so delegate the jump back to a done step
   $('#nlStepbar').addEventListener('click', function(e){
-    if(e.target.closest('#nlStepBack') && !isFirstStep()) gotoStep(stepAt(-1));
+    var t = e.target.closest('[data-nl-step]');
+    if(!t) return;
+    var k = t.getAttribute('data-nl-step');
+    /* ⚠️ Guarded against the list it is jumping inside, not against the rendered button:
+       `steps()` changes with the plan, so a stale stepper must not be able to send the
+       flow to a step this plan does not have. `gotoStep` also falls back to the first
+       step, but a silent jump to step one would read as a bug rather than as a refusal. */
+    if(steps().indexOf(k) > -1 && steps().indexOf(k) < stepIdx()) gotoStep(k);
   });
 
   body.addEventListener('click', function(e){

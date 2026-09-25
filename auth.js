@@ -66,7 +66,7 @@ var Auth = (function(){
      desktop the ✕ is all that is in it. */
   +     '<div class="fs-header">'
   +       '<span class="spacer"></span>'
-  +       '<button class="fs-close" id="authClose" aria-label="Close"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-x"></use></svg></button>'
+  +       '<button class="btn btn--ghost btn--md btn--icon fs-close" id="authClose" aria-label="Close"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-x"></use></svg></button>'
   +     '</div>'
   +     '<div class="fs-body authbody" id="authBody"></div>'
   +   '</div>'
@@ -81,7 +81,7 @@ var Auth = (function(){
   function socialHTML(){
     return '<div class="auth-social">'
       + SOCIALS.map(function(s){
-          return '<button class="btn sec auth-soc" data-auth-social="' + s.k + '">'
+          return '<button class="btn btn--secondary btn--md auth-soc" data-auth-social="' + s.k + '">'
             + icon(s.ic)
             + '<span>' + s.t + '</span></button>';
         }).join('')
@@ -104,7 +104,7 @@ var Auth = (function(){
       + '<input id="' + f.id + '" type="' + f.type + '" autocomplete="' + f.ac + '"'
       + (lock ? ' value="' + esc(invited.email) + '" readonly aria-readonly="true"' : '') + '>'
       + (lock ? '<svg class="ic authlock-ic" aria-hidden="true"><use href="assets/icons.svg#ti-lock"></use></svg>' : '')
-      + (pw ? '<button class="iconbtn ghost ib authpw-eye" data-auth-reveal aria-label="Show password">'
+      + (pw ? '<button class="btn btn--ghost btn--md btn--icon authpw-eye" data-auth-reveal aria-label="Show password">'
           + '<svg class="ic eye" aria-hidden="true"><use href="assets/icons.svg#ti-eye"></use></svg>'
           + '<svg class="ic eyeoff" aria-hidden="true"><use href="assets/icons.svg#ti-eye-off"></use></svg>'
           + '</button>' : '')
@@ -166,7 +166,7 @@ var Auth = (function(){
       + '<div class="auth-or"><span>OR</span></div>'
       + s.fields.map(fieldHTML).join('')
       + (s.legal ? legalHTML() : '')
-      + '<button class="btn auth-primary" id="authSubmit">' + s.cta + '</button>'
+      + '<button class="btn btn--primary btn--md auth-primary" id="authSubmit">' + s.cta + '</button>'
       /* The footer is the door to the other screen, and the two are not the same
          shape: sign-up asks a question whose answer is a link, log-in asks one whose
          answer is an action you have not taken yet — so it gets a real secondary
@@ -175,7 +175,7 @@ var Auth = (function(){
       + '<div class="auth-foot">'
       +   '<span class="auth-footq">' + s.footTxt + '</span>'
       +   (mode === 'login'
-          ? '<button class="btn sec auth-alt" data-auth="signup">Create an account</button>'
+          ? '<button class="btn btn--secondary btn--md auth-alt" data-auth="signup">Create an account</button>'
           : '<button class="link auth-altlink" data-auth="login">Sign in</button>')
       + '</div>'
       + (s.forgot ? '<div class="auth-forgot"><button class="link" data-stub="Forgot password">Forgot password?</button></div>' : '');

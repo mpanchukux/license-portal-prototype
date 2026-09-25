@@ -79,12 +79,23 @@ function renderDashInvoices(){
 /* Each block ends with the way out of it: one button naming how much is behind it.
    The count is everything in the section, which is what the block is a preview of —
    licences include cancelled ones, exactly as the block itself does. */
+/* ⚠️ THE COUNT IS THE BUTTON NOW, and it sits in the heading (2026-09-25, from a
+   reference). It was `Open all (17)` under the table — the number and the way through
+   were one control, but it was at the far end of the block from the title that named
+   what was being counted. Same control, moved to where the question is asked.
+   ⚠️ Still `renderBlockFooters`, still one function: the count comes from the dataset,
+   so a demo switch repaints it without either block knowing. */
 function renderBlockFooters(){
-  var lic = $('#dashLicOpenAll'), inv = $('#dashInvOpenAll');
-  if(lic) lic.textContent = 'Open all (' + DATA().licenses.length + ')';
+  var lic = $('#dashLicCount'), inv = $('#dashInvCount');
+  if(lic) lic.innerHTML = button({ variant:'secondary', size:'sm', iconEnd:'arrow-right',
+    label:String(DATA().licenses.length), href:'licenses.html',
+    ariaLabel:'Open all ' + DATA().licenses.length + ' licenses' });
   if(inv){
-    inv.textContent = 'Open all (' + DATA().invoices.length + ')';
-    inv.closest('.dblock-foot').hidden = !DATA().invoices.length;
+    var n = DATA().invoices.length;
+    /* an account with no invoices has nothing to open — the button goes, the heading stays */
+    inv.innerHTML = n ? button({ variant:'secondary', size:'sm', iconEnd:'arrow-right',
+      label:String(n), href:'invoices.html',
+      ariaLabel:'Open all ' + n + ' invoices' }) : '';
   }
 }
 /* Home greeting follows the viewer's own clock — the one place the prototype
@@ -106,7 +117,7 @@ function renderDashFeed(){
   var el = $('#dashFeed'); if(!el) return;
   var all = DATA().activity, list = all.slice(0, dashFeedShown);
   el.innerHTML = list.length
-    ? list.map(function(a, i){ return activityEntry(a, 'global', i); }).join('')
+    ? activityList(list, 'global', '')
     : '<div class="emptybox">No activity yet.</div>';
   var more = $('#dashFeedMore'); if(more) more.hidden = all.length <= dashFeedShown;
 }
@@ -131,7 +142,6 @@ renderHome();
 wireLicenseRows('#dashLicTable', { from:'home', rerender: renderHome });
 // modal mode: a change made inside the details modal restates this page too
 if(window.LicenseDetails) LicenseDetails.setRerender(renderHome);
-wireFeedAudit('#dashView');
 
 /* Reaching the end of the feed appends the next batch; the button is the
    keyboard path and the fallback where IntersectionObserver is missing. */
@@ -179,7 +189,7 @@ function installStickyAction(){
   stickyActionOn = true;
   /* Both labels ship; CSS picks one. On a phone the bar is tight (logo · action ·
      profile on one row), so the copy collapses to an icon plus "Buy". */
-  slot.innerHTML = '<button class="btn" id="topbarNewBtn">'
+  slot.innerHTML = '<button class="btn btn--primary btn--md" id="topbarNewBtn">'
     + '<svg class="ic tb-ic" aria-hidden="true"><use href="assets/icons.svg#ti-plus"></use></svg>'
     + '<span class="tb-full">Buy a license</span><span class="tb-short">Buy</span></button>';
   $('#topbarNewBtn').addEventListener('click', function(){ NL.open({}); });

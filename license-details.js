@@ -37,14 +37,14 @@ var DETAILS_HTML = ''
 + '          <svg class="ic gb-ic" aria-hidden="true"><use href="assets/icons.svg#ti-circle-check"></use></svg>'
 + '          <span class="gb-txt">License created &mdash; your license key is ready.</span>'
 + '          <span class="sp"></span>'
-+ '          <button class="gb-x" id="licNewDismiss" aria-label="Dismiss"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-x"></use></svg></button>'
++ '          <button class="btn btn--ghost btn--md btn--icon gb-x" id="licNewDismiss" aria-label="Dismiss"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-x"></use></svg></button>'
 + '        </div>'
 + '        <div class="canvas">'
 + ''
 + '          <!-- header: back button in its own gutter, everything else in the content column -->'
 + '          <div class="head">'
 + '           <div class="headgrid">'
-+ '            <button class="back" id="backBtn" aria-label="Back to Licenses" title="Back to Licenses">&larr;</button>'
++ '            <button type="button" class="btn btn--secondary btn--md btn--icon back" id="backBtn" aria-label="Back to Licenses" title="Back to Licenses">&larr;</button>'
 + '            <div class="headcol">'
 + '            <div class="top">'
 + '              <div class="idline">'
@@ -63,16 +63,16 @@ var DETAILS_HTML = ''
 + '                </div>'
 + '              </div>'
 + '              <div class="headactions">'
-+ '                <button class="btn sec" id="couponBtn">Apply coupon</button>'
-+ '                <button class="btn" id="changePlanBtn" data-modal="change-plan" data-page="sub">Change plan</button>'
-+ '                <button class="btn sec" id="renewBtn" data-page="sub" hidden>Renew subscription</button>'
++ '                <button class="btn btn--secondary btn--md" id="couponBtn">Apply coupon</button>'
++ '                <button class="btn btn--primary btn--md" id="changePlanBtn" data-modal="change-plan" data-page="sub">Change plan</button>'
++ '                <button class="btn btn--secondary btn--md" id="renewBtn" data-page="sub" hidden>Renew subscription</button>'
 + '                <!-- a perpetual does not renew and has nothing to cancel, so Change'
 + '                     plan and the ⋮ menu are dropped. Its primary is `Manage`: the same'
 + '                     wizard a subscription opens, committing as a one-time purchase'
 + '                     with no proration and no renewal. -->'
-+ '                <button class="btn" data-modal="add-ons" data-page="perp">Manage</button>'
++ '                <button class="btn btn--primary btn--md" data-modal="add-ons" data-page="perp">Manage</button>'
 + '                <div class="menu" data-page="sub" id="headKebabMenu">'
-+ '                  <button class="btn sec kebab-btn" id="headKebabBtn" aria-haspopup="true" aria-expanded="false" aria-label="More actions"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-dots-vertical"></use></svg></button>'
++ '                  <button class="btn btn--secondary btn--md kebab-btn" id="headKebabBtn" aria-haspopup="true" aria-expanded="false" aria-label="More actions"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-dots-vertical"></use></svg></button>'
 + '                  <div class="pop" id="headKebabPop" role="menu" hidden>'
 + '                    <!-- mobile only: on a phone the header keeps just the primary'
 + '                         action, and Apply coupon moves in here (see the ≤600px'
@@ -109,11 +109,11 @@ var DETAILS_HTML = ''
 + '                <div class="keyline">'
 + '                  <span class="rowic mob-only" id="keyIc"></span>'
 + '                  <span class="mono" id="keyText" data-masked="••••••••••••3f2a" data-full="d41d-8cd9-8f00-b204-e980-3f2a">••••••••••••3f2a</span>'
-+ '                  <button class="iconbtn ib" id="revealBtn" aria-pressed="false" aria-label="Reveal license key" title="Reveal">'
++ '                  <button class="btn btn--secondary btn--md btn--icon" id="revealBtn" aria-pressed="false" aria-label="Reveal license key" title="Reveal">'
 + '                    <svg class="ic eye" aria-hidden="true"><use href="assets/icons.svg#ti-eye"></use></svg>'
 + '                    <svg class="ic eyeoff" aria-hidden="true"><use href="assets/icons.svg#ti-eye-off"></use></svg>'
 + '                  </button>'
-+ '                  <button class="iconbtn ib tip" id="copyBtn" aria-label="Copy license key" data-tip="Copy">'
++ '                  <button class="btn btn--secondary btn--md btn--icon tip" id="copyBtn" aria-label="Copy license key" data-tip="Copy">'
 + '                    <svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-copy"></use></svg>'
 + '                  </button>'
 + '                  <!-- what to do with the key, next to the actions that get you the'
@@ -122,7 +122,7 @@ var DETAILS_HTML = ''
 /* ⚠️ An outbound LINK, not a button with a placeholder. Installing a key is not
    the portal's job — the key is entered in ThingsBoard itself, the platform syncs,
    and this surface reflects what came back. The honest control is one that leaves. */
-+ '                  <a class="iconbtn ib tip" id="installBtn" href="' + EXT.install + '" target="_blank" rel="noopener" aria-label="Installation instructions (opens in a new tab)" data-tip="Installation instructions">'
++ '                  <a class="btn btn--secondary btn--md btn--icon tip" id="installBtn" href="' + EXT.install + '" target="_blank" rel="noopener" aria-label="Installation instructions (opens in a new tab)" data-tip="Installation instructions">'
 + '                    <svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-file-text"></use></svg>'
 + '                  </a>'
 + '                </div>'
@@ -183,7 +183,7 @@ var DETAILS_HTML = ''
 + '               below it now, so this heading says only what it is. -->'
 + '          <div class="section planblock">'
 + '              <div class="sh"><h3>Plan</h3><span class="spacer"></span>'
-+ '                <button class="btn sec" data-modal="add-ons" data-page="sub">Manage</button>'
++ '                <button class="btn btn--secondary btn--md" data-modal="add-ons" data-page="sub">Manage</button>'
 + '                <!-- inferred: capacity is bought once, so this opens a one-time'
 + '                     purchase flow — not the recurring Manage add-ons flow, which'
 + '                     computes proration and a new monthly total. -->'
@@ -246,7 +246,7 @@ var DETAILS_HTML = ''
 + '                  <button class="typechip" data-insttype="dev" aria-pressed="false">Development</button>'
 + '                </div>'
 + '                <span class="spacer"></span>'
-+ '                <button class="iconbtn ib" data-refresh aria-label="Refresh" title="Refresh"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-refresh"></use></svg></button>'
++ '                <button class="btn btn--secondary btn--md btn--icon" data-refresh aria-label="Refresh" title="Refresh"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-refresh"></use></svg></button>'
 + '              </div>'
 + ''
 + '              <!-- ⚠️ RENDERED, not written. This used to be two hardcoded rows —'
@@ -321,7 +321,7 @@ var DETAILS_HTML = ''
 + '                    <!-- the payment method is account-level, so the edit action routes'
 + '                         to Billing rather than pretending to be an inline edit. Same'
 + '                         pencil, same icon-button, as Payment method there. -->'
-+ '                    <a class="iconbtn ib tip" id="ncEditPay" href="billing.html" aria-label="Payment and Billing" data-tip="Payment &amp; Billing">'
++ '                    <a class="btn btn--secondary btn--md btn--icon tip" id="ncEditPay" href="billing.html" aria-label="Payment and Billing" data-tip="Payment &amp; Billing">'
 + '                      <svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-pencil"></use></svg>'
 + '                    </a>'
 + '                  </div>'
@@ -345,10 +345,10 @@ var DETAILS_HTML = ''
 + '                <span>Items per page<select aria-label="Items per page"><option>10</option><option>20</option><option>50</option><option>100</option></select></span>'
 + '                <span class="range" id="licInvRange">0 of 0</span>'
 + '                <span class="pagebtns">'
-+ '                  <button disabled aria-label="First page"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevrons-left"></use></svg></button>'
-+ '                  <button disabled aria-label="Previous page"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-left"></use></svg></button>'
-+ '                  <button disabled aria-label="Next page"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-right"></use></svg></button>'
-+ '                  <button disabled aria-label="Last page"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevrons-right"></use></svg></button>'
++ '                  <button type="button" class="btn btn--secondary btn--md btn--icon" disabled aria-disabled="true" aria-label="First page"><svg class="ic btn-ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevrons-left"></use></svg></button>'
++ '                  <button type="button" class="btn btn--secondary btn--md btn--icon" disabled aria-disabled="true" aria-label="Previous page"><svg class="ic btn-ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-left"></use></svg></button>'
++ '                  <button type="button" class="btn btn--secondary btn--md btn--icon" disabled aria-disabled="true" aria-label="Next page"><svg class="ic btn-ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-right"></use></svg></button>'
++ '                  <button type="button" class="btn btn--secondary btn--md btn--icon" disabled aria-disabled="true" aria-label="Last page"><svg class="ic btn-ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevrons-right"></use></svg></button>'
 + '                </span>'
 + '              </div>'
 + '              </div>'
@@ -364,25 +364,25 @@ var DETAILS_HTML = ''
 + '              <div class="insttoolbar" data-feed="lic">'
 + '                <div class="searchbox"><svg class="ic searchglyph" aria-hidden="true"><use href="assets/icons.svg#ti-search"></use></svg><input type="text" placeholder="Search activity" aria-label="Search activity"></div>'
 + '                <div class="dropwrap perctl">'
-+ '                  <button class="btn sec perbtn" aria-haspopup="true" aria-expanded="false" aria-label="Period"><b class="perlabel">All time</b> <svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-down"></use></svg></button>'
++ '                  <button class="btn btn--secondary btn--md perbtn" aria-haspopup="true" aria-expanded="false" aria-label="Period"><b class="perlabel">All time</b> <svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-down"></use></svg></button>'
 + '                  <div class="dropmenu permenu" hidden>'
-+ '                    <button data-period="all">All time</button>'
-+ '                    <button data-period="24h">Last 24 hours</button>'
-+ '                    <button data-period="7d">Last 7 days</button>'
-+ '                    <button data-period="30d">Last 30 days</button>'
-+ '                    <button data-period="custom">Custom range&hellip;</button>'
++ '                    <button type="button" role="menuitemradio" data-period="all">All time</button>'
++ '                    <button type="button" role="menuitemradio" data-period="24h">Last 24 hours</button>'
++ '                    <button type="button" role="menuitemradio" data-period="7d">Last 7 days</button>'
++ '                    <button type="button" role="menuitemradio" data-period="30d">Last 30 days</button>'
++ '                    <button type="button" role="menuitemradio" data-period="custom">Custom range&hellip;</button>'
 + '                    <div class="percustom">'
 + '                      <div class="perrow">'
 + '                        <input type="date" class="perfrom" aria-label="From date">'
 + '                        <span class="permid">to</span>'
 + '                        <input type="date" class="perto" aria-label="To date">'
 + '                      </div>'
-+ '                      <button class="btn sec perapply">Apply</button>'
++ '                      <button class="btn btn--secondary btn--md perapply">Apply</button>'
 + '                    </div>'
 + '                  </div>'
 + '                </div>'
 + '                <span class="spacer"></span>'
-+ '                <button class="iconbtn ib" data-refresh aria-label="Refresh" title="Refresh"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-refresh"></use></svg></button>'
++ '                <button class="btn btn--secondary btn--md btn--icon" data-refresh aria-label="Refresh" title="Refresh"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-refresh"></use></svg></button>'
 + '              </div>'
 + '              <!-- this licence\'s events only — same feed cards as the Activity page -->'
 + '              <div class="feed" id="licFeed"></div>'
@@ -415,7 +415,7 @@ function renderLabelSlot(lic){
   var slot = labelSlot(); if(!slot) return;
   if(lic && lic.label){
     slot.innerHTML = '<span class="labeltext">' + esc(lic.label) + '</span>'
-      + '<button class="iconbtn ib labeledit" data-editlabel aria-label="Edit label" title="Edit label">' + PENCIL + '</button>';
+      + '<button class="btn btn--secondary btn--md btn--icon labeledit" data-editlabel aria-label="Edit label" title="Edit label">' + PENCIL + '</button>';
   } else {
     slot.innerHTML = '<button class="chip ghost" data-editlabel>+ Add label</button>';
   }
@@ -438,7 +438,7 @@ function editLabel(){
     + '<input class="labelinput" id="labelInput" placeholder="Label…" aria-label="Label"'
     +   ' maxlength="' + LABEL_MAX + '" value="' + esc(lic.label || '') + '">'
     + '<span class="labelcount" id="labelCount" aria-live="polite"></span>'
-    + '<button class="btn sec labelsave" id="labelSave">Save</button></span>';
+    + '<button class="btn btn--secondary btn--md labelsave" id="labelSave">Save</button></span>';
   var inp = $('#labelInput', slot), cnt = $('#labelCount', slot);
   function tick(){
     cnt.textContent = inp.value.length + '/' + LABEL_MAX;
@@ -594,7 +594,7 @@ function renderLicenseFeatures(lic, spec){
    `mobact` marks an action the desktop never had — it stays hidden there rather
    than appearing as a new control on a surface that was not in scope. */
 function alertAction(short, long, attrs, mobOnly){
-  return '<button class="btn ter aact' + (mobOnly ? ' mobact' : '') + '" ' + attrs + '>'
+  return '<button class="btn btn--text btn--md aact' + (mobOnly ? ' mobact' : '') + '" ' + attrs + '>'
     + '<span class="aact-long">' + long + '</span>'
     + '<span class="aact-short">' + short + '</span>'
     + '</button>';
@@ -610,7 +610,15 @@ function renderLicenseVersion(lic){
   if(v == null){ col.hidden = true; return; }
   col.hidden = false;
   var behind = cmpVersion(v, LATEST_VERSION) < 0;
-  var txt = esc(v) + (behind ? ' <span class="ver-latest">latest ' + esc(LATEST_VERSION) + '</span>' : '')
+  /* ⚠️ THE SAME MARK AS THE TABLE (2026-09-25). This line printed a bare number and a
+     `latest 3.9.4` beside it and carried no mark at all — so the one surface a reader
+     opens to answer "am I current" was the one that made them compare two numbers
+     themselves. `versionMark` is shared, so the answer, the colour and the tooltip are
+     the same here as in the list. */
+  /* ⚠️ Wrapped in `.ver-run` like the table cell, not just concatenated: that class is
+     what puts the 6px between the mark and the number and aligns them on one line.
+     Without it the icon sat flush against the digits — measured on screen. */
+  var txt = '<span class="ver-run">' + versionMark(behind) + esc(v) + '</span>'
     + (versionMixed(lic) ? ' <span class="ver-mixed">across ' + instRunning(lic) + ' instances</span>' : '');
   var el = $('#licVersion'); if(el) el.innerHTML = txt;
   var mob = $('#licVersionMob'); if(mob) mob.innerHTML = txt;
@@ -728,7 +736,7 @@ function renderLicenseAlert(lic){
     t.innerHTML = '<span class="amsg"><b>No instance has checked in yet.</b> The license key was issued '
       + fmtDate(lic.created) + ' \u2014 activate an instance with it and it appears here. '
       + '<a class="link inlineact" href="' + EXT.install + '" target="_blank" rel="noopener" style="margin-left:6px">Installation guide' + EXTSVG + '</a></span>'
-      + '<a class="btn ter aact mobact" href="' + EXT.install + '" target="_blank" rel="noopener">'
+      + '<a class="btn btn--text btn--md aact mobact" href="' + EXT.install + '" target="_blank" rel="noopener">'
       +   '<span class="aact-long">Installation guide' + EXTSVG + '</span><span class="aact-short">Set up' + EXTSVG + '</span></a>';
     al.hidden=false;
   }
@@ -959,7 +967,7 @@ function instRow(i){
        second cell. It keeps its tooltip, its label and its 40px hit area — only the box
        goes (see `.ghostbtn`). */
     + '<td class="mono"><span class="inst-id" title="' + id + '">' + id + '</span>'
-    +   '<button class="ghostbtn tip inst-copy" data-instcopy="' + id + '"'
+    +   '<button class="btn btn--ghost btn--md btn--icon tip inst-copy" data-instcopy="' + id + '"'
     +     ' aria-label="Copy instance ID" data-tip="Copy instance ID">' + COPYSVG + '</button></td>'
     /* ⚠️ NO HOVER PENCIL IN THIS CELL (2026-09-24). Renaming lives in the row's own
        menu and nowhere else — the same rule Deactivate and Delete already follow. A
@@ -1138,7 +1146,7 @@ function renewUpdatesHTML(lic){
     +     '<a class="link" href="license-agreement.html" target="_blank" rel="noopener">ThingsBoard License Agreement</a>. '
     +     'I confirm I am authorized to accept it on behalf of my organization.</span></label>'
     +   (ruState.legalErr ? '<div class="fielderr nl-legalerr" role="alert">' + esc(ruState.legalErr) + '</div>' : '')
-    +   '<button class="btn fs-nextbtn" id="ruPay">Pay ' + fmtMoney(price) + '</button>'
+    +   '<button class="btn btn--primary btn--md fs-nextbtn" id="ruPay">Pay ' + fmtMoney(price) + '</button>'
     + '</div>'
     + '</div>';
 }
@@ -1317,10 +1325,13 @@ function wireDetailsOnce(){
        a control that responds and does nothing is the exact fault this pass is for.
        If a bulk action arrives, the column comes back with it.
 
-       ---------- copy the FULL instance id ---------- */
+       ---------- rename an instance ----------
+       ⚠️ COPY MOVED OUT (2026-09-25) to the delegated block in components.js: it was
+       scoped here, so `Copy instance ID` in the INSTANCES PAGE's row menu did nothing at
+       all. Rename stays, because it only works here — `openInstanceLabelModal` reads
+       `activeLicense` and repaints through `renderInstances`, both of which are this
+       panel's. Reported as a finding rather than moved with the other one. */
     instPanel.addEventListener('click', function(e){
-      var c = e.target.closest('[data-instcopy]');
-      if(c){ copyValue(c.getAttribute('data-instcopy'), 'Instance ID', c); return; }
       var l = e.target.closest('[data-instlabel]');
       if(l){ openInstanceLabelModal(l.getAttribute('data-instlabel')); return; }
     });
@@ -1352,7 +1363,6 @@ function wireDetailsOnce(){
   /* ---------- render ---------- */
   function refreshDetails(){ renderLicenseDetails(activeLicense); }
   refreshDetails();
-  wireFeedAudit('#appView');
   wirePeriod('.perctl', licPeriod, function(){ renderLicFeed(activeLicense); });
 
   /* ---------- header actions ---------- */
@@ -1423,7 +1433,7 @@ var LicenseDetails = (function(){
   + '    <div class="fs-header">'
   + '      <h2 class="fs-maintitle" id="licModalTitle">License details</h2>'
   + '      <span class="spacer"></span>'
-  + '      <div class="fs-headactions"><button class="fs-close" id="licModalClose" aria-label="Close"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-x"></use></svg></button></div>'
+  + '      <div class="fs-headactions"><button class="btn btn--ghost btn--md btn--icon fs-close" id="licModalClose" aria-label="Close"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-x"></use></svg></button></div>'
   + '    </div>'
   + '    <div class="fs-body" id="licModalBody"></div>'
   + '  </div>'

@@ -37,6 +37,161 @@ function icon(name, opt){
   return '<svg class="' + cls + '"' + a11y + '><use href="assets/icons.svg#ti-' + name + '"></use></svg>';
 }
 
+/* ============================================================================
+   THE BUTTON — one component, four axes, every call site
+   ============================================================================
+   Built 2026-09-25 from a reference matrix. What the reference supplied is the
+   STRUCTURE — which variants exist, which states exist, and that an icon-only button
+   has a width of its own. Nothing else came from it: no colours, no radii, no
+   proportions. Those are this product's tokens.
+
+   FOUR INDEPENDENT AXES. A flat list of names would need a new name for every
+   combination (`primaryLargeIconDisabled`); axes do not.
+
+     variant   primary · secondary · text · ghost · menu
+     size      sm (26) · md (40, the band) · lg (48)
+     content   label · label + icon · icon only   — DERIVED, never passed
+     state     enabled · hovered · focused · pressed · disabled · busy
+     tone      default · destructive               — crosses every variant
+
+   ⚠️ `content` IS DERIVED, not an argument: a button with no label is icon-only, and a
+   caller cannot get it wrong by saying one thing and passing another.
+   ⚠️ `tone` IS AN AXIS AND NOT A VARIANT, because we need a destructive PRIMARY (the
+   confirm in the cancel dialog) and a destructive TEXT item (Delete in a kebab). As a
+   variant each of those would need its own name.
+   ⚠️ `hovered`, `focused` and `pressed` are CSS, not arguments — the browser owns them.
+   `disabled` and `busy` are the two the caller states.
+
+   DELIBERATELY NOT ALLOWED (and refused here, not just undocumented):
+     · `menu` with a label — the kebab is the whole of that variant.
+     · `menu` at `lg` — it is a trigger inside a row, never a page action.
+     · `busy` together with `disabled` — "you cannot do this" and "this is happening"
+       are different statements and a button cannot make both.
+
+   OUTPUT
+     <button type="button" class="btn btn--primary btn--md">
+       <svg class="ic btn-ic">…</svg><span class="btn-txt">Label</span>
+     </button>
+   `href` renders an <a> instead, with the same classes — several call sites are real
+   navigations wearing a button.                                                     */
+var BTN_VARIANT = { primary:1, secondary:1, text:1, ghost:1, menu:1 };
+var BTN_SIZE    = { sm:1, md:1, lg:1 };
+
+/* ⚠️ The BUSY spinner is markup, not a background image: it has to sit on top of the
+   content that is reserving the width, and a background cannot be centred over a box
+   whose own children are still laid out inside it. */
+var BTN_SPIN = '<span class="btn-spin" aria-hidden="true"></span>';
+
+function button(o){
+  o = o || {};
+  var variant = BTN_VARIANT[o.variant] ? o.variant : 'primary';
+  var size    = BTN_SIZE[o.size] ? o.size : 'md';
+  var label   = o.label == null ? '' : String(o.label);
+  var iconOnly = !label;
+  /* an end-icon is decoration beside a label; it can never make a button icon-only */
+  var busy    = !!o.busy;
+  var disabled = !!o.disabled && !busy;      /* busy wins: see the note above */
+  /* the three refusals, applied rather than described */
+  if(variant === 'menu'){ label = ''; iconOnly = true; if(size === 'lg') size = 'md'; }
+
+  var cls = ['btn', 'btn--' + variant, 'btn--' + size];
+  if(iconOnly) cls.push('btn--icon');
+  if(o.tone === 'destructive') cls.push('btn--destructive');
+  if(busy) cls.push('is-busy');
+  if(o.cls) cls.push(o.cls);
+
+  /* ⚠️ THE ACCESSIBLE NAME IS NEVER LOST. An icon-only button must be given one, and a
+     busy button keeps the one it had — the label stays in the DOM and is hidden with
+     `visibility`, which is also what reserves the width (see the stylesheet). */
+  var name = o.ariaLabel || (iconOnly ? (o.title || '') : '');
+  var attrs = ' class="' + cls.join(' ') + '"';
+  if(name) attrs += ' aria-label="' + esc(name) + '"';
+  if(o.title) attrs += ' title="' + esc(o.title) + '"';
+  if(busy) attrs += ' aria-busy="true" aria-disabled="true"';
+  /* ⚠️ `aria-disabled`, NOT the `disabled` attribute, while busy: a disabled element
+     drops out of the tab order, so a keyboard user loses their place mid-action and
+     lands somewhere unrelated when the button comes back. Activation is blocked by the
+     delegated guard below instead. */
+  if(disabled) attrs += (o.href ? ' aria-disabled="true"' : ' disabled') + ' aria-disabled="true"';
+  if(o.attrs) attrs += ' ' + o.attrs;
+
+  /* ⚠️ `iconEnd` IS A SIDE, NOT A SECOND ICON (added 2026-09-25). The content axis said
+     "label, label with icon, or icon only" and never said WHICH SIDE the icon sits on —
+     which was fine until a count-and-arrow button needed the arrow after the number.
+     One of `icon` / `iconEnd`, never both: two glyphs on one button is a toolbar, not a
+     button, and the axis would stop describing what it builds. */
+  /* ⚠️ `iconHTML` IS THE GENERAL FORM OF `icon` (added 2026-09-25), for the one case the
+     icon rule itself already names: a leading graphic that is BRAND ARTWORK and not a
+     sprite symbol. `icon` takes a name and goes through the sprite, which is right for
+     everything except the product marks. The caller hands the mark over ready-made; it
+     still lands in the same slot, so the layout does not learn a second shape. */
+  var ic  = o.icon ? icon(o.icon, { size:o.iconSize, cls:'btn-ic' })
+          : (o.iconHTML ? '<span class="btn-ic btn-mark" aria-hidden="true">' + o.iconHTML + '</span>' : '');
+  var icE = (!o.icon && !o.iconHTML && o.iconEnd) ? icon(o.iconEnd, { size:o.iconSize, cls:'btn-ic btn-ic-end' }) : '';
+  var txt = label ? '<span class="btn-txt">' + (o.html ? label : esc(label)) + '</span>' : '';
+  var inner = (busy ? BTN_SPIN : '') + ic + txt + icE;
+
+  if(o.href) return '<a href="' + o.href + '"' + attrs + '>' + inner + '</a>';
+  return '<button type="' + (o.type || 'button') + '"' + attrs + '>' + inner + '</button>';
+}
+
+/* ---- busy at runtime -------------------------------------------------------------
+   ⚠️ RESTORING IS THE DEFAULT. `setButtonBusy(el, false)` puts the button back, and
+   `runButtonBusy(el, ms)` does it on a timer. A caller whose surface is replaced by the
+   action — the purchase confirm — opts out by never calling it back, and says so where
+   it does that. The old wizard code froze the width with an inline style and never
+   restored; the width is reserved by the hidden label now, so there is nothing to undo.
+   ⚠️ The 600ms icon spin on Refresh is THIS state with a short duration, not a second
+   mechanism: `runButtonBusy(btn, 600)`. */
+function setButtonBusy(el, on){
+  if(!el) return;
+  el.classList.toggle('is-busy', on !== false);
+  if(on === false){ el.removeAttribute('aria-busy'); el.removeAttribute('aria-disabled'); }
+  else { el.setAttribute('aria-busy', 'true'); el.setAttribute('aria-disabled', 'true'); }
+}
+function runButtonBusy(el, ms){
+  setButtonBusy(el, true);
+  setTimeout(function(){ setButtonBusy(el, false); }, ms || 600);
+}
+/* ⚠️ `aria-disabled` does not stop a click the way `disabled` does, so the component
+   stops it — once, here, rather than in every handler. Capture phase, so it lands
+   before any delegated listener the page has bound. */
+document.addEventListener('click', function(e){
+  var b = e.target.closest && e.target.closest('.btn.is-busy, .btn[aria-disabled="true"]');
+  if(b){ e.preventDefault(); e.stopPropagation(); }
+}, true);
+document.addEventListener('keydown', function(e){
+  if(e.key !== 'Enter' && e.key !== ' ') return;
+  var b = e.target.closest && e.target.closest('.btn.is-busy, .btn[aria-disabled="true"]');
+  if(b){ e.preventDefault(); e.stopPropagation(); }
+}, true);
+
+/* ---- static pages declare, the component decides -------------------------------
+   ⚠️ A PROTOTYPE PAGE IS A FILE, so half the buttons are written in HTML and cannot
+   call a function. They write INTENT — `data-btn="secondary md"` — and this stamps the
+   same classes `button()` would. One place decides what a button looks like; the page
+   only says which one it is. The checker (tools/check-icons.py) fails on any button
+   that does neither. */
+function hydrateButtons(root){
+  $$('[data-btn]', root || document).forEach(function(el){
+    if(el.classList.contains('btn')) return;                 // already stamped
+    var parts = String(el.getAttribute('data-btn')).split(/\s+/).filter(Boolean);
+    var variant = 'primary', size = 'md', tone = '', icon_only = false;
+    parts.forEach(function(p){
+      if(BTN_VARIANT[p]) variant = p;
+      else if(BTN_SIZE[p]) size = p;
+      else if(p === 'destructive') tone = p;
+      else if(p === 'icon') icon_only = true;
+    });
+    if(variant === 'menu'){ icon_only = true; if(size === 'lg') size = 'md'; }
+    if(!icon_only) icon_only = !el.querySelector('.btn-txt') && !el.textContent.trim();
+    el.classList.add('btn', 'btn--' + variant, 'btn--' + size);
+    if(icon_only) el.classList.add('btn--icon');
+    if(tone) el.classList.add('btn--destructive');
+  });
+}
+
+
 /* ---------- helpers ---------- */
 function $(s, r){ return (r || document).querySelector(s); }
 function $$(s, r){ return Array.prototype.slice.call((r || document).querySelectorAll(s)); }
@@ -672,8 +827,8 @@ function publicChromeHTML(){
   +     brandHTML()
   +     '<span class="sp"></span>'
   +     '<div class="pubacts">'
-  +       '<button class="btn sec" data-auth="login">Sign in</button>'
-  +       '<button class="btn" data-auth="signup">Sign up</button>'
+  +       '<button class="btn btn--secondary btn--md" data-auth="login">Sign in</button>'
+  +       '<button class="btn btn--primary btn--md" data-auth="signup">Sign up</button>'
   +     '</div>'
   +   '</div>'
   + '</header>';
@@ -759,7 +914,7 @@ function chromeHTML(){
   +   '<div class="imp-banner" role="status">'
   +     '<span>You are logged in as <b id="impEmail"></b></span>'
   +     '<span class="sp"></span>'
-  +     '<button class="imp-return" id="impReturn">Return to my account</button>'
+  +     '<button class="btn btn--secondary btn--sm imp-return" id="impReturn">Return to my account</button>'
   +   '</div>'
   + '</div>';
 }
@@ -794,6 +949,10 @@ function settingsContext(){
     home: page === 'home',
     landing: page === 'landing',
     licenses: page === 'licenses',
+    /* ⚠️ `instances` NO LONGER GATES ANYTHING (2026-09-25) — the Instances view group
+       left this panel for the page's own toolbar. Kept because the list of surfaces is
+       what a new group is written against, and the next one added for this page would
+       otherwise have to re-derive it. */
     instances: page === 'instances',
     billing: page === 'billing',
     /* the details surface counts in either presentation: the full page, or the
@@ -835,16 +994,13 @@ function settingsBodyHTML(){
       .map(function(t){ return '<a class="sp-opt" href="license.html?tier=' + t[0] + '"><span>' + t[1] + '</span></a>'; }).join(''));
   }
 
-  /* ---- Instances: flat list, or the same rows gathered under their product ----
-     ⚠️ A VIEW, not a filter: both show every instance, and neither hides anything. The
-     grouped one answers "what is running for TBMQ" without making the reader read the
-     Licence column of nineteen rows; the flat one answers "what checked in last", which
-     is the order it sorts by and which grouping necessarily breaks. */
-  if(c.instances){
-    out += group('Instances view',
-      '<label class="sp-opt"><input type="radio" name="instView" value="flat"' + (instView() === 'flat' ? ' checked' : '') + '><span>Flat list (default)</span></label>'
-      + '<label class="sp-opt"><input type="radio" name="instView" value="grouped"' + (instView() === 'grouped' ? ' checked' : '') + '><span>Grouped by product</span></label>');
-  }
+  /* ⚠️ THE INSTANCES VIEW GROUP IS GONE FROM HERE (2026-09-25, by request). It is a
+     switcher on the page's own toolbar now — see `.viewseg` in instances.html. It was
+     never a demo setting like the ones around it: those change what the prototype IS
+     for the sake of comparing, and this changes how a reader is looking at their own
+     list right now. Leaving it in both places would be two controls for one question.
+     ⚠️ `instView()` and the `instView` store key are UNCHANGED — the toolbar writes the
+     same key, so the choice still survives a reload and still resets with the demo. */
 
   /* ---- Licenses table: the current one, or the four-column proposal ----
      ⚠️ Offered on Home as well as on the Licenses page, because Home's block renders
@@ -956,9 +1112,9 @@ function modalsHTML(){
   + '<div class="overlay" id="overlay" hidden>'
   +   '<div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">'
   +     '<div class="mh"><h3 id="modalTitle">Title</h3><span class="spacer"></span>'
-  +       '<button class="mclose" id="modalClose" aria-label="Close"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-x"></use></svg></button></div>'
+  +       '<button class="btn btn--ghost btn--md btn--icon mclose" id="modalClose" aria-label="Close"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-x"></use></svg></button></div>'
   +     '<div class="mb" id="modalBody"></div>'
-  +     '<div class="mf"><button class="btn sec" id="modalCloseBtn">Close</button></div>'
+  +     '<div class="mf"><button class="btn btn--secondary btn--md" id="modalCloseBtn">Close</button></div>'
   +   '</div>'
   + '</div>'
   + PAY_MODAL_HTML + COUPON_MODAL_HTML + USERS_MODAL_HTML;
@@ -1060,7 +1216,7 @@ function openStub(title){ openModal(title, '<p>' + STUB + '</p>'); }
 // add a primary action to the generic dialog's footer and return it
 function modalAction(label, onClick, disabled){
   var b = document.createElement('button');
-  b.type = 'button'; b.className = 'btn'; b.textContent = label; b.disabled = !!disabled;
+  b.type = 'button'; b.className = 'btn btn--primary btn--md'; b.textContent = label; b.disabled = !!disabled;
   b.addEventListener('click', onClick);
   $('#overlay .mf').appendChild(b);
   return b;
@@ -1135,8 +1291,9 @@ function wireGlobal(){
   document.addEventListener('click', function(e){
     var btn = e.target.closest('[data-refresh]');
     if(!btn) return;
-    btn.classList.add('spinning');
-    setTimeout(function(){ btn.classList.remove('spinning'); }, 600);
+    /* ⚠️ THE SAME BUSY STATE, at a short duration — not a second mechanism. It used to
+       add `.spinning`, which animated the icon itself and left the button pressable. */
+    runButtonBusy(btn, 600);
   });
 
   /* Scroll-to-top: appears once the page has actually been scrolled, hides again at
@@ -1586,12 +1743,6 @@ function wireSettingsPanel(){
         Store.set('billingData', r.value);
         if(window.NL && NL.refreshOpen) NL.refreshOpen();
         return;
-      /* the view is a stored setting and the page repaints in place — nothing about it
-         changes which rows exist, so there is nothing to reload */
-      case 'instView':
-        Store.set('instView', r.value);
-        if(typeof renderInstancesPage === 'function') renderInstancesPage();
-        return;
       /* both surfaces that render licence rows repaint from their own entry point;
          neither needs a reload, because nothing about which rows exist changed */
       case 'licTable':
@@ -1705,7 +1856,7 @@ var Snack = (function(){
   function show(text, ms){
     var h = el();
     h.innerHTML = '<span class="snack-t"></span>'
-      + '<button type="button" class="snack-x" aria-label="Dismiss"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-x"></use></svg></button>';
+      + '<button type="button" class="btn btn--ghost btn--sm btn--icon snack-x" aria-label="Dismiss"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-x"></use></svg></button>';
     $('.snack-t', h).textContent = text;
     $('.snack-x', h).addEventListener('click', hide);
     h.hidden = false;
@@ -1864,7 +2015,7 @@ var PAY_MODAL_HTML = ''
 + '    <div class="paymodal-h">'
 + '      <h3 id="payTitle">Update payment method</h3>'
 + '      <span class="sp"></span>'
-+ '      <button class="paymodal-x" id="payClose" aria-label="Close"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-x"></use></svg></button>'
++ '      <button class="btn btn--ghost btn--md btn--icon paymodal-x" id="payClose" aria-label="Close"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-x"></use></svg></button>'
 + '    </div>'
 + '    <div class="paymodal-b">'
 + '      <div class="field">'
@@ -1892,10 +2043,10 @@ var PAY_MODAL_HTML = ''
 + '      <div class="formerr" id="payFormErr" role="alert" hidden></div>'
 + '      <span class="paystripe-note">Powered by <b>Stripe</b></span>'
 + '      <span class="sp"></span>'
-+ '      <button class="btn sec" id="payCancel">Cancel</button>'
++ '      <button class="btn btn--secondary btn--md" id="payCancel">Cancel</button>'
 /* ⚠️ Not disabled. Same contract as the wizard's billing step: a disabled primary
    cannot say why it is disabled, so this one accepts the click and answers it. */
-+ '      <button class="btn" id="payUpdate">Update</button>'
++ '      <button class="btn btn--primary btn--md" id="payUpdate">Update</button>'
 + '    </div>'
 + '  </div>'
 + '</div>';
@@ -1906,7 +2057,7 @@ var COUPON_MODAL_HTML = ''
 + '    <div class="paymodal-h">'
 + '      <h3 id="couponTitle">Apply coupon</h3>'
 + '      <span class="sp"></span>'
-+ '      <button class="paymodal-x" id="couponClose" aria-label="Close"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-x"></use></svg></button>'
++ '      <button class="btn btn--ghost btn--md btn--icon paymodal-x" id="couponClose" aria-label="Close"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-x"></use></svg></button>'
 + '    </div>'
 + '    <div class="paymodal-b">'
 + '      <div class="field">'
@@ -1916,8 +2067,8 @@ var COUPON_MODAL_HTML = ''
 + '    </div>'
 + '    <div class="paymodal-f">'
 + '      <span class="sp"></span>'
-+ '      <button class="btn sec" id="couponCancel">Cancel</button>'
-+ '      <button class="btn" id="couponApply" disabled>Apply</button>'
++ '      <button class="btn btn--secondary btn--md" id="couponCancel">Cancel</button>'
++ '      <button class="btn btn--primary btn--md" id="couponApply" disabled>Apply</button>'
 + '    </div>'
 + '  </div>'
 + '</div>';
@@ -2017,7 +2168,7 @@ var USERS_MODAL_HTML = ''
 +         '<svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-link"></use></svg>'
 +         '<span>Copy invite link</span>'
 +       '</button>'
-+       '<button class="fs-close" id="usersModalClose" aria-label="Close"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-x"></use></svg></button>'
++       '<button class="btn btn--ghost btn--md btn--icon fs-close" id="usersModalClose" aria-label="Close"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-x"></use></svg></button>'
 +     '</div>'
 +     '<div class="fs-body usersbody">'
 
@@ -2037,7 +2188,7 @@ var USERS_MODAL_HTML = ''
 +       '<div class="inviterow" id="usersInvite">'
 +         '<input type="email" class="invite-in" id="usersEmail" autocomplete="off"'
 +           ' placeholder="Add comma separated emails to invite" aria-label="Emails to invite">'
-+         '<button class="btn invite-go" data-invite>Invite</button>'
++         '<button class="btn btn--primary btn--md invite-go" data-invite>Invite</button>'
 +       '</div>'
 /* ⚠️ The message slot is ALWAYS in the layout, empty or not: toggled with visibility,
    not `hidden`, so an error cannot change the block's height. Problems only —
@@ -2338,7 +2489,7 @@ function openDeleteUser(email){
   openModal('Delete user', '<p>Delete <b>' + email + '</b>? They will lose access to this portal.</p>');
   var foot = $('#overlay .mf');
   var del = document.createElement('button');
-  del.type = 'button'; del.className = 'btn ter'; del.id = 'delUserBtn'; del.textContent = 'Delete';
+  del.type = 'button'; del.className = 'btn btn--primary btn--md btn--destructive'; del.id = 'delUserBtn'; del.textContent = 'Delete';
   foot.appendChild(del);
   $('#modalCloseBtn').textContent = 'Cancel';
   del.addEventListener('click', function(){
@@ -2367,7 +2518,7 @@ function openLoginAs(email){
      different thing from signing in — see the Users table), but this button is the
      confirm of a dialog that already says whose account it is, so it names the act
      rather than repeating a verb the portal now spells 'Sign in' everywhere else. */
-  go.type = 'button'; go.className = 'btn'; go.id = 'loginAsBtn'; go.textContent = 'Continue as this user';
+  go.type = 'button'; go.className = 'btn btn--primary btn--md'; go.id = 'loginAsBtn'; go.textContent = 'Continue as this user';
   foot.appendChild(go);
   $('#modalCloseBtn').textContent = 'Cancel';
   go.addEventListener('click', function(){ impersonate(email); closeModal(); });

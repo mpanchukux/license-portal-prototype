@@ -198,9 +198,17 @@ def main():
             for ent, cp in decoded_glyphs(line):
                 findings.append((rel, i, 'glyph entity %s = U+%04X' % (ent, cp), line.strip()[:90]))
 
+    for path in files():
+        rel = os.path.relpath(path, ROOT)
+        if rel == SPRITE:
+            continue
+        src = strip_comments(io.open(path, encoding='utf-8').read(), rel.endswith('.html'))
+        findings += button_findings(rel, src)
+
     if not findings:
         print('icons: clean - no drawing elements or glyphs outside %s' % SPRITE)
         print('activity: clean - no tags in the copy map, no rows built outside the component')
+        print('buttons: clean - every button carries the component vocabulary')
         return 0
 
     by_file = {}
@@ -215,6 +223,90 @@ def main():
         if not verbose and len(hits) > 4:
             print('    %5s  ... %d more (-v for all)' % ('', len(hits) - 4))
     return 1
+
+
+
+# ===========================================================================
+# BUTTONS — nothing assembles button markup outside the component
+# ===========================================================================
+# The component is `button()` in shared.js and the vocabulary it emits is the only
+# vocabulary a button may wear. This does not read the JS; it reads the RESULT, which is
+# what a page can actually get wrong:
+#
+#   every <button>, and every <a> that looks like one, must carry
+#       .btn  +  exactly one btn--<variant>  +  exactly one btn--<size>
+#   and may carry btn--icon / btn--destructive / is-busy and nothing else beginning btn--.
+#
+# ⚠️ WHY THE OUTPUT AND NOT THE CALL. Half this prototype's buttons live in static HTML
+# files, which cannot call a function — "page = file" is a hard constant here. So the
+# page writes the component's vocabulary and this refuses anything else: a legacy class,
+# an invented modifier, a button with no variant. The effect is the same — a call site
+# cannot describe a button the component would not build.
+#
+# ⚠️ THE EXEMPT LIST IS NAMED, NOT A HOLE. These are `<button>` elements that are not
+# buttons in the component's sense: a row inside a popup, a tab in a tablist, a filter
+# chip that toggles, a segmented radio, a step in a stepper, a nav item in the chrome, a
+# numeric stepper, the FAQ accordion, and the marks (`infoic`, `alertic`, `verm`) ruled
+# out of the component on purpose. Each one is a different component with its own
+# states; folding them in would be the flat list of names the axes exist to avoid.
+BTN_VARIANTS = {'primary', 'secondary', 'text', 'ghost', 'menu'}
+BTN_SIZES    = {'sm', 'md', 'lg'}
+BTN_EXTRA    = {'icon', 'destructive'}
+NOT_A_BUTTON = (
+    'tab', 'typechip', 'filterchip', 'chip', 'seg', 'nl-step', 'ig-btn', 'faq-q',
+    'faq-cat', 'faq-more', 'tnav-item', 'dprofbtn', 'bnav-item', 'dropcheck',
+    'infoic', 'alertic', 'verm', 'link', 'dblock', 'sg-', 'gearfab', 'totop',
+    'tb-refresh', 'emailpend-v', 'nr-clear', 'dblock-link', 'lp-link', 'sdot',
+    'plancard', 'nl-prodcard', 'switch', 'pc-', 'am-', 'ec-', 'inlineact',
+    'stepbtn', 'menurow', 'searchclear',
+)
+BTN_TAG = re.compile(r'<(button|a)\b([^>]*)>', re.I)
+CLASS_IN = re.compile(r'class=\\?["\']([^"\'\\]*)')
+
+# ⚠️ A SECOND WAY IN, and it was a blind spot until `page-billing.js` was caught doing
+# it: a button can be re-dressed at runtime with `el.className = '...'`, which no amount
+# of reading markup will catch. Any assignment that mentions `btn` spells the vocabulary
+# too, or it fails here.
+CLASS_ASSIGN = re.compile(r'''className\s*=\s*(['"])([^'"]*)\1''')
+
+def button_findings(rel, text):
+    out = []
+    for m in CLASS_ASSIGN.finditer(text):
+        cls = m.group(2).split()
+        if 'btn' not in cls:
+            continue
+        mods = [c[5:] for c in cls if c.startswith('btn--')]
+        if (len([x for x in mods if x in BTN_VARIANTS]) != 1
+                or len([x for x in mods if x in BTN_SIZES]) != 1):
+            out.append((rel, text[:m.start()].count('\n') + 1,
+                        'className= sets a button outside the vocabulary', m.group(0)[:90]))
+    for m in BTN_TAG.finditer(text):
+        tag, attrs = m.group(1).lower(), m.group(2)
+        if "' + attrs + '" in attrs:
+            continue                      # the component's own emit line, in shared.js
+        cm = CLASS_IN.search(attrs)
+        cls = cm.group(1).split() if cm else []
+        if tag == 'a' and 'btn' not in cls:
+            continue                      # an anchor is only in scope when it wears one
+        if any(c == e or c.startswith(e) for c in cls for e in NOT_A_BUTTON):
+            continue                      # named above: a different component
+        if 'role=' in attrs and ('menuitem' in attrs or 'tab"' in attrs or 'radio' in attrs):
+            continue                      # a row in a popup / a tab / a radio card
+        line = text[:m.start()].count('\n') + 1
+        if 'btn' not in cls:
+            out.append((rel, line, 'button outside the component', m.group(0)[:90]))
+            continue
+        mods = [c[5:] for c in cls if c.startswith('btn--')]
+        variants = [x for x in mods if x in BTN_VARIANTS]
+        sizes    = [x for x in mods if x in BTN_SIZES]
+        unknown  = [x for x in mods if x not in BTN_VARIANTS | BTN_SIZES | BTN_EXTRA]
+        if len(variants) != 1:
+            out.append((rel, line, 'needs exactly one btn--<variant>', m.group(0)[:90]))
+        if len(sizes) != 1:
+            out.append((rel, line, 'needs exactly one btn--<size>', m.group(0)[:90]))
+        for u in unknown:
+            out.append((rel, line, 'btn--%s is not in the vocabulary' % u, m.group(0)[:90]))
+    return out
 
 
 if __name__ == '__main__':

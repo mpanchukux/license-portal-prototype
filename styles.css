@@ -23,21 +23,98 @@
      cards draw themselves, in a colour the brief gave. It is a token rather than a
      literal so the next reader can find every use of it in one grep — the audit found
      421 literals bypassing the system and this was not going to be 422. */
-  /* ⚠️ 011A48 -> 1177BE (2026-09-25, by request), one day old and replaced. */
-  --tick:#1177BE;
+  /* ============================================================================
+     COLOUR PRIMITIVES — raw values, named by hue and step, and NOTHING uses these
+     directly. A component reads a MEANING (below); the meaning reads a primitive. Two
+     layers rather than one because a brand that restates its green is one edit here,
+     and because "what is this colour" and "what is it for" are different questions —
+     the audit found 421 literals bypassing the system precisely because there was no
+     layer to put them in.
+     ⚠️⚠️ THIS IS THE MONOCHROME RULE ENDING, by request and in stages. The prototype's
+     hard constant was "state is carried by weight, borders and grey fill — never by
+     colour", with three named exceptions on the selling surface. Status and version are
+     the first elements to be coloured on purpose. See the note on each meaning below for
+     what keeps this accessible; the short version is that colour is never the only
+     carrier — a differently SHAPED icon and a word sit beside every one of them. */
+  --c-green-600:#009A4F;
+  --c-red-600:#DA1818;
+  /* ⚠️ Two more steps of the SAME red, added for the destructive button's hover and
+     pressed surfaces — a filled button needs somewhere to go when you touch it, and
+     "the same red at 90% opacity" is the fade this system refuses. 700 is 6.96:1 on
+     white; 50 is the wash an outlined destructive takes. */
+  --c-red-700:#B31313;
+  --c-red-50:#FCEDED;
+  --c-grey-600:#525252;
+  /* one step off ink, for text that is a list item rather than a statement */
+  --c-grey-800:#333333;
+  /* ⚠️ A COOL grey ramp, and it is NOT the one already here. `--bg` #f4f4f2 and
+     `--hover` #f0f0ee are warm; #F4F5F6 is cool, so it cannot be spelled with what
+     exists. Three steps because a filled control needs somewhere to go when you touch
+     it — see the note on hover and pressed being two surfaces, not two opacities. */
+  --c-grey-50:#F4F5F6;
+  /* ⚠️ The cool blue Home fades into. It was a literal on `--page-bg` and is now a
+     primitive, because a SECOND thing reads it: a table row under the cursor. Pulling it
+     in here is part of the debt this file recorded when the two layers were built. */
+  --c-blue-50:#F4F7FB;
+  /* ⚠️ A STEP LIGHTER THAN THE PAGE GROUND, added 2026-09-25 by request. The row hover
+     started as `--c-blue-50` — the exact colour Home fades into — and at 1.075:1 against
+     white that was already faint; it is 1.046 now. The two are separate values rather
+     than one because they are doing different jobs: the ground is a PAGE, and a row
+     highlight has to be quieter than the surface it sits on top of. */
+  --c-blue-25:#F8FAFD;
+  --c-grey-100:#E9EBED;
+  --c-grey-200:#DDE0E3;
+  /* ---- what those colours MEAN. Components read these, never the primitives. ---- */
+  /* healthy, current, running as intended */
+  --status-ok:var(--c-green-600);
+  /* something needs doing — a failed charge, a release left behind */
+  --status-alert:var(--c-red-600);
+  /* switched off rather than wrong: cancelled, ended, inactive */
+  --status-off:var(--c-grey-600);
+  /* a filled surface for a control that is present but is not the page's own action.
+     Three steps: at rest, under the cursor, and while it is held. */
+  --surface-quiet:var(--c-grey-50);
+  --surface-quiet-hover:var(--c-grey-100);
+  --surface-quiet-press:var(--c-grey-200);
+  /* ⚠️ `--accent`, `--tick` and `--page-bg` are still LITERALS and do not go through the
+     primitive layer. They predate it and they are on the selling surface, where a value
+     change is a visible change; folding them in is a pass of its own. */
+  /* ⚠️ 011A48 -> 1177BE -> --accent (2026-09-25, by request). Third value in two days,
+     and the third one is not a value: the ticks were asked for in "the same blue as the
+     Popular chip", so the token now POINTS at that blue instead of restating it. A
+     literal would be the same colour until somebody moved one of them. The token stays
+     because the tick is still its own idea — what it costs is one indirection, what it
+     buys is that "same as Popular" cannot quietly stop being true. */
+  --tick:var(--accent);
   /* ⚠️ GIVEN, NOT DERIVED (2026-09-25, second pass). It was #7BA3D8, computed from
      --page-bg by keeping its hue and moving saturation and lightness; that is recorded
      here because the method still holds if this one is ever recomputed. The value in use
      is the one that was asked for. It is a dark navy, not a light blue, so it reads as a
      line rather than as a tint — and the Popular badge takes white text on it. */
-  --accent:#06235C;
+  /* ⚠️ 06235C -> 06265D (2026-09-25, by request). `--tick` points here, so the plan-card
+     ticks move with it; so do the Popular ring and tag and the rule under the two
+     billing headings. One value, four places. */
+  --accent:#06265D;
   /* The flat page ground the Home mesh gradient fades into. Named so the two
      candidates live in one place: cool near-white by default, cool beige beside it.
      ⚠️ Scoped to Home today (the only page with the gradient) — every other page is
      still on --bg. Making it the whole site's ground is one rule, not a hunt. */
-  --page-bg:#F4F7FB;        /* alternative: #F6F5F1 — cool beige */
+  --page-bg:var(--c-blue-50);   /* alternative: #F6F5F1 — cool beige */
+  /* ⚠️ A ROW UNDER THE CURSOR TAKES THE SAME BLUE (2026-09-25, by request) — literally
+     the ground Home fades into, so the highlight belongs to the product rather than
+     being a grey borrowed from the button ramp. It is the ONE place a list row is
+     tinted, and it is transient: nothing is selected, nothing is stated, the pointer is
+     simply here. */
+  --row-hover:var(--c-blue-25);
   --btnH:40px;
-  --backW:40px; --backGap:12px; --contentX:74px;  /* 22px head padding + 40 + 12 — the gutter is one --btnH wide */
+  /* ⚠️ 40 -> 52 (2026-09-25): the back button is an icon-only button, and icon-only
+     stopped being square when the shape reference arrived — it is the icon plus its
+     padding, which comes out 52 wide. The gutter is that number, and `--contentX`
+     is recomputed from it (22 head padding + 52 + 12 gap = 86) rather than left at a
+     figure that no longer describes anything. Leaving it at 74 would have pushed the
+     button 12px out of its own canal, which is the exact fault this trio was created
+     to prevent the last time a button changed size. */
+  --backW:52px; --backGap:12px; --contentX:86px;
   /* one shared page container: same width, same side padding, centred */
   /* ⚠️ 1120 → 1180 (2026-09-24), and the number is driven by ONE measurement, not by
      taste: at 1120 the five-across plan row gives each card 190.4px, whose heading box is
@@ -207,8 +284,11 @@ a{color:inherit}
 .idline{display:flex;align-items:center;gap:14px;min-width:0;flex:1 1 auto}
 .idline .title{min-width:0}
 /* same box as the ⋮ overflow button in the header actions */
-.back{width:var(--btnH);height:var(--btnH);font-size:15px;line-height:1;border:1px solid var(--line);border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--mid);background:#fff;flex:none}
-.back:hover{background:var(--hover);color:var(--ink)}
+/* ⚠️ `.back` KEEPS NO GEOMETRY. It is `btn btn--secondary btn--md btn--icon`, and this
+   rule restated the whole box — including a `width:var(--btnH)` that held the button at
+   40 while every other icon-only button became 54, which is how the canal and its
+   occupant ended up disagreeing again. Position and nothing else. */
+.back{flex:none}
 /* plan identity: small grey subhead over the plan name + status chip */
 .titleblock{min-width:0}
 /* the eyebrow uses the same text style as the "Plan" section title (see .sh h3):
@@ -291,7 +371,6 @@ a{color:inherit}
 /* .btn sets display, so a plain [hidden] on a header action would not hide it
    (the data-page buttons get away with it through [data-page][hidden]) */
 .headactions .btn[hidden]{display:none}
-.kebab-btn{width:var(--btnH);padding:0;font-size:15px;line-height:1}
 
 /* conditional attention alert (hidden in healthy state) */
 /* Banner actions are emitted twice — a short verb for the phone's one-row band, the
@@ -307,21 +386,172 @@ a{color:inherit}
 .alert .atxt b{font-weight:600}
 
 .actions{display:flex;gap:9px;margin-top:14px;flex-wrap:wrap;align-items:center}
-.btn{font-size:14px;height:var(--btnH);display:inline-flex;align-items:center;justify-content:center;padding:0 13px;border-radius:6px;border:1px solid var(--ink);background:var(--ink);color:#fff}
-.btn:hover{background:#000}
-/* the page's primary action, standing beside its h1 — the largest button we have.
-   16px is the body token: bigger than the rest without reaching a heading size. */
-/* ⚠️ 48 -> 56, padding 22 -> 34 (2026-09-24, by request). The named exception to the
-   two-number size ladder gets larger still: it is the only control that stands beside
-   an h1 rather than in a toolbar, so --btnH has never applied to it. Nothing else in
-   the product may take this height. */
-.btn.xl{height:56px;font-size:16px;padding:0 34px}
-/* No height of their own: primary, secondary and destructive are all the band (--btnH,
-   40px). One height for every button that is not the page's own primary action. */
-.btn.sec{background:#fff;color:var(--ink);border-color:var(--line)}
-.btn.sec:hover{border-color:var(--ink);background:var(--hover)}
-.btn.ter{background:transparent;color:var(--mid);border-color:transparent;text-decoration:underline;text-underline-offset:2px}
-.btn.ter:hover{color:var(--ink)}
+/* ============================================================================
+   THE BUTTON — four axes, one block. See `button()` in shared.js for the model.
+   ============================================================================
+   Read this as a grid, not as a list of buttons: SIZE sets the box, VARIANT sets the
+   surface, TONE swaps which colour the surface is made of, and STATE moves the surface
+   one step. Nothing below names a combination.
+
+   ⚠️⚠️ HOVER AND PRESSED ARE TWO DIFFERENT SURFACES, NOT TWO OPACITIES OF ONE. In a
+   monochrome system the lazy answer is to fade the same fill twice, and the result is
+   that a button under the cursor and a button being pressed look like the same button at
+   two distances. So: on a FILLED button hover goes flat black and pressed adds an inset
+   well at the top edge — a recess, which flat black cannot be. On an OUTLINED or
+   TRANSPARENT button hover takes `--hover` and pressed takes `--sel`, which are two
+   different greys the product already uses for exactly this pair (hover wash, selected).
+   ⚠️ PRESSED IS NEW. `:active` appeared ZERO times in this stylesheet before this pass.
+   ⚠️ FOCUS IS A RING AND IT IS NOT HOVER. `:focus-visible` only — a mouse click does not
+   raise it, which is the behaviour the global rule at the top of this file already had.
+   ⚠️ DISABLED DOES NOT RESPOND. Every hover and every active rule below is guarded with
+   `:not([disabled]):not([aria-disabled="true"])`, which is the bug this replaces: the
+   old `.btn:hover{background:#000}` was unguarded, so a disabled primary still went
+   black under the cursor, and there was no global `.btn[disabled]` rule at all — the
+   fade was written separately inside four containers and nowhere else. */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  font-family:inherit;font-size:14px;line-height:1;text-decoration:none;
+  height:var(--btnH);padding:0 13px;border-radius:24px;border:1px solid transparent;
+  background:transparent;color:var(--ink);cursor:pointer;position:relative;
+  white-space:nowrap}
+.btn .btn-ic{flex:none}
+/* the trailing arrow on a count button: it belongs to the label, so it keeps the same
+   gap and leans away on hover the way the block heading's chevron always has */
+.btn .btn-ic-end{transition:transform .15s ease}
+.btn:not([disabled]):hover .btn-ic-end{transform:translateX(2px)}
+.btn-txt{display:inline-block}
+
+/* ---- SIZE: three, and the third has one user by design -------------------------
+   sm 26 — actions inside an ink banner, where the band would out-shout the banner.
+   md 40 — `--btnH`, everything standing in a control row.
+   lg 48 — the page's own primary beside its h1. ⚠️ 56 -> 48 (2026-09-25): 56 next to a
+   40px toolbar is a jump; 48 is a 1.2 step and reads as bigger without shouting. */
+.btn--sm{height:26px;padding:0 10px}
+.btn--md{height:var(--btnH);padding:0 13px}
+.btn--lg{height:48px;font-size:16px;padding:0 22px}
+
+/* ---- CONTENT: icon-only is a WIDE rounded rectangle ----------------------------
+   ⚠️⚠️ NOT A SQUARE (2026-09-25, from the shape reference). It was `width = height`,
+   which is the lazy reading of "icon-only": the box came from the BAND rather than from
+   what is in it. The width is the ICON PLUS ITS OWN PADDING, and that padding is wider
+   than it is tall, so the box comes out about 1.3:1 — a rounded rectangle lying down.
+   ⚠️ PADDING, NOT A FIXED WIDTH, and that is the rule working rather than a shortcut:
+   a 20px or 24px icon makes a wider button by itself, because the box is measured from
+   the content. Nothing has to remember a second number when an icon changes size.
+   ⚠️ `999px` is a STADIUM, not a guess at a radius: the browser clamps it to half the
+   shorter side, so the ends are true semicircles at every height without any size
+   restating what its own rounding should be. */
+.btn--icon{border-radius:999px}
+.btn--icon.btn--sm{padding:0 9px}
+.btn--icon.btn--md{padding:0 18px}
+.btn--icon.btn--lg{padding:0 23px}
+
+/* ---- VARIANT: primary ---- */
+.btn--primary{background:var(--ink);border-color:var(--ink);color:#fff}
+.btn--primary:not([disabled]):not([aria-disabled="true"]):hover{background:#000;border-color:#000}
+.btn--primary:not([disabled]):not([aria-disabled="true"]):active{background:#000;border-color:#000;
+  box-shadow:inset 0 3px 4px rgba(0,0,0,.55)}
+/* ---- VARIANT: secondary --------------------------------------------------------
+   ⚠️⚠️ A FILL, NOT AN OUTLINE (2026-09-25, by request). It was white with a `--line`
+   border; now it is `--surface-quiet` with the border turned TRANSPARENT rather than
+   removed. That is deliberate: `.btn` declares `border:1px solid transparent` for every
+   variant, so a button keeps the same box whichever variant it wears — drop the border
+   here and a secondary icon button comes out 2px narrower than a primary one beside it.
+   Nothing is drawn; hover and pressed are two further steps of the same grey ramp rather
+   than a border changing colour underneath a wash.
+   ⚠️ Contrast is not at risk: ink on #F4F5F6 is 15.61:1. */
+.btn--secondary{background:var(--surface-quiet);border-color:transparent;color:var(--ink)}
+.btn--secondary:not([disabled]):not([aria-disabled="true"]):hover{background:var(--surface-quiet-hover)}
+.btn--secondary:not([disabled]):not([aria-disabled="true"]):active{background:var(--surface-quiet-press)}
+/* ⚠️ 16 -> 24px ON AN ICON-ONLY SECONDARY (by request), and the box follows: the width
+   is the icon plus its padding, so a 24px glyph makes a 60px button at md without any
+   number being restated. That is the padding rule earning its keep. */
+.btn--secondary.btn--icon .ic{width:var(--ic-24);height:var(--ic-24)}
+/* ---- VARIANT: text ---- */
+.btn--text{color:var(--mid);padding-left:9px;padding-right:9px}
+.btn--text:not([disabled]):not([aria-disabled="true"]):hover{background:var(--hover);color:var(--ink)}
+.btn--text:not([disabled]):not([aria-disabled="true"]):active{background:var(--sel);color:var(--ink)}
+/* ---- VARIANT: ghost — text with no wash until you touch it ---- */
+.btn--ghost{color:var(--mid)}
+.btn--ghost:not([disabled]):not([aria-disabled="true"]):hover{background:var(--hover);color:var(--ink)}
+.btn--ghost:not([disabled]):not([aria-disabled="true"]):active{background:var(--sel);color:var(--ink)}
+/* ---- VARIANT: menu — the kebab, and the ONE icon-only form that is narrower.
+   ⚠️ That narrowness belongs only to this variant: it is a trigger that lives at the end
+   of a row, and a 40px box there pushes the row's last real column left by 12px for a
+   glyph three dots wide. 28 = the 16px icon plus 6 either side. */
+/* ⚠️ THE SAME QUIET FILL AS SECONDARY (2026-09-25). In the reference matrix the menu
+   trigger is a FILLED grey shape, not a bare glyph, and in a table row a bare kebab
+   beside a filled copy button read as two different kinds of control doing the same
+   kind of job. What stays its own is the WIDTH — see below. */
+.btn--menu{background:var(--surface-quiet);color:var(--mid)}
+/* ⚠️ The kebab is a glyph three dots wide, so its padding is the narrow one: the box
+   comes out slightly TALLER than wide (about 0.9:1) while every other icon-only button
+   is wider than tall. That contrast is the whole point — you can tell a menu trigger
+   from an action at the end of a row without reading either. */
+.btn--menu.btn--icon.btn--md{padding:0 10px}
+.btn--menu.btn--icon.btn--sm{padding:0 6px}
+.btn--menu:not([disabled]):not([aria-disabled="true"]):hover{background:var(--surface-quiet-hover);color:var(--ink)}
+.btn--menu:not([disabled]):not([aria-disabled="true"]):active{background:var(--surface-quiet-press);color:var(--ink)}
+
+/* ---- TONE: destructive ---------------------------------------------------------
+   ⚠️⚠️ IT READS AS DESTRUCTIVE, WHICH IS THE INVERSION THIS FIXES. `.btn.ter` carried
+   the comment "destructive" and rendered QUIETER than an ordinary button — underlined
+   grey text — so in the cancel dialog the destructive action looked least like a button
+   of anything on screen. Destructive now takes `--status-alert`, at the same weight as
+   its variant: a destructive primary is a filled red button, a destructive text item is
+   red text. The variant decides the shape; the tone decides the colour. */
+.btn--destructive.btn--primary{background:var(--status-alert);border-color:var(--status-alert);color:#fff}
+.btn--destructive.btn--primary:not([disabled]):not([aria-disabled="true"]):hover,
+.btn--destructive.btn--primary:not([disabled]):not([aria-disabled="true"]):active{
+  background:var(--c-red-700);border-color:var(--c-red-700)}
+.btn--destructive.btn--primary:not([disabled]):not([aria-disabled="true"]):active{
+  box-shadow:inset 0 3px 4px rgba(0,0,0,.45)}
+.btn--destructive.btn--secondary{color:var(--status-alert);border-color:var(--status-alert)}
+.btn--destructive.btn--secondary:not([disabled]):not([aria-disabled="true"]):hover,
+.btn--destructive.btn--secondary:not([disabled]):not([aria-disabled="true"]):active{
+  background:var(--c-red-50);border-color:var(--c-red-700);color:var(--c-red-700)}
+.btn--destructive.btn--text,.btn--destructive.btn--ghost,.btn--destructive.btn--menu{color:var(--status-alert)}
+.btn--destructive.btn--text:not([disabled]):not([aria-disabled="true"]):hover,
+.btn--destructive.btn--ghost:not([disabled]):not([aria-disabled="true"]):hover,
+.btn--destructive.btn--text:not([disabled]):not([aria-disabled="true"]):active,
+.btn--destructive.btn--ghost:not([disabled]):not([aria-disabled="true"]):active{
+  background:var(--c-red-50);color:var(--c-red-700)}
+
+/* ---- STATE: focused ---- */
+.btn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+/* ---- STATE: disabled — pale AND inert ---- */
+.btn[disabled],.btn[aria-disabled="true"]:not(.is-busy){opacity:.45;cursor:not-allowed}
+/* ---- STATE: busy -----------------------------------------------------------------
+   ⚠️ THE WIDTH IS RESERVED BY THE CONTENT, not frozen by script. `visibility:hidden`
+   keeps the label and its icon in the layout and takes them off the screen, so the box
+   is exactly the width it was — the old wizard code measured the button and wrote an
+   inline `width`, which is a snapshot that goes wrong the moment the label changes.
+   ⚠️ NOT `opacity` and NOT `[disabled]`: busy is "this is happening", disabled is "you
+   cannot do this". Busy keeps its full contrast and keeps its place in the tab order;
+   `aria-busy` + `aria-disabled` say the rest. */
+.btn.is-busy{cursor:progress}
+.btn.is-busy .btn-txt,.btn.is-busy .btn-ic{visibility:hidden}
+.btn-spin{position:absolute;left:50%;top:50%;width:15px;height:15px;margin:-8px 0 0 -8px;
+  border:2px solid currentColor;border-top-color:transparent;border-radius:50%;opacity:.85;
+  animation:refspin .7s linear infinite}
+.btn--sm .btn-spin{width:12px;height:12px;margin:-6px 0 0 -6px}
+
+/* ---- the mobile touch rule, ONCE -------------------------------------------------
+   ⚠️ THIS REPLACES THREE CONTEXTUAL OVERRIDES. `.pubacts .btn{height:36px}`,
+   `.pagetitlerow .btn{min-height:44px}` and `#couponOverlay .paymodal-f .btn{height:48px}`
+   each answered the same question — a 40px (or 26px) control is not a touch target — in
+   a different place with a different number. One rule, in the component, and no call
+   site says anything about size on a phone.
+   ⚠️ `sm` RESOLVES TO THE TOUCH SIZE TOO. 26px is below any usable target, so a banner
+   action gets the same 44 as everything else; if that makes a banner top-heavy the
+   answer is a change to the banner, not a smaller button. */
+@media (max-width:600px){
+  .btn--sm,.btn--md{height:44px}
+  /* ⚠️ The touch rule raises the HEIGHT; the width follows the padding as it does
+     everywhere else, so a phone button keeps the same 1.3:1 shape rather than
+     collapsing back to a square. */
+  .btn--icon.btn--sm,.btn--icon.btn--md{padding:0 20px}
+  .btn--menu.btn--icon.btn--md,.btn--menu.btn--icon.btn--sm{padding:0 12px}
+}
 .spacer{flex:1}
 
 .tabs{display:flex;gap:2px;padding:0 18px 0 var(--contentX);border-bottom:1px solid var(--line2)}
@@ -399,23 +629,22 @@ a{color:inherit}
 .sh .spacer{flex:1}
 
 .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
-.iconbtn{display:inline-flex;align-items:center;gap:5px;height:var(--btnH);font-size:14px;color:var(--mid);border:1px solid var(--line);border-radius:6px;padding:0 10px;background:#fff}
-.iconbtn:hover{color:var(--ink);border-color:var(--mid);background:var(--hover)}
-.iconbtn.ib{padding:0;width:var(--btnH);justify-content:center}
-.iconbtn .ic{width:var(--ic-16);height:var(--ic-16)}
-.iconbtn.copied{border-color:var(--ink);color:var(--ink)}
+.btn .ic{width:var(--ic-16);height:var(--ic-16)}
 /* refresh feedback: brief icon spin + a muted "updated" note beside the button */
 @keyframes refspin{to{transform:rotate(360deg)}}
-.iconbtn.spinning .ic{animation:refspin .6s linear;transform-origin:center}
+/* ⚠️ `.iconbtn.spinning` IS GONE: the 600ms refresh spin is the BUSY state at a short
+   duration (`runButtonBusy(btn, 600)`), not a second mechanism. */
 /* ghost icon button: no fill, no stroke — hover only darkens the glyph */
-.iconbtn.ghost{border-color:transparent;background:transparent}
-.iconbtn.ghost:hover{border-color:transparent;background:transparent;color:var(--ink)}
 .link{color:var(--ink);text-decoration:underline;text-underline-offset:2px;font-size:14px;background:transparent;border:0;padding:0}
 .link:hover{color:#000}
 
 table{width:100%;border-collapse:collapse;font-size:14px}
 th{text-align:left;color:var(--faint);font-family:var(--font-ui);font-size:var(--t-label-fs);line-height:var(--t-label-lh);letter-spacing:var(--t-label-ls);font-weight:400;text-transform:uppercase;padding:8px;border-bottom:1px solid var(--line2)}
-td{padding:13px 8px;border-bottom:1px dashed var(--line2);vertical-align:middle}
+/* ⚠️ SOLID, NOT DASHED (2026-09-25, by request). Asked for the licence table; applied
+   to every table, because Home stands the licence block and the invoice block one above
+   the other and a dashed rule under one with a solid rule under the other reads as a
+   defect rather than as two components. One divider, one product. */
+td{padding:13px 8px;border-bottom:1px solid var(--line2);vertical-align:middle}
 /* breathing room around tables and before their pagination */
 .section > table{margin-top:16px}
 tr:last-child td{border-bottom:0}
@@ -502,12 +731,7 @@ th.num,td.num{text-align:right}
    is a row-menu action now, like every other thing you can do to an instance.
    ⚠️ A GHOST ICON BUTTON: the hit area and the focus ring of `.iconbtn.ib` without its
    frame, for an icon that sits beside a value inside a cell rather than in a toolbar. */
-.ghostbtn{display:inline-flex;align-items:center;justify-content:center;
-  width:var(--btnH);height:var(--btnH);flex:none;padding:0;margin:0;
-  background:none;border:0;border-radius:6px;color:var(--mid);cursor:pointer}
-.ghostbtn:hover{color:var(--ink);background:var(--hover)}
-.ghostbtn:focus-visible{outline:2px solid var(--ink);outline-offset:-2px}
-.ghostbtn .ic{width:16px;height:16px}
+/* ⚠️ `.ghostbtn` IS GONE — it is `btn btn--ghost btn--md btn--icon`. */
 /* the new-tab marker: it rides after the label, at text size, never its own control */
 .extmark{width:var(--ic-16);height:var(--ic-16);margin-left:5px;vertical-align:-2px;opacity:.65}
 
@@ -539,15 +763,46 @@ th.num,td.num{text-align:right}
 .lic-ver{white-space:nowrap}
 .verline{display:flex;flex-direction:column;gap:2px;line-height:1.3}
 .ver-run{display:inline-flex;align-items:center;gap:6px;font-variant-numeric:tabular-nums}
-/* ⚠️ MONOCHROME, both of them. A tick and a warning are exactly where a colour system
-   would put green and amber, and this one may not: state is carried by shape and weight.
-   The two shapes are the whole difference — a closed tick reads as settled, an
-   exclamation as unfinished — and the quieter grey on the tick says "nothing to do
-   here" without a second colour. */
-.verm{display:inline-flex;flex:none;color:var(--faint)}
-.verm.is-behind{color:var(--ink)}
-.verline.is-behind .ver-run{font-weight:500}
-.ver-latest,.ver-mixed{font-size:13px;color:var(--faint);font-variant-numeric:tabular-nums}
+/* ⚠️ ONE MARK ONLY: the alert, and nothing when the version is current. `.verm` is
+   always a `<button>` now — the only time it renders, it carries the tooltip — so the
+   button reset is the whole rule. */
+.verm{display:inline-flex;flex:none;align-items:center;padding:0;border:0;background:none;
+  color:var(--status-alert);cursor:pointer;border-radius:6px}
+.verm:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+/* ⚠️ THE NUMBER IS ONE STYLE IN BOTH STATES (2026-09-25, by request). `.verline.is-behind
+   .ver-run{font-weight:500}` set the behind number heavier, so the column had two type
+   treatments for one kind of value. The alert beside it is the difference; the digits
+   are just digits. */
+/* ⚠️ `.ver-latest` and the LIST's `.ver-mixed` are both gone. `.ver-mixed` survives as a
+   rule because the licence DETAILS header still prints it — it is the only place left
+   that says a licence's figure is the lowest of its instances. */
+.ver-mixed{font-size:13px;color:var(--faint);font-variant-numeric:tabular-nums}
+
+/* ---------- the status mark: the word, in its own colour ------------------------
+   ⚠️⚠️ THE COLOUR IS ON THE TEXT NOW, and the icon is gone (2026-09-25, second pass).
+   Yesterday's rule put the colour on a 20px glyph and kept the word in `--ink`, on the
+   argument that a coloured word "would carry the meaning a second time and would fail
+   the moment it sat on a coloured ground". Neither half survives the change: there is no
+   glyph left to carry it, and this cell never sits on a coloured ground.
+   ⚠️ WHAT MAKES IT READABLE WITHOUT COLOUR is the word, which is different in each state
+   — not one label in three tints. See the note on `statusMark` for why that is the line
+   that must not be crossed.
+   ⚠️⚠️ CONTRAST — COMPUTED, not eyeballed, against `--card` (#ffffff):
+     `--status-off`   #525252  7.81:1   passes
+     `--status-alert` #DA1818  5.09:1   passes
+     `--status-ok`    #009A4F  3.66:1   **FAILS AA** (the floor is 4.5 at 14px regular)
+   This mattered less while the colour was on a 20px glyph — 1.4.11 asks 3:1 of a
+   non-text mark and #009A4F cleared it. As TEXT it is a 14px word and the floor moves to
+   4.5, so the one state a reader sees most often is the one below the line.
+   Recorded, not silently corrected: the value was given, and changing it is a decision
+   about the palette. Holding the hue (150.8°) and saturation and darkening only the
+   lightness, **#008846 is the first value that clears it, at 4.56:1** — a change small
+   enough to be invisible beside the current green. One line in the primitives. */
+.statmark{display:inline-flex;align-items:center;font-size:14px;white-space:nowrap;
+  color:var(--status-off)}
+.statmark.is-ok{color:var(--status-ok)}
+.statmark.is-alert{color:var(--status-alert)}
+.statmark.is-off{color:var(--status-off)}
 
 /* ---------- the Instances page --------------------------------------------------
    ⚠️ `.lic-viewseg` LIVED HERE and is gone with the Licenses/Instances tablist — the
@@ -583,6 +838,14 @@ th.num,td.num{text-align:right}
    without something in its place the phone's icon-only button would have been empty. */
 .lnb-ic{display:none}
 .lic-titlerow > .lic-h1{padding-top:0;margin-bottom:0}
+/* ⚠️ A ROW when it holds the count chip, and it has to be `:has` rather than a second
+   class: the Instances page uses `.lic-titlerow` for a title with a SENTENCE under it,
+   which is a stack and must stay one. Flex only when there is a chip to sit beside. */
+.lic-titlerow:has(> .titlecount){display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+/* the count is a statement, not a control — no hover, no target, no way in */
+.titlecount{display:inline-flex;align-items:center;height:26px;padding:0 10px;
+  border-radius:999px;background:var(--surface-quiet);color:var(--mid);
+  font-size:14px;font-variant-numeric:tabular-nums}
 .inst-hint{margin:4px 0 0;font-size:14px;line-height:1.5;color:var(--mid)}
 .inst-filter{margin:0;padding:12px 18px;border-bottom:1px solid var(--line2);
   font-size:14px;line-height:1.5;color:var(--ink)}
@@ -627,32 +890,21 @@ th.num,td.num{text-align:right}
 /* the statement on the Review of a downgrade — inside the effect box, set apart from
    the sentence above it because it is the other side of the trade */
 .nl-creditnote{margin-top:8px;padding-top:8px;border-top:1px solid var(--line2);color:var(--ink)}
-/* a folded run: the chevron turns when it opens, and the entries it holds sit inside
-   the same row rather than becoming rows of their own */
-.fgroup .fg-toggle .ic{transition:transform .12s}
-.fgroup .fg-toggle.is-on .ic{transform:rotate(180deg)}
-.fg-items{margin:6px 0 0 0;border-left:2px solid var(--line2);padding-left:12px}
-.fg-items[hidden]{display:none}
-.fg-line{padding:3px 0;font-size:14px;color:var(--mid)}
-.fg-lrow{display:flex;align-items:center;gap:10px}
-.fg-time{flex:none;min-width:150px;font-variant-numeric:tabular-nums}
-.fg-txt{flex:1;min-width:0}
-/* smaller than the row's own audit button: it belongs to ONE ENTRY inside a row, not to
-   the row — folding is a display decision, and it must not cost an entry its record */
-.fg-audit{flex:none;width:28px;height:28px}
-.fg-line .fi-audit{margin-top:4px}
-@media (max-width:600px){
-  /* the time moves above the sentence; the payload button stays on the sentence's line */
-  .fg-lrow{flex-wrap:wrap;gap:0 10px}
-  .fg-time{min-width:0;flex:1 1 100%;font-size:13px;color:var(--faint)}
-  .fg-txt{flex:1}
-}
+/* ⚠️ THE FOLDED-RUN BLOCK IS GONE (2026-09-25). `.fgroup`, `.fg-toggle`, `.fg-items`,
+   `.fg-line`, `.fg-lrow`, `.fg-time`, `.fg-txt` and `.fg-audit` dressed markup that
+   `feedGroupItem` stopped building long ago and that the expander removal finished off.
+   None of them was emitted by anything when they were deleted — checked, not assumed. */
 .inst-filter[hidden]{display:none}
 .ia-name{font-weight:500}
 .ia-id{font-size:13px;color:var(--faint);max-width:30ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ia-licsub{font-size:13px;color:var(--faint)}
 /* the one destructive entry in a row menu */
-.menu button.danger{color:var(--ink)}
+/* ⚠️ A DESTRUCTIVE MENU ITEM READS AS DESTRUCTIVE (2026-09-25). This set `--ink`, i.e.
+   exactly the colour of every other item — the class existed and said nothing. A menu
+   item is not the button component (it is a row in a popup), but the TONE is the same
+   token, so the two cannot drift apart. */
+.menu button.danger{color:var(--status-alert)}
+.menu button.danger:hover{background:var(--c-red-50);color:var(--c-red-700)}
 .menu button.danger::before{content:"";display:inline-block;width:0}
 
 /* ---------- info icon ----------
@@ -715,10 +967,19 @@ input[type=checkbox]{accent-color:var(--ink);width:14px;height:14px;margin:0}
 .insttoolbar .spacer{flex:1}
 .insttype[hidden]{display:none}
 .pager.instpager{margin-top:40px}
-.rowactions{display:inline-flex;align-items:center;gap:16px;white-space:nowrap}
+/* ⚠️ 16 -> 6, the same gap `.lic-actions` uses (2026-09-25, by request). Both rows end in
+   a pair of icon buttons; 16px read as two separate controls and 6 reads as one group,
+   which is what they are. */
+.rowactions{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
 /* action columns shrink to their content, so row actions sit at the table's right
    edge instead of floating in the middle of an over-wide last column */
 th[aria-label$="ctions"],th.cellact,td.cellact{width:1%;white-space:nowrap;text-align:right}
+/* ⚠️ AIR BEFORE THE ROW ACTIONS (2026-09-25, by request). The right end of a licence row
+   ran straight from the last figure into two buttons, so the buttons read as another
+   column of data. 28px is the gap, and it sits on the ACTIONS cell rather than on the
+   column before it, because which column that is depends on the variant: in A it is
+   `Updated`, in B it is `Version`. One rule, both layouts. */
+.lic-row > td.cellact,table:has(.lic-row) thead th:last-child{padding-left:28px}
 /* invoices: fixed proportional columns so the row fills the width evenly and the
    actions sit at the right edge instead of floating with a gap */
 .invtable{table-layout:fixed}
@@ -732,9 +993,8 @@ th[aria-label$="ctions"],th.cellact,td.cellact{width:1%;white-space:nowrap;text-
 .pager select{font:inherit;font-size:14px;height:var(--btnH);border:1px solid var(--line);border-radius:6px;padding:0 6px;background:#fff;color:var(--ink);margin-left:4px}
 .pager .range{font-variant-numeric:tabular-nums}
 .pagebtns{display:flex;gap:4px}
-.pagebtns button{width:var(--btnH);height:var(--btnH);border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--mid);display:inline-flex;align-items:center;justify-content:center;font-size:14px;line-height:1}
-.pagebtns button:not([disabled]):hover{color:var(--ink);border-color:var(--mid);background:var(--hover)}
-.pagebtns button[disabled]{color:var(--line);cursor:not-allowed}
+/* ⚠️ The pager's four buttons are `btn--secondary btn--md btn--icon`; this block used to
+   restate the whole box and its own disabled rule. Nothing left to say. */
 
 /* ---------- modal ---------- */
 .overlay{position:fixed;inset:0;background:rgba(28,28,28,.32);display:flex;align-items:center;justify-content:center;padding:20px;z-index:100}
@@ -911,6 +1171,12 @@ th[aria-label$="ctions"],th.cellact,td.cellact{width:1%;white-space:nowrap;text-
 .seg label:first-child span{border-right:1px solid var(--line)}
 .seg input:checked + span{background:var(--ink);color:#fff}
 .seg input:focus-visible + span{outline:2px solid var(--ink);outline-offset:-2px}
+/* ⚠️ THE SAME `.seg` MECHANIC AT THE TOOLBAR'S ONE HEIGHT. Everything standing in a
+   control row is `--btnH` (see the size ladder) and `.seg`'s own padding lands it around
+   33px, which would sit 7px short of the search box beside it. Height here rather than
+   more padding, so the ladder's two numbers stay the only numbers. */
+.viewseg{flex:none;height:var(--btnH)}
+.viewseg span{display:flex;align-items:center;height:100%;padding:0 13px;white-space:nowrap}
 
 /* ---------- Manage add-ons: large centered modal ---------- */
 /* backdrop: dim + blur the page behind; the modal panel (.fs-box) sits centered on top */
@@ -1004,8 +1270,12 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
    banners each used to carry their own ✕ (30 / 28 / 26 / 25px), which was four
    accidents rather than four decisions. Only the colour is contextual: the ink
    banner cannot wear a white box, so .gb-x keeps its own fill below. */
-.fs-close,.modal .mclose,.paymodal-x,.gb-x{width:30px;height:30px;flex:none;padding:0;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--mid);display:inline-flex;align-items:center;justify-content:center;font-size:15px;line-height:1;cursor:pointer}
-.fs-close:hover,.modal .mclose:hover,.paymodal-x:hover{color:var(--ink);background:var(--hover)}
+/* ⚠️ THE ✕ IS FOUR CLASS NAMES AND NO GEOMETRY (2026-09-25). It used to be six spellings
+   at three heights (30 / 28 / 36); all four here are `btn btn--ghost btn--md btn--icon`
+   and what is left of the class is POSITION, which is the only thing that ever really
+   differed between them. ⚠️ 30 -> 40 is a visible change: a close is a control in a
+   control row and takes the band like every other one. */
+.fs-close,.modal .mclose,.paymodal-x,.gb-x{flex:none}
 .fs-nextbtn{width:100%;margin-top:14px}
 /* Customize step: one control per row, so every stepper and toggle lands in the
    same right-hand column */
@@ -1168,11 +1438,20 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
 .nl-stepbar{flex:none;display:flex;align-items:center;gap:10px;
   padding:12px 24px;background:#fff;border-bottom:1px solid var(--line2)}
 .nl-stepbar > div{flex:1;min-width:0}
-.nl-stepback{flex:none}
+/* ⚠️ `.nl-stepback` IS GONE with the chevron it sized (2026-09-25). Every step behind
+   the current one is its own way back now — see renderSteps. */
 .nl-steps{display:flex;align-items:stretch;gap:4px;
   border:1px solid var(--line2);border-radius:12px;padding:6px}
-.nl-step{flex:1;min-width:0;display:flex;align-items:center;gap:12px;
+/* ⚠️ ONE RULE FOR BOTH ELEMENTS. A done step is a <button> and the rest are <div>s, so
+   the button half has to be reset back to the div it sits beside — font, background,
+   border and text alignment do not inherit into a button. Anything added below that is
+   not in this reset will make the done steps look different from the others. */
+.nl-step{flex:1;min-width:0;display:flex;align-items:center;gap:12px;text-align:left;
+  font:inherit;background:none;border:0;
   padding:8px 12px;border-radius:8px;color:var(--faint)}
+button.nl-step{cursor:pointer}
+button.nl-step:hover{background:var(--hover)}
+button.nl-step:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 /* ⚠️ THE CURRENT STEP IS THE ONLY FILLED ONE. The reference fills it in the product's
    accent; here the fill is ink, because this is chrome inside a monochrome product and
    `--accent` is spent on the Popular card, where it means "we suggest this". A filled
@@ -1284,8 +1563,23 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
    no longer the tail of the lead sentence. `.dwelcome` is already a flex row whose text
    column takes the space, so the link only has to stop shrinking and sit on the same
    baseline band as the sentence it answers. */
-.lp-swap{flex:none;align-self:flex-end;padding-bottom:2px}
-.lp-swap .nl-prodswap{white-space:nowrap}
+/* ⚠️ `align-self:stretch`, NOT `flex-end` (2026-09-25, by request). The frame is asked to
+   stand as tall as the two lines of text beside it, and the only way a flex item takes
+   its row's height without anyone measuring the text is to stretch into it. The moment
+   the heading or the lead wraps to another line, the frame follows on its own. */
+.lp-swap{flex:none;align-self:stretch;display:flex;align-items:center}
+/* ⚠️ A BUTTON THAT IS WHITE, not the quiet grey `secondary` fills everywhere else. It
+   stands on the landing page's own pale ground, where `--surface-quiet` is nearly the
+   same value and the frame would disappear; white is what makes it an object there. The
+   same local-palette exception the ink banner takes, and for the same reason — the
+   variant does not know what it is standing on. */
+.lp-swapbox{height:100%;gap:12px;padding:0 18px;border-radius:10px;
+  background:var(--card);text-decoration:none}
+.lp-swapbox:not([disabled]):hover{background:var(--hover)}
+.lp-swapbox:not([disabled]):active{background:var(--sel)}
+/* the mark is artwork, so it gets a box rather than the 16px icon slot */
+.lp-swapbox .btn-mark{display:inline-flex;width:28px;height:28px}
+.lp-swapbox .btn-txt{white-space:nowrap}
 .nl-stated{display:flex;align-items:flex-start;gap:12px;min-width:0}
 .nl-stated .ic{width:var(--ic-24);height:var(--ic-24)}
 .nl-stated .nl-prodic{color:var(--ink)}    /* stated, not one of two — it is not dimmed */
@@ -1307,7 +1601,12 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
   left:50%;top:50%;transform:translate(-50%,-50%);
   width:10px;height:10px;border-radius:50%;background:var(--ink)}
 .nl-prodcard[disabled] .nl-prodradio{border-color:var(--line2)}
-.nl-prodic{flex:none;display:inline-flex;color:var(--mid);width:24px;height:24px}
+/* ⚠️ 24 -> 42px (2026-09-25, by request): the mark now stands as tall as the two lines
+   of text beside it, so the card reads as one block instead of an icon floating beside a
+   paragraph. 42 is MEASURED, not chosen: `.nl-prodname` 16px x 1.2 = 19.2, `.nl-proddesc`
+   14px x 1.35 = 18.9, plus the 4px `.nl-prodtxt` gap = 42.1. If either line's size or
+   leading moves, this number is wrong and has to be recomputed from them. */
+.nl-prodic{flex:none;display:inline-flex;color:var(--mid);width:42px;height:42px;align-items:center}
 .nl-prodcard .ic{width:var(--ic-24);height:var(--ic-24)}
 .nl-prodtxt{display:flex;flex-direction:column;gap:4px;min-width:0}
 .nl-prodname{font-size:16px;font-weight:500;line-height:1.2}
@@ -1331,6 +1630,11 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
    the product cards above and the plan grid below. */
 .nl-billtabs{gap:22px;padding-left:0;padding-right:0}
 .nl-billtab{font-size:16px}
+/* ⚠️ THE SAME STRIP, THE OTHER BREAKPOINT. Above 600px the two billing models are named
+   by `.plangroup-h` and the rule under them is `--accent`; below 600px they are TABS and
+   the rule is the tab's own underline. Same two words, same line, same colour — scoped
+   to `.nl-billtab` so every other tablist in the product keeps its ink. */
+.nl-billtab[aria-selected="true"]{border-color:var(--accent);color:var(--accent)}
 .nl-billtab[disabled]{cursor:default;color:var(--faint)}
 .nl-billtab[disabled].on{color:var(--ink)}
 /* one line, and it is allowed to be long — it is the only place this step explains
@@ -1357,7 +1661,10 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
    every part of it is the wizard's own component, and a landing-only override would
    be exactly the drift the shared template exists to prevent. */
 .planpicker{margin-top:28px}
-.planpicker .plangroups{margin-top:24px}
+/* ⚠️ 24 -> 56 (2026-09-25, by request). The head row states what the page is for; the
+   price list is the next subject, not its continuation, and 24px read as the lead
+   sentence's own bottom margin. */
+.planpicker .plangroups{margin-top:56px}
 
 /* ---------- auth: one box, two screens ----------
    Rides .fs-screen / .fs-box, so it is already a centred modal above 600px and a
@@ -1562,10 +1869,81 @@ button.dbrand{background:none;border:0;padding:0;color:inherit;font:inherit;curs
    A heading row inside the table, not a second table: the columns have to keep lining
    up across the groups, which is the whole reason the grouping is a row rather than a
    stack of tables. `--bg` is the same quiet inset the activity detail panel uses. */
-.instgroup > td{background:var(--bg);padding:8px 8px;border-bottom:1px solid var(--line2)}
-.ig-name{font-family:var(--font-ui);font-size:var(--t-label-fs);letter-spacing:var(--t-label-ls);
-  font-weight:var(--t-label-fw);text-transform:uppercase;color:var(--mid)}
-.ig-count{margin-left:8px;font-size:14px;color:var(--faint);font-variant-numeric:tabular-nums}
+/* ---------- the grouped Instances view: a licence, and the instances under it ------
+   ⚠️ THE WHOLE HEADING IS THE CONTROL, not a chevron beside a label. The row is the
+   only thing in it and there is only one thing it does; a 40px target inside a
+   full-width row would be a smaller way to do the same job.
+   ⚠️ `.ig-name` LOST ITS UPPERCASE LABEL STYLING. It used to name a PRODUCT — a
+   category, which is what that treatment is for; it now carries a licence's own label,
+   which is a name somebody typed, and uppercasing a name rewrites it. */
+/* ---------- ONE OUTLINE AROUND A WHOLE GROUP -------------------------------------
+   ⚠️ `border-collapse:separate` IS THE PRECONDITION, not a preference. With `collapse`
+   the border between two cells is a single shared edge and `border-radius` on it is
+   ignored outright — there is no rounding a collapsed table. The flat list keeps
+   `collapse`; only the grouped table switches, which is why the class is on the TABLE.
+   ⚠️ `border-spacing:0` because the gap between GROUPS is a spacer row: spacing is
+   uniform, so any value here would push the rows inside a group apart by the same
+   amount and take the grouping with it.
+   ⚠️ NO EXTRA PADDING ANYWHERE IN HERE. The subordinate rows keep the cell padding every
+   other row has and are not indented — the outline simply continues down from the
+   heading and closes under the last of them. */
+/* ⚠️ THE GROUPED TABLE HAS NO OUTER FRAME. Every other table on a list page is a framed
+   object now (see the block above), but here the GROUPS are the framed objects — a frame
+   around them would be a box holding boxes, which is the same call made for the phone
+   card and for the Home table at 600px. The head keeps its grey band; the body is a
+   stack of groups on the page ground. */
+#instTable.is-grouped{border-collapse:separate;border-spacing:0;border:0;border-radius:0}
+#instTable.is-grouped thead th:first-child,
+#instTable.is-grouped thead th:last-child{border-radius:0}
+/* ⚠️ and the frame's "last row closes the box" rule must not reach in here: the last
+   row of the LAST GROUP is what closes that group, and it needs its border. */
+#instTable.is-grouped tbody tr:last-child > td{border-bottom:inherit}
+#instTable.is-grouped .instg-row.is-last > td{border-bottom:1px solid var(--line)}
+/* the heading: sides and a top always, the bottom only when it is closed and therefore
+   the whole of the box */
+/* ⚠️⚠️ A COLLAPSED GROUP HAS NO OUTLINE (2026-09-25, by request). It used to be a closed
+   8px box whether or not anything was under it, so a list of collapsed groups read as a
+   stack of empty containers. The outline is what says "these rows belong to this
+   heading" — with nothing showing there is nothing to enclose, so the heading is just a
+   band. It appears the moment the group opens, and closes under the last row. */
+#instTable.is-grouped .instgroup > td{padding:0;border:0;border-radius:8px}
+#instTable.is-grouped .instgroup.is-open > td{border:1px solid var(--line);
+  border-bottom:0;border-radius:8px 8px 0 0}
+/* the rows inside: the sides continue down them, the dashed hairline stays as the
+   separator BETWEEN them, and the last one closes the box */
+#instTable.is-grouped .instg-row > td{border-top:0}
+#instTable.is-grouped .instg-row > td:first-child{border-left:1px solid var(--line)}
+#instTable.is-grouped .instg-row > td:last-child{border-right:1px solid var(--line)}
+/* ⚠️ `.is-last` IS EMITTED, not `:last-child`. The last row of a group is only the last
+   child of the table in the final group, and search hides rows without removing them —
+   either way the bottom of the box would land on the wrong row or on none. */
+#instTable.is-grouped .instg-row.is-last > td{border-bottom:1px solid var(--line)}
+#instTable.is-grouped .instg-row.is-last > td:first-child{border-bottom-left-radius:8px}
+#instTable.is-grouped .instg-row.is-last > td:last-child{border-bottom-right-radius:8px}
+/* the space between two groups — see instGroupedHTML for why it is a row */
+#instTable.is-grouped .instgap > td{height:10px;padding:0;border:0}
+/* ⚠️ `min-width:0` ON BOTH THE ROW AND THE NAME, and it is load-bearing. A flex item
+   defaults to `min-width:auto`, so a `nowrap` name REFUSES to shrink and pushes the
+   whole table wider than the viewport instead of ellipsizing — measured at 390px: the
+   table came out 553px wide and the heading ran under the edge, clipped by the scroll
+   box with no way to read it. The ellipsis below cannot work without this. */
+/* ⚠️ `border-radius:inherit`, so the fill can never round differently from the box that
+   holds it — 8px all round when the group is closed, top-only when it is open, and both
+   answers come from the one rule above. */
+.ig-btn{display:flex;align-items:center;gap:10px;width:100%;min-width:0;
+  padding:10px 8px;background:var(--bg);border:0;border-radius:inherit;
+  font:inherit;text-align:left;color:var(--ink);cursor:pointer}
+.ig-btn:hover{background:var(--sel)}
+.ig-btn:focus-visible{outline:2px solid var(--ink);outline-offset:-2px}
+.ig-chev{flex:none;display:inline-flex;color:var(--mid);transition:transform .12s}
+.ig-btn[aria-expanded="false"] .ig-chev{transform:rotate(-90deg)}
+.ig-mark{flex:none;display:inline-flex;width:24px;height:24px}
+.ig-name{min-width:0;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ig-sub{color:var(--faint);font-size:14px;white-space:nowrap}
+/* pushed to the far edge: it is the answer to "how big is this group", read against the
+   rows below rather than against the name beside it */
+.ig-count{margin-left:auto;font-size:14px;color:var(--faint);font-variant-numeric:tabular-nums}
+.instgroup[hidden]{display:none}
 
 /* ---------- VARIANT B of the licence table (2026-09-25, a proposal) --------------
    Running beside variant A, chosen in the ⚙ panel. Nothing here touches A. */
@@ -1675,7 +2053,9 @@ button.dbrand{background:none;border:0;padding:0;color:inherit;font:inherit;curs
 /* burger, phone menu panel and the scroll-to-top button: below the breakpoint only */
 .bnav,.tb-back,.tb-title,.totop,.tb-refresh{display:none}   /* phone-only chrome; the ≤600px block turns these on */
 /* row actions ship a glyph and a label; desktop reads the label */
-.ra-act .ra-ic{display:none}
+/* ⚠️ `.ra-txt` / `.ra-ic` ARE GONE: the invoice row's actions are icon-only on every
+   breakpoint now, so there is no label to hide and no glyph to reveal. `.ra-act` is
+   left as a POSITION hook only. */
 /* the sticky action ships both labels and an icon; desktop shows the words only */
 .tb-short,.tb-ic{display:none}
 
@@ -1739,8 +2119,7 @@ button.dbrand{background:none;border:0;padding:0;color:inherit;font:inherit;curs
 .imp-banner{display:flex;align-items:center;gap:12px;width:100%;max-width:var(--pageW);margin:0 auto;padding:9px var(--pageX);background:var(--ink);color:#fff;border-radius:0 0 10px 10px;font-size:14px}
 .imp-banner b{font-weight:600}
 .imp-banner .sp{flex:1}
-.imp-return{height:26px;padding:0 12px;border:0;border-radius:6px;background:#fff;color:var(--ink);font:inherit;font-size:14px;cursor:pointer;flex:none}
-.imp-return:hover{background:var(--hover)}
+.imp-return{flex:none}
 /* ⚠️ The rule that squared the bar's bottom corners while the impersonation band sits
    under it is gone with the corners — the bar is a full-width band with none. */
 /* legal pages: long-form reading */
@@ -1755,7 +2134,16 @@ button.dbrand{background:none;border:0;padding:0;color:inherit;font:inherit;curs
 .dmain{flex:1;overflow:visible;padding:0}
 /* Home opens with the greeting line, so it gets more room under the top-bar band
    than the shared --pageY gives the list pages */
-body[data-page="home"] .dwrap{padding-top:48px}
+/* ⚠️⚠️ THE SAME DISTANCE FROM THE BAR ON ALL THREE SESSION STATES (2026-09-25, by
+   request). Measured before the fix: landing 28px, signed-in 53. TWO things were making
+   the difference and only one of them was the padding.
+   ⚠️ THE OTHER FIVE PIXELS WERE VERTICAL CENTRING. `.dwelcome` is a flex row with
+   `align-items:center`, and on Home the row's tallest child is the 48px `Buy a license`,
+   not the 39px heading — so the heading was pushed down by half the difference. On the
+   landing the text block IS the tallest child, so it was not. The row now pins its
+   children to the TOP and the action re-centres itself, which is the only arrangement
+   where the heading's position does not depend on what happens to be beside it. */
+body[data-page="home"] .dwrap,body[data-page="landing"] .dwrap{padding-top:48px}
 
 /* ---------- Home: animated mesh gradient ------------------------------------
    ⚠️⚠️ THE ONE PLACE IN THIS PROTOTYPE THAT IS NOT MONOCHROME, and it is a named
@@ -1881,7 +2269,12 @@ body[data-mesh] .dtopbar{
   background:transparent;border-bottom-color:transparent;
   transition:background-color .18s ease,border-color .18s ease;
 }
-body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(--line2)}
+/* ⚠️ FILL ONLY WHEN IT DOCKS (2026-09-25, by request). It used to bring a hairline down
+   with the white, so scrolling produced two changes where one was wanted. The border
+   stays transparent through the whole transition; only the background moves.
+   ⚠️ Pages WITHOUT the mesh keep their static hairline (`.dtopbar`, above) — that one
+   does not appear on scroll, it is always there, so it is not what this is about. */
+body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:transparent}
 
 /* ⚠️ THE PHONE MEASURES THE ZONE IN PIXELS, NOT IN vh, and that is not a stylistic
    preference. On the phone Home's first block is a FULL-BLEED white surface — no
@@ -1902,7 +2295,9 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
   }
 }
 /* welcome text and the page-level action sit on one row */
-.dwelcome{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.dwelcome{display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap}
+/* the page action keeps the centring the row gave up — see the note above */
+.dwelcome > .btn{align-self:center}
 .dwelcome .dw-txt{flex:1;min-width:0}
 .dwelcome h1{margin:0;font-family:var(--font-ui);font-size:var(--t-h1-fs);line-height:var(--t-h1-lh);letter-spacing:var(--t-h1-ls);font-weight:var(--t-h1-fw)}
 .dwelcome p{margin:5px 0 0;font-family:var(--font-ui);font-size:var(--t-small-fs);line-height:var(--t-small-lh);letter-spacing:var(--t-small-ls);font-weight:var(--t-small-fw);color:var(--mid)}
@@ -1938,6 +2333,12 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
 .nl-pe.is-gap .nl-pe-intro{color:var(--mid)}
 
 .dblock{background:var(--card);border:1px solid var(--line2);border-radius:10px;padding:15px 18px;margin-top:20px}
+/* ⚠️ NO STROKE ON HOME — white fill alone (2026-09-25, by request).
+   ⚠️ SCOPED TO `#dashView`, and that is not caution, it is necessary: `.dblock` is also
+   the wizard's product cards and every plan card (`.nl-prodcard`, `.plancard`), where
+   the border is what makes a card a selectable target and the `on` state thickens it.
+   Dropping it globally would have taken the frame off the price list. */
+#dashView .dblock{border:0}
 /* Home feed lazy load: a sentinel the observer watches, plus a quiet fallback */
 .feedmore{display:flex;justify-content:center;padding:10px 0 2px}
 .feedmore[hidden]{display:none}
@@ -1946,22 +2347,24 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
    line, and a banner above it pushed everything down. The block below supplies
    the gap with its own margin-top. */
 .dwelcome + .gbanner{margin:24px 0 0}
-.dblock-head{display:flex;align-items:baseline;gap:12px;margin-bottom:4px}
+/* ⚠️ `align-items:center`, not `baseline`: the heading now holds a BUTTON beside the
+   word, and a 26px box aligned on a text baseline sits low. `margin-bottom` 4 -> 12
+   because the table below it is a framed object now, not a run of rows that reads as a
+   continuation of the title. */
+.dblock-head{display:flex;align-items:center;gap:12px;margin-bottom:12px}
 .dblock-head h2{margin:0;font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw)}
 .dblock-head .sp{flex:1}
 /* The block heading IS the navigation — there is no second "Show all" link. It is
    a heading first, so no underline at rest; the chevron carries the affordance and
    leans into the direction it goes on hover. */
-.dblock-link{display:inline-flex;align-items:center;gap:5px;color:inherit;text-decoration:none}
-.dblock-link:hover{text-decoration:underline;text-underline-offset:3px}
-.dbh-chev{display:inline-flex;align-items:center;color:var(--faint);transition:transform .15s ease,color .15s ease}
-.dbh-chev .ic{width:var(--ic-16);height:var(--ic-16);display:block}
-.dblock-link:hover .dbh-chev{transform:translateX(2px);color:var(--mid)}
+/* ⚠️ `.dblock-link` AND `.dbh-chev` ARE GONE (2026-09-25). The heading used to BE the
+   link, with a chevron after the word; all three Home blocks now put the way through in
+   a button beside the title, so there is no linked heading left to dress. */
 /* Every preview block ends with the way into its full page, and the button says
    how much is behind it. Centred, like the feed's own Load more. */
-.dblock-foot{display:flex;justify-content:flex-start;margin-top:12px}
-.dblock-foot[hidden]{display:none}
-.dblock-open{text-decoration:none}
+/* ⚠️ `.dblock-foot` AND `.dblock-open` ARE GONE with the button under the table. Its job
+   — how much is behind this block, and the way there — moved into the heading, where the
+   question is asked. Checked: no markup emits either class any more. */
 /* Home column heads are quieter than a list page's: the blocks are previews, and
    their heads should not compete with the block heading above them. 14px is the
    type floor, so what comes down is the tracking and the height of the row. */
@@ -1974,6 +2377,85 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
 /* preview tables inside a dashboard block */
 .dblock table{margin-top:10px}
 .dblock table td{padding:11px 8px}
+/* ---------- A TABLE IS A FRAMED OBJECT (2026-09-25) -------------------------------
+   From a reference: the head is a filled grey band and the whole table sits inside its
+   own hairline with rounded corners.
+   ⚠️⚠️ THIS NOW COVERS THE LIST PAGES TOO, and that reverses what this note said one
+   pass ago: "on the list pages a table IS the page — it has `.listframe` around it
+   already, and a second frame inside the first would be a box in a box." By request,
+   and the objection turns out to be wrong in practice: `.listframe` frames the PAGE —
+   title, toolbar, column row and rows together — while this frames the TABLE inside it,
+   so the two say different things rather than the same thing twice. Home and the list
+   pages now read as one component at two lengths.
+   ⚠️ `border-collapse:separate` is the precondition, same as the grouped Instances view:
+   a collapsed border is one edge shared by two cells and a radius on it is ignored. The
+   corners are therefore put on the CELLS — the head's first and last `th`, and the last
+   row's first and last `td` — because a table's own `border-radius` does not clip what
+   its children paint.
+   ⚠️ NO `overflow:hidden` ON A LIST-PAGE TABLE: its column row is sticky, and a clipping
+   ancestor is exactly what stops `position:sticky` from sticking. The cell corners do
+   the rounding instead, which is why they are there rather than relying on the clip. */
+/* ⚠️⚠️ ON A LIST PAGE THE TOP OF THE FRAME BELONGS TO THE HEADER, NOT TO THE TABLE
+   (2026-09-25, by request). The column row is sticky; the table is not — so the table's
+   own top border and its two upper corners scrolled away and the header stuck to nothing,
+   with square corners and no line above it. The top edge and both upper corners are on
+   the `th` cells, which travel with them; the table keeps the sides and the bottom.
+   ⚠️ The side borders overlap in the header band — the th's and the table's sit at the
+   same x, same colour, 1px on 1px — which is invisible, and cheaper than teaching the
+   table where its header is. */
+.dblock table{border-collapse:separate;border-spacing:0;
+  border:1px solid var(--line2);border-radius:10px}
+/* ⚠️⚠️ THE FRAME IS DRAWN ENTIRELY BY THE CELLS (2026-09-25). The table carried the sides
+   and the bottom while the header carried the top — and the two were never on the same
+   line: with `border-collapse:separate` a cell's box starts INSIDE the table's border, so
+   the table's left edge and the header's left edge sat 1px apart. At the corners, where
+   one curved and the other did not, that showed as the little stubs poking out past the
+   rounding. Measured, not guessed.
+   The table now draws NOTHING. Every edge is a cell border: the head's top and its two
+   upper corners, the first and last cell of every row for the sides, and the last row for
+   the bottom and the two lower corners. One line per side, no offset to mismatch, and the
+   header's share still travels with it when it sticks.
+   ⚠️ `:not(.is-grouped)` — the grouped Instances view has no outer frame at all (the
+   GROUPS are the framed objects there), so it must not pick up side borders per row. */
+.listframe table{border-collapse:separate;border-spacing:0;border:0;border-radius:0}
+.listframe table:not(.is-grouped) thead th{border-top:1px solid var(--line2)}
+.listframe table:not(.is-grouped) thead th:first-child{border-left:1px solid var(--line2)}
+.listframe table:not(.is-grouped) thead th:last-child{border-right:1px solid var(--line2)}
+/* ⚠️⚠️ THE ROUNDED CORNER IS A HOLE, AND SOMETHING HAS TO BE BEHIND IT. Found by
+   hit-testing rather than by eye: at the header's own top-left pixel
+   `document.elementsFromPoint` returns the ROW's cell first and the `th` not at all —
+   because a border-radius clips the cell's background and border away, so the corner is
+   genuinely empty and whatever is underneath shows through. Underneath, while the header
+   is stuck, is a row scrolling past with a 1px side border on it. That sliver appearing
+   and disappearing at each corner is what "the outline sticks out at the sides while you
+   scroll" was.
+   The fix is a backdrop, not a z-index: the `th` already wins the stacking order
+   (measured — mid-header it IS first), it simply has nothing painted in its own corner.
+   A square pane in the frame's own white sits behind the cell's background and fills the
+   cut-out; `z-index:-1` keeps it inside the th's stacking context, so it hides the rows
+   without hiding the th. The frame around it is white too, which is why a square backdrop
+   behind a rounded corner is invisible. */
+.listframe table:not(.is-grouped) thead th:first-child::before,
+.listframe table:not(.is-grouped) thead th:last-child::before{
+  content:"";position:absolute;inset:-1px;background:var(--card);z-index:-1}
+.listframe table:not(.is-grouped) tbody td:first-child{border-left:1px solid var(--line2)}
+.listframe table:not(.is-grouped) tbody td:last-child{border-right:1px solid var(--line2)}
+.dblock thead th,.listframe thead th{background:var(--surface-quiet);
+  border-bottom:1px solid var(--line2)}
+.dblock thead th{padding:11px 8px}
+.dblock thead th:first-child,.listframe thead th:first-child{border-top-left-radius:10px;padding-left:18px}
+.dblock thead th:last-child,.listframe thead th:last-child{border-top-right-radius:10px;padding-right:18px}
+.dblock table tbody td:first-child,.listframe table tbody td:first-child{padding-left:18px}
+.dblock table tbody td:last-child,.listframe table tbody td:last-child{padding-right:18px}
+/* the last row closes the frame — on Home the table's own border does it, so the row
+   stands down; on a list page there is no table border and the row IS the bottom edge */
+.dblock table tbody tr:last-child > td{border-bottom:0}
+.listframe table:not(.is-grouped) tbody tr:last-child > td{border-bottom:1px solid var(--line2)}
+.dblock table tbody tr:last-child > td:first-child,
+.listframe table tbody tr:last-child > td:first-child{border-bottom-left-radius:10px}
+.dblock table tbody tr:last-child > td:last-child,
+.listframe table tbody tr:last-child > td:last-child{border-bottom-right-radius:10px}
+.dblock .tablescroll{overflow:visible}
 
 /* New-user empty state: plan structure. Switchers reuse the .seg segmented
    control; cards reuse .dblock + .pill + .btn — no new colors or components. */
@@ -1983,13 +2465,6 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
    blocks nothing: the switchers and plan cards below stay fully live. "Grant
    approved" is a populated dashboard whose single licence is the grant, plus a
    one-time banner. Quiet monochrome — neither surface is an alert. */
-/* ⚠️ `Open all` is a GHOST button: no border, no fill, just the label. It carries
-   `.btn.sec` in the markup for the desktop's default, and this overrides it rather
-   than editing three HTML files — a bordered box at the foot of a block competed
-   with the block's own surface for the same edge. */
-.dblock-foot .dblock-open,.dblock-foot .dblock-open:link{
-  border-color:transparent;background:transparent;color:var(--ink);padding:0 10px}
-.dblock-foot .dblock-open:hover{border-color:transparent;background:var(--hover);color:var(--ink)}
 .gstatus{display:flex;align-items:flex-start;gap:14px;margin-top:20px;border:1px solid var(--line2);border-radius:10px;background:var(--card);padding:16px 18px}
 .gstatus[hidden]{display:none}
 .gstatus .gs-ic{width:var(--ic-24);height:var(--ic-24);margin-top:2px;color:var(--mid)}
@@ -2035,15 +2510,36 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
 .hb-more{display:inline-flex;align-items:center;text-decoration:none;white-space:nowrap}
 /* the per-line action is smaller than a single banner's primary: in a list it is one of
    three equals, and three full-size buttons would out-weigh the sentences they serve */
-.gb-act.sm{height:26px;padding:0 10px;font-size:14px;flex:none}
+.gb-act{flex:none}
 /* a link inside the sentence: underlined, because on an ink band weight alone does not
    separate it from the bold lead-in */
 .gb-lic{color:#fff;text-decoration:underline;text-underline-offset:2px}
 .gb-lic:hover{opacity:.82}
 /* the secondary route (detach) next to the primary: outlined on ink, not filled */
-.gb-act.sec{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.55);
+/* ============================================================================
+   ⚠️⚠️ THE ONE THING THE BUTTON MODEL CANNOT SAY: which ground it is standing on.
+   ============================================================================
+   The axes are variant, size, content, state and tone. None of them is SURFACE. On an
+   ink banner a `primary` is ink-on-ink and vanishes, so the banner's primary action has
+   always been a WHITE box with ink text — the inverse of primary, not a variant of it.
+   Rather than mint a sixth variant, or let the banner keep its own button as it did for
+   a year, the BANNER declares its ground and re-paints the component's surfaces inside
+   itself. The classes on the button are still the component's; only the palette is local.
+   Reported as a gap: a second dark surface makes this a fifth axis (`surface`), not a
+   second copy of this block. */
+.gbanner .btn--secondary{background:transparent;color:#fff;border-color:rgba(255,255,255,.55);
   display:inline-flex;align-items:center;text-decoration:none}
-.gb-act.sec:hover{background:rgba(255,255,255,.14)}
+.gbanner .btn--secondary:not([disabled]):hover,
+.gbanner .btn--secondary:not([disabled]):active{background:rgba(255,255,255,.14);border-color:#fff;color:#fff}
+.gbanner .btn--primary{background:#fff;border-color:#fff;color:var(--ink)}
+.gbanner .btn--primary:not([disabled]):hover{background:var(--hover);border-color:var(--hover)}
+.gbanner .btn--primary:not([disabled]):active{background:var(--sel);border-color:var(--sel);box-shadow:none}
+.gbanner .btn--ghost{color:rgba(255,255,255,.72)}
+.gbanner .btn--ghost:not([disabled]):hover,
+.gbanner .btn--ghost:not([disabled]):active{color:#fff;background:rgba(255,255,255,.14)}
+.gbanner .btn:focus-visible{outline-color:#fff}
+.impbar .btn--secondary{background:#fff;border-color:#fff;color:var(--ink)}
+.impbar .btn--secondary:not([disabled]):hover{background:var(--hover)}
 @media (max-width:600px){
   .homebanner{position:relative}
   .homebanner .gb-x{position:absolute;top:8px;right:8px}
@@ -2058,11 +2554,9 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
 .gbanner .sp{flex:1}
 .gbanner .gb-ic{width:var(--ic-20);height:var(--ic-20);color:#fff}
 .gb-txt{font-size:14px;color:#fff}
-.gb-act{height:26px;padding:0 12px;border:0;border-radius:6px;background:#fff;color:var(--ink);font:inherit;font-size:14px;cursor:pointer;flex:none}
-.gb-act:hover{background:var(--hover)}
+
 /* same box as every other ✕ (above); on an ink banner only the colour changes */
-.gb-x{border-color:transparent;background:none;color:rgba(255,255,255,.72)}
-.gb-x:hover{color:#fff;background:rgba(255,255,255,.14)}
+/* ⚠️ `.gb-x` keeps no colour of its own — the `.gbanner` inversion above paints it. */
 #statusSlot{display:inline-flex;align-items:center;gap:8px}   /* a grant carries two quiet chips */
 /* ⚠️ The column count is NOT hardcoded any more. `repeat(5, …)` was written when the
    subscription set had five cards; dropping Maker and Prototype (2026-09-01) left
@@ -2150,7 +2644,10 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
      ⚠️ `min-height` is what keeps the cards aligned now that the heading holds a
      description again — two lines are reserved whether the sentence needs them or not.
      4.5em = heading line + two description lines + the padding under the rule. */
-  .plangroups > .plangroup > .plangroup-h{border-bottom:1px solid var(--line);
+  /* ⚠️ `--line` -> `--accent` (2026-09-25, by request): the rule is the only thing
+     separating the two billing models, and it now carries the page's own colour rather
+     than the neutral divider weight it borrowed. */
+  .plangroups > .plangroup > .plangroup-h{border-bottom:1px solid var(--accent);
     padding-bottom:10px;min-height:4.5em;display:flex;flex-direction:column}
   .plangroups > .plangroup > .plangroup-h .pg-d{margin:4px 0 0;max-width:46ch;
     font-size:var(--t-small-fs);line-height:var(--t-small-lh);color:var(--mid)}
@@ -2350,6 +2847,11 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
    half the row is already more than either needs. Capped rather than fixed, so a short
    detail still shrinks to its content. */
 .fi-detail{margin:6px 0 2px;padding:8px 12px;background:var(--bg);border-radius:6px;max-width:50%}
+/* ⚠️ INSIDE A FRAMED ENTRY THE PANEL FLIPS TO WHITE. Both were `--bg`, so on the new
+   grey entry frame the panel vanished into its container and the from/to rows read as
+   loose text. It keeps its own edge by being lighter than what holds it, which is the
+   reverse of what it does everywhere else — and that is the point. */
+.fitem .fi-detail{background:var(--card)}
 .fd-row{display:flex;gap:14px;padding:1px 0;font-size:14px;line-height:1.5}
 .fd-row dt{flex:0 0 150px;color:var(--faint)}
 .fd-row dd{margin:0;flex:1;min-width:0;color:var(--mid);font-variant-numeric:tabular-nums}
@@ -2387,7 +2889,11 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
 /* ⚠️ `padding-bottom` on the frame, not a margin under the pager. The pager is not
    always the last thing in the block (a feed ends with its own "load more" row), and a
    frame that ends flush on its border reads as cut off whatever is last. */
-.listframe{padding:0 0 14px;overflow:visible}
+/* ⚠️ NO OUTLINE ON THE FRAME (2026-09-25, by request). `.listcard` gives it one and the
+   TABLE inside it now carries its own, so the page was a box drawn twice. The frame is
+   still a frame — it groups title, toolbar, column row and rows, and it is what sticks —
+   it just does not draw a second edge around the one that is already there. */
+.listframe{padding:0 0 14px;overflow:visible;border-color:transparent}
 .listframe > *{padding-left:18px;padding-right:18px}
 .listframe > .tablescroll,.listframe > div > .tablescroll{padding-left:0;padding-right:0}
 /* the page title is the frame's first child and scrolls away with the content — it is
@@ -2398,12 +2904,13 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
 .listframe > .lic-titlerow{padding-left:18px;padding-right:18px}
 .stickybar{position:sticky;top:0;z-index:12;background:var(--card);
   padding-top:15px;padding-bottom:15px;
-  /* ⚠️ THE DIVIDER, AND IT IS FULL WIDTH BY CONSTRUCTION. The frame has no padding of
-     its own and its children carry theirs, so this border spans the frame edge to edge
-     rather than stopping 18px short the way a rule inside a padded box would. It marks
-     the end of the toolbar whether or not anything is stuck; when the block IS stuck it
-     is also the line the shadow comes off. */
-  border-bottom:1px solid var(--line2)}
+  /* ⚠️ THE DIVIDER IS TRANSPARENT, NOT REMOVED (2026-09-25, by request). The line under
+     the toolbar is gone; the 1px is kept so the box is exactly the height it was and the
+     column row still sticks at the same `--barH`. Deleting the border instead would have
+     moved every sticky offset on four pages by a pixel to hide a line.
+     ⚠️ The line under the STUCK column row is a different one and stays — see
+     `.listframe.is-stuck .stickyhead th::after`. */
+  border-bottom:1px solid transparent}
 /* ⚠️ `th`, not `thead`. A sticky `thead` is honoured unevenly; the cells are the
    reliable target, and each needs its OWN background or the rows show through the
    gaps between them. Each also carries the grey line, for the same reason: a border on
@@ -2441,6 +2948,12 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
 .listframe.is-stuck .stickybar::after{opacity:1}
 .listframe.is-stuck:has(.stickyhead th) .stickybar::after{opacity:0}
 .listframe.is-stuck .stickyhead th::after{opacity:1}
+/* ⚠️ ACTIVITY HAS NO TABLE, so the toolbar divider was its ONLY separator — and making
+   that divider transparent (for the three pages that do have a table) left the stuck
+   toolbar there with a shadow and no line to fall from. The line comes back on the
+   pseudo-element, and only on the surface with no column row under it. */
+.listframe.is-stuck:not(:has(.stickyhead th)) .stickybar::after{
+  top:calc(100% - 1px);border-top:1px solid var(--stickyLine)}
 
 /* ---------- stuck: the line and the shadow run the FULL width of the block ----------
    ⚠️ The toolbar's divider spans the frame edge to edge, and the column row's did not:
@@ -2455,8 +2968,12 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
 .listframe.is-stuck .stickyhead th{border-bottom-color:transparent}
 .listframe.is-stuck .stickyhead th::after{
   top:calc(100% - 1px);border-top:1px solid var(--stickyLine)}
-.listframe.is-stuck .stickyhead th:first-child::after{left:-18px}
-.listframe.is-stuck .stickyhead th:last-child::after{right:-18px}
+/* ⚠️ THE SHADOW STOPS AT THE TABLE (2026-09-25, by request), and this reverses the note
+   above it. Those two rules pushed the line and the shadow 18px past the end cells so
+   they would span the frame edge to edge, matching the toolbar divider above them. That
+   divider is gone and the table now has an OUTLINE — so a shadow running past it spilled
+   over the frame's side padding, outside the box it is supposed to be falling inside.
+   It ends where the table ends. */
 
 /* ---------- the same pattern inside the licence panel ----------
    ⚠️ A DIFFERENT SCROLL, and that is the only difference. The panel's tab bar is its
@@ -2483,23 +3000,72 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
 .listcard .lic-controls,.listcard .insttoolbar{margin:0}
 .listcard .pager{margin-top:18px;padding-bottom:0}
 .listcard .feed{margin-top:0}
+/* ⚠️ A NARROWER GUTTER WHERE THE FEED IS A BLOCK, not the page. Home's block and the
+   licence's Activity tab are ~half the width the Activity page gives a sentence, and a
+   190px gutter there spends a third of the row on a date. Measured against the longest
+   heading the formatter can produce ("Sep 15, 2026" at 15px/500) — 120 holds it.
+   ⚠️ NAMED BY SURFACE, NOT BY `.listcard`: the Activity PAGE is a listcard too, so the
+   obvious selector caught the one feed that has the width to spare. Measured — the page
+   feed came out at a 120px gutter before this was scoped. */
+.dblock .feed,#licFeed{--fdayW:120px}
 /* activity feed: chronological history (newest first) — replaces the table on
    both the Activity page and the dashboard block. Icon frame matches .iconbtn.ib,
    rows use the same dashed dividers as .drow — no new colors or components. */
-.feed{margin-top:8px}
-.fitem{padding:14px 2px;border-bottom:1px dashed var(--line2)}
-.fitem:last-child{border-bottom:0}
+/* ⚠️ ONE GUTTER WIDTH FOR THE WHOLE FEED, declared on the container so the three
+   surfaces can differ without the day heading and the rows ever disagreeing — they both
+   read the same custom property. The Activity page keeps the full gutter; Home and the
+   licence tab are blocks inside a card and take a narrower one (below). */
+.feed{margin-top:8px;--fdayW:190px;--fitemTimeW:56px}
+/* ---------- the day group: heading in the gutter, entries indented past it ----------
+   ⚠️ A HANGING HEADING, NOT A COLUMN. The date is its own row at the left edge and the
+   entries start where the gutter ends — so the sentences of every day begin on one
+   vertical line, and the heading is read once on the way past rather than beside a row
+   it does not belong to any more than the next one.
+   ⚠️ The entries are indented with `margin-left` and not by a grid column, because a
+   grid would tie the heading's height to the first row's; here the heading takes the
+   space it needs and the rows below are unaffected. */
+/* ⚠️ THE FIRST HEADING NEEDS THE SPACE, NOT THE FEED. `.feed` had `margin-top:8px`, and
+   under a sticky toolbar that put the date on the toolbar's hairline. The space goes on
+   the heading itself so it is the same above the first group and above every later one —
+   a top margin on the container would have spaced only the first. */
+.feed > .fday:first-child{margin-top:12px}
+.fday + .fday{margin-top:30px}
+/* ⚠️ 14 -> the h3 step (2026-09-25, by request). It is a heading over a run of rows, and
+   at the body size it read as another row that happened to be short. Spelled
+   `var(--t-h3-fs,18px)` and not `18px`, because that is how the product's one other h3
+   already spells it — a literal here would be a second spelling of the same step.
+   ⚠️ It therefore rides an UNDECLARED token (see the debt list): the fallback is what
+   actually paints. Two rules depend on it now instead of one. */
+.fday-date{font-size:var(--t-h3-fs,18px);font-weight:500;line-height:1.3;color:var(--ink)}
+.fday-items{margin-top:10px;margin-left:var(--fdayW)}
+/* ⚠️ A FRAME, NOT A DIVIDER (2026-09-25, by request). Dashed rules between entries drew
+   the GAPS between rows; a filled card draws the row itself, which is the thing being
+   counted. The entry is also the click target for nothing at all, so the frame carries
+   no hover — it is a container, not a control.
+   ⚠️ `--card-soft` is the same grey the detail panel inside an entry uses (`--bg`), so
+   the panel needed its own ground: white, so it still reads as a panel INSIDE the
+   entry rather than as part of it. See `.fitem .fi-detail`. */
+/* ⚠️ FILL *AND* HAIRLINE, because the entry does not always sit on white. On the
+   Activity page it sits in a white `.listcard` and the grey fill alone is the frame;
+   inside the licence panel at 390px the ground is already `--bg`, so the fill matched
+   its container exactly and the frames vanished — measured, every ancestor there is
+   transparent down to a grey page. The border is what makes the frame a frame on every
+   surface instead of on the one it was designed against. */
+.fitem{padding:14px 16px;background:var(--bg);border:1px solid var(--line2);border-radius:8px}
+.fitem + .fitem{margin-top:8px}
 .fi-row{display:flex;align-items:flex-start;gap:12px}
 .fi-body{flex:1;min-width:0}
-/* no icon column: the timestamp and the sentence both start at the edge */
-.fi-meta{font-size:14px;color:var(--faint);font-variant-numeric:tabular-nums}
-.fi-txt{margin-top:4px;font-size:14px;color:var(--ink);line-height:1.5}
-.fi-row > .iconbtn{flex:none;margin-top:0}
-/* audit payload expands in place under the entry — capped height, own scroll */
-.fi-audit{margin:10px 0 2px 0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:14px;line-height:1.5;color:var(--ink);background:#fafafa;border:1px solid var(--line2);border-radius:6px;padding:12px 14px;max-height:300px;overflow:auto;white-space:pre}
-.fi-audit[hidden]{display:none}
-/* expand button stays visibly pressed while its payload is open */
-.iconbtn[data-audit][aria-expanded="true"]{border-color:var(--ink);color:var(--ink);background:var(--sel)}
+/* ⚠️ `.fi-meta` IS GONE with the date-time it printed (2026-09-25). The day is the group
+   heading now and the time is `.fi-time` at the right edge; nothing else used the class.
+   ⚠️ The time is the LAST child of the row, after the fold button, so it lands on the
+   same vertical line whether or not an entry has a disclosure — a fixed width, because a
+   shrink-to-fit slot would move with "9:05" against "16:20". */
+.fi-time{flex:none;width:var(--fitemTimeW);text-align:right;font-size:14px;
+  color:var(--faint);font-variant-numeric:tabular-nums}
+.fi-txt{font-size:14px;color:var(--ink);line-height:1.5}
+/* ⚠️ `.fi-audit` AND `.iconbtn[data-audit]` ARE GONE (2026-09-25) with the expander they
+   dressed. `.fi-row > .iconbtn` went too — the fold button was the only icon button a
+   feed entry ever held. */
 .lic-h1{margin:0 0 4px;font-family:var(--font-ui);font-size:var(--t-h1-fs);line-height:var(--t-h1-lh);letter-spacing:var(--t-h1-ls);font-weight:var(--t-h1-fw)}
 .lic-sub{margin:0 0 20px;font-size:var(--t-small-fs);line-height:var(--t-small-lh);letter-spacing:var(--t-small-ls);font-weight:var(--t-small-fw);color:var(--mid)}
 /* ---------- Settings pages (Profile / Billing): forms, section cards, save footers ---------- */
@@ -2640,7 +3206,9 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
 .nl-couponrow .nl-couponfield{display:flex;align-items:center;gap:8px;flex-wrap:nowrap}
 .nl-couponrow .field{margin:0;flex:1 1 90px;min-width:0}
 .nl-couponrow .field input{height:32px;font-size:14px}
-.nl-couponrow .btn.sec{height:32px;padding:0 14px;font-size:14px;flex:none}
+/* ⚠️ `.nl-couponrow .btn.sec{height:32px}` REMOVED: a fifth height for one button.
+   It is `btn--secondary btn--md` like every other Apply in the product. */
+.nl-couponrow .btn{flex:none}
 .nl-couponrow [data-couponcancel]{flex:none;margin-left:0}
 .nl-couponedit{margin-left:10px;font-size:14px;color:var(--mid)}
 .nl-couponedit:hover{color:var(--ink)}
@@ -2738,9 +3306,7 @@ body.list-empty #pageTitleRow #licNewBtn{display:none !important}
 .snack[hidden]{display:none}
 .snack-t{font-size:14px;line-height:1.45}
 /* the dismiss is quiet: the message leaves by itself, this is for the impatient */
-.snack-x{flex:none;width:28px;height:28px;padding:0;border:0;border-radius:6px;
-  background:transparent;color:#fff;opacity:.7;font-size:13px;line-height:1;cursor:pointer;
-  display:inline-flex;align-items:center;justify-content:center}
+.snack-x{flex:none;color:#fff;opacity:.7}
 .snack-x:hover{opacity:1;background:rgba(255,255,255,.14)}
 
 /* an invited user: present in the list, not yet a person in it */
@@ -2885,7 +3451,12 @@ body.list-empty #pageTitleRow #licNewBtn{display:none !important}
 /* ⚠️ Scoped to `.listcard`, because `.listcard .lic-controls{margin:0}` zeroes every
    toolbar margin inside a card and outranks a single class — the 24px was being set and
    thrown away, and the measured gap was 0. */
-.listcard .lic-viewrow{margin-bottom:24px}
+/* ⚠️ 24 -> 0 (2026-09-25, by request). This dates from when the toolbar was TWO rows and
+   this margin separated them; one row later it was still pushing the table 24px down, so
+   the Licenses page had a band of white under its toolbar that Instances and Invoices
+   did not. Measured before the fix: licences 24, the other two 0. The toolbar's own
+   `padding-bottom:15px` is the space under it, and it is the same on all three. */
+.listcard .lic-viewrow{margin-bottom:0}
 .lic-filterrow{margin-bottom:14px}
 /* persistent search input (always-visible, magnifier inside) — standard toolbar element */
 .searchbox{position:relative;flex:none;width:280px;max-width:100%}
@@ -2893,9 +3464,10 @@ body.list-empty #pageTitleRow #licNewBtn{display:none !important}
 .searchbox input{font:inherit;font-size:14px;width:100%;height:var(--btnH);border:1px solid var(--line);border-radius:6px;padding:0 10px 0 32px;background:#fff;color:var(--ink);outline:none}
 .searchbox input:focus{border-color:var(--ink)}
 /* the clear control — inside the field, trailing edge, only when there is text */
+/* ⚠️ Position only: the box is `btn--ghost btn--md btn--icon`. 40px inside a 40px
+   field would touch both edges, so this one keeps a size — see the report. */
 .searchclear{position:absolute;right:4px;top:50%;transform:translateY(-50%);
-  width:30px;height:30px;padding:0;border:0;background:transparent;color:var(--faint);
-  display:inline-flex;align-items:center;justify-content:center;border-radius:6px;cursor:pointer}
+  width:32px;height:32px;color:var(--faint)}
 .searchclear:hover{color:var(--ink);background:var(--hover)}
 .searchclear[hidden]{display:none}
 .searchclear .ic{width:var(--ic-16);height:var(--ic-16)}
@@ -2914,7 +3486,11 @@ body.list-empty #pageTitleRow #licNewBtn{display:none !important}
    level with the product name rather than floating in the middle of the row */
 .lic-row > td{vertical-align:top}
 .lic-row{cursor:pointer}
-.lic-row:hover{background:var(--hover)}
+/* ⚠️ ALL FOUR LIST ROWS, not just the clickable one. Only `.lic-row` had a hover, which
+   made the licence table feel like the only live list in the product — and the reason a
+   row lights up is not "you can click me", it is "this is the line you are reading",
+   which is worth as much on a wide invoice table as on a licence one. */
+.lic-row:hover,.inv-row:hover,.inst-row:hover,.user-row:hover{background:var(--row-hover)}
 .lic-row[hidden]{display:none}
 /* trailing row actions: inline Copy license key + ⋮ overflow */
 .lic-actions{display:inline-flex;align-items:center;gap:6px;justify-content:flex-end}
@@ -2957,6 +3533,13 @@ a.lp-cell:hover .lp-name{text-decoration:underline;text-underline-offset:2px}
 .lp-type{color:var(--mid)}
 .lic-prodlabel{font-size:14px;color:var(--faint);margin-top:2px;white-space:normal}
 .lic-num{font-variant-numeric:tabular-nums;white-space:nowrap}   /* dates stay on one line now that Product takes the width */
+/* ⚠️ THE HEADING HAS TO MOVE WITH THE CELLS. Variant B right-aligns the Version cells
+   (see `.licb-row .lic-ver`) and `headHtmlB` already said in a comment that the heading
+   travels with them — but nothing made it. A left-aligned `Version` sitting over a
+   right-aligned column is what "detached from the header" was. Scoped to `th` on
+   purpose: variant A puts `.lic-num` on `td` alone (the Updated cells), so this rule
+   can only ever reach variant B's one heading. */
+th.lic-num{text-align:right}
 /* lightweight dropdowns for Type filter and + New license */
 .dropwrap{position:relative}
 .dropwrap[hidden]{display:none}
@@ -3025,6 +3608,18 @@ a.lp-cell:hover .lp-name{text-decoration:underline;text-underline-offset:2px}
 /* one specimen: a label naming the class, then the live component */
 .sg-item{background:var(--card);border:1px solid var(--line2);border-radius:10px;padding:16px 18px;margin-top:12px}
 .sg-item > h3{font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);font-weight:var(--t-h2-fw);margin:0 0 2px}
+/* a step below `.sg-item > h3` — for a specimen block holding more than one group,
+   like the three colour layers under Tokens */
+/* the button matrix: variants down, states across, icon-only in its own column so the
+   width difference is the thing you see */
+.sg-btnmatrix{width:auto;min-width:100%}
+.sg-btnmatrix th{text-transform:none;letter-spacing:0;color:var(--mid)}
+.sg-btnmatrix th[scope="row"]{font-weight:500;color:var(--ink);white-space:nowrap;padding-right:18px}
+.sg-btnmatrix td{border-bottom:1px solid var(--line2);padding:12px 10px}
+.sg-btnmatrix .sg-btnonly{border-left:1px solid var(--line2);padding-left:18px}
+.sg-sub{margin:18px 0 8px;font-family:var(--font-ui);font-size:var(--t-small-fs);
+  font-weight:500;color:var(--mid)}
+.sg-sub .sg-cls{margin-left:8px;font-weight:400}
 .sg-note{font-size:14px;color:var(--faint);margin:0 0 14px}
 .sg-row{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end}
 .sg-cell{display:flex;flex-direction:column;gap:7px;min-width:0}
@@ -3137,7 +3732,7 @@ a.lp-cell:hover .lp-name{text-decoration:underline;text-underline-offset:2px}
   .pubbar .dbrand{display:flex}
   .pubacts{margin-left:auto;gap:8px}
   /* the two ways in are the whole bar here, so they may be tighter than the band */
-  .pubacts .btn{height:36px;padding:0 12px}
+  /* ⚠️ `.pubacts .btn{height:36px}` REMOVED — the component's touch rule owns this. */
 
   /* ---------- the auth sheet ----------
      ⚠️ .fs-box goes full-viewport at this width, but .authbox is more specific and
@@ -3288,8 +3883,7 @@ a.lp-cell:hover .lp-name{text-decoration:underline;text-underline-offset:2px}
   .dblock{padding:14px 14px;margin-top:14px}
   .dblock-head h2{font-size:var(--t-h2-sm-fs)}
   /* the way out of a block spans it */
-  .dblock-foot{display:block}
-  .dblock-open{width:100%}
+
   .feedmore .link{min-height:44px;display:inline-flex;align-items:center}
 
   /* ---------- tables become stacked row cards ---------- */
@@ -3349,6 +3943,45 @@ a.lp-cell:hover .lp-name{text-decoration:underline;text-underline-offset:2px}
   tr.inst-row > td.cellact{position:absolute;top:8px;right:8px;
     width:auto;margin:0;padding:0;text-align:right}
   .inst-row > td.cellact .lic-actions{gap:2px}
+  /* ⚠️ THE GROUPED ROW RE-ORDERS THE SAME CARD. The rules above address cells by
+     POSITION, and the grouped row has five in a different order — without this, Status
+     landed in the slot the flat card gives the licence and the card read wrong. Same
+     reading order as the flat card, minus the licence the heading already names:
+     the deployment, then when it last reported, what it runs, and its state. */
+  tr.instg-row > td:nth-child(1){order:1;flex:0 0 100%}          /* name + id */
+  tr.instg-row > td:nth-child(2){order:4;margin-top:6px}         /* status pill */
+  tr.instg-row > td:nth-child(3){order:3;margin-top:6px}         /* version */
+  tr.instg-row > td:nth-child(4){order:2;color:var(--faint);font-size:14px;margin-top:6px}
+  /* the group heading is a full-width band between cards, not a card itself */
+  tr.instgroup{display:block;margin-bottom:10px}
+  tr.instgroup > td{display:block;width:auto;padding:0;border:0}
+  .ig-sub{display:none}                 /* product · type is on the licence, not the group's job at 390 */
+  /* ⚠️ THE TOOLBAR ORDERS ITS CHILDREN EXPLICITLY at this width — search 1, the status
+     chips 2 — so anything added without a number of its own lands at `order:0` and goes
+     FIRST. Measured: the view switcher sat above the search box. It belongs after the
+     filters here, same as it does beside them on the desktop. */
+  .viewseg{order:3}
+  /* ⚠️ THE GROUP IS A HEADING HERE, NOT A CONTAINER, so its box CLOSES. Every table row
+     becomes its own card at this width (a decision older than this view), and an open
+     group would be a box whose stroke runs down past the heading and then stops in
+     mid-air — the cards below it are already outside it. Closed, it reads as what it is:
+     a labelled band with a stack of cards under it. Nesting cards inside a card was the
+     other option and it is worse. */
+  #instTable.is-grouped .instgroup > td,
+  #instTable.is-grouped .instgroup.is-open > td{border:1px solid var(--line);border-radius:8px}
+  #instTable.is-grouped .instg-row > td:first-child,
+  #instTable.is-grouped .instg-row > td:last-child,
+  #instTable.is-grouped .instg-row.is-last > td{border:0}
+  #instTable.is-grouped .instgap > td{height:0}   /* the cards carry their own margin */
+  /* ⚠️ THE NAME WRAPS HERE INSTEAD OF ELLIPSIZING. On the desktop the licence is also
+     named in every row's License column; in this view it is not, and at 390px a label
+     like "Production — Central Europe manufacturing cluster, building 4" would be cut
+     to three words. The heading is the only place the name appears, so it gets the
+     lines it needs. */
+  .ig-btn{align-items:flex-start}
+  .ig-name{white-space:normal;overflow:visible}
+  .ig-count{flex:none;white-space:nowrap}
+  .instg-row{margin-left:0}
 
   /* ---------- the Users row becomes a card ----------
      ⚠️ This page had been skipped entirely: only Home and the licence pages were
@@ -3402,8 +4035,19 @@ a.lp-cell:hover .lp-name{text-decoration:underline;text-underline-offset:2px}
   .pager select{height:44px}
 
   /* ---------- Activity feed: one column, sentences wrap ---------- */
+  /* ⚠️ THE HOME TABLE FRAME COMES OFF ON A PHONE, for the same reason the grouped
+     Instances box closes into a heading: every row is already its own card at this
+     width, so an outer frame is a box around boxes. The head is hidden here anyway —
+     there is nothing left for the frame to be the top of. */
+  .dblock table,.listframe table{border:0;border-radius:0}
   .fi-txt{overflow-wrap:anywhere}
-  .fi-audit{max-height:220px;overflow:auto}
+  .fitem{padding:12px 12px}
+  /* ⚠️ THE GUTTER COLLAPSES ON A PHONE. 190px of indent on a 390px screen would leave
+     the sentence half the width it needs; the heading keeps its own line and the entries
+     start at the container edge under it, which is the same reading order without the
+     column. */
+  .fday-items{margin-left:0}
+  .fday + .fday{margin-top:20px}
 
   /* ---------- licence details modal: a full-screen sheet ---------- */
   .fs-screen{padding:0;align-items:stretch;justify-content:stretch}
@@ -3882,7 +4526,7 @@ a.lp-cell:hover .lp-name{text-decoration:underline;text-underline-offset:2px}
   .pc-expw{display:none}
   .paycard{gap:8px;flex-wrap:nowrap}
   .paycard .sp{display:none}
-  .paycard > .iconbtn{flex:none;margin-left:auto}
+  .paycard > .btn{flex:none;margin-left:auto}
   .paycard .pc-num,.paycard .pc-exp{white-space:nowrap}
 
   /* ================= global surface rule =================
@@ -3936,7 +4580,6 @@ a.lp-cell:hover .lp-name{text-decoration:underline;text-underline-offset:2px}
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .ptr-sp,.pagehead.pagetitlerow .sp,.setcard-h-page.pagetitlerow .sp{flex:1}
   /* Save is an action on this row like any other, so it gets the row's own height */
-  .pagetitlerow .btn{min-height:44px}
   /* every action in the row is the same 44px tertiary icon-button */
   .pagetitlerow [data-refresh],.pagetitlerow #licNewBtn,.pagetitlerow #secBackBtn{
     flex:none;width:44px;height:44px;min-height:44px;padding:0;
@@ -3989,7 +4632,6 @@ a.lp-cell:hover .lp-name{text-decoration:underline;text-underline-offset:2px}
   #couponOverlay .paymodal-f{flex:none;gap:10px;padding:12px 16px calc(12px + env(safe-area-inset-bottom));
     border-top:1px solid var(--line2);background:#fff}
   #couponOverlay .paymodal-f .sp{display:none}
-  #couponOverlay .paymodal-f .btn{height:48px}
   #couponOverlay #couponCancel{flex:0 0 auto;padding:0 18px}
   #couponOverlay #couponApply{flex:1}
 
@@ -4073,7 +4715,7 @@ a.lp-cell:hover .lp-name{text-decoration:underline;text-underline-offset:2px}
      ~18px of dead space above the first card for nothing. */
   /* the phone keeps the pair tighter — the rows are stacked blocks there rather than two
      bands, and 24px of the screen's height is a card */
-  .listcard .lic-viewrow{margin-bottom:12px}
+  .listcard .lic-viewrow{margin-bottom:0}
   /* ⚠️ The two `.lic-viewseg` / `.lic-viewtab` rules that were here went with the
      tablist. The spacer still stands down, so what is left of the row — refresh and the
      primary — takes the arrangement every other list page's primary already has. */
@@ -4312,9 +4954,9 @@ a.lp-cell:hover .lp-name{text-decoration:underline;text-underline-offset:2px}
   tr.lic-row .lic-copy:hover{background:var(--hover);color:var(--ink)}
   tr.lic-row .lic-copy .ic{width:var(--ic-20);height:var(--ic-20)}
   /* the invoice card's pair gets the same treatment, for the same reason */
-  tr.inv-row .ra-act{width:44px;height:44px;border:0;border-radius:10px;
-    background:var(--sel);color:var(--ink)}
-  tr.inv-row .ra-act:hover{background:var(--hover)}
+  /* ⚠️ Size comes from the component's touch rule; what the CARD adds is the filled
+     chip, the same one the licence card gives its copy button. */
+  tr.inv-row .ra-act{border-radius:10px;background:var(--sel);color:var(--ink)}
 
   /* ---------- invoice card ----------
        NAWE49WG-0021                    [↓] [↗]     ← top band: the number and
@@ -4371,7 +5013,7 @@ a.lp-cell:hover .lp-name{text-decoration:underline;text-underline-offset:2px}
      Headroom: the pair grows 90px → 96px, and the number cell reserves 110px on its
      right, so nothing collides; measured 125px of clear space to the number's text. */
   tr.inv-row .rowactions{display:flex;gap:8px;align-items:center}
-  tr.inv-row .ra-act .ra-ic{width:var(--ic-24);height:var(--ic-24)}
+  tr.inv-row .ra-act .ic{width:var(--ic-24);height:var(--ic-24)}
 
   /* band 2 opens with the product line, and its top border is the divider */
   tr.inv-row > td.lic-prodcell{grid-area:prod;padding:var(--cardpad) var(--cardpad) 0;
@@ -4418,14 +5060,9 @@ a.lp-cell:hover .lp-name{text-decoration:underline;text-underline-offset:2px}
   tr.inv-row .autoic .ic{width:var(--ic-20);height:var(--ic-20)}
 
   /* the two icon-buttons themselves — shared with any other .rowactions on a phone */
-  /* same tertiary treatment on the invoice card's two actions — bare glyphs in a
-     44px target, not outlined boxes */
-  .rowactions .ra-act{width:44px;height:44px;display:inline-flex;align-items:center;
-    justify-content:center;border:0;border-radius:6px;
-    background:transparent;color:var(--mid);text-decoration:none}
-  .rowactions .ra-act:hover{color:var(--ink);background:var(--hover)}
-  .ra-act .ra-ic{display:block;width:var(--ic-20);height:var(--ic-20)}
-  .ra-act .ra-txt{display:none}
+  /* ⚠️ Nothing left to say here: `btn--ghost` is already a bare glyph and the touch
+     rule already makes it 44. */
+  .ra-act .ic{width:var(--ic-20);height:var(--ic-20)}
   .rowactions .mob-only{display:inline-flex}
 }
 
@@ -4573,20 +5210,41 @@ a.lp-cell:hover .lp-name{text-decoration:underline;text-underline-offset:2px}
 .faq-cat{display:block;width:100%;text-align:left;border:0;border-left:3px solid transparent;
   background:transparent;padding:10px 14px;font:var(--t-small-fw) var(--t-small-fs)/var(--t-small-lh) var(--font-ui);
   color:var(--mid);cursor:pointer;border-radius:0 6px 6px 0}
-.faq-cat:hover{background:var(--hover);color:var(--ink)}
-.faq-cat.on{border-left-color:var(--ink);background:var(--sel);color:var(--ink);font-weight:500}
+/* ⚠️ WHITE, not the grey wash (2026-09-25, by request). The SELECTED item is white with
+   a coloured strip, so a grey hover was the one state in this rail that used a different
+   material — pointing at a row and landing on it now differ by the strip alone, which is
+   the only thing that should differ. */
+.faq-cat:hover{background:var(--card);color:var(--ink)}
+/* ⚠️ WHITE, NOT GREY, and the strip carries the colour (2026-09-25, by request). A grey
+   fill said "this one is pressed"; white says "this one is the page you are reading",
+   which is what a rail selection is — the strip is the only mark, so it is the one that
+   takes `--accent`. */
+.faq-cat.on{border-left-color:var(--accent);background:var(--card);color:var(--ink);font-weight:500}
 .faq-cat:focus-visible{outline:2px solid var(--ink);outline-offset:-2px}
 
 /* ---- the accordion ----
    One card per question, the question itself the control. The chevron turns instead of
-   swapping glyphs: one symbol, two states, which is the same thing `.dbh-chev` does. */
-.faq-i{border:1px solid var(--line2);border-radius:8px;background:var(--card);margin-bottom:8px}
+   swapping glyphs: one symbol, two states — the same trick the block headings used
+   to run before their chevron became a button. */
+/* ⚠️ NO BORDER WHILE CLOSED (2026-09-25, by request). A list of closed questions was a
+   stack of outlined boxes, and the outline said nothing — every one of them had it. It
+   appears on the one that is OPEN, in `--accent`, where it does say something: this is
+   the question whose answer is on screen. */
+.faq-i{border:1px solid transparent;border-radius:8px;background:var(--card);margin-bottom:8px}
 .faq-qh{margin:0;font:inherit}
 .faq-q{display:flex;align-items:center;gap:14px;width:100%;text-align:left;border:0;background:transparent;
-  padding:14px 16px;cursor:pointer;color:var(--ink);
-  font:500 var(--t-body-fs)/var(--t-body-lh) var(--font-ui)}
+  padding:14px 16px;cursor:pointer;
+  /* ⚠️ 500 -> 400 and `--ink` -> `--c-grey-800` (2026-09-25, by request). A list of
+     questions is a list of things to READ, and at 500 every one of them was asking to be
+     read first. #333333 is a step off pure ink for the same reason — the answer that
+     opens underneath is the thing with weight to spend. */
+  color:var(--c-grey-800);
+  font:400 var(--t-body-fs)/var(--t-body-lh) var(--font-ui)}
 .faq-q > span{flex:1;min-width:0}
-.faq-q:hover{background:var(--hover);border-radius:8px}
+/* ⚠️ THE TEXT LIGHTS UP, THE FILL DOES NOT. It was a grey wash; the card is white and
+   stays white, and what moves is the colour of the words — so hovering a question reads
+   as pointing at it rather than as selecting it. */
+.faq-q:hover{color:var(--accent);border-radius:8px}
 .faq-q:focus-visible{outline:2px solid var(--ink);outline-offset:-2px;border-radius:8px}
 .faq-chev{flex:none;color:var(--mid);transition:transform .15s ease}
 .faq-q[aria-expanded="true"] .faq-chev{transform:rotate(180deg)}
@@ -4599,7 +5257,7 @@ a.lp-cell:hover .lp-name{text-decoration:underline;text-underline-offset:2px}
   font-size:var(--t-small-fs);line-height:1.6;color:var(--mid)}
 /* open items step forward by a stronger hairline — the reference marks them with an
    accent outline, and the nearest true thing in a monochrome system is one line darker */
-.faq-i:has(> .faq-qh > .faq-q[aria-expanded="true"]){border-color:var(--line)}
+.faq-i:has(> .faq-qh > .faq-q[aria-expanded="true"]){border-color:var(--accent)}
 .faq-a p{margin:0 0 10px}
 .faq-a p:last-child,.faq-a ul:last-child{margin-bottom:0}
 .faq-a ul{margin:0 0 10px;padding-left:20px}
@@ -4617,7 +5275,11 @@ a.lp-cell:hover .lp-name{text-decoration:underline;text-underline-offset:2px}
 .faq-more{display:block;width:100%;height:var(--btnH);border:1px dashed var(--line);
   border-radius:6px;background:transparent;color:var(--ink);cursor:pointer;
   font:500 var(--t-small-fs)/1 var(--font-ui);margin-top:4px}
-.faq-more:hover{background:var(--hover);border-style:solid}
+/* ⚠️ Three states, three surfaces, and none of them is the same one faded: at rest a
+   dashed outline on the page ground, under the cursor a WHITE fill (the row lifts off
+   the ground), and while it is held the outline turns solid `--accent`. */
+.faq-more:hover{background:var(--card);border-style:solid}
+.faq-more:active{background:var(--card);border-style:solid;border-color:var(--accent);color:var(--accent)}
 .faq-more[hidden]{display:none}
 
 @media (max-width:600px){

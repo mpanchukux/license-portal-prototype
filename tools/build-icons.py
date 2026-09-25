@@ -47,6 +47,10 @@ ICONS = [
     'search', 'refresh', 'plus', 'x', 'check', 'copy', 'pencil', 'download',
     'external-link', 'link', 'dots-vertical', 'repeat', 'trash',
     # state and meaning
+    # ⚠️ `circle-x` WAS ADDED AND REMOVED ON THE SAME DAY (2026-09-25). It joined for the
+    # Cancelled status mark; the pass after it took the icons out of that column and left
+    # the symbol with no reader. A closed set that keeps what nothing draws is not closed,
+    # it is just a pile — so it goes, and this line is the record that it was considered.
     'alert-triangle', 'alert-circle', 'info-circle', 'circle-check', 'clock',
     'lock', 'eye', 'eye-off', 'shield-check', 'point', 'file-text',
     # ⚠️ Nothing in the product uses `device-desktop` — it is here because the

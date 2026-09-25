@@ -38,7 +38,7 @@
              so the --btnH toolbar band does not apply to it — and because it is
              the page's primary action, it takes the largest size we have.
              As it scrolls away, page-home.js hands the same action to the top bar. -->
-        <button class="btn xl" id="dashNewBtn">Buy a license</button>
+        <button class="btn btn--primary btn--lg" id="dashNewBtn">Buy a license</button>
       </div>
 
       <!-- ⚠️ ONE SLOT FOR EVERY HOME BANNER, filled by renderHomeBanner (components.js).
@@ -56,24 +56,30 @@
            block). Named rather than counted, because #dashActBlock is absent in some
            dash states and :nth-of-type would then flip the colours. Inert on desktop. -->
       <div class="dblock band">
-        <!-- the heading itself navigates: one target per block, no separate link -->
-        <div class="dblock-head"><h2><a class="dblock-link" href="licenses.html">Licenses<span class="dbh-chev" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-right"></use></svg></span></a></h2>
-        </div>
+        <!-- ⚠️ THE COUNT MOVED UP INTO THE HEADING (2026-09-25, from a reference), and
+             the bottom button is gone with it. The heading used to BE the link, with a
+             chevron after the word; now the word is a plain h2 and the way through is a
+             button beside it carrying the number — so how much is behind the block and
+             how to get there are one control instead of two halves at opposite ends of
+             the table. The count is filled by renderBlockFooters. -->
+        <div class="dblock-head"><h2>Licenses</h2><span id="dashLicCount"></span></div>
         <div class="tablescroll">
           <table id="dashLicTable">
             <thead id="dashLicHead"></thead>
             <tbody id="dashLicBody"></tbody>
           </table>
         </div>
-        <!-- the count comes from the dataset, so the button says how much is behind
-             it (see renderBlockFooters) -->
-        <div class="dblock-foot"><a class="btn sec dblock-open" id="dashLicOpenAll" href="licenses.html">Open all</a></div>
+
       </div>
 
       <!-- Recent invoices — same columns and order as the Invoices page -->
       <div class="dblock noband">
-        <div class="dblock-head"><h2><a class="dblock-link" href="invoices.html">Recent invoices<span class="dbh-chev" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-right"></use></svg></span></a></h2>
-        </div>
+        <!-- ⚠️ THE SAME TREATMENT, and not because it was asked for: the reference covers
+             the licences block, and two tables one above the other on the same page with
+             different heads, different frames and their links at opposite ends would read
+             as a defect rather than as two components. Same argument as the dashed/solid
+             divider. -->
+        <div class="dblock-head"><h2>Recent invoices</h2><span id="dashInvCount"></span></div>
         <table>
           <thead>
             <tr>
@@ -92,14 +98,20 @@
           <!-- rows come from the dataset — see renderDashInvoices -->
           <tbody id="dashInvBody"></tbody>
         </table>
-        <div class="dblock-foot"><a class="btn sec dblock-open" id="dashInvOpenAll" href="invoices.html">Open all</a></div>
+
       </div>
 
       <!-- Recent activity — the last block on Home. Users are not previewed here:
            they live on their own page (nav → Users). The feed shows the latest few
            and grows in place as you reach its end (see renderDashFeed). -->
       <div class="dblock band" id="dashActBlock">
-        <div class="dblock-head"><h2><a class="dblock-link" href="activity.html">Recent activity<span class="dbh-chev" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-right"></use></svg></span></a></h2>
+        <!-- ⚠️ THE SAME HEADING SHAPE, WITHOUT A NUMBER, and the absence is the honest
+             part: the other two blocks can say how much is behind them, this one cannot.
+             The feed is mostly DERIVED check-ins — hundreds a day on this account — so a
+             count here would be a big number that means "the machine reported a lot",
+             not "you have a lot to read". Same control, same family, no invented figure. -->
+        <div class="dblock-head"><h2>Recent activity</h2>
+          <a class="btn btn--secondary btn--sm btn--icon" href="activity.html" aria-label="Open all activity"><svg class="ic btn-ic" aria-hidden="true"><use href="assets/icons.svg#ti-arrow-right"></use></svg></a>
         </div>
         <div class="feed" id="dashFeed"></div>
         <!-- lazy load: the sentinel appends the next batch when it scrolls into

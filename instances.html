@@ -50,7 +50,20 @@
       <button class="typechip" data-status="Stale" aria-pressed="false">Stale<span class="chipcount" data-count="Stale"></span></button>
     </div>
     <span class="spacer"></span>
-    <button class="iconbtn ib" data-refresh aria-label="Refresh" title="Refresh"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-refresh"></use></svg></button>
+    <!-- ⚠️ A VIEW SWITCHER, AND IT SITS AFTER THE SPACER ON PURPOSE (2026-09-25). The
+         controls on the left NARROW the list; this one does not — both views show every
+         instance and neither hides anything. Filters left, presentation right, beside
+         Refresh, so the toolbar reads as two groups rather than four controls.
+         ⚠️ NOT a `.typechip` pair, though one is right beside it: a chip group means
+         "this is filtering" on both pages that carry one, and reusing the same control
+         for a choice that filters nothing would teach the chips to mean two things.
+         ⚠️ Real radios (the `.seg` mechanic), so the arrow keys, the grouping and the
+         checked state come from the elements rather than from script. -->
+    <div class="seg viewseg" role="radiogroup" aria-label="Instance list view">
+      <label><input type="radio" name="instViewSeg" value="flat" checked><span>All instances</span></label>
+      <label><input type="radio" name="instViewSeg" value="grouped"><span>By license</span></label>
+    </div>
+    <button class="btn btn--secondary btn--md btn--icon" data-refresh aria-label="Refresh" title="Refresh"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-refresh"></use></svg></button>
   </div>
 
   <div id="instancesList">
@@ -69,10 +82,10 @@
       <span>Items per page<select aria-label="Items per page"><option>10</option><option>20</option><option>50</option><option>100</option></select></span>
       <span class="range">0 of 0</span>
       <span class="pagebtns">
-        <button disabled aria-label="First page"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevrons-left"></use></svg></button>
-        <button disabled aria-label="Previous page"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-left"></use></svg></button>
-        <button disabled aria-label="Next page"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-right"></use></svg></button>
-        <button disabled aria-label="Last page"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevrons-right"></use></svg></button>
+        <button type="button" class="btn btn--secondary btn--md btn--icon" disabled aria-disabled="true" aria-label="First page"><svg class="ic btn-ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevrons-left"></use></svg></button>
+        <button type="button" class="btn btn--secondary btn--md btn--icon" disabled aria-disabled="true" aria-label="Previous page"><svg class="ic btn-ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-left"></use></svg></button>
+        <button type="button" class="btn btn--secondary btn--md btn--icon" disabled aria-disabled="true" aria-label="Next page"><svg class="ic btn-ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-right"></use></svg></button>
+        <button type="button" class="btn btn--secondary btn--md btn--icon" disabled aria-disabled="true" aria-label="Last page"><svg class="ic btn-ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevrons-right"></use></svg></button>
       </span>
     </div>
   </div><!-- /#instancesList -->

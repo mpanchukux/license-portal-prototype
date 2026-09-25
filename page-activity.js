@@ -50,7 +50,7 @@ function renderActFeed(){
     var rows = searching ? list : pageSlice(list, actPage);
     if(searching) actPage.total = list.length;
     actRendered = rows;
-    el.innerHTML = rows.map(function(a, i){ return activityEntry(a, 'global', i); }).join('');
+    el.innerHTML = activityList(rows, 'global', '');
   }
   syncListEmpty(!everything.length);
   var pg = $('#activityView .pager');
@@ -113,7 +113,6 @@ function renderActTypes(){
 })();
 
 renderActFeed();
-wireFeedAudit('#activityView');
 wirePeriod('#actPeriod', actPeriod, renderActFeed);
 wirePager('#activityView .pager', actPage, renderActFeed);
 /* ⚠️ Bound BEFORE wireSearch, and the order is the whole trick: this re-renders the

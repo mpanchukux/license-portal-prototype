@@ -153,6 +153,17 @@ function instanceChecks(lic, inst){
   for(var h = 0; h < hours; h++){
     var minsAgo = (inst.agoMin || 0) + h * 60;
     if(minsAgo > hours * 60) break;
+    /* ⚠️ A MISSED REPORT — ADDED DEMO DATA (2026-09-25), and it is data, not a rule.
+       Nothing in the seed produced a HOLE before this: every hour got a record, either
+       ok or failed, so "a group breaks on a gap" had nothing to break on and could not
+       be seen on screen. A miss is not a failure — a failure is a check that happened
+       and went wrong, and it logs a row saying why; a miss is the instance not reporting
+       at all, which is the same absence `agoMin` and Stale are already built on.
+       ⚠️ Its own hash draw (`inst.id + '|miss'`), so the existing failure distribution
+       is byte-for-byte what it was — this adds holes without moving a single failure.
+       ⚠️ 2% of hours, stable per instance: often enough that a three-day window shows a
+       few, rare enough that it does not read as an outage. */
+    if(checkHash(inst.id + '|miss', h) % 100 < 2) continue;
     var r = checkHash(inst.id, h) % 100;
     /* ⚠️ A BLOCKED LICENCE FAILS EVERY CHECK, and that is not decoration: it is what
        "blocked until the count is back within its limit" MEANS, and the log is where a
@@ -207,6 +218,20 @@ var CHECKIN_INTERVAL_H = 1;
    to 1 — the rule is one line and both numbers are named. */
 var CHECKIN_STALE_MULT = 2;
 function checkinStaleAfterH(){ return CHECKIN_INTERVAL_H * CHECKIN_STALE_MULT; }
+/* ⚠️ WHAT COUNTS AS A MISSED CHECK, and why it is a tolerance and not an equality.
+   The cadence is RECORDED (`CHECKIN_INTERVAL_H`), so a gap is detected against the
+   interval the product states — not inferred from the spacing of the stamps. But a real
+   instance does not report on the minute: a slow restart, a clock a few minutes out, a
+   queue that drains late all move a stamp without a report being missed. So the test is
+   "is there room for a whole slot in here", not "is this exactly one interval":
+   a delta below 1.5x the interval is the SAME check arriving early or late, and only a
+   delta at or above it leaves a slot with nothing in it.
+   ⚠️ That is also the answer for an irregular-but-innocent interval: jitter smaller than
+   half a slot is absorbed, and anything larger is reported as a gap whatever caused it —
+   this prototype cannot tell a missed report from a report it never received, and it
+   must not pretend to. What it shows is "nothing arrived for this hour", which is true
+   either way. */
+function checkGapMin(){ return CHECKIN_INTERVAL_H * 60 * 1.5; }
 
 /* Hours between a "Mon DD YYYY, HH:MM" stamp and now. Built on the same epochDay the
    date shifting uses, so a shifted seed measures correctly without re-parsing. */
@@ -1088,4 +1113,5 @@ function extLink(key, text, cls){
 // newest first; standard sentence order: what was done -> from -> to (if any) -> by whom.
 // `delta` is the plain-text change, kept for the raw audit payload only.
 // Activity now lives per-variant in DATASETS (density datasets block above).
-var AUDITSVG = '<svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-file-text"></use></svg>';
+/* ⚠️ `AUDITSVG` IS GONE (2026-09-25): it drew the feed's expander button, and the feed
+   no longer has one. `ti-file-text` stays in the sprite — other surfaces use it. */

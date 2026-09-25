@@ -18,13 +18,13 @@ function renderPayCard(){
   $$('.brandbadge, .pc-num, .pc-exp, .paycard-none', card).forEach(function(n){ n.remove(); });
   if(billingSaved()){
     card.insertAdjacentHTML('afterbegin', paymentMethodHTML());
-    if(btn){ btn.className = 'iconbtn ib'; btn.innerHTML = PENCIL_SVG;
+    if(btn){ btn.className = 'btn btn--secondary btn--md btn--icon'; btn.innerHTML = PENCIL_SVG;
              btn.setAttribute('aria-label', 'Update payment method');
              btn.setAttribute('title', 'Update payment method'); }
   } else {
     card.insertAdjacentHTML('afterbegin',
       '<span class="paycard-none">No payment method yet — charges cannot be taken until one is added.</span>');
-    if(btn){ btn.className = 'btn sec'; btn.textContent = 'Add payment method';
+    if(btn){ btn.className = 'btn btn--secondary btn--md'; btn.textContent = 'Add payment method';
              btn.setAttribute('aria-label', 'Add payment method');
              btn.removeAttribute('title'); }
   }

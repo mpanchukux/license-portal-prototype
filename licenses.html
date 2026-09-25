@@ -32,7 +32,14 @@
        title, toolbar, column row, rows. The title still SCROLLS AWAY — it is in the
        frame, not in the sticky part of it. -->
   <div class="listcard listframe">
-  <h1 class="lic-h1">Licenses</h1>
+  <!-- ⚠️ THE COUNT SITS WITH THE TITLE, the same place Home puts it. Home's is a BUTTON
+       (it goes somewhere); this one is a CHIP, because on the Licenses page there is
+       nowhere left to go — it states how many the account has, and the filters below
+       narrow what is shown without changing it. Filled by renderLicenses. -->
+  <div class="lic-titlerow">
+    <h1 class="lic-h1">Licenses</h1>
+    <span class="titlecount" id="licTotal"></span>
+  </div>
 
   <!-- ⚠️ ONE TOOLBAR ROW, and it was two. Row one held refresh and + New license with an
        empty left half where the view tablist used to be; row two held search and the
@@ -63,12 +70,12 @@
     <!-- ⚠️ On the phone these two are MOVED into the page title row by syncTitleRow, and
          that is why they must stay inside a `.lic-controls`: it is the host the mover
          looks for, and where it puts them back above the breakpoint. -->
-    <button class="iconbtn ib" data-refresh aria-label="Refresh" title="Refresh"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-refresh"></use></svg></button>
+    <button class="btn btn--secondary btn--md btn--icon" data-refresh aria-label="Refresh" title="Refresh"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-refresh"></use></svg></button>
     <!-- ⚠️ THE MARK IS AN ICON, not a "+" character (the icon rule), and it is hidden
          above 600px: on the desktop the words are the button. On the phone the title
          row shows the mark alone — so removing the character without putting a mark in
          its place would have left an empty black square there. -->
-    <button class="btn" id="licNewBtn"><svg class="ic lnb-ic" aria-hidden="true"><use href="assets/icons.svg#ti-plus"></use></svg><span class="lnb-txt">Buy a license</span></button>
+    <button class="btn btn--primary btn--md" id="licNewBtn"><svg class="ic lnb-ic" aria-hidden="true"><use href="assets/icons.svg#ti-plus"></use></svg><span class="lnb-txt">Buy a license</span></button>
   </div>
 
   <div id="licensesList">
@@ -84,10 +91,10 @@
     <span>Items per page<select aria-label="Items per page"><option>10</option><option>20</option><option>50</option></select></span>
     <span class="range" id="licRange">1–4 of 4</span>
     <span class="pagebtns">
-      <button disabled aria-label="First page"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevrons-left"></use></svg></button>
-      <button disabled aria-label="Previous page"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-left"></use></svg></button>
-      <button disabled aria-label="Next page"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-right"></use></svg></button>
-      <button disabled aria-label="Last page"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevrons-right"></use></svg></button>
+      <button type="button" class="btn btn--secondary btn--md btn--icon" disabled aria-disabled="true" aria-label="First page"><svg class="ic btn-ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevrons-left"></use></svg></button>
+      <button type="button" class="btn btn--secondary btn--md btn--icon" disabled aria-disabled="true" aria-label="Previous page"><svg class="ic btn-ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-left"></use></svg></button>
+      <button type="button" class="btn btn--secondary btn--md btn--icon" disabled aria-disabled="true" aria-label="Next page"><svg class="ic btn-ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-right"></use></svg></button>
+      <button type="button" class="btn btn--secondary btn--md btn--icon" disabled aria-disabled="true" aria-label="Last page"><svg class="ic btn-ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevrons-right"></use></svg></button>
     </span>
   </div>
   </div>

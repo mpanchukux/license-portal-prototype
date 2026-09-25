@@ -55,12 +55,18 @@ function renderProducts(){
       line:'Buy a license to get a key for your ThingsBoard or TBMQ instance.',
       /* the ONE primary a new account gets, and it opens the same wizard the
          toolbar's "+ New license" does — one action, not a second way in */
-      action:'<button class="btn" id="licEmptyBuy">Buy a license</button>'
+      action:'<button class="btn btn--primary btn--md" id="licEmptyBuy">Buy a license</button>'
     });
   } else {
     $('#prodBody').innerHTML = html;
   }
   syncListEmpty(accountEmpty);
+  /* ⚠️ THE ACCOUNT'S TOTAL, not the filtered count. The chip sits with the TITLE, and the
+     title names the page rather than the current filter — a number beside it that fell to
+     3 when a chip was pressed would be describing the toolbar, which already describes
+     itself (every filter chip carries its own facet count). */
+  var total = $('#licTotal');
+  if(total) total.textContent = DATA().licenses.length;
   $('#licRange').textContent = vis ? ('1–' + vis + ' of ' + vis) : '0 of 0';
   syncLicChipCounts();
 }

@@ -45,8 +45,34 @@
 
     <div class="sg-item">
       <h3>Colour</h3>
-      <p class="sg-note">Monochrome by constraint: state is carried by weight, border and fill — never by hue.</p>
+      <p class="sg-note"><b>Two layers, and a component may only read the second.</b>
+        <b>Primitives</b> (<code class="sg-cls">--c-green-600</code>,
+        <code class="sg-cls">--c-red-600</code>, <code class="sg-cls">--c-grey-600</code>) are raw values
+        named by hue and step, and <b>nothing uses them directly</b>. <b>Meanings</b>
+        (<code class="sg-cls">--status-ok</code>, <code class="sg-cls">--status-alert</code>,
+        <code class="sg-cls">--status-off</code>) are what a rule reads. Two layers because &ldquo;what
+        is this colour&rdquo; and &ldquo;what is it for&rdquo; are different questions, and because a
+        brand restating its green is then one edit.</p>
+      <p class="sg-note"><b><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> This is the monochrome rule ending, in stages (2026-09-25).</b>
+        The constraint read: <i>state is carried by weight, border and fill &mdash; never by hue</i>, with
+        three named exceptions on the selling surface. <b>Status and version are the first elements
+        coloured on purpose.</b> Everything else is still grey, and stays grey until it is asked for.</p>
+      <p class="sg-note"><b><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> Colour is never the only carrier, and that is what keeps this
+        accessible.</b> Every coloured mark ships with two other signals: a <b>differently shaped</b>
+        glyph (a check, a cross, an exclamation &mdash; three outlines, not one in three tints) and, where
+        there is room, the <b>word</b>. Remove the colour entirely and every one of them still reads.
+        A tone-only carrier &mdash; the phone card&rsquo;s status stripe &mdash; is still an open debt,
+        not a precedent.</p>
+      <p class="sg-note"><b><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <code class="sg-cls">--accent</code>,
+        <code class="sg-cls">--tick</code> and <code class="sg-cls">--page-bg</code> are still literals</b>
+        and do not go through the primitive layer. They predate it and they sit on the selling surface,
+        where a value change is a visible change; folding them in is a pass of its own.</p>
+      <h4 class="sg-sub">Greys &mdash; the system everything still defaults to</h4>
       <div class="sg-grid" id="sgColors"></div>
+      <h4 class="sg-sub">Primitives <span class="sg-cls">nothing reads these directly</span></h4>
+      <div class="sg-grid" id="sgColorsPrim"></div>
+      <h4 class="sg-sub">Meanings <span class="sg-cls">this is what a rule reads</span></h4>
+      <div class="sg-grid" id="sgColorsMeaning"></div>
     </div>
 
     <div class="sg-item">
@@ -149,24 +175,131 @@
 
   <section class="sg-sec" id="buttons">
     <h2>Buttons</h2>
-    <p>One height (<code class="sg-cls">--btnH</code>, 31px) across every variant, so a toolbar reads as one band.</p>
+    <p><b>One component, four axes</b> (<code class="sg-cls">button()</code> in
+      <code class="sg-cls">shared.js</code>). <b>Variant</b> &middot; <b>size</b> &middot; <b>content</b>
+      &middot; <b>state</b>, plus <b>tone</b>. A flat list of named buttons would need a new name for
+      every combination (<code class="sg-cls">primaryLargeIconDisabled</code>); axes do not.
+      <b>Every cell below is rendered by the component</b> &mdash; nothing on this page is drawn by hand,
+      so the matrix cannot disagree with the product.</p>
+
     <div class="sg-item">
-      <div class="sg-row">
-        <div class="sg-cell"><button class="btn">Primary</button><span class="sg-cls">.btn</span></div>
-        <div class="sg-cell"><button class="btn sec">Secondary</button><span class="sg-cls">.btn.sec</span></div>
-        <div class="sg-cell"><button class="btn ter">Destructive</button><span class="sg-cls">.btn.ter</span></div>
-        <div class="sg-cell"><button class="btn xl">Page primary</button><span class="sg-cls">.btn.xl</span></div>
-        <div class="sg-cell"><button class="link">Text link</button><span class="sg-cls">.link</span></div>
-        <div class="sg-cell"><button class="btn" disabled>Disabled</button><span class="sg-cls">.btn[disabled]</span></div>
-        <div class="sg-cell"><button class="btn" id="sgLoading"><span class="nl-spin" aria-hidden="true"></span></button><span class="sg-cls">.btn &gt; .nl-spin</span></div>
-      </div>
-      <div class="sg-row" style="margin-top:18px">
-        <div class="sg-cell"><button class="iconbtn ib" aria-label="Refresh"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-refresh"></use></svg></button><span class="sg-cls">.iconbtn.ib</span></div>
-        <div class="sg-cell"><button class="iconbtn ib spinning" aria-label="Refreshing"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-refresh"></use></svg></button><span class="sg-cls">.iconbtn.spinning</span></div>
-        <div class="sg-cell"><button class="back" aria-label="Back"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-left"></use></svg></button><span class="sg-cls">.back</span></div>
-        <div class="sg-cell"><span class="menu"><button class="iconbtn ib" aria-haspopup="true" aria-expanded="false" aria-label="More actions"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-dots-vertical"></use></svg></button></span><span class="sg-cls">.menu &gt; .iconbtn</span></div>
-        <div class="sg-cell"><div class="dropwrap"><button class="btn sec" id="sgSplit" aria-haspopup="true" aria-expanded="false">All time <svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-down"></use></svg></button><div class="dropmenu right" hidden><button>All time</button><button>Last 7 days</button><button>Last 30 days</button></div></div><span class="sg-cls">.dropwrap + .dropmenu</span></div>
-      </div>
+      <h3>The matrix <span class="sg-cls">variants down, states across</span></h3>
+      <p class="sg-note"><b>The last column is the icon-only form</b>, and it is there so the
+        <b>width difference is visible</b>: an icon-only button is not the label form narrowed, it is
+        sized from <b>the icon plus its own padding</b>. At md a ghost or text one is
+        <b>54&times;40</b> and a <b>secondary</b> one is <b>62&times;40</b>, because secondary carries a
+        24px glyph and the box is measured from what is in it &mdash; a rounded rectangle lying down,
+        not a square.
+        <b><code class="sg-cls">menu</code> is the one that goes the other way</b>: <b>38&times;40</b>,
+        slightly taller than wide, because a kebab is a glyph three dots across. That contrast is the
+        point &mdash; you can tell a menu trigger from an action at the end of a row without reading
+        either.</p>
+      <p class="sg-note"><b><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> It used to be a square</b> (40&times;40, and menu a narrow
+        28), which is the lazy reading of &ldquo;icon-only&rdquo;: the box came from the <b>band</b>
+        rather than from what is in it. Width is padding now, not a number &mdash; a 20px or 24px icon
+        makes a wider button by itself, and nothing has to remember a second figure when an icon changes
+        size.</p>
+      <p class="sg-note"><b><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> Radius: 24px on everything with a label, a stadium on
+        everything without one.</b> <code class="sg-cls">999px</code> is not a guess &mdash; the browser
+        clamps it to half the shorter side, so the ends are true semicircles at every height.
+        <b>Note what 24 does at md:</b> the box is 40 tall, so the browser clamps 24 to 20 and a
+        labelled md button renders as a <b>full pill</b>. Only <code class="sg-cls">lg</code> (48) shows
+        24 as an actual corner. If a visible corner rather than a pill was the intent, the number has to
+        be under 20.</p>
+      <div class="tablescroll"><table class="sg-btnmatrix"><thead id="sgBtnHead"></thead><tbody id="sgBtnBody"></tbody></table></div>
+    </div>
+
+    <div class="sg-item">
+      <h3>Sizes <span class="sg-cls">three, and the third has one user by design</span></h3>
+      <p class="sg-note"><code class="sg-cls">sm</code> 26 &mdash; actions inside an ink banner, where the
+        band would out-shout the banner. <code class="sg-cls">md</code> 40 &mdash;
+        <code class="sg-cls">--btnH</code>, everything standing in a control row.
+        <code class="sg-cls">lg</code> 48 &mdash; the page&rsquo;s own primary beside its h1.
+        <span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <b>lg was 56 and is now 48.</b> 56 next to a 40px toolbar is a jump; 48 is a 1.2
+        step and reads as bigger without shouting. One call site is the right number for a hero &mdash;
+        a page has one primary action.</p>
+      <p class="sg-note"><b><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> The mobile touch rule lives in the component, once.</b> Below
+        600px <code class="sg-cls">sm</code> and <code class="sg-cls">md</code> both resolve to 44.
+        This replaced <b>three contextual overrides</b> &mdash;
+        <code class="sg-cls">.pubacts .btn{height:36px}</code>,
+        <code class="sg-cls">.pagetitlerow .btn{min-height:44px}</code> and
+        <code class="sg-cls">#couponOverlay .paymodal-f .btn{height:48px}</code> &mdash; three answers to
+        one question, in three places, with three numbers. No call site says anything about size now.</p>
+      <div class="sg-row" id="sgBtnSizes"></div>
+    </div>
+
+    <div class="sg-item">
+      <h3>Tone <span class="sg-cls">default &middot; destructive</span></h3>
+      <p class="sg-note"><b>An axis, not a variant</b>, because we need a destructive <b>primary</b> (the
+        confirm in the cancel dialog) and a destructive <b>text</b> item (Delete in a kebab). As a variant
+        each of those would need its own name. The variant decides the shape; the tone decides the
+        colour, from <code class="sg-cls">--status-alert</code>.</p>
+      <p class="sg-note"><b><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> This fixes an inversion.</b>
+        <code class="sg-cls">.btn.ter</code> carried the comment &ldquo;destructive&rdquo; and rendered
+        <b>quieter</b> than an ordinary button &mdash; underlined grey text &mdash; so in the cancel
+        dialog <b>the destructive action looked least like a button of anything on screen</b>. The
+        usability session caught the same inversion.</p>
+      <div class="sg-row" id="sgBtnTone"></div>
+    </div>
+
+    <div class="sg-item">
+      <h3>States without colour</h3>
+      <p class="sg-note"><b><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> Hover and pressed are two different surfaces, not two opacities
+        of one.</b> On a <b>filled</b> button hover goes flat black and pressed adds an <b>inset well</b>
+        at the top edge &mdash; a recess, which flat black cannot be. On a <b>quiet filled</b> button
+        (secondary, menu) hover and pressed are the next two steps of that fill's own ramp &mdash;
+        <code class="sg-cls">--surface-quiet-hover</code> then
+        <code class="sg-cls">--surface-quiet-press</code>. On a <b>transparent</b> one (text, ghost)
+        hover takes <code class="sg-cls">--hover</code> and pressed takes
+        <code class="sg-cls">--sel</code>, two greys the product already uses for exactly this pair.</p>
+      <p class="sg-note"><b><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> Secondary is a FILL, not an outline</b> (2026-09-25). It was
+        white with a <code class="sg-cls">--line</code> border; it is
+        <code class="sg-cls">--surface-quiet</code> (#F4F5F6) with the border turned <b>transparent</b>
+        rather than removed &mdash; <code class="sg-cls">.btn</code> declares a 1px transparent border
+        for every variant, so a button keeps the same box whichever one it wears. Drop it here and a
+        secondary icon button comes out 2px narrower than a primary beside it.
+        <b><code class="sg-cls">menu</code> takes the same fill</b>: the reference shows that trigger as
+        a filled grey shape, and in a table row a bare kebab beside a filled copy button read as two
+        kinds of control doing the same kind of job. What stays menu's own is the <b>width</b>.</p>
+      <p class="sg-note"><b>Every icon button in a list row is the quiet filled one.</b> The licences and
+        invoices tables both use it, so a row's actions read the same wherever you are.</p>
+      <p class="sg-note"><b><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> Pressed is new work.</b> <code class="sg-cls">:active</code>
+        appeared <b>zero times</b> in 4,600 lines of stylesheet before this.</p>
+      <p class="sg-note"><b>Focus is a ring and it is not hover.</b>
+        <code class="sg-cls">:focus-visible</code> only &mdash; a mouse click does not raise it.</p>
+      <p class="sg-note"><b><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> Disabled does not respond, and that was a bug.</b> The old
+        <code class="sg-cls">.btn:hover{background:#000}</code> was <b>unguarded</b>, so a disabled
+        primary still went black under the cursor and kept <code class="sg-cls">cursor:pointer</code>;
+        there was <b>no global <code class="sg-cls">.btn[disabled]</code> rule at all</b> &mdash; the fade
+        was written separately inside four containers and nowhere else. Every hover and active rule is
+        now guarded.</p>
+      <p class="sg-note"><b>Busy is the sixth state, and it is not disabled.</b> Disabled means
+        <i>you cannot do this</i>; busy means <i>this is happening</i>. It <b>reserves its own width</b>
+        with the hidden label rather than freezing one with an inline style, keeps the accessible name,
+        sets <code class="sg-cls">aria-busy</code>, and uses <code class="sg-cls">aria-disabled</code>
+        rather than the <code class="sg-cls">disabled</code> attribute so <b>focus is not lost
+        mid-action</b>. <b>Restoring is the default</b> &mdash; the purchase confirm opts out explicitly,
+        because the surface behind it is replaced. The 600ms refresh spin is <b>this state at a shorter
+        duration</b>, not a second mechanism.</p>
+      <div class="sg-row" id="sgBtnBusy"></div>
+    </div>
+
+    <div class="sg-item">
+      <h3>Not allowed, on purpose</h3>
+      <p class="sg-note">The component <b>refuses</b> these rather than leaving them undocumented:</p>
+      <p class="sg-note">&middot; <b><code class="sg-cls">menu</code> with a label.</b> The kebab is the
+        whole of that variant; a labelled one is a secondary button with a chevron, which already exists.
+        <br>&middot; <b><code class="sg-cls">menu</code> at <code class="sg-cls">lg</code>.</b> It is a
+        trigger inside a row, never a page action.
+        <br>&middot; <b><code class="sg-cls">busy</code> together with
+        <code class="sg-cls">disabled</code>.</b> &ldquo;You cannot do this&rdquo; and &ldquo;this is
+        happening&rdquo; are different statements and one button cannot make both. Busy wins.</p>
+      <p class="sg-note"><b><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> What the model cannot say: which ground it stands on.</b> On the
+        ink banner a <code class="sg-cls">primary</code> is ink-on-ink and vanishes, so the banner
+        re-paints the component&rsquo;s surfaces for its dark ground
+        (<code class="sg-cls">.gbanner .btn--primary</code>). The classes are still the
+        component&rsquo;s; only the palette is local. <b>If a second dark surface appears this becomes a
+        fifth axis</b> (<code class="sg-cls">surface</code>), not a second copy of that block.</p>
     </div>
   </section>
 
@@ -193,7 +326,7 @@
         <div class="sg-cell"><span class="switch lg"><input type="checkbox" checked><span class="track"></span></span><span class="sg-cls">.switch.lg</span></div>
         <div class="sg-cell"><label class="sp-opt"><input type="checkbox" checked><span>Checkbox option</span></label><span class="sg-cls">.sp-opt &gt; input</span></div>
         <div class="sg-cell">
-          <div class="stepper"><button aria-label="Decrease">−</button><input type="text" value="2" aria-label="Amount"><button aria-label="Increase">+</button></div>
+          <div class="stepper"><button type="button" class="stepbtn" aria-label="Decrease">−</button><input type="text" value="2" aria-label="Amount"><button type="button" class="stepbtn" aria-label="Increase">+</button></div>
           <span class="sg-cls">.stepper</span>
         </div>
         <div class="sg-cell">
@@ -227,7 +360,7 @@
           <div class="field err"><label for="sgErr1">Card number <span class="req" aria-hidden="true">*</span></label><input id="sgErr1" type="text" value="4242"><div class="fielderr">A card number is at least 12 digits &mdash; this one has 4.</div></div>
           <div class="field err"><label for="sgErr2">Billing email <span class="req" aria-hidden="true">*</span></label><input id="sgErr2" type="text" value="mariia"><div class="help">This help line is suppressed while the error shows.</div><div class="fielderr">This does not look like an email address &mdash; check for a missing @ or domain.</div></div>
           <div class="formerr">2 fields need attention before this order can be placed.</div>
-          <button class="btn" type="button">Place order</button>
+          <button type="button" class="btn btn--primary btn--md">Place order</button>
         </div>
       </div>
     </div>
@@ -237,8 +370,82 @@
   <!-- ============================ CHIPS ============================ -->
   <section class="sg-sec" id="chips">
     <h2>Status chips</h2>
-    <p>Status reads by weight and border, not colour. Attention states get the ink fill; quiet states stay outlined.</p>
+    <p><b>A licence&rsquo;s status is a coloured word now</b>
+      (<code class="sg-cls">statusMark</code>) &mdash; the word alone, in the colour of its state.
+      The chips below still read by weight and border &mdash; attention states take the ink fill, quiet
+      states stay outlined. <b>Buttons no longer do</b>: secondary is a fill (see
+      <a href="#buttons">Buttons</a>), so an outline on this page means a chip, not a control.</p>
     <div class="sg-item">
+      <h3>The licence status mark</h3>
+      <p class="sg-note"><b>The word, in its own colour, and nothing else.</b>
+        <code class="sg-cls">--status-ok</code> for Active, <code class="sg-cls">--status-off</code> for
+        Canceled, <code class="sg-cls">--status-alert</code> for Blocked. <b>No icon.</b></p>
+      <p class="sg-note"><b><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> This reverses yesterday, and the note it replaces is worth
+        keeping visible.</b> That version put the colour on a 20px glyph and kept the word in
+        <code class="sg-cls">--ink</code>, arguing that a coloured word <i>&ldquo;would carry the meaning
+        a second time and would fail the moment it sat on a coloured ground&rdquo;</i>. Neither half
+        survives: there is no glyph left to carry it, and this cell never sits on a coloured ground.</p>
+      <p class="sg-note"><b><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> Colour is now the only VISUAL carrier here, and the word is
+        what saves it.</b> Active / Canceled / Blocked are three different strings, not one label in
+        three tints &mdash; a reader who sees no colour at all still reads the status.
+        <b>That is the line that must not be crossed:</b> the moment two statuses share a word and differ
+        only in hue, this cell fails.</p>
+      <p class="sg-note"><b><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <code class="sg-cls">--status-ok</code> is below AA as text.</b>
+        Computed on white: <code class="sg-cls">--status-off</code> <b>7.81:1</b>,
+        <code class="sg-cls">--status-alert</code> <b>5.09:1</b>,
+        <code class="sg-cls">--status-ok</code> <b>3.66:1</b> against a 4.5 floor at 14px regular. It
+        passed while it was a glyph (1.4.11 asks 3:1 of a non-text mark); as a word the floor moved and
+        the value did not. Holding the hue and darkening only the lightness,
+        <b><code class="sg-cls">#008846</code> is the first value that clears it, at 4.56:1</b>.
+        Recorded rather than changed: the green was given.</p>
+      <p class="sg-note"><b><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <code class="sg-cls">Blocked</code> is inferred.</b> The
+        reference covered Active and Canceled; Blocked is the third value this cell has always had, and
+        leaving it an ink pill between two icon marks would be one column speaking two languages. It takes
+        the alert colour because it is the one status that means <i>act now</i>.</p>
+      <p class="sg-note"><b><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <code class="sg-cls">Canceled</code>, one L.</b> The reference
+        writes &ldquo;Cancelled&rdquo;. Every other surface &mdash; the menu item, the cancel dialog, the
+        activity copy &mdash; spells it with one, and a status disagreeing with the dialog that sets it is
+        worse than a spelling preference.</p>
+      <div class="sg-row">
+        <div class="sg-cell"><span class="statmark is-ok">Active</span><span class="sg-cls">.statmark.is-ok</span></div>
+        <div class="sg-cell"><span class="statmark is-off">Canceled</span><span class="sg-cls">.statmark.is-off</span></div>
+        <div class="sg-cell"><span class="statmark is-alert">Blocked</span><span class="sg-cls">.statmark.is-alert</span></div>
+      </div>
+    </div>
+    <div class="sg-item">
+      <h3>The version mark <span class="sg-cls">versionMark</span></h3>
+      <p class="sg-note"><b>One line, one type treatment, and a mark only when something is wrong.</b>
+        The <code class="sg-cls">latest 3.9.4</code> line is gone, <b>the green tick is gone</b>, and in
+        the list <code class="sg-cls">across N instances</code> is gone with them. What is left is the
+        number, and an alert beside it when the number is not the latest.</p>
+      <p class="sg-note"><b><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> Silence is the up-to-date state.</b> A tick marked the ordinary
+        case, so a column of ticks said &ldquo;normal&rdquo; nineteen times to make one exclamation stand
+        out &mdash; and the exclamation stands out better with nothing beside it. The number the running
+        one is compared against lives in the alert&rsquo;s tooltip:
+        <i>&ldquo;The latest product version is 3.9.4.&rdquo;</i> <b>Only the alert has one</b>; there is
+        nothing to ask about a licence that is already current.</p>
+      <p class="sg-note"><b><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> The digits are one weight in both states.</b> The behind number
+        used to be 500, which gave one kind of value two type treatments in one column. The alert is the
+        difference; the digits are just digits.</p>
+      <p class="sg-note"><b><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <code class="sg-cls">across N instances</code> now exists in
+        exactly one place</b> &mdash; the licence <b>details header</b>. It says the thing the list cannot:
+        a licence&rsquo;s figure is the <b>lowest</b> of its instances, so one laggard and a whole estate
+        print the same number. If the details header ever drops it too, the prototype stops saying it
+        anywhere.</p>
+      <p class="sg-note"><b><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> The alert is a real <code class="sg-cls">&lt;button&gt;</code></b>,
+        the same shape the attention marker uses &mdash; hover on a pointer device, focus for the keyboard,
+        and the delegated <b>tap below 600px</b> where there is no hover. A <code class="sg-cls">title</code>
+        would have had none of the three.</p>
+      <p class="sg-note"><b><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> A circled exclamation, not a triangle.</b> A triangle means
+        &ldquo;something is broken, act now&rdquo; here; running an older release is the step below that
+        &mdash; worth knowing, nothing stopped.</p>
+      <div class="sg-row">
+        <div class="sg-cell"><span class="ver-run">3.9.4</span><span class="sg-cls">current &middot; no mark</span></div>
+        <div class="sg-cell"><span class="ver-run"><span class="verm"><svg class="ic ic-20" aria-hidden="true"><use href="assets/icons.svg#ti-alert-circle"></use></svg></span>3.8.1</span><span class="sg-cls">behind &middot; tooltip on the mark</span></div>
+      </div>
+    </div>
+    <div class="sg-item">
+      <h3>The rest, still monochrome</h3>
       <div class="sg-row">
         <div class="sg-cell"><span class="chip status"><span class="sdot"></span>Active</span><span class="sg-cls">.chip.status</span></div>
         <div class="sg-cell"><span class="chip">Free</span><span class="sg-cls">.chip</span></div>
@@ -255,17 +462,31 @@
   <section class="sg-sec" id="table">
     <h2>Table</h2>
     <p>The licence table, rendered by the same builders the Licenses page calls
-      (<code class="sg-cls">headHtml()</code> / <code class="sg-cls">rowHtml()</code>) — header, sortable column,
+      (<code class="sg-cls">headHtml()</code> / <code class="sg-cls">rowHtml()</code>) &mdash; header, sortable column,
       a row with its actions, and the pager.</p>
+    <p><b>A table is a framed object</b> (2026-09-25): the head is a filled
+      <code class="sg-cls">--surface-quiet</code> band and the whole table sits inside its own hairline
+      with a 10px radius. Home, Licenses, Invoices and the flat Instances list are all this one look.
+      <b>A row under the cursor takes <code class="sg-cls">--row-hover</code></b> &mdash; literally the
+      blue Home fades into, so the highlight belongs to the product rather than being a grey borrowed
+      from the button ramp. It is transient: nothing is selected, the pointer is simply there.</p>
+    <p class="sg-note"><b><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> The specimen carries <code class="sg-cls">.listframe</code></b>,
+      because that is what the frame is scoped to. Without it this page would keep showing the table as
+      it looked before &mdash; which is the failure mode this page exists to prevent.</p>
+    <p class="sg-note"><b><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> The frame comes off below 600px and in the grouped Instances
+      view.</b> On a phone every row is already its own card, and in the grouped view the GROUPS are the
+      framed objects &mdash; either way an outer frame would be a box holding boxes.
+      <b>A collapsed group has no outline at all</b>: the outline is what says &ldquo;these rows belong
+      to this heading&rdquo;, and with nothing showing there is nothing to enclose.</p>
     <div class="sg-item">
-      <div class="listcard">
+      <div class="listcard listframe">
         <div class="tablescroll"><table><thead id="sgTableHead"></thead><tbody id="sgTableBody"></tbody></table></div>
         <div class="pager">
           <span>Items per page</span>
           <select aria-label="Items per page"><option>10</option><option>25</option></select>
           <span class="spacer"></span>
           <span class="range">1–2 of 2</span>
-          <span class="pagebtns"><button aria-label="First page" disabled><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevrons-left"></use></svg></button><button aria-label="Previous page" disabled><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-left"></use></svg></button><button aria-label="Next page"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-right"></use></svg></button><button aria-label="Last page"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevrons-right"></use></svg></button></span>
+          <span class="pagebtns"><button type="button" class="btn btn--secondary btn--md btn--icon" aria-label="First page" disabled aria-disabled="true" ><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevrons-left"></use></svg></button><button type="button" class="btn btn--secondary btn--md btn--icon" aria-label="Previous page" disabled aria-disabled="true" ><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-left"></use></svg></button><button type="button" class="btn btn--secondary btn--md btn--icon" aria-label="Next page" ><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-right"></use></svg></button><button type="button" class="btn btn--secondary btn--md btn--icon" aria-label="Last page" ><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevrons-right"></use></svg></button></span>
         </div>
       </div>
       <p class="sg-note" style="margin-top:12px">Sortable header: <code class="sg-cls">th.sortable[aria-sort]</code> ·
@@ -482,9 +703,9 @@
       <h3>Standard dialog <span class="sg-cls">.overlay &gt; .modal</span></h3>
       <div class="sg-static">
         <div class="overlay"><div class="modal">
-          <div class="mh"><h3>Add capacity</h3><span class="spacer"></span><button class="mclose" aria-label="Close"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-x"></use></svg></button></div>
+          <div class="mh"><h3>Add capacity</h3><span class="spacer"></span><button class="btn btn--ghost btn--md btn--icon mclose" aria-label="Close"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-x"></use></svg></button></div>
           <div class="mb"><p>Placeholder — one-time purchase of extra devices, instances, or AI credits.</p></div>
-          <div class="mf"><button class="btn sec">Close</button></div>
+          <div class="mf"><button class="btn btn--secondary btn--md">Close</button></div>
         </div></div>
       </div>
     </div>
@@ -493,9 +714,9 @@
       <p class="sg-note">The destructive action is the added button; the safe one keeps the default focus.</p>
       <div class="sg-static">
         <div class="overlay"><div class="modal">
-          <div class="mh"><h3>Cancel subscription</h3><span class="spacer"></span><button class="mclose" aria-label="Close"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-x"></use></svg></button></div>
+          <div class="mh"><h3>Cancel subscription</h3><span class="spacer"></span><button class="btn btn--ghost btn--md btn--icon mclose" aria-label="Close"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-x"></use></svg></button></div>
           <div class="mb"><p>Cancel <b>Prototype · Production</b>?</p><p>The subscription stays active until <b>Aug 28, 2026</b>. After that its instances will stop.</p></div>
-          <div class="mf"><button class="btn sec">Keep subscription</button><button class="btn ter">Cancel subscription</button></div>
+          <div class="mf"><button class="btn btn--secondary btn--md">Keep subscription</button><button class="btn btn--text btn--md">Cancel subscription</button></div>
         </div></div>
       </div>
     </div>
@@ -503,9 +724,9 @@
       <h3>Focused form dialog <span class="sg-cls">.payoverlay &gt; .paymodal.tight</span></h3>
       <div class="sg-static">
         <div class="payoverlay"><div class="paymodal tight">
-          <div class="paymodal-h"><h3>Apply coupon</h3><span class="sp"></span><button class="paymodal-x" aria-label="Close"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-x"></use></svg></button></div>
+          <div class="paymodal-h"><h3>Apply coupon</h3><span class="sp"></span><button class="btn btn--ghost btn--md btn--icon paymodal-x" aria-label="Close"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-x"></use></svg></button></div>
           <div class="paymodal-b"><div class="field"><label>Coupon code</label><input type="text" placeholder="Enter coupon code"></div></div>
-          <div class="paymodal-f"><span class="sp"></span><button class="btn sec">Cancel</button><button class="btn" disabled>Apply</button></div>
+          <div class="paymodal-f"><span class="sp"></span><button class="btn btn--secondary btn--md">Cancel</button><button class="btn btn--primary btn--md" disabled>Apply</button></div>
         </div></div>
       </div>
     </div>
@@ -514,10 +735,10 @@
       <p class="sg-note">Header, stepper, scrolling body, sticky footer. Manage add-ons and the new-licence wizard share it.</p>
       <div class="sg-static">
         <div class="fs-screen"><div class="fs-box">
-          <div class="fs-header"><h2 class="fs-maintitle">New subscription</h2><span class="spacer"></span><div class="fs-headactions"><button class="fs-close" aria-label="Close"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-x"></use></svg></button></div></div>
+          <div class="fs-header"><h2 class="fs-maintitle">New subscription</h2><span class="spacer"></span><div class="fs-headactions"><button class="btn btn--ghost btn--md btn--icon fs-close" aria-label="Close"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-x"></use></svg></button></div></div>
           <div class="nl-stepbar"><div id="sgWizStep"></div></div>
           <div class="fs-body"><p class="sg-note" style="margin:0">Step content renders here.</p></div>
-          <div class="nl-foot"><button class="btn sec">Back</button><span class="spacer"></span><button class="btn">Continue</button></div>
+          <div class="nl-foot"><button class="btn btn--secondary btn--md">Back</button><span class="spacer"></span><button class="btn btn--primary btn--md">Continue</button></div>
         </div></div>
       </div>
     </div>
@@ -605,12 +826,12 @@
     <div class="sg-item">
       <h3>Impersonation <span class="sg-cls">.imp-wrap &gt; .imp-banner</span></h3>
       <p class="sg-note">Chrome, not content: it is glued under the top bar and persists across pages.</p>
-      <div class="imp-wrap" style="position:static"><div class="imp-banner" role="status"><span>You are logged in as <b>a.admin@thingsboard.io</b></span><span class="sp"></span><button class="imp-return">Return to my account</button></div></div>
+      <div class="imp-wrap" style="position:static"><div class="imp-banner" role="status"><span>You are logged in as <b>a.admin@thingsboard.io</b></span><span class="sp"></span><button class="btn btn--secondary btn--sm imp-return">Return to my account</button></div></div>
     </div>
     <div class="sg-item">
       <h3>Dismissible success <span class="sg-cls">.gbanner</span></h3>
       <p class="sg-note">Same clothes as impersonation, but it lives in the content column and can be closed once.</p>
-      <div class="gbanner" role="status"><svg class="ic gb-ic" aria-hidden="true"><use href="assets/icons.svg#ti-circle-check"></use></svg><span class="gb-txt">Your Community Grant is ready — the license key has been issued.</span><span class="sp"></span><button class="gb-act">View license</button><button class="gb-x" aria-label="Dismiss"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-x"></use></svg></button></div>
+      <div class="gbanner" role="status"><svg class="ic gb-ic" aria-hidden="true"><use href="assets/icons.svg#ti-circle-check"></use></svg><span class="gb-txt">Your Community Grant is ready — the license key has been issued.</span><span class="sp"></span><button class="btn btn--primary btn--sm gb-act">View license</button><button class="btn btn--ghost btn--md btn--icon gb-x" aria-label="Dismiss"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-x"></use></svg></button></div>
     </div>
   </section>
 
@@ -623,13 +844,27 @@
       licence&rsquo;s own tab all call it; <b>no page assembles a row</b>. Everything below is rendered by
       that component from that map &mdash; nothing on this page is retyped, so it cannot fall behind the
       thing it documents.</p>
+    <p><b>A feed is grouped by day</b> (<code class="sg-cls">activityList</code>), and that is the
+      second builder: the entry renders a row, the list renders the <b>day heading</b> above a run of
+      them. The same three surfaces call it, so no feed groups differently from another.
+      <span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> The specimens below call <code class="sg-cls">activityEntry</code>
+      <b>directly</b>, without the list, because they are showing the component and not a feed &mdash;
+      which is why they print a time and no date.</p>
 
     <div class="sg-item">
       <h3>Anatomy</h3>
-      <p class="sg-note"><b>Timestamp &middot; what it is about &middot; what happened &middot; what
-        changed, from and to &middot; who did it.</b> A reason or an amount sits <b>inside the
+      <p class="sg-note"><b>What it is about &middot; what happened &middot; what changed, from and to
+        &middot; who did it &middot; the time.</b> A reason or an amount sits <b>inside the
         sentence</b>, never only behind the expander &mdash; a failure that hides its cause behind a click
         is a failure you have to go and ask about.</p>
+      <p class="sg-note"><b>The day is a heading, the time is a column</b> (2026-09-25). The entry used to
+        open with the full <code class="sg-cls">Sep 13, 2026, 07:12</code>; the date now sits once above
+        the run of entries that share it, in a gutter of its own, and the row keeps only
+        <code class="sg-cls">07:12</code>, right-aligned at the far edge.
+        <span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> The reason is the <b>left edge</b>: a leading timestamp started every
+        sentence at a different x, so the one column a reader scans a log for &mdash; what happened
+        &mdash; was the one that never lined up. Printing the date on every row would also print it
+        fifty times under a heading that already says it once.</p>
       <p class="sg-note"><b>One chip per entry, always the same thing.</b> In the account-wide feed the
         <b>entity</b> sits in a chip (<code class="sg-cls">.fi-chip</code>) &mdash; the licence label, the
         instance label, the user&rsquo;s email, the invoice number. Everything else is plain,
@@ -648,8 +883,10 @@
         the chip &mdash; what the page already states is what goes.</p>
       <p class="sg-note"><b>Voice.</b> Past tense, no auxiliary: <i>Plan changed from Startup to
         Business</i>, never <i>Plan was changed</i>. One sentence, ending in a period. No
-        &ldquo;successfully&rdquo;, no adjectives. Dates use the product&rsquo;s one format,
-        <code class="sg-cls">Sep 13, 2026, 07:12</code>.
+        &ldquo;successfully&rdquo;, no adjectives. Dates <b>inside a sentence</b> use the
+        product&rsquo;s one format, <code class="sg-cls">Sep 13, 2026</code> &mdash; the entry&rsquo;s own
+        timestamp is split between the day heading and the time column, but a date the copy mentions is
+        written out in full.
         <span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <b>Eleven of the twenty-nine reach true active voice</b>; the rest stand as
         participles with the auxiliary dropped, because English has no agentless active for
         &ldquo;user removed&rdquo;. Active: <i>plan changed</i>, <i>capacity changed</i>, <i>updates
@@ -684,8 +921,8 @@
          derived from the sample at render time, not typed here. -->
     <div class="sg-item">
       <h3>1 &middot; Sentence and actor <span class="sg-cls">the default</span></h3>
-      <p class="sg-note">Somebody did something. The timestamp, one sentence, the actor at the
-        end. No panel, nothing to expand &mdash; most of the map is this.</p>
+      <p class="sg-note">Somebody did something. One sentence, the actor at the end, the time at the
+        right. No panel, nothing to expand &mdash; most of the map is this.</p>
       <div class="listcard sg-actlist" data-actshape="plain"></div>
     </div>
     <div class="sg-item">
@@ -708,14 +945,40 @@
       <div class="listcard sg-actlist" data-actshape="system"></div>
     </div>
     <div class="sg-item">
-      <h3>4 &middot; A folded run <span class="sg-cls">rec.fold</span></h3>
-      <p class="sg-note">The one disclosure left in the feed. Check-ins are <b>derived, not
-        stored</b> &mdash; the licence reports hourly, so a nineteen-instance account would otherwise
-        write hundreds of rows a day. Consecutive <b>successful</b> checks <b>for the same instance</b>
-        fold into one entry carrying the count and the period, and it expands to the entries it folded.
-        <span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <b>A failure never folds</b>, even between two successes:
-        it is the entry the reader is scanning for, and it names its cause in the sentence.</p>
+      <h3>4 &middot; A grouped run <span class="sg-cls">instance.checks_grouped</span></h3>
+      <p class="sg-note">Check-ins are <b>derived, not stored</b> &mdash; the licence reports hourly, so
+        a nineteen-instance account would otherwise write hundreds of rows a day. An <b>unbroken</b> run
+        of <b>successful</b> checks <b>for the same instance</b> becomes one entry carrying the count and
+        both ends of the run.</p>
+      <p class="sg-note"><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <b>It does not expand, and nothing in the feed does.</b> It
+        used to open to the entries it folded, and that list said nothing the summary had not: the checks
+        are hourly and the summary prints the count and both ends, so every line was derivable and each
+        carried the same two words. It is <b>removed</b>, not hidden behind a click.</p>
+      <p class="sg-note"><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <b>A failure never joins a run</b>, even between two
+        successes: it is the entry the reader is scanning for, and it names its cause in the sentence.</p>
       <div class="listcard sg-actlist" data-actshape="fold"></div>
+    </div>
+
+    <!-- ⚠️ A CONSTRUCTED PAIR, and the only specimen on this page that is. Everything
+         else here renders one record from ACTIVITY_TEXT; a gap is a relationship BETWEEN
+         two entries, so it cannot be shown by a single sample. The two records are built
+         in styleguide.js from the same component as every other row. -->
+    <div class="sg-item">
+      <h3>5 &middot; A gap between two runs <span class="sg-cls">the structure is the message</span></h3>
+      <p class="sg-note">A run covers <b>consecutive</b> checks. When an expected check never arrives,
+        the run <b>ends</b> and a new one starts after the hole &mdash; so two groups with nothing
+        between them are how the feed says <b>a check is missing</b>. Below: a run ending at 18:10 and
+        the next beginning at 20:10, with <b>no failure row between them</b>. The 19:10 check never
+        came.</p>
+      <p class="sg-note"><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <b>This is the one thing the summary cannot say.</b>
+        &ldquo;4 successful checks, 08:57 to 11:57&rdquo; is equally true whether or not 10:57 happened,
+        and no expander would have fixed that &mdash; the missing check is not <em>in</em> the group to
+        be expanded to. Only the break between two groups carries it.</p>
+      <p class="sg-note"><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <b>The cadence is recorded, not guessed.</b> The gap is
+        measured against <code class="sg-cls">CHECKIN_INTERVAL_H</code> &mdash; the interval the product
+        states &mdash; and a delta below <b>1.5&times;</b> it is treated as the same check arriving early
+        or late. Jitter is absorbed; only room for a whole missed slot breaks a run.</p>
+      <div class="listcard sg-actlist" id="sgActGap"></div>
     </div>
   </section>
 
@@ -726,8 +989,8 @@
       and focus; adding <code class="sg-cls">.show</code> pins it (that is how “Copied” is confirmed).</p>
     <div class="sg-item">
       <div class="sg-row">
-        <div class="sg-cell"><button class="iconbtn ib tip" data-tip="Copy license key" aria-label="Copy license key"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-copy"></use></svg></button><span class="sg-cls">.tip (hover me)</span></div>
-        <div class="sg-cell"><button class="iconbtn ib tip show copied" data-tip="Copied" aria-label="Copied"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-check"></use></svg></button><span class="sg-cls">.tip.show.copied</span></div>
+        <div class="sg-cell"><button class="btn btn--secondary btn--md btn--icon tip" data-tip="Copy license key" aria-label="Copy license key"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-copy"></use></svg></button><span class="sg-cls">.tip (hover me)</span></div>
+        <div class="sg-cell"><button class="btn btn--secondary btn--md btn--icon tip show copied" data-tip="Copied" aria-label="Copied"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-check"></use></svg></button><span class="sg-cls">.tip.show.copied</span></div>
         <div class="sg-cell"><span class="usecell"><span class="usetxt">0 / 50</span><span class="meter"><span style="width:0%"></span></span></span><span class="sg-cls">.usecell + .meter</span></div>
       </div>
     </div>
@@ -762,14 +1025,25 @@
 
     <div class="sg-item" id="alerticon">
       <h3>Alert icon <span class="sg-cls">.alertic.tip.wide</span></h3>
+      <p class="sg-note"><b><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> IT NO LONGER APPEARS IN A LICENCE ROW</b> (2026-09-25, by
+        request). The Status column dropped it, and with it went the row's tooltip &mdash; the sentence
+        that said <em>why</em> (&ldquo;2 production instances running, 1 allowed&hellip;&rdquo;). That
+        sentence is <b>not lost</b>: it is the banner at the top of the licence details page, which is
+        where the full wording always lived. What the row keeps is the words &mdash;
+        <i>Payment failed</i>, <i>Over instance limit</i> &mdash; now that the status itself is coloured
+        and carries the alarm.</p>
+      <p class="sg-note"><b><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> The builder is gone too.</b>
+        <code class="sg-cls">alertIcon()</code> had exactly one reader and it is deleted; what is
+        documented below is the <b>pattern</b> &mdash; the shape a warning takes if one is needed again
+        &mdash; and the live contrast with the neutral info icon, which is still in the product.</p>
       <p class="sg-note"><b>Two icons, two meanings, and the difference is the whole reason there are
-        two.</b> The info icon above explains something <b>neutral</b> — what a production instance is,
-        what an AI credit buys — and a reader who never opens it has lost nothing. This one says
-        <b>something is wrong</b>, and in a list row it is the only mark that does. If they looked alike,
-        a row would answer &ldquo;is anything the matter here?&rdquo; with a glyph that means either.</p>
+        two.</b> The info icon explains something <b>neutral</b> &mdash; what a production instance is,
+        what an AI credit buys &mdash; and a reader who never opens it has lost nothing. This one says
+        <b>something is wrong</b>. If they looked alike, a row would answer &ldquo;is anything the matter
+        here?&rdquo; with a glyph that means either.</p>
       <div class="sg-row">
         <div class="sg-cell">
-          <span style="font-size:14.5px"><span class="pill">Active</span>
+          <span style="font-size:14.5px"><span class="statmark is-ok">Active</span>
             <button type="button" class="alertic tip wide" aria-label="Software updates expired"
               data-tip="Software updates ended Sep 10, 2026. No security fixes or version upgrades."><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></button></span>
           <span class="sg-cls">hover me</span>
@@ -787,11 +1061,15 @@
         Fill is the strongest emphasis this system has, and it is what the attention chips already use.
         Same size, same tooltip mechanics — hover on a pointer device, <b>tap below 600px</b>, because
         touch has no hover and an explanation only reachable by hover is not reachable.</p>
-      <p class="sg-note"><b><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> Not in an error colour, and that is a departure from what was asked.</b>
-        This prototype is monochrome by hard rule — state is carried by weight, fill and shape, never by
-        hue — and a single red glyph would be the only colour in the product. Adding an
-        <code class="sg-cls">--error</code> token is a one-line change if that rule is being revisited;
-        it is recorded here rather than made quietly.</p>
+      <p class="sg-note"><b><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> Still in ink, and the reason it gave has now expired.</b>
+        This entry read: <i>&ldquo;a single red glyph would be the only colour in the product &mdash;
+        adding an <code class="sg-cls">--error</code> token is a one-line change if that rule is being
+        revisited&rdquo;</i>. The rule <b>is</b> being revisited (see Tokens) and the token now exists as
+        <code class="sg-cls">--status-alert</code>. This marker was not switched with it, because it was
+        not asked for and because it is the product&rsquo;s strongest signal &mdash; a filled triangle
+        outranks a coloured outline, and turning it red would flatten the gap between
+        &ldquo;something is broken&rdquo; and &ldquo;you are a release behind&rdquo; that the two shapes
+        exist to keep. <b>One line when it is wanted.</b></p>
       <p class="sg-note"><b>Keep the row's own label short.</b> In the table the icon carries a few
         words. The full sentence — what is actually lost — lives on the licence page, where there is room
         to say it once, properly.</p>
@@ -839,7 +1117,7 @@
           <div class="hb-body">
             <p class="hb-fact"><b><a class="gb-lic" href="#">On-prem HQ</a> is blocked</b> &mdash; 2 production instances running, 1 allowed.</p>
             <p class="hb-todo">Raise the limit or deactivate the extra instance. The license checks in hourly and unblocks at the next check.</p>
-            <div class="hb-acts"><button class="gb-act">Manage</button><a class="gb-act sec" href="#">Deactivate an instance</a></div>
+            <div class="hb-acts"><button class="btn btn--primary btn--sm gb-act">Manage</button><a class="btn btn--secondary btn--sm gb-act" href="#">Deactivate an instance</a></div>
           </div>
         </div>
       </div>
@@ -849,7 +1127,7 @@
           <div class="hb-body">
             <p class="hb-fact"><b><a class="gb-lic" href="#">On-prem HQ</a> is blocked</b> &mdash; 2 production instances running, 1 allowed.<a class="gb-lic hb-more" href="#">and 3 more</a></p>
             <p class="hb-todo">Raise the limit or deactivate the extra instance. The license checks in hourly and unblocks at the next check.</p>
-            <div class="hb-acts"><button class="gb-act">Manage</button><a class="gb-act sec" href="#">Deactivate an instance</a></div>
+            <div class="hb-acts"><button class="btn btn--primary btn--sm gb-act">Manage</button><a class="btn btn--secondary btn--sm gb-act" href="#">Deactivate an instance</a></div>
           </div>
         </div>
       </div>
@@ -924,6 +1202,69 @@
         the host page&rsquo;s controls switched off is not a slice.</b> Columns are unchanged: instance ·
         licence · last check-in · version · status. <b>Nothing about plans or money lives here</b> — that
         is what the licence row is for.</p>
+      <p class="sg-note"><b>Two views, and they do not have the same columns.</b> A switcher on the
+        page&rsquo;s own toolbar picks
+        between a <b>flat list</b> (instance · licence · last check-in · version · status) and
+        <b>grouped by licence</b> (instance · status · version · last check-in). Grouped drops the
+        <b>License</b> column because the heading above the rows <em>is</em> the licence &mdash; printing
+        it again on every row is the duplication the grouping exists to remove.
+        <span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <b>It grouped by PRODUCT until 2026-09-25</b>, and that version argued for itself
+        here: a licence names itself in every row, so grouping by it would print the same string twice.
+        The reversal answers that argument rather than ignoring it &mdash; the column is gone, so the name
+        is printed once. <b>Product grouping was not kept as a third option</b>; two groupings would be
+        two lists again.</p>
+      <p class="sg-note"><b>The switcher is on the toolbar, and it used to be in the settings panel.</b>
+        It sits <b>after the spacer</b>, beside Refresh: the controls on the left narrow the list and this
+        one does not, so the toolbar reads as filters then presentation.
+        <span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <b>It is not a chip pair</b>, though one is right beside it &mdash; a chip group
+        means &ldquo;this is filtering&rdquo; on both pages that carry one, and borrowing it for a choice
+        that filters nothing would teach the chips to mean two things. Real radios, at the toolbar&rsquo;s
+        one height (<code class="sg-cls">--btnH</code>).
+        <span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <b>The choice is still stored</b> under the same <code class="sg-cls">instView</code>
+        key, so it survives a reload and resets with the demo. Only the control moved.</p>
+      <p class="sg-note"><b>The first group is open, the rest are closed.</b> Opening with everything
+        expanded printed nineteen rows under fourteen headings &mdash; the flat list with headings in it;
+        opening with everything closed would answer &ldquo;which licences do I have&rdquo;, which is the
+        Licenses page&rsquo;s question. One open group does both: the view opens showing instances and
+        still says what a row looks like.
+        <span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <b>Untouched is not the same as closed.</b> The state holds only the groups a reader
+        has actually toggled; everything else falls through to the index rule. That is what lets the first
+        group be closed by hand and <em>stay</em> closed &mdash; a boolean default would re-open it on the
+        next repaint.
+        <span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <b>The state is not stored.</b> It is where a reader happens to be looking, not a
+        setting; a collapsed group surviving a reload would be a licence quietly missing from the list
+        with no sign of why.
+        <span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <b>A search forces every group open.</b> Rows are filtered in the DOM, so a hit
+        inside a collapsed group would be filtered into a row that was never rendered &mdash; the search
+        would report nothing and be right about the DOM and wrong about the account. Headings whose every
+        row was filtered out hide with them.
+        <span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <b>Grouping and paging cannot both be on</b>, and grouping wins: a page of ten rows
+        cut from the middle would show a heading that states a group it is not showing.</p>
+      <p class="sg-note"><b>A group is one outline, not a run of rows.</b> Each group is a box with an
+        <b>8px radius</b> and a stroke that starts at the heading and closes under the last instance in
+        it; groups are separated by space, not by a rule. <b>Nothing inside is indented and nothing gains
+        padding</b> &mdash; the subordinate rows keep the cell padding every other row has, and the
+        outline simply continues down past them.
+        <span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <b>It is drawn from the CELLS.</b> A table cannot take a border per group, so the
+        sides come from the first and last cell of every row, the top from the heading and the bottom from
+        the row marked <code class="sg-cls">.is-last</code>. That class is <b>emitted</b>, never
+        <code class="sg-cls">:last-child</code>: the last row of a group is only the table&rsquo;s last
+        child in the final group, and search hides rows without removing them.
+        <span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <code class="sg-cls">border-collapse:separate</code> is a <b>precondition</b>, not a
+        preference &mdash; a collapsed border is a single edge shared by two cells and a radius on it is
+        ignored outright. The flat list keeps <code class="sg-cls">collapse</code>, so the mode lives on
+        the table element.
+        <span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <b>The gap between groups is a spacer row.</b> <code class="sg-cls">margin</code>
+        does nothing on a <code class="sg-cls">&lt;tr&gt;</code> and
+        <code class="sg-cls">border-spacing</code> is uniform &mdash; it would push the rows <em>inside</em>
+        a group apart by the same amount and undo the grouping.
+        <span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <b>On the phone the group closes and becomes a heading.</b> Every row is already its
+        own card at that width, so an open group would be a stroke that runs past the heading and stops in
+        mid-air with the cards outside it. A labelled band over a stack of cards; no cards inside cards.</p>
+      <p class="sg-note"><b>The id carries a ghost copy button</b>
+        (<code class="sg-cls">.ghostbtn.inst-copy</code>), the same one the licence panel&rsquo;s instance
+        table has always had. The id is a 36-character uuid that the cell ellipsizes, so the clipboard is
+        the only way to get all of it, and the row menu was the only route to the clipboard.</p>
       <p class="sg-note"><b>It filters by the one thing an instance has.</b> The Licenses toolbar filters
         by product type and by cancellation, and an instance has neither — which is exactly why both stood
         down when this was a view on that page. What an instance does have is the state its own column
@@ -1039,7 +1380,7 @@
       <div class="sg-static" style="min-height:96px">
         <div class="snack on" style="position:static;transform:none;margin:0 auto;max-width:420px">
           <span class="snack-t">Invitations sent to 3 people</span>
-          <button type="button" class="snack-x" aria-label="Dismiss"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-x"></use></svg></button>
+          <button type="button" class="btn btn--ghost btn--sm btn--icon snack-x" aria-label="Dismiss"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-x"></use></svg></button>
         </div>
       </div>
     </div>
@@ -1064,7 +1405,7 @@
       <div class="sg-static">
         <div class="setcard" style="margin-top:0">
           <div class="field"><label for="sgSave1">Company name</label><input id="sgSave1" type="text" value="ThingsBoard"></div>
-          <button class="btn" type="button">Save</button><span class="savednote">Saved &middot; 14:32</span>
+          <button type="button" class="btn btn--primary btn--md">Save</button><span class="savednote">Saved &middot; 14:32</span>
         </div>
       </div>
     </div>
@@ -1118,7 +1459,7 @@
             <tr><td colspan="5" class="eb-cell"><div class="emptybox eb">
               <div class="eb-t">No licenses yet.</div>
               <p class="eb-p">Buy a license to get a key for your ThingsBoard or TBMQ instance.</p>
-              <div class="eb-a"><button class="btn" type="button">Buy a license</button></div>
+              <div class="eb-a"><button type="button" class="btn btn--primary btn--md">Buy a license</button></div>
             </div></td></tr>
           </tbody></table></div></div>
           <span class="sg-cls">.emptybox.eb with a primary</span>
@@ -1166,7 +1507,7 @@
           <p class="solo-line">You&rsquo;re the only person with access. Invite users by sending link to the e-mail or copy invite link and send directly.</p>
           <div class="inviterow">
             <input type="email" class="invite-in" placeholder="name@company.com, another@company.com" aria-label="Emails to invite">
-            <button class="btn invite-go" type="button">Invite</button>
+            <button type="button" class="btn btn--primary btn--md invite-go">Invite</button>
           </div>
           <p class="invite-note">Anyone you invite gets full access to your licenses, invoices and payment method.</p>
         </div>

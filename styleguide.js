@@ -23,12 +23,41 @@ var COLORS = [
   ['--hover',      'hover wash'],
   ['--sel',        'selected nav item']
 ];
-$('#sgColors').innerHTML = COLORS.map(function(c){
-  return '<div class="sg-swatch">'
-    + '<div class="chip-fill" style="background:' + CSSVAR(c[0]) + '"></div>'
-    + '<div class="sg-meta"><b>' + c[0] + '</b><span>' + CSSVAR(c[0]) + ' · ' + c[1] + '</span></div>'
-    + '</div>';
-}).join('');
+/* ⚠️ THE COLOURED LAYER IS LISTED SEPARATELY, and it is listed at all because this page
+   claimed token swatches "cannot drift from the values the product uses" while the list
+   above was curated by hand — the three selling-surface exceptions had never appeared on
+   it, and the status colours would have been the fourth omission. Two rows now: what the
+   value IS, and what it is FOR.
+   ⚠️ A PRIMITIVE IS SHOWN AS ITS OWN ROW, dimmed by its label rather than by a rule: it
+   is not a colour any component may read, and a page that shows it beside the meanings
+   without saying so teaches exactly the mistake the two layers exist to prevent. */
+var COLORS_PRIMITIVE = [
+  ['--c-green-600', 'primitive — read only by a meaning below'],
+  ['--c-red-600',   'primitive — read only by a meaning below'],
+  ['--c-grey-600',  'primitive — read only by a meaning below']
+];
+var COLORS_MEANING = [
+  ['--status-ok',    'healthy, current, running as intended'],
+  ['--status-alert', 'needs doing — failed charge, release behind'],
+  ['--status-off',   'switched off rather than wrong — cancelled, ended'],
+  ['--accent',       'Popular card ring and tag — LITERAL, not through a primitive'],
+  ['--tick',         'plan-card ticks — points at --accent'],
+  ['--page-bg',      'Home ground under the mesh — LITERAL, not through a primitive']
+];
+function sgSwatches(list){
+  return list.map(function(c){
+    return '<div class="sg-swatch">'
+      + '<div class="chip-fill" style="background:' + CSSVAR(c[0]) + '"></div>'
+      + '<div class="sg-meta"><b>' + c[0] + '</b><span>' + CSSVAR(c[0]) + ' · ' + c[1] + '</span></div>'
+      + '</div>';
+  }).join('');
+}
+$('#sgColors').innerHTML = sgSwatches(COLORS);
+/* ⚠️ `CSSVAR` resolves the COMPUTED value, so a meaning that points at a primitive
+   (or at another meaning, as --tick points at --accent) prints the colour it actually
+   paints — the indirection is documented in the prose, not hidden by the swatch. */
+if($('#sgColorsPrim')) $('#sgColorsPrim').innerHTML = sgSwatches(COLORS_PRIMITIVE);
+if($('#sgColorsMeaning')) $('#sgColorsMeaning').innerHTML = sgSwatches(COLORS_MEANING);
 
 /* ---------- type scale ----------
    Three groups, because the prototype really does render three. The BASE tier
@@ -296,7 +325,6 @@ $$('#sgWizStep').forEach(function(box){
         + ' no sample for <code class="sg-cls">' + k + '</code></p></div>';
       var rec = { type:k, ts:TS, actor:d[0], f:d[1] };
       if(d[2]) rec.detail = d[2];
-      if(k === 'instance.checks_grouped') rec.fold = true;   // the one disclosure left
       /* ⚠️ BOTH SCOPES, and only when they differ — a second copy of an identical
          sentence would teach the opposite of the rule it is there to show. */
       var lic = activitySentence(rec, 'license'), glob = activitySentence(rec, 'global');
@@ -309,15 +337,107 @@ $$('#sgWizStep').forEach(function(box){
               + activityEntry(rec, 'license', pre + n + 'L') + '</div>')
         + '</div>';
     }).join('');
-    wireFeedAudit('.sg-actlist[data-actgroup="' + pre + '"]');
   });
+
+  /* ---------- the gap specimen: two runs and the hole between them ----------------
+     ⚠️ THE ONLY CONSTRUCTED PAIR ON THIS PAGE, and it has to be: a gap is a relationship
+     BETWEEN two entries, so no single sample from `ACTIVITY_TEXT` can render it. The
+     records are the same shape `foldChecks` emits — same type, same `f` — and they go
+     through `activityList` like every real feed, so what is shown is the component and
+     not a drawing of it.
+     ⚠️ The numbers are chosen to BE a gap: the older run ends 18:10, the newer begins
+     20:10, and 19:10 is the slot nothing arrived for. Whoever edits these must keep the
+     hole; two runs an hour apart would silently become one continuous story. */
+  (function(){
+    var host = $('#sgActGap'); if(!host) return;
+    var mk = function(count, from, to, ts){
+      return { type:'instance.checks_grouped', ts:ts,
+               f:{ entity:'Factory A', count:count, from:from, to:to } };
+    };
+    host.innerHTML = activityList([
+      mk(4, 'Sep 23, 2026, 20:10', 'Sep 23, 2026, 23:10', 'Sep 23 2026, 23:10'),
+      mk(5, 'Sep 23, 2026, 14:10', 'Sep 23, 2026, 18:10', 'Sep 23 2026, 18:10')
+    ], 'global', 'gap');
+  })();
 })();
 
-/* ---------- the two live demos on this page ---------- */
-// the loading button keeps spinning; the split button shows its menu behaviour
-$('#sgSplit').addEventListener('click', function(e){ e.preventDefault(); openStub('Split button'); });
-// tables and menus on this page use the same delegated handlers as the product,
-// so the row kebab opens for real — nothing extra to wire
+/* ---------- the button matrix: variants down, states across ---------------------
+   ⚠️ EVERY CELL IS `button()`. Nothing here draws a button — the page asks the
+   component for one per cell, which is what makes the matrix a test rather than a
+   picture of one. If a combination stops rendering, this page stops rendering it too.
+   ⚠️ HOVER, FOCUS AND PRESSED CANNOT BE FAKED with a class, because the component does
+   not have one for them — they are `:hover`, `:focus-visible` and `:active`, and the
+   browser owns all three. The matrix renders a real button in each cell and LABELS the
+   column; you read those three with a pointer and a Tab key, which is the only honest
+   way to show a state the markup does not carry. Enabled, disabled and busy are real
+   arguments and render as themselves. */
+(function(){
+  var head = $('#sgBtnHead'), body = $('#sgBtnBody');
+  if(!head || !body) return;
+  var STATES = [
+    ['enabled',  {}],
+    ['hovered',  {}],
+    ['focused',  {}],
+    ['pressed',  {}],
+    ['disabled', { disabled:true }],
+    ['busy',     { busy:true }]
+  ];
+  var VARIANTS = ['primary','secondary','text','ghost','menu'];
+  head.innerHTML = '<tr><th>Variant</th>'
+    + STATES.map(function(s){ return '<th>' + s[0] + '</th>'; }).join('')
+    + '<th>icon only</th></tr>';
+  body.innerHTML = VARIANTS.map(function(v){
+    var labelled = STATES.map(function(st){
+      /* menu refuses a label — the component drops it, and the cell shows what you
+         actually get rather than pretending the combination exists */
+      var o = { variant:v, size:'md', label:'Label', icon:(v==='menu'?'dots-vertical':null) };
+      for(var k in st[1]) o[k] = st[1][k];
+      if(v === 'menu'){ o.label = ''; o.ariaLabel = 'More actions'; }
+      return '<td>' + button(o) + '</td>';
+    }).join('');
+    var only = button({ variant:v, size:'md',
+      icon:(v === 'menu' ? 'dots-vertical' : 'plus'),
+      ariaLabel:(v === 'menu' ? 'More actions' : 'Add') });
+    return '<tr><th scope="row">' + v + '</th>' + labelled
+      + '<td class="sg-btnonly">' + only + '</td></tr>';
+  }).join('');
+
+  $('#sgBtnSizes').innerHTML = ['sm','md','lg'].map(function(z){
+    return '<div class="sg-cell">' + button({ variant:'primary', size:z, label:'Label' })
+      + button({ variant:'secondary', size:z, icon:'plus', ariaLabel:'Add' })
+      + '<span class="sg-cls">' + z + '</span></div>';
+  }).join('');
+
+  $('#sgBtnTone').innerHTML = ['primary','secondary','text'].map(function(v){
+    return '<div class="sg-cell">'
+      + button({ variant:v, size:'md', label:'Delete', tone:'destructive' })
+      + '<span class="sg-cls">' + v + ' &middot; destructive</span></div>';
+  }).join('');
+
+  $('#sgBtnBusy').innerHTML = '<div class="sg-cell">'
+      + button({ variant:'primary', size:'md', label:'Confirm purchase', busy:true })
+      + '<span class="sg-cls">busy &mdash; the hidden label is holding the width</span></div>'
+    + '<div class="sg-cell">'
+      + button({ variant:'secondary', size:'md', icon:'refresh', ariaLabel:'Refresh', busy:true })
+      + '<span class="sg-cls">busy &middot; icon only</span></div>'
+    + '<div class="sg-cell">'
+      + button({ variant:'primary', size:'md', label:'Confirm purchase', disabled:true })
+      + '<span class="sg-cls">disabled &mdash; same button, different statement</span></div>';
+})();
+
+/* ⚠️⚠️ `#sgSplit` IS GONE, AND SO IS THE UNGUARDED LOOKUP THAT KILLED THE PAGE.
+   It was the split-button demo inside the old Buttons section. When that section was
+   replaced by the matrix the element went with it, and this line — `$('#sgSplit')`
+   with no null check — threw on load. Everything after it in this file stopped running,
+   INCLUDING the rail that builds the side navigation, so the design system lost its
+   navigation and fourteen of its twenty-one pages. The page still looked fine at the
+   top, which is why it was reported as "the navigation went somewhere" rather than as a
+   crash.
+   ⚠️ THE LESSON IS THE GUARD, not the element. Every other block in this file opens with
+   `var host = $('#…'); if(!host) return;`. This one line did not, and one line was
+   enough. A page whose markup is edited by hand cannot have a script that assumes it.
+   Tables and menus on this page use the product's delegated handlers, so the row kebab
+   opens for real — nothing to wire here. */
 
 /* ---------- the icon set, rendered from the sprite itself ----------------------
    ⚠️ Read from `assets/icons.svg`, not from a list typed here. A hand-kept inventory
