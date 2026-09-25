@@ -145,9 +145,43 @@ $('#sgSpace').innerHTML = SPACE.map(function(s){
 $('#sgProducts').innerHTML = nlProductStatedHTML({});
 
 /* ---------- wizard stepper inside the modal specimen ---------- */
-$('#sgWizStep').innerHTML = '<div class="nl-progress">'
-  + '<div class="nl-ptrack"><span class="nl-pfill" style="width:25%"></span></div>'
-  + '<div class="nl-plabel">Step 1 of 4 · <b>Choose your plan</b></div></div>';
+/* ⚠️ THE STEPPER SPECIMEN IS HAND-BUILT, and it is the one place on this page that is.
+   `renderSteps` lives inside the wizard's IIFE and reads the open flow's own state, so
+   there is nothing to call from here — a specimen would have to open a purchase to draw
+   one. The markup below is copied from it; if the classes change, this changes. */
+$$('#sgWizStep').forEach(function(box){
+  var S = [['Choose your plan','Product, billing model and plan'],
+           ['Capacity','Devices, instances and AI credits'],
+           ['Add-ons','Optional features for this license'],
+           ['Review & pay','Check what you are buying']];
+  var here = 1;                                   // done · CURRENT · upcoming · upcoming
+  box.innerHTML = '<div class="nl-steps">' + S.map(function(d, n){
+    var done = n < here, cur = n === here;
+    var mark = done
+      ? '<span class="nl-smark is-done">' + icon('check') + '</span>'
+      : '<span class="nl-smark' + (cur ? ' is-cur' : '') + '">' + ('0' + (n + 1)).slice(-2) + '</span>';
+    return '<div class="nl-step' + (done ? ' is-done' : '') + (cur ? ' is-cur' : '') + '">'
+      + mark + '<span class="nl-stxt"><span class="nl-sname">' + esc(d[0]) + '</span>'
+      + '<span class="nl-sdesc">' + esc(d[1]) + '</span></span></div>';
+  }).join('') + '</div>';
+});
+
+/* ---------- the licence table, both layouts, from the same rows ------------------
+   ⚠️ RENDERED BY THE PRODUCT'S OWN BUILDERS, not by markup typed here — and by BOTH of
+   them explicitly, rather than through `licRowHTML`. The dispatcher follows the ⚙
+   setting, which would make this page show the same table twice whenever the setting
+   was flipped; a page documenting a comparison has to be the one place the setting does
+   not reach. */
+(function(){
+  var rows = (DATASETS.B && DATASETS.B.licenses ? DATASETS.B.licenses : []).slice(0, 5);
+  if(!rows.length) return;
+  var ha = $('#sgLicHeadA'), ba = $('#sgLicBodyA'), hb = $('#sgLicHeadB'), bb = $('#sgLicBodyB');
+  if(ha) ha.innerHTML = headHtml();
+  if(ba) ba.innerHTML = rows.map(function(p){ return rowHtml(p, { noLabelEdit:true }); }).join('');
+  if(hb) hb.innerHTML = headHtmlB();
+  /* B's own sort is part of B, so the specimen shows the order it actually produces */
+  if(bb) bb.innerHTML = licSortB(rows).map(function(p){ return rowHtmlB(p, { noLabelEdit:true }); }).join('');
+})();
 
 /* ---------- ACTIVITY: every type, from the one component -----------------------
    ⚠️ THE LIST IS DRIVEN BY `ACTIVITY_TEXT`, not written out here. Iterating the map is
@@ -234,11 +268,25 @@ $('#sgWizStep').innerHTML = '<div class="nl-progress">'
       'Replacing it.']
   };
   var TS = 'Sep 13 2026, 07:12';
+  /* ⚠️ THE SHAPE IS DERIVED, NOT DECLARED. Grouping by hand would be a second list to
+     keep in step with the first, and the first is `ACTIVITY_TEXT`, which grows. A type
+     lands in a group because of what its sample actually renders — a detail array, a
+     missing actor, the fold flag — so a new type cannot be filed wrongly, only filed. */
+  function actShape(k){
+    var d = S[k];
+    if(k === 'instance.checks_grouped') return 'fold';
+    if(!d) return null;                        // no sample: reported as a gap, below
+    if(d[2]) return 'detail';
+    if(!d[0]) return 'system';
+    return 'plain';
+  }
   $$('.sg-actlist').forEach(function(box){
-    var pre = box.getAttribute('data-actgroup');
+    var pre = box.getAttribute('data-actshape');
     var keys = Object.keys(ACTIVITY_TEXT).filter(function(k){
-      var p = k.split('.')[0];
-      return p === pre || (pre === 'user' && p === 'account');
+      var sh = actShape(k);
+      /* a type with no sample has no shape either — it is shown once, in the first
+         group, as the gap it is, rather than vanishing from the page entirely */
+      return sh === pre || (sh === null && pre === 'plain');
     });
     box.innerHTML = keys.map(function(k, n){
       var d = S[k];
@@ -307,4 +355,81 @@ $('#sgSplit').addEventListener('click', function(e){ e.preventDefault(); openStu
     if(h) h.insertAdjacentHTML('afterend',
       '<p class="sg-note sg-spritecount"><b>' + ids.length + ' icons</b> in the sprite.</p>');
   });
+})();
+
+/* ============================================================================
+   sgRouter — the rail, and one component per page
+   ============================================================================
+   ⚠️ THE PAGES ARE THE SECTIONS THAT ARE ALREADY IN THE FILE. Nothing is listed twice:
+   the rail is built by reading `.sg-sec` out of the document, so a section added to
+   styleguide.html appears in the rail on the next load and a section removed disappears
+   with it. The old `.sg-toc` was a hand-typed list and had already drifted — it linked
+   to `#solo`, `#snack`, `#sheet` and four others that were not sections at all.
+
+   ⚠️ SEVEN ITEMS ARE PROMOTED TO PAGES OF THEIR OWN, and they are promoted HERE rather
+   than re-nested in the HTML. They were `.sg-item`s inside `#empty`, which had become a
+   drawer: an empty state, a bottom sheet, a snackbar and the Home banner are four
+   different components that shared a section only because nobody had moved them out.
+   Moving the node at boot costs ten lines and no edit to the specimens; re-nesting the
+   markup would have been a 400-line diff across things that work.
+   ⚠️ `stickyblock` is NOT promoted — it is a behaviour OF the table, and a page about it
+   with no table on it would document nothing.
+
+   ⚠️ Hiding is `hidden`, not a class, so a page that is not on screen is out of the
+   accessibility tree too — a rail that says "one page" while a screen reader walks
+   twenty-one is not one page. */
+(function(){
+  var wrap = $('.sg-main'), nav = $('#sgNav');
+  if(!wrap || !nav) return;
+
+  /* [id, label] — the label is what the rail shows; the page keeps its own heading */
+  var PROMOTE = ['infoicon', 'alerticon', 'homebanner', 'instancesview', 'messages', 'sheet', 'snack', 'solo'];
+  PROMOTE.forEach(function(id){
+    var item = document.getElementById(id);
+    if(!item || item.classList.contains('sg-sec')) return;
+    var sec = document.createElement('section');
+    sec.className = 'sg-sec';
+    sec.id = id;
+    item.removeAttribute('id');
+    item.parentNode.insertBefore(sec, item.nextSibling);
+    sec.appendChild(item);
+    wrap.appendChild(sec);                      // out of its old host, into the page list
+  });
+
+  var pages = $$('.sg-main .sg-sec');
+  /* ⚠️ A RAIL LABEL IS A NAME, NOT A SENTENCE. Three of the promoted items carry headings
+     written to be read above a specimen — "Where a message goes — two places, one rule
+     each" — which is right there and wrong in a 240px rail. Overridden by id; every other
+     page still takes its own heading, so nothing has to be kept in step. */
+  var LABEL = { messages:'Messages', homebanner:'Home banner', instancesview:'Instances view',
+                infoicon:'Info icon', alerticon:'Alert icon', sheet:'Bottom sheet',
+                snack:'Snackbar', solo:'Solo state' };
+  function labelOf(sec){
+    if(LABEL[sec.id]) return LABEL[sec.id];
+    var h = sec.querySelector('h2, h3');
+    /* the class chip inside a heading is a caption, not part of the name */
+    var t = h ? h.cloneNode(true) : null;
+    if(t) $$('.sg-cls', t).forEach(function(n){ n.remove(); });
+    return (t ? t.textContent : sec.id).trim().replace(/\s+/g, ' ');
+  }
+  nav.innerHTML = pages.map(function(sec){
+    return '<a href="#' + sec.id + '" data-sgpage="' + sec.id + '">' + esc(labelOf(sec)) + '</a>';
+  }).join('');
+
+  function show(id){
+    var found = pages.some(function(s){ return s.id === id; });
+    if(!found) id = pages[0] && pages[0].id;
+    pages.forEach(function(s){ s.hidden = s.id !== id; });
+    $$('#sgNav a').forEach(function(a){
+      var on = a.getAttribute('data-sgpage') === id;
+      a.classList.toggle('on', on);
+      /* `aria-current`, not just a class: the rail is a nav, and "which one am I on" is
+         the one thing a nav has to say to something that cannot see the highlight */
+      if(on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
+    });
+    var sc = $('#shellMain');
+    if(sc) sc.scrollTop = 0;
+  }
+  show((location.hash || '').replace('#', ''));
+  window.addEventListener('hashchange', function(){ show(location.hash.replace('#', '')); });
 })();

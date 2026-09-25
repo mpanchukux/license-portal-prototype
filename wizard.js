@@ -12,10 +12,10 @@
 
 /* ---------- markup, injected once per page ---------- */
 var WIZARD_HTML = ''
-+ '<div class="fs-screen" id="nlModal" role="dialog" aria-modal="true" aria-label="New license" hidden>'
++ '<div class="fs-screen" id="nlModal" role="dialog" aria-modal="true" aria-label="Buy a license" hidden>'
 + '  <div class="fs-box">'
 + '    <div class="fs-header">'
-+ '      <h2 class="fs-maintitle" id="nlTitle">New subscription</h2>'
++ '      <h2 class="fs-maintitle" id="nlTitle">Buy a license</h2>'
 + '      <span class="spacer"></span>'
 + '      <div class="fs-headactions">'
 + '        <button class="fs-close" id="nlClose" aria-label="Close"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-x"></use></svg></button>'
@@ -548,18 +548,49 @@ var NL = (function(){
   /* A free plan commits from the Review step and pays nothing, so the step must not be
      called "Review & pay" — there is no pay. */
   function reviewLabel(){ return isFree() ? 'Review' : 'Review & pay'; }
+  /* ⚠️ ONE LINE EACH, AND THEY SAY WHAT THE STEP ASKS FOR — not what it is called a
+     second time. "Plan · Choose a plan" would be the label twice; what the reader wants
+     from a stepper they can see all of is "which one holds the thing I am looking for". */
+  function stepDesc(k){
+    if(k === 'pick')     return 'Product, billing model and plan';
+    if(k === 'capacity') return 'Devices, instances and AI credits';
+    if(k === 'addons')   return 'Optional features for this license';
+    if(k === 'review')   return isFree() ? 'Check what you are getting'
+                                         : 'Check what you are buying';
+    return 'Card and billing details';
+  }
+  /* ---- the stepper (2026-09-25, from a reference) --------------------------------
+     ⚠️ EVERY STEP IS ON SCREEN, with its name and its description. It was a progress
+     line plus "Step 2 of 4 · Capacity": that says where you are and nothing about where
+     you are going, which on a flow whose length CHANGES with the plan is the half that
+     matters — a free plan has three steps and a perpetual with add-ons has five, and the
+     old bar could only tell you the number after you had committed to the plan.
+     ⚠️ THE LIST IS `steps()`, so it still cannot disagree with the flow. Nothing here
+     knows how many steps there are.
+     ⚠️ DONE STEPS ARE NOT CLICKABLE, and that is deliberate rather than unfinished: a
+     stepper you can see all of invites clicking, but jumping backwards has to decide
+     what happens to what was entered after the target — and that is a flow decision, not
+     a stepper one. Back still moves one step at a time and is the only way back. */
   function renderSteps(){
-    // Back is an icon button here, right before the step label — the footer no
-    // longer carries it (and the Customize steps have no footer at all)
     var back = !isFirstStep()
       ? '<button class="iconbtn ib nl-stepback" id="nlStepBack" aria-label="Back" title="Back">'
         + '<svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-left"></use></svg></button>'
       : '';
-    var i = stepIdx() + 1, n = totalSteps();
-    $('#nlSteps').innerHTML = '<div class="nl-progress">'
-      + '<div class="nl-ptrack"><span class="nl-pfill" style="width:' + (i / n * 100) + '%"></span></div>'
-      + '<div class="nl-plabel">' + back
-      + '<span>Step ' + i + ' of ' + n + ' · <b>' + stepLabel(st.step) + '</b></span></div></div>';
+    var here = stepIdx();
+    var items = steps().map(function(k, n){
+      var done = n < here, cur = n === here;
+      var mark = done
+        ? '<span class="nl-smark is-done">' + icon('check') + '</span>'
+        : '<span class="nl-smark' + (cur ? ' is-cur' : '') + '">'
+          + ('0' + (n + 1)).slice(-2) + '</span>';
+      return '<div class="nl-step' + (done ? ' is-done' : '') + (cur ? ' is-cur' : '') + '"'
+        + (cur ? ' aria-current="step"' : '') + '>'
+        + mark
+        + '<span class="nl-stxt"><span class="nl-sname">' + esc(stepLabel(k)) + '</span>'
+        +   '<span class="nl-sdesc">' + esc(stepDesc(k)) + '</span></span>'
+        + '</div>';
+    }).join('');
+    $('#nlSteps').innerHTML = back + '<div class="nl-steps">' + items + '</div>';
   }
 
   /* ---- step 1 — choose your product and plan ------------------------------
@@ -1830,7 +1861,7 @@ var NL = (function(){
       gotoStep('pick');
     } else {
       // the billing type is chosen inside step 1 now, so the title stays neutral
-      setWizardTitle('New license', '', '');
+      setWizardTitle('Buy a license', '', '');
       // a preselected plan (picked on the landing page) skips the picker it already answered
       gotoStep(opts.startStep && st.plan ? (steps()[0] === 'pick' ? steps()[1] : steps()[0]) : 'pick');
     }

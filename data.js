@@ -685,7 +685,14 @@ var EC_PLANS = {
          word for word the first two feature rows directly beneath it. A qualifier that
          repeats the list it introduces is not a qualifier; it is the same fact printed
          twice on one card. The rows say it, so the term line went. */
-      { name:'Free',           price:'Free', per:'', free:true,
+      /* ⚠️ `$0` AND A CADENCE, not the word `Free` (2026-09-25, by request). This
+         reverses the badge treatment: `Free` was a badge because as plain text it sat in
+         the line where the paid cards carry a 28px number and read as a price that had
+         failed to load. A number solves that on its own terms — the row now lines up
+         with the other four because it IS the same shape, not because it borrows one.
+         `free:true` is untouched: it still gates the billing step, the total and the
+         payment method, and none of that is about what the card prints. */
+      { name:'Free',           price:'$0', per:'/ month', free:true,
         feats:['100 devices', '100 assets', '1 prod instance', '1M AI credits / mo'] },
       /* ⚠️ `deviceNote` is a NOTE ON THE DEVICES ROW, not a feature of its own. As a
          seventh bullet "Device limit is fixed on this plan" sat below White labeling,
@@ -900,13 +907,17 @@ var PRODUCT_LOGO = {
 
    ⚠️ Falls back to the plain product logo, never to nothing: an unknown combination
    (a new product, a kind nobody added a square for) must still mark its row. */
+/* ⚠️ SVG SINCE 2026-09-25, and the extension is the whole fix. The first set was 44x44
+   PNG sitting in a 40px box on a 2x screen and a 53px card on a phone — a 1.8x upscale on
+   the desktop and 2.4x on the phone, which is exactly what "the icons look soft" was.
+   A vector has no native size to be upscaled past. Same six names, same keys. */
 var LICENSE_MARK = {
-  'ThingsBoard|Subscription': 'assets/TB_Subscription.png',
-  'ThingsBoard|Perpetual':    'assets/TB_Perpetual.png',
-  'ThingsBoard|Grant':        'assets/TB_Grant.png',
-  'ThingsBoard|Free':         'assets/TB_Free.png',
-  'TBMQ|Subscription':        'assets/TBMQ_Subscription.png',
-  'TBMQ|Perpetual':           'assets/TBMQ_Perpetual.png'
+  'ThingsBoard|Subscription': 'assets/TB_Subscription.svg',
+  'ThingsBoard|Perpetual':    'assets/TB_Perpetual.svg',
+  'ThingsBoard|Grant':        'assets/TB_Grant.svg',
+  'ThingsBoard|Free':         'assets/TB_Free.svg',
+  'TBMQ|Subscription':        'assets/TBMQ_Subscription.svg',
+  'TBMQ|Perpetual':           'assets/TBMQ_Perpetual.svg'
 };
 function licenseMarkSrc(lic){
   if(!lic || typeof lic !== 'object') return null;
@@ -933,6 +944,11 @@ function productMark(product, cls){
 }
 
 /* the one arrow mark in the product: the wizard's change rows and the activity detail */
+/* ⚠️ A LABEL IS A NAME, NOT A DESCRIPTION (2026-09-25). 40 characters — long enough
+   for "Production — Central Europe cluster", short enough that a table cell can hold
+   one on a line. ⚠️ Four seeded labels predate this and run to 61; the cap refuses new
+   input but never truncates a stored value, so none of them lose text. */
+var LABEL_MAX = 40;
 var ARROW_IC = '<svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-arrow-right"></use></svg>';
 
 var EC_SINGLE_NOTE = 'You can fine-tune capacity before checkout.';
@@ -941,9 +957,16 @@ var EC_SINGLE_NOTE = 'You can fine-tune capacity before checkout.';
    entitlement half of the old sentence ("unlimited customers, dashboards, integrations,
    API calls, data points and messages") was the baseline written as prose, and it now
    lives in the baseline block where it is said once instead of twice. */
+/* ⚠️ THE PERPETUAL SENTENCE LOST ITS SECOND HALF (2026-09-25, by request). It read
+   "Pay once and run it indefinitely. Includes 12 months of software updates, renewable."
+   and is now four words. ⚠️⚠️ THE UPDATES FACT NOW APPEARS NOWHERE ON A SELLING SURFACE:
+   the perpetual card's own `term` line ("Including 1 year of software updates") was
+   removed on 2026-09-24, and this was the only other place that said it. Reported rather
+   than quietly kept — see the pass report. One string, both readers: this line is the
+   group's description AND the phone tab's, because it is one sentence about one thing. */
 var BILLING_MODE_NOTE = {
   subscription: 'Pay every month, and change the plan any time.',
-  perpetual:    'Pay once and run it indefinitely. Includes 12 months of software updates, renewable.'
+  perpetual:    'Pay once, no expiry.'
 };
 /* ---------- what expiry actually means on a perpetual --------------------------
    ⚠️ `PERPETUAL`, `Active` and `Expires Oct 01, 2026` sat next to each other and read

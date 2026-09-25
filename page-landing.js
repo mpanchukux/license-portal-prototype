@@ -14,7 +14,12 @@
 // the product is STATED here, and which one comes from arrival — see arrivedProduct()
 /* `statedInHead` — this page names the product in its own H1, so the shared picker
    must not state it a second time above the tabs (see nlProductStatedHTML). */
-var lsel = { product:arrivedProduct(), kind:'subscription', plan:null, statedInHead:true };
+/* `cta` — the ONE word this surface changes on the shared card. Signed out, a Select
+   selects nothing: there is no account yet, so the click opens sign-up and carries the
+   plan through it (see the `picked` branch below). Home's first-run screen keeps
+   `Select`, because there the click really does select. */
+var lsel = { product:arrivedProduct(), kind:'subscription', plan:null, statedInHead:true,
+             cta:'Get started' };
 
 var lChoices = $('#landingChoices'), lPlans = $('#landingPlans'),
     lExtra = $('#landingExtra');

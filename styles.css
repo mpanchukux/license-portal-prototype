@@ -18,6 +18,19 @@
   --line:#c9c9c9; --line2:#e2e2e2; --bg:#f4f4f2; --card:#ffffff;
   --fill:#3d3d3d; --track:#e6e6e6;
   --chrome:#efefec; --chromeLine:#dcdcd8; --hover:#f0f0ee; --sel:#e4e4e0;
+  /* ⚠️ THE THIRD COLOUR EXCEPTION, and the first one INSIDE a component rather than
+     behind it. The wordmark and the licence marks are artwork; this is a mark the plan
+     cards draw themselves, in a colour the brief gave. It is a token rather than a
+     literal so the next reader can find every use of it in one grep — the audit found
+     421 literals bypassing the system and this was not going to be 422. */
+  /* ⚠️ 011A48 -> 1177BE (2026-09-25, by request), one day old and replaced. */
+  --tick:#1177BE;
+  /* ⚠️ GIVEN, NOT DERIVED (2026-09-25, second pass). It was #7BA3D8, computed from
+     --page-bg by keeping its hue and moving saturation and lightness; that is recorded
+     here because the method still holds if this one is ever recomputed. The value in use
+     is the one that was asked for. It is a dark navy, not a light blue, so it reads as a
+     line rather than as a tint — and the Popular badge takes white text on it. */
+  --accent:#06235C;
   /* The flat page ground the Home mesh gradient fades into. Named so the two
      candidates live in one place: cool near-white by default, cool beige beside it.
      ⚠️ Scoped to Home today (the only page with the gradient) — every other page is
@@ -70,6 +83,17 @@ body{
 }
 /* the feed's one emphasis style: .em, and <b> inside feed text maps onto it */
 .em,.fi-txt b{font-weight:var(--t-em-fw)}
+/* ---------- the named thing inside an activity sentence (2026-09-25) -------------
+   ⚠️ IT SITS IN THE TEXT FLOW, so everything about it is sized to a line of prose, not
+   to a control: the baseline does not move, the line-height does not grow, and a
+   sentence that wraps wraps around it. `inline` + padding rather than `inline-block`
+   for exactly that reason — an inline-block would set the line box's height and the
+   feed's rows would grow by a pixel or two each.
+   ⚠️ Quiet, because there can be two in one sentence ("Plan changed from A to B on C").
+   A chip per clause at full contrast would out-shout the verb that says what happened. */
+.fi-chip{display:inline;padding:1px 6px;margin:0 1px;border-radius:999px;
+  background:var(--sel);color:var(--ink);white-space:nowrap;
+  box-decoration-break:clone;-webkit-box-decoration-break:clone}
 /* the shared shell: the top bar (.dtopbar) stays put; every page's view scrolls here */
 /* The scroll region is a column so the footer can be pushed to its bottom edge:
    short pages end with the footer sitting on the bottom of the screen instead of
@@ -82,7 +106,10 @@ body{
 #shellMain > .shellfoot{margin-top:auto}
 /* global footer: quiet, muted, one line, aligned to the content container */
 .shellfoot{background:var(--bg);padding:6px 24px 22px}
-.shellfoot-in{max-width:var(--pageW);margin:0 auto;padding:0 var(--pageX);display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:14px;color:var(--faint)}
+/* centred, not left-aligned (2026-09-25): it is a row of four equal legal links with
+   nothing to align to — the content column above it starts at a gutter this row does
+   not share, so `left` was aligning it to an edge that is not there. */
+.shellfoot-in{max-width:var(--pageW);margin:0 auto;padding:0 var(--pageX);display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;font-size:14px;color:var(--faint)}
 .shellfoot-in .link{color:var(--faint)}
 .shellfoot-in .link:hover{color:var(--ink)}
 /* every page renders inside the same container: one max-width, centred, same
@@ -511,7 +538,14 @@ th.num,td.num{text-align:right}
    subtraction across a table. */
 .lic-ver{white-space:nowrap}
 .verline{display:flex;flex-direction:column;gap:2px;line-height:1.3}
-.ver-run{font-variant-numeric:tabular-nums}
+.ver-run{display:inline-flex;align-items:center;gap:6px;font-variant-numeric:tabular-nums}
+/* ⚠️ MONOCHROME, both of them. A tick and a warning are exactly where a colour system
+   would put green and amber, and this one may not: state is carried by shape and weight.
+   The two shapes are the whole difference — a closed tick reads as settled, an
+   exclamation as unfinished — and the quieter grey on the tick says "nothing to do
+   here" without a second colour. */
+.verm{display:inline-flex;flex:none;color:var(--faint)}
+.verm.is-behind{color:var(--ink)}
 .verline.is-behind .ver-run{font-weight:500}
 .ver-latest,.ver-mixed{font-size:13px;color:var(--faint);font-variant-numeric:tabular-nums}
 
@@ -1106,22 +1140,72 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
   .fs-screen[data-present="c"]{background:none;-webkit-backdrop-filter:none;backdrop-filter:none}
   .fs-screen[data-present="c"] .fs-box{
     width:100%;height:100%;max-width:none;border:0;border-radius:0;box-shadow:none}
-  /* both grown frames: band full width, band CONTENTS on the working column */
-  .fs-screen[data-present="b"] .fs-header,.fs-screen[data-present="c"] .fs-header,
-  .fs-screen[data-present="b"] .nl-plabel,.fs-screen[data-present="c"] .nl-plabel{
+  /* ⚠️ B KEEPS THE WORKING COLUMN, C NO LONGER DOES (2026-09-25, by request). The rule
+     was one: both grown frames put their band contents on the 1040px column so the
+     header lined up with the body beneath it. In C the frame IS the window, and a title
+     indented to a centred column inside a full-screen surface reads as a dialog that
+     failed to grow — so C's header spans the window with the portal bar's own 40px
+     gutter, title left and close right. B is untouched and still aligns to the column. */
+  .fs-screen[data-present="b"] .fs-header,
+  .fs-screen[data-present="b"] .nl-stepbar{
     padding-left:max(24px,calc((100% - var(--fs-work))/2 + 24px));
     padding-right:max(24px,calc((100% - var(--fs-work))/2 + 24px))}
+  /* 40px is the same number the portal's own top bar takes — see .dtopbar-inner. The
+     stepper follows it so the two bands share one left edge. */
+  .fs-screen[data-present="c"] .fs-header,
+  .fs-screen[data-present="c"] .nl-stepbar{padding-left:40px;padding-right:40px}
 }
 /* ---------- New license flow (stepped; rides the manage-modal chrome) ---------- */
 /* the stepper: a thin full-width track directly under the header hairline,
    then one padded label row — "Step N of 4 · Plan" */
-.nl-stepbar{flex:none;padding:0 0 10px;background:#fff;border-bottom:1px solid var(--line2)}
-.nl-progress{width:100%}
-.nl-ptrack{height:3px;background:var(--track);overflow:hidden}
-.nl-pfill{display:block;height:100%;background:var(--ink)}
-.nl-plabel{margin-top:9px;padding:0 24px;font-size:var(--t-small-fs);color:var(--mid);display:flex;align-items:center;gap:10px}
+/* ---------- the stepper: every step, named and described (2026-09-25) ------------
+   ⚠️ `.nl-progress` / `.nl-ptrack` / `.nl-pfill` / `.nl-plabel` ARE GONE with the
+   progress line they drew. Nothing else used them; if a thin progress bar is ever
+   wanted again it is a new thing, not these rules revived — the stepper below occupies
+   the band they lived in.
+   One row, one item per step, in a frame of its own so it reads as a map of the flow
+   rather than as the first row of the body. */
+.nl-stepbar{flex:none;display:flex;align-items:center;gap:10px;
+  padding:12px 24px;background:#fff;border-bottom:1px solid var(--line2)}
+.nl-stepbar > div{flex:1;min-width:0}
 .nl-stepback{flex:none}
-.nl-plabel b{color:var(--ink);font-weight:600}
+.nl-steps{display:flex;align-items:stretch;gap:4px;
+  border:1px solid var(--line2);border-radius:12px;padding:6px}
+.nl-step{flex:1;min-width:0;display:flex;align-items:center;gap:12px;
+  padding:8px 12px;border-radius:8px;color:var(--faint)}
+/* ⚠️ THE CURRENT STEP IS THE ONLY FILLED ONE. The reference fills it in the product's
+   accent; here the fill is ink, because this is chrome inside a monochrome product and
+   `--accent` is spent on the Popular card, where it means "we suggest this". A filled
+   step does not suggest anything — it says "you are here". */
+.nl-step.is-cur{background:var(--ink);color:#fff}
+.nl-step.is-done{color:var(--ink)}
+/* the number, or a tick once the step is behind you */
+.nl-smark{flex:none;display:inline-flex;align-items:center;justify-content:center;
+  width:34px;height:34px;border-radius:50%;border:1.5px solid var(--line);
+  font-size:14px;font-variant-numeric:tabular-nums;color:var(--faint)}
+.nl-step.is-cur .nl-smark{border-color:#fff;color:#fff}
+.nl-smark.is-done{border-color:var(--ink);background:var(--ink);color:#fff}
+.nl-smark .ic{width:var(--ic-16);height:var(--ic-16)}
+.nl-stxt{display:flex;flex-direction:column;min-width:0}
+.nl-sname{font-size:var(--t-small-fs);font-weight:500;line-height:1.25;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nl-step.is-done .nl-sname{color:var(--ink)}
+.nl-sdesc{font-size:14px;line-height:1.3;color:inherit;opacity:.75;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nl-step:not(.is-cur):not(.is-done) .nl-sname{color:var(--faint)}
+@media (max-width:900px){
+  /* the descriptions are the first thing to go: five of them across a narrow band
+     become five ellipses, which is a row of nothing */
+  .nl-sdesc{display:none}
+}
+@media (max-width:600px){
+  /* on a phone the map does not fit at all — the current step, named, is what is left */
+  .nl-steps{border:0;padding:0}
+  .nl-step{display:none}
+  .nl-step.is-cur{display:flex;background:transparent;color:var(--ink);padding:0}
+  .nl-step.is-cur .nl-smark{border-color:var(--line);color:var(--mid)}
+  .nl-sdesc{display:block;color:var(--mid)}
+}
 .nl-foot{flex:none;display:flex;align-items:center;gap:12px;padding:12px 24px;background:#fff;border-top:1px solid var(--line2)}
 .nl-foot[hidden]{display:none}
 .nl-foot .btn[hidden]{display:none}   /* .btn sets display, so [hidden] needs help */
@@ -1388,13 +1472,13 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
 .dtopbar{display:flex;flex:none;padding:0;background:var(--card);
   border-bottom:1px solid var(--line2)}
 /* ⚠️ THE BAR'S CONTENT LEAVES THE PAGE COLUMN (2026-09-24, by request), and that
-   reverses the note above it: the logo and the profile now sit 80px from the WINDOW's
+   reverses the note above it: the logo and the profile now sit 40px from the WINDOW's
    edges, not on the 1180 column the content below keeps. So the bar is deliberately no
    longer aligned with the page under it — that alignment was the whole argument for
    --pageW here, and it is the thing being traded away for a header that uses the width
    it has. The column below is untouched; only this row moved. */
 .dtopbar-inner{position:relative;display:flex;align-items:center;gap:14px;height:56px;
-  width:100%;margin:0;padding:0 80px;
+  width:100%;margin:0;padding:0 40px;
   background:transparent;border:0;border-radius:0}
 .dtopbar .sp{flex:1}
 .dbrand{display:flex;align-items:center;gap:10px}
@@ -1411,7 +1495,10 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
    set and the ratio still supplies the other; 32 in a 56px bar leaves 12 of air above
    and below, which is the floor before the lockup starts crowding the band.
    ⚠️ The phone bar is the same 56px and does not override this — checked, it fits. */
-.tblogo{height:32px;width:auto;aspect-ratio:1452.9/320;flex:none;color:var(--ink);display:block}
+/* ⚠️ RATIO UPDATED WITH THE FILE: 1824x243, not the old SVG's 1452.9x320. Height is
+   still the only dimension set; stating the ratio keeps an <img> in a flex line from
+   being stretched before it has loaded. `color` is gone — a raster ignores it. */
+.tblogo{height:32px;width:auto;aspect-ratio:1824/243;flex:none;display:block;object-fit:contain}
 /* the lockup is one object: no caption beside it, because the file carries its own */
 /* the logo doubles as a Home link — reset it to look identical as a <button> */
 button.dbrand{background:none;border:0;padding:0;color:inherit;font:inherit;cursor:pointer}
@@ -1446,8 +1533,12 @@ button.dbrand{background:none;border:0;padding:0;color:inherit;font:inherit;curs
 .dtopbar-inner > .dbrand{flex:1 1 0;min-width:max-content;justify-content:flex-start}
 .tb-trail{flex:1 1 0;min-width:max-content;display:flex;align-items:center;justify-content:flex-end;gap:14px}
 .tnav{display:flex;align-items:center;gap:6px;flex:none}
+/* ⚠️ 14 -> 16px (2026-09-25, by request), and 16 rather than 15 because 15 is not in the
+   ladder: the scale has 14 (small) and 16 (body) and nothing between them. This reverses
+   "розміри шрифта не змінюємо" from the pass that added the icons — that was a constraint
+   on that pass, not a rule. */
 .tnav-item{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border:0;
-  border-radius:999px;background:transparent;color:var(--mid);font:inherit;font-size:14px}
+  border-radius:999px;background:transparent;color:var(--mid);font:inherit;font-size:var(--t-body-fs)}
 /* the icon takes the item's colour like every other icon in the product — currentColor,
    so the pill's white and the strip's grey both arrive without a rule painting a glyph */
 .tnav-item .ic{flex:none}
@@ -1455,6 +1546,104 @@ button.dbrand{background:none;border:0;padding:0;color:inherit;font:inherit;curs
 .tnav-item.on{background:var(--ink);color:#fff;font-weight:600}
 .tnav-item.on:hover{background:var(--ink);color:#fff}
 .tnav-item:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+
+/* ---------- the count a filter chip carries (2026-09-25) ------------------------
+   ⚠️ IT IS NOT A BADGE. A badge is a notification — something arrived — and a number
+   in that shape beside `Subscription` would read as "9 new". This is the size of what
+   the chip would show, so it takes the quiet treatment the row already has: the chip's
+   own colour at one step down, tabular figures so the widths do not jitter as the
+   filters change, and no fill of its own. */
+.chipcount{margin-left:7px;color:var(--faint);font-variant-numeric:tabular-nums}
+.typechip.is-on .chipcount,.filterchip.is-on .chipcount{color:inherit;opacity:.72}
+.typechip:hover .chipcount{color:var(--mid)}
+.chipcount:empty{display:none}
+
+/* ---------- the grouped Instances view (2026-09-25) -----------------------------
+   A heading row inside the table, not a second table: the columns have to keep lining
+   up across the groups, which is the whole reason the grouping is a row rather than a
+   stack of tables. `--bg` is the same quiet inset the activity detail panel uses. */
+.instgroup > td{background:var(--bg);padding:8px 8px;border-bottom:1px solid var(--line2)}
+.ig-name{font-family:var(--font-ui);font-size:var(--t-label-fs);letter-spacing:var(--t-label-ls);
+  font-weight:var(--t-label-fw);text-transform:uppercase;color:var(--mid)}
+.ig-count{margin-left:8px;font-size:14px;color:var(--faint);font-variant-numeric:tabular-nums}
+
+/* ---------- VARIANT B of the licence table (2026-09-25, a proposal) --------------
+   Running beside variant A, chosen in the ⚙ panel. Nothing here touches A. */
+/* ⚠️ THE COLUMN IS CLAIMED, NOT LEFT TO THE TABLE. `max-width:0` was the first attempt —
+   it does make an ellipsis possible, but it also tells auto table layout that this column
+   wants nothing, so `TBMQ \u00b7 Subscription \u00b7 PE subscription` clipped at
+   `TBMQ \u00b7 Subscript…` while three narrow columns sat in the space it needed.
+   A percentage width claims the room first and the ellipsis then only bites the labels
+   that are genuinely too long. 52% measured against the longest seeded label (61 chars)
+   at the narrowest desktop this table is drawn at. */
+.licb-row .licb-name,.licb-head-name{width:52%}
+.licb-row .licb-name{white-space:nowrap}
+.licb-name .lp-ic{display:inline-flex;vertical-align:middle;margin-right:10px}
+.licb-txt{display:inline-flex;flex-direction:column;vertical-align:middle;min-width:0;
+  max-width:calc(100% - 50px);white-space:normal}
+/* ⚠️ ONE LINE AND AN ELLIPSIS. `min-width:0` on every ancestor is what actually lets
+   this bite — a flex or table child defaults to min-content and simply refuses to
+   shrink, which is how an ellipsis rule ends up doing nothing at all. */
+.licb-head{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  font-weight:500;color:var(--ink)}
+.licb-sub{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  font-size:14px;color:var(--mid)}
+/* the only figure in this table, so the only right-aligned column */
+.licb-row .lic-ver{text-align:right;font-variant-numeric:tabular-nums}
+.licb-row .lic-ver .verline{align-items:flex-end}
+.licb-row .lic-ver .ver-run{justify-content:flex-end}
+
+/* the label editor's counter — quiet until it is the thing you need to see */
+.labelcount{font-size:14px;color:var(--faint);font-variant-numeric:tabular-nums;
+  white-space:nowrap}
+.labelcount.over{color:var(--ink);font-weight:500}
+
+@media (max-width:600px){
+  /* ⚠️ THE CARD IS THE SAME HIERARCHY, NOT A SECOND ONE. Variant B's whole claim is
+     "the name first, everything else quiet beneath", and that is already what a phone
+     card wants — so the phone needs no special arrangement here, only room: the two
+     lines stack as they do on the desktop and the status, version and actions follow
+     underneath. See the report for what would be cut if it stopped fitting. */
+  .licb-row .licb-name{white-space:normal}
+  .licb-txt{max-width:none}
+  .licb-head{white-space:normal;font-size:var(--t-body-sm-fs)}
+  .licb-row .lic-ver{text-align:left}
+  .licb-row .lic-ver .verline{align-items:flex-start}
+}
+
+/* ---------- the design system's own shell (2026-09-25) ---------------------------
+   ⚠️ IT DOES NOT USE THE PAGE CONTAINER. Every other page in the portal is one centred
+   1180px column; this one is a two-column reference and its rail has to reach the left
+   edge of the window, so `.sg-wrap` opts out of `--pageW` here rather than fighting it
+   from inside. That is also why the rail is `position:sticky` against #shellMain rather
+   than the viewport — #shellMain is the scroller on every page in this prototype. */
+.sg-wrap{display:grid;grid-template-columns:240px minmax(0,1fr);gap:0;align-items:start;
+  max-width:none;margin:0;padding:0}
+.sg-side{position:sticky;top:0;align-self:start;max-height:100vh;overflow-y:auto;
+  padding:26px 18px 30px;border-right:1px solid var(--line2);background:var(--card)}
+.sg-sidehead{margin-bottom:16px}
+.sg-sidetitle{margin:0 0 6px;font-family:var(--font-ui);font-size:var(--t-h2-fs);
+  line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw)}
+.sg-back{display:inline-flex;align-items:center;gap:4px;font-size:14px;color:var(--mid)}
+.sg-back:hover{color:var(--ink)}
+.sg-nav{display:flex;flex-direction:column;gap:1px}
+.sg-nav a{display:block;padding:7px 10px;border-radius:6px;font-size:14px;color:var(--mid)}
+.sg-nav a:hover{background:var(--hover);color:var(--ink)}
+/* the current page takes the fill the nav strip's current destination takes — one idea,
+   one treatment, even though this rail is scaffolding rather than product */
+.sg-nav a.on{background:var(--ink);color:#fff;font-weight:500}
+.sg-main{min-width:0;padding:26px 30px 60px}
+.sg-main .sg-head{margin-bottom:22px}
+.sg-main .sg-sec[hidden]{display:none}
+@media (max-width:900px){
+  /* the rail goes horizontal above the content: 240px of nav beside a specimen is most
+     of a phone, and the specimens are the point */
+  .sg-wrap{grid-template-columns:minmax(0,1fr)}
+  .sg-side{position:static;max-height:none;border-right:0;border-bottom:1px solid var(--line2);
+    padding:16px var(--pageX)}
+  .sg-nav{flex-direction:row;flex-wrap:wrap;gap:4px}
+  .sg-main{padding:20px var(--pageX) 48px}
+}
 /* ---- below the page's own design width, the bar gives back what it can ----
    ⚠️ 1200 is not a taste line: the content column is --pageW 1180 plus 2x--pageX, so
    1228 is the narrowest window the LAYOUT was drawn for. Under it the bar is carrying
@@ -1479,8 +1668,10 @@ button.dbrand{background:none;border:0;padding:0;color:inherit;font:inherit;curs
 .entdelta{align-items:center;height:20px;padding:0 7px;margin-left:8px;
   border:1px solid var(--line);border-radius:999px;background:#fff;
   font-size:14px;font-variant-numeric:tabular-nums;color:var(--ink)}
-/* the profile button's phone form: a user glyph instead of the name */
-.dprof-ic{display:none}
+/* ⚠️ THE GLYPH IS NO LONGER PHONE-ONLY (2026-09-25). It used to be hidden here and
+   turned on in the ≤600px block, where it stands IN PLACE of the name; now it sits
+   beside the name on the desktop too, so there is nothing to hide. The phone rules
+   further down are unchanged — there the name is the thing that goes. */
 /* burger, phone menu panel and the scroll-to-top button: below the breakpoint only */
 .bnav,.tb-back,.tb-title,.totop,.tb-refresh{display:none}   /* phone-only chrome; the ≤600px block turns these on */
 /* row actions ship a glyph and a label; desktop reads the label */
@@ -1510,12 +1701,19 @@ button.dbrand{background:none;border:0;padding:0;color:inherit;font:inherit;curs
    is glass at rest the name sits directly on the mesh, and --mid measured 3.92:1 against
    the lavender pool — under AA for 14px. Ink is ~12:1 on the same ground. It is also the
    only text left in the bar with no box of its own, so it has the least help. */
-/* ⚠️ The HOVER is an underline, not a fill. With the pill gone there is no box to tint,
-   and adding one back on hover would reintroduce exactly the white shape that was asked
-   to go — an underline is the affordance a text control already owns. The caret stays
-   quiet so the name reads first and the control still says it opens. */
-.dprofbtn:hover .dprof-name,
-.dprofbtn[aria-expanded="true"] .dprof-name{text-decoration:underline;text-underline-offset:3px}
+/* ⚠️ THE HOVER IS A GHOST FILL AGAIN (2026-09-25, by request), reversing the underline
+   that replaced the pill. The objection to a fill was that it reintroduced the white
+   shape; `--hover` is not that shape — it is the same grey wash every other quiet
+   control in the chrome takes, it appears only under the pointer, and it lights the
+   whole hit area rather than just the word, which is what a control with no resting box
+   most needs to show. */
+.dprofbtn{padding:6px 10px}
+.dprofbtn:hover,
+.dprofbtn[aria-expanded="true"]{background:var(--hover)}
+/* the face comes back with it: with no box at rest, the icon is what marks this as a
+   control rather than a name printed in the bar */
+.dprofbtn .dprof-ic{display:inline-block;flex:none;color:var(--mid)}
+.dprofbtn:hover .dprof-ic{color:var(--ink)}
 .dprofbtn .dprof-caret{color:var(--mid)}
 .dprofbtn:hover .dprof-caret{color:var(--ink)}
 .dprofbtn:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
@@ -1714,6 +1912,9 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
    `display` step, which is now unused again — the token and its styleguide row stay,
    marked as unused there rather than quietly deleted. The H1 keeps the h1 treatment
    the section title had, so the page starts one step lower and says more. */
+/* the greeting above the heading: the lead's treatment, and the small gap that makes
+   it read as an opening line rather than as a stray sentence */
+.ec-welcome{margin:0 0 4px}
 .lp-welcome .lp-sect{margin:0;font-family:var(--font-ui);
   font-size:var(--t-h1-fs);line-height:var(--t-h1-lh);
   letter-spacing:var(--t-h1-ls);font-weight:var(--t-h1-fw)}
@@ -1880,7 +2081,9 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
    together, each with its own label and one-line description; the tabs that used to
    choose between them are hidden, not removed — the phone still needs them, because
    stacking nine cards is a very long page. Same markup on both, CSS decides. */
-.plangroups{display:grid;gap:34px;margin-top:20px}
+/* 20 -> 40 (2026-09-25, by request): the price list is a new subject after the page's
+   own heading and lead, and 20px read as the lead's own bottom margin. */
+.plangroups{display:grid;gap:34px;margin-top:40px}
 /* ⚠️ LEFT, not centred (2026-09-24). Centred worked while the heading floated above a
    slice of a shared row; inside a frame of its own it is the frame's label, and a label
    starts where its box starts — the same line the cards inside it start on. */
@@ -1928,12 +2131,30 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
    label and its own plan cards. Separated, but side by side — which is the whole point,
    since the row is read across. */
 @media(min-width:601px){
-  /* ⚠️ NO STROKE (2026-09-24, by request): the frame is told apart from the page by its
-     white fill alone, now that the cards inside it are the page's own light ground. The
-     two grounds are what separate the three levels — page, frame, card — so a line
-     around the middle one was a third signal saying what the fill already said. */
-  .plangroups > .plangroup{background:var(--card);border:0;
-    border-radius:16px;corner-shape:squircle;padding:var(--pg-pad, 18px)}
+  /* ⚠️ THE FRAME IS GONE ENTIRELY (2026-09-25, by request) — no fill, no stroke, no
+     padding. What separates the two billing models now is a RULE under each group's
+     heading, running the full width of the cards beneath it. The layout is untouched:
+     the same flex row, the same equal card widths, the same grid inside each group.
+     ⚠️ `--pg-pad` goes to 0 rather than being deleted, because the flex basis below is
+     computed FROM it (`2 * var(--pg-pad) + gaps`). Removing the token would have left
+     that formula reading a value that no longer exists and every card would have
+     resized. One number to 0, and the arithmetic still holds.
+     ⚠️ The cards keep their light ground, and it still works: they now sit on the page
+     rather than in a white box, and --page-bg on --page-bg would be invisible — which
+     is why `.plancard` is given the card fill back here. Three levels became two, so
+     the card takes the upper one, exactly as it already does on the phone. */
+  .plangroups > .plangroup{background:transparent;border:0;border-radius:0;padding:0}
+  /* --line2 -> --line (2026-09-25, by request): with the frames gone this rule is the
+     only thing separating the two billing models, so it carries more than a hairline
+     between rows of text and is drawn at the weight of a real divider.
+     ⚠️ `min-height` is what keeps the cards aligned now that the heading holds a
+     description again — two lines are reserved whether the sentence needs them or not.
+     4.5em = heading line + two description lines + the padding under the rule. */
+  .plangroups > .plangroup > .plangroup-h{border-bottom:1px solid var(--line);
+    padding-bottom:10px;min-height:4.5em;display:flex;flex-direction:column}
+  .plangroups > .plangroup > .plangroup-h .pg-d{margin:4px 0 0;max-width:46ch;
+    font-size:var(--t-small-fs);line-height:var(--t-small-lh);color:var(--mid)}
+  .plangroups > .plangroup .plancard{background:var(--card)}
   /* ⚠️ COLUMN FLEX, so the grid can take the height the frame was given. The frames are
      stretched to the same height by the row below, but a `block` child does not grow
      into that height — measured at 1600: both frames 475, the payg grid 400 and the
@@ -1943,7 +2164,12 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
   .plangroups > .plangroup{display:flex;flex-direction:column}
   .plangroups > .plangroup > .plangrid{flex:1}
   .plangroups > .plangroup > .plangroup-h{margin-bottom:0}
-  .plangroups > .plangroup > .plangrid{margin-top:14px}
+  /* ⚠️ 14 -> 32 (2026-09-25). 14 was the gap from the heading block to the cards, and
+     the Popular card eats 14 of it on its own — it sits 14px proud of the row, so it was
+     landing exactly on the rule with nothing between them. 32 leaves the ordinary cards
+     32 below the rule and the tall one 18, which is the smallest gap that still reads as
+     a gap. Any change to `.plancard.is-popular`'s negative margin has to come back here. */
+  .plangroups > .plangroup > .plangrid{margin-top:32px}
 }
 /* ---------- ONE ROW: the frames sit side by side --------------------------------
    ⚠️ FLEX, NOT GRID, and the reason is the frames' padding. The previous version made
@@ -1962,8 +2188,12 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
      it gives back, in both frames, without a second edit. That is what the token was
      for. The gap BETWEEN the two frames stays 16px: it separates two objects, while
      this separates cards within one. */
-  .plangroups.two{--pg-pad:18px; --pg-cardgap:10px;
-    display:flex; align-items:stretch; gap:16px}
+  /* ⚠️ `--pg-pad:0` — the frames have no padding any more (see above); the token stays
+     because the flex basis is computed from it. The gap BETWEEN the groups widens to 34
+     to do the work the two frame edges used to: with no boxes, 16px read as one long
+     row of five cards rather than as two groups. */
+  .plangroups.two{--pg-pad:0px; --pg-cardgap:10px;
+    display:flex; align-items:stretch; gap:34px}
   .plangroups.two > .plangroup{
     flex:var(--pg-span) 0 calc(2 * var(--pg-pad)
       + (var(--pg-span) - 1) * var(--pg-cardgap));
@@ -2001,6 +2231,36 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
   background:var(--page-bg);border:0;border-radius:20px;corner-shape:squircle}
 .plangrid .nl-select:hover{box-shadow:inset 0 0 0 1px var(--line)}
 .plangrid .nl-select.on{box-shadow:inset 0 0 0 2px var(--ink)}
+/* ---------- the Popular card (2026-09-25, from a reference) ----------------------
+   ⚠️ IT GROWS SYMMETRICALLY AND ITS CONTENT DOES NOT MOVE. The ask was a taller card
+   with the others centred against it, and the trap is that "taller" usually means the
+   content slides down with the box — which would break the one thing yesterday's pass
+   measured, every Select on one line. The card takes 14px of negative margin top and
+   bottom and 14px of extra padding on both: the border box extends 14px past the row in
+   each direction, the content box starts exactly where the other cards' does, and the
+   grid's own `stretch` keeps the four ordinary cards equal to each other.
+   ⚠️ A RING, NOT A BORDER, for the same reason hover and selected are rings — a border
+   would make this card 4px narrower than its neighbours and the row would stop lining up. */
+.plancard.is-popular{margin-top:-14px;margin-bottom:-14px;padding-top:30px;padding-bottom:30px;
+  box-shadow:inset 0 0 0 2px var(--accent)}
+.plancard.is-popular:hover{box-shadow:inset 0 0 0 2px var(--accent)}
+/* selected still outranks it: the reader's own choice is louder than our suggestion */
+.plangrid .nl-select.is-popular.on{box-shadow:inset 0 0 0 2px var(--ink)}
+/* ⚠️ INSIDE THE CARD, TOP RIGHT (2026-09-25, by request) — it straddled the top edge
+   for one pass and now sits within it. It is still absolutely positioned rather than
+   placed in the heading row: in the flow it would lengthen the plan name's line on
+   exactly one card, which is what moved it out of `.pc-head` in the first place.
+   ⚠️ Vertical overlap with the plan name is possible and harmless — the badge is right
+   aligned, the name is left aligned, and the only name long enough to reach it would
+   have already wrapped. */
+.plancard{position:relative}
+.pc-badge{position:absolute;top:12px;right:14px;z-index:1;
+  background:var(--accent);border-color:var(--accent);color:#fff}
+@media (max-width:1080px){
+  /* stacked, the negative margins would pull the card into its neighbours instead of
+     out of a row — there is no row left to stand out of */
+  .plancard.is-popular{margin-top:0;margin-bottom:0;padding-top:16px;padding-bottom:16px}
+}
 /* Change plan: "Current plan" is a strip on the current card's top edge; its
    height is reserved above EVERY card (empty elsewhere) so card heights match
    and the plan names stay on one horizontal line */
@@ -2022,7 +2282,7 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
    The tick takes the rule's job of giving each line a left edge to start from. */
 .pc-feat{display:flex;gap:8px;font-size:14px;color:var(--mid);padding:7px 0}
 /* 2px lifts the 16px glyph onto the cap height of a 14px line rather than its box */
-.pc-tick{flex:none;margin-top:2px;color:var(--faint)}
+.pc-tick{flex:none;margin-top:2px;color:var(--tick)}
 .pc-feattxt{min-width:0}
 .pc-cta{width:100%;margin-top:14px}
 /* a feature line's explanation: under it, quieter, and it must not make the row read

@@ -204,6 +204,13 @@ var DASH_STATES = {
   dashgrant:        { label:'Dashboard — grant approved',    variant:'G' }
 };
 function dashState(){ return DASH_STATES[Store.get('dash')] || DASH_STATES.dashboard; }
+/* flat is the default: it is the order the check-in question is asked in */
+function instView(){ return Store.get('instView') === 'grouped' ? 'grouped' : 'flat'; }
+/* ⚠️ 'a' IS THE DEFAULT AND MUST STAY IT while the decision is open: B is a proposal,
+   and a proposal that ships as the default has been decided rather than proposed.
+   Stored, so it survives a reload; in the same key as everything else, so
+   `Reset demo data` drops it with the rest. */
+function licTable(){ return Store.get('licTable') === 'b' ? 'b' : 'a'; }
 function dashVariant(){ return dashState().variant; }
 /* ⚠️ DERIVED, not stored. `empty:true` used to be a flag on the state above, set once
    by setSession('new') and cleared by nobody — so buying a licence left Home on its
@@ -640,8 +647,15 @@ function brandHTML(){
   /* ⚠️ The mark is the WHOLE lockup — it already sets "License Portal" under the
      product name, so the separate caption that used to sit beside it is gone. Keeping
      both printed the words twice and pushed the second copy under the nav strip. */
-    + '<svg class="tblogo" role="img" aria-label="ThingsBoard License Portal">'
-    +   '<use href="assets/logo.svg#tb-logo"></use></svg>'
+  /* ⚠️ AN <img>, NOT THE SPRITE (2026-09-25): the supplied file is `logo_updated.png`.
+     What that costs is `currentColor` — a raster cannot be recoloured, so this wordmark
+     is black on transparent and only works on a light bar. Every bar it sits on today is
+     light (or glass over a light mesh), so nothing breaks; if the chrome ever goes dark,
+     this is the one thing that will not follow it.
+     ⚠️ `assets/logo.svg` and `tools/build-logo.py` are now unused. Left in place rather
+     than deleted — that is a separate decision, and the SVG is the only recolourable
+     copy of the mark if the above ever matters. */
+    + '<img class="tblogo" src="assets/logo_updated.png" alt="ThingsBoard License Portal">'
     + '</a>';
 }
 
@@ -780,6 +794,7 @@ function settingsContext(){
     home: page === 'home',
     landing: page === 'landing',
     licenses: page === 'licenses',
+    instances: page === 'instances',
     billing: page === 'billing',
     /* the details surface counts in either presentation: the full page, or the
        modal mounted over any list */
@@ -820,10 +835,26 @@ function settingsBodyHTML(){
       .map(function(t){ return '<a class="sp-opt" href="license.html?tier=' + t[0] + '"><span>' + t[1] + '</span></a>'; }).join(''));
   }
 
-  // ---- Licenses page: the only variant scoped to it is the layout it already uses
-  if(c.licenses){
-    out += group('List layout',
-      '<a class="sp-opt" href="licenses.html"><span>Product-first (neutral)</span></a>');
+  /* ---- Instances: flat list, or the same rows gathered under their product ----
+     ⚠️ A VIEW, not a filter: both show every instance, and neither hides anything. The
+     grouped one answers "what is running for TBMQ" without making the reader read the
+     Licence column of nineteen rows; the flat one answers "what checked in last", which
+     is the order it sorts by and which grouping necessarily breaks. */
+  if(c.instances){
+    out += group('Instances view',
+      '<label class="sp-opt"><input type="radio" name="instView" value="flat"' + (instView() === 'flat' ? ' checked' : '') + '><span>Flat list (default)</span></label>'
+      + '<label class="sp-opt"><input type="radio" name="instView" value="grouped"' + (instView() === 'grouped' ? ' checked' : '') + '><span>Grouped by product</span></label>');
+  }
+
+  /* ---- Licenses table: the current one, or the four-column proposal ----
+     ⚠️ Offered on Home as well as on the Licenses page, because Home's block renders
+     THE SAME row component — a setting that changed one and not the other would make
+     two tables out of one and the comparison would be against a fork. */
+  if(c.licenses || c.home){
+    out += group('Licenses table',
+      '<label class="sp-opt"><input type="radio" name="licTable" value="a"' + (licTable() === 'a' ? ' checked' : '') + '><span>A — current (5 columns)</span></label>'
+      + '<label class="sp-opt"><input type="radio" name="licTable" value="b"' + (licTable() === 'b' ? ' checked' : '') + '><span>B — proposal (4 columns)</span></label>'
+      + '<div class="sp-hint">B folds product, type and plan into one column and sorts attention first. Home\u2019s block follows the same setting.</div>');
   }
 
   /* ---- which product the session behaves as having arrived for. Scoped to the three
@@ -1316,8 +1347,11 @@ function custVariant(){ return Store.get('custVariant') === 'a' ? 'a' : 'b'; }
    ⚠️ BELOW 600px THE THREE ARE ONE. Every .fs-screen is a full-screen sheet on the
    phone, so the setting has nothing to change there; the panel says so, because the
    alternative is someone testing it on a phone and reporting it broken. */
-function wizardPresent(){ var v = Store.get('wizardPresent'); return (v === 'b' || v === 'c') ? v : 'a'; }
-var WIZARD_PRESENTS = [['a', 'A \u2014 Dialog (default)'], ['b', 'B \u2014 Inset'], ['c', 'C \u2014 Full screen']];
+/* ⚠️ C IS THE DEFAULT NOW (2026-09-25, by request) — the purchase flow is a full
+   screen, not a dialog over the page. A and B stay selectable: the three were built to
+   be compared and the comparison is not over, only decided for now. */
+function wizardPresent(){ var v = Store.get('wizardPresent'); return (v === 'a' || v === 'b') ? v : 'c'; }
+var WIZARD_PRESENTS = [['a', 'A \u2014 Dialog'], ['b', 'B \u2014 Inset'], ['c', 'C \u2014 Full screen (default)']];
 /* The wizard is the only surface carrying the attribute; it is set where the node is
    born (wizard.js, right after the markup is injected), on every open, and whenever
    the panel writes a new value. Pages that never load wizard.js have no node and this
@@ -1551,6 +1585,19 @@ function wireSettingsPanel(){
       case 'billingData':
         Store.set('billingData', r.value);
         if(window.NL && NL.refreshOpen) NL.refreshOpen();
+        return;
+      /* the view is a stored setting and the page repaints in place — nothing about it
+         changes which rows exist, so there is nothing to reload */
+      case 'instView':
+        Store.set('instView', r.value);
+        if(typeof renderInstancesPage === 'function') renderInstancesPage();
+        return;
+      /* both surfaces that render licence rows repaint from their own entry point;
+         neither needs a reload, because nothing about which rows exist changed */
+      case 'licTable':
+        Store.set('licTable', r.value);
+        if(typeof renderProducts === 'function') renderProducts();
+        if(typeof renderDashLicenses === 'function') renderDashLicenses();
         return;
       // the details presentation is a stored setting; rows read it on click
       case 'licDetails':

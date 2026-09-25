@@ -30,16 +30,19 @@ function licNeedsAttention(l){
 }
 
 function currentProducts(){
-  return DATA().licenses.slice().sort(function(a, b){ return dateKey(b.created) - dateKey(a.created); });
+  var all = DATA().licenses.slice();
+  /* ⚠️ THE SORT TRAVELS WITH THE VARIANT — see licSortB. A stays newest-first. */
+  return licTable() === 'b' ? licSortB(all)
+    : all.sort(function(a, b){ return dateKey(b.created) - dateKey(a.created); });
 }
 function renderProducts(){
-  $('#prodHead').innerHTML = headHtml();
+  $('#prodHead').innerHTML = licHeadHTML();
   var vis = 0, html = '';
   currentProducts().forEach(function(p){
     if(licType && p.type !== licType) return;
     if(licAttentionOnly && !licNeedsAttention(p)) return;
     if(!licShowCanceled && p.status === 'canceled') return;
-    vis++; html += rowHtml(p);
+    vis++; html += licRowHTML(p);
   });
   /* ⚠️ "Empty" here means the ACCOUNT owns nothing — not that a filter hid everything.
      A type chip that leaves no rows is the reader's own doing and keeps its toolbar,
@@ -47,7 +50,7 @@ function renderProducts(){
      account that has never bought anything. */
   var accountEmpty = currentProducts().length === 0;
   if(accountEmpty){
-    $('#prodBody').innerHTML = emptyStateRow(6, {   // 6 columns since Product version joined
+    $('#prodBody').innerHTML = emptyStateRow(licColSpan(), {   // the variant decides the span
       title:'No licenses yet.',
       line:'Buy a license to get a key for your ThingsBoard or TBMQ instance.',
       /* the ONE primary a new account gets, and it opens the same wizard the
@@ -59,6 +62,28 @@ function renderProducts(){
   }
   syncListEmpty(accountEmpty);
   $('#licRange').textContent = vis ? ('1–' + vis + ' of ' + vis) : '0 of 0';
+  syncLicChipCounts();
+}
+/* ---------- what each chip would show ------------------------------------------
+   ⚠️ A FACET COUNT, not a total: each chip counts the rows it would leave if IT were
+   the pressed one, with every OTHER filter still applied. So `Subscription 9` means
+   nine subscriptions among what you are currently looking at, not nine in the account —
+   which is the only reading that stays true while another filter is on.
+   ⚠️ The chip's own group is excluded from its own count, because the type chips are
+   mutually exclusive: counting `Perpetual` through the `Subscription` filter would
+   always print 0 and the row of chips would read as an empty list. */
+function syncLicChipCounts(){
+  var base = currentProducts().filter(function(p){
+    if(licAttentionOnly && !licNeedsAttention(p)) return false;
+    if(!licShowCanceled && p.status === 'canceled') return false;
+    return true;
+  });
+  $$('#licensesView .chipcount').forEach(function(el){
+    var k = el.getAttribute('data-count'), n;
+    if(k === 'active') n = currentProducts().filter(function(p){ return p.status !== 'canceled'; }).length;
+    else n = base.filter(function(p){ return p.type === k; }).length;
+    el.textContent = n;
+  });
 }
 renderProducts();
 wireLicenseRows('#licensesView', { from:'licenses', rerender: renderProducts });
@@ -82,12 +107,17 @@ $$('#licensesView .typechip').forEach(function(chip){
 /* Two controls, one state: the desktop switch and the phone's Canceled chip. Both
    write through the same setter so whichever the viewer used, the other agrees the
    moment the breakpoint changes. */
+/* ⚠️ THE CONTROL IS INVERTED, THE STATE IS NOT. The switch reads `Active only`, so it is
+   CHECKED when canceled licences are hidden — `checked === !licShowCanceled`. The stored
+   key keeps its old name and its old meaning on purpose: renaming it would have silently
+   flipped what every existing stored value means, and the store is shared with nothing
+   that could have told us. One inversion, in one place, at the edge. */
 var licCanceledBox = $('#licCanceled'), licCanceledChip = $('#licCanceledChip');
 function syncCanceledControls(){
-  licCanceledBox.checked = licShowCanceled;
+  licCanceledBox.checked = !licShowCanceled;
   if(licCanceledChip){
-    licCanceledChip.classList.toggle('is-on', licShowCanceled);
-    licCanceledChip.setAttribute('aria-pressed', licShowCanceled ? 'true' : 'false');
+    licCanceledChip.classList.toggle('is-on', !licShowCanceled);
+    licCanceledChip.setAttribute('aria-pressed', !licShowCanceled ? 'true' : 'false');
   }
 }
 function setShowCanceled(v){
@@ -97,7 +127,7 @@ function setShowCanceled(v){
   renderProducts();
 }
 syncCanceledControls();                            // reflect the stored choice on load
-licCanceledBox.addEventListener('change', function(){ setShowCanceled(this.checked); });
+licCanceledBox.addEventListener('change', function(){ setShowCanceled(!this.checked); });
 if(licCanceledChip) licCanceledChip.addEventListener('click', function(){ setShowCanceled(!licShowCanceled); });
 
 // + New license → the wizard; product and billing type are chosen on its step 1

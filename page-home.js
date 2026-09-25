@@ -59,11 +59,11 @@ function dashLicList(){
 }
 function renderDashLicenses(){
   var head=$('#dashLicHead'), body=$('#dashLicBody'); if(!head||!body) return;
-  head.innerHTML = headHtml();
+  head.innerHTML = licHeadHTML();
   // no Edit label in the row menu here: this block is a summary, and renaming a
   // licence belongs on the Licenses page and its details, where it is the subject.
   // Explicit callback — rowHtml takes options second, and .map would pass the index.
-  body.innerHTML = dashLicList().map(function(p){ return rowHtml(p, { noLabelEdit:true }); }).join('');
+  body.innerHTML = dashLicList().map(function(p){ return licRowHTML(p, { noLabelEdit:true }); }).join('');
 }
 // a dataset may legitimately have no invoices (the grant is free) — say so
 function renderDashInvoices(){
@@ -233,6 +233,10 @@ if(dashEmptyV && !dashEmptyV.hidden){
   /* The head is part of the render, not static markup: swapping the product changes the
      heading, the line and the link along with the cards. */
   function renderEcHead(){
+    /* the greeting is the account's, not the product's, so it does NOT re-render with
+       the product switch — it is set once and the switch below leaves it alone */
+    var w = $('#ecWelcome');
+    if(w) w.textContent = 'Welcome, ' + portalName();
     $('#ecHead').textContent = landingHeading(esel);
     $('#ecLead').textContent = landingLead(esel, { signedIn:true });
     $('#ecSwap').innerHTML = productSwapHTML(esel);

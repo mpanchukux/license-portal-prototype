@@ -131,6 +131,11 @@
            down (`statedInHead`), exactly as it does on the landing page. -->
       <div class="dwelcome lp-welcome">
         <div class="dw-txt">
+          <!-- ⚠️ ABOVE the heading, and only here. This screen is the one price list shown
+               to someone the portal already knows, so it can greet them; the landing page
+               shows the same list to someone it cannot name, and has no line like this.
+               Same treatment as the lead below the heading — see .lp-lead. -->
+          <p id="ecWelcome" class="lp-lead ec-welcome"></p>
           <h1 class="lp-sect" id="ecHead"></h1>
           <p id="ecLead" class="lp-lead"></p>
         </div>

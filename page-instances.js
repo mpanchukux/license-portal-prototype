@@ -38,6 +38,32 @@ function instMatchesStatus(r){
   return (instStale(r.inst) ? 'Stale' : 'Healthy') === instStatus;
 }
 
+/* ---------- the grouped view (2026-09-25) ---------------------------------------
+   ⚠️ THE ROWS ARE THE SAME ROWS. This builds headings and re-orders; it does not build a
+   second kind of instance row, because `instAllRow` is shared with the licence panel's
+   own Instances tab and a fork here would be a fork there. Everything that reads or acts
+   on a row — the kebab, Deactivate, Copy ID, the licence link — keeps working untouched.
+   ⚠️ Grouped BY PRODUCT, not by licence: a licence already names itself in every row's
+   second column, so grouping by it would print the same string twice per row. The
+   product is the one fact the rows share and none of them states on its own.
+   ⚠️ Order inside a group is the order it arrived in — newest check-in first — so the
+   flat view's question ("is anything not reporting") is still answerable inside each
+   group rather than being replaced by an alphabet. */
+function instGroupedHTML(rows){
+  var order = [], by = {};
+  rows.forEach(function(r){
+    var k = r.lic.product || '—';
+    if(!by[k]){ by[k] = []; order.push(k); }
+    by[k].push(r);
+  });
+  return order.map(function(k){
+    return '<tr class="instgroup"><td colspan="6">'
+      + '<span class="ig-name">' + esc(k) + '</span>'
+      + '<span class="ig-count">' + by[k].length + '</span></td></tr>'
+      + by[k].map(instAllRow).join('');
+  }).join('');
+}
+
 function renderInstancesPage(){
   var head = $('#instAllHead'), body = $('#instAllBody');
   if(!head || !body) return;
@@ -57,9 +83,15 @@ function renderInstancesPage(){
 
   if(rows.length){
     var searching = !!instQuery();
-    var shown = searching ? rows : pageSlice(rows, instPage);
-    if(searching) instPage.total = rows.length;
-    body.innerHTML = shown.map(instAllRow).join('');
+    var grouped = instView() === 'grouped';
+    /* ⚠️ GROUPING AND PAGING CANNOT BOTH BE ON, and grouping wins. A page of ten rows
+       cut out of the middle of a grouped list shows a product heading with two of its
+       seven instances under it and the rest on a page you have to ask for — the heading
+       then states a group it is not showing. Same pairing the search already makes:
+       render everything, and the pager stands down (see the `hidden` line below). */
+    var shown = (searching || grouped) ? rows : pageSlice(rows, instPage);
+    if(searching || grouped) instPage.total = rows.length;
+    body.innerHTML = grouped ? instGroupedHTML(shown) : shown.map(instAllRow).join('');
   } else if(all.length){
     /* ⚠️ A CHIP THAT LEAVES NOTHING IS THE READER'S OWN DOING, and it keeps the
        toolbar, because the way out is to unset the filter they set. Same split the
@@ -81,9 +113,17 @@ function renderInstancesPage(){
      toolbar and the pager, and doing that because a chip matched nothing would take
      away the control the reader needs to undo it. */
   syncListEmpty(!all.length);
+  /* the same facet reading the Licenses chips use: each chip counts what it would show,
+     and the status group is excluded from its own count because the chips are exclusive */
+  $$('#instancesView .chipcount').forEach(function(el){
+    var k = el.getAttribute('data-count');
+    el.textContent = all.filter(function(r){
+      return (instStale(r.inst) ? 'Stale' : 'Healthy') === k;
+    }).length;
+  });
   if(!rows.length) instPage.total = 0;
   var pg = $('#instancesView .pager');
-  if(pg) pg.hidden = !!instQuery() || !rows.length;
+  if(pg) pg.hidden = !!instQuery() || instView() === 'grouped' || !rows.length;
   syncPager('#instancesView .pager', instPage);
 }
 renderInstancesPage();

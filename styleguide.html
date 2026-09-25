@@ -13,19 +13,28 @@
 <div id="shellMain">
 <div class="sg-wrap">
 
+  <!-- ⚠️ TWO COLUMNS AND ONE PAGE AT A TIME (2026-09-25). This was one very long scroll
+       with a row of anchor links at the top: fine as a reference to search, useless as a
+       place to WORK, because every component sat in the same undifferentiated column and
+       nothing had an address you could sit on. The rail is the table of contents now and
+       each component is its own page — see sgRouter in styleguide.js. Nothing about the
+       specimens changed; they are the same sections, shown one at a time. -->
+  <div class="sg-side">
+    <div class="sg-sidehead">
+      <h1 class="sg-sidetitle">Design system</h1>
+      <a class="sg-back" href="index.html"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-left"></use></svg> Back to the portal</a>
+    </div>
+    <!-- filled by sgRouter from the sections themselves, so a section added to this file
+         appears in the rail without anybody remembering to add it here -->
+    <nav class="sg-nav" id="sgNav" aria-label="Design system"></nav>
+  </div>
+
+  <div class="sg-main">
   <div class="sg-head">
-    <h1 class="lic-h1">Design system</h1>
     <p class="sg-lead">Every token and component the portal is built from, rendered from the same
       <code class="sg-cls">styles.css</code> the pages load — nothing here is a copy or a screenshot.
       Change a rule and this page changes with the product. Each specimen is labelled with the class
       you write to get it.</p>
-    <nav class="sg-toc">
-      <a href="#tokens">Tokens</a><a href="#buttons">Buttons</a><a href="#inputs">Inputs</a>
-      <a href="#chips">Status chips</a><a href="#table">Table</a><a href="#cards">Cards</a>
-      <a href="#modals">Modals</a><a href="#stepper">Wizard stepper</a><a href="#banners">Banners</a>
-      <a href="#feed">Activity</a><a href="#tooltip">Tooltips</a><a href="#infoicon">Info icon</a><a href="#empty">Empty states</a><a href="#solo">Solo state</a><a href="#empty">No results</a><a href="#alerticon">Alert icon</a><a href="#homebanner">Home banner</a><a href="#instancesview">Instances view</a><a href="#messages">Messages</a><a href="#sheet">Bottom sheet</a><a href="#snack">Snackbar</a>
-      <a href="index.html"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-left"></use></svg> back to the portal</a>
-    </nav>
   </div>
 
   <!-- ============================ TOKENS ============================ -->
@@ -326,6 +335,50 @@
     </div>
   </section>
 
+  <!-- ==================== LICENCE TABLE: A vs B ==================== -->
+  <section class="sg-sec" id="lictable">
+    <h2>Licence table &mdash; A and B</h2>
+    <p><b>Two layouts are live at once</b> while the choice is open. The <svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-settings"></use></svg> panel switches
+      between them (<code class="sg-cls">licTable</code>), <b>A is the default</b>, and both render
+      from the same row component &mdash; nothing below is retyped.
+      <span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <b>B is a proposal, not a decision.</b> It ships alongside A so the two
+      can be read against each other; until somebody chooses, A is what the product is.</p>
+
+    <div class="sg-item">
+      <h3>A &mdash; current <span class="sg-cls">headHtml / rowHtml</span></h3>
+      <p class="sg-note">Five content columns: Product &middot; License &middot; Status &middot;
+        Version &middot; Updated. Sorted newest first.</p>
+      <div class="tablescroll"><table><thead id="sgLicHeadA"></thead><tbody id="sgLicBodyA"></tbody></table></div>
+    </div>
+
+    <div class="sg-item">
+      <h3>B &mdash; proposal <span class="sg-cls">headHtmlB / rowHtmlB</span></h3>
+      <p class="sg-note">Four columns. <b>The duplication is what goes:</b> the product moved onto
+        the licence cell&rsquo;s second line (and the mark already carries it), the plan moved there
+        with it, and <b>Updated</b> left entirely &mdash; it had one reader and nothing sorted or
+        filtered by it.</p>
+      <p class="sg-note"><b>Two lines, never empty, never blank-first.</b> Line one is the label;
+        line two is <b>product &middot; billing model &middot; plan</b>. With no label the plan moves
+        up to line one and line two drops to product &middot; billing model.</p>
+      <p class="sg-note"><b>Attention first</b>, then the nearest dated event, then the label.
+        The first screen answers &ldquo;is anything wrong&rdquo; without reading every row.
+        <span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> Version is the only figure, so it is the only
+        right-aligned column, with tabular numerals.</p>
+      <div class="tablescroll"><table><thead id="sgLicHeadB"></thead><tbody id="sgLicBodyB"></tbody></table></div>
+    </div>
+
+    <div class="sg-item">
+      <h3>The label is a name <span class="sg-cls">LABEL_MAX</span></h3>
+      <p class="sg-note"><b>40 characters, with a visible counter</b>, in the licence panel&rsquo;s
+        label editor. A <b>data rule</b>, so it holds in both variants.
+        <span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> Four seeded labels predate it and run to 61 characters;
+        <code class="sg-cls">maxlength</code> refuses new input but never truncates a stored value, so
+        none of them lose text. B&rsquo;s cell clamps to one line with an ellipsis and carries the full
+        string in <code class="sg-cls">title</code> &mdash; that is the <b>safety net for old data</b>,
+        not the rule.</p>
+    </div>
+  </section>
+
   <!-- ============================ CARDS ============================ -->
   <section class="sg-sec" id="cards">
     <h2>Cards</h2>
@@ -509,25 +562,35 @@
   <!-- ============================ STEPPER ============================ -->
   <section class="sg-sec" id="stepper">
     <h2>Wizard stepper</h2>
-    <p>One stepper: the progress line. A 3px track directly under the header hairline, then a single
-      “Step N of M · Label” row.</p>
-    <p class="sg-note"><b>M is computed, never written down.</b> The purchase flow's steps are a list built per
-      mode — <i>Choose your plan · Capacity · Add-ons · Review</i>, plus <i>Payment &amp; Billing</i> when the
-      account has no billing data — and steps drop out of it: a free plan has no Capacity, no Add-ons and no
-      billing, TBMQ subscriptions have no Add-ons, and Manage add-ons has no plan step. So the same
-      component reads “Step 2 of 2” and “Step 4 of 5”, and no screen can promise a step that is not coming.</p>
+    <p>One stepper: <b>every step at once</b>, each with its name and a line saying what it asks for.
+      A frame under the header hairline, one item per step, and the current one filled.</p>
+    <p class="sg-note"><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <b>It was a progress line until 2026-09-25</b> &mdash; a 3px
+      track and a &ldquo;Step 2 of 4 &middot; Capacity&rdquo; row. That says where you are and nothing about
+      where you are going, and on a flow whose <b>length changes with the plan</b> that is the half that
+      matters: a free plan has three steps, a perpetual with add-ons has five, and the old bar could only
+      tell you which after you had already committed to a plan.</p>
+    <p class="sg-note"><b>The list is computed, never written down.</b> The steps are built per mode
+      &mdash; <i>Choose your plan &middot; Capacity &middot; Add-ons &middot; Review</i>, plus
+      <i>Payment &amp; Billing</i> when the account has no billing data &mdash; and steps drop out of it: a
+      free plan has no Capacity, no Add-ons and no billing, TBMQ subscriptions have no Add-ons, and Manage
+      add-ons has no plan step. The stepper renders <code class="sg-cls">steps()</code>, so it cannot show a
+      step the flow does not have.</p>
     <div class="sg-item">
-      <h3>Progress line <span class="sg-cls">.nl-stepbar &gt; .nl-progress</span></h3>
+      <h3>Three states <span class="sg-cls">.nl-steps &gt; .nl-step</span></h3>
+      <p class="sg-note"><b>Done</b> is a filled tick, <b>current</b> is a filled row, <b>upcoming</b> is a
+        ringed number in grey. <span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> The fill is <b>ink, not the accent</b>: the accent is
+        spent on the Popular plan card, where it means &ldquo;we suggest this&rdquo;. A filled step suggests
+        nothing &mdash; it says you are here.</p>
       <div class="sg-static" style="padding:0">
-        <div class="nl-stepbar"><div class="nl-progress">
-          <div class="nl-ptrack"><span class="nl-pfill" style="width:50%"></span></div>
-          <div class="nl-plabel">Step 2 of 4 · <b>Capacity</b></div>
-        </div></div>
+        <div class="nl-stepbar"><div id="sgWizStep"></div></div>
       </div>
-      <div class="sg-flag"><b>Deviation from the brief:</b> the brief asked for all three stepper variants.
-        The summary rail (A) and numbered steps (C) were deleted in the pre-restructure cleanup, so only the
-        progress line exists to show. Rebuilding them for the inventory would make this page describe
-        components the product does not have.</div>
+      <p class="sg-note"><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <b>Done steps are not clickable</b>, and that is a decision
+        rather than an omission: a stepper you can see all of invites clicking, but jumping back has to say
+        what happens to everything entered after the target. <b>Back</b> moves one step at a time and is the
+        only way back.</p>
+      <p class="sg-note"><b>Below 900px the descriptions go</b> &mdash; five of them across a narrow band
+        become five ellipses. <b>Below 600px only the current step is shown</b>, named and described: the
+        map does not fit, and the one thing it has to answer is &ldquo;where am I&rdquo;.</p>
     </div>
   </section>
 
@@ -567,18 +630,22 @@
         changed, from and to &middot; who did it.</b> A reason or an amount sits <b>inside the
         sentence</b>, never only behind the expander &mdash; a failure that hides its cause behind a click
         is a failure you have to go and ask about.</p>
-      <p class="sg-note"><b>One bold per entry, always the same thing.</b> In the account-wide feed the
-        <b>entity</b> is bold &mdash; the licence label, the instance label, the user&rsquo;s email, the
-        invoice number. Everything else is plain, <b>values included</b>. That gives a scannable column of
-        names and keeps bold meaning one thing.
-        <span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> Two entries have no bold at all, and that is correct: a password change and an invite link
+      <p class="sg-note"><b>One chip per entry, always the same thing.</b> In the account-wide feed the
+        <b>entity</b> sits in a chip (<code class="sg-cls">.fi-chip</code>) &mdash; the licence label, the
+        instance label, the user&rsquo;s email, the invoice number. Everything else is plain,
+        <b>values included</b>. That gives a scannable column of names, and a chip says
+        <b>&ldquo;this is a named thing&rdquo;</b> rather than &ldquo;this matters more&rdquo;.
+        <span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> It was <b>bold</b> until 2026-09-25, and weight was the
+        problem: <code class="sg-cls">.em</code> inside sentences and the attention labels in rows were
+        already spending it &mdash; three jobs, one voice.
+        <span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> Two entries have no chip at all, and that is correct: a password change and an invite link
         have no named subject but the account itself.</p>
-      <p class="sg-note"><b>In a licence&rsquo;s own tab the entity is dropped, not bolded again</b> &mdash;
+      <p class="sg-note"><b>In a licence&rsquo;s own tab the entity is dropped, not chipped again</b> &mdash;
         the page already says which licence you are in. Same event, two renderings; that is what the scope
         argument is for. In the map it is one template: the bracketed segment
         (<code class="sg-cls">[ on {entity}]</code>) is what the licence scope removes.
-        <span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> For an <b>instance</b> event the bracket holds the <em>licence</em> and the instance stays
-        bold &mdash; what the page already states is what goes.</p>
+        <span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> For an <b>instance</b> event the bracket holds the <em>licence</em> and the instance keeps
+        the chip &mdash; what the page already states is what goes.</p>
       <p class="sg-note"><b>Voice.</b> Past tense, no auxiliary: <i>Plan changed from Startup to
         Business</i>, never <i>Plan was changed</i>. One sentence, ending in a period. No
         &ldquo;successfully&rdquo;, no adjectives. Dates use the product&rsquo;s one format,
@@ -607,29 +674,48 @@
         type with no detail gets <b>no button</b>. A grouped run expands to the entries it folded.</p>
     </div>
 
+    <!-- ⚠️ GROUPED BY TYPE, NOT BY DOMAIN (2026-09-25). This used to be four lists —
+         Licences, Instances, Users, Billing — each printing every content variant in its
+         domain. That is a catalogue of COPY, and the copy is already in `ACTIVITY_TEXT`
+         where it can be read in one screen; what a design system has to show is the
+         component's SHAPES, because those are what a new type has to fit into.
+         Four shapes, and every type in the map still appears in exactly one of them —
+         the grouping changed, the coverage did not. Miscategorise nothing: the shape is
+         derived from the sample at render time, not typed here. -->
     <div class="sg-item">
-      <h3>Licences <span class="sg-cls">license.*</span></h3>
-      <div class="listcard sg-actlist" data-actgroup="license"></div>
+      <h3>1 &middot; Sentence and actor <span class="sg-cls">the default</span></h3>
+      <p class="sg-note">Somebody did something. The timestamp, one sentence, the actor at the
+        end. No panel, nothing to expand &mdash; most of the map is this.</p>
+      <div class="listcard sg-actlist" data-actshape="plain"></div>
     </div>
     <div class="sg-item">
-      <h3>Instances <span class="sg-cls">instance.*</span></h3>
-      <p class="sg-note">Check-ins are <b>derived, not stored</b> &mdash; the licence reports hourly, so a
-        nineteen-instance account would otherwise write hundreds of rows a day. Consecutive <b>successful</b>
-        checks <b>for the same instance</b> fold into one entry carrying the count and the period, and it
-        expands to the individual entries. <span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <b>A failure never folds</b>, even between two successes:
+      <h3>2 &middot; With a detail panel <span class="sg-cls">rec.detail</span></h3>
+      <p class="sg-note">The sentence carries the headline change; the panel carries what the
+        sentence left out, as named <b>field &middot; from &rarr; to</b> rows.
+        <span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> It must never repeat the sentence &mdash; a
+        <code class="sg-cls">Plan: Startup &rarr; Business</code> row under &ldquo;Plan changed from
+        Startup to Business&rdquo; is the same fact printed twice.</p>
+      <div class="listcard sg-actlist" data-actshape="detail"></div>
+    </div>
+    <div class="sg-item">
+      <h3>3 &middot; No actor <span class="sg-cls">a machine event</span></h3>
+      <p class="sg-note">Check-ins, expiries, automatic charges and the credit a downgrade returns.
+        <span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> The sentence simply <b>ends</b> rather than saying
+        &ldquo;System&rdquo;: the absence of a name is what says nobody did it.
+        <span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> An <b>automatic charge is its own type</b>, not a
+        paid-invoice entry with the name left off &mdash; &ldquo;charged automatically&rdquo; is a fact
+        the reader wants, and an empty actor can only say that we do not know who.</p>
+      <div class="listcard sg-actlist" data-actshape="system"></div>
+    </div>
+    <div class="sg-item">
+      <h3>4 &middot; A folded run <span class="sg-cls">rec.fold</span></h3>
+      <p class="sg-note">The one disclosure left in the feed. Check-ins are <b>derived, not
+        stored</b> &mdash; the licence reports hourly, so a nineteen-instance account would otherwise
+        write hundreds of rows a day. Consecutive <b>successful</b> checks <b>for the same instance</b>
+        fold into one entry carrying the count and the period, and it expands to the entries it folded.
+        <span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <b>A failure never folds</b>, even between two successes:
         it is the entry the reader is scanning for, and it names its cause in the sentence.</p>
-      <div class="listcard sg-actlist" data-actgroup="instance"></div>
-    </div>
-    <div class="sg-item">
-      <h3>Users and the account <span class="sg-cls">user.* &middot; account.*</span></h3>
-      <div class="listcard sg-actlist" data-actgroup="user"></div>
-    </div>
-    <div class="sg-item">
-      <h3>Billing <span class="sg-cls">billing.*</span></h3>
-      <p class="sg-note"><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> An <b>automatic charge is its own type</b>, not a paid-invoice entry with
-        the name left off: &ldquo;charged automatically&rdquo; is a fact the reader wants, and an empty
-        actor can only say that we do not know who.</p>
-      <div class="listcard sg-actlist" data-actgroup="billing"></div>
+      <div class="listcard sg-actlist" data-actshape="fold"></div>
     </div>
   </section>
 
@@ -1093,6 +1179,7 @@
     </div>
   </section>
 
+</div><!-- /.sg-main -->
 </div>
 </div><!-- /#shellMain -->
 

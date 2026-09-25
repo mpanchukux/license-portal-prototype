@@ -189,12 +189,27 @@ function alertIcon(p){
    ⚠️ A licence with no instances has no running version: nothing has reported one, and
    printing the latest release there would claim the customer is current when in fact
    they have never started. */
+/* ---------- the version's own mark (2026-09-25) ---------------------------------
+   ⚠️ TWO MARKS, AND THE `behind` ONE IS A CIRCLE, NOT A TRIANGLE. The triangle in this
+   product means "something is wrong with this licence and you must act" — it is the
+   attention marker beside `Payment failed` and `Over instance limit`. Running an older
+   release is not that: nothing is broken and nothing stops. A circled exclamation is
+   the step below, the one that says "worth knowing", and keeping the two shapes apart
+   is what lets a reader scan a column of triangles and believe them.
+   ⚠️ The mark never travels alone: the number is beside it either way, and `behind`
+   also prints `latest x.y.z`. State is not carried by the glyph. */
+function versionMark(behind){
+  return behind
+    ? '<span class="verm is-behind" role="img" aria-label="Behind the latest release">'
+      + icon('alert-circle') + '</span>'
+    : '<span class="verm" role="img" aria-label="Up to date">' + icon('circle-check') + '</span>';
+}
 function versionCell(p){
   var v = licenseVersion(p);
   if(v == null) return '<td class="lic-ver"><span class="muted">&mdash;</span></td>';
   var behind = cmpVersion(v, LATEST_VERSION) < 0;
   return '<td class="lic-ver"><div class="verline' + (behind ? ' is-behind' : '') + '">'
-    + '<span class="ver-run">' + esc(v) + '</span>'
+    + '<span class="ver-run">' + versionMark(behind) + esc(v) + '</span>'
     + (behind ? '<span class="ver-latest">latest ' + esc(LATEST_VERSION) + '</span>' : '')
     + '</div>'
     /* only when the instances disagree: the licence-level number is the LOWEST of
@@ -361,7 +376,7 @@ function headHtml(){
   return '<tr><th class="lic-prodhead">Product</th><th>License</th><th>Status</th>'
     /* next to Status on purpose: "am I current" and "is anything wrong" are read
        together, and the version gap is what argues for renewing */
-    + '<th>Product version</th>'
+    + '<th>Version</th>'
     + '<th>Updated</th>'
     + '<th aria-label="Actions"></th></tr>';
 }
@@ -433,6 +448,76 @@ function rowHtml(p, opts){
   // when the licence last changed — plan, add-ons, label or payment state
   var updatedCell = '<td class="lic-num">' + fmtDate(p.updated || p.created) + '</td>';
   return rowOpen(p) + productCell(p) + lic + statusCell(p) + versionCell(p) + updatedCell + actionsCell(p, opts) + '</tr>';
+}
+
+/* ============================================================================
+   VARIANT B — the licence table with the duplication taken out
+   ============================================================================
+   ⚠️ A PROPOSAL, RUNNING BESIDE THE CURRENT ONE. Both are live and the ⚙ panel picks
+   between them (`licTable`); nothing is replaced until somebody decides. Everything
+   below is additive — `headHtml`/`rowHtml` are untouched, so variant A is exactly the
+   table it was and the comparison is honest.
+
+   FOUR COLUMNS instead of five, and the saving is all duplication:
+     · Product      GONE — the product is on the cell's second line, and the mark in
+                    front of it already says which product from across the room.
+     · License      GONE as a column — it held the PLAN, which is now the end of that
+                    same second line.
+     · Updated      GONE — see the report. One reader, nothing sorts or filters by it.
+   What is left is: what is this (two lines) · is it alright · is it current · act.
+
+   ⚠️ THE FIRST LINE IS NEVER EMPTY AND NEVER BLANK-FIRST. A licence with no label would
+   otherwise open with nothing, so the plan moves up into line one and line two drops to
+   `product · billing model`. The column has the same shape either way; only the words
+   move. That is the whole reason this is a builder and not two templates.
+   ⚠️ ONE LINE, ELLIPSIS, FULL TEXT IN `title`. Four seeded labels run to 61 characters
+   (see the 40-char cap on the input) and a wrapping label is what makes a row two rows
+   tall. The clamp is a SAFETY NET for data that predates the cap, not the answer to it.
+   ⚠️ Variant A is deliberately NOT given the clamp: it is the thing being compared
+   against and it has to stay as it is. Its labels still wrap. */
+function licenseCellB(p){
+  var label = (p.label || '').trim();
+  var plan  = p.name || '';
+  var quiet = [p.product || '', p.type || '', label ? plan : ''].filter(Boolean).join(' · ');
+  var head  = label || plan;
+  return '<td class="licb-name">'
+    + '<span class="lp-ic" aria-hidden="true">' + licenseMark(p) + '</span>'
+    + '<span class="licb-txt">'
+    +   '<span class="licb-head" title="' + esc(head) + '">' + esc(head) + '</span>'
+    +   '<span class="licb-sub">' + esc(quiet) + '</span>'
+    + '</span></td>';
+}
+function headHtmlB(){
+  /* ⚠️ Version is the only figure in this table, and it is the only right-aligned
+     column — the heading has to move with the cells or the column reads as broken. */
+  return '<tr><th class="licb-head-name">License</th><th>Status</th><th class="lic-num">Version</th>'
+    + '<th aria-label="Actions"></th></tr>';
+}
+function rowHtmlB(p, opts){
+  return rowOpen(p).replace('class="lic-row', 'class="lic-row licb-row')
+    + licenseCellB(p) + statusCell(p) + versionCell(p) + actionsCell(p, opts) + '</tr>';
+}
+
+/* ---------- which table, and the sort that comes with it -----------------------
+   ⚠️ THE SORT BELONGS TO THE VARIANT, not to the page. B's first screen has to answer
+   "is anything wrong" without reading every row, so it leads with the licences that
+   need attention; A keeps newest-first, which is what it has always done and what it
+   is being compared as. Changing A's order would make the two differ by two things at
+   once and the comparison would prove nothing. */
+function licRowHTML(p, opts){ return licTable() === 'b' ? rowHtmlB(p, opts) : rowHtml(p, opts); }
+function licHeadHTML(){ return licTable() === 'b' ? headHtmlB() : headHtml(); }
+function licColSpan(){ return licTable() === 'b' ? 4 : 6; }
+/* attention first · then the nearest dated event · then the label, A to Z.
+   ⚠️ `dateKey('')` is NaN — a licence with no event (a grant, a free plan) must not
+   land wherever an unstable comparison drops it, so it is pushed to the end explicitly. */
+function licSortB(list){
+  return list.slice().sort(function(a, b){
+    var ra = attnRank(a), rb = attnRank(b);
+    if(ra !== rb) return ra - rb;
+    var da = a.event ? dateKey(a.event) : Infinity, db = b.event ? dateKey(b.event) : Infinity;
+    if(da !== db) return da - db;
+    return String(a.label || a.name || '').localeCompare(String(b.label || b.name || ''));
+  });
 }
 
 /* ---------- navigation ---------- */
@@ -658,7 +743,17 @@ function activitySentenceHTML(rec, scope){
   val = String(val);
   var at = plain.indexOf(val);
   if(at < 0) return esc(plain);          // the entity was in the dropped segment
-  return esc(plain.slice(0, at)) + '<b>' + esc(val) + '</b>' + esc(plain.slice(at + val.length));
+  /* ⚠️ A CHIP, NOT A BOLD (2026-09-25, by request). The subject of an entry was lifted
+     out with weight, which is the same signal the feed already spends on `.em` inside
+     sentences and on attention labels in rows — three jobs, one voice. A chip is a
+     different kind of mark: it says "this is a NAMED THING", not "this matters more",
+     and it lets a reader find the licence in a column of sentences without reading them.
+     ⚠️ It stays INSIDE the sentence and inside the same text flow — it is not pulled out
+     to a slot of its own, because the wording depends on where it sits ("Payment failed
+     on X", "Label set to Y on X") and a chip in a fixed position would have to invent a
+     word for what it is. */
+  return esc(plain.slice(0, at)) + '<span class="fi-chip">' + esc(val) + '</span>'
+    + esc(plain.slice(at + val.length));
 }
 /* The detail block. ⚠️ IT IS NOT THE RAW RECORD (decided 2026-09-24) and it is NOT
    BEHIND A BUTTON (2026-09-24, second pass): once the payload became five words of
@@ -1407,23 +1502,32 @@ function productSwapHTML(sel){
       + 'Need ' + other.t + ' instead?</button>'
     : '';
 }
+/* ⚠️ A SWITCHER AGAIN IN THE MODAL (2026-09-25, by request), and this reverses the
+   "state the product, offer an escape link" decision — but ONLY here. The two selling
+   PAGES still state it: they name the product in their own H1 and pass `statedInHead`,
+   so this function returns nothing for them and the link lives with their heading. The
+   modal has no H1 to name it, and someone who opened `Buy a license` from inside the
+   portal has chosen nothing yet — a link phrased "Need TBMQ instead?" asks them to
+   correct a choice they were never offered.
+   ⚠️ The markup is the radio-card pair the stylesheet already carried (`.nl-prodcards`,
+   `.nl-prodradio`) from before the link replaced it, and the click is read by the
+   existing `data-nl-product` branch in planPickerClick — so this adds a builder and
+   nothing else. Two real buttons in a `radiogroup`, so the keyboard and `aria-checked`
+   come from the element rather than from script. */
 function nlProductStatedHTML(sel){
-  /* ⚠️ `statedInHead` — the surface has already named the product in its own H1 (the
-     landing page does), so the row would be a second statement of it. The link still
-     has to exist, and it lives with the heading there. */
   if(sel && sel.statedInHead) return '';
   var cur = productOf(sel);
-  var other = PRODUCT_CHOICES.filter(function(o){ return o.v !== cur.v; })[0];
-  return '<div class="nl-prodrow">'
-    + '<div class="nl-stated">'
-    +   '<span class="nl-prodic">' + (productMark(cur.v) || icon(cur.ic, { size:24 })) + '</span>'
-    +   '<span class="nl-prodtxt"><span class="nl-prodname">' + cur.t + '</span>'
-    +   '<span class="nl-proddesc">' + cur.d + '</span></span>'
-    + '</div>'
-    /* a text link, deliberately not a button that looks like an option: it is an
-       escape hatch for the minority who arrived on the wrong product */
-    + (other ? '<button type="button" class="link nl-prodswap" data-nl-product="' + other.v + '">'
-        + 'Need ' + other.t + ' instead?</button>' : '')
+  return '<div class="nl-prodcards" role="radiogroup" aria-label="Product">'
+    + PRODUCT_CHOICES.map(function(o){
+        var on = o.v === cur.v;
+        return '<button type="button" class="dblock nl-prodcard' + (on ? ' on' : '') + '"'
+          + ' role="radio" aria-checked="' + on + '" data-nl-product="' + o.v + '">'
+          + '<span class="nl-prodradio" aria-hidden="true"></span>'
+          + '<span class="nl-prodic">' + (productMark(o.v) || icon(o.ic, { size:24 })) + '</span>'
+          + '<span class="nl-prodtxt"><span class="nl-prodname">' + esc(o.t) + '</span>'
+          +   '<span class="nl-proddesc">' + esc(o.d) + '</span></span>'
+          + '</button>';
+      }).join('')
     + '</div>';
 }
 /* LEVEL 2 — billing as TABS, left-aligned, standing where the heading used to.
@@ -1483,32 +1587,42 @@ function nlPlanCardHTML(c, set, sel){
   var on = !current && c.name === sel.plan;
   // Current plan = a strip sitting on the card's top edge (see .pc-strip)
   var strip = current ? '<div class="pc-strip">Current plan</div>' : '';
-  var badge = !current && c.badge ? '<span class="pill">' + c.badge + '</span>' : '';
+  /* ⚠️ THE BADGE LEFT THE HEADING ROW (2026-09-25, from a reference). It used to sit
+     beside the plan name, which made the name's line longer on exactly one card and
+     pushed `Perpetual License` around. It is a flag ON the card now, pinned to the top
+     edge and half outside it — so it costs the heading no width at all and marks the
+     card from across the row rather than from inside it. */
+  var popular = !current && c.badge === 'Popular';
+  var badge = !current && c.badge
+    ? '<span class="pill pc-badge">' + c.badge + '</span>' : '';
   /* ⚠️ ONE PRIMARY ON THE SURFACE, and it is the Popular card. The `set.cards.length === 1`
      clause is GONE (2026-09-24, by request): in practice the only one-card set is the
      perpetual group, so that clause made the perpetual Select a filled button standing
      opposite the payg row's single filled Pilot — two primaries competing across one
      offer. A group of one is not a reason to shout. */
   var primary = c.badge === 'Popular';
+  /* ⚠️ THE LABEL COMES FROM THE HOST, and only the landing page changes it. Signed out
+     a card is not something you pick — there is no account to pick it INTO — so the
+     button says what actually happens next: sign-up opens and the choice is carried
+     through it. Everywhere else the word stays `Select`, because there the click really
+     does select. See `lsel.cta` in page-landing.js. */
   var cta = current ? ''
-    : '<button class="btn' + (primary ? '' : ' sec') + ' pc-cta" data-nl-pick="' + c.name + '">Select</button>';
+    : '<button class="btn' + (primary ? '' : ' sec') + ' pc-cta" data-nl-pick="' + c.name + '">'
+      + esc(sel.cta || 'Select') + '</button>';
   return '<div class="dblock plancard ' + (current ? 'nl-current' : 'nl-select') + (on ? ' on' : '')
+    + (popular ? ' is-popular' : '')
     + '" data-plan="' + c.name + '" role="button" tabindex="' + (current ? '-1' : '0') + '"'
     + ' aria-pressed="' + on + '"' + (current ? ' aria-disabled="true"' : '') + '>'
-    + strip
-    + '<div class="pc-head"><h2>' + c.name + '</h2>' + badge + '</div>'
-    /* ⚠️ `Free` IS A BADGE, NOT A PRICE. Rendered as plain text it sat in the line where
-       the paid cards carry a 28px number, so in a row of five the two free cards read as
-       cards whose price had failed to load. `.pill` is the badge this system already has
-       (the `Popular` chip above uses it), so the free cards borrow it rather than
-       inventing a treatment.
-       ⚠️ It KEEPS THE PRICE LINE rather than replacing it — the badge sits where the
-       price sits. Dropping the line would pull every row beneath it (term, features, CTA)
-       28px up on two cards out of five, and the five cards are read ACROSS, so the rows
-       have to line up. See the report for the measurement. */
-    + '<div class="pc-price' + (c.free ? ' is-free' : '') + '">'
-    +   (c.free ? '<span class="pill pc-freebadge">Free</span>'
-                : c.price + ' <span class="pc-per">' + c.per + '</span>') + '</div>'
+    + strip + badge
+    + '<div class="pc-head"><h2>' + c.name + '</h2></div>'
+    /* ⚠️ ONE PRICE LINE FOR EVERY CARD (2026-09-25). The free plans used to print a `Free`
+       badge here instead of a number — the badge existed because the bare word `Free` read
+       as a price that had failed to load. `$0 / month` is a number, so the branch goes
+       with it: five cards, one shape, and the rows beneath still line up across the row
+       because nothing changed height. `c.free` still decides everything that is actually
+       about being free; it just no longer decides what this line looks like. */
+    + '<div class="pc-price">' + c.price
+    +   (c.per ? ' <span class="pc-per">' + c.per + '</span>' : '') + '</div>'
     + (c.term ? '<div class="pc-term">' + c.term + '</div>' : '')
     /* ⚠️ BOTH forms are emitted and the breakpoint picks one — the same technique the
        product cell already uses for its desktop and phone arrangements, and for the
@@ -1618,8 +1732,20 @@ function planGroupHTML(g, sel, many, pos){
        ⚠️ The heading is hidden on the phone when there are two groups: the tabs above
        already name the one on screen AND carry the same sentence as visible text, which
        is the half of this that a touch device needs. */
+    /* ⚠️ THE SENTENCE IS BACK OUT OF THE TOOLTIP (2026-09-25, by request), and this
+       REVERSES the 2026-09-24 decision that put it there. That decision had a measurement
+       behind it: as a line the description was as wide as the group's frame — one line
+       over four cards, three over one — so the two headings came out different heights and
+       the cards below them started on different lines.
+       ⚠️ What stops that happening again is `min-height` on `.plangroup-h`, not luck: the
+       heading block reserves two lines whatever it holds, so a one-line description and a
+       two-line one leave the cards on the same baseline. The frames are also gone now, so
+       the long sentence no longer has a box edge to fill — and the perpetual one is four
+       words. Both halves of the old objection are answered; the rule that answers them is
+       one line of CSS and it is named here so it is not removed as decoration. */
     + '<div class="plangroup-h">'
-    +   '<h3 class="pg-t">' + g.choice.t + infoIcon(g.choice.t, g.choice.d) + '</h3>'
+    +   '<h3 class="pg-t">' + g.choice.t + '</h3>'
+    +   (g.choice.d ? '<p class="pg-d">' + esc(g.choice.d) + '</p>' : '')
     + '</div>'
     + '<div class="plangrid' + (set.single ? ' one' : '') + (hasCur ? ' withcur' : '') + '">'
     +   set.cards.map(function(c){ return nlPlanCardHTML(c, set, sel); }).join('')
@@ -2124,7 +2250,7 @@ function instAllRow(r){
     +   esc(l.label || l.name) + '</a><div class="ia-licsub">' + esc(l.product || '') + ' · ' + esc(l.type) + '</div></td>'
     + '<td>' + agoText(i.agoMin) + '</td>'
     + '<td class="lic-ver"><div class="verline' + (behind ? ' is-behind' : '') + '">'
-    +   '<span class="ver-run">' + esc(i.version || '—') + '</span>'
+    +   '<span class="ver-run">' + (i.version ? versionMark(behind) : '') + esc(i.version || '—') + '</span>'
     +   (behind ? '<span class="ver-latest">latest ' + esc(LATEST_VERSION) + '</span>' : '') + '</div></td>'
     + instStatusCell(i)
     + '<td class="cellact"><div class="lic-actions">' + instRowMenu(i) + '</div></td></tr>';

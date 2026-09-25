@@ -424,10 +424,30 @@ function renderLabelSlot(lic){
 function editLabel(){
   var slot = labelSlot(), lic = activeLicense;
   if(!slot || !lic) return;
+  /* ⚠️ 40 CHARACTERS, AND THE COUNTER IS VISIBLE BEFORE YOU HIT IT. A label is a NAME —
+     "Factory A", "On-prem HQ" — and the demo has four that are sentences, up to 61
+     characters ("Production — Central Europe manufacturing cluster, building 4"). A cap
+     with no counter just stops accepting keystrokes and reads as a broken field, so the
+     count is on screen from the first character.
+     ⚠️ THIS IS A DATA RULE, so it holds in both table variants and everywhere else a
+     label is typed — this editor is the only place one can be. The four long seeded
+     labels are grandfathered: `maxlength` does not truncate an existing value, it only
+     refuses new input, so nothing in the demo loses text. What handles them on screen is
+     the ellipsis in variant B's cell, which is a safety net and not the rule. */
   slot.innerHTML = '<span class="labeledit-row">'
-    + '<input class="labelinput" id="labelInput" placeholder="Label…" aria-label="Label" value="' + esc(lic.label || '') + '">'
+    + '<input class="labelinput" id="labelInput" placeholder="Label…" aria-label="Label"'
+    +   ' maxlength="' + LABEL_MAX + '" value="' + esc(lic.label || '') + '">'
+    + '<span class="labelcount" id="labelCount" aria-live="polite"></span>'
     + '<button class="btn sec labelsave" id="labelSave">Save</button></span>';
-  var inp = $('#labelInput', slot);
+  var inp = $('#labelInput', slot), cnt = $('#labelCount', slot);
+  function tick(){
+    cnt.textContent = inp.value.length + '/' + LABEL_MAX;
+    /* over-length can only happen to a value that was already stored; the counter says
+       so rather than pretending the field is within its limit */
+    cnt.classList.toggle('over', inp.value.length > LABEL_MAX);
+  }
+  tick();
+  inp.addEventListener('input', tick);
   inp.focus();
   inp.select();
   inp.addEventListener('keydown', function(e){
