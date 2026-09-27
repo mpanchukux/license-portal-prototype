@@ -51,7 +51,7 @@ var DETAILS_HTML = ''
 + '                <!-- same placeholder square as the Home / Licenses product cell'
 + '                     (.lp-ic): solid light fill, no border. Desktop only — the'
 + '                     phone identity block was specced without it. -->'
-+ '                <span class="hd-ic lp-ic" aria-hidden="true"></span>'
++ '                <span class="hd-ic lp-ic" id="licHeadMark" aria-hidden="true"></span>'
 + '                <div class="titleblock">'
 + '                  <div class="titlekicker" data-page="sub" id="kickerSub">ThingsBoard &middot; Subscription</div>'
 + '                  <div class="titlekicker" data-page="perp" id="kickerPerp">ThingsBoard &middot; Perpetual</div>'
@@ -199,7 +199,7 @@ var DETAILS_HTML = ''
 + '                   and carried the action that cancelled it. Downgrades recalculate'
 + '                   immediately now, so there is no pending state to announce. -->'
 + ''
-+ '              <table class="plantable">'
++ '              <table class="plantable gridtbl">'
 + '                <thead>'
 + '                  <!-- Usage is hidden in the UI, not removed: the cells are still'
 + '                       rendered and the data still flows through meterRow. One CSS'
@@ -255,7 +255,7 @@ var DETAILS_HTML = ''
 + '                   renderInstances() from the licence\'s own `instances`. -->'
 + '              <p class="inst-note" id="instNote"></p>'
 + '              <div class="insttype" data-insttype="prod">'
-+ '                <table class="insttable">'
++ '                <table class="insttable gridtbl">'
 + '                  <thead>'
 + '                    <tr>'
 + '                      <th>Instance ID</th>'
@@ -272,7 +272,7 @@ var DETAILS_HTML = ''
 + '              </div>'
 + ''
 + '              <div class="insttype" data-insttype="dev" hidden>'
-+ '                <table class="insttable" id="instTableDev">'
++ '                <table class="insttable gridtbl" id="instTableDev">'
 + '                  <thead>'
 + '                    <tr>'
 + '                      <th>Instance ID</th><th>Label</th><th>Status</th>'
@@ -334,7 +334,7 @@ var DETAILS_HTML = ''
 + '                   both subscriptions and perpetuals; an invoice is an invoice, and the'
 + '                   rows come from the dataset (see renderLicInvoices). -->'
 + '              <div id="licInvBlock">'
-+ '              <table class="invtable" style="margin-top:18px">'
++ '              <table class="invtable gridtbl" style="margin-top:18px">'
 + '                <thead>'
 + '                  <tr><th>Invoice #</th><th>Date</th><th class="num">Amount</th><th>Status</th><th aria-label="Invoice actions"></th></tr>'
 + '                </thead>'
@@ -511,11 +511,24 @@ function renderPeriodRow(lic, pk){
   if(!lab || !val) return;
   var perp = pk === 'perp';
   var ic = '<span class="rowic">' + (perp ? UPDSVG : CYCLESVG) + '</span>';
-  if(lic.grant){
-    lab.textContent = 'Expiry';
-    /* ⚠️ No `.muted` here either. Its siblings on this row ("Renews Sep 13, 2026",
-       "Updates until …") are --ink from `.rowvalue`; --faint made the grant's line
-       the only lighter one. Same fact, same tone. */
+  /* ⚠️ A LICENCE WITH NO END DATE — a grant or a Free subscription (see `neverExpires`
+     in components.js, which the tables read too). Before this branch covered both, the
+     Free licence fell through to the dated wording below with `lic.event` empty, and the
+     row rendered the bare word `Renews` with nothing after it: a label promising a date
+     that never came. Caught while giving the tables the same answer — the two surfaces
+     were about to say "No expiry" and "Renews" about the same licence.
+     ⚠️ The LABEL still differs, and should. A grant's period IS its expiry, and there is
+     none; a Free subscription is still a subscription, so it keeps "Subscription period"
+     and answers it. The VALUE is one sentence for both, because it is one fact.
+     ⚠️ No `.muted` here either. Its siblings on this row ("Renews Sep 13, 2026",
+     "Updates until …") are --ink from `.rowvalue`; --faint made the grant's line
+     the only lighter one. Same fact, same tone. */
+  if(neverExpires(lic)){
+    /* ⚠️ The label is never left as it was: on the phone this row is label + value, and
+       the early return used to skip the assignment below — so a Free licence rendered a
+       value with no label at all. A grant's period IS its expiry; a Free subscription is
+       still a subscription, and says on the phone what it says on the desktop. */
+    lab.textContent = lic.grant ? 'Expiry' : 'Subscription period';
     val.innerHTML = ic + '<span class="rowtxt">No expiry</span>';
     return;
   }
@@ -804,6 +817,15 @@ function renderKicker(lic, pk){
      once the headline gained it and buried the plan under the product.
      The headline is written by renderLicenseDetails (it sets #planName), so the
      product is prepended there, not here. */
+  /* ⚠️ THE SQUARE BESIDE THE TITLE IS FILLED NOW (2026-09-27). It was a reserved slot
+     with nothing in it — sized and aligned for artwork that never arrived. What goes in
+     it is the SAME mark the licence rows carry (`licenseMark`, keyed on product ×
+     billing kind), so the row you clicked and the panel it opened wear one identity.
+     ⚠️ `aria-hidden` stays: the product, the kind and the plan are all spelled out in
+     the two lines beside it, and a reader that also announced the mark would say it
+     twice — the same reason the table's copy of this square is hidden. */
+  var mk = $('#appView #licHeadMark');
+  if(mk) mk.innerHTML = licenseMark(lic);
   el.innerHTML = esc(type)
     + '<span class="kickchip mob-only">'
     +   '<span class="chip status' + (lic.status === 'canceled' ? ' off' : '') + '">'
@@ -873,7 +895,12 @@ function renderLicenseDetails(lic){
     if(ui) ui.innerHTML = lic.grant ? '' : infoIcon('Software updates', UPDATES_LAPSE);
   } else {
     var ps = $('#periodSub');
-    if(ps) ps.textContent = (lic.status==='canceled' ? 'Active until ' : 'Renews ') + fmtDate(lic.event);
+    /* ⚠️ A Free subscription has no `event`, and this printed the bare word `Renews`
+       with nothing after it — a label promising a date that never came. Same predicate
+       the tables read (`neverExpires`, components.js), so the licence says one thing
+       about itself wherever it is shown. */
+    if(ps) ps.textContent = neverExpires(lic) ? 'No expiry'
+      : (lic.status==='canceled' ? 'Active until ' : 'Renews ') + fmtDate(lic.event);
     var price = String(lic.price).replace(/\s*\/\s*mo/i,'');
     var nc=$('#ncAmount'), when=$('#ncWhen');
     /* ⚠️ NO CHARGE AHEAD → NO BLOCK. A cancelled subscription used to keep the card

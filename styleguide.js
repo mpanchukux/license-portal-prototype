@@ -179,20 +179,27 @@ $('#sgProducts').innerHTML = nlProductStatedHTML({});
    there is nothing to call from here — a specimen would have to open a purchase to draw
    one. The markup below is copied from it; if the classes change, this changes. */
 $$('#sgWizStep').forEach(function(box){
-  var S = [['Choose your plan','Product, billing model and plan'],
-           ['Capacity','Devices, instances and AI credits'],
-           ['Add-ons','Optional features for this license'],
-           ['Review & pay','Check what you are buying']];
+  /* second field = the optional note, not a description: the stepper stopped printing
+     descriptions in 2026-09-27 and prints "(Optional)" under the one step that can be
+     passed without answering it (see stepOptional in wizard.js) */
+  var S = [['Choose your plan',''],
+           ['Capacity',''],
+           ['Add-ons','(Optional)'],
+           ['Review & pay','']];
   var here = 1;                                   // done · CURRENT · upcoming · upcoming
-  box.innerHTML = '<div class="nl-steps">' + S.map(function(d, n){
+  var out = '';
+  S.forEach(function(d, n){
     var done = n < here, cur = n === here;
-    var mark = done
-      ? '<span class="nl-smark is-done">' + icon('check') + '</span>'
-      : '<span class="nl-smark' + (cur ? ' is-cur' : '') + '">' + ('0' + (n + 1)).slice(-2) + '</span>';
-    return '<div class="nl-step' + (done ? ' is-done' : '') + (cur ? ' is-cur' : '') + '">'
-      + mark + '<span class="nl-stxt"><span class="nl-sname">' + esc(d[0]) + '</span>'
-      + '<span class="nl-sdesc">' + esc(d[1]) + '</span></span></div>';
-  }).join('') + '</div>';
+    /* the connector takes the state of the step BEFORE it, so the line INTO the current
+       step reads as travelled — `n <= here`, not `n < here`. Same off-by-one the
+       product's own renderSteps had for one pass. */
+    if(n) out += '<span class="nl-sline' + (n <= here ? ' is-done' : '') + '" aria-hidden="true"></span>';
+    out += '<div class="nl-step' + (done ? ' is-done' : '') + (cur ? ' is-cur' : '') + '">'
+      + '<span class="nl-smark">' + (n + 1) + '</span>'
+      + '<span class="nl-stxt"><span class="nl-sname">' + esc(d[0]) + '</span>'
+      + (d[1] ? '<span class="nl-sopt">' + esc(d[1]) + '</span>' : '') + '</span></div>';
+  });
+  box.innerHTML = '<div class="nl-steps">' + out + '</div>';
 });
 
 /* ---------- the licence table, both layouts, from the same rows ------------------

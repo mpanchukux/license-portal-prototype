@@ -14,6 +14,17 @@
 var WIZARD_HTML = ''
 + '<div class="fs-screen" id="nlModal" role="dialog" aria-modal="true" aria-label="Buy a license" hidden>'
 + '  <div class="fs-box">'
+/* ⚠️ THE SAME GRADIENT AS HOME, not a copy of it (2026-09-27). The box was `--bg`, a
+   flat grey that belonged to the page ground the modal covers up — so a flow launched
+   from a page with a gradient behind it landed on the one surface in the product that
+   had gone grey. This is the identical node the landing page and Home carry, styled by
+   the identical `.meshbg` rules; nothing here is a second definition, and changing the
+   pools changes all three. `.fs-box` gains `isolation` in the stylesheet so the
+   z-index:-1 layer stays inside the box instead of escaping to `.fs-screen` and being
+   painted over by the backdrop. */
++ '    <div class="meshbg" aria-hidden="true">'
++ '      <span class="mb-lav"></span><span class="mb-cream2"></span><span class="mb-cream"></span><span class="mb-lav2"></span>'
++ '    </div>'
 + '    <div class="fs-header">'
 + '      <h2 class="fs-maintitle" id="nlTitle">Buy a license</h2>'
 + '      <span class="spacer"></span>'
@@ -558,6 +569,16 @@ var NL = (function(){
                                          : 'Check what you are buying';
     return 'Card and billing details';
   }
+  /* ⚠️ ONE STEP CAN BE PASSED WITHOUT ANSWERING IT, and the stepper says which.
+     Add-ons is the only one: every switch on it is off by default and Continue is live
+     with nothing picked — its own description has said "Optional features" all along.
+     Capacity looks similar and is NOT the same: the figures it carries are what the
+     total and the entitlements are computed from, so it is passed through with values,
+     not skipped. Review and Payment commit; Choose a plan is the flow.
+     ⚠️ `stepDesc` is still here and still the one-line answer to "what does this step
+     ask for" — the stepper stopped printing it (see renderSteps), and it is kept
+     because it is the text any future surface that has room would want. */
+  function stepOptional(k){ return k === 'addons'; }
   /* ---- the stepper (2026-09-25, from a reference) --------------------------------
      ⚠️ EVERY STEP IS ON SCREEN, with its name and its description. It was a progress
      line plus "Step 2 of 4 · Capacity": that says where you are and nothing about where
@@ -580,24 +601,44 @@ var NL = (function(){
      ⚠️ ONLY the done ones are buttons. The current step is where you are and upcoming
      ones cannot be jumped to — a stepper that let you skip Capacity would be offering a
      shortcut past the thing the next step is computed from. */
+  /* ⚠️ SIMPLER, FROM A SECOND REFERENCE (2026-09-27). What went: the frame around the
+     row, the box each step sat in, the fill on the whole current step, the zero-padded
+     numbers and the description line under every name. What is left is the thing a
+     stepper is — a numbered circle, a name, and a line to the next one.
+     ⚠️ PROGRESS IS THE CONNECTOR, not the tick it replaces. A done step used to carry a
+     check mark; now the line BEHIND a step is solid ink and the line ahead of it is
+     grey, so where you are in the flow is readable from the shape of the row without
+     reading a single glyph — and, unlike a colour, it survives being printed in grey.
+     ⚠️ The line is a real element, not a border on the step: it has to absorb the slack
+     between two items of different widths, which is `flex:1` on something that exists.
+     ⚠️ DONE STEPS ARE STILL BUTTONS (2026-09-25 decision, unchanged): jumping back
+     decides nothing, because `gotoStep` only re-renders, and Back already reached the
+     same steps one at a time. Only the done ones — the current step is where you are,
+     and an upcoming one cannot be jumped to because the next step is computed from
+     what this one holds. */
   function renderSteps(){
     var here = stepIdx();
-    var items = steps().map(function(k, n){
+    var list = steps();
+    var out = '';
+    list.forEach(function(k, n){
       var done = n < here, cur = n === here;
-      var mark = done
-        ? '<span class="nl-smark is-done">' + icon('check') + '</span>'
-        : '<span class="nl-smark' + (cur ? ' is-cur' : '') + '">'
-          + ('0' + (n + 1)).slice(-2) + '</span>';
-      var inner = mark
+      /* ⚠️ The connector is drawn with the step it LEADS TO, so its own state is the
+         state of the step BEFORE it: the line into the current step has been travelled,
+         even though the step it arrives at has not been completed. `done` on this item
+         is `n < here`, which is one short — the test is `n <= here`. Caught by eye and
+         confirmed by the row: with `done` the line between step 1 and the current step 2
+         drew grey, and the stepper said nothing had been finished. */
+      if(n) out += '<span class="nl-sline' + (n <= here ? ' is-done' : '') + '" aria-hidden="true"></span>';
+      var inner = '<span class="nl-smark">' + (n + 1) + '</span>'
         + '<span class="nl-stxt"><span class="nl-sname">' + esc(stepLabel(k)) + '</span>'
-        +   '<span class="nl-sdesc">' + esc(stepDesc(k)) + '</span></span>';
-      /* a real <button>, so the keyboard and the focus ring come from the element */
-      if(done) return '<button type="button" class="nl-step is-done" data-nl-step="' + k + '"'
+        + (stepOptional(k) ? '<span class="nl-sopt">(Optional)</span>' : '')
+        + '</span>';
+      if(done) out += '<button type="button" class="nl-step is-done" data-nl-step="' + k + '"'
         + ' title="Back to ' + esc(stepLabel(k)) + '">' + inner + '</button>';
-      return '<div class="nl-step' + (cur ? ' is-cur' : '') + '"'
+      else out += '<div class="nl-step' + (cur ? ' is-cur' : '') + '"'
         + (cur ? ' aria-current="step"' : '') + '>' + inner + '</div>';
-    }).join('');
-    $('#nlSteps').innerHTML = '<div class="nl-steps">' + items + '</div>';
+    });
+    $('#nlSteps').innerHTML = '<div class="nl-steps">' + out + '</div>';
   }
 
   /* ---- step 1 — choose your product and plan ------------------------------
@@ -824,7 +865,7 @@ var NL = (function(){
     if(!list) return;
     list.innerHTML = summaryHTML();
     var totalRow = $('#nlStepCap .am-total-row');
-    if(totalRow) totalRow.innerHTML = '<span>' + (isPerp() ? 'One-time total' : 'New monthly')
+    if(totalRow) totalRow.innerHTML = '<span>' + (isPerp() ? 'One-time total' : 'Monthly')
       + '</span><span>' + money(perpMod() ? modDelta() : total()) + perSuffix() + '</span>';
   }
   /* The Devices description names every part the number is made of, and only the
@@ -918,9 +959,15 @@ var NL = (function(){
     return '<div class="fs-grid">'
       + '<div class="fs-col">' + leftHTML + '</div>'
       + '<div class="am-sec fs-right">'
+      /* ⚠️ `Monthly`, not `New monthly` (2026-09-27). This card is the running total of
+         the step you are on, not a comparison with what you had — "new" promised an old
+         figure beside it that the card never showed. The Review step's own order row
+         still says `New monthly` on a MODIFICATION, and that one is earned: it prints
+         the previous amount struck through next to it (see `.am-newmonthly .was`).
+         ⚠️ Two places write this row — here and `refreshSummary` — and they must agree. */
       +   '<div class="am-sechead"><h4>Calculation summary</h4></div>'
       +   '<div class="am-figures"><div class="am-sumlist">' + summaryHTML() + '</div>'
-      +     '<div class="am-sumrow am-total-row"><span>' + (isPerp() ? 'One-time total' : 'New monthly') + '</span><span>' + money(perpMod() ? modDelta() : total()) + perSuffix() + '</span></div>'
+      +     '<div class="am-sumrow am-total-row"><span>' + (isPerp() ? 'One-time total' : 'Monthly') + '</span><span>' + money(perpMod() ? modDelta() : total()) + perSuffix() + '</span></div>'
       /* ⚠️ THE TAX LINE BELONGS WHEREVER A TOTAL IS, and these two steps were the gap:
          the Calculation summary showed "New monthly $299.00" on Capacity and again on
          Add-ons with nothing qualifying it, so a reader met the figure twice before the

@@ -16,6 +16,10 @@
 :root{
   --ink:#1c1c1c; --mid:#6b6b6b; --faint:#9a9a9a;
   --line:#c9c9c9; --line2:#e2e2e2; --bg:#f4f4f2; --card:#ffffff;
+  /* the corner every 40px control in a toolbar shares: buttons, the search field and
+     the view switcher. At 40px tall it clamps to a pill; the number is what matters on
+     anything shorter. */
+  --btn-r:24px;
   --fill:#3d3d3d; --track:#e6e6e6;
   --chrome:#efefec; --chromeLine:#dcdcd8; --hover:#f0f0ee; --sel:#e4e4e0;
   /* ⚠️ THE THIRD COLOUR EXCEPTION, and the first one INSIDE a component rather than
@@ -270,7 +274,12 @@ a{color:inherit}
 
 /* ---------- canvas ---------- */
 .canvas{background:var(--card);border:1px solid var(--line);border-radius:6px;overflow:hidden}
-.head{padding:22px 22px 20px;border-bottom:1px solid var(--line2);background:#fafafa}
+/* ⚠️ THE BLUE HOME FADES INTO, not a grey of its own (2026-09-27). `#fafafa` was a
+   one-off literal — a near-white that belonged to no scale and sat a shade off every
+   other quiet ground in the file. `--c-blue-50` is the colour the Home gradient resolves
+   to at the foot of the page, so a licence opened from that page keeps its ground
+   instead of stepping onto a different one. */
+.head{padding:22px 22px 20px;border-bottom:1px solid var(--line2);background:var(--c-blue-50)}
 /* the back button sits alone in a narrow left gutter; every content block
    below aligns to one vertical line at --contentX from the canvas edge
    (head padding-left + gutter + gap) */
@@ -410,7 +419,7 @@ a{color:inherit}
    fade was written separately inside four containers and nowhere else. */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;
   font-family:inherit;font-size:14px;line-height:1;text-decoration:none;
-  height:var(--btnH);padding:0 13px;border-radius:24px;border:1px solid transparent;
+  height:var(--btnH);padding:0 13px;border-radius:var(--btn-r);border:1px solid transparent;
   background:transparent;color:var(--ink);cursor:pointer;position:relative;
   white-space:nowrap}
 .btn .btn-ic{flex:none}
@@ -798,8 +807,12 @@ th.num,td.num{text-align:right}
    about the palette. Holding the hue (150.8°) and saturation and darkening only the
    lightness, **#008846 is the first value that clears it, at 4.56:1** — a change small
    enough to be invisible beside the current green. One line in the primitives. */
-.statmark{display:inline-flex;align-items:center;font-size:14px;white-space:nowrap;
+.statmark{display:inline-flex;align-items:center;gap:6px;font-size:14px;white-space:nowrap;
   color:var(--status-off)}
+/* ⚠️ `currentColor` and nothing else — the glyph takes the tone from `.statmark`, so the
+   three state rules below stay the only place a status colour is written. 16px, the
+   sprite's base size, against a 14px word. */
+.statmark-ic{width:var(--ic-16);height:var(--ic-16);flex:none}
 .statmark.is-ok{color:var(--status-ok)}
 .statmark.is-alert{color:var(--status-alert)}
 .statmark.is-off{color:var(--status-off)}
@@ -1164,7 +1177,11 @@ th[aria-label$="ctions"],th.cellact,td.cellact{width:1%;white-space:nowrap;text-
 .sp-ctx{display:flex;flex-direction:column;gap:1px}
 .sp-opt input:disabled + span{color:var(--faint)}
 .sp-ctx[hidden]{display:none}
-.seg{display:flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+/* ⚠️ The same radius as the buttons it stands beside (2026-09-27) — `.seg` has exactly
+   one instance, the Instances view switcher, and it sat at 6px in a toolbar of 24px
+   buttons and 999px chips. `overflow:hidden` is what lets the checked half's fill follow
+   the rounded outline instead of squaring it off at the ends. */
+.seg{display:flex;border:1px solid var(--line);border-radius:var(--btn-r);overflow:hidden}
 .seg label{flex:1;position:relative;margin:0}
 .seg input{position:absolute;opacity:0;pointer-events:none}
 .seg span{display:block;text-align:center;padding:7px 6px;font-size:14px;color:var(--mid);cursor:pointer;background:#fff}
@@ -1256,7 +1273,19 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
    needed — a modal that fills the window stops reading as a layer over the page.
    One step down keeps three cards comfortable (~300px) and gives the backdrop back.
    Shared with the details sheet, which was never the constraint. */
-.fs-box{display:flex;flex-direction:column;width:min(1040px,92vw);height:90vh;background:var(--bg);border:1px solid var(--line);border-radius:12px;box-shadow:0 24px 64px rgba(0,0,0,.28);overflow:hidden}
+/* ⚠️ `--page-bg` + `isolation`, and both are for the mesh (2026-09-27). The ground is
+   the colour Home resolves to, and `isolation:isolate` makes the box its own stacking
+   context so the wizard's `.meshbg` (z-index:-1) stays inside it — without it the layer
+   escapes to `.fs-screen`, which is a stacking context of its own at z-index:100, and
+   the dimmed backdrop paints straight over the gradient. Same pair of properties
+   `body[data-mesh]` carries, for the same reason.
+   ⚠️ `position:relative` is the other half: the mesh is absolutely positioned and would
+   otherwise measure itself against the viewport rather than the box. */
+.fs-box{position:relative;isolation:isolate;display:flex;flex-direction:column;width:min(1040px,92vw);height:90vh;background:var(--page-bg);border:1px solid var(--line);border-radius:12px;box-shadow:0 24px 64px rgba(0,0,0,.28);overflow:hidden}
+/* ⚠️ The details and Users modals keep the flat ground they were built on: only the
+   purchase wizard was asked for the gradient, and it is the only one that carries the
+   node. This restores their own ground rather than letting them inherit the new one. */
+.licmodal .fs-box,#usersModal .fs-box{background:var(--bg)}
 .fs-screen[hidden]{display:none}
 /* one header row: muted label + title on the left, Change plan + close on the right */
 /* one row, always: a wrapping header dropped ✕ below the title once a licence
@@ -1290,7 +1319,15 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
    stay a column inside it */
 .fs-panel.nl-plansum{display:flex;align-items:flex-start;gap:14px}
 /* the two slots that hold a product mark size it here; `.prodmark` fills its box */
-.nl-plansum-ic{flex:none;display:inline-flex;color:var(--mid);margin-top:2px;width:24px;height:24px}
+/* ⚠️ 54px IS MEASURED, NOT CHOSEN, and it is the same rule `.nl-prodic` follows one
+   block up: the mark is exactly as tall as the two lines beside it, so its top and
+   bottom land on their cap and baseline instead of floating against the first line.
+   `.nl-plansum-t` 20px x 1.30 = 26, `.nl-plansum-f` 14px x 1.55 = 21.7, plus the 6px
+   `.nl-plansum-tx` gap = 53.7. If either line's size or the gap changes, this changes.
+   ⚠️ `margin-top` is gone with the reason for it: a 24px square needed nudging to sit
+   with the first line; one that spans both lines starts where they start. */
+.nl-plansum-ic{flex:none;display:inline-flex;align-items:center;justify-content:center;
+  color:var(--mid);width:54px;height:54px}
 .nl-plansum-ic .ic{width:var(--ic-24);height:var(--ic-24)}
 .nl-plansum-tx{display:flex;flex-direction:column;gap:6px;min-width:0}
 .nl-plansum-t{display:block;font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw);color:var(--ink)}
@@ -1440,50 +1477,52 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
 .nl-stepbar > div{flex:1;min-width:0}
 /* ⚠️ `.nl-stepback` IS GONE with the chevron it sized (2026-09-25). Every step behind
    the current one is its own way back now — see renderSteps. */
-.nl-steps{display:flex;align-items:stretch;gap:4px;
-  border:1px solid var(--line2);border-radius:12px;padding:6px}
-/* ⚠️ ONE RULE FOR BOTH ELEMENTS. A done step is a <button> and the rest are <div>s, so
-   the button half has to be reset back to the div it sits beside — font, background,
-   border and text alignment do not inherit into a button. Anything added below that is
-   not in this reset will make the done steps look different from the others. */
-.nl-step{flex:1;min-width:0;display:flex;align-items:center;gap:12px;text-align:left;
-  font:inherit;background:none;border:0;
-  padding:8px 12px;border-radius:8px;color:var(--faint)}
+/* ⚠️ SIMPLER, FROM A SECOND REFERENCE (2026-09-27). Gone with the old stepper: the
+   frame around the row, the padded box per step, the ink fill across the whole current
+   step, and `.nl-sdesc` — the description line under every name, which put five
+   sentences in a band that has room for none.
+   ⚠️ THE CONNECTOR CARRIES PROGRESS, and it is why the tick could go. `.nl-sline` is
+   solid ink behind the step you are on and `--line` ahead of it, so the row's own shape
+   says how far along you are; that reading survives with no colour and no glyph.
+   ⚠️ One rule for `.nl-step` covering both elements: a done step is a <button> and the
+   rest are <div>s, so font, background, border and alignment have to be reset back to
+   the div it stands beside. Anything added here that is not in that reset makes the
+   done steps look different from their neighbours. */
+.nl-steps{display:flex;align-items:center;gap:10px}
+.nl-step{flex:none;display:flex;align-items:center;gap:10px;text-align:left;
+  font:inherit;background:none;border:0;padding:0;color:var(--faint)}
+.nl-sline{flex:1;min-width:16px;height:1px;background:var(--line);border-radius:1px}
+.nl-sline.is-done{background:var(--ink)}
 button.nl-step{cursor:pointer}
-button.nl-step:hover{background:var(--hover)}
-button.nl-step:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
-/* ⚠️ THE CURRENT STEP IS THE ONLY FILLED ONE. The reference fills it in the product's
-   accent; here the fill is ink, because this is chrome inside a monochrome product and
-   `--accent` is spent on the Popular card, where it means "we suggest this". A filled
-   step does not suggest anything — it says "you are here". */
-.nl-step.is-cur{background:var(--ink);color:#fff}
-.nl-step.is-done{color:var(--ink)}
-/* the number, or a tick once the step is behind you */
+button.nl-step:hover .nl-sname{text-decoration:underline;text-underline-offset:3px}
+button.nl-step:focus-visible{outline:2px solid var(--ink);outline-offset:3px;border-radius:6px}
+/* ⚠️ ONLY THE CIRCLE FILLS. The reference fills it in the product's accent; here it is
+   ink, because this is chrome and `--accent` is spent on the Popular card, where it
+   means "we suggest this". A filled step suggests nothing — it says "you are here". */
 .nl-smark{flex:none;display:inline-flex;align-items:center;justify-content:center;
-  width:34px;height:34px;border-radius:50%;border:1.5px solid var(--line);
+  width:28px;height:28px;border-radius:50%;border:1.5px solid var(--line);
   font-size:14px;font-variant-numeric:tabular-nums;color:var(--faint)}
-.nl-step.is-cur .nl-smark{border-color:#fff;color:#fff}
-.nl-smark.is-done{border-color:var(--ink);background:var(--ink);color:#fff}
-.nl-smark .ic{width:var(--ic-16);height:var(--ic-16)}
+.nl-step.is-done .nl-smark{border-color:var(--ink);color:var(--ink)}
+.nl-step.is-cur .nl-smark{border-color:var(--ink);background:var(--ink);color:#fff}
 .nl-stxt{display:flex;flex-direction:column;min-width:0}
-.nl-sname{font-size:var(--t-small-fs);font-weight:500;line-height:1.25;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nl-sname{font-size:var(--t-small-fs);line-height:1.25;white-space:nowrap}
 .nl-step.is-done .nl-sname{color:var(--ink)}
-.nl-sdesc{font-size:14px;line-height:1.3;color:inherit;opacity:.75;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.nl-step:not(.is-cur):not(.is-done) .nl-sname{color:var(--faint)}
+.nl-step.is-cur .nl-sname{color:var(--ink);font-weight:500}
+/* the one step that can be passed without answering it says so, quietly, under its
+   name — see stepOptional */
+.nl-sopt{font-size:14px;line-height:1.2;color:var(--faint)}
 @media (max-width:900px){
-  /* the descriptions are the first thing to go: five of them across a narrow band
-     become five ellipses, which is a row of nothing */
-  .nl-sdesc{display:none}
+  /* names go before the row does: five of them across a narrow band become five
+     ellipses, and a row of circles joined by lines still reads as a stepper */
+  .nl-step:not(.is-cur) .nl-stxt{display:none}
 }
 @media (max-width:600px){
   /* on a phone the map does not fit at all — the current step, named, is what is left */
-  .nl-steps{border:0;padding:0}
-  .nl-step{display:none}
-  .nl-step.is-cur{display:flex;background:transparent;color:var(--ink);padding:0}
-  .nl-step.is-cur .nl-smark{border-color:var(--line);color:var(--mid)}
-  .nl-sdesc{display:block;color:var(--mid)}
+  .nl-steps{gap:0}
+  .nl-step,.nl-sline{display:none}
+  .nl-step.is-cur{display:flex}
+  .nl-step.is-cur .nl-smark{border-color:var(--line);background:none;color:var(--mid)}
+  .nl-step.is-cur .nl-stxt{display:flex}
 }
 .nl-foot{flex:none;display:flex;align-items:center;gap:12px;padding:12px 24px;background:#fff;border-top:1px solid var(--line2)}
 .nl-foot[hidden]{display:none}
@@ -1590,11 +1629,16 @@ button.nl-step:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 .nl-prodcards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;width:100%}
 /* a <button> reset first — these are real buttons so the keyboard and aria-pressed
    come for free, but none of the UA button chrome should survive */
-.nl-prodcard{display:flex;align-items:flex-start;gap:14px;width:100%;
+/* ⚠️ CENTRED, not top-aligned (2026-09-27). The radio sat in the top-left corner
+   because the row started at the top; against a 42px icon and two lines of text it read
+   as a mark ABOUT the card rather than the control that selects it. Centring the row
+   settles all three on one axis — the icon is already exactly two lines tall, so nothing
+   else moves. */
+.nl-prodcard{display:flex;align-items:center;gap:14px;width:100%;
   padding:20px 22px;text-align:left;font:inherit;color:var(--ink);cursor:pointer}
 /* the drawn radio — leading, before the glyph. It is the visible half of the
    role="radio" contract the markup declares. */
-.nl-prodradio{flex:none;width:20px;height:20px;margin-top:1px;border-radius:50%;
+.nl-prodradio{flex:none;width:20px;height:20px;border-radius:50%;
   border:1.5px solid var(--line);background:#fff;position:relative}
 .nl-prodcard.on .nl-prodradio{border-color:var(--ink)}
 .nl-prodcard.on .nl-prodradio::after{content:"";position:absolute;
@@ -1887,14 +1931,19 @@ button.dbrand{background:none;border:0;padding:0;color:inherit;font:inherit;curs
    ⚠️ NO EXTRA PADDING ANYWHERE IN HERE. The subordinate rows keep the cell padding every
    other row has and are not indented — the outline simply continues down from the
    heading and closes under the last of them. */
-/* ⚠️ THE GROUPED TABLE HAS NO OUTER FRAME. Every other table on a list page is a framed
-   object now (see the block above), but here the GROUPS are the framed objects — a frame
-   around them would be a box holding boxes, which is the same call made for the phone
-   card and for the Home table at 600px. The head keeps its grey band; the body is a
-   stack of groups on the page ground. */
-#instTable.is-grouped{border-collapse:separate;border-spacing:0;border:0;border-radius:0}
-#instTable.is-grouped thead th:first-child,
-#instTable.is-grouped thead th:last-child{border-radius:0}
+/* ⚠️⚠️ THE GROUPED TABLE IS FRAMED AGAIN (2026-09-27, by request), and the argument that
+   took the frame off is answered rather than ignored. It was "the GROUPS are the framed
+   objects, so a frame round them is a box holding boxes" — true while the only thing
+   separating one group from the next was its own 8px outline. The headings are BANDED
+   now: alternating fills, in the head's own grey, tell one group from the next without
+   an outline doing it. The frame is back to the one job it has on every other list page,
+   which is to say where the table ends.
+   ⚠️ THE FRAME IS ON THE TABLE, not drawn from the cells the way `.dblock` draws it. The
+   cell method puts a side border on every row, and in here every row already carries the
+   sides of its own group — two 1px lines at the same x. The head keeps the rounded top
+   it gets from the shared rule; the table draws the rest. */
+#instTable.is-grouped{border-collapse:separate;border-spacing:0;
+  border:1px solid var(--line2);border-radius:10px}
 /* ⚠️ and the frame's "last row closes the box" rule must not reach in here: the last
    row of the LAST GROUP is what closes that group, and it needs its border. */
 #instTable.is-grouped tbody tr:last-child > td{border-bottom:inherit}
@@ -1930,9 +1979,19 @@ button.dbrand{background:none;border:0;padding:0;color:inherit;font:inherit;curs
 /* ⚠️ `border-radius:inherit`, so the fill can never round differently from the box that
    holds it — 8px all round when the group is closed, top-only when it is open, and both
    answers come from the one rule above. */
+/* ⚠️ THE HEAD'S OWN GREY, not `--bg` (2026-09-27). `--bg` was the page ground the table
+   used to sit on, and it stopped being that the moment the table gained a white frame —
+   the band was then a grey belonging to nothing on screen. `--surface-quiet` is the
+   colour the column head is filled with, so the heading reads as a second head.
+   ⚠️ THE BANDS ALTERNATE, and that is what tells one group from the next now the frame
+   is back: odd groups take the frame's white. `.is-alt` is emitted per GROUP — see
+   instGroupHeadRow for why `:nth-of-type` cannot do it.
+   ⚠️ 12px sides, against the 8px it had: the heading is the widest row in the table and
+   its chevron was closer to the frame than any other cell's content. */
 .ig-btn{display:flex;align-items:center;gap:10px;width:100%;min-width:0;
-  padding:10px 8px;background:var(--bg);border:0;border-radius:inherit;
+  padding:10px 12px;background:var(--surface-quiet);border:0;border-radius:inherit;
   font:inherit;text-align:left;color:var(--ink);cursor:pointer}
+#instTable.is-grouped .instgroup.is-alt .ig-btn{background:var(--card)}
 .ig-btn:hover{background:var(--sel)}
 .ig-btn:focus-visible{outline:2px solid var(--ink);outline-offset:-2px}
 .ig-chev{flex:none;display:inline-flex;color:var(--mid);transition:transform .12s}
@@ -2376,7 +2435,7 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:trans
 /* Recent activity preview: muted timestamp on the right (replaces the status chip) */
 /* preview tables inside a dashboard block */
 .dblock table{margin-top:10px}
-.dblock table td{padding:11px 8px}
+.dblock table td,.gridtbl td{padding:11px 8px}
 /* ---------- A TABLE IS A FRAMED OBJECT (2026-09-25) -------------------------------
    From a reference: the head is a filled grey band and the whole table sits inside its
    own hairline with rounded corners.
@@ -2403,7 +2462,7 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:trans
    ⚠️ The side borders overlap in the header band — the th's and the table's sit at the
    same x, same colour, 1px on 1px — which is invisible, and cheaper than teaching the
    table where its header is. */
-.dblock table{border-collapse:separate;border-spacing:0;
+.dblock table,.gridtbl{border-collapse:separate;border-spacing:0;
   border:1px solid var(--line2);border-radius:10px}
 /* ⚠️⚠️ THE FRAME IS DRAWN ENTIRELY BY THE CELLS (2026-09-25). The table carried the sides
    and the bottom while the header carried the top — and the two were never on the same
@@ -2435,26 +2494,60 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:trans
    cut-out; `z-index:-1` keeps it inside the th's stacking context, so it hides the rows
    without hiding the th. The frame around it is white too, which is why a square backdrop
    behind a rounded corner is invisible. */
+/* ⚠️⚠️ THE PATCH FILLS THE CUT-OUT AND NOTHING ELSE (fixed 2026-09-27). It used to be
+   `inset:-1px` across the WHOLE cell, on the reasoning written above: a negative
+   z-index keeps the pane behind the th's own background. It does not, and the reason
+   is three lines further down this file — `.stickyhead th` is `position:sticky` WITH
+   `z-index:11`, so every header cell is a STACKING CONTEXT, and inside one the paint
+   order is the element's own background FIRST and its negative-z descendants after it.
+   The white pane therefore landed on top of the grey, and the header read as a band
+   with its two end cells punched out. Measured: all four `th` computed
+   `background-color: rgb(244,245,246)`, and disabling this one pseudo brought the band
+   back whole — the colour was never wrong, something was painted over it.
+   The corner is still a hole and still has to be filled (measured while stuck: at the
+   th's own top-left pixel `elementsFromPoint` returns a TD carrying a 1px side border,
+   and no th at all), so the pane stays — sized to the corner and cut to the sliver.
+   The gradient's transparent disc IS the rounded shape; only what falls outside it is
+   painted. Nothing overlaps the fill any more, so the stacking order stops mattering
+   and the rule survives whatever z-index the sticky header needs next. */
+.listframe table:not(.is-grouped) thead th:first-child,
+.listframe table:not(.is-grouped) thead th:last-child{--headPatch:11px}   /* the 10px radius + the 1px the pane sits out by */
 .listframe table:not(.is-grouped) thead th:first-child::before,
 .listframe table:not(.is-grouped) thead th:last-child::before{
-  content:"";position:absolute;inset:-1px;background:var(--card);z-index:-1}
+  content:"";position:absolute;z-index:-1;top:-1px;
+  width:var(--headPatch);height:var(--headPatch)}
+.listframe table:not(.is-grouped) thead th:first-child::before{left:-1px;
+  background:radial-gradient(circle var(--headPatch) at 100% 100%,
+    transparent 0 var(--headPatch),var(--card) var(--headPatch))}
+.listframe table:not(.is-grouped) thead th:last-child::before{right:-1px;
+  background:radial-gradient(circle var(--headPatch) at 0 100%,
+    transparent 0 var(--headPatch),var(--card) var(--headPatch))}
 .listframe table:not(.is-grouped) tbody td:first-child{border-left:1px solid var(--line2)}
 .listframe table:not(.is-grouped) tbody td:last-child{border-right:1px solid var(--line2)}
-.dblock thead th,.listframe thead th{background:var(--surface-quiet);
+/* ⚠️ `.gridtbl` IS THE THIRD MEMBER OF THIS LOOK (2026-09-27), and it is a CLASS rather
+   than another ancestor because the tables that need it — Plan, Instances and Invoices
+   inside the licence panel — share no wrapper with Home's blocks and are mounted in two
+   hosts (the page and the modal). Opting in by name says which tables were meant to
+   look alike; an ancestor selector would have swept in whatever else lands there later.
+   ⚠️ NOTHING IS COPIED. Every rule that draws the framed table gained one selector, so
+   there is still one definition of it — change the radius here and all three follow. */
+.dblock thead th,.listframe thead th,.gridtbl thead th{background:var(--surface-quiet);
   border-bottom:1px solid var(--line2)}
-.dblock thead th{padding:11px 8px}
-.dblock thead th:first-child,.listframe thead th:first-child{border-top-left-radius:10px;padding-left:18px}
-.dblock thead th:last-child,.listframe thead th:last-child{border-top-right-radius:10px;padding-right:18px}
-.dblock table tbody td:first-child,.listframe table tbody td:first-child{padding-left:18px}
-.dblock table tbody td:last-child,.listframe table tbody td:last-child{padding-right:18px}
+.dblock thead th,.gridtbl thead th{padding:11px 8px}
+.dblock thead th:first-child,.listframe thead th:first-child,.gridtbl thead th:first-child{border-top-left-radius:10px;padding-left:18px}
+.dblock thead th:last-child,.listframe thead th:last-child,.gridtbl thead th:last-child{border-top-right-radius:10px;padding-right:18px}
+.dblock table tbody td:first-child,.listframe table tbody td:first-child,.gridtbl tbody td:first-child{padding-left:18px}
+.dblock table tbody td:last-child,.listframe table tbody td:last-child,.gridtbl tbody td:last-child{padding-right:18px}
 /* the last row closes the frame — on Home the table's own border does it, so the row
    stands down; on a list page there is no table border and the row IS the bottom edge */
-.dblock table tbody tr:last-child > td{border-bottom:0}
+.dblock table tbody tr:last-child > td,.gridtbl tbody tr:last-child > td{border-bottom:0}
 .listframe table:not(.is-grouped) tbody tr:last-child > td{border-bottom:1px solid var(--line2)}
 .dblock table tbody tr:last-child > td:first-child,
-.listframe table tbody tr:last-child > td:first-child{border-bottom-left-radius:10px}
+.listframe table tbody tr:last-child > td:first-child,
+.gridtbl tbody tr:last-child > td:first-child{border-bottom-left-radius:10px}
 .dblock table tbody tr:last-child > td:last-child,
-.listframe table tbody tr:last-child > td:last-child{border-bottom-right-radius:10px}
+.listframe table tbody tr:last-child > td:last-child,
+.gridtbl tbody tr:last-child > td:last-child{border-bottom-right-radius:10px}
 .dblock .tablescroll{overflow:visible}
 
 /* New-user empty state: plan structure. Switchers reuse the .seg segmented
@@ -3460,8 +3553,14 @@ body.list-empty #pageTitleRow #licNewBtn{display:none !important}
 .lic-filterrow{margin-bottom:14px}
 /* persistent search input (always-visible, magnifier inside) — standard toolbar element */
 .searchbox{position:relative;flex:none;width:280px;max-width:100%}
-.searchbox .searchglyph{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:var(--ic-16);height:var(--ic-16);color:var(--faint);pointer-events:none}
-.searchbox input{font:inherit;font-size:14px;width:100%;height:var(--btnH);border:1px solid var(--line);border-radius:6px;padding:0 10px 0 32px;background:#fff;color:var(--ink);outline:none}
+/* ⚠️ THE FIELD TAKES THE BUTTON'S RADIUS (2026-09-27). It was 6px standing in a toolbar
+   of 24px buttons and 999px chips — the one control in the row with a different corner.
+   `var(--btn-r)` rather than the number, so the two cannot drift apart again.
+   ⚠️ THE INSETS GREW WITH IT, and that is not decoration: at 40px tall a 24px radius
+   clamps to a pill, so the left edge at mid-height is the widest point of the curve and
+   a glyph at 10px sat on it. 14px clears the curve; the text follows at 38. */
+.searchbox .searchglyph{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:var(--ic-16);height:var(--ic-16);color:var(--faint);pointer-events:none}
+.searchbox input{font:inherit;font-size:14px;width:100%;height:var(--btnH);border:1px solid var(--line);border-radius:var(--btn-r);padding:0 10px 0 38px;background:#fff;color:var(--ink);outline:none}
 .searchbox input:focus{border-color:var(--ink)}
 /* the clear control — inside the field, trailing edge, only when there is text */
 /* ⚠️ Position only: the box is `btn--ghost btn--md btn--icon`. 40px inside a 40px
@@ -3471,7 +3570,7 @@ body.list-empty #pageTitleRow #licNewBtn{display:none !important}
 .searchclear:hover{color:var(--ink);background:var(--hover)}
 .searchclear[hidden]{display:none}
 .searchclear .ic{width:var(--ic-16);height:var(--ic-16)}
-.searchbox input{padding-right:36px}
+.searchbox input{padding-right:40px}
 .searchbox input::placeholder{color:var(--faint)}
 .lic-toggle{display:inline-flex;align-items:center;height:var(--btnH);gap:9px;font-size:14px;color:var(--mid);cursor:pointer;margin-left:12px}
 /* Type filter: segmented chips, mutually exclusive */
@@ -3521,6 +3620,9 @@ a.lp-cell:hover .lp-name{text-decoration:underline;text-underline-offset:2px}
    shape. The mark sits inside it, so every alignment the square was holding is kept. */
 .lp-ic{width:40px;height:40px;flex:none;border-radius:6px;display:flex;
   align-items:center;justify-content:center;overflow:hidden}
+/* the compact cell (invoices, Home's preview blocks): same mark, smaller box — the
+   invoice row is one line tall and a 40px square would set its height */
+.lp-ic--sm{width:24px;height:24px;border-radius:4px}
 /* one rule for the product artwork wherever it appears — row, picker, wizard summary */
 .prodmark{display:block;width:100%;height:100%;object-fit:contain}
 /* The cell has a floor (min-width above) and the text a ceiling: auto table layout

@@ -50,20 +50,41 @@ function attnRank(l){
    product — the menu item, the cancel dialog, the activity copy, `.pill.off` — spells it
    with one, and a status that disagrees with the dialog that sets it is worse than a
    spelling preference. Flagged rather than silently changed. */
+/* ⚠️ THE GLYPH IS BACK, LEFT OF THE WORD (2026-09-27, by request), and it closes a gap
+   the notes had already named. When the icons came out of this column on 2026-09-25 the
+   record said it plainly: "колір тепер ЄДИНИЙ візуальний носій у цій комірці" — the cell
+   was left leaning on the WORD alone to survive without colour. The hard constant asks
+   for more than that: every coloured mark carries a different SHAPE as well.
+   Three states, three outlines — a tick, a cross, a warning triangle — so the column
+   reads with the colour removed, printed in grey, or seen by someone who cannot tell
+   green from red. `circle-x` rejoined the sprite for the middle one (see ICONS).
+   ⚠️ `aria-hidden`: the word is right there and says the same thing. */
+var STATUS_IC = { ok:'circle-check', off:'circle-x', alert:'alert-triangle-filled' };
 function statusMark(l){
   var st = l && typeof l === 'object' ? l.status : l;
-  if(st==='canceled')
-    return '<span class="statmark is-off">Canceled</span>';
+  function mark(tone, word){
+    return '<span class="statmark is-' + tone + '">'
+      + icon(STATUS_IC[tone], { cls:'statmark-ic' }) + word + '</span>';
+  }
+  if(st==='canceled') return mark('off', 'Canceled');
   /* ⚠️ The one attention state that IS a status — see statusChipHTML. A row that says
      `Active` while its own state line says "Over instance limit · 2 of 1" is the list
      contradicting itself in two adjacent cells. */
-  if(typeof l === 'object' && instOverLimit(l))
-    return '<span class="statmark is-alert">Blocked</span>';
-  return '<span class="statmark is-ok">Active</span>';
+  if(typeof l === 'object' && instOverLimit(l)) return mark('alert', 'Blocked');
+  return mark('ok', 'Active');
 }
 /* What the next date means depends on the licence: a subscription renews, a
    perpetual stops receiving updates, a cancelled subscription runs out, and a
    grant never expires. Attention states keep their date here. */
+/* ⚠️ ONE QUESTION, ONE PREDICATE: does this licence have an end date at all?
+   TWO kinds answer no, and until now they answered it in two different ways. A community
+   grant carries `grant:true` and said "No expiry"; a Free subscription carries neither a
+   flag nor an `event`, so it fell through to the em dash — and an em dash does not mean
+   "this never ends", it means "there is nothing here". The reader of a Free row was left
+   to work out which. Same fact, same words.
+   ⚠️ Read off the TIER, not the price or the name: `price:'Free'` is also what a grant
+   prints, and the name is a label someone can change. The tier is the identifier. */
+function neverExpires(p){ return !!(p && (p.grant || p.tier === 'free')); }
 function stateText(p){
   /* ⚠️ No `.muted` wrapper. `.muted` is --faint, while every other state ("Renews
      Sep 02, 2026", "Updates until …") inherits --mid from .licstat-txt/.licstat-mob
@@ -79,7 +100,7 @@ function stateText(p){
      the sentence, and the line keeps to the few words the brief asks for. */
   var attn = attentionOf(p);
   if(attn) return attn.label;
-  if(p.grant)  return 'No expiry';
+  if(neverExpires(p)) return 'No expiry';
   if(!p.event) return '<span class="muted">—</span>';
   var d = fmtDate(p.event);
   return p.status === 'canceled' ? ('Active until ' + d)
@@ -118,7 +139,7 @@ var KEYSVG = icon('key');
    keeping a second phrasing that can drift. */
 function stateMobile(p){
   if(instOverLimit(p)) return '<span>' + stateText(p) + '</span>';
-  if(p.grant)  return 'No expiry';                    // same tone as every other state
+  if(neverExpires(p)) return 'No expiry';             // same tone as every other state
   if(!p.event) return '<span class="muted">&mdash;</span>';
   return (p.type === 'Perpetual' ? UPDSVG : CYCLESVG) + '<span>' + stateText(p) + '</span>';
 }
@@ -283,7 +304,7 @@ function autoChargeIcon(v){
 }
 /* One builder for all three invoice tables, so none of them can drift:
      · the Invoices page  — the full Product cell
-     · the Home block     — opts.bareProduct: the type line only
+     · the Home block     — opts.bareProduct: 24px mark + the type line, no label
      · the licence's own Invoices tab — opts.noProduct: no column at all, because
        every row on it belongs to the licence you are already looking at
    Everything else (the auto-charge mark, the row actions) is identical everywhere. */
@@ -309,7 +330,12 @@ function autoChargeIcon(v){
    the one direction that lies. */
 function invStatusMark(v){
   var st = v.status || 'Paid';
-  return '<span class="statmark ' + (st === 'Paid' ? 'is-ok' : 'is-alert') + '">' + esc(st) + '</span>';
+  /* ⚠️ The glyph comes back here too, and it has to: the note beside this builder says
+     these two columns "cannot drift", and a licence status with a shape beside an
+     invoice status without one is exactly that drift. */
+  var tone = st === 'Paid' ? 'ok' : 'alert';
+  return '<span class="statmark is-' + tone + '">'
+    + icon(STATUS_IC[tone], { cls:'statmark-ic' }) + esc(st) + '</span>';
 }
 function invRow(v, opts){
   opts = opts || {};
@@ -485,8 +511,14 @@ function productCell(p, opts){
      a grant — because the supplied artwork is colour-coded on exactly those three. The
      wizard and the product picker still take `productMark`: they are choosing a PRODUCT,
      and there is no licence yet to have a kind. */
-  var inner = (bare ? '' : '<span class="lp-ic" aria-hidden="true">'
-    + licenseMark(p) + '</span>') + txt;
+  /* ⚠️ `bare` NO LONGER MEANS "no mark" (2026-09-27). It meant that while the square was
+     an empty grey placeholder — a box worth dropping from a compact cell. It holds real
+     colour-coded artwork now, and that artwork is the fastest way to tell a TBMQ line
+     from a ThingsBoard one in a list of invoices, so the compact cell keeps it and only
+     shrinks it: 24px against the 40px the licence tables use. What `bare` still drops is
+     the phone's two-line identity and the licence label. */
+  var inner = '<span class="lp-ic' + (bare ? ' lp-ic--sm' : '') + '" aria-hidden="true">'
+    + licenseMark(p) + '</span>' + txt;
   /* The flex row lives inside the cell, never on it: a <td> that becomes a flex
      container stops being a table cell and takes the column widths with it.
      opts.link makes that row a real anchor to this licence's details — keyboard

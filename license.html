@@ -11,7 +11,17 @@
      you go back through, so on the phone its app bar leads with ✕ instead of the
      chevron and drops the avatar — ⋮ is the single trailing action. syncAppBar
      swaps the glyph; the ≤600px block hides the profile control. -->
-<body data-page="license" data-nav="licenses" data-title="License" data-back="licenses.html" data-backicon="close">
+<body data-page="license" data-nav="licenses" data-title="License" data-back="licenses.html" data-backicon="close" data-mesh>
+
+<!-- The ground: the same gradient Home and the landing page carry, injected by the same
+     markup and styled by the same rules (see "Home: animated mesh gradient" in
+     styles.css). `data-mesh` on <body> is the switch — it is what turns the body into
+     a stacking context, drops the grounds that would paint over the layer, and rests
+     the top bar on it. -->
+<div class="meshbg" aria-hidden="true">
+  <span class="mb-lav"></span><span class="mb-cream2"></span><span class="mb-cream"></span><span class="mb-lav2"></span>
+</div>
+
 
 <div id="shellMain">
 <!-- the surface itself is license-details.js; this page is one of its two hosts -->

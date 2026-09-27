@@ -98,9 +98,15 @@
 
     <div class="sg-item">
       <h3>Radii</h3>
+      <p class="sg-note"><code class="sg-cls">--btn-r</code> is the toolbar corner: every 40px control
+        standing in a row together takes it &mdash; buttons, the search field and the Instances view
+        switcher. At 40px tall it clamps to a pill, so the number only shows on anything shorter.
+        The two that did not have it (search and the switcher, both 6px) were the only different corners
+        in those rows until 2026-09-27.</p>
       <div class="sg-radii">
         <div style="border-radius:5px">5px · controls</div>
         <div style="border-radius:6px">6px · inputs</div>
+        <div style="border-radius:24px">24px · --btn-r</div>
         <div style="border-radius:8px">8px · cards</div>
         <div style="border-radius:10px">10px · blocks</div>
         <div style="border-radius:12px">12px · modal</div>
@@ -406,10 +412,20 @@
         writes &ldquo;Cancelled&rdquo;. Every other surface &mdash; the menu item, the cancel dialog, the
         activity copy &mdash; spells it with one, and a status disagreeing with the dialog that sets it is
         worse than a spelling preference.</p>
+      <p class="sg-note"><b><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> The glyph came back on 2026-09-27</b>, and it is what
+        makes the promise at the top of this page true for this cell. Between 2026-09-25 and then the
+        column carried the <b>word alone</b> beside a colour &mdash; the note written at the time said so
+        in as many words &mdash; which is one carrier, not two. Three states, three outlines:
+        <code class="sg-cls">circle-check</code>, <code class="sg-cls">circle-x</code>,
+        <code class="sg-cls">alert-triangle-filled</code>. Remove the colour and the column still reads.</p>
+      <p class="sg-note"><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> These three are <b>typed out here</b>, not rendered:
+        <code class="sg-cls">statusMark</code> takes a licence and Blocked needs one that is over its
+        instance limit. The glyph choice lives in <code class="sg-cls">STATUS_IC</code> &mdash; change it
+        there and change it here.</p>
       <div class="sg-row">
-        <div class="sg-cell"><span class="statmark is-ok">Active</span><span class="sg-cls">.statmark.is-ok</span></div>
-        <div class="sg-cell"><span class="statmark is-off">Canceled</span><span class="sg-cls">.statmark.is-off</span></div>
-        <div class="sg-cell"><span class="statmark is-alert">Blocked</span><span class="sg-cls">.statmark.is-alert</span></div>
+        <div class="sg-cell"><span class="statmark is-ok"><svg class="ic statmark-ic" aria-hidden="true"><use href="assets/icons.svg#ti-circle-check"></use></svg>Active</span><span class="sg-cls">.statmark.is-ok</span></div>
+        <div class="sg-cell"><span class="statmark is-off"><svg class="ic statmark-ic" aria-hidden="true"><use href="assets/icons.svg#ti-circle-x"></use></svg>Canceled</span><span class="sg-cls">.statmark.is-off</span></div>
+        <div class="sg-cell"><span class="statmark is-alert"><svg class="ic statmark-ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle-filled"></use></svg>Blocked</span><span class="sg-cls">.statmark.is-alert</span></div>
       </div>
     </div>
     <div class="sg-item">
@@ -783,8 +799,8 @@
   <!-- ============================ STEPPER ============================ -->
   <section class="sg-sec" id="stepper">
     <h2>Wizard stepper</h2>
-    <p>One stepper: <b>every step at once</b>, each with its name and a line saying what it asks for.
-      A frame under the header hairline, one item per step, and the current one filled.</p>
+    <p>One stepper: <b>every step at once</b>, each a numbered circle and a name, joined by a line.
+      Only the <b>circle</b> of the current step is filled.</p>
     <p class="sg-note"><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <b>It was a progress line until 2026-09-25</b> &mdash; a 3px
       track and a &ldquo;Step 2 of 4 &middot; Capacity&rdquo; row. That says where you are and nothing about
       where you are going, and on a flow whose <b>length changes with the plan</b> that is the half that
@@ -798,20 +814,31 @@
       step the flow does not have.</p>
     <div class="sg-item">
       <h3>Three states <span class="sg-cls">.nl-steps &gt; .nl-step</span></h3>
-      <p class="sg-note"><b>Done</b> is a filled tick, <b>current</b> is a filled row, <b>upcoming</b> is a
-        ringed number in grey. <span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> The fill is <b>ink, not the accent</b>: the accent is
+      <p class="sg-note"><b>Done</b> is a ringed number in ink, <b>current</b> is a filled circle,
+        <b>upcoming</b> is a ringed number in grey. <span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> The fill is <b>ink, not the accent</b>: the accent is
         spent on the Popular plan card, where it means &ldquo;we suggest this&rdquo;. A filled step suggests
         nothing &mdash; it says you are here.</p>
+      <p class="sg-note"><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <b>The connector carries progress</b>, and it is
+        what let the tick go. The line <i>behind</i> a step is solid ink and the line <i>ahead</i> of it is
+        grey, so how far along you are is readable from the row&rsquo;s own shape &mdash; with no glyph to
+        recognise and nothing that depends on colour. The line into the <b>current</b> step counts as
+        travelled: you got there.</p>
+      <p class="sg-note"><b>One step says it can be skipped.</b> <i>Add-ons</i> carries
+        &ldquo;(Optional)&rdquo; under its name &mdash; every switch on it is off by default and Continue is
+        live with nothing picked. <i>Capacity</i> looks similar and is not the same: it is passed through
+        <i>with values</i>, because the total and the entitlements are computed from them.</p>
       <div class="sg-static" style="padding:0">
         <div class="nl-stepbar"><div id="sgWizStep"></div></div>
       </div>
-      <p class="sg-note"><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <b>Done steps are not clickable</b>, and that is a decision
-        rather than an omission: a stepper you can see all of invites clicking, but jumping back has to say
-        what happens to everything entered after the target. <b>Back</b> moves one step at a time and is the
-        only way back.</p>
-      <p class="sg-note"><b>Below 900px the descriptions go</b> &mdash; five of them across a narrow band
-        become five ellipses. <b>Below 600px only the current step is shown</b>, named and described: the
-        map does not fit, and the one thing it has to answer is &ldquo;where am I&rdquo;.</p>
+      <p class="sg-note"><b>Done steps are clickable</b>, and the worry that kept them inert was measured
+        away: jumping back decides nothing about what was entered after the target, because
+        <code class="sg-cls">gotoStep</code> only re-renders &mdash; a jump of three is three Backs, which
+        was always allowed. Only the done ones: the current step is where you are, and an upcoming one
+        cannot be jumped to because the next step is computed from what this one holds.</p>
+      <p class="sg-note"><b>Below 900px the names go</b> &mdash; four of them across a narrow band become
+        four ellipses, and circles joined by lines still read as a stepper. <b>Below 600px only the current
+        step is shown</b>, named: the map does not fit, and the one thing it has to answer is
+        &ldquo;where am I&rdquo;.</p>
     </div>
   </section>
 

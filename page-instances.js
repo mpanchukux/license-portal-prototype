@@ -77,9 +77,15 @@ function instGroupIsOpen(licId, index){
   if(instOpen[licId] === undefined) return index === 0;
   return instOpen[licId];
 }
-function instGroupHeadRow(lic, n, open){
+/* ⚠️ THE STRIPE IS EMITTED, NOT INFERRED (2026-09-27). `:nth-of-type` cannot see the
+   groups: between two headings sit a variable number of instance rows and a spacer row,
+   so "every other `<tr>`" counts the wrong things and the stripe changes whenever a
+   group is opened or a filter hides a row. `n` is the group's own index, so the banding
+   depends on the list of GROUPS and nothing else. */
+function instGroupHeadRow(lic, n, open, idx){
   var id = esc(lic.id);
-  return '<tr class="instgroup' + (open ? ' is-open' : '') + '" data-instgroupid="' + id + '"><td colspan="5">'
+  return '<tr class="instgroup' + (open ? ' is-open' : '') + (idx % 2 ? ' is-alt' : '')
+    + '" data-instgroupid="' + id + '"><td colspan="5">'
     + '<button type="button" class="ig-btn" data-instgroup="' + id + '"'
     +   ' aria-expanded="' + (open ? 'true' : 'false') + '">'
     +   '<span class="ig-chev" aria-hidden="true">'
@@ -118,7 +124,7 @@ function instGroupedHTML(rows){
   return out + order.map(function(k, n){
     var g = by[k], open = instGroupIsOpen(k, n);
     var last = g.rows.length - 1;
-    return instGroupHeadRow(g.lic, g.rows.length, open)
+    return instGroupHeadRow(g.lic, g.rows.length, open, n)
       + (open ? g.rows.map(function(r, i){
           return instGroupRow(r, i === last ? 'is-last' : '');
         }).join('') : '')

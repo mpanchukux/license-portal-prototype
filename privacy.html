@@ -8,7 +8,17 @@
 <link rel="stylesheet" href="styles.css">
 </head>
 <!-- data-public: readable signed out — the sign-up consent line links here (see isPublicPage) -->
-<body data-page="privacy" data-nav="" data-title="Privacy policy" data-public>
+<body data-page="privacy" data-nav="" data-title="Privacy policy" data-public data-mesh>
+
+<!-- The ground: the same gradient Home and the landing page carry, injected by the same
+     markup and styled by the same rules (see "Home: animated mesh gradient" in
+     styles.css). `data-mesh` on <body> is the switch — it is what turns the body into
+     a stacking context, drops the grounds that would paint over the layer, and rests
+     the top bar on it. -->
+<div class="meshbg" aria-hidden="true">
+  <span class="mb-lav"></span><span class="mb-cream2"></span><span class="mb-cream"></span><span class="mb-lav2"></span>
+</div>
+
 
 <div id="shellMain">
 <div class="licview" id="privacyView">
