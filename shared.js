@@ -388,6 +388,15 @@ function instView(){ return Store.get('instView') === 'grouped' ? 'grouped' : 'f
    Stored, so it survives a reload; in the same key as everything else, so
    `Reset demo data` drops it with the rest. */
 function licTable(){ return Store.get('licTable') === 'b' ? 'b' : 'a'; }
+/* ⚠️ A SECOND, INDEPENDENT VARIANT AXIS (2026-09-28, by request). `licTable` is about
+   the ROWS (five columns or four); this is about the TOOLBAR above them (chips plus an
+   `Active only` switch, or two dropdowns). They are deliberately not one setting: the
+   proposals arrived separately, they can be judged separately, and folding them into one
+   switch would force a reader comparing toolbars to also accept a different table.
+   ⚠️ 'a' IS THE DEFAULT for the same reason `licTable` is: a proposal that ships as the
+   default has been decided rather than proposed. Same store key, so `Reset demo data`
+   drops it with everything else. */
+function licBar(){ return Store.get('licBar') === 'b' ? 'b' : 'a'; }
 function dashVariant(){ return dashState().variant; }
 /* ⚠️ DERIVED, not stored. `empty:true` used to be a flag on the state above, set once
    by setSession('new') and cleared by nobody — so buying a licence left Home on its
@@ -1028,6 +1037,18 @@ function settingsBodyHTML(){
      ⚠️ Offered on Home as well as on the Licenses page, because Home's block renders
      THE SAME row component — a setting that changed one and not the other would make
      two tables out of one and the comparison would be against a fork. */
+  /* ---- Licenses toolbar: the current controls, or the two-dropdown proposal ----
+     ⚠️ Scoped to the Licenses page ONLY, unlike `Licenses table` above. The table row is
+     rendered on Home too, so a setting that changed one and not the other would fork it;
+     a TOOLBAR exists on exactly one surface, and offering the switch on Home would be a
+     control for something not on the screen. */
+  if(c.licenses){
+    out += group('Licenses toolbar',
+      '<label class="sp-opt"><input type="radio" name="licBar" value="a"' + (licBar() === 'a' ? ' checked' : '') + '><span>A \u2014 current (chips + Active only)</span></label>'
+      + '<label class="sp-opt"><input type="radio" name="licBar" value="b"' + (licBar() === 'b' ? ' checked' : '') + '><span>B \u2014 proposal (two dropdowns)</span></label>'
+      + '<div class="sp-hint">B replaces the type chips and the Active only switch with a Type and a Status dropdown, both starting at All \u2014 so nothing is hidden until you narrow it.</div>');
+  }
+
   if(c.licenses || c.home){
     out += group('Licenses table',
       '<label class="sp-opt"><input type="radio" name="licTable" value="a"' + (licTable() === 'a' ? ' checked' : '') + '><span>A — current (5 columns)</span></label>'
@@ -1779,6 +1800,13 @@ function wireSettingsPanel(){
         if(typeof renderProducts === 'function') renderProducts();
         if(typeof renderDashLicenses === 'function') renderDashLicenses();
         return;
+      /* ⚠️ NO RELOAD. Both toolbars are in the markup and one of them is hidden, so
+         swapping is an attribute plus a repaint — and the filters the reader has already
+         set survive the swap, which is the whole point of being able to compare. */
+      case 'licBar':
+        Store.set('licBar', r.value);
+        if(typeof applyLicBar === 'function') applyLicBar();
+        return;
       // the details presentation is a stored setting; rows read it on click
       case 'licDetails':
         Store.set('licDetails', r.value);
@@ -2342,7 +2370,11 @@ function syncTitleRow(){
     }
     return;
   }
-  if(row) return;                       // already built
+  /* ⚠️ Already built — but the LICENCES page can swap its whole toolbar underneath this
+     row while the phone layout is up (see applyLicBar), so "built" is not "finished".
+     Everything else about the row is unchanged; only which toolbar's controls it is
+     holding can change. */
+  if(row){ homeToolbarControls(row); return; }
 
   /* ⚠️ ONE header row per page, never a row inside a row. The settings pages ship
      their own `.pagehead` (sticky, holding the H1 and Save) in markup; inserting a
@@ -2369,13 +2401,14 @@ function syncTitleRow(){
   }
 
   /* a back control leads the row when the page declares one — the same data-back
-     the app bar used to read, so there is still one source for "where does back go" */
-  var backHref = document.body.getAttribute('data-back');
+     the app bar used to read, so there is still one source for "where does back go"
+     ⚠️ NOTHING IS RELOCATED ANY MORE (2026-09-28). `#secBackBtn` used to live outside the
+     header, in the `.secgrid` gutter column, so the phone had to move it in and put it
+     back on the way out — which is what `data-homed` recorded. Change password puts it
+     inside the header row in markup, so the only thing left to do is make sure it LEADS
+     that row, which the branch below already does. The marking is removed rather than
+     left pointing at `.secgrid`, a node that no longer exists. */
   var back = $('#secBackBtn');
-  if(backHref && back){
-    back.setAttribute('data-homed', '.secgrid');
-    if(!existing) row.appendChild(back);
-  }
   if(!existing){
     row.appendChild(h1);
     var sp = document.createElement('span');
@@ -2385,15 +2418,35 @@ function syncTitleRow(){
     row.insertBefore(back, row.firstChild);   // back leads the row it already had
   }
 
-  /* refresh first, then the primary — so the destructive-free, always-present
-     action keeps one position across every list page and the page-specific one
-     sits on the outside */
-  [['[data-refresh]', '.lic-controls, .insttoolbar'], ['#licNewBtn', '.lic-controls']]
+  homeToolbarControls(row);
+}
+/* refresh first, then the primary — so the destructive-free, always-present action
+   keeps one position across every list page and the page-specific one sits on the
+   outside.
+   ⚠️⚠️ `:not([hidden])`, AND IT IS NOT A TIDY-UP. The Licenses page carries TWO
+   `.lic-controls` now — the current toolbar and the proposal, one of them hidden — and
+   `$()` returns the first match. Without this the phone would lift the HIDDEN toolbar's
+   Refresh and primary into the title row, which reads as "the buttons do nothing".
+   ⚠️ `#licNewBtnB` is listed beside `#licNewBtn` rather than the two sharing one id or
+   one attribute: they are two nodes in two layouts, and a selector that names both is
+   cheaper than a button that hops hosts on every switch.
+   ⚠️ `data-homed` RECORDS THE HOST'S OWN ID where it has one. It used to record the
+   class path, which resolved back to the FIRST `.lic-controls` — so a control lifted out
+   of toolbar B would have been put back into toolbar A. */
+function homeToolbarControls(row){
+  /* anything whose home toolbar is now the hidden one goes back before we pick again */
+  $$('[data-homed]', row).forEach(function(el){
+    var home = document.querySelector(el.getAttribute('data-homed'));
+    if(home && home.hasAttribute('hidden')){ home.appendChild(el); el.removeAttribute('data-homed'); }
+  });
+  [['[data-refresh]', '.lic-controls:not([hidden]), .insttoolbar'],
+   ['#licNewBtn, #licNewBtnB', '.lic-controls:not([hidden])']]
     .forEach(function(pair){
       var host = $('#shellMain ' + pair[1].split(',')[0]) || $('#shellMain ' + (pair[1].split(',')[1] || '').trim());
       var el = host ? $(pair[0], host) : null;
       if(!el) return;
-      el.setAttribute('data-homed', '#shellMain ' + (el.closest('.lic-controls') ? '.lic-controls' : '.insttoolbar'));
+      el.setAttribute('data-homed', host.id ? '#' + host.id
+        : '#shellMain ' + (el.closest('.lic-controls') ? '.lic-controls' : '.insttoolbar'));
       row.appendChild(el);
     });
 }
@@ -2439,12 +2492,19 @@ function stickyLine(scroller, el){
 function wireStickyFrame(frame, scroller){
   if(!frame || !scroller || frame.__sticky) return;
   frame.__sticky = true;
-  var bar = frame.querySelector('.stickybar');
+  /* ⚠️⚠️ RE-QUERIED, NOT CAPTURED (2026-09-28). The Licenses page has two `.stickybar`
+     toolbars with one of them hidden, and a captured reference would pin `--barH` — the
+     offset the column row sticks at — to whichever toolbar happened to be in the markup
+     first. A hidden bar measures 0, so the column row would sit on top of the visible
+     one. The observer below still watches BOTH, so either changing height re-measures. */
+  function bar(){ return frame.querySelector('.stickybar:not([hidden])'); }
+  var bars = frame.querySelectorAll('.stickybar');
   var wrap = frame.querySelector('.tablescroll');
   var table = wrap && wrap.querySelector('table');
 
   function measure(){
-    if(bar) frame.style.setProperty('--barH', Math.round(bar.getBoundingClientRect().height) + 'px');
+    var b = bar();
+    if(b) frame.style.setProperty('--barH', Math.round(b.getBoundingClientRect().height) + 'px');
     if(wrap && table){
       /* compare against the wrapper's own content box, and do it with the scroller off,
          or a wrapper that is already scrolling reports a clientWidth narrowed by its
@@ -2454,9 +2514,10 @@ function wireStickyFrame(frame, scroller){
     }
   }
   function syncShadow(){
-    if(!bar) return;
+    var b = bar();
+    if(!b) return;
     var stuck = scroller.scrollTop > 0
-      && bar.getBoundingClientRect().top <= stickyLine(scroller, bar) + 0.5;
+      && b.getBoundingClientRect().top <= stickyLine(scroller, b) + 0.5;
     frame.classList.toggle('is-stuck', stuck);
   }
   function sync(){ measure(); syncShadow(); }
@@ -2469,7 +2530,7 @@ function wireStickyFrame(frame, scroller){
      it narrow, and left the wrapper inert on a list that would need it. */
   if(window.ResizeObserver){
     var ro = new ResizeObserver(sync);
-    if(bar) ro.observe(bar);
+    Array.prototype.forEach.call(bars, function(b){ ro.observe(b); });
     if(table) ro.observe(table);
   }
   sync();

@@ -801,6 +801,83 @@
     </div>
   </section>
 
+  <!-- ================= LICENCES TOOLBAR: A vs B ================= -->
+  <section class="sg-sec" id="lictoolbar">
+    <h2>Licences toolbar &mdash; A and B</h2>
+    <p><b>A second open decision, and it is not the same one as the table above.</b> That
+      switch is about the ROWS; this one is about the controls over them
+      (<code class="sg-cls">licBar</code> in the <svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-settings"></use></svg> panel, <b>A is the default</b>).
+      They are deliberately two settings: the proposals arrived separately and can be
+      judged separately, and one switch would force a reader comparing toolbars to accept
+      a different table with it.</p>
+    <p><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <b>B&rsquo;s dropdown is Activity&rsquo;s dropdown.</b> Same trigger
+      (<code class="sg-cls">.dropwrap.perctl</code> + <code class="sg-cls">.btn--secondary.perbtn</code>),
+      same panel (<code class="sg-cls">.dropmenu</code>), same rows
+      (<code class="sg-cls">.dropcheck</code>). Nothing here declares a second dropdown style.
+      The one difference is arity, and arity is what decides it: Activity&rsquo;s event types
+      are multi-select and the menu stays open while two are ticked; these are
+      single-select, so the menu closes on a pick.</p>
+
+    <div class="sg-item">
+      <h3>A &mdash; current <span class="sg-cls">.typechip + .lic-toggle</span></h3>
+      <p class="sg-note">Two mutually exclusive type chips, an <b>Active only</b> switch, and
+        &mdash; new &mdash; an independent <b>Needs attention</b> chip. The chip exists because
+        Home&rsquo;s banner links here with <code class="sg-cls">?attention=1</code>: before it, the
+        list narrowed with nothing on screen saying so and no way back.</p>
+      <div class="sg-toolbarspec" id="sgBarA"></div>
+      <p class="sg-note"><b>Two kinds of filter, and they must not look alike.</b> The group
+        states its choice by FILL; the independents carry a CHECK. A hairline divider
+        separates the kinds &mdash; the same one the phone has always drawn.</p>
+    </div>
+
+    <div class="sg-item">
+      <h3>B &mdash; proposal <span class="sg-cls">.dropwrap.perctl &times; 2</span></h3>
+      <p class="sg-note"><b>Everything is shown by default.</b> Both filters start at
+        <b>All</b>, and there is no <b>Active only</b> switch: a cancelled-but-still-running
+        licence disappearing from a view nobody narrowed is the fault this replaces.</p>
+      <div class="sg-toolbarspec" id="sgBarB"></div>
+      <p class="sg-note"><b>The trigger states the answer</b>, so a narrowed list is readable
+        without opening the menu.</p>
+    </div>
+
+    <div class="sg-item">
+      <h3>The two menus <span class="sg-cls">LIC_TYPE_OPTS / LIC_STATUS_OPTS</span></h3>
+      <p class="sg-note">Rendered from the same two lists the page reads, so this specimen
+        cannot fall behind what the filters offer. Counts are of the <b>account</b>, not of
+        the current view &mdash; which is why they add up to the number in the page title.
+        <span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <b>A&rsquo;s chips use the other rule</b> (a facet count: what
+        would be left if this were the pressed one). Both readings are defensible and they
+        cannot both be true at once, so the difference is stated rather than smoothed over.</p>
+      <div class="sg-row sg-menuspecs">
+        <div class="dropmenu sg-staticmenu" id="sgLicTypeMenu" role="menu"></div>
+        <div class="dropmenu sg-staticmenu" id="sgLicStatusMenu" role="menu"></div>
+      </div>
+      <p class="sg-note"><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <b>The rule above <i>Needs attention</i> is load-bearing.</b>
+        The Status cell holds <b>two axes</b>: a STATE (<b>Active &middot; Blocked &middot;
+        Canceled</b>, the three words the chip can print) and a CONDITION (<b>Payment failed
+        &middot; Over instance limit &middot; Updates ending</b>, which replaces the date line).
+        A licence stored as <code class="sg-cls">payment_failed</code> shows <b>Active</b> in the
+        chip; one stored as <code class="sg-cls">active</code> can show <b>Blocked</b>. The
+        separator is the only thing in the menu that says the fourth item is not a fourth
+        state. <b>Blocked is on both axes</b> and that is a fact about the product, not a
+        flaw in the split: being over the limit is the one condition that changes what the
+        licence <i>is</i>.</p>
+    </div>
+
+    <div class="sg-item">
+      <h3>Below 600px</h3>
+      <p class="sg-note">A keeps the phone shape it had: search full width, then a chip row
+        that scrolls sideways &mdash; <b>593px of chips in a 358px window</b> at 390.
+        <span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> The attention chip is last in that row, so a
+        <b>pressed</b> one pulls itself into view: arriving from the banner to five rows with
+        every visible control reading &ldquo;off&rdquo; is worse than no filter at all.</p>
+      <p class="sg-note">B stacks to <b>search, then the two dropdowns in equal halves</b>
+        (173px each at 390). Halves rather than content width, because the widths are the
+        LABELS &mdash; content width made the row change shape every time a filter was used.
+        The label ellipsizes instead of moving its neighbour.</p>
+    </div>
+  </section>
+
   <!-- ============================ CARDS ============================ -->
   <section class="sg-sec" id="cards">
     <h2>Cards</h2>

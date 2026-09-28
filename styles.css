@@ -55,6 +55,15 @@
      white; 50 is the wash an outlined destructive takes. */
   --c-red-700:#B31313;
   --c-red-50:#FCEDED;
+  /* ⚠️ TWO MORE STEPS ON THE SAME RED RAMP (2026-09-28, by request). Destructive
+     secondary became a FILL rather than an outline, and a filled control needs
+     somewhere to go under the cursor and under the finger — the same argument that
+     built `--c-grey-50/100/200` for the quiet surface. Derived, not picked: the grey
+     ramp's lightness steps (96.9 → 92.2 → 87.8) applied to red-50's own hue and
+     saturation (0°, 76.5%), so the three reds are the same wash getting deeper and
+     never a different red. */
+  --c-red-100:#FAD7D7;
+  --c-red-200:#F7C4C4;
   --c-grey-600:#525252;
   /* one step off ink, for text that is a list item rather than a statement */
   --c-grey-800:#333333;
@@ -94,6 +103,18 @@
   --surface-quiet:var(--c-grey-50);
   --surface-quiet-hover:var(--c-grey-100);
   --surface-quiet-press:var(--c-grey-200);
+  /* the same three steps in red, for the one tone that is not grey */
+  --surface-danger:var(--c-red-50);
+  --surface-danger-hover:var(--c-red-100);
+  --surface-danger-press:var(--c-red-200);
+  /* ⚠️ A SURFACE TOKEN, NOT `--surface-quiet` (2026-09-28, by request). The two
+     resolve to the same primitive today, and that is exactly why they must be two
+     names: `--surface-quiet` means "a control that is not the page's own action" and
+     is read by four button variants, while this means "the band at the top of a
+     dialog". One of them will move one day, and whichever moves would otherwise drag
+     the other with it. The purchase wizard's header is deliberately NOT on this — it
+     is a full-screen flow, not a dialog, and it keeps its white band. */
+  --modal-head:var(--c-grey-50);
   /* ⚠️ `--accent`, `--tick` and `--page-bg` are still LITERALS and do not go through the
      primitive layer. They predate it and they are on the selling surface, where a value
      change is a visible change; folding them in is a pass of its own. */
@@ -634,10 +655,21 @@ a{color:inherit}
   background:var(--c-red-700);border-color:var(--c-red-700)}
 .btn--destructive.btn--primary:not([disabled]):not([aria-disabled="true"]):active{
   box-shadow:inset 0 3px 4px rgba(0,0,0,.45)}
-.btn--destructive.btn--secondary{color:var(--status-alert);border-color:var(--status-alert)}
-.btn--destructive.btn--secondary:not([disabled]):not([aria-disabled="true"]):hover,
+/* ⚠️⚠️ A FILL, NOT AN OUTLINE (2026-09-28, by request), and this closes an
+   inconsistency rather than opening one. Secondary stopped being an outlined button on
+   2026-09-25 — "secondary стала заливкою" — and every grey secondary in the product has
+   been `--surface-quiet` with a transparent border since. Destructive secondary was
+   missed in that pass and stayed outlined, so the ONE variant carrying the most serious
+   tone was also the only one still wearing the old shape. It takes the red wash the
+   outlined version used on hover, and the two deeper steps of the same ramp for hover
+   and press — the same three-surface rule as the grey.
+   ⚠️ The border stays declared and TRANSPARENT, not removed: the box has to keep its
+   1px so a filled and an outlined button in one row are the same height. */
+.btn--destructive.btn--secondary{background:var(--surface-danger);border-color:transparent;color:var(--status-alert)}
+.btn--destructive.btn--secondary:not([disabled]):not([aria-disabled="true"]):hover{
+  background:var(--surface-danger-hover);border-color:transparent;color:var(--c-red-700)}
 .btn--destructive.btn--secondary:not([disabled]):not([aria-disabled="true"]):active{
-  background:var(--c-red-50);border-color:var(--c-red-700);color:var(--c-red-700)}
+  background:var(--surface-danger-press);border-color:transparent;color:var(--c-red-700)}
 .btn--destructive.btn--text,.btn--destructive.btn--ghost,.btn--destructive.btn--menu{color:var(--status-alert)}
 .btn--destructive.btn--text:not([disabled]):not([aria-disabled="true"]):hover,
 .btn--destructive.btn--ghost:not([disabled]):not([aria-disabled="true"]):hover,
@@ -1012,6 +1044,25 @@ th.num,td.num{text-align:right}
 .dropcheck.is-on{font-weight:500}
 .dropfoot{border-top:1px solid var(--line2);margin-top:5px;padding:7px 10px 2px}
 .dropfoot .link{font-size:14px}
+/* ---------- a menu row that states how many it would leave --------------------
+   ⚠️ `margin-left:auto`, so the number sits on the menu's right edge however long the
+   label is — the column of figures is what makes the menu scannable, and a count that
+   followed the text would zig-zag down it. Tabular figures for the same reason the
+   chip counts use them: 1 and 17 must occupy the same width or the column wobbles. */
+.dropcount{margin-left:auto;padding-left:16px;color:var(--faint);font-variant-numeric:tabular-nums}
+.dropcheck.is-on .dropcount{color:inherit;opacity:.72}
+/* ⚠️⚠️ A RULE, BECAUSE THE ITEM BELOW IT IS A DIFFERENT QUESTION. `Needs attention` is
+   not a fourth status — it is the other axis of the Status cell (see licStatusKey), and
+   a reader who met it as the fourth item in a flat list would reasonably read it as one.
+   The line is the only thing in the menu that says "this one is not like those". */
+.dropsep{height:1px;margin:5px 7px;background:var(--line2)}
+/* ⚠️ NO `min-width` OVERRIDE HERE, and it was written and then taken out rather than
+   left in place. `.licfiltermenu{min-width:232px}` sat at the same weight as
+   `.dropmenu{min-width:180px}` and earlier in the file, so it never applied — and
+   measuring showed it was not needed anyway: at 390px the widest row, `Needs attention`
+   with its count, renders at 168px inside a 180px menu with every row 36px and nothing
+   wrapped. A rule that does nothing is worse than no rule, because the next reader
+   believes it. */
 /* the tax line inside the Calculation summary: it qualifies the total directly above
    it, so it sits in the same card rather than under it */
 .am-taxline{margin:10px 0 0;font-size:13px;line-height:1.4}
@@ -1495,6 +1546,29 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
    label grew long. The title ellipsizes instead (see .fs-maintitle). */
 .fs-header{flex:none;display:flex;align-items:center;gap:12px;flex-wrap:nowrap;padding:13px 24px;background:#fff;border-bottom:1px solid var(--line2)}
 .fs-header .spacer{flex:1}
+/* ---------- the header band of a DIALOG is grey (2026-09-28, by request) ----------
+   ⚠️ NAMED SURFACES, NOT `.fs-header` WHOLESALE. Four things wear this class and one of
+   them is the purchase wizard, which was explicitly excluded: a full-screen flow is not
+   a dialog, its header carries a step title and a Back, and it keeps its white band.
+   Listing the three dialogs is longer than restyling the class and is the only version
+   that cannot quietly repaint the fourth.
+   ⚠️ `.authscreen` is NOT here either, and that is a decision rather than an omission:
+   its header holds nothing but the ✕ and is `background:transparent` on purpose, so a
+   grey band would be a band where the design has none. Reported.
+   ⚠️ `#licModal` only shows this below 600px — above it the band is collapsed to zero
+   height and the ✕ floats off the corner (see the min-width:601px block above). */
+.modal .mh,
+.paymodal-h,
+#usersModal .fs-header,
+#licModal .fs-header{background:var(--modal-head)}
+/* ⚠️ THE CORNERS ARE THE CHILD'S JOB HERE. `.fs-box` clips its children, so the two
+   modals above need nothing — but `.modal` and `.paymodal` do NOT have `overflow:hidden`,
+   and a filled band inside a rounded, bordered box squares off the top two corners with
+   grey. The radius is the container's MINUS its 1px border, which is where the inside of
+   the curve actually is. (Adding `overflow:hidden` to the containers would do it too and
+   would clip anything that ever needs to escape them — this does not.) */
+.modal .mh{border-radius:7px 7px 0 0}
+.paymodal-h{border-radius:9px 9px 0 0}
 .fs-maintitle{margin:0;font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw);flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}   /* a long licence label must not push ✕ onto a second row */
 .fs-headactions{display:flex;align-items:center;gap:14px;flex:none}
 /* ONE close control, for every surface that has one. The licence-details modal set
@@ -2259,12 +2333,41 @@ button.dbrand{background:none;border:0;padding:0;color:inherit;font:inherit;curs
    rows. The head is positioned because it sticks; the strip rides on that. */
 #instTable.is-grouped thead th:first-child{border-top-left-radius:0}
 #instTable.is-grouped thead th:last-child{border-top-right-radius:0}
-#instTable.is-grouped thead th:first-child::after,
-#instTable.is-grouped thead th:last-child::after{content:"";position:absolute;
+/* ⚠️⚠️ `::before`, AND IT WAS `::after` — WHICH WAS ALREADY TAKEN (fixed 2026-09-28).
+   The sticky pattern draws its stuck LINE AND SHADOW on `.listframe .stickyhead th::after`
+   (one element carrying both, see that block). Writing the corner patch onto the same
+   pseudo did not replace that rule, it COLLIDED with it: the ID selector won only the
+   properties it declares and the strip inherited the rest. Measured, mid-scroll:
+     · `height:7px` survived — `top:0;bottom:0` sets no height, and a height beats a
+       bottom on an absolutely positioned box, so the patch was 7px tall against a
+       43.8px band;
+     · `opacity:0` survived — so the patch was INVISIBLE until the block stuck and then
+       appeared, which is the "sliver that isn't there before scrolling";
+     · `border-top:1px solid var(--stickyLine)` survived from the is-stuck rule, drawing
+       a stray line across the top of that sliver;
+     · and the first and last cells therefore had NO stuck line and NO shadow, so the
+       band's bottom edge existed under the middle columns only.
+   `::before` is free here — the non-grouped corner patch is guarded by
+   `:not(.is-grouped)` — so the two jobs get an element each and neither inherits the
+   other's geometry. */
+#instTable.is-grouped thead th:first-child::before,
+#instTable.is-grouped thead th:last-child::before{content:"";position:absolute;
   top:0;bottom:0;width:12px;background:var(--surface-quiet);
   border-bottom:1px solid var(--line2)}
-#instTable.is-grouped thead th:first-child::after{left:-12px;border-top-left-radius:10px}
-#instTable.is-grouped thead th:last-child::after{right:-12px;border-top-right-radius:10px}
+#instTable.is-grouped thead th:first-child::before{left:-12px;border-top-left-radius:10px}
+#instTable.is-grouped thead th:last-child::before{right:-12px;border-top-right-radius:10px}
+/* ⚠️ AND THE STUCK LINE HAS TO REACH ACROSS THE PATCHES, or the band would end its
+   underline 12px short at each end — the same 18px step the note further down this file
+   describes, at a different scale. The `::after` is the line-and-shadow element; on
+   these two cells it is stretched by exactly the width of the strip beside them. */
+#instTable.is-grouped .stickyhead th:first-child::after{left:-12px}
+#instTable.is-grouped .stickyhead th:last-child::after{right:-12px}
+/* ⚠️ While stuck the `th` gives up its own bottom border so the pseudo can draw the
+   line (see `.listframe.is-stuck .stickyhead th`); the patch has to give up its border
+   for the same reason, or the 12px at each end would carry two hairlines a pixel apart. */
+.listframe.is-stuck #instTable.is-grouped thead th:first-child::before,
+.listframe.is-stuck #instTable.is-grouped thead th:last-child::before{
+  border-bottom-color:transparent}
 /* ⚠️ and the frame's "last row closes the box" rule must not reach in here: the last
    row of the LAST GROUP is what closes that group, and it needs its border. */
 #instTable.is-grouped tbody tr:last-child > td{border-bottom:inherit}
@@ -2477,8 +2580,17 @@ button.dbrand{background:none;border:0;padding:0;color:inherit;font:inherit;curs
    whole hit area rather than just the word, which is what a control with no resting box
    most needs to show. */
 .dprofbtn{padding:6px 10px}
+/* ⚠️ WHITE, NOT `--hover` (2026-09-28, by request). The bar is glass at rest and the
+   grey wash is a CHROME colour — it reads as a control lifting off an opaque toolbar,
+   which is what this bar stopped being. White is what every other control on a tinted
+   ground takes here (`.on-tint .btn--secondary`), so the account button now answers the
+   pointer the same way the rest of the product does on the same ground.
+   ⚠️ `.tnav-item:hover` is STILL `--hover` — only this control was asked for, so the bar
+   now holds two hover fills. Named rather than quietly unified: the nav items sit in the
+   centre niche and the account button at the edge, and whether they should agree is a
+   decision, not a tidy-up. */
 .dprofbtn:hover,
-.dprofbtn[aria-expanded="true"]{background:var(--hover)}
+.dprofbtn[aria-expanded="true"]{background:var(--card)}
 /* the face comes back with it: with no box at rest, the icon is what marks this as a
    control rather than a name printed in the bar */
 .dprofbtn .dprof-ic{display:inline-block;flex:none;color:var(--mid)}
@@ -3845,7 +3957,8 @@ body.list-empty #instTable.is-grouped,
   border-bottom-left-radius:10px;border-bottom-right-radius:10px}
 .gridtbl:has(+ .pager[hidden]) tbody tr:last-child > td{border-bottom:0}
 body.list-empty #pageTitleRow [data-refresh],
-body.list-empty #pageTitleRow #licNewBtn{display:none !important}
+body.list-empty #pageTitleRow #licNewBtn,
+body.list-empty #pageTitleRow #licNewBtnB{display:none !important}
 
 /* ================= snackbar =================
    Bottom-centre, above everything except a modal, and it must not cover the thing it
@@ -3972,8 +4085,11 @@ body.list-empty #pageTitleRow #licNewBtn{display:none !important}
 .emailpend-v:hover{color:var(--ink)}
 .emailpend-sep{color:var(--line)}
 /* Security page: back button in its own gutter, aligned with the H1 row */
-.secgrid{display:grid;grid-template-columns:var(--backW) 1fr;column-gap:var(--backGap);align-items:start}
-.secgrid > .back{margin-top:19px}
+/* ⚠️ `.secgrid` REMOVED (2026-09-28). It was the two-column grid that parked Change
+   password's back button in a `--backW` gutter beside the content; the button lives in
+   the page's header row now, inside the one frame, and the page uses the plain
+   `.setgrid` Account does. `--backW` / `--backGap` are untouched — the licence details
+   header still reads them. */
 /* the three password fields stack, each the width of one .field2 cell
    (the 800px card body minus the 14px column gap, halved). The cap sits on the
    inputs: .setcard > *:not(.setcard-h) already claims max-width:800px here. */
@@ -4056,6 +4172,12 @@ body.list-empty #pageTitleRow #licNewBtn{display:none !important}
 .paystripe .ps-cvc{width:64px}
 .paystripe .ps-exp:focus,.paystripe .ps-cvc:focus{background:var(--surface-quiet-hover)}
 .lic-controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+/* ⚠️⚠️ WRITTEN IN THE SAME BREATH AS THE `display` ABOVE, and that is the whole point.
+   A component that declares `display` beats the UA's `[hidden]{display:none}`, and this
+   file has now watched that happen four times (`.btn`, `.icon`, `#subAlert`, `.fitem`) —
+   each time silently. The two Licenses toolbars are hidden by the `hidden` attribute, so
+   without this line the proposal would simply render underneath the current one. */
+.lic-controls[hidden]{display:none}
 .lic-controls .spacer{flex:1}
 /* ---------- the toolbar's two rows ---------------------------------------------
    Row one carries the view toggle alone — it changes the subject, and everything in
@@ -4108,6 +4230,31 @@ body.list-empty #pageTitleRow #licNewBtn{display:none !important}
 /* locked (change-plan mode): the choice is fixed, so drop the affordance */
 .typechip:disabled{cursor:default}
 .typechip:disabled:not(.is-on),.typechip:disabled:not(.is-on):hover{color:var(--faint);border-color:var(--line2)}
+/* ---------- the OTHER kind of chip: an independent on/off -----------------------
+   ⚠️ TWO KINDS OF FILTER IN ONE ROW, AND THEY MUST NOT LOOK ALIKE. The type chips are a
+   mutually exclusive group; `Needs attention` is an independent switch that can be on
+   beside any of them. Same pill so the row reads as one set of controls, but it carries
+   a CHECK when it is on — the filter-chip convention — instead of relying on fill alone,
+   which is what the group above uses. A hairline divider separates the kinds.
+   ⚠️⚠️ NO `display` IN `.filterchip`, and the file already learnt why one line above
+   (see `.mob-only`): `.cancelchip` is `.mob-only`, i.e. `display:none` at (0,1,0), and a
+   `display` declared here — later in the file, at the same weight — would win and show
+   the phone's chip on the desktop. The box is shared; only the chip that is never
+   phone-only declares how it lays out.
+   ⚠️ HOISTED OUT OF THE ≤600px BLOCK (2026-09-28). Every one of these declarations lived
+   inside the phone breakpoint because `.cancelchip` was the only chip of this kind; the
+   moment a second one appeared on the desktop, leaving them there would have meant
+   copying them — which is this file's own definition of forking a component. */
+.chipdiv{flex:none;align-self:center;width:1px;height:22px;margin:0 6px;background:var(--line)}
+.filterchip{height:var(--btnH);align-items:center;gap:6px;padding:0 14px;
+  border:1px solid var(--line);border-radius:999px;background:#fff;
+  color:var(--mid);font:inherit;font-size:14px;white-space:nowrap;cursor:pointer}
+.attnchip{display:inline-flex}
+.filterchip:hover{border-color:var(--mid);color:var(--ink)}
+/* the check occupies no width until it means something, so the chip does not jump */
+.filterchip .cc-check{width:0;height:var(--ic-16);opacity:0;transition:width .12s ease}
+.filterchip.is-on{border-color:var(--ink);background:var(--sel);color:var(--ink);font-weight:500}
+.filterchip.is-on .cc-check{width:var(--ic-16);opacity:1}
 /* a wrapping label makes rows two lines tall, so every cell aligns to the top —
    level with the product name rather than floating in the middle of the row */
 .lic-row > td{vertical-align:top}
@@ -4179,6 +4326,21 @@ th.lic-num{text-align:right}
 .dropmenu{position:absolute;left:0;top:calc(100% + 4px);background:#fff;border:1px solid var(--line);border-radius:10px;min-width:180px;padding:5px;box-shadow:0 6px 20px rgba(0,0,0,.10);z-index:40;overflow:visible;max-height:none}
 .dropmenu.right{left:auto;right:0}
 .dropmenu[hidden]{display:none}
+/* ---------- styleguide only: a menu shown flat, and a toolbar shown as a specimen ----
+   ⚠️ `.dropmenu` is `position:absolute`, because in the product it hangs off a trigger.
+   A specimen has none to hang off, so it is laid back into the flow here rather than a
+   second, flatter menu being written for the page to show.
+   ⚠️⚠️ AND IT SITS **AFTER** `.dropmenu`, NOT BESIDE THE OTHER DROP RULES 3000 LINES UP.
+   That is where I wrote it first, and at equal weight (0,1,0) the later rule wins — so
+   `position:static` lost to `position:absolute` and both specimens rendered stacked on
+   top of each other, off the flow. Second time in one pass: the dead
+   `.licfiltermenu{min-width}` was the same mistake. An override goes next to what it
+   overrides, or it is not an override. */
+.sg-staticmenu{position:static;box-shadow:none;width:248px;flex:none}
+.sg-menuspecs{align-items:flex-start;gap:18px;flex-wrap:wrap}
+/* the toolbar specimens sit on the card ground they sit on in the product */
+.sg-toolbarspec{background:var(--card);border:1px solid var(--line2);border-radius:10px;padding:14px 14px 0}
+.sg-toolbarspec .lic-controls{margin-bottom:14px}
 /* ⚠️ `:not(.btn)`, and its absence is why Apply looked like a menu ITEM (fixed
    2026-09-28). This rule dresses the menu's own rows — transparent, left-aligned, a 7px
    corner — and `.dropmenu button` (0,1,1) outranks `.btn--secondary` (0,1,0), so the one
@@ -4423,7 +4585,7 @@ th.lic-num{text-align:right}
      the in-content ones step aside — and their reserved gutter goes with them, which
      hands 44px of width back to the content that was squeezed by it. */
   #backBtn,#secBackBtn{display:none}
-  .headgrid,.secgrid{grid-template-columns:1fr;column-gap:0}
+  .headgrid{grid-template-columns:1fr;column-gap:0}
   .tb-back{grid-area:back;display:inline-flex;align-items:center;justify-content:center;
     width:44px;height:44px;margin-left:-6px;color:var(--mid);border-radius:6px}
   .tb-back[hidden]{display:none}             /* empty leading slot on a top-level page */
@@ -5247,7 +5409,7 @@ th.lic-num{text-align:right}
   .ptr-sp,.pagehead.pagetitlerow .sp,.setcard-h-page.pagetitlerow .sp{flex:1}
   /* Save is an action on this row like any other, so it gets the row's own height */
   /* every action in the row is the same 44px tertiary icon-button */
-  .pagetitlerow [data-refresh],.pagetitlerow #licNewBtn,.pagetitlerow #secBackBtn{
+  .pagetitlerow [data-refresh],.pagetitlerow #licNewBtn,.pagetitlerow #licNewBtnB,.pagetitlerow #secBackBtn{
     flex:none;width:44px;height:44px;min-height:44px;padding:0;
     display:inline-flex;align-items:center;justify-content:center;
     border:0;border-radius:6px;background:transparent;color:var(--mid)}
@@ -5255,10 +5417,12 @@ th.lic-num{text-align:right}
   .pagetitlerow [data-refresh] .ic,.pagetitlerow #secBackBtn{font-size:20px}
   .pagetitlerow [data-refresh] .ic{width:var(--ic-24);height:var(--ic-24)}
   /* the primary keeps its emphasis — it is the one filled thing on the line */
-  .pagetitlerow #licNewBtn{background:var(--ink);color:#fff;font-size:22px;line-height:1}
-  .pagetitlerow #licNewBtn:hover{background:var(--ink)}
+  /* ⚠️ Both primaries by name — the two toolbars are two nodes, and the phone lifts
+     whichever one is on screen into this row (see homeToolbarControls). */
+  .pagetitlerow #licNewBtn,.pagetitlerow #licNewBtnB{background:var(--ink);color:#fff;font-size:22px;line-height:1}
+  .pagetitlerow #licNewBtn:hover,.pagetitlerow #licNewBtnB:hover{background:var(--ink)}
   .pagetitlerow .lnb-txt{display:none}          /* icon-only here */
-  .pagetitlerow #licNewBtn .lnb-ic{display:inline-flex}
+  .pagetitlerow #licNewBtn .lnb-ic,.pagetitlerow #licNewBtnB .lnb-ic{display:inline-flex}
   /* ⚠️ Refresh has LEFT the app bar again (it was moved there in the previous pass).
      The bar keeps the logo and the avatar only. */
   .tb-refresh{display:none !important}
@@ -5401,22 +5565,31 @@ th.lic-num{text-align:right}
      independent toggle. A gap plus a hairline divider separates the kinds, and the
      toggle carries a CHECK when it is on — the M3 filter-chip convention — instead
      of relying on fill alone, which is exactly what the group above uses. */
-  .chipdiv{display:block;flex:none;align-self:center;
-    width:1px;height:22px;margin:0 6px;background:var(--line)}
-  .cancelchip{display:inline-flex;align-items:center;gap:6px;padding:0 14px;
-    border:1px solid var(--line);border-radius:999px;background:#fff;
-    color:var(--mid);font:inherit;font-size:14px;white-space:nowrap;cursor:pointer}
-  /* the check occupies no width until it means something, so the chip does not
-     jump when it is pressed */
-  .cancelchip .cc-check{width:0;height:var(--ic-16);opacity:0;transition:width .12s ease}
-  .cancelchip.is-on{border-color:var(--ink);background:var(--sel);color:var(--ink);font-weight:500}
-  .cancelchip.is-on .cc-check{width:var(--ic-16);opacity:1}
+  /* ⚠️ THE BOX MOVED OUT OF HERE (2026-09-28) — see `.filterchip` in the main block.
+     What is left is the one thing that is genuinely about the phone: `.cancelchip` is
+     `.mob-only`, so this is where it is allowed to lay itself out. */
+  .cancelchip{display:inline-flex}
   /* Activity's period control is a chip in that same row */
   .insttoolbar .perctl{flex:none}
-  .insttoolbar .perbtn{min-height:40px;border-radius:999px;padding:0 14px}
+  /* ⚠️ TOOLBAR B'S TRIGGERS TAKE THE SAME SHAPE, by joining this selector rather than
+     copying it: they ARE Activity's control, and the phone treatment is part of it. */
+  .insttoolbar .perbtn,#licBarB .perbtn{min-height:40px;border-radius:999px;padding:0 14px}
+  /* ---------- toolbar B at ≤600px --------------------------------------------------
+     ⚠️ SEARCH FIRST, and it was not. `.searchbox` already carries `order:1` here, and
+     the two dropdowns default to 0 — so the unstyled phone layout put the FILTERS above
+     the field, which is the opposite of every other list toolbar in the product.
+     ⚠️ EQUAL HALVES, not content width. Measured at 390 unstyled: `All types` 106px and
+     `All statuses` 124px, which fits — but the widths are the LABELS, so the row changed
+     shape every time a filter was used and the two triggers never lined up with each
+     other. Halves make the row a fixed thing you operate; the label ellipsizes instead
+     of moving its neighbour. */
+  #licBarB .dropwrap{order:2;flex:1 1 0;min-width:0}
+  #licBarB .perctl{display:flex}
+  #licBarB .perbtn{width:100%;justify-content:space-between}
+  #licBarB .perbtn b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   /* the primary action, full width and last — the same shape Home's "Buy a license"
      has. ⚠️ NOT a FAB: the FAB slot belongs to scroll-to-top. */
-  .lic-controls #licNewBtn,.insttoolbar #addUserBtn{order:3;flex:0 0 100%;height:48px}
+  .lic-controls #licNewBtn,.lic-controls #licNewBtnB,.insttoolbar #addUserBtn{order:3;flex:0 0 100%;height:48px}
   /* the in-content refresh steps aside; the app bar carries it now */
   .lic-controls [data-refresh],.insttoolbar [data-refresh]{display:none}
   .lic-controls .spacer,.insttoolbar .spacer{display:none}

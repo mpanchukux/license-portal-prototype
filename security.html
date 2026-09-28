@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
-<title>Security — ThingsBoard License Portal</title>
+<title>Change password — ThingsBoard License Portal</title>
 <link rel="stylesheet" href="styles.css">
 </head>
-<body data-page="security" data-nav="" data-title="Security" data-back="account.html" data-titleback="1" data-mesh>
+<body data-page="security" data-nav="" data-title="Change password" data-back="account.html" data-titleback="1" data-mesh>
 
 <!-- The ground: the same gradient Home and the landing page carry, injected by the same
      markup and styled by the same rules (see "Home: animated mesh gradient" in
@@ -21,22 +21,48 @@
 
 <div id="shellMain">
 <div class="licview" id="securityView">
- <div class="setgrid secgrid">
-  <button type="button" class="btn btn--secondary btn--md btn--icon back" id="secBackBtn" aria-label="Back to Account" title="Back to Account">&larr;</button>
+ <div class="setgrid">
   <div class="setcol">
-  <div class="pagehead">
-    <h1 class="lic-h1">Security</h1>
-    <span class="sp"></span>
-    <button class="btn btn--primary btn--md" id="secSaveBtn">Save</button><span class="savednote" id="secSaveBtnNote" hidden></span>
-  </div>
-  <div class="setcard">
-    <div class="setcard-h"><h2>Password</h2><span class="setcard-hint">Signs out your other sessions</span></div>
+  <!-- ⚠️ ONE FRAME, LIKE ACCOUNT (2026-09-28, by request). This page used to be three
+       containers for one subject: a back button in a gutter column of its own, a
+       `.pagehead` floating on the page ground with the title and Save, and a white card
+       below titled "Password". Account solved the same shape a pass earlier — the card
+       IS the page, its header carries the page name and the page's actions — and this
+       page had no argument for being the exception.
+       ⚠️ THE GUTTER COLUMN IS GONE WITH IT (`.secgrid`). It existed to park the back
+       button beside the content at `--backW`; inside the frame the button leads the
+       header row, which is where the reader looks for it and where the phone layout was
+       already moving it to. -->
+  <div class="setcard setcard-page">
+    <!-- The header stays STICKY inside the card, the same as Account's: Save has to
+         stay reachable while you are in the fields below it. -->
+    <div class="setcard-h setcard-h-page">
+      <!-- ⚠️ AN ICON, not `&larr;`. The arrow was a TEXT GLYPH in markup — the one thing
+           the icon rule forbids outright — and it survived because `check-icons.py`
+           looks for `✕`, `&#9662;` and `\u2715`, none of which is `&larr;`. Reported:
+           the checker has a fourth spelling to learn.
+           ⚠️ `chevron-left`, NOT `arrow-left`. The sprite has no `arrow-left` and this
+           does not add one: the chevron is already what "a surface you step back
+           through" means here — it is the glyph the phone app bar has always shown for
+           exactly this journey (Change password → Account), and an arrow beside it would
+           be two shapes for one idea. -->
+      <button type="button" class="btn btn--secondary btn--md btn--icon back" id="secBackBtn" aria-label="Back to Account" title="Back to Account"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-left"></use></svg></button>
+      <h1 class="lic-h1">Change password</h1>
+      <span class="sp"></span>
+      <button class="btn btn--primary btn--md" id="secSaveBtn">Save</button><span class="savednote" id="secSaveBtnNote" hidden></span>
+    </div>
     <!-- one column: the three fields stack, each as wide as a single .field2 cell -->
+    <!-- ⚠️ THE INNER "Password" HEADING IS GONE. The page is called Change password now;
+         a card inside it titled Password was the same word twice for one subject — the
+         argument Account's frame was built on. The hint it carried is a FACT about what
+         saving does, so it moves next to the other fact about this password rather than
+         hanging off a heading. -->
     <div class="pwstack">
       <p class="seclast" id="secLastChanged"></p>
       <div class="field"><label for="sec-current">Current password</label><input id="sec-current" data-field="current" type="password"><div class="fielderr" data-secerr="current" hidden></div></div>
       <div class="field"><label for="sec-next">New password</label><input id="sec-next" data-field="next" type="password"><div class="fielderr" data-secerr="next" hidden></div></div>
       <div class="field"><label for="sec-confirm">Confirm new password</label><input id="sec-confirm" data-field="confirm" type="password"><div class="fielderr" data-secerr="confirm" hidden></div></div>
+      <div class="cardhelp">Saving signs out your other sessions.</div>
     </div>
   </div>
   </div><!-- /setcol -->

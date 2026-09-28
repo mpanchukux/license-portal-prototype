@@ -70,10 +70,13 @@
     <div class="setdelete">
       <!-- ⚠️ THE DESTRUCTIVE TONE, not a second variant (2026-09-28, by request). The
            button model has an axis for exactly this: the VARIANT decides the shape and
-           the TONE decides which colour the surface is made of. `text` + `destructive`
-           is a red text button — the quietest shape the page can give the one action
-           that cannot be undone, in the colour that says so. -->
-      <button class="btn btn--text btn--md btn--destructive" id="deleteAcctBtn">Delete account</button>
+           the TONE decides which colour the surface is made of.
+           ⚠️ `secondary`, NOT `text` (2026-09-28, by request). It was a red text button —
+           the quietest shape the page could give the one action that cannot be undone —
+           and the fill it took on hover is now the fill it has at rest. The shape says
+           "this is a button"; the colour still says what kind. Nothing about the
+           friction moved: the confirm dialog is where this is actually decided. -->
+      <button class="btn btn--secondary btn--md btn--destructive" id="deleteAcctBtn">Delete account</button>
       <div class="cardhelp" style="margin-top:4px">Removes your profile and access. Active licenses and billing history are not affected. You'll confirm on the next step.</div>
     </div>
   </div>

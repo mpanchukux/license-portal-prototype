@@ -214,6 +214,64 @@ function attentionOf(lic){
   return hit ? { state:hit.state, label:ATTN_LABEL[hit.state](lic), tip:ATTN_TIP[hit.state](lic) } : null;
 }
 
+/* ---------- the two things the Status cell holds, named separately ----------------
+   ⚠️⚠️ THE STATUS CELL IS TWO AXES STACKED, and until a filter had to be built on it
+   nothing forced them apart. Line one is a STATE and has exactly three values — the
+   three words `statusMark` can print. Line two is a CONDITION and replaces the date
+   when there is one. They are not the same question, and the data proves it:
+     B3  stored `payment_failed` → state `Active`,  condition `Payment failed`
+     B8  stored `active`         → state `Blocked`, condition `Over instance limit`
+     B16 stored `active`         → state `Active`,  condition `Updates period over`
+     B15 stored `awaiting_checkin` → state `Active`, no condition at all
+   So the stored `status` field is a THIRD thing: five values of which two ever reach
+   the screen. Nothing below reads it directly except for `canceled`, which is the one
+   stored value the cell does print.
+
+   ⚠️ `blocked` IS ON BOTH AXES, and that is a fact about the product rather than a flaw
+   in the split: being over the instance limit is the one condition that changes what the
+   licence IS, so it has a state of its own. A reader who picks `Blocked` and a reader who
+   picks `Needs attention` both see B8, and both are right. */
+function licStatusKey(l){
+  if(!l) return 'active';
+  if(l.status === 'canceled') return 'canceled';
+  if(instOverLimit(l)) return 'blocked';
+  return 'active';
+}
+/* Does this licence have something wrong with it? ONE reading, shared with the Home
+   banner's own count — if the list derived it separately the banner could link into a
+   filtered view and find nothing marked, which is exactly what was once reported.
+   ⚠️ `grant` is excluded: the grant notice is a notice, not a problem, and a licence
+   that is merely free is not a licence that needs doing anything about.
+   ⚠️ MOVED HERE FROM `page-licenses.js` (2026-09-28). It has three readers now — both
+   Licenses toolbars and the styleguide's specimen of them — and a predicate the banner
+   and the list must agree on does not belong to one page's script. */
+function licNeedsAttention(l){
+  return attentionConditions().some(function(c){
+    return c.state !== 'grant' && c.lic && c.lic.id === l.id;
+  });
+}
+/* The menus, declared as data so the two toolbars, their counts and the styleguide all
+   read one list. `v` is what the filter stores; `sep` draws the rule above an option.
+   ⚠️ `attention` SITS BELOW A RULE because it is the other axis. Three states, then a
+   line, then the question "is anything wrong" — the separator is what tells a reader
+   the fourth item is not a fourth state. */
+var LIC_TYPE_OPTS = [
+  { v:'Subscription', t:'Subscription' },
+  { v:'Perpetual',    t:'Perpetual' },
+  { v:'Grant',        t:'Grant' }
+];
+var LIC_STATUS_OPTS = [
+  { v:'active',    t:'Active' },
+  { v:'blocked',   t:'Blocked' },
+  { v:'canceled',  t:'Canceled' },
+  { v:'attention', t:'Needs attention', sep:true }
+];
+/* Does a licence pass a Status choice? `null` is All and passes everything. */
+function licStatusMatch(l, v){
+  if(!v) return true;
+  return v === 'attention' ? licNeedsAttention(l) : licStatusKey(l) === v;
+}
+
 /* ---------- the ALERT icon, and why it is not the info icon ---------------------
    ⚠️ TWO ICONS, TWO MEANINGS, AND THE DIFFERENCE IS THE POINT. `infoIcon` (ⓘ) explains
    something NEUTRAL — what a production instance is, what an AI credit buys — and the
@@ -1628,6 +1686,23 @@ function noResultsHTML(q, cls){
   return '<div class="noresults' + (cls ? ' ' + cls : '') + '">'
     + '<div class="nr-t">No matches for &ldquo;' + esc(q) + '&rdquo;</div>'
     + '<button type="button" class="link nr-clear" data-clearsearch>Clear search</button>'
+    + '</div>';
+}
+/* ---------- the same shape, for a filter rather than a query ---------------------
+   ⚠️⚠️ ADDED BEYOND THE BRIEF (2026-09-28), and the reason is that the brief asked me to
+   walk the page with filters applied: `Perpetual` + `Canceled` leaves nothing, and what
+   the page showed was an EMPTY BOX — no sentence, no way out, the toolbar above it still
+   claiming two answers. That was already true of the current toolbar and is listed in
+   the notes as open debt; the proposal makes it reachable in two clicks instead of by
+   accident, so shipping it unfixed would have been shipping a worse page.
+   ⚠️ `.noresults`, NOT `.emptybox`. This file already draws the distinction and it is
+   the right one here: the dashed block describes something the READER did and its exit
+   is to undo it, while the solid one describes an account that owns nothing and its exit
+   is to go and buy something. A filter that matches nothing is the first kind. */
+function noMatchHTML(){
+  return '<div class="noresults">'
+    + '<div class="nr-t">No licenses match these filters</div>'
+    + '<button type="button" class="link nr-clear" data-clearfilters>Clear filters</button>'
     + '</div>';
 }
 /* opts: { items(): [nodes], text(node): string, empty(q): html, host: node }

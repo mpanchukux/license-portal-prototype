@@ -223,6 +223,77 @@ $$('#sgWizStep').forEach(function(box){
   if(bb) bb.innerHTML = licSortB(rows).map(function(p){ return rowHtmlB(p, { noLabelEdit:true }); }).join('');
 })();
 
+/* ---------- LICENCES TOOLBAR: A and B, and the two menus ------------------------
+   ⚠️ THE MENUS ARE BUILT FROM `LIC_TYPE_OPTS` / `LIC_STATUS_OPTS`, the same two lists
+   page-licenses.js reads. That is the whole reason this specimen is rendered rather
+   than typed: this file has twice described a component it no longer had, and a filter
+   menu is exactly the kind of thing that grows an option nobody comes back to document.
+   ⚠️ THE TOOLBARS ARE STATIC. They are the product's own markup with nothing wired —
+   a specimen is for reading the shape, and a live filter here would need a list to
+   filter and would then be a second, quietly diverging implementation.
+   ⚠️ THE COUNTS ARE REAL, read from the dataset the rest of this page uses, because a
+   specimen showing `Subscription 0` teaches the wrong thing about the component. */
+(function(){
+  var lic = (DATA().licenses || []);
+  function typeCount(v){ return lic.filter(function(p){ return p.type === v; }).length; }
+  function statusCount(v){ return lic.filter(function(p){ return licStatusMatch(p, v); }).length; }
+  function row(label, count, on){
+    return '<button type="button" role="menuitemradio" class="dropcheck' + (on ? ' is-on' : '')
+      + '" aria-checked="' + (on ? 'true' : 'false') + '" tabindex="-1">'
+      + '<svg class="ic cc-check" aria-hidden="true"><use href="assets/icons.svg#ti-check"></use></svg>'
+      + '<span>' + label + '</span><span class="dropcount">' + count + '</span></button>';
+  }
+  function menu(opts, allLabel, countOf){
+    return row(allLabel, lic.length, true)
+      + opts.map(function(o){
+          return (o.sep ? '<div class="dropsep" role="separator"></div>' : '')
+            + row(o.t, countOf(o.v), false);
+        }).join('');
+  }
+  var tm = $('#sgLicTypeMenu'), sm = $('#sgLicStatusMenu');
+  if(tm) tm.innerHTML = menu(LIC_TYPE_OPTS, 'All types', typeCount);
+  if(sm) sm.innerHTML = menu(LIC_STATUS_OPTS, 'All statuses', statusCount);
+
+  /* ⚠️ THE CLASS IS A LITERAL IN EACH, not one helper taking it as an argument.
+     `tools/check-icons.py` reads the markup a file EMITS, and `class="' + cls + '"` is a
+     class it cannot read — so a builder that assembles the attribute hides every button
+     it makes from the guard. Two three-line functions cost less than a blind spot. */
+  function typeChip(t, n){
+    return '<button class="typechip" tabindex="-1"><span>' + t + '</span>'
+      + '<span class="chipcount">' + n + '</span></button>';
+  }
+  function attnChip(t, n){
+    return '<button class="filterchip attnchip" tabindex="-1">'
+      + '<svg class="ic cc-check" aria-hidden="true"><use href="assets/icons.svg#ti-check"></use></svg>'
+      + '<span>' + t + '</span><span class="chipcount">' + n + '</span></button>';
+  }
+  var a = $('#sgBarA');
+  if(a) a.innerHTML = '<div class="lic-controls">'
+    + '<div class="searchbox"><svg class="ic searchglyph" aria-hidden="true"><use href="assets/icons.svg#ti-search"></use></svg><input type="text" placeholder="Search licenses" aria-label="Search licenses (specimen)" tabindex="-1"></div>'
+    + '<div class="lic-typeseg">'
+    +   typeChip('Subscription', typeCount('Subscription'))
+    +   typeChip('Perpetual', typeCount('Perpetual'))
+    +   '<span class="chipdiv" aria-hidden="true"></span>'
+    +   attnChip('Needs attention', statusCount('attention'))
+    + '</div>'
+    + '<label class="lic-toggle"><span class="switch"><input type="checkbox" checked tabindex="-1"><span class="track"></span></span> Active only</label>'
+    + '<span class="spacer"></span>'
+    + button({ variant:'secondary', icon:'refresh', ariaLabel:'Refresh', title:'Refresh' })
+    /* no leading mark: `.lnb-ic` is display:none above 600px, so on the desktop the
+       words ARE the button — the specimen shows what the product shows */
+    + button({ variant:'primary', label:'Buy a license' })
+    + '</div>';
+  var b = $('#sgBarB');
+  if(b) b.innerHTML = '<div class="lic-controls">'
+    + '<div class="searchbox"><svg class="ic searchglyph" aria-hidden="true"><use href="assets/icons.svg#ti-search"></use></svg><input type="text" placeholder="Search licenses" aria-label="Search licenses (specimen)" tabindex="-1"></div>'
+    + '<div class="dropwrap perctl"><button class="btn btn--secondary btn--md perbtn" tabindex="-1" aria-haspopup="true" aria-expanded="false"><b>All types</b> <svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-down"></use></svg></button></div>'
+    + '<div class="dropwrap perctl"><button class="btn btn--secondary btn--md perbtn" tabindex="-1" aria-haspopup="true" aria-expanded="false"><b>All statuses</b> <svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-down"></use></svg></button></div>'
+    + '<span class="spacer"></span>'
+    + button({ variant:'secondary', icon:'refresh', ariaLabel:'Refresh', title:'Refresh' })
+    + button({ variant:'primary', label:'Buy a license' })
+    + '</div>';
+})();
+
 /* ---------- ACTIVITY: every type, from the one component -----------------------
    ⚠️ THE LIST IS DRIVEN BY `ACTIVITY_TEXT`, not written out here. Iterating the map is
    what makes this page unable to fall behind: a type added to the map appears here on
