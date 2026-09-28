@@ -1650,6 +1650,13 @@ function wirePeriod(sel, st, rerender){
   var ctl = $(sel) || $('.perctl');
   if(!ctl) return;
   var btn=$('.perbtn',ctl), menu=$('.permenu',ctl), custom=$('.percustom',ctl), lab=$('.perlabel',ctl);
+  /* ⚠️⚠️ A PERIOD CONTROL WITHOUT ITS MENU IS NOT ONE, and this guard is here because
+     the absence used to be discovered on every click in the document. `.perctl` is the
+     shared trigger BOX — the Licenses toolbar's filter dropdowns wear it too — so a
+     caller passing a loose selector could land on a control that has no `.permenu`,
+     and `closeMenu()` then threw from a document-level listener, i.e. everywhere.
+     The callers are scoped now; this makes the failure impossible rather than unlikely. */
+  if(!btn || !menu) return;
   var apply=$('.perapply',ctl), fromI=$('.perfrom',ctl), toI=$('.perto',ctl);
   function fmtDM(iso){ var q=String(iso).split('-'); return q[2]+'.'+q[1]; }
   function closeMenu(){ menu.hidden=true; btn.setAttribute('aria-expanded','false'); }
@@ -2596,6 +2603,15 @@ function bannerKey(c){
    in the same priority order — and only the overflow becomes a count.
    The reason the old rule existed still stands and still constrains this: three stacked
    BANNERS would push the licence list off the screen. Three LINES do not. */
+/* ---------- the two demo levers the state bar pulls (2026-09-28) ----------------
+   ⚠️ OVERRIDES, NOT A SECOND SOURCE. `null` / `'auto'` is the default on both, and on
+   the default this file behaves exactly as it did — the levers can only NARROW what is
+   already true, never invent a condition that is not. That is the whole contract: the
+   bar lets you look at a real banner you would otherwise have to arrange the data to
+   see, and it cannot show you one the account could not produce.
+   ⚠️ Stored in the demo key, so `Reset demo data` clears them with everything else. */
+function bannerForce(){ var v = Store.get('bannerForce'); return v || null; }
+function bannerShape(){ var v = Store.get('bannerShape'); return v === 'one' || v === 'many' ? v : 'auto'; }
 function homeBannerVisible(){
   var all = attentionConditions();
   /* one entry per licence, its most serious condition — a licence that is both blocked
@@ -2608,6 +2624,15 @@ function homeBannerVisible(){
     seen[key] = true;
     out.push(c);
   });
+  /* ⚠️ The forced state is moved to the FRONT rather than filtered to on its own: the
+     count beside it ("and 3 more") has to stay true, and the others are still conditions
+     this account has. Narrowing to one would make the bar show a banner that lies about
+     how much else is wrong. */
+  var force = bannerForce();
+  if(force){
+    var hit = out.filter(function(c){ return c.state === force; });
+    if(hit.length) out = hit.concat(out.filter(function(c){ return c.state !== force; }));
+  }
   return out;
 }
 
@@ -2722,6 +2747,12 @@ function renderHomeBanner(){
   var copy = homeBannerCopy(items[0]);
   if(!copy){ slot.hidden = true; return; }
   var rest = items.length - 1;
+  /* the state bar's shape lever — `one` shows the full form even when others are
+     pending, `many` shows the compact form; neither can fabricate a count (see
+     bannerShape, and the `disabled` rule on the bar's own option) */
+  var shape = bannerShape();
+  if(shape === 'one') rest = 0;
+  else if(shape === 'many' && rest < 1) rest = 0;
   /* ⚠️⚠️ TWO SHAPES, AND THE SECOND ONE IS DELIBERATELY POORER (2026-09-24).
      ONE alert  — the whole thing: the fact, what fixes it, and its actions.
      SEVERAL    — the most urgent alert's FACT and one control, `and N more`. No todo

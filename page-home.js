@@ -307,3 +307,151 @@ if(dashEmptyV && !dashEmptyV.hidden){
   NL.open({ product:pending.product, kind:pending.kind, plan:pending.plan,
             startStep:2, skipPicker:true });
 })();
+
+
+/* ============================================================================
+   HOME'S PAGE STATES — the bottom bar (2026-09-28, by request)
+   ============================================================================
+   ⚠️ FOUR TABS, AND THEY ARE FOUR DIFFERENT QUESTIONS — which is why they are tabs and
+   not one long row. `Dashboard` decides what the account HAS; `Payment` decides a fact
+   about the account that two banners read; `Banner` decides which of the true
+   conditions is the one on screen; `Shape` decides how much of it is shown. Only the
+   first changes the data; the rest are the levers that let a real banner be looked at
+   without arranging an account to produce it.
+   ⚠️ `Dashboard state` MOVED HERE FROM THE ⚙ PANEL. It was always a fact about this one
+   page, sitting in the panel every page opens — which is the split this bar exists to
+   make. Same store key, so nothing about it changed except where it is set.
+   ⚠️ EVERY OPTION CARRIES A LIVE COUNT OR A REASON, and the ones that cannot fire are
+   DISABLED rather than hidden: "this banner cannot happen on this account" is the most
+   useful thing the bar can tell you about it, and a hidden row says nothing. */
+(function(){
+  if(!window.PageStates) return;
+
+  /* ---------- the card that makes `card_expiring` reachable at all ----------------
+     ⚠️ Without this the condition CANNOT FIRE from a fresh demo, and that is a finding
+     rather than a convenience: `cardExpiryDay` parses only a STORED card's `MMYY`, and
+     the seeded `PAYMENT_METHOD` is display markup ("12 / 2028") with no parseable date.
+     So `savedCard()` is null, the expiry is null, and the branch is dead.
+     ⚠️⚠️ THE DATE IS DERIVED FROM THE NEXT CHARGE, NOT SET TO "SOON". First attempt was
+     `TODAY + 20 days`, and it did not fire: a card dies at the END of its month, so
+     `cardExpiryDay` rounded 20 days up to 34 — past the soonest renewal, which is the
+     very comparison the condition makes. The card is dated one month BEFORE the month
+     of the soonest renewal, so its end-of-life always lands before that charge, whatever
+     the demo's dates have been shifted to. */
+  function soonestRenewal(){
+    var next = null;
+    (DATA().licenses || []).forEach(function(l){
+      if(l.status === 'canceled' || l.type !== 'Subscription' || !l.event) return;
+      var d = dayOf(l.event);
+      if(d != null && (next == null || d < next)) next = d;
+    });
+    return next;
+  }
+  function expiringCard(){
+    var next = soonestRenewal(); if(next == null) return null;
+    /* the month that CONTAINS the day before the charge, stepped back one: the card's
+       first-of-next-month is then that month's first day, which is before the charge */
+    var q = dayToDate(next - 1).split(' ');               // "Oct 06 2026"
+    var m = MONN.indexOf(q[0]) + 1, y = +q[2];
+    m -= 1; if(m < 1){ m = 12; y -= 1; }
+    return { brand:'VISA', last4:'4242', num:'4242 4242 4242 4242',
+             exp:('0' + m).slice(-2) + String(y).slice(-2),
+             name:'Mariia Panchuk', country:'Germany' };
+  }
+  function payState(){
+    if(!billingSaved() && !savedCard()) return 'none';
+    var c = savedCard();
+    return (c && cardExpiryDay() != null) ? 'expiring' : 'saved';
+  }
+  var PAY = [
+    { v:'saved',    t:'Card on file' },
+    { v:'none',     t:'No payment method', note:'fires no_card' },
+    { v:'expiring', t:'Card expires soon', note:'fires card_expiring' }
+  ];
+
+  /* what each banner condition is called in the bar, in the order the code ranks them */
+  var COND = [
+    ['blocked',         'Blocked'],
+    ['payment_failed',  'Payment failed'],
+    ['no_card',         'No payment method'],
+    ['card_expiring',   'Card expiring'],
+    ['updates_expired', 'Updates ended'],
+    ['updates_14',      'Updates end ≤14d'],
+    ['updates_30',      'Updates end ≤30d'],
+    ['grant',           'Grant ready']
+  ];
+  function live(){
+    var m = {};
+    attentionConditions().forEach(function(c){ m[c.state] = (m[c.state] || 0) + 1; });
+    return m;
+  }
+
+  PageStates.define({
+    id:'home',
+    label:'Home',
+    when:function(){ return document.body.getAttribute('data-page') === 'home'; },
+    tabs:[
+      { id:'dash', label:'Dashboard',
+        hint:'What the account owns. This is the only tab that changes the data — the other three only decide what is shown.',
+        get:function(){ return Store.get('dash'); },
+        set:function(v){ Store.set('dash', v); location.reload(); },
+        options:function(){
+          return Object.keys(DASH_STATES).map(function(k){
+            var d = DASH_STATES[k];
+            var n = ((DATASETS[d.variant] || {}).licenses || []).length;
+            return { v:k, t:d.label.replace(/^Dashboard — /, ''), note:n + ' lic' };
+          });
+        } },
+
+      { id:'pay', label:'Payment',
+        hint:'A fact about the account that two banners read. `Card expires soon` writes a real card dated 20 days out, which is what makes card_expiring reachable at all.',
+        get:payState,
+        set:function(v){
+          if(v === 'none'){ Store.set('billingData','none'); Store.set('paymentMethod', null); }
+          else if(v === 'expiring'){
+            var c = expiringCard(); if(!c) return;
+            Store.set('billingData','saved'); Store.set('paymentMethod', c);
+          }
+          else { Store.set('billingData','saved'); Store.set('paymentMethod', null); }
+          renderHomeBanner(); PageStates.sync();
+        },
+        /* ⚠️ `Card expires soon` needs a charge to expire BEFORE — an account with no
+           renewing subscription (the empty and grant states) has nothing to compare
+           against, so the option says why rather than doing nothing. */
+        options:function(){
+          var can = soonestRenewal() != null;
+          return PAY.map(function(o){
+            return o.v === 'expiring' && !can
+              ? { v:o.v, t:o.t, note:'no renewal to precede', disabled:true } : o;
+          });
+        } },
+
+      { id:'banner', label:'Banner',
+        hint:'Which of the conditions that are TRUE right now is the one on screen. A condition the account cannot produce is disabled — the bar narrows what is real, it never invents one.',
+        get:function(){ return bannerForce() || 'auto'; },
+        set:function(v){ Store.set('bannerForce', v === 'auto' ? null : v); renderHomeBanner(); PageStates.sync(); },
+        options:function(){
+          var m = live();
+          var total = Object.keys(m).reduce(function(a,k){ return a + m[k]; }, 0);
+          return [{ v:'auto', t:'Auto (most urgent)', note:total ? total + ' live' : 'none live' }]
+            .concat(COND.map(function(c){
+              return { v:c[0], t:c[1], note:m[c[0]] ? String(m[c[0]]) : '0', disabled:!m[c[0]] };
+            }));
+        } },
+
+      { id:'shape', label:'Shape',
+        hint:'One alert gets the fact, what fixes it and its actions. Several get the fact and `and N more` only — deliberately poorer, because an action button beside a list acts on one of them while looking like it settles all.',
+        get:bannerShape,
+        set:function(v){ Store.set('bannerShape', v); renderHomeBanner(); PageStates.sync(); },
+        options:function(){
+          var n = homeBannerVisible().length;
+          return [
+            { v:'auto', t:'Auto', note:n + ' live' },
+            { v:'one',  t:'Alone — full', disabled:!n },
+            { v:'many', t:'With others — count', note:n > 1 ? 'and ' + (n-1) + ' more' : 'needs 2+', disabled:n < 2 }
+          ];
+        } }
+    ]
+  });
+  PageStates.sync();
+})();

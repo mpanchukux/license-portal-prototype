@@ -1005,25 +1005,16 @@ function settingsBodyHTML(){
   var c = settingsContext(), out = '';
   function group(head, body){ return body ? '<div class="sp-grouphead">' + head + '</div>' + body : ''; }
 
-  // ---- Home: which dashboard state the page renders
-  if(c.home){
-    out += group('Dashboard state', Object.keys(DASH_STATES).map(function(k){
-      return '<label class="sp-opt"><input type="radio" name="dashState" value="' + k + '"'
-        + (Store.get('dash') === k ? ' checked' : '') + '><span>'
-        + DASH_STATES[k].label.replace(/^Dashboard — /, '') + '</span></label>';
-    }).join(''));
-  }
-
-  // ---- License details: how it presents, plus a way into each tier's details
-  if(c.details){
-    out += group('Details presentation',
-      '<label class="sp-opt"><input type="radio" name="licDetails" value="modal"' + (licDetailsMode() === 'modal' ? ' checked' : '') + '><span>Modal (default)</span></label>'
-      + '<label class="sp-opt"><input type="radio" name="licDetails" value="page"' + (licDetailsMode() === 'page' ? ' checked' : '') + '><span>Full page</span></label>');
-    out += group('Open another tier',
-      [['maker','Maker'],['prototype','Prototype'],['pilot','Pilot'],['startup','Startup'],
-       ['business','Business'],['prototypeaddons','Prototype + add-ons'],['perp','Perpetual']]
-      .map(function(t){ return '<a class="sp-opt" href="license.html?tier=' + t[0] + '"><span>' + t[1] + '</span></a>'; }).join(''));
-  }
+  /* ⚠️⚠️ THREE GROUPS LEFT THIS PANEL (2026-09-28, by request): `Dashboard state`,
+     `Details presentation` and `Open another tier`. They are the local half of the
+     settings — facts about ONE surface — and they now live at the foot of that surface
+     in the page-state bar (see `PageStates`). What stays here is what is true of the
+     prototype wherever you are standing: the session, the product it arrived for, the
+     variant a SHARED component wears, and the dev actions.
+     The store keys did not move (`dash`, `licDetails`, the `?tier=` routes); only the
+     place they are set did, so nothing stored had to be migrated.
+     ⚠️ `settingsContext().home` and `.details` are still computed above — the panel no
+     longer reads them, and the next group scoped to either page will. */
 
   /* ⚠️ THE INSTANCES VIEW GROUP IS GONE FROM HERE (2026-09-25, by request). It is a
      switcher on the page's own toolbar now — see `.viewseg` in instances.html. It was
@@ -1147,6 +1138,163 @@ function settingsHTML(){
     + '</div>';
 }
 
+/* ============================================================================
+   PAGE STATES — the second level of the prototype's settings (2026-09-28, by request)
+   ============================================================================
+   ⚠️⚠️ TWO LEVELS, AND THE SPLIT IS ABOUT SCOPE, NOT ABOUT IMPORTANCE. The ⚙ panel is
+   the GLOBAL control: who is signed in, which product the session arrived for, which
+   variant a shared component wears — things that are true of the prototype wherever you
+   are standing. This bar is the LOCAL one: the states of the surface you are looking at
+   right now. A page with twenty ways to be full does not belong in a 256px panel that
+   every other page also opens; it belongs at the foot of that page, where the thing it
+   describes is on screen above it.
+
+   ⚠️ IT IS PROTOTYPE SCAFFOLDING, and it says so. Same family as the ⚙ panel: ink
+   chrome, its own corner of the window, never part of the product UI. `tools/check-icons.py`
+   exempts the `sb-` prefix for the same reason it exempts `sg-`.
+
+   ⚠️ NOTHING HERE OWNS STATE. Every option reads and writes through the surface's own
+   store key — `dash`, `licDetails`, `paymentMethod` — so the bar is a second WAY to set
+   what was already settable, never a second copy of it. Turn the bar off and every value
+   it touched is still where it was.
+
+   ⚠️ DESKTOP ONLY (≤600px it is hidden). The phone has a bottom navigation bar of its
+   own and 390px of width; a review tool that covered either would be reviewing itself.
+
+   A page declares its own states and this renders them:
+
+     PageStates.define({
+       id:    'home',                       // one spec per surface, re-defining replaces
+       label: 'Home',                       // what the bar calls the surface
+       when:  function(){ return true; },   // is this surface on screen right now?
+       tabs:  [{ id, label, get(), set(v), options:[{ v, t, note, disabled }] }]
+     });
+
+   `options` may be a function, so a tab that counts live conditions recomputes on every
+   render rather than freezing whatever was true at boot. */
+var PageStates = (function(){
+  var specs = [];        // every surface that has declared states, in declaration order
+  var bar = null, activeTab = {};
+
+  function open(){ return Store.get('stateBarOpen') !== false; }
+  function current(){
+    for(var i = 0; i < specs.length; i++){
+      var sp = specs[i];
+      var on = true;
+      try { on = sp.when ? !!sp.when() : true; } catch(e){ on = false; }
+      if(on) return sp;
+    }
+    return null;
+  }
+  function opts(tab){
+    var o = typeof tab.options === 'function' ? tab.options() : tab.options;
+    return o || [];
+  }
+  function render(){
+    if(!bar) return;
+    var sp = current();
+    /* ⚠️ The BAR hides, not the body: a surface with no states declared has no bar at
+       all, rather than an empty one asking to be filled. */
+    if(!sp || !sp.tabs || !sp.tabs.length){
+      bar.hidden = true;
+      document.body.classList.remove('has-statebar');
+      document.body.style.removeProperty('--sbH');
+      return;
+    }
+    bar.hidden = false;
+    document.body.classList.add('has-statebar');
+    var tabs = sp.tabs;
+    var pick = activeTab[sp.id];
+    if(!tabs.some(function(t){ return t.id === pick; })) pick = tabs[0].id;
+    activeTab[sp.id] = pick;
+    var tab = tabs.filter(function(t){ return t.id === pick; })[0];
+
+    var head = '<button type="button" class="sb-toggle" id="sbToggle" aria-expanded="'
+      + (open() ? 'true' : 'false') + '" aria-controls="sbBody">'
+      + icon(open() ? 'chevron-down' : 'chevron-up', { cls:'sb-chev' })
+      + '<span class="sb-title">Page states</span>'
+      + '<span class="sb-where">' + esc(sp.label || sp.id) + '</span></button>';
+
+    var tablist = '<div class="sb-tabs" role="tablist" aria-label="State groups">'
+      + tabs.map(function(t){
+          var on = t.id === pick;
+          return '<button type="button" class="sb-tab' + (on ? ' is-on' : '') + '" role="tab"'
+            + ' aria-selected="' + (on ? 'true' : 'false') + '" data-sbtab="' + esc(t.id) + '">'
+            + esc(t.label) + '</button>';
+        }).join('')
+      + '</div>';
+
+    /* ⚠️ RADIOS IN LABELS, exactly like `.sp-opt` in the ⚙ panel. They are one control
+       with one answer, the browser gives the grouping and the arrow keys for free, and
+       it keeps the two settings surfaces reading as one idea at two scales. */
+    var cur = null;
+    try { cur = tab.get ? tab.get() : null; } catch(e){ cur = null; }
+    var rows = opts(tab).map(function(o, i){
+      var on = String(o.v) === String(cur);
+      return '<label class="sb-opt' + (o.disabled ? ' is-off' : '') + (on ? ' is-on' : '') + '">'
+        + '<input type="radio" name="sbopt" value="' + esc(o.v) + '" data-sbopt="' + i + '"'
+        + (on ? ' checked' : '') + (o.disabled ? ' disabled' : '') + '>'
+        + '<span class="sb-opt-t">' + esc(o.t) + '</span>'
+        + (o.note ? '<span class="sb-opt-n">' + esc(o.note) + '</span>' : '')
+        + '</label>';
+    }).join('');
+
+    bar.innerHTML = head
+      + '<div class="sb-body" id="sbBody"' + (open() ? '' : ' hidden') + '>'
+      +   tablist
+      +   '<div class="sb-opts">' + rows + '</div>'
+      +   (tab.hint ? '<p class="sb-hint">' + tab.hint + '</p>' : '')
+      + '</div>';
+    /* the bar overlays the page, so the page is told how much of itself is covered */
+    document.body.style.setProperty('--sbH', Math.round(bar.getBoundingClientRect().height) + 'px');
+  }
+  function wire(){
+    bar.addEventListener('click', function(e){
+      var t = e.target.closest('[data-sbtab]');
+      if(t){
+        var sp = current(); if(sp) activeTab[sp.id] = t.getAttribute('data-sbtab');
+        render(); return;
+      }
+      if(e.target.closest('#sbToggle')){ Store.set('stateBarOpen', !open()); render(); }
+    });
+    bar.addEventListener('change', function(e){
+      var r = e.target.closest('[data-sbopt]'); if(!r) return;
+      var sp = current(); if(!sp) return;
+      var tab = sp.tabs.filter(function(t){ return t.id === activeTab[sp.id]; })[0];
+      if(!tab) return;
+      var o = opts(tab)[+r.getAttribute('data-sbopt')];
+      if(!o || o.disabled) return;
+      /* ⚠️ The setter may navigate or reload — so nothing is done after it that assumes
+         this document is still here. A setter that stays puts the page back in step by
+         calling `PageStates.sync()` itself. */
+      try { tab.set(o.v, o); } catch(err){ /* a demo lever must never break the page */ }
+      render();
+    });
+    window.addEventListener('resize', render);
+  }
+  return {
+    define: function(spec){
+      specs = specs.filter(function(s){ return s.id !== spec.id; });
+      specs.push(spec);
+      if(bar) render();
+    },
+    /* every surface that opens or closes over a page calls this — the licence panel
+       does it on open and on close, so the bar follows what is actually on screen */
+    sync: function(){ render(); },
+    mount: function(){
+      if(bar) return;
+      bar = document.createElement('div');
+      bar.className = 'statebar';
+      bar.id = 'stateBar';
+      bar.hidden = true;
+      bar.setAttribute('aria-label', 'Prototype page states');
+      document.body.appendChild(bar);
+      wire();
+      render();
+    }
+  };
+})();
+
 /* Shared dialogs. Every page gets all of them: they are defined once here, and
    the pages that use one only wire its behaviour. */
 function modalsHTML(){
@@ -1169,6 +1317,7 @@ function injectChrome(){
   document.body.insertAdjacentHTML('afterbegin', chromeHTML());
   if(main) main.insertAdjacentHTML('beforeend', footerHTML());
   document.body.insertAdjacentHTML('beforeend', modalsHTML() + settingsHTML());
+  PageStates.mount();
 }
 
 /* ---------- nav highlight ---------- */
@@ -1776,12 +1925,10 @@ function wireSettingsPanel(){
       case 'session':
         setSession(r.value);
         return;
-      // the dashboard state is a stored setting: pick it anywhere, land on Home with it
-      case 'dashState':
-        Store.set('dash', r.value);
-        if(document.body.getAttribute('data-page') === 'home') location.reload();
-        else location.href = 'index.html';
-        return;
+      /* ⚠️ `dashState` and `licDetails` are GONE from this handler with their groups —
+         the page-state bar sets both through its own `set()`, which is the same
+         `Store.set` plus whatever that surface needs to repaint. */
+
       /* the balance changes what a purchase charges, so an open wizard has to repaint */
       case 'credit':
         Store.set('credit', +r.value || 0);
@@ -1806,10 +1953,6 @@ function wireSettingsPanel(){
       case 'licBar':
         Store.set('licBar', r.value);
         if(typeof applyLicBar === 'function') applyLicBar();
-        return;
-      // the details presentation is a stored setting; rows read it on click
-      case 'licDetails':
-        Store.set('licDetails', r.value);
         return;
       /* arrival changes what every selling surface states, and all three of them are
          re-rendered from one entry point rather than each knowing about the others */

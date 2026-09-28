@@ -1411,6 +1411,85 @@ th[aria-label$="ctions"],th.cellact,td.cellact{width:1%;white-space:nowrap;text-
   z-index:900;box-shadow:0 4px 14px rgba(0,0,0,.28);cursor:pointer}
 .gearfab:hover{background:#000;color:#fff}
 .gearfab .ic{width:var(--ic-24);height:var(--ic-24)}
+/* ============================================================================
+   THE PAGE-STATE BAR — the local half of the prototype's settings
+   ============================================================================
+   ⚠️ SAME FAMILY AS THE ⚙ PANEL, DIFFERENT SCOPE. Ink chrome, its own corner of the
+   window, obviously not product UI. It docks along the bottom because that is the one
+   edge a full-width review tool can take without covering the thing being reviewed —
+   the page tells itself how much is covered through `--sbH`, set by the bar's own
+   measurement rather than by a constant here (its height changes with the number of
+   options and whether it is open).
+   ⚠️ IT SITS UNDER THE ⚙ FAB IN Z-ORDER AND PUSHES IT UP. Two floating controls in one
+   corner is one too many; the gear rides above the bar rather than behind it.
+   ⚠️ HIDDEN ≤600px — see the note in shared.js. */
+.statebar{position:fixed;left:0;right:0;bottom:0;z-index:880;
+  background:var(--ink);color:#fff;font-size:14px;
+  box-shadow:0 -6px 24px rgba(0,0,0,.24)}
+.statebar[hidden]{display:none}
+.sb-toggle{display:flex;align-items:center;gap:10px;width:100%;padding:7px 18px;
+  border:0;background:transparent;color:#fff;font:inherit;font-size:14px;text-align:left;cursor:pointer}
+.sb-toggle:hover{background:rgba(255,255,255,.08)}
+.sb-toggle:focus-visible{outline:2px solid #fff;outline-offset:-3px}
+.sb-chev{width:var(--ic-16);height:var(--ic-16);flex:none;opacity:.75}
+.sb-title{font-weight:600;letter-spacing:.06em;text-transform:uppercase;font-size:14px}
+/* which surface the bar is describing — the bar is one node and several pages use it */
+.sb-where{margin-left:auto;opacity:.7}
+.sb-body{padding:0 18px 12px}
+.sb-body[hidden]{display:none}
+.sb-tabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px;
+  border-bottom:1px solid rgba(255,255,255,.16);padding-bottom:8px}
+.sb-tab{padding:4px 11px;border:0;border-radius:999px;background:transparent;
+  color:rgba(255,255,255,.66);font:inherit;font-size:14px;cursor:pointer}
+.sb-tab:hover{background:rgba(255,255,255,.10);color:#fff}
+.sb-tab.is-on{background:#fff;color:var(--ink);font-weight:500}
+.sb-tab:focus-visible{outline:2px solid #fff;outline-offset:2px}
+/* ⚠️ A WRAPPING ROW, NOT A COLUMN. Twenty states in a column would be a panel again;
+   across the foot of the window they are one glance, and the row grows downward only
+   when it has to. */
+.sb-opts{display:flex;flex-wrap:wrap;gap:6px}
+.sb-opt{display:inline-flex;align-items:baseline;gap:7px;padding:5px 12px;
+  border:1px solid rgba(255,255,255,.22);border-radius:999px;cursor:pointer;
+  color:rgba(255,255,255,.82);white-space:nowrap}
+.sb-opt:hover{border-color:rgba(255,255,255,.5);color:#fff}
+/* the radio is the mechanism, not the mark — the whole chip states the answer */
+.sb-opt input{position:absolute;opacity:0;pointer-events:none;width:0;height:0}
+.sb-opt.is-on{background:#fff;border-color:#fff;color:var(--ink);font-weight:500}
+.sb-opt.is-off{opacity:.38;cursor:not-allowed}
+.sb-opt:focus-within{outline:2px solid #fff;outline-offset:2px}
+/* the count or the reason, riding the chip it qualifies */
+.sb-opt-n{opacity:.62;font-variant-numeric:tabular-nums}
+.sb-opt.is-on .sb-opt-n{opacity:.7}
+.sb-hint{margin:10px 0 0;color:rgba(255,255,255,.62);line-height:1.45;max-width:96ch}
+/* the page keeps its own bottom clear of the bar, and the gear rides above it */
+body.has-statebar #shellMain{padding-bottom:var(--sbH,0px)}
+/* ⚠️ A FIXED OVERLAY CANNOT BE PADDED OUT OF THE WAY, so the overlay's own box is given
+   a shorter window to centre in: `.fs-screen` is `inset:0` and the modal centres inside
+   it, so lifting its bottom edge lifts the sheet with it. Measured without this: the
+   licence panel is 90vh and the bar covered its last ~90px, including the tab bar's
+   scroll end. The backdrop stops above the bar too, which is right — the bar has to
+   stay lit and clickable while the thing it is switching is open. */
+body.has-statebar .fs-screen,
+body.has-statebar .payoverlay,
+body.has-statebar .overlay{bottom:var(--sbH,0px)}
+/* ⚠️ AND THE BOX HAS TO BE TOLD TOO. Lifting the overlay's bottom edge shortens the box
+   it centres in, but `.fs-box` is `height:90vh` — a share of the WINDOW, not of that box
+   — so it simply overflowed the shorter one. Measured: sheet bottom 767 against a bar
+   top of 723.5. `min()` keeps 90vh as the cap and takes whatever is actually left when
+   that is less, so nothing changes while the bar is closed or absent. */
+body.has-statebar .fs-box{height:min(90vh, calc(100vh - var(--sbH,0px) - 32px))}
+body.has-statebar .gearfab{bottom:calc(var(--sbH, 0px) + 16px)}
+body.has-statebar .settings-panel{bottom:calc(var(--sbH, 0px) + 70px)}
+@media (max-width:600px){
+  .statebar{display:none}
+  body.has-statebar #shellMain{padding-bottom:0}
+  body.has-statebar .fs-screen,
+  body.has-statebar .payoverlay,
+  body.has-statebar .overlay{bottom:0}
+  body.has-statebar .fs-box{height:90vh}
+  body.has-statebar .gearfab{bottom:16px}
+  body.has-statebar .settings-panel{bottom:70px}
+}
 .settings-panel{position:fixed;right:16px;bottom:70px;width:256px;background:#fff;border:1px solid var(--line);border-radius:8px;box-shadow:0 12px 32px rgba(0,0,0,.18);z-index:901;padding:14px;max-height:calc(100vh - 100px);overflow-y:auto}
 .settings-panel[hidden]{display:none}
 .settings-panel h4{margin:0 0 3px;font-size:14px}

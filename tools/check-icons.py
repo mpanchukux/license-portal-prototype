@@ -259,6 +259,12 @@ NOT_A_BUTTON = (
     'tb-refresh', 'emailpend-v', 'nr-clear', 'dblock-link', 'lp-link', 'sdot',
     'plancard', 'nl-prodcard', 'switch', 'pc-', 'am-', 'ec-', 'inlineact',
     'stepbtn', 'menurow', 'searchclear',
+    # ⚠️ `sb-` is the PAGE-STATE BAR, and it is exempt for the same reason `sg-` is:
+    # prototype scaffolding, not product chrome. Its tabs and its collapse toggle are
+    # its own controls in ink chrome along the bottom of the window; dressing them in
+    # the product's button vocabulary would make the review tool look like the thing
+    # being reviewed. See the PageStates block in shared.js.
+    'sb-',
 )
 BTN_TAG = re.compile(r'<(button|a)\b([^>]*)>', re.I)
 CLASS_IN = re.compile(r'class=\\?["\']([^"\'\\]*)')

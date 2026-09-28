@@ -392,7 +392,7 @@ var DETAILS_HTML = ''
 + '            <div class="section">'
 + '              <div class="insttoolbar" data-feed="lic">'
 + '                <div class="searchbox"><svg class="ic searchglyph" aria-hidden="true"><use href="assets/icons.svg#ti-search"></use></svg><input type="text" placeholder="Search activity" aria-label="Search activity"></div>'
-+ '                <div class="dropwrap perctl">'
++ '                <div class="dropwrap perctl" id="licFeedPeriod">'
 + '                  <button class="btn btn--secondary btn--md perbtn" aria-haspopup="true" aria-expanded="false" aria-label="Period"><b class="perlabel">All time</b> <svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-down"></use></svg></button>'
 + '                  <div class="dropmenu permenu" hidden>'
 + '                    <button type="button" role="menuitemradio" data-period="all">All time</button>'
@@ -1449,7 +1449,16 @@ function wireDetailsOnce(){
   /* ---------- render ---------- */
   function refreshDetails(){ renderLicenseDetails(activeLicense); }
   refreshDetails();
-  wirePeriod('.perctl', licPeriod, function(){ renderLicFeed(activeLicense); });
+  /* ⚠️⚠️ SCOPED BY ID, AND IT WAS A BARE `.perctl` (fixed 2026-09-28). `$()` returns the
+     FIRST match in the document, so this wired whichever period control happened to come
+     first in the markup — which was this panel's, right up until the Licenses toolbar B
+     gave its Type and Status dropdowns the same `.perctl` box. From that day the panel's
+     period filter was wired to a control that has no `.permenu`, and `closeMenu()` —
+     which runs from a DOCUMENT click listener — threw on every click anywhere on the
+     page. Found in the console sweep, not by anything visibly breaking.
+     This is the file's own recurring lesson at a new address: a selector that names a
+     LAYOUT reaches surfaces you were not thinking about. */
+  wirePeriod('#licFeedPeriod', licPeriod, function(){ renderLicFeed(activeLicense); });
 
   /* ---------- header actions ---------- */
   var cancelActiveBtn = $('[data-cancel-active]');
@@ -1579,6 +1588,12 @@ var LicenseDetails = (function(){
     resetSurface();
     if(!wired){ wireDetailsOnce(); wired = true; }
     syncNewBanner(lic);
+    /* ⚠️ WHICH LICENCE THIS SURFACE IS SHOWING, on the surface itself. In modal mode
+       there is no id in the URL, so nothing outside could answer that question — the
+       state bar reads this to mark the option it is currently standing on. One
+       attribute, written wherever the panel is filled, which is here and only here. */
+    var host = $('#appView'); if(host && lic) host.setAttribute('data-lic', lic.id);
+    if(window.PageStates) PageStates.sync();
   }
   /* ---------- the overflow stays WITH the other actions ----------
      ⚠️ `placeOverflow()` is GONE. It relocated the ⋮ on a phone — into the app bar's
@@ -1656,6 +1671,9 @@ var LicenseDetails = (function(){
     modal.hidden = true;
     document.body.classList.remove('licmodal-open');
     if(opener && opener.focus) opener.focus();
+    /* the state bar follows what is on screen, and this surface comes and goes over
+       pages that have states of their own */
+    if(window.PageStates) PageStates.sync();
   }
   function mountPage(hostSel, lic, opts){
     var host = $(hostSel); if(!host) return;
@@ -1676,7 +1694,7 @@ var LicenseDetails = (function(){
   }
   return {
     mountPage: mountPage,
-    openModal: openModal,
+    openModal: function(lic){ openModal(lic); if(window.PageStates) PageStates.sync(); },
     close: close,
     setRerender: function(fn){ hostRerender = fn; },
     afterChange: afterChange,
@@ -1690,4 +1708,123 @@ var LicenseDetails = (function(){
     },
     refresh: function(){ if(activeLicense) renderLicenseDetails(activeLicense); }
   };
+})();
+
+
+/* ============================================================================
+   THE LICENCE PANEL'S PAGE STATES — the bottom bar (2026-09-28, by request)
+   ============================================================================
+   ⚠️ THE SURFACE, NOT THE PAGE. This panel has two hosts — a modal over any list and
+   `license.html` — so its `when()` asks whether the surface is ON SCREEN rather than
+   which page you are on. `openModal` and `close` call `PageStates.sync()`, so the bar
+   appears with the modal and goes with it.
+   ⚠️ IT SWITCHES BY OPENING A REAL LICENCE, never by faking one. Every option here
+   names a licence that actually carries that state, and a state no licence carries is
+   DISABLED with its count — which is also how the bar reports what the demo cannot
+   currently show (a cancelled perpetual, say, does not exist).
+   ⚠️ `Presentation` and `Tier` MOVED HERE FROM THE ⚙ PANEL. Both were facts about this
+   one surface living in the panel every page opens — the split this bar exists to make.
+   Same store key, same synthetic `?tier=` routes; only where they are set changed. */
+(function(){
+  if(!window.PageStates) return;
+
+  function onScreen(){
+    return document.body.getAttribute('data-page') === 'license'
+        || (window.LicenseDetails && LicenseDetails.isOpen());
+  }
+  /* ⚠️ Honour the CURRENT host: in the modal, swap the licence inside it; on the page,
+     navigate. Opening a modal from the full-page host would put the surface on top of
+     itself. */
+  function openLic(id){
+    var lic = licById(id); if(!lic) return;
+    if(document.body.getAttribute('data-page') === 'license'){
+      location.href = licenseHref(lic, 'licenses');
+    } else {
+      LicenseDetails.openModal(lic);
+    }
+  }
+  function active(){
+    var m = /[?&]id=([^&]+)/.exec(location.search);
+    if(m) return decodeURIComponent(m[1]);
+    var t = $('#licModalTitle');
+    /* the modal does not carry the id in the URL, so the bar reads the licence the
+       panel is actually showing — `data-lic` is written by show() */
+    var host = $('#appView');
+    return host ? host.getAttribute('data-lic') : null;
+  }
+
+  /* the seven branches of `renderLicenseAlert`, in its own order of seriousness */
+  var STATES = [
+    ['over_limit',       'Over instance limit', function(l){ return instOverLimit(l); }],
+    ['payment_failed',   'Payment failed',      function(l){ return !instOverLimit(l) && l.status === 'payment_failed'; }],
+    ['updates_expired',  'Updates ended',       function(l){ return !instOverLimit(l) && l.status !== 'payment_failed' && hasUpdatesTerm(l) && daysUntil(l.event) < 0; }],
+    ['updates_expiring', 'Updates ending',      function(l){ return !instOverLimit(l) && l.status === 'updates_expiring'; }],
+    ['canceled',         'Canceled',            function(l){ return l.status === 'canceled'; }],
+    ['awaiting_checkin', 'Awaiting check-in',   function(l){ return l.status === 'awaiting_checkin'; }],
+    ['none',             'No banner',           function(l){
+      return !instOverLimit(l) && l.status !== 'payment_failed' && l.status !== 'canceled'
+        && l.status !== 'awaiting_checkin' && l.status !== 'updates_expiring'
+        && !(hasUpdatesTerm(l) && daysUntil(l.event) < 0); }]
+  ];
+  var TYPES = [
+    ['Subscription', 'Subscription', function(l){ return l.type === 'Subscription' && l.tier !== 'free'; }],
+    ['Perpetual',    'Perpetual',    function(l){ return l.type === 'Perpetual'; }],
+    ['Grant',        'Grant',        function(l){ return !!l.grant; }],
+    ['Free',         'Free',         function(l){ return l.tier === 'free'; }]
+  ];
+  function group(defs){
+    var lic = DATA().licenses || [];
+    return defs.map(function(d){
+      var hits = lic.filter(d[2]);
+      var cur = active();
+      var mine = hits.filter(function(l){ return l.id === cur; })[0];
+      return { v:d[0], t:d[1], note:hits.length ? String(hits.length) : 'none',
+               disabled:!hits.length, _open:(mine || hits[0] || {}).id,
+               _on:!!mine };
+    });
+  }
+  function pickFrom(defs){
+    return function(v){
+      var o = group(defs).filter(function(x){ return x.v === v; })[0];
+      if(o && o._open) openLic(o._open);
+    };
+  }
+  function currentOf(defs){
+    return function(){
+      var o = group(defs).filter(function(x){ return x._on; })[0];
+      return o ? o.v : null;
+    };
+  }
+
+  PageStates.define({
+    id:'license',
+    label:'License details',
+    when:onScreen,
+    tabs:[
+      { id:'state', label:'State',
+        hint:'The seven branches of the panel’s own banner, in its order of seriousness. Picking one opens a licence that really carries it — a state no licence has is disabled with its count.',
+        get:currentOf(STATES), set:pickFrom(STATES),
+        options:function(){ return group(STATES); } },
+
+      { id:'type', label:'Type',
+        hint:'Type swaps whole blocks (data-page sub / perp). A grant takes the perpetual branch and then strips coupon, add-ons, invoices and the instances toolbar on top of it.',
+        get:currentOf(TYPES), set:pickFrom(TYPES),
+        options:function(){ return group(TYPES); } },
+
+      { id:'present', label:'Presentation',
+        hint:'Modal over the list is the default. The full page is the same surface with a Back button instead of a close control, and a header band the modal collapses on the desktop.',
+        get:licDetailsMode,
+        set:function(v){ Store.set('licDetails', v); PageStates.sync(); },
+        options:[{ v:'modal', t:'Modal (default)' }, { v:'page', t:'Full page' }] },
+
+      { id:'tier', label:'Tier',
+        hint:'Synthesised plan pages — there is no licence in the datasets for these, so they are routed through ?tier= rather than opened from data.',
+        get:function(){ var m = /[?&]tier=([^&]+)/.exec(location.search); return m ? m[1] : null; },
+        set:function(v){ location.href = 'license.html?tier=' + encodeURIComponent(v); },
+        options:[['maker','Maker'],['prototype','Prototype'],['pilot','Pilot'],['startup','Startup'],
+                 ['business','Business'],['prototypeaddons','Prototype + add-ons'],['perp','Perpetual']]
+                .map(function(t){ return { v:t[0], t:t[1] }; }) }
+    ]
+  });
+  PageStates.sync();
 })();
