@@ -513,7 +513,22 @@ var DATASETS = {
       { num:'NAWE49WG-0018', licId:'B1',  date:'Aug 08 2026', amount:'$499.00',   status:'Paid', payment:'Auto-pay', auto:true  },
       { num:'NAWE49WG-0017', licId:'B7',  date:'Aug 05 2026', amount:'$39.00',    status:'Paid', payment:'Auto-pay', auto:true  },
       { num:'NAWE49WG-0016', licId:'B2',  date:'Aug 02 2026', amount:'$299.00',   status:'Paid', payment:'Auto-pay', auto:true  },
-      { num:'NAWE49WG-0015', licId:'B3',  date:'Jul 28 2026', amount:'$299.00',   status:'Paid', payment:'Auto-pay', auto:true  }
+      { num:'NAWE49WG-0015', licId:'B3',  date:'Jul 28 2026', amount:'$299.00',   status:'Paid', payment:'Auto-pay', auto:true  },
+      /* ⚠️⚠️ THE CHARGE THAT DIDN'T GO THROUGH, and it is a DATA FIX rather than a new
+         demo prop (2026-09-28). B3 has carried `status:'payment_failed'` since the
+         dataset was written — Home banners it, the licence row prints `Payment failed`,
+         the licence page explains it — and the Invoices table showed nothing but a
+         clean run of `Paid`. An account cannot have a declined charge and a spotless
+         ledger; one of the two was lying, and it was the ledger.
+         ⚠️ Dated one cycle after B3's last successful charge (Jul 28 + a month), same
+         amount, same auto-pay, so it reads as the next attempt rather than as an
+         unrelated bill. `shiftDemoDates` moves it with everything else.
+         ⚠️ `Past due` IS THE WORD `invStatusMark` ALREADY NAMED — its note says the test
+         is "did it go through", with "`Past due` now, a refund or a dispute later". The
+         LICENCE says `Payment failed` because that is a condition of the licence; the
+         INVOICE says `Past due` because that is the state of a document. Two subjects,
+         two words, neither invented here. */
+      { num:'NAWE49WG-0023', licId:'B3',  date:'Aug 28 2026', amount:'$299.00',   status:'Past due', payment:'Auto-pay', auto:true  }
     ],
     /* ⚠️ RECORDS, NOT SENTENCES — see the note on account A. Two seeded shapes were
        retired here rather than given a type of their own:

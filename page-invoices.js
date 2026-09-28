@@ -4,9 +4,51 @@
    PDF at runtime. Both read the row they were clicked in.
    ============================================================================ */
 
+/* Status filter: null = All = every invoice shown. Not stored — a filter is about the
+   question you are asking right now, unlike the toolbar and table VARIANTS, which are
+   settings about how the prototype presents itself. */
+var invStatus = null;
+/* ⚠️ THE PAGER IS REAL HERE NOW (2026-09-28, by request). It was `syncPagerUnpaged`:
+   every row rendered, the footer reporting one page, and the four arrows and the
+   per-page select taken off screen because they could not do anything. That was honest
+   but it made this the THIRD answer in the product to "how does a list page" — beside
+   the Instances page, which really pages, and Activity, which has no footer at all.
+   Same controller, same default size as Instances. */
+var invPage = { page:1, size:10, total:0 };
+function invQuery(){
+  var i = $('#invoicesView .searchbox input');
+  return i ? i.value.trim() : '';
+}
+function invMatches(v){ return !invStatus || (v.status || 'Paid') === invStatus; }
+/* ⚠️ COUNTS OF THE ACCOUNT, not of the current view — the same rule the Licenses
+   dropdowns use, so the figures add up to the number of invoices there are. */
+function invStatusCount(st){
+  return (DATA().invoices || []).filter(function(v){ return (v.status || 'Paid') === st; }).length;
+}
+function renderInvStatusMenu(){
+  var opts = invStatusOpts();
+  var m = $('#invStatusMenu');
+  if(m) m.innerHTML = filterMenuHTML('invstatus', opts, invStatus, 'All statuses',
+                                     (DATA().invoices || []).length, invStatusCount);
+  var l = $('#invStatusLabel');
+  if(l) l.textContent = filterOptLabel(opts, invStatus, 'All statuses');
+  /* ⚠️ A CONTROL WITH ONE ANSWER IS NOT A CONTROL. While every invoice shares a status
+     the menu can only say what the column already says on every row, so the trigger
+     stands down entirely — the same rule the pager footer follows when there is one
+     page. It comes back on its own the day a charge fails. */
+  var ctl = $('#invStatusCtl');
+  if(ctl) ctl.hidden = opts.length < 2;
+}
 function renderInvoicesPage(){
   var b = $('#invoicesView tbody'); if(!b) return;
-  var inv = invoicesSorted();          // newest first, everywhere (see invoicesSorted)
+  var all = invoicesSorted();          // newest first, everywhere (see invoicesSorted)
+  var inv = all.filter(invMatches);
+  /* ⚠️ SEARCH AND PAGING CANNOT BOTH BE ON — `wireSearch` hides rows already in the DOM,
+     so a query across page 1 of 3 would search ten rows and call the rest absent. While
+     there is a query the page renders everything and the footer states one page. */
+  var searching = !!invQuery();
+  var shown = searching ? inv : pageSlice(inv, invPage);
+  if(searching) invPage.total = inv.length;
   if(inv.length){
     /* ⚠️ `bareProduct`, the SAME cell Home's invoice block renders. The full product
        cell belongs to the Licenses table, where the licence is the subject of the row;
@@ -15,12 +57,19 @@ function renderInvoicesPage(){
        like an entry of its own — a grey square and a deployment name competing with
        the invoice number two columns to the left. Product, type, and a link to the
        licence: nothing else earns a place. */
-    b.innerHTML = inv.map(function(v){ return invRow(v, { bareProduct:true }); }).join('');
+    b.innerHTML = shown.map(function(v){ return invRow(v, { bareProduct:true }); }).join('');
+  } else if(all.length){
+    /* ⚠️ A FILTER THAT MATCHES NOTHING IS NOT AN EMPTY ACCOUNT — it keeps the toolbar,
+       because the way out is to undo what the reader set. Same split the Licenses page
+       makes, through the same builder. */
+    b.innerHTML = '<tr><td colspan="6" class="noresults-cell">' + noMatchHTML() + '</td></tr>';
+    invPage.total = 0;
   } else if(DATA().noInvoicesNote){
     /* ⚠️ A dataset can say WHY it has no invoices — the grant is free, and that is a
        fact about the account rather than a state waiting to be filled. It keeps the
        one-line form and gets no action, because there is nothing to do about it. */
     b.innerHTML = invEmptyRow();
+    invPage.total = 0;
   } else {
     b.innerHTML = emptyStateRow(6, {
       title:'No invoices yet.',
@@ -32,13 +81,33 @@ function renderInvoicesPage(){
          differently, on a page that fills itself as a side effect of it. */
       action:'<a class="link" href="licenses.html">Go to Licenses</a>'
     });
+    invPage.total = 0;
   }
-  syncListEmpty(!inv.length);
-  /* same as Licenses: every row is rendered, nothing pages, so the footer says one page
-     and the controls that would imply otherwise stand down (see syncPagerUnpaged) */
-  syncPagerUnpaged('#invoicesView .pager', inv.length);
+  /* ⚠️ Measured against the ACCOUNT, not against the filter: `list-empty` strips the
+     toolbar, and doing that because a status matched nothing would take away the
+     control the reader needs to undo it. */
+  syncListEmpty(!all.length);
+  if(searching || !inv.length) syncPagerUnpaged('#invoicesView .pager', inv.length);
+  else syncPager('#invoicesView .pager', invPage);
+  renderInvStatusMenu();
 }
 renderInvoicesPage();
+wireFilterDrop('#invStatusCtl', 'invstatus', function(v){
+  invStatus = v; invPage.page = 1; renderInvoicesPage();
+});
+wirePager('#invoicesView .pager', invPage, renderInvoicesPage);
+/* the way out of a filter that matches nothing — it clears the status and nothing else */
+document.addEventListener('click', function(e){
+  if(!e.target.closest('#invoicesView [data-clearfilters]')) return;
+  invStatus = null; invPage.page = 1; renderInvoicesPage();
+});
+/* ⚠️ Bound BEFORE wireSearch, and the order is the whole trick: this re-renders the
+   table (everything while there is a query, one page when there is not) and the listener
+   wireSearch adds next then hides the non-matches in what was just drawn. */
+(function(){
+  var i = $('#invoicesView .searchbox input');
+  if(i) i.addEventListener('input', renderInvoicesPage);
+})();
 
 /* ---------- search: invoice number, the licence it is for, and the amount ---- */
 wireSearch('#invoicesView .searchbox input', {

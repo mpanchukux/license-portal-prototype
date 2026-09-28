@@ -825,6 +825,19 @@ td{padding:13px 8px;border-bottom:1px solid var(--line2);vertical-align:middle}
 .section > table{margin-top:16px}
 tr:last-child td{border-bottom:0}
 th.num,td.num{text-align:right}
+/* ⚠️ THE ONE PAIR OF COLUMNS THAT COLLIDE (2026-09-28, by request). Amount is
+   right-aligned and Status is left-aligned, so the gap between them is the only one in
+   any table made of two cells' padding facing each other — 8 + 8 at the default, which
+   put a figure and a status word almost touching while every other column pair had a
+   whole column's slack. The space goes on AMOUNT's right rather than on Status's left:
+   the number then moves away from the word instead of the word moving toward Product,
+   and the columns after it do not shift.
+   ⚠️ Named on the cell (`.inv-amt`) rather than scoped to a page, because the same row
+   renders on Home, on the Invoices page and inside the licence panel — a rule for one
+   of the three would be the same table with two spacings. Phone cards re-lay the row
+   entirely (see the ≤600px block) and reset their own padding, so this never reaches
+   them. */
+th.inv-amt,td.inv-amt{padding-right:30px}
 .meter{height:8px;background:var(--track);border-radius:999px;overflow:hidden;min-width:120px;border:1px solid var(--line2)}
 .meter>span{display:block;height:100%;background:var(--fill)}
 /* fixed text column so every meter starts at the same x and is the same width;
@@ -2248,6 +2261,19 @@ button.dbrand{background:none;border:0;padding:0;color:inherit;font:inherit;curs
    so the pill's white and the strip's grey both arrive without a rule painting a glyph */
 .tnav-item .ic{flex:none}
 .tnav-item:hover{background:var(--hover);color:var(--ink)}
+/* ⚠️⚠️ THE HOVER FILL FOLLOWS THE GROUND (2026-09-28, by request), and this closes the
+   debt the previous pass opened by hand. On 09-28 the account button was made white
+   unconditionally and the nav items were left grey — two hover fills in one bar, named
+   in the notes as "a decision, not a tidy-up". This is the decision: the fill is WHITE
+   while the bar is glass over the gradient and GREY once the bar has docked and is
+   itself white. One rule, both controls, and the question it answers is what the
+   control is standing ON rather than which control it is.
+   ⚠️ `:not(.docked)` is the whole test. `.docked` is what `wireMeshHeader` sets the
+   moment anything scrolls behind the bar, and it is already what swaps the bar's own
+   background — so the hover cannot disagree with the surface it sits on.
+   ⚠️ Pages with NO mesh never match: their bar is white at rest, so the base grey above
+   is already right and nothing here applies. */
+body[data-mesh] .dtopbar:not(.docked) .tnav-item:hover{background:var(--card)}
 .tnav-item.on{background:var(--ink);color:#fff;font-weight:600}
 .tnav-item.on:hover{background:var(--ink);color:#fff}
 .tnav-item:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
@@ -2580,17 +2606,16 @@ button.dbrand{background:none;border:0;padding:0;color:inherit;font:inherit;curs
    whole hit area rather than just the word, which is what a control with no resting box
    most needs to show. */
 .dprofbtn{padding:6px 10px}
-/* ⚠️ WHITE, NOT `--hover` (2026-09-28, by request). The bar is glass at rest and the
-   grey wash is a CHROME colour — it reads as a control lifting off an opaque toolbar,
-   which is what this bar stopped being. White is what every other control on a tinted
-   ground takes here (`.on-tint .btn--secondary`), so the account button now answers the
-   pointer the same way the rest of the product does on the same ground.
-   ⚠️ `.tnav-item:hover` is STILL `--hover` — only this control was asked for, so the bar
-   now holds two hover fills. Named rather than quietly unified: the nav items sit in the
-   centre niche and the account button at the edge, and whether they should agree is a
-   decision, not a tidy-up. */
+/* ⚠️ ONE RULE WITH THE NAV ITEMS NOW (2026-09-28, second pass). This was white
+   UNCONDITIONALLY for a day — right on the gradient, wrong once the bar docks and is
+   itself white, where a white fill is invisible. It takes the same base as every other
+   quiet control in the chrome and the same ground-dependent override (see `.tnav-item`
+   above), so the bar has one answer to "what does a hover look like here" instead of
+   two. ⚠️ `[aria-expanded="true"]` rides along: an open menu is the same lit hit area. */
 .dprofbtn:hover,
-.dprofbtn[aria-expanded="true"]{background:var(--card)}
+.dprofbtn[aria-expanded="true"]{background:var(--hover)}
+body[data-mesh] .dtopbar:not(.docked) .dprofbtn:hover,
+body[data-mesh] .dtopbar:not(.docked) .dprofbtn[aria-expanded="true"]{background:var(--card)}
 /* the face comes back with it: with no box at rest, the icon is what marks this as a
    control rather than a name printed in the bar */
 .dprofbtn .dprof-ic{display:inline-block;flex:none;color:var(--mid)}
@@ -2607,9 +2632,15 @@ button.dbrand{background:none;border:0;padding:0;color:inherit;font:inherit;curs
 /* ⚠️ Removed 2026-09-17 with the nested Users level they styled: `.dprofuser` /
    `.dpu-*`, the two-line user row, and the `.dprofsub-back` display reset. The user
    row is the Users page's table again — `userRow` in components.js. */
-.dprofmenu{position:absolute;right:0;top:calc(100% + 6px);min-width:232px;background:#fff;border:1px solid var(--line);border-radius:8px;box-shadow:0 12px 32px rgba(0,0,0,.16);padding:6px;z-index:60}
+/* ⚠️ 8 → 10px, AND THE ROWS 6 → 7px (2026-09-28, by request). This menu and `.dropmenu`
+   are the same component wearing two spellings: a panel hanging off a trigger, holding
+   rows you pick one of. `.dropmenu` is 10px with 7px rows and there are four of them in
+   the product; this was the only one at 8/6, which is not a smaller menu, it is the same
+   menu drawn slightly wrong. The numbers move to the ones with four readers, not the
+   other way round. */
+.dprofmenu{position:absolute;right:0;top:calc(100% + 6px);min-width:232px;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 12px 32px rgba(0,0,0,.16);padding:6px;z-index:60}
 .dprofmenu[hidden]{display:none}
-.dprofmenu button,.dprofmenu a{display:flex;align-items:baseline;gap:8px;width:100%;text-align:left;padding:8px 10px;border:0;background:transparent;border-radius:6px;font:inherit;font-size:14px;color:var(--ink)}
+.dprofmenu button,.dprofmenu a{display:flex;align-items:baseline;gap:8px;width:100%;text-align:left;padding:8px 10px;border:0;background:transparent;border-radius:7px;font:inherit;font-size:14px;color:var(--ink)}
 .dprofmenu button:hover,.dprofmenu a:hover{background:var(--hover)}
 .dprofmenu button .who{font-size:14px;color:var(--faint)}
 .dprofmenu .sep{height:1px;background:var(--line2);margin:6px 4px}
@@ -2770,12 +2801,18 @@ body[data-mesh] .dtopbar{
   background:transparent;border-bottom-color:transparent;
   transition:background-color .18s ease,border-color .18s ease;
 }
-/* ⚠️ FILL ONLY WHEN IT DOCKS (2026-09-25, by request). It used to bring a hairline down
-   with the white, so scrolling produced two changes where one was wanted. The border
-   stays transparent through the whole transition; only the background moves.
-   ⚠️ Pages WITHOUT the mesh keep their static hairline (`.dtopbar`, above) — that one
-   does not appear on scroll, it is always there, so it is not what this is about. */
-body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:transparent}
+/* ⚠️⚠️ THE HAIRLINE COMES BACK WITH THE FILL (2026-09-28, by request), AND THIS IS A
+   REVERSE OF 09-25. That pass took the border out with the argument "it used to bring a
+   hairline down with the white, so scrolling produced two changes where one was wanted"
+   — one change, one moment, and that reasoning is about ECONOMY. What it traded away is
+   the EDGE: a white bar over white content has nothing to say where it ends, and the
+   bar was left floating on the page it is supposed to be sitting above. The two changes
+   are one event seen twice — the bar becomes a surface, and a surface has a bottom.
+   ⚠️ It is the same `--line2` the non-mesh pages carry statically (`.dtopbar`, above),
+   so a docked bar and a plain page's bar now end the same way rather than two ways.
+   ⚠️ The transition already covers `border-color` (see the rule above), so the line
+   fades in with the fill instead of snapping. */
+body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(--line2)}
 
 /* ⚠️ THE PHONE MEASURES THE ZONE IN PIXELS, NOT IN vh, and that is not a stylistic
    preference. On the phone Home's first block is a FULL-BLEED white surface — no
@@ -2810,7 +2847,7 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:trans
    the section title had, so the page starts one step lower and says more. */
 /* the greeting above the heading: the lead's treatment, and the small gap that makes
    it read as an opening line rather than as a stray sentence */
-.ec-welcome{margin:0 0 4px}
+/* ⚠️ `.ec-welcome` REMOVED (2026-09-28) with the line it spaced — see index.html. */
 .lp-welcome .lp-sect{margin:0;font-family:var(--font-ui);
   font-size:var(--t-h1-fs);line-height:var(--t-h1-lh);
   letter-spacing:var(--t-h1-ls);font-weight:var(--t-h1-fw)}
@@ -3411,7 +3448,16 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:trans
 .fd-was{color:var(--faint);text-decoration:line-through}
 .fd-arrow{display:inline-flex;color:var(--faint)}
 .fd-arrow .ic{width:var(--ic-16);height:var(--ic-16)}
-.fd-now{font-size:14px}
+/* ⚠️⚠️ COLOURED, NOT OUTLINED (2026-09-28, by request). `.pill` draws a 1px `--ink`
+   border, which in a feed of quiet sentences made the new value the only hard black
+   shape on the row — an outline shouts "control" where the thing is a VALUE. It takes
+   the pair this feed already uses for "a named thing": `--c-blue-50` under `--accent`,
+   the same two the entity chip and the discs on the rail wear. So the blue in this feed
+   means one thing in all three places it appears.
+   ⚠️ The border is kept and made TRANSPARENT rather than removed: the pill has to stay
+   exactly the height it was, or the struck-through old value beside it stops sharing a
+   baseline with it. ⚠️ 12.1:1 — the same measurement as the chip. */
+.fd-now{font-size:14px;background:var(--c-blue-50);border-color:transparent;color:var(--accent)}
 @media (max-width:600px){
   /* the row already wraps; what it needs at this width is to start each change on its
      own line rather than squeezing a struck value, an arrow and a pill into one */
@@ -4799,6 +4845,9 @@ th.lic-num{text-align:right}
      Reading order is name, email, added, then the two actions on their own line —
      the column order, which here is also the order someone reads a person. */
   tr.user-row{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px}
+  /* ⚠️ THE CARD FOLLOWS THE TABLE (2026-09-28): column 1 is the EMAIL now, so it is the
+     line that leads the card and carries the weight. It was the name, and on a pending
+     row that meant the card opened with an em dash. */
   tr.user-row > td:nth-child(1){order:1;flex:0 0 100%;font-weight:600;color:var(--ink)}
   tr.user-row > td:nth-child(2){order:2;flex:0 0 100%;color:var(--mid);
     overflow-wrap:anywhere}                 /* a long address wraps rather than pushes */

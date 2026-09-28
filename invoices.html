@@ -34,6 +34,16 @@
   <h1 class="lic-h1">Invoices</h1>
   <div class="insttoolbar stickybar">
     <div class="searchbox"><svg class="ic searchglyph" aria-hidden="true"><use href="assets/icons.svg#ti-search"></use></svg><input type="text" placeholder="Search invoices" aria-label="Search invoices"></div>
+    <!-- ⚠️ THE SAME DROPDOWN AS ACTIVITY AND AS THE LICENSES PROPOSAL — `.dropwrap.perctl`
+         trigger, `.dropmenu` panel, `.dropcheck` rows, built by `filterMenuHTML`. Nothing
+         here declares a filter style; this page only says what it is filtering.
+         ⚠️ THE OPTIONS ARE DERIVED FROM THE INVOICES, not written out (see
+         `invStatusOpts`): the Status column already refuses to keep a list of known
+         words, and a menu with one would go stale the first time a refund appears. -->
+    <div class="dropwrap perctl" id="invStatusCtl">
+      <button class="btn btn--secondary btn--md perbtn" aria-haspopup="true" aria-expanded="false" aria-label="Invoice status"><b id="invStatusLabel">All statuses</b> <svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-down"></use></svg></button>
+      <div class="dropmenu" id="invStatusMenu" role="menu" hidden></div>
+    </div>
     <span class="spacer"></span>
     <button class="btn btn--secondary btn--md btn--icon" data-refresh aria-label="Refresh" title="Refresh"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-refresh"></use></svg></button>
   </div>
@@ -53,7 +63,7 @@
       <tr>
         <th>Invoice #</th>
         <th class="sortable" aria-sort="descending" tabindex="0">Date <span class="arrow" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-down"></use></svg></span></th>
-        <th class="num">Amount</th>
+        <th class="num inv-amt">Amount</th>
         <!-- an auto-charge icon rides next to the status chip for invoices the system
              charged on its own; Payment type said the same thing in a word and spent a
              whole column doing it -->

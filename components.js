@@ -272,6 +272,97 @@ function licStatusMatch(l, v){
   return v === 'attention' ? licNeedsAttention(l) : licStatusKey(l) === v;
 }
 
+/* ============================================================================
+   THE FILTER DROPDOWN — one component, three menus and counting
+   ============================================================================
+   ⚠️ MOVED HERE FROM `page-licenses.js` (2026-09-28, second pass). It was written for
+   the Licenses toolbar's two menus and the Invoices page then needed the same control —
+   at which point the choice is one shared builder or a second copy that starts identical
+   and stops being so. It is the Activity page's dropdown either way (`.dropwrap.perctl`
+   trigger, `.dropmenu` panel, `.dropcheck` rows); what lives here is only the SINGLE
+   SELECT arity those two toolbars want.
+   ⚠️ `All` IS AN OPTION, NOT AN ABSENCE. A menu whose only way back to everything is
+   "click the selected one again" hides its own exit, so All is a row you can point at
+   and it carries the whole count.
+   ⚠️ THE COUNTS ARE OF THE WHOLE LIST, not of the current view: they add up to the
+   number in the page title, and they do not move while the reader narrows. (The Licenses
+   page's CHIPS use the other rule — a facet count — and that difference is stated in the
+   styleguide rather than smoothed over.) */
+function filterMenuHTML(kind, opts, current, allLabel, total, countOf){
+  function row(v, text, count, sep){
+    var on = current === v || (!current && !v);
+    return (sep ? '<div class="dropsep" role="separator"></div>' : '')
+      + '<button type="button" role="menuitemradio" class="dropcheck' + (on ? ' is-on' : '') + '"'
+      + ' data-' + kind + '="' + esc(v || '') + '" aria-checked="' + (on ? 'true' : 'false') + '">'
+      + '<svg class="ic cc-check" aria-hidden="true"><use href="assets/icons.svg#ti-check"></use></svg>'
+      + '<span>' + esc(text) + '</span><span class="dropcount">' + count + '</span></button>';
+  }
+  return row('', allLabel, total, false)
+    + opts.map(function(o){ return row(o.v, o.t, countOf(o.v), o.sep); }).join('');
+}
+/* ⚠️ THE TRIGGER STATES THE ANSWER, so a narrowed list is readable without opening the
+   menu — the same contract Activity's period and event-type triggers keep. */
+function filterOptLabel(opts, v, allLabel){
+  if(!v) return allLabel;
+  var hit = opts.filter(function(o){ return o.v === v; })[0];
+  return hit ? hit.t : allLabel;
+}
+/* The trigger opens, the menu picks, a click outside closes.
+   ⚠️ `closeAllMenus()` BEFORE the toggle, and `willOpen` read BEFORE the close — the
+   same two lines `wirePeriod` needed once two dropdowns could be open at once.
+   ⚠️ Guarded, because a page may wire the same control twice across a re-render. */
+function wireFilterDrop(ctlSel, attr, set){
+  var ctl = $(ctlSel); if(!ctl || ctl.__drop) return;
+  ctl.__drop = true;
+  var btn = $('.perbtn', ctl), menu = $('.dropmenu', ctl);
+  btn.addEventListener('click', function(e){
+    e.stopPropagation();
+    var willOpen = menu.hidden;
+    if(typeof closeAllMenus === 'function') closeAllMenus();
+    menu.hidden = !willOpen;
+    btn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+  });
+  menu.addEventListener('click', function(e){
+    var row = e.target.closest('[data-' + attr + ']'); if(!row) return;
+    e.stopPropagation();
+    /* ⚠️ Single-select, so the menu CLOSES on a pick — unlike Activity's event types,
+       which is multi-select and has to stay open while two are ticked. Same component,
+       different arity, and the arity is what decides. */
+    set(row.getAttribute('data-' + attr) || null);
+    menu.hidden = true;
+    btn.setAttribute('aria-expanded', 'false');
+  });
+  document.addEventListener('click', function(e){
+    if(ctl.contains(e.target)) return;
+    menu.hidden = true; btn.setAttribute('aria-expanded', 'false');
+  });
+}
+/* ---------- what statuses the invoices actually have ----------------------------
+   ⚠️⚠️ DERIVED FROM THE DATA, NOT A LIST WRITTEN HERE. `invStatusMark` already refuses
+   to keep a list of known strings — its test is "did it go through", so that anything
+   new is treated as something to look at rather than silently passed as green. A filter
+   with a hand-written menu would undo that: the day a refund or a dispute appears, the
+   column would show it and the filter would not offer it, and nothing would say so.
+   ⚠️ The ORDER is ranked, not derived: `Paid` first because it is the resting state and
+   the rest alphabetically, so the menu does not reshuffle itself when the data changes.
+   Deriving the order too would make the menu's shape depend on which invoice happens to
+   be newest. */
+function invStatusOpts(list){
+  var seen = {}, out = [];
+  (list || DATA().invoices || []).forEach(function(v){
+    var st = v.status || 'Paid';
+    if(seen[st]) return;
+    seen[st] = true; out.push(st);
+  });
+  out.sort(function(a, b){
+    if(a === b) return 0;
+    if(a === 'Paid') return -1;
+    if(b === 'Paid') return 1;
+    return a < b ? -1 : 1;
+  });
+  return out.map(function(st){ return { v:st, t:st }; });
+}
+
 /* ---------- the ALERT icon, and why it is not the info icon ---------------------
    ⚠️ TWO ICONS, TWO MEANINGS, AND THE DIFFERENCE IS THE POINT. `infoIcon` (ⓘ) explains
    something NEUTRAL — what a production instance is, what an AI credit buys — and the
@@ -424,7 +515,7 @@ function invRow(v, opts){
   var view = button({ variant:'secondary', size:'md', icon:'external-link', cls:'tip ra-act',
                       ariaLabel:'View invoice (opens in a new tab)', href:'#',
                       attrs:'data-viewinv target="_blank" rel="noopener" data-tip="View invoice"' });
-  return '<tr class="inv-row"><td class="mono">'+v.num+'</td><td>'+fmtDate(v.date)+'</td><td class="num">'+v.amount+'</td>'
+  return '<tr class="inv-row"><td class="mono">'+v.num+'</td><td>'+fmtDate(v.date)+'</td><td class="num inv-amt">'+v.amount+'</td>'
     + '<td><span class="statwrap">'+invStatusMark(v)+autoChargeIcon(v)+'</span></td>'
     + (opts.noProduct ? '' : invProductCell(v, opts))
     + '<td class="cellact"><span class="rowactions">' + dl + view + '</span></td></tr>';
@@ -443,9 +534,10 @@ function invProductCell(v, opts){
              : '<td class="lic-prodcell"><span class="muted">—</span></td>';
 }
 /* ⚠️ An INVITED user — asked, but not yet signed in and filled in their details —
-   keeps the table's columns. Their email sits in the EMAIL column like everyone's,
-   Name and Added are simply blank because those facts do not exist yet, and a quiet
-   `Invited` pill next to the address says why.
+   keeps the table's columns. Their email sits in the EMAIL column like everyone's —
+   which since 2026-09-28 is the FIRST one, so an invited row now leads with the one
+   fact it has — Name and Added are simply blank because those facts do not exist yet,
+   and a quiet `Invited` pill next to the address says why.
 
    ⚠️ SUPERSEDES the `colspan=3` muted row this used to be. That version said the same
    thing but broke the grid to say it: the email slid under the NAME heading, so the
@@ -462,8 +554,9 @@ function userRow(u){
        a dash reads as "there is nothing here yet", which is the actual fact — the
        person has not signed in and so has neither a name nor an added date. Same mark
        the Label column uses for an unlabelled instance. */
-    return '<tr class="user-row user-pending"><td class="muted">&mdash;</td>'
+    return '<tr class="user-row user-pending">'
       + '<td>' + esc(u.email) + ' <span class="pill soft user-invited">Invited</span></td>'
+      + '<td class="muted">&mdash;</td>'
       + '<td class="muted">&mdash;</td><td class="cellact"></td></tr>';
   }
   /* ⚠️ `.user-row` is the hook the phone layout needs. The Users table had NO mobile
@@ -486,7 +579,7 @@ function userRow(u){
   var delBtn = button({ variant:'secondary', size:'md', icon:'trash', cls:'tip',
                         ariaLabel:'Delete ' + u.email,
                         attrs:'data-deluser="' + esce + '" data-tip="Delete"' });
-  return '<tr class="user-row"><td>'+u.name+'</td><td>'+u.email+'</td><td>'+fmtDate(u.created)+'</td>'
+  return '<tr class="user-row"><td>'+u.email+'</td><td>'+u.name+'</td><td>'+fmtDate(u.created)+'</td>'
     + '<td class="cellact"><span class="rowactions">' + loginBtn + delBtn + '</span></td></tr>';
 }
 function menuItems(p, opts){
@@ -1343,8 +1436,25 @@ function syncPager(sel, st){
   if(r) r.textContent = st.total ? (from + '\u2013' + to + ' of ' + st.total) : '0 of 0';
   var b = el.querySelectorAll('.pagebtns button');
   if(b.length === 4){
-    b[0].disabled = b[1].disabled = st.page <= 1;
-    b[2].disabled = b[3].disabled = st.page >= last;
+    /* ⚠️⚠️ `aria-disabled` MOVES WITH `disabled`, AND THIS IS WHY EVERY PAGER IN THE
+       PRODUCT WAS INERT (found 2026-09-28). Both markup pagers and `pagerHTML` start
+       their four buttons disabled, and `button({disabled:true})` writes BOTH attributes
+       — correctly, because `aria-disabled` is what tells a screen reader. This function
+       then cleared only `disabled`, so an enabled `Next` still carried
+       `aria-disabled="true"` — and the capture-phase guard in shared.js
+       (`.btn[aria-disabled="true"]` → preventDefault + stopPropagation) swallowed the
+       click before `wirePager`'s listener could ever see it.
+       Measured on Instances before the fix: `disabled:false`, `aria-disabled:"true"`,
+       and `1-10 of 20` unchanged after pressing Next. The notes have called that pager
+       "a full pager" since 09-18; it had never turned a page.
+       ⚠️ Set through `toggleAttribute`, not by writing `"false"`: `aria-disabled="false"`
+       is a legitimate value that the guard's attribute-presence selector would still
+       match, so the attribute has to GO, not change value. */
+    var off = [st.page <= 1, st.page <= 1, st.page >= last, st.page >= last];
+    for(var i = 0; i < 4; i++){
+      b[i].disabled = off[i];
+      b[i].toggleAttribute('aria-disabled', off[i]);
+    }
   }
   var sz = el.querySelector('select');
   if(sz && sz.value !== String(st.size)) sz.value = String(st.size);
@@ -1920,7 +2030,22 @@ function productOf(sel){
   var v = (sel && sel.product) || arrivedProduct();
   return PRODUCT_CHOICES.filter(function(o){ return o.v === v; })[0] || PRODUCT_CHOICES[0];
 }
-function landingHeading(sel){ return 'Buy and manage ' + productOf(sel).t + ' licenses'; }
+/* ⚠️⚠️ TWO SURFACES, TWO HEADS (2026-09-28, by request). This line was shared verbatim
+   by the landing page and Home's first-run screen, which was right while both were
+   addressing a stranger. They are not: the landing page cannot name its reader, and
+   Home IS the account — so signed in, the heading GREETS and the line under it takes
+   over the "buy and manage" job that used to be the heading's.
+     landing  h1 `Buy and manage TBMQ licenses`  ·  lead `Self-managed TBMQ — …`
+     home     h1 `Welcome, Mariia Panchuk`       ·  lead `Buy and manage licenses for
+                                                          self-managed TBMQ — …`
+   ⚠️ NOTHING IS SAID TWICE. `#ecWelcome` — a separate `Welcome, …` line ABOVE the
+   heading — is removed with this change rather than left to greet the reader a second
+   time two lines above the greeting.
+   ⚠️ The product still decides the words in both, so both still re-render on a swap. */
+function landingHeading(sel, opts){
+  if(opts && opts.signedIn) return 'Welcome, ' + portalName();
+  return 'Buy and manage ' + productOf(sel).t + ' licenses';
+}
 /* ⚠️ ONE clause differs between the two surfaces that use this line, and it is the one
    that cannot be true on both: "You'll need an account to buy a plan" is the reason a
    signed-out visitor is told to sign up, and on Home the reader IS signed in — the
@@ -1929,8 +2054,14 @@ function landingHeading(sel){ return 'Buy and manage ' + productOf(sel).t + ' li
    ⚠️ Nothing is invented to replace it: the sentence simply ends earlier. */
 function landingLead(sel, opts){
   var p = productOf(sel);
-  var line = 'Self-managed ' + p.t + ' \u2014 ' + p.short + '.';
-  return (opts && opts.signedIn) ? line : line + ' You\u2019ll need an account to buy a plan.';
+  /* ⚠️ The signed-in lead LEADS with the job, because its heading no longer does: the
+     heading greets, so "buy and manage" has to be somewhere and this is the only line
+     left. Signed out the heading still carries it, and this line stays what it was.
+     ⚠️ Lower-case `self-managed` here — mid-sentence it is a description of the product,
+     not the start of one. The signed-out line begins with it and keeps its capital. */
+  var what = p.t + ' \u2014 ' + p.short + '.';
+  if(opts && opts.signedIn) return 'Buy and manage licenses for self-managed ' + what;
+  return 'Self-managed ' + what + ' You\u2019ll need an account to buy a plan.';
 }
 /* Just the escape hatch, for a surface that has stated the product in its own heading.
    ⚠️ Same builder as the full row below, so the two cannot word it differently. */

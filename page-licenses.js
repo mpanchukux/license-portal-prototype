@@ -37,6 +37,20 @@ var licShowCanceled = !!Store.get('showCanceled');
    ⚠️ `?view=instances` WAS THE SECOND ONE and is gone with the view toggle — the
    blocked banner's route is `instances.html?lic=…` now. A stale link carrying the old
    parameter lands on a plain Licenses page, which is wrong but not broken. */
+/* ⚠️ THE PAGER IS REAL HERE NOW (2026-09-28, by request), and it replaces
+   `syncPagerUnpaged`. That call rendered every row, reported one page and hid the four
+   arrows and the per-page select — honest about what it did, and the reason the product
+   had THREE answers to "how does a list page": this, the Instances page (which really
+   pages), and Activity (no footer at all). Same controller, same default size as
+   Instances, so two of the three are now one.
+   ⚠️ Activity stays unpaged, and that is the one named exception: the 09-28 decision
+   there was that 315 sentences on an axis ARE what a log is, and a pager was what got
+   removed to make it so. */
+var licPage = { page:1, size:10, total:0 };
+function licQuery(){
+  var i = $('#licBarA:not([hidden]) .searchbox input, #licBarB:not([hidden]) .searchbox input');
+  return i ? i.value.trim() : '';
+}
 var licParams = new URLSearchParams(location.search);
 if(licParams.get('attention') === '1') licStatus = 'attention';
 /* ⚠️ `licNeedsAttention` MOVED TO components.js (2026-09-28). Three surfaces read it
@@ -62,11 +76,14 @@ function licPasses(p){
 }
 function renderProducts(){
   $('#prodHead').innerHTML = licHeadHTML();
-  var vis = 0, html = '';
-  currentProducts().forEach(function(p){
-    if(!licPasses(p)) return;
-    vis++; html += licRowHTML(p);
-  });
+  var matched = currentProducts().filter(licPasses);
+  /* ⚠️ SEARCH AND PAGING CANNOT BOTH BE ON — `wireSearch` hides rows already in the DOM,
+     so a query across page 1 of 2 would search ten rows and call the rest absent. While
+     there is a query the page renders everything and the footer states one page. */
+  var searching = !!licQuery();
+  var shown = searching ? matched : pageSlice(matched, licPage);
+  if(searching) licPage.total = matched.length;
+  var vis = matched.length, html = shown.map(function(p){ return licRowHTML(p); }).join('');
   /* ⚠️ "Empty" here means the ACCOUNT owns nothing — not that a filter hid everything.
      A type chip that leaves no rows is the reader's own doing and keeps its toolbar,
      because the way out is to unset the filter they set. The empty state is for the
@@ -97,11 +114,8 @@ function renderProducts(){
      itself (every filter chip carries its own facet count). */
   var total = $('#licTotal');
   if(total) total.textContent = DATA().licenses.length;
-  /* ⚠️ THROUGH THE SHARED FOOTER (2026-09-28), not a hand-written count. This list
-     renders every row and pages nothing — see `syncPagerUnpaged` and the report — so it
-     reports one page, which is both true and what hides the four arrows and the
-     items-per-page select that nothing here has ever read. */
-  syncPagerUnpaged('#licensesView .pager', vis);
+  if(searching || !vis) syncPagerUnpaged('#licensesView .pager', vis);
+  else syncPager('#licensesView .pager', licPage);
   syncLicChipCounts();
   renderLicMenus();
 }
@@ -161,69 +175,21 @@ function licTypeCount(v){
 function licStatusCount(v){
   return DATA().licenses.filter(function(p){ return licStatusMatch(p, v); }).length;
 }
-/* ⚠️ `All` IS AN OPTION, NOT AN ABSENCE. A menu whose only way back to everything is
-   "click the selected one again" hides its own exit; the brief asks for both filters to
-   start at All, so All has to be somewhere a reader can point at. */
-function licMenuHTML(kind, opts, current, allLabel, countOf){
-  var total = DATA().licenses.length;
-  return '<button type="button" role="menuitemradio" class="dropcheck' + (current ? '' : ' is-on') + '"'
-      + ' data-' + kind + '="" aria-checked="' + (current ? 'false' : 'true') + '">'
-      + '<svg class="ic cc-check" aria-hidden="true"><use href="assets/icons.svg#ti-check"></use></svg>'
-      + '<span>' + allLabel + '</span><span class="dropcount">' + total + '</span></button>'
-    + opts.map(function(o){
-        var on = current === o.v;
-        return (o.sep ? '<div class="dropsep" role="separator"></div>' : '')
-          + '<button type="button" role="menuitemradio" class="dropcheck' + (on ? ' is-on' : '') + '"'
-          + ' data-' + kind + '="' + o.v + '" aria-checked="' + (on ? 'true' : 'false') + '">'
-          + '<svg class="ic cc-check" aria-hidden="true"><use href="assets/icons.svg#ti-check"></use></svg>'
-          + '<span>' + o.t + '</span><span class="dropcount">' + countOf(o.v) + '</span></button>';
-      }).join('');
-}
-/* ⚠️ THE TRIGGER STATES THE ANSWER, so a narrowed list is readable without opening the
-   menu — the same contract Activity's period and event-type triggers keep. */
-function licOptLabel(opts, v, allLabel){
-  if(!v) return allLabel;
-  var hit = opts.filter(function(o){ return o.v === v; })[0];
-  return hit ? hit.t : allLabel;
-}
+/* ⚠️ THE MENU BUILDER, THE LABEL AND THE WIRING MOVED TO `components.js` (2026-09-28,
+   second pass) — the Invoices toolbar wanted the same control, and the choice at that
+   point is one shared builder or a second copy that starts identical. What stays here
+   is only what is about LICENCES: which lists, which counts, what a pick does. */
 function renderLicMenus(){
+  var total = DATA().licenses.length;
   var tm = $('#licTypeMenu'), sm = $('#licStatusMenu');
-  if(tm) tm.innerHTML = licMenuHTML('lictype', LIC_TYPE_OPTS, licType, 'All types', licTypeCount);
-  if(sm) sm.innerHTML = licMenuHTML('licstatus', LIC_STATUS_OPTS, licStatus, 'All statuses', licStatusCount);
+  if(tm) tm.innerHTML = filterMenuHTML('lictype', LIC_TYPE_OPTS, licType, 'All types', total, licTypeCount);
+  if(sm) sm.innerHTML = filterMenuHTML('licstatus', LIC_STATUS_OPTS, licStatus, 'All statuses', total, licStatusCount);
   var tl = $('#licTypeLabel'), sl = $('#licStatusLabel');
-  if(tl) tl.textContent = licOptLabel(LIC_TYPE_OPTS, licType, 'All types');
-  if(sl) sl.textContent = licOptLabel(LIC_STATUS_OPTS, licStatus, 'All statuses');
+  if(tl) tl.textContent = filterOptLabel(LIC_TYPE_OPTS, licType, 'All types');
+  if(sl) sl.textContent = filterOptLabel(LIC_STATUS_OPTS, licStatus, 'All statuses');
 }
-/* One wiring for both dropdowns: the trigger opens, the menu picks, a click outside
-   closes. ⚠️ `closeAllMenus()` BEFORE the toggle, and `willOpen` read BEFORE the close —
-   the same two lines `wirePeriod` needed once two dropdowns could be open at once. */
-function wireLicDrop(ctlSel, attr, set){
-  var ctl = $(ctlSel); if(!ctl) return;
-  var btn = $('.perbtn', ctl), menu = $('.dropmenu', ctl);
-  btn.addEventListener('click', function(e){
-    e.stopPropagation();
-    var willOpen = menu.hidden;
-    if(typeof closeAllMenus === 'function') closeAllMenus();
-    menu.hidden = !willOpen;
-    btn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
-  });
-  menu.addEventListener('click', function(e){
-    var row = e.target.closest('[data-' + attr + ']'); if(!row) return;
-    e.stopPropagation();
-    /* ⚠️ Single-select, so the menu CLOSES on a pick — unlike Activity's event types,
-       which is multi-select and has to stay open while two are ticked. Same component,
-       different arity, and the arity is what decides. */
-    set(row.getAttribute('data-' + attr) || null);
-    menu.hidden = true;
-    btn.setAttribute('aria-expanded', 'false');
-  });
-  document.addEventListener('click', function(e){
-    if(ctl.contains(e.target)) return;
-    menu.hidden = true; btn.setAttribute('aria-expanded', 'false');
-  });
-}
-wireLicDrop('#licTypeCtl', 'lictype', function(v){ licType = v; syncTypeChips(); renderProducts(); });
-wireLicDrop('#licStatusCtl', 'licstatus', function(v){ licStatus = v; syncAttnChip(); renderProducts(); });
+wireFilterDrop('#licTypeCtl', 'lictype', function(v){ licType = v; licPage.page = 1; syncTypeChips(); renderProducts(); });
+wireFilterDrop('#licStatusCtl', 'licstatus', function(v){ licStatus = v; licPage.page = 1; syncAttnChip(); renderProducts(); });
 
 /* ---------- the switch ------------------------------------------------------------
    ⚠️ NAMED ON `window` because the ⚙ panel calls it by name from shared.js, which loads
@@ -277,12 +243,14 @@ function syncAttnChip(){
 var licAttnChip = $('#licAttnChip');
 if(licAttnChip) licAttnChip.addEventListener('click', function(){
   licStatus = (licStatus === 'attention') ? null : 'attention';
+  licPage.page = 1;
   syncAttnChip(); renderProducts();
 });
 $$('#licensesView .typechip').forEach(function(chip){
   chip.addEventListener('click', function(){
     var t = chip.getAttribute('data-type');
     licType = (licType === t) ? null : t;
+    licPage.page = 1;
     syncTypeChips();
     renderProducts();
   });
@@ -305,6 +273,7 @@ function syncCanceledControls(){
 }
 function setShowCanceled(v){
   licShowCanceled = !!v;
+  licPage.page = 1;                                  // the list just changed length
   Store.set('showCanceled', licShowCanceled);
   syncCanceledControls();
   renderProducts();
@@ -326,7 +295,7 @@ document.addEventListener('click', function(e){
   /* the way out of a filter that matches nothing — it clears what the reader set and
      nothing else, so a search query they also typed is left alone */
   if(e.target.closest('[data-clearfilters]')){
-    licType = null; licStatus = null;
+    licType = null; licStatus = null; licPage.page = 1;
     syncTypeChips(); syncAttnChip(); renderProducts();
   }
 });
@@ -340,6 +309,12 @@ document.addEventListener('click', function(e){
    ⚠️ THE QUERY DOES NOT SURVIVE THE SWITCH, and that is left as it is: the field is part
    of the toolbar being compared, and carrying text from one into the other would be this
    code deciding that the two search boxes are one control. Noted in the report. */
+/* ⚠️ Bound BEFORE wireSearch, and the order is the whole trick: this re-renders the
+   table (everything while there is a query, one page when there is not) and the listener
+   wireSearch adds next then hides the non-matches in what was just drawn. */
+$$('#licBarA .searchbox input, #licBarB .searchbox input').forEach(function(i){
+  i.addEventListener('input', renderProducts);
+});
 ['#licBarA .searchbox input', '#licBarB .searchbox input'].forEach(function(sel){
   wireSearch(sel, {
     items: function(){ return $$('#licensesView tbody tr.lic-row'); },
@@ -354,4 +329,5 @@ document.addEventListener('click', function(e){
 /* ⚠️ LAST, and it is what puts the stored variant and `?attention=1` on screen. It
    re-renders, so the boot render above is the one that fills the table and this is the
    one that agrees with the controls. */
+wirePager('#licensesView .pager', licPage, renderProducts);
 applyLicBar();

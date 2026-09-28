@@ -369,7 +369,7 @@ var DETAILS_HTML = ''
 + '              <div id="licInvBlock">'
 + '              <table class="invtable gridtbl" style="margin-top:18px">'
 + '                <thead>'
-+ '                  <tr><th>Invoice #</th><th>Date</th><th class="num">Amount</th><th>Status</th><th aria-label="Invoice actions"></th></tr>'
++ '                  <tr><th>Invoice #</th><th>Date</th><th class="num inv-amt">Amount</th><th>Status</th><th aria-label="Invoice actions"></th></tr>'
 + '                </thead>'
 + '                <tbody id="licInvBody"></tbody>'
 + '              </table>'
@@ -602,6 +602,12 @@ function renderEntitlements(entList, extras){
 /* The invoices this licence produced, from the dataset (an invoice names its licence
    through `licId`). Same builder as every other invoice table, minus the Product
    column — see invRow. */
+/* ⚠️ A REAL PAGER (2026-09-28, by request), the same controller and the same default
+   size as this panel's two instance tables three tabs away. It was `syncPagerUnpaged`,
+   which made this the one table in the panel that could not page while its neighbours
+   could. ⚠️ State on the module, not inside the function: the panel re-renders on every
+   change and a local would reset the reader to page one each time. */
+var licInvPage = { page:1, size:10, total:0 };
 function renderLicInvoices(lic){
   var body = $('#licInvBody'); if(!body) return;
   var opts = { noProduct:true };
@@ -618,12 +624,16 @@ function renderLicInvoices(lic){
         ? 'No invoices yet. The first one appears when this license is charged.'
         : 'No charges on this license yet.');
   body.innerHTML = list.length
-    ? list.map(function(v){ return invRow(v, opts); }).join('')
+    ? pageSlice(list, licInvPage).map(function(v){ return invRow(v, opts); }).join('')
     : '<tr><td colspan="' + invCols(opts) + '" class="emptybox">' + msg + '</td></tr>';
-  /* every row is rendered and nothing pages, so the footer states one page — which is
-     also what takes the four dead arrows and the per-page select off the screen, and
-     what removes the footer entirely when the list is empty */
-  syncPagerUnpaged('#licInvPager', list.length);
+  if(!list.length) licInvPage.total = 0;
+  /* the footer still removes itself when there is nothing to count, and still shows the
+     count alone while there is only one page — that part never depended on paging */
+  syncPager('#licInvPager', licInvPage);
+  /* ⚠️ Wired here rather than at mount: the panel builds its markup fresh every time it
+     opens, so the node this binds to does not exist until then. `wirePager` guards
+     against a second listener on the same element. */
+  wirePager('#licInvPager', licInvPage, function(){ renderLicInvoices(lic); });
 }
 function renderLicenseFeatures(lic, spec){
   var wl = (lic.whitelabel != null ? lic.whitelabel : spec.wl);

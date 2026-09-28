@@ -85,7 +85,7 @@
             <tr>
               <th>Invoice #</th>
               <th class="sortable" aria-sort="descending" tabindex="0">Date <span class="arrow" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-down"></use></svg></span></th>
-              <th class="num">Amount</th>
+              <th class="num inv-amt">Amount</th>
               <th>Status</th>
               <!-- Status carries the auto-charge icon for invoices the system charged
                    on its own; Product is the very same cell the Licenses table uses and
@@ -143,11 +143,10 @@
            down (`statedInHead`), exactly as it does on the landing page. -->
       <div class="dwelcome lp-welcome">
         <div class="dw-txt">
-          <!-- ⚠️ ABOVE the heading, and only here. This screen is the one price list shown
-               to someone the portal already knows, so it can greet them; the landing page
-               shows the same list to someone it cannot name, and has no line like this.
-               Same treatment as the lead below the heading — see .lp-lead. -->
-          <p id="ecWelcome" class="lp-lead ec-welcome"></p>
+          <!-- ⚠️ `#ecWelcome` REMOVED (2026-09-28). It was a `Welcome, …` line above the
+               heading, from when the heading said `Buy and manage … licenses`. The
+               heading IS the greeting now, so this line would have said the same words
+               immediately above itself. The `.ec-welcome` rule goes with it. -->
           <h1 class="lp-sect" id="ecHead"></h1>
           <p id="ecLead" class="lp-lead"></p>
         </div>

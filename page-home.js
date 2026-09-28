@@ -243,11 +243,10 @@ if(dashEmptyV && !dashEmptyV.hidden){
   /* The head is part of the render, not static markup: swapping the product changes the
      heading, the line and the link along with the cards. */
   function renderEcHead(){
-    /* the greeting is the account's, not the product's, so it does NOT re-render with
-       the product switch — it is set once and the switch below leaves it alone */
-    var w = $('#ecWelcome');
-    if(w) w.textContent = 'Welcome, ' + portalName();
-    $('#ecHead').textContent = landingHeading(esel);
+    /* ⚠️ THE GREETING IS THE HEADING NOW (2026-09-28, by request) — see landingHeading.
+       `#ecWelcome`, the separate line that used to sit above it, is gone from the markup
+       with this change: it would have said `Welcome, …` directly above `Welcome, …`. */
+    $('#ecHead').textContent = landingHeading(esel, { signedIn:true });
     $('#ecLead').textContent = landingLead(esel, { signedIn:true });
     $('#ecSwap').innerHTML = productSwapHTML(esel);
   }

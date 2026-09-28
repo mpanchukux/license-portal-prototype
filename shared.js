@@ -285,7 +285,7 @@ var Store = (function(){
      no company name at all. That store would render a half-empty consolidated section
      and print an invoice missing the company. Bumping is cheaper than a migration for
      a prototype, and unlike a migration it cannot half-succeed. */
-  var KEY = 'tb-license-portal-demo-v22';   // v22: the Free row seeds against the file's date anchor, not today's
+  var KEY = 'tb-license-portal-demo-v23';   // v23: B3's declined charge finally has an invoice (see DATASETS.B)
   function clone(o){ return JSON.parse(JSON.stringify(o)); }
   /* ⚠️ The snapshot is taken ONCE and then shifted to today. Doing it here rather than
      at render time means every surface reads the same stored dates, and a browser left
@@ -2276,7 +2276,11 @@ var USERS_MODAL_HTML = ''
    there is still one definition of the look. */
 +         '<table class="gridtbl">'
 +           '<thead><tr>'
-+             '<th>Name</th><th>Email</th>'
+/* ⚠️ EMAIL FIRST (2026-09-28, by request). The address is what identifies a person
+   here — it is what an invitation is sent to, what `Log in as` and `Delete` are keyed
+   on, and the only one of the two an INVITED row has at all. Name was leading a table
+   whose first column was a dash for anyone who had not signed up yet. */
++             '<th>Email</th><th>Name</th>'
 +             '<th class="sortable" aria-sort="descending" tabindex="0">Added <span class="arrow" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-down"></use></svg></span></th>'
 +             '<th aria-label="User actions"></th>'
 +           '</tr></thead>'
