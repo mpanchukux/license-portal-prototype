@@ -29,6 +29,16 @@ var lChoices = $('#landingChoices'), lPlans = $('#landingPlans'),
 /* The head is part of the render, not static markup: swapping the product changes the
    heading, the line and the link along with the cards. */
 function renderLanding(){
+  /* ⚠️ THE BACKGROUND FOLLOWS THE PICKER, and it is written here because this is the
+     one function every product change already goes through — the swap link and the
+     picker both end in `renderLanding()`. Putting it anywhere else would be a second
+     place that has to learn about a change this one already hears about.
+     ⚠️ An ATTRIBUTE, not a class swap on the layer: the cross-fade is two stacked trios
+     whose opacity the stylesheet decides (see `.lm-trio`), so all this has to do is
+     name the product. Nothing here moves, sizes or positions anything.
+     ⚠️ No "nothing selected yet" branch: `lsel.product` is seeded from arrivedProduct()
+     above, before the first render, so one of the two is always the answer. */
+  document.body.setAttribute('data-lprod', lsel.product === 'tbmq' ? 'tbmq' : 'thingsboard');
   $('#landingHead').textContent = landingHeading(lsel);
   /* ⚠️ The sentence and the swap link are TWO slots now, not one line. The link used to
      follow the lead text with a word space so the two wrapped together; it sits at the

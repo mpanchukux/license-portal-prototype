@@ -397,6 +397,25 @@ function licTable(){ return Store.get('licTable') === 'b' ? 'b' : 'a'; }
    default has been decided rather than proposed. Same store key, so `Reset demo data`
    drops it with everything else. */
 function licBar(){ return Store.get('licBar') === 'b' ? 'b' : 'a'; }
+/* ⚠️ A THIRD AXIS, and it is about the table's EDGES (2026-09-28, by request) — not its
+   rows (`licTable`) and not the controls above them (`licBar`). B takes the frame off
+   every table on the page: no outline, no rounded head, no side padding, so the table
+   fills its block edge to edge. Written to <body> because "all tables" is a page-level
+   statement; the CSS hangs off `body[data-tableframe]`.
+   ⚠️ 'a' is the default, same as the other two: a proposal ships beside what exists. */
+function tableFrame(){ return Store.get('tableFrame') === 'b' ? 'b' : 'a'; }
+/* ⚠️ THE LANDING'S BACKGROUND, AND ONLY THE LANDING'S (2026-09-28, by request). Same
+   shape as the three axes above — a stored key, an explicit opt-out, 'current' as the
+   default — because a proposal ships beside what exists rather than replacing it.
+   ⚠️ The PRODUCT trio is deliberately NOT a setting: it comes from what the visitor
+   picks on the page, which is the one place a product is genuinely in context. The ⚙
+   chooses the gradient, the page chooses the colours. */
+function landingBg(){ return Store.get('landingBg') === 'mesh' ? 'mesh' : 'current'; }
+function applyLandingBg(){
+  if(document.body.getAttribute('data-page') === 'landing')
+    document.body.setAttribute('data-lbg', landingBg());
+}
+function applyTableFrame(){ document.body.setAttribute('data-tableframe', tableFrame()); }
 function dashVariant(){ return dashState().variant; }
 /* ⚠️ DERIVED, not stored. `empty:true` used to be a flag on the state above, set once
    by setSession('new') and cleared by nobody — so buying a licence left Home on its
@@ -1040,6 +1059,24 @@ function settingsBodyHTML(){
       + '<div class="sp-hint">B replaces the type chips and the Active only switch with a Type and a Status dropdown, both starting at All \u2014 so nothing is hidden until you narrow it.</div>');
   }
 
+  /* ---- the table's EDGES, on every page that has a table ----
+     ⚠️ NOT scoped to Licenses like the toolbar above: this is a page-level statement
+     (`data-tableframe` on <body>), and every list page, Home's blocks and the licence
+     panel's three tables all read it. Offering it only where the licence rows are would
+     hide the setting on four of the surfaces it changes. */
+  /* the landing's own ground, offered only where it applies */
+  if(c.landing){
+    out += group('Landing gradient',
+      '<label class="sp-opt"><input type="radio" name="landingBg" value="current"' + (landingBg() === 'current' ? ' checked' : '') + '><span>1 \u2014 current</span></label>'
+      + '<label class="sp-opt"><input type="radio" name="landingBg" value="mesh"' + (landingBg() === 'mesh' ? ' checked' : '') + '><span>2 \u2014 mesh</span></label>'
+      + '<div class="sp-hint">Variant 2 follows the product picked on the page \u2014 it is not a setting.</div>');
+  }
+
+  out += group('Table frame',
+    '<label class="sp-opt"><input type="radio" name="tableFrame" value="a"' + (tableFrame() === 'a' ? ' checked' : '') + '><span>A \u2014 current (framed)</span></label>'
+    + '<label class="sp-opt"><input type="radio" name="tableFrame" value="b"' + (tableFrame() === 'b' ? ' checked' : '') + '><span>B \u2014 proposal (no frame)</span></label>'
+    + '<div class="sp-hint">Every table on the page at once \u2014 outline, rounded head and side padding all go.</div>');
+
   if(c.licenses || c.home){
     out += group('Licenses table',
       '<label class="sp-opt"><input type="radio" name="licTable" value="a"' + (licTable() === 'a' ? ' checked' : '') + '><span>A — current (5 columns)</span></label>'
@@ -1314,6 +1351,11 @@ function modalsHTML(){
 /* ---------- inject ---------- */
 function injectChrome(){
   var main = $('#shellMain');
+  /* ⚠️ Before the chrome is written, not after: the attribute decides how every table
+     on the page is drawn, and setting it later means one paint with the frame and one
+     without. It is a no-op on a page with no table. */
+  applyTableFrame();
+  applyLandingBg();
   document.body.insertAdjacentHTML('afterbegin', chromeHTML());
   if(main) main.insertAdjacentHTML('beforeend', footerHTML());
   document.body.insertAdjacentHTML('beforeend', modalsHTML() + settingsHTML());
@@ -1942,6 +1984,18 @@ function wireSettingsPanel(){
         return;
       /* both surfaces that render licence rows repaint from their own entry point;
          neither needs a reload, because nothing about which rows exist changed */
+      /* the frame is an attribute on <body>, so it needs no re-render — every table
+         reads it through CSS */
+      /* an attribute swap, like the table frame: the page needs no re-render, and the
+         trio already on screen keeps whichever product is selected */
+      case 'landingBg':
+        Store.set('landingBg', r.value);
+        applyLandingBg();
+        return;
+      case 'tableFrame':
+        Store.set('tableFrame', r.value);
+        applyTableFrame();
+        return;
       case 'licTable':
         Store.set('licTable', r.value);
         if(typeof renderProducts === 'function') renderProducts();

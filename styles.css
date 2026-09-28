@@ -83,6 +83,32 @@
      licence header reads as the same family as Home's gradient without being a copy of
      it. Derived, not picked: change the pool and this should move with it. */
   --c-lav-50:#F6F6FD;
+  /* ---------- the landing mesh's six, as PRIMITIVES (2026-09-28, by request) --------
+     ⚠️ NAMED BY COLOUR, NOT BY PRODUCT, and that is the instruction rather than a
+     preference: these are colours, and the product mapping is a proposal that may not
+     survive the comparison. `--c-mint-200` stays true whichever trio ends up on which
+     product; `--c-tb-1` would have to be renamed the day the mapping moves.
+     ⚠️ THE 200 STEP is where they sit on the ramps already here — light enough to be a
+     wash, nowhere near the 600s that carry status. Given values, not derived: they were
+     handed over as six hexes and are recorded unchanged.
+     ⚠️ THE EXISTING MESH LITERALS STAY LITERAL. `rgb(197 200 247)` / `rgb(255 248 229)`
+     in `.meshbg`, and `--page-bg` with its neighbours, are NOT folded in here — NOTES
+     calls that its own pass and this is not it. */
+  --c-mint-200:#82FFBE;
+  --c-sky-200:#B0D9FF;
+  --c-peach-200:#FFE5C9;
+  --c-periwinkle-200:#CAD5FF;
+  --c-aqua-200:#AEEFFF;
+  --c-orchid-200:#F0D0FF;
+  /* ---------- and the two trios, as VALUES that reference them ----------
+     The layer a rule is allowed to read. Swapping which colour a product wears is an
+     edit here; the primitives above do not move. */
+  --mesh-tb-1:var(--c-mint-200);
+  --mesh-tb-2:var(--c-sky-200);
+  --mesh-tb-3:var(--c-peach-200);
+  --mesh-mq-1:var(--c-periwinkle-200);
+  --mesh-mq-2:var(--c-aqua-200);
+  --mesh-mq-3:var(--c-orchid-200);
   /* ⚠️ A STEP LIGHTER THAN THE PAGE GROUND, added 2026-09-25 by request. The row hover
      started as `--c-blue-50` — the exact colour Home fades into — and at 1.075:1 against
      white that was already faint; it is 1.046 now. The two are separate values rather
@@ -815,7 +841,11 @@ a{color:inherit}
 .link:hover{color:#000}
 
 table{width:100%;border-collapse:collapse;font-size:14px}
-th{text-align:left;color:var(--faint);font-family:var(--font-ui);font-size:var(--t-label-fs);line-height:var(--t-label-lh);letter-spacing:var(--t-label-ls);font-weight:400;text-transform:uppercase;padding:8px;border-bottom:1px solid var(--line2)}
+/* ⚠️ `--mid`, not `--faint`, and a shorter band (2026-09-28, by request). The column
+   row is a label, not a whisper: at `--faint` on `--surface-quiet` it was the palest
+   text in the table sitting on the one row that has to be scannable. The height comes
+   down with it — a band that is quieter needs less room to stop being a heading. */
+th{text-align:left;color:var(--mid);font-family:var(--font-ui);font-size:var(--t-label-fs);line-height:var(--t-label-lh);letter-spacing:var(--t-label-ls);font-weight:400;text-transform:uppercase;padding:6px 8px;border-bottom:1px solid var(--line2)}
 /* ⚠️ SOLID, NOT DASHED (2026-09-25, by request). Asked for the licence table; applied
    to every table, because Home stands the licence block and the invoice block one above
    the other and a dashed rule under one with a solid rule under the other reads as a
@@ -1235,17 +1265,74 @@ th[aria-label$="ctions"],th.cellact,td.cellact{width:1%;white-space:nowrap;text-
 /* ⚠️ `.listcard .pager` sets its own margin and padding further down the file at the
    same specificity as `.listframe .pager`, so the two-class form has to be named here to
    win on source order alone. */
-.listcard.listframe .pager,.listframe .pager,.gridtbl + .pager{
-  margin-top:0;padding:9px 18px;background:var(--card);
-  border:1px solid var(--line2);border-top:0;border-radius:0 0 10px 10px}
-.listframe table:not(.is-grouped) tbody tr:last-child > td:first-child{border-bottom-left-radius:0}
-.listframe table:not(.is-grouped) tbody tr:last-child > td:last-child{border-bottom-right-radius:0}
+/* ⚠️⚠️ THE PAGER IS BACK UNDER THE TABLE (2026-09-28, by request), and this REVERSES
+   the footer-of-the-frame form that landed earlier the same day. What went with it: the
+   footer's own border, its `--card` fill, its bottom radius, and the two rules that took
+   the last row's bottom corners away so the footer could carry them. The table closes
+   itself again and the pager is a control standing under it.
+   ⚠️ The count and the controls are unchanged — this is where the row sits, not what it
+   says. `syncPager` and `wirePager` are untouched. */
+.listframe .pager,.gridtbl + .pager{margin-top:14px;padding-bottom:0;background:none;border:0}
 /* the grouped Instances table gives up its own bottom edge to the footer as well —
    stated beside the rule it overrides, further down this file */
 /* the licence panel's tables do the same — and only the ones that HAVE a pager: the
    Plan table has none and must keep closing itself */
-.gridtbl:has(+ .pager){border-bottom:0;border-bottom-left-radius:0;border-bottom-right-radius:0}
-.gridtbl:has(+ .pager) tbody tr:last-child > td{border-bottom:1px solid var(--line2)}
+/* ---------- TABLE CHROME, VARIANT B: no frame at all (2026-09-28, by request) -------
+   ⚠️ A THIRD VARIANT AXIS, and it is about the table's EDGES — `licTable` is about the
+   licence row, `licBar` about the controls above it, this about the box around any of
+   them. It is set on <body> because it reaches every table on the page at once, which
+   is what "all tables" means; per-table opt-in would be a fourth axis nobody asked for.
+   ⚠️ WHAT GOES: the outline, the rounded head, and the 18px the frame kept either side
+   so its content cleared the border. With no border to clear, that padding is a margin
+   inside a margin — the table fills `.listframe` edge to edge and the page's own gutter
+   is the only inset left.
+   ⚠️ The corner patches go with the corners: `thead th::before` exists to fill a hole
+   cut by `border-radius`, and at radius 0 there is no hole. Left in place they would be
+   an 11px white square over the head's left and right ends. */
+body[data-tableframe="b"] .dblock table,
+body[data-tableframe="b"] .gridtbl,
+body[data-tableframe="b"] .listframe table{border:0;border-radius:0}
+body[data-tableframe="b"] .listframe table:not(.is-grouped) thead th,
+body[data-tableframe="b"] .listframe table:not(.is-grouped) thead th:first-child,
+body[data-tableframe="b"] .listframe table:not(.is-grouped) thead th:last-child,
+body[data-tableframe="b"] .listframe table:not(.is-grouped) tbody td:first-child,
+body[data-tableframe="b"] .listframe table:not(.is-grouped) tbody td:last-child{
+  border-left:0;border-right:0;border-top:0}
+body[data-tableframe="b"] .dblock thead th:first-child,
+body[data-tableframe="b"] .listframe thead th:first-child,
+body[data-tableframe="b"] .gridtbl thead th:first-child{border-top-left-radius:0;padding-left:0}
+body[data-tableframe="b"] .dblock thead th:last-child,
+body[data-tableframe="b"] .listframe thead th:last-child,
+body[data-tableframe="b"] .gridtbl thead th:last-child{border-top-right-radius:0;padding-right:0}
+body[data-tableframe="b"] .dblock table tbody td:first-child,
+body[data-tableframe="b"] .listframe table tbody td:first-child,
+body[data-tableframe="b"] .gridtbl tbody td:first-child{padding-left:0}
+body[data-tableframe="b"] .dblock table tbody td:last-child,
+body[data-tableframe="b"] .listframe table tbody td:last-child,
+body[data-tableframe="b"] .gridtbl tbody td:last-child{padding-right:0}
+body[data-tableframe="b"] .listframe table:not(.is-grouped) thead th::before{display:none}
+body[data-tableframe="b"] .dblock table tbody tr:last-child > td,
+body[data-tableframe="b"] .listframe table tbody tr:last-child > td,
+body[data-tableframe="b"] .gridtbl tbody tr:last-child > td{border-bottom:0;border-radius:0}
+body[data-tableframe="b"] #instTable.is-grouped{border:0;border-radius:0}
+/* ⚠️ THE FRAME'S OWN 18px HAS TO GO TOO, or the table stops short of the edge it was
+   told to fill. `.listframe > *` insets every direct child so the content clears the
+   frame's border; the scroller is already exempt (it inests its cells instead), and in
+   this variant the cells are not inset either. The toolbar and the title keep theirs —
+   they are controls and headings, not rows, and a search field flush to the frame's
+   edge is a different request from a table that fills it. */
+/* ⚠️ THE INSET IS ON THE WRAPPER, NOT ON THE SCROLLER. Measured: the chain is
+   `.listframe > div (18px) > .tablescroll (0) > table`, so zeroing `.tablescroll`
+   changed nothing — the unnamed list wrapper (`#licensesList`, `#instancesList`) is the
+   direct child `.listframe > *` insets. It is targeted by `:has()` rather than by id,
+   because three pages carry one under three different names and only the ones holding a
+   table should lose the inset. */
+body[data-tableframe="b"] .listframe > .tablescroll,
+body[data-tableframe="b"] .listframe > *:has(> .tablescroll){padding-left:0;padding-right:0}
+body[data-tableframe="b"] .listframe > .pager,
+body[data-tableframe="b"] .listframe > *:has(> .pager) > .pager{padding-left:0;padding-right:0}
+/* ⚠️ `.gridtbl:has(+ .pager)` is GONE with the footer: a table whose pager stands
+   outside it keeps its own bottom edge, like every other table. */
 /* ⚠️ The feed's pager keeps a rule and the surface and takes no sides: there is no
    frame beside it for sides to continue. See the report. */
 .listcard.listframe .feed + .pager,.listframe .feed + .pager{border:0;border-radius:0;
@@ -2853,6 +2940,95 @@ body[data-page="home"] .dwrap,body[data-page="landing"] .dwrap{padding-top:48px}
   .meshbg span{animation:none;will-change:auto;transform:translate(-50%,-50%)}
 }
 
+/* ============================================================================
+   LANDING GRADIENT, VARIANT 2 — one sphere, two trios (2026-09-28, by request)
+   ============================================================================
+   ⚠️ SCOPED TO THE LANDING PAGE AND TO A DIRECT CHILD OF <body>, and both halves of
+   that are load-bearing. `body[data-page="landing"]` keeps it off Home, off the
+   new-user screen and off the twelve other pages that carry `.meshbg`. The `> ` keeps
+   it off the FOURTEENTH copy: the purchase wizard injects a `.meshbg` into `.fs-box`,
+   and the landing loads `wizard.js`, so this page has two mesh nodes inside it. Only
+   the page-level one is a child of <body>.
+   ⚠️ VARIANT 1 IS NOT TOUCHED. The switch hides one node and shows the other; neither
+   rule reaches into the other's markup.
+
+   ⚠️ THE GEOMETRY IS WRITTEN ONCE AND BOTH TRIOS READ IT. `--lm-c*` place the shared
+   centre, `--lm-orbit` how far each blob sits from it, `--lm-size` how wide each one
+   is. Size is deliberately larger than twice the orbit: that is the whole reason the
+   three read as ONE sphere instead of three spots — each blob's core reaches past the
+   centre, so the overlap is where the light is brightest and every edge is somebody
+   else's middle. Shrink the size or grow the orbit and the spots come back.
+   ⚠️ `closest-side` on a square box makes the falloff a circle with no hard stop at
+   any radius, which is what keeps the edges from banding. The stops are the same three
+   the existing mesh uses, for the same reason.
+   ⚠️ THE MASK IS WHAT PUTS THE COLOUR IN THE TOP BAND. Full strength to 30vh, gone by
+   52vh — so the head and the picker sit in the light and the plan cards below sit on
+   the page's own near-white ground. It is on the CONTAINER, so it clips both trios
+   identically and cannot become a third thing that differs between them. */
+.lmesh{
+  --lm-cx:50%; --lm-cy:210px;
+  --lm-orbit:190px;
+  --lm-size:clamp(520px,64%,780px);
+  position:absolute; inset:0 0 auto; height:56vh;
+  z-index:-1; pointer-events:none; overflow:hidden;
+  -webkit-mask-image:linear-gradient(to bottom,#000 0,#000 30vh,rgba(0,0,0,0) 52vh);
+          mask-image:linear-gradient(to bottom,#000 0,#000 30vh,rgba(0,0,0,0) 52vh);
+}
+/* ⚠️ Hidden by default: variant 1 is the default, and an unswitched landing must look
+   exactly as it did. `display`, not opacity — a transparent layer still composites. */
+.lmesh{display:none}
+body[data-page="landing"][data-lbg="mesh"] > .lmesh{display:block}
+body[data-page="landing"][data-lbg="mesh"] > .meshbg{display:none}
+
+/* both trios fill the layer and sit on top of each other; only opacity separates them */
+.lm-trio{position:absolute; inset:0; opacity:0; transition:opacity .5s ease}
+/* ⚠️ THE DEFAULT IS THE ThingsBoard TRIO, and it is written as "not tbmq" rather than
+   as a third state: the landing has no "nothing selected yet" — `lsel.product` is
+   seeded from `arrivedProduct()` before the first render, so one of the two is always
+   the answer. Checked in page-landing.js before this was written. */
+body[data-lprod="tbmq"] .lm-mq{opacity:1}
+body:not([data-lprod="tbmq"]) .lm-tb{opacity:1}
+
+/* the three positions, shared by both trios — left/top name the blob's CENTRE and the
+   -50%/-50% moves the box onto it, the same mechanic variant 1 uses */
+.lm-trio span{
+  position:absolute; display:block; width:var(--lm-size); aspect-ratio:1;
+  border-radius:50%; transform:translate(-50%,-50%);
+}
+/* 120° apart around the shared centre: up, lower-left, lower-right */
+.lm-trio .lm-1{left:var(--lm-cx); top:calc(var(--lm-cy) - var(--lm-orbit))}
+.lm-trio .lm-2{left:calc(var(--lm-cx) - var(--lm-orbit) * 0.87); top:calc(var(--lm-cy) + var(--lm-orbit) * 0.5)}
+.lm-trio .lm-3{left:calc(var(--lm-cx) + var(--lm-orbit) * 0.87); top:calc(var(--lm-cy) + var(--lm-orbit) * 0.5)}
+/* ⚠️ `color-mix` rather than a channel triplet: the primitives are hex, like every
+   other primitive in this file, and a second spelling of the same six colours is a
+   second thing to keep in step. Same three stops for all six. */
+.lm-tb .lm-1{background:radial-gradient(circle closest-side,
+  color-mix(in srgb,var(--mesh-tb-1) 62%,transparent) 0%,
+  color-mix(in srgb,var(--mesh-tb-1) 50%,transparent) 34%,
+  transparent 100%)}
+.lm-tb .lm-2{background:radial-gradient(circle closest-side,
+  color-mix(in srgb,var(--mesh-tb-2) 62%,transparent) 0%,
+  color-mix(in srgb,var(--mesh-tb-2) 50%,transparent) 34%,
+  transparent 100%)}
+.lm-tb .lm-3{background:radial-gradient(circle closest-side,
+  color-mix(in srgb,var(--mesh-tb-3) 62%,transparent) 0%,
+  color-mix(in srgb,var(--mesh-tb-3) 50%,transparent) 34%,
+  transparent 100%)}
+.lm-mq .lm-1{background:radial-gradient(circle closest-side,
+  color-mix(in srgb,var(--mesh-mq-1) 62%,transparent) 0%,
+  color-mix(in srgb,var(--mesh-mq-1) 50%,transparent) 34%,
+  transparent 100%)}
+.lm-mq .lm-2{background:radial-gradient(circle closest-side,
+  color-mix(in srgb,var(--mesh-mq-2) 62%,transparent) 0%,
+  color-mix(in srgb,var(--mesh-mq-2) 50%,transparent) 34%,
+  transparent 100%)}
+.lm-mq .lm-3{background:radial-gradient(circle closest-side,
+  color-mix(in srgb,var(--mesh-mq-3) 62%,transparent) 0%,
+  color-mix(in srgb,var(--mesh-mq-3) 50%,transparent) 34%,
+  transparent 100%)}
+/* the cross-fade is the point of the pass; motion is not part of it */
+@media (prefers-reduced-motion: reduce){ .lm-trio{transition:none} }
+
 /* ---- the grounds that would otherwise paint over the layer ----
    ⚠️ `[data-mesh]`, NOT `[data-page="home"]`: the same gradient and the same glass
    bar are on THREE surfaces now — Home signed in, Home's first run and the signed-out
@@ -3091,7 +3267,7 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
    there is still one definition of it — change the radius here and all three follow. */
 .dblock thead th,.listframe thead th,.gridtbl thead th{background:var(--surface-quiet);
   border-bottom:1px solid var(--line2)}
-.dblock thead th,.gridtbl thead th{padding:11px 8px}
+.dblock thead th,.gridtbl thead th{padding:8px}
 .dblock thead th:first-child,.listframe thead th:first-child,.gridtbl thead th:first-child{border-top-left-radius:10px;padding-left:18px}
 .dblock thead th:last-child,.listframe thead th:last-child,.gridtbl thead th:last-child{border-top-right-radius:10px;padding-right:18px}
 .dblock table tbody td:first-child,.listframe table tbody td:first-child,.gridtbl tbody td:first-child{padding-left:18px}
@@ -3596,8 +3772,12 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
    STOPS and sits over the content. Set on `.stickyhead` rather than on stick, so the
    height never changes underneath the reader — a padding that grew when the row stuck
    would shove every row below it down by the difference at the moment of sticking. */
+/* ⚠️ THIS IS WHERE THE COLUMN ROW'S HEIGHT ACTUALLY COMES FROM on a list page, and
+   shortening the band meant shortening it here. The base `th` rule and the `.dblock` /
+   `.gridtbl` one both lose to `.stickyhead th` — measured: the band stayed 45px while
+   both of those already said 6px and 8px. 9px against the 13px it was. */
 .stickyhead th{position:sticky;top:var(--barH,0px);z-index:11;background:var(--card);
-  padding-top:13px;padding-bottom:13px;
+  padding-top:9px;padding-bottom:9px;
   border-bottom:1px solid var(--stickyLine)}
 
 /* ---------- the line and the shadow ----------
@@ -4035,12 +4215,47 @@ td.noresults-cell .noresults{margin:14px}
    action. Solid border — `.noresults` is dashed, because that block describes the
    VIEW (you filtered it) and this one describes the ACCOUNT (nothing exists yet).
    Two different facts should not look like one. */
-.emptybox.eb{padding:34px 20px;text-align:center}
+/* ⚠️⚠️ THE BORDER THE COMMENT ABOVE PROMISED WAS NEVER DECLARED (fixed 2026-09-28).
+   `.emptybox.eb` had padding and alignment and no `border` of any kind — and
+   `td.eb-cell .emptybox{border:0}` sat underneath removing one that did not exist. What
+   READ as a stroke on Licenses, Invoices and Instances was the FRAME's own borders
+   landing on the empty cell: `tbody td:first-child` gives a left, `:last-child` a right,
+   `tr:last-child > td` a bottom — and nothing gives a top, because the top of the first
+   row is normally the column row's bottom line and the column row is `display:none` on
+   an empty page. Three sides and an open top: the cut edge that was reported.
+   Activity was the fourth form and the opposite one — its block is not in a table, so
+   it inherited nothing and drew no box at all.
+   ⚠️ ONE FORM NOW, and it is the one the comment always described: a complete solid
+   outline the block owns itself, identical whether it stands in a cell or in a feed.
+   Owning it is the point — a box drawn by its container can only ever have the sides
+   that container happens to give it. */
+.emptybox.eb{padding:34px 20px;text-align:center;
+  border:1px solid var(--line2);border-radius:10px;background:var(--card)}
 .eb-t{font-size:var(--t-body-fs);line-height:var(--t-body-lh);color:var(--ink)}
 .eb-p{margin:6px auto 0;max-width:46ch;font-size:14px;line-height:1.5;color:var(--mid)}
 .eb-a{margin-top:16px}
 td.eb-cell{padding:0;border:0}
-td.eb-cell .emptybox{border:0}
+/* the same inset `.noresults` takes inside a cell */
+td.eb-cell .emptybox{margin:14px}
+/* ⚠️ AND THE FEED'S COPY HAS TO BE INSET TWICE OVER to land on the same line. A table
+   sits inside `.listframe > div`, which the frame insets 18px; the feed does not, so a
+   flat 14px left Activity's block 18px wider on each side than the other three —
+   measured at 1440: 185..1251 against 203..1233. One form means one width, so the feed's
+   block takes the frame's inset as well as the block's own. */
+.feed > .emptybox.eb{margin:14px 32px}
+/* ⚠️ AND THE TABLE STOPS DRAWING. On an empty page there is one row and it is this
+   block, so every border the frame would hand its cells is a fragment of a box that is
+   already complete — left the double stroke visible: the block's own outline with the
+   frame's U still outside it.
+   ⚠️⚠️ THE FIRST VERSION OF THIS RULE LOST, and the count in its own comment was the
+   mistake. `body.list-empty .listframe table tbody td` is (0,2,4) — two classes, four
+   types — against `.listframe table:not(.is-grouped) tbody td:first-child` at (0,3,3).
+   CLASSES ARE COMPARED BEFORE TYPES, so three classes beat two however many element
+   names follow. Measured, not reasoned: the cell still reported `R1 B1 L1` after the
+   rule was in the file. `:not(.is-grouped)` is carried here for the count, and it is
+   also true — a grouped table has no empty state of this kind. */
+body.list-empty .listframe table:not(.is-grouped) tbody td,
+body.list-empty .listframe table:not(.is-grouped){border:0;border-radius:0}
 
 /* ⚠️ An empty page shows no chrome that operates on rows. There is nothing to search,
    filter, sort, page through or refresh, and a toolbar over nothing is a set of
