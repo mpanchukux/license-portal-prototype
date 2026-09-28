@@ -43,6 +43,11 @@ ICONS = [
     # direction
     'chevron-left', 'chevron-right', 'chevron-down', 'chevron-up',
     'chevrons-left', 'chevrons-right', 'arrow-up', 'arrow-right',
+    # ⚠️ ADDED 2026-09-28 for the activity feed's folded run: the line that offers the
+    # entries a group stands for is INDENTED under it, and a corner arrow is what says
+    # "these hang off the row above". `arrow-right` was the near miss already in the set
+    # and it says "goes to", which is a different claim.
+    'corner-down-right',
     # actions
     'search', 'refresh', 'plus', 'x', 'check', 'copy', 'pencil', 'download',
     'external-link', 'link', 'dots-vertical', 'repeat', 'trash',

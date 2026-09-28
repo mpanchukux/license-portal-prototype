@@ -87,7 +87,7 @@ function openManageAddons(lic){ NL.open({ mode:'addons', license:lic }); }
    the rule rather than a fixed sequence, because the sequence is now computed.
 
    THE STEPS ARE A LIST, BUILT PER MODE — see steps(). The full set is
-   Choose your plan · Capacity · Add-ons · Review · Payment & Billing, and steps drop
+   Choose your plan · Capacity · Add-ons · Review · Billing & Payment, and steps drop
    out of it: a free plan has no Capacity, no Add-ons and no billing; a TBMQ
    subscription has no Add-ons; Manage add-ons has no plan step; an account with
    billing data on file has no billing step and commits from Review.
@@ -316,11 +316,21 @@ var NL = (function(){
      worth having in a prototype is the shape of a rejection, so one reserved code is
      always invalid and a malformed one is caught: that is enough to show where the error
      goes and what it looks like, without pretending there is a catalogue behind it. */
+  /* ⚠️⚠️ TWO MESSAGES, AND THE FORMAT RULE IS NOT ONE OF THEM (2026-09-28, by request).
+     It used to answer a malformed code with `Coupon codes are 4–20 letters, numbers or
+     hyphens.` — a specification of a rule nobody asked about, which tells the reader what
+     a coupon looks like and not what happened to theirs. What happened is the same thing
+     in both cases: the code was not accepted.
+     ⚠️ `EXPIRED` FOLDED INTO `not valid`, and that is a data fact rather than a copy
+     preference. There is no coupon catalogue in this repository — the rate is a demo
+     constant and `EXPIRED` is a hardcoded magic string, so the surface CANNOT tell an
+     expired code from an unknown one. Saying "expired" would have been the prototype
+     inventing a distinction its data does not carry. If a real catalogue arrives with an
+     expiry on it, this is where the third message goes. */
   function couponError(code){
     if(!code) return 'Enter a coupon code.';
-    if(!/^[A-Za-z0-9-]{4,20}$/.test(code))
-      return 'Coupon codes are 4–20 letters, numbers or hyphens.';
-    if(code.toUpperCase() === 'EXPIRED') return 'This coupon has expired.';
+    if(!/^[A-Za-z0-9-]{4,20}$/.test(code) || code.toUpperCase() === 'EXPIRED')
+      return 'That code isn’t valid. Check it and try again.';
     return null;
   }
   /* ---- credit ---------------------------------------------------------------------
@@ -497,7 +507,7 @@ var NL = (function(){
   /* Product, billing type and plan are all chosen on step 1, so there is no
      separate product step. The tail depends on the account: with billing data
      saved the last step is Review & pay and commits there; without it, Review
-     only reviews and a Payment & Billing step is appended to collect the data
+     only reviews and a Billing & Payment step is appended to collect the data
      and commit. Nothing hardcodes the count — the progress line reads it. */
   // a licence you can change already pays for itself, so change-plan never asks
   // for billing data — only a first purchase can land on the billing step
@@ -553,7 +563,10 @@ var NL = (function(){
     if(k === 'capacity') return 'Capacity';
     if(k === 'addons') return 'Add-ons';
     if(k === 'review') return steps().indexOf('billing') < 0 ? reviewLabel() : 'Review';
-    return 'Payment & Billing';
+    /* ⚠️ `Billing & Payment`, not `Payment & Billing` (2026-09-28, by request). The step
+       collects the billing address first and the card second, which is the order the
+       form is in; naming it the other way round described the screen backwards. */
+    return 'Billing & Payment';
   }
   /* A free plan commits from the Review step and pays nothing, so the step must not be
      called "Review & pay" — there is no pay. */
@@ -578,7 +591,12 @@ var NL = (function(){
      ⚠️ `stepDesc` is still here and still the one-line answer to "what does this step
      ask for" — the stepper stopped printing it (see renderSteps), and it is kept
      because it is the text any future surface that has room would want. */
-  function stepOptional(k){ return k === 'addons'; }
+  /* ⚠️ `stepOptional` IS GONE with the label it fed (2026-09-28). It had exactly one
+     reader — the stepper — and a predicate kept for a caller that does not exist is the
+     same pile the icon rule refuses. The FACT it encoded is not lost: Add-ons is the one
+     step whose switches are all off by default and whose `Continue` is live untouched,
+     and that is stated here so the next surface that wants to say so knows which step
+     it is talking about. */
   /* ---- the stepper (2026-09-25, from a reference) --------------------------------
      ⚠️ EVERY STEP IS ON SCREEN, with its name and its description. It was a progress
      line plus "Step 2 of 4 · Capacity": that says where you are and nothing about where
@@ -631,7 +649,12 @@ var NL = (function(){
       if(n) out += '<span class="nl-sline' + (n <= here ? ' is-done' : '') + '" aria-hidden="true"></span>';
       var inner = '<span class="nl-smark">' + (n + 1) + '</span>'
         + '<span class="nl-stxt"><span class="nl-sname">' + esc(stepLabel(k)) + '</span>'
-        + (stepOptional(k) ? '<span class="nl-sopt">(Optional)</span>' : '')
+        /* ⚠️ `(Optional)` IS GONE FROM THE STEPPER (2026-09-28, by request). It was the
+           only step label carrying a second line, so the band's height was set by the
+           one step that had something extra to say — and what it said is answered by
+           the step itself the moment you arrive: every switch is off and `Continue` is
+           live without touching one. A word in the map that the screen repeats is a
+           word the map can drop. */
         + '</span>';
       if(done) out += '<button type="button" class="nl-step is-done" data-nl-step="' + k + '"'
         + ' title="Back to ' + esc(stepLabel(k)) + '">' + inner + '</button>';
@@ -830,7 +853,12 @@ var NL = (function(){
     return '<div class="am-cell am-feature"><div class="fs-cellhead"><div class="fs-celltext">'
       + '<div class="am-celltop">' + name + '</div>'
       + '<div class="fs-celldesc">' + desc + '</div></div>'
-      + '<span class="pill soft am-featstate">' + state + '</span>'
+      /* ⚠️ THE SAME FILLED ACCENT PILL AS `Popular` (2026-09-28, by request). It was
+         `.pill.soft` — an outlined grey — which put the one thing on this step that is
+         already YOURS at the quietest weight on the screen, below every add-on price
+         beside it. `Included` and `Enabled` are both good news about what the plan
+         carries, and the accent pill is what this system uses to say so. */
+      + '<span class="pill is-accent am-featstate">' + state + '</span>'
       + '</div></div>';
   }
   function addonRow(key, name, desc, price, on){
@@ -1063,7 +1091,11 @@ var NL = (function(){
       return '<div class="am-orow nl-couponrow is-applied"><div>'
         + 'Coupon <b>' + esc(st.coupon.code) + '</b> '
         + '<span class="muted">\u2212' + Math.round(st.coupon.rate * 100) + '%</span> '
-        + '<button type="button" class="link nl-couponedit" data-couponopen>Change</button>'
+        /* ⚠️ `Change` IS GONE (2026-09-28, by request). Two links side by side led to the
+           same place — `Change` set the open flag on a row that then had to re-offer
+           Apply anyway — so the row asked the reader to choose between two words for
+           one action. Changing a code is removing it and applying another: one extra
+           click, on a path almost nobody takes. */
         + '<button type="button" class="link nl-couponedit" data-couponremove>Remove</button>'
         + '</div><div>\u2212' + money(discount()) + '</div></div>';
     }
@@ -1071,20 +1103,34 @@ var NL = (function(){
       + '<button type="button" class="link" data-couponopen>Apply coupon</button>'
       + '</div><div></div></div>';
   }
+  /* ⚠️ THE MESSAGE SLOT IS ALWAYS RENDERED (2026-09-28, by request). It used to be
+     emitted only when there was an error, and `.nl-couponfield` was `flex-wrap:nowrap`
+     — so the message could not drop to its own line and was squeezed in BESIDE the
+     Cancel link, which is what "the error appears at the side" was. It is a field error;
+     it belongs under the field it is about.
+     ⚠️ EMPTY BUT PRESENT, so the row does not change height as messages appear and
+     clear. A slot that only exists while it has something to say makes the total below
+     it jump by a line every time somebody mistypes a code. `aria-live` on the slot means
+     the sentence is announced when it arrives rather than when focus happens to land.
+     ⚠️ `role="alert"` is NOT used, deliberately: the legal checkbox has one because that
+     error interrupts a commit. This one answers a button the reader just pressed with
+     the cursor still in the field — polite is the correct urgency. */
   function couponOpenHTML(){
     return '<div class="am-orow nl-couponrow is-open"><div class="nl-couponfield">'
         + '<div class="field' + (st.couponErr ? ' err' : '') + '">'
         +   '<input type="text" id="nlCouponInput" placeholder="Coupon code" autocomplete="off"'
-        +     ' aria-label="Coupon code" value="' + esc(st.couponDraft || '') + '">'
+        +     ' aria-label="Coupon code"' + (st.couponErr ? ' aria-invalid="true" aria-describedby="nlCouponErr"' : '')
+        +     ' value="' + esc(st.couponDraft || '') + '">'
         + '</div>'
         + '<button type="button" class="btn btn--secondary btn--md" data-couponapply>Apply</button>'
         + '<button type="button" class="link nl-couponedit" data-couponcancel>Cancel</button>'
-      + (st.couponErr ? '<div class="fielderr nl-couponerr">' + esc(st.couponErr) + '</div>' : '')
+        + '<div class="fielderr nl-couponerr" id="nlCouponErr" aria-live="polite">'
+        +   (st.couponErr ? esc(st.couponErr) : '') + '</div>'
       + '</div><div></div></div>';
   }
   /* ---- the legal confirmation ---------------------------------------------------
      ⚠️ IT SITS ON WHICHEVER STEP COMMITS, not on a fixed one. With billing data on file
-     that is Review & pay; without it the flow ends on Payment & Billing, and a consent
+     that is Review & pay; without it the flow ends on Billing & Payment, and a consent
      tick left behind on an earlier screen would be agreed to before the order was.
      ⚠️ IT FOLLOWS THE VALIDATION RULE THIS FLOW ALREADY HAS: the primary is never
      disabled. A disabled button cannot say why it is disabled — it cannot even take
@@ -1263,19 +1309,25 @@ var NL = (function(){
                  the new one beside it. A single recalculated number is correct and says
                  nothing — the reader applied a coupon to find out what it did, and the
                  answer is the difference, not the result. */
+              /* ⚠️ THE TWO FIGURES ARE NO LONGER THE SAME SIZE (2026-09-28, by request).
+                 Struck-through already said "not this one", but at the same size and a
+                 single weight step the eye still had to choose between them. The charged
+                 amount steps up to `--t-body-fs` and the reference stays at
+                 `--t-small-fs` — two type tokens the system already has, not a one-off
+                 pair of pixel values. */
               +   '</div><div>' + (st.coupon
                     ? '<span class="was">' + money(total()) + '</span> '
-                      + money(Math.max(0, total() - discount()))
+                      + '<span class="now">' + money(Math.max(0, total() - discount())) + '</span>'
                     : money(total())) + perSuffix() + '</div></div>')
       /* ⚠️ NEXT TO THE DISCOUNTED FIGURE, not in a footnote. Someone reading a number
          lower than the plan's price will take it for the price unless told otherwise —
          and the moment to tell them is while they are looking at it, not on the invoice
          a month later. A perpetual has no "next", so it is not told about one. */
-      +       (st.coupon && !isPerp() && !isFree()
-                ? '<div class="am-orow nl-oncenote"><div>Discount applies to this charge only — '
-                  + 'from ' + fmtDate(dayStr(30)) + ' this license is billed at '
-                  + money(total()) + ' / mo.</div><div></div></div>'
-                : '')
+      /* ⚠️ THE DISCOUNT SENTENCE LEFT THE ORDER LIST (2026-09-28, by request) and joined
+         the terms block below — see `.nl-terms`. It was one of THREE statements about
+         payment stacked under the total in three different treatments: this one as an
+         order row, the billing terms in their own card, the tax line faint beneath it.
+         Everything about money now reads in one place, in one voice. */
       /* ⚠️ THIS CLOSES `.am-order`, and losing it is what broke the Review layout:
          `.nl-terms` fell inside the order list, the remaining two closers went to
          `.am-order` and `.nl-joined`, and `.fs-col` was left open — so `.fs-right`
@@ -1284,8 +1336,18 @@ var NL = (function(){
          guards were added by rewriting this block by line range; a `</div>` on a
          line of its own is exactly what a range rewrite loses. */
       +     '</div>'
-      +     '<div class="nl-terms">' + termsLine()
-      +       (isFree() ? '' : '<span class="taxnote nl-taxline">' + TAX_NOTE + '</span>') + '</div>'
+      /* ⚠️ ONE BLOCK, ONE TREATMENT, in the order the reader needs it: what the discount
+         does and when it stops, how the licence is billed, then tax. Three sentences at
+         three weights asked which of them mattered; they all matter the same amount. */
+      +     '<div class="nl-terms">'
+      +       (st.coupon && !isPerp() && !isFree()
+                ? '<p class="nl-termline">Discount applies to this charge only — '
+                  + 'from ' + fmtDate(dayStr(30)) + ' this license is billed at '
+                  + money(total()) + ' / mo.</p>'
+                : '')
+      +       '<p class="nl-termline">' + termsLine() + '</p>'
+      +       (isFree() ? '' : '<p class="nl-termline">' + TAX_NOTE + '</p>')
+      +     '</div>'
       +   '</div>'
       + '</div>'
       /* right: Due today, the payment context, then the commit — all sitting in
@@ -1336,7 +1398,9 @@ var NL = (function(){
     return '<div class="field"><label for="nlb-' + name + '">' + label
       + (req ? ' <span class="req" aria-hidden="true">*</span>' : '') + '</label>'
       + (opts.select
-        ? '<select id="nlb-' + name + '" data-nlb="' + name + '">' + countryOptions(bill[name]) + '</select>'
+        ? '<span class="selwrap"><select id="nlb-' + name + '" data-nlb="' + name + '">'
+          + countryOptions(bill[name]) + '</select>'
+          + icon('chevron-down', { cls:'selchev' }) + '</span>'
         : '<input id="nlb-' + name + '" data-nlb="' + name + '" type="' + (opts.type || 'text') + '" value="' + val + '"'
           + (opts.ph ? ' placeholder="' + opts.ph + '"' : '') + '>')
       + (opts.help ? '<div class="help">' + opts.help + '</div>' : '')
@@ -1528,7 +1592,12 @@ var NL = (function(){
       +     rows
       +     '<div class="am-sumrow am-total-row"><span>Due today</span><span>' + money(total()) + '</span></div>'
       +   '</div>'
-      +   '<div class="nl-terms nl-terms-tight">' + termsLine() + '</div>'
+      /* ⚠️ `Billed monthly · auto-pay. Cancel anytime.` IS GONE FROM HERE (2026-09-28,
+         by request). It is the last step, the button beneath it says `Subscribe`, and
+         the same sentence is already on Review — the screen where the reader is being
+         asked to READ the terms. Repeating it beside the commit made the summary three
+         lines of which only one was a number. The tax line stays, under the form on the
+         left, because it qualifies the figure rather than the arrangement. */
       /* the summary sits WITH the button it belongs to, not at the top of a form the
          reader has already scrolled past */
       +   '<div class="formerr" id="nlBillFormErr" role="alert" hidden></div>'
@@ -1562,7 +1631,7 @@ var NL = (function(){
       step.classList.remove('haspin');
       if(!phone || step.hidden) return;
       /* Each step says what it is — a switch, not a boolean.
-         ⚠️ Payment & Billing NEVER pins: this REVERSES the earlier instruction to pin
+         ⚠️ Billing & Payment NEVER pins: this REVERSES the earlier instruction to pin
          it. Its content is a long form, and a bar carrying the total plus `Subscribe`
          over a keyboard-driven form competes with the field being typed in.
          ⚠️ Testing by position was the old bug (`n !== 3`, then `n === 2`, and billing
@@ -2030,11 +2099,15 @@ var NL = (function(){
         var bad = $('#nlCouponInput'); if(bad) bad.focus();
         return;
       }
-      var changing = !!st.coupon;
+      /* ⚠️ `applied instead` WENT WITH `Change` (2026-09-28). It existed for the one
+         path where a second code replaced a first without the first being removed, and
+         that path no longer exists — the applied row offers `Remove` and nothing else,
+         so every Apply is now a first apply. A message for a state that cannot happen is
+         a message nobody will ever read and everybody has to maintain. */
       st.coupon = { code:code.toUpperCase(), rate:COUPON_RATE };
       st.couponOpen = false; st.couponErr = null; st.dirty = true;
       renderReview();
-      Snack.show('Coupon ' + st.coupon.code + (changing ? ' applied instead' : ' applied'));
+      Snack.show('Coupon ' + st.coupon.code + ' applied');
       return;
     }
     if(e.target.closest('#nlPayChange')){ attemptClose(function(){ location.href = 'billing.html'; }); }

@@ -62,15 +62,28 @@ function attnRank(l){
 var STATUS_IC = { ok:'circle-check', off:'circle-x', alert:'alert-triangle-filled' };
 function statusMark(l){
   var st = l && typeof l === 'object' ? l.status : l;
-  function mark(tone, word){
-    return '<span class="statmark is-' + tone + '">'
-      + icon(STATUS_IC[tone], { cls:'statmark-ic' }) + word + '</span>';
+  /* ⚠️ `tip` IS THE SENTENCE THE ALERT TRIANGLE USED TO CARRY (2026-09-28, by request).
+     When the triangle left this column on 09-25 its tooltip went with it, and the note
+     written then said the wording "is not lost — it is the banner on the licence page".
+     True, and not enough: the row is where the reader meets the word `Blocked`, and the
+     page that explains it is a click away. Same text (`ATTN_TIP`), same `.tip.wide`
+     mechanism the version marker uses — nothing new is written, the reader is just told
+     in the place they are looking.
+     ⚠️ `tabindex="0"` rather than a `<button>`. The version marker is a button because
+     that is all it is; here the tooltip hangs off a WORD that is the cell's content, and
+     wrapping a status in a button would offer an action this cell does not have. Focus
+     is what the tooltip needs (`.tip:focus-visible`), so focus is all it gets. */
+  function mark(tone, word, tip){
+    return '<span class="statmark is-' + tone + (tip ? ' tip wide" tabindex="0" data-tip="' + esc(tip) : '')
+      + '">' + icon(STATUS_IC[tone], { cls:'statmark-ic' }) + word
+      /* the same sentence, for a reader who never hovers: a tooltip is not a carrier */
+      + (tip ? '<span class="vh"> \u2014 ' + esc(tip) + '</span>' : '') + '</span>';
   }
   if(st==='canceled') return mark('off', 'Canceled');
   /* ⚠️ The one attention state that IS a status — see statusChipHTML. A row that says
      `Active` while its own state line says "Over instance limit · 2 of 1" is the list
      contradicting itself in two adjacent cells. */
-  if(typeof l === 'object' && instOverLimit(l)) return mark('alert', 'Blocked');
+  if(typeof l === 'object' && instOverLimit(l)) return mark('alert', 'Blocked', ATTN_TIP.blocked(l));
   return mark('ok', 'Active');
 }
 /* What the next date means depends on the licence: a subscription renews, a
@@ -399,8 +412,24 @@ function userRow(u){
      treatment at all — it kept its four columns at 390px, so `Login as` and `Delete`
      sat off-screen entirely and dragging sideways moved the whole page. The class lets
      it become a card the same way the licence and invoice rows already do. */
+  /* ⚠️ ICON BUTTONS, LIKE EVERY OTHER ROW IN THE PRODUCT (2026-09-28, by request).
+     These were two `.link` buttons — text inside a table cell — and they were the last
+     row actions anywhere still written that way: the licence row, the invoice row and
+     the instance row all carry quiet filled icon buttons with the word in the tooltip.
+     ⚠️ `Delete` IS NOT GIVEN THE DESTRUCTIVE TONE, and that is the request: both are
+     grey. The confirmation dialog is where this action gets its weight; a red glyph in
+     a four-row list of colleagues reads as an alarm about the person.
+     ⚠️ The words are not lost — `aria-label` names the row's own person ("Delete
+     n.rossi@…"), which the text buttons never did, and `data-tip` prints the verb. */
+  var esce = esc(u.email);
+  var loginBtn = button({ variant:'secondary', size:'md', icon:'arrow-right', cls:'tip',
+                          ariaLabel:'Log in as ' + u.email,
+                          attrs:'data-loginas="' + esce + '" data-tip="Log in as"' });
+  var delBtn = button({ variant:'secondary', size:'md', icon:'trash', cls:'tip',
+                        ariaLabel:'Delete ' + u.email,
+                        attrs:'data-deluser="' + esce + '" data-tip="Delete"' });
   return '<tr class="user-row"><td>'+u.name+'</td><td>'+u.email+'</td><td>'+fmtDate(u.created)+'</td>'
-    + '<td class="cellact"><span class="rowactions"><button class="link" data-loginas="'+u.email+'">Log in as<svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-arrow-right"></use></svg></button><button class="link" data-deluser="'+u.email+'">Delete</button></span></td></tr>';
+    + '<td class="cellact"><span class="rowactions">' + loginBtn + delBtn + '</span></td></tr>';
 }
 function menuItems(p, opts){
   var type = p && typeof p === 'object' ? p.type : p;
@@ -871,59 +900,138 @@ function activitySentenceHTML(rec, scope){
    "what changed, from and to" is a sentence slot in the anatomy; the detail carries what
    the sentence left out. A `Plan: Startup → Business` row under "Plan changed from
    Startup to Business" is the same fact printed twice, which is what prompted this pass. */
+/* ---------- the mark on the rail (2026-09-28, from a reference) ------------------
+   ⚠️ THE FEED HAS AN AXIS NOW, and every entry hangs a mark on it. Until this pass a row
+   opened with its sentence and nothing else, which is honest and unscannable: a log read
+   top to bottom is a wall of prose, and the reader's question is usually "where are the
+   things of KIND X" rather than "what does line 40 say".
+   ⚠️ KEYED ON THE PREFIX FIRST, with named exceptions above it — the same shape
+   `ACTIVITY_BUCKET` uses, and for the same reason: a table that lists all 29 types is a
+   table that falls behind the 30th. A new `license.*` event gets the licence key mark
+   without anyone adding a line.
+   ⚠️ THREE EXCEPTIONS, AND ALL THREE ARE THINGS THAT WENT WRONG. They take the filled
+   triangle and `--status-alert`, which is what that pair already means everywhere else
+   in the product. Colour is not the carrier: the shape differs too, and the sentence
+   says it in words.
+   ⚠️ NO PER-TYPE COLOUR BEYOND THAT. The references colour every kind of event
+   separately; here that would be a palette invented to distinguish categories, which is
+   exactly what the monochrome rule still forbids outside the named exceptions. The
+   GLYPH distinguishes them and costs nothing. */
+var ACT_MARK_TYPE = {
+  'license.payment_failed':   ['alert-triangle-filled', 'alert'],
+  'instance.check_failed':    ['alert-triangle-filled', 'alert'],
+  'license.updates_expiring': ['clock', ''],
+  'license.payment_recovered':['circle-check', ''],
+  'instance.check_ok':        ['refresh', ''],
+  'instance.checks_grouped':  ['refresh', '']
+};
+var ACT_MARK_PREFIX = { license:'key', instance:'device-desktop', user:'user',
+                        account:'user', billing:'credit-card' };
+function activityMarkHTML(rec){
+  var t = (rec && rec.type) || '';
+  var hit = ACT_MARK_TYPE[t];
+  var name = hit ? hit[0] : (ACT_MARK_PREFIX[t.split('.')[0]] || 'point');
+  var tone = hit && hit[1] ? ' is-' + hit[1] : '';
+  return '<span class="fi-mark' + tone + '" aria-hidden="true">' + icon(name) + '</span>';
+}
+/* ---------- the detail, in a box of its own (2026-09-28, from a reference) --------
+   ⚠️ A PLAIN ENTRY IS PLAIN TEXT; ONLY EXTRA INFORMATION GETS A FRAME. Until this pass
+   EVERY entry was a filled, bordered card whether it carried anything or not — so a feed
+   of one-line sentences was a stack of boxes, and the three entries that actually had
+   something more to show looked exactly like the twenty that did not. The frame now
+   means "there is more here than the sentence", which is a thing worth drawing.
+   ⚠️ IT MUST STILL NOT REPEAT THE SENTENCE (the 2026-09-24 rule, unchanged): the
+   sentence carries the headline change, the box carries what the sentence left out.
+   ⚠️⚠️ A CHANGED VALUE IS SHOWN AS THE CHANGE, not as two words with an arrow between
+   them: the old value is struck through and quiet, the new one is a pill. That is what
+   makes it readable at a glance — the eye lands on the pill, which is the value the row
+   is now about, and the struck one is there to be checked rather than read. */
 function activityDetailHTML(rec){
   var d = rec && rec.detail;
   if(!d || !d.length) return '';
-  return '<dl class="fi-detail">' + d.map(function(row){
+  return '<div class="fi-card">' + d.map(function(row){
     var val = row.length > 2
       /* ⚠ THE ARROW IS AN ICON, like every other mark here — a character standing in
          for a mark is exactly what the icon rule forbids, and the checker caught this
          one the moment it was written. */
-      ? esc(String(row[1])) + ' <span class="fd-arrow">' + ARROW_IC + '</span> <b>' + esc(String(row[2])) + '</b>'
-      : esc(String(row[1]));
-    return '<div class="fd-row"><dt>' + esc(String(row[0])) + '</dt><dd>' + val + '</dd></div>';
-  }).join('') + '</dl>';
+      ? '<s class="fd-was">' + esc(String(row[1])) + '</s>'
+        + '<span class="fd-arrow">' + ARROW_IC + '</span>'
+        + '<span class="pill fd-now">' + esc(String(row[2])) + '</span>'
+      : '<span class="fd-v">' + esc(String(row[1])) + '</span>';
+    return '<div class="fd-row"><span class="fd-k">' + esc(String(row[0])) + '</span>' + val + '</div>';
+  }).join('') + '</div>';
 }
+/* ⚠️⚠️ THE TIME IS BACK INSIDE THE SENTENCE (2026-09-28, by request, from a reference),
+   and the argument that put it at the right edge on 09-25 is answered rather than
+   dropped. That argument was: "a LEADING timestamp made every sentence start at a
+   different x, and the one thing a reader scans a log for was the column that never
+   lined up." True, and it is about a LEADING stamp. Trailing the sentence after a
+   middot, the sentences still all start on one line — the rail decides that now — and
+   the time sits where the reader looks only after reading what happened.
+   ⚠️ THE DATE IS NOT HERE. It is a separator row of its own (see `activityList`), so a
+   row that printed it would print the same date under a line that just said it.
+   ⚠️ `activityEntry` IS NOT SELF-SUFFICIENT, for that reason: on its own it says 16:20
+   with no day. Every surface goes through `activityList`; the styleguide is the one
+   caller that does not, and it is showing the component rather than a feed. */
+/* ⚠️⚠️ THE FOLDED RUN EXPANDS AGAIN, AND THIS REVERSES 2026-09-25 (by request, from a
+   reference). That pass removed the disclosure with a real argument — "the checks are
+   hourly and the summary prints the count and both ends, so every line in it was
+   derivable" — and the argument is still true of the CONTENT. What it does not cover is
+   the SHAPE: the reference asks a group to look like a group, with the things it stands
+   for one click away, and a summary that cannot be opened is indistinguishable from a
+   sentence that happens to contain a number. The members ride on the record now
+   (`foldChecks`), so nothing is re-derived to show them.
+   ⚠️ `i` is the disclosure's key again — it was kept in the signature and unused after
+   09-25 precisely so this could come back without touching four call sites. */
 function activityEntry(rec, scope, i){
   var html = activitySentenceHTML(rec, scope);
   if(html == null) return '';
-  var det = activityDetailHTML(rec);
-  /* ⚠️ NO TYPE KEEPS A DISCLOSURE ANY MORE. This used to argue the opposite — that the
-     folded run had to keep its expander because its `detail` was the thirty-six entries
-     it folded. It is removed rather than inlined: see foldChecks. Checked across all 29
-     types in ACTIVITY_TEXT — `instance.checks_grouped` is the ONLY one produced by
-     grouping, so "does any other group need expanding" has no other candidate. A group
-     is a run of IDENTICAL successes by construction (a failure ends a run, and so does a
-     gap), which is what makes a count able to stand for it. */
-  /* ⚠️ THE ROW PRINTS THE TIME, NOT THE DATE-TIME (2026-09-25, by request). The date
-     moved up to the group heading (`activityList`), and a row that repeated it would
-     print the same date on every row under a heading that already says it once. It is
-     also why the slot moved to the RIGHT: a leading timestamp made every sentence start
-     at a different x, and the one thing a reader scans a log for — what happened — was
-     the column that never lined up.
-     ⚠️ `activityEntry` IS NO LONGER SELF-SUFFICIENT because of this: on its own it says
-     16:20 with no day. Every surface goes through `activityList`, which supplies the day;
-     the styleguide is the one caller that does not, and it shows the component rather
-     than a feed. */
-  /* ⚠️⚠️ NOTHING IN A FEED ENTRY IS BEHIND A CLICK ANY MORE (2026-09-25, by request).
-     The last disclosure was the folded run of checks, and its payload is gone with it —
-     not inlined, GONE: see foldChecks for why the list said nothing the summary had not.
-     What `detail` holds for every other type was already inline; it simply has no
-     `hidden` branch to sit beside now.
-     ⚠️ `i` is kept in the signature and unused on purpose — it was the expander's key,
-     and four call sites pass it. Removing it is a separate, wider edit. */
+  var mem = (rec && rec.members) || [];
+  var key = 'fm' + String(i == null ? '' : i).replace(/[^\w-]/g, '');
+  var more = '';
+  if(mem.length > 1){
+    more = '<div class="fi-more">'
+      + '<span class="fi-more-ic" aria-hidden="true">' + icon('corner-down-right') + '</span>'
+      + '<button type="button" class="link fi-morebtn" data-fmore="' + key + '"'
+      +   ' aria-expanded="false" aria-controls="' + key + '">View ' + mem.length + ' more</button>'
+      + '</div>'
+      /* ⚠️ The members are ROWS, not a second component: same time, same sentence, same
+         builder for the words. What they are not given is a mark of their own — they
+         hang off the group's mark, and a second column of identical glyphs would say
+         the rail had twelve more events on it than it has. */
+      + '<div class="fi-subs" id="' + key + '" hidden>'
+      +   mem.map(function(m){
+            var t = activitySentenceHTML(m, scope);
+            return t == null ? '' : '<div class="fi-sub"><span class="fi-subtime">'
+              + esc(activityTime(m.ts)) + '</span><span>' + t + '</span></div>';
+          }).join('')
+      + '</div>';
+  }
   return '<div class="fitem">'
-    + '<div class="fi-row">'
-    +   '<div class="fi-body">'
+    + activityMarkHTML(rec)
+    + '<div class="fi-body">'
     /* ⚠️ NO SEPARATE ACTOR SLOT. The actor is inside the sentence (see `{by}`), and
        printing it in both places would put the same name on the row twice. */
-    +     '<div class="fi-txt">' + html + '</div>'
-    +     det
-    +   '</div>'
-    +   '<div class="fi-time">' + esc(activityTime(rec.ts)) + '</div>'
+    +   '<div class="fi-txt">' + html
+    +     '<span class="fi-time">' + esc(activityTime(rec.ts)) + '</span></div>'
+    +   activityDetailHTML(rec)
+    +   more
     + '</div>'
     + '</div>';
 }
+/* one delegated listener for every folded run on every surface — the feeds are rebuilt
+   by paging, filtering and searching, so nothing may be bound per row */
+document.addEventListener('click', function(e){
+  var b = e.target.closest('[data-fmore]');
+  if(!b) return;
+  var box = document.getElementById(b.getAttribute('data-fmore'));
+  if(!box) return;
+  var open = box.hidden;
+  box.hidden = !open;
+  b.setAttribute('aria-expanded', open ? 'true' : 'false');
+  /* the label states what the press does next, which is the half a count cannot say */
+  b.textContent = open ? 'Hide' : ('View ' + box.children.length + ' more');
+});
 /* ============================================================================
    THE FEED — entries grouped under the day they happened
    ============================================================================
@@ -946,23 +1054,64 @@ function activityEntry(rec, scope, i){
    entry under it has actually been built. */
 function activityDay(rec){ return String(rec && rec.ts).split(', ')[0]; }
 function activityTime(ts){ var q = String(ts).split(', '); return q.length === 2 ? q[1] : ''; }
+/* ⚠️⚠️ THE DAY IS A SEPARATOR ROW, NOT A HANGING HEADING (2026-09-28, by request, from
+   a reference), and this reverses two things 09-25 decided together.
+   It was a heading in a 190px left gutter with the entries indented past it. That paid
+   for itself while the entries were cards floating in a column; with a rail down the
+   left it cannot — the gutter and the rail are two left-hand structures competing for
+   the same job, and the date would have to sit outside the axis the rest of the feed
+   hangs on.
+   ⚠️ IT ALSO GOES BACK TO THE LABEL STEP from the h3 the same pass gave it. That change
+   was made because "at the body size it read as another row that happened to be short",
+   which was true of a bare line of text — it is not true of a row with a node ON the
+   rail and caps letterspacing. The structure says "separator" now; the type does not
+   have to shout it.
+   ⚠️ NO WRAPPER PER DAY. The rows are siblings of the separators in one flat list, so
+   the rail is one line down the whole feed instead of restarting inside each group —
+   which is exactly what a wrapper per day would have forced. */
 function activityList(rows, scope, keyPrefix){
   var pre = keyPrefix == null ? '' : keyPrefix;
-  var out = '', day = null, open = false;
+  var parts = [], day = null, last = -1;
   (rows || []).forEach(function(rec, n){
     var html = activityEntry(rec, scope, pre + n);
     if(!html) return;
     var d = activityDay(rec);
     if(d !== day){
-      if(open) out += '</div></div>';
       day = d;
-      out += '<div class="fday"><div class="fday-date">' + esc(fmtDate(d)) + '</div>'
-           + '<div class="fday-items">';
-      open = true;
+      parts.push('<div class="fsep"><span class="fsep-dot" aria-hidden="true"></span>'
+        + '<h3 class="fsep-d">' + esc(fmtDate(d)) + '</h3></div>');
     }
-    out += html;
+    last = parts.push(html) - 1;
   });
-  return open ? out + '</div></div>' : out;
+  /* ⚠️ THE LAST ROW IS MARKED HERE, where "last" is known for certain. The rail is drawn
+     per row and overshoots into the gap beneath it, so one row has to stop — and the
+     builder is the only place that can say which without asking the DOM. A search hides
+     rows afterwards and moves the tail; `syncFeedChrome` re-points it then. */
+  if(last >= 0) parts[last] = parts[last].replace('<div class="fitem"', '<div class="fitem is-tail"');
+  return parts.join('');
+}
+/* ⚠️ A DATE WITH NOTHING UNDER IT IS NOT A DATE (2026-09-28). The separators are
+   siblings of the entries now, not wrappers around them, so a filter that hides every
+   entry of a day leaves the day standing alone. Walked BACKWARDS: each separator is
+   shown only if an entry has been seen since the one before it, which is the same pass
+   whichever way the list is sorted.
+   ⚠️ Called from `wireSearch`'s `after` hook rather than from the filter itself — the
+   feed is also re-rendered wholesale by paging and by the type filter, and in those
+   cases `activityList` has already emitted only the separators it needs. */
+/* ⚠️ AND WHERE THE RAIL ENDS, in the same backwards pass. The segment is drawn per row
+   and overshoots into the gap below it, so the LAST one has to be told not to — and
+   `:last-child` is the wrong last: while a search is running the final child is usually
+   a hidden row, so the line ran on past everything visible and into the footer. */
+function syncFeedChrome(host){
+  if(!host) return;
+  var kids = [].slice.call(host.children), seen = false, tail = null;
+  for(var n = kids.length - 1; n >= 0; n--){
+    var el = kids[n];
+    el.classList.remove('is-tail');
+    if(el.classList.contains('fsep')){ el.hidden = !seen; seen = false; }
+    else if(el.classList.contains('fitem') && !el.hidden){ seen = true; if(!tail) tail = el; }
+  }
+  if(tail) tail.classList.add('is-tail');
 }
 /* What SEARCH matches: the sentence and the actor, and nothing else.
    ⚠️ This is the whole point of the plain-text map. Search used to run
@@ -1045,11 +1194,17 @@ function foldChecks(checks){
       /* ⚠️ A GROUP IS AN ORDINARY ENTRY — no `fold`, no `detail`, nothing a surface has
          to treat as a second kind of row. What it carries is what it says: which
          instance, how many, and the two ends of the run. */
+      /* ⚠️ `members` RIDES ON THE RECORD (2026-09-28). The group used to throw away what
+         it folded, so the disclosure that came back with the rail would have had to
+         re-derive it; keeping the run costs nothing — it is the array this loop is
+         already holding — and it means the expanded list cannot disagree with the count
+         beside it, because they are the same array. */
       out.push(run.length === 1 ? run[0] : {
         type:'instance.checks_grouped',
         ts: run[0].ts, tsMin: run[0].tsMin,
         f: { entity: run[0].f.entity, count: run.length,
              from: fmtDateTime(run[run.length - 1].ts), to: fmtDateTime(run[0].ts) },
+        members: run.slice(),
         instId: run[0].instId, licId: run[0].licId });
       run = [];
     }
@@ -1113,6 +1268,14 @@ function pageSlice(list, st){
   if(st.page < 1) st.page = 1;
   return list.slice((st.page - 1) * st.size, st.page * st.size);
 }
+/* ⚠️ THE FOOTER SHOWS ONLY WHAT IS TRUE (2026-09-28, by request). The COUNT always
+   shows: "1–16 of 16" is information, and a list that does not say how long it is makes
+   the reader scroll to find out. The four arrows and the items-per-page control appear
+   only when there IS more than one page — with everything on one page they were four
+   buttons that could not be pressed and a dropdown that changed nothing visible, which
+   is four controls teaching the reader that this footer does not respond.
+   ⚠️ `hidden`, not removed: the nodes stay in the markup, so nothing has to be rebuilt
+   when a filter takes the list across the boundary in either direction. */
 function syncPager(sel, st){
   var el = $(sel); if(!el) return;
   var last = Math.max(1, Math.ceil(st.total / st.size));
@@ -1127,6 +1290,30 @@ function syncPager(sel, st){
   }
   var sz = el.querySelector('select');
   if(sz && sz.value !== String(st.size)) sz.value = String(st.size);
+  /* ⚠️ NOTHING TO COUNT, NOTHING TO SHOW (2026-09-28, by request). An empty list —
+     whether the account is empty or a filter matched nothing — had a footer reading
+     `0 of 0` under its own empty state, which is a control describing the absence of
+     the thing it controls. The whole band goes; the frame closes itself again (see the
+     `:has(.pager[hidden])` rules in the stylesheet).
+     ⚠️ It is the same `hidden` the two halves below use, so one mechanism turns off a
+     part of this footer and all of it. */
+  el.hidden = !st.total;
+  var multi = last > 1;
+  var btns = el.querySelector('.pagebtns');
+  if(btns) btns.hidden = !multi;
+  /* the label and the control are one `<span>`; hiding the select alone would leave the
+     words "Items per page" standing with nothing after them */
+  if(sz && sz.parentNode) sz.parentNode.hidden = !multi;
+}
+/* ⚠️ FOR A LIST THAT RENDERS EVERY ROW AND PAGES NOTHING. Licenses and Invoices have a
+   pager in their markup and no controller behind it (see the report, 2026-09-28): the
+   range was written by hand as "1–n of n" and the items-per-page select was read by
+   nobody. This states the same truth through the one function that draws a footer, so
+   there is not a second way of writing a count — and the single page it reports is what
+   takes the dead controls off the screen. Replace this call with `pageSlice` +
+   `wirePager` the day those two lists really page. */
+function syncPagerUnpaged(sel, total){
+  syncPager(sel, { page:1, size:Math.max(1, total), total:total });
 }
 /* ⚠️ Bound ONCE per pager and guarded, because several of these live inside surfaces
    that are re-rendered (the licence panel remounts its whole markup). A second
@@ -1157,11 +1344,13 @@ function wirePager(sel, st, rerender){
 var PAGER_BTNS = [['First page','chevrons-left'], ['Previous page','chevron-left'],
                   ['Next page','chevron-right'], ['Last page','chevrons-right']];
 function pagerHTML(id, sizes){
-  return '<div class="pager air" id="' + id + '">'
+  /* ⚠️ `.air` WENT WITH THE 40px GAP (2026-09-28): a pager is the frame's footer now, so
+     the class that pushed it away from the table has nothing left to describe. */
+  return '<div class="pager" id="' + id + '">'
     + '<span class="spacer"></span>'
-    + '<span>Items per page<select aria-label="Items per page">'
+    + '<span>Items per page<span class="selwrap"><select aria-label="Items per page">'
     +   (sizes || [10,20,50,100]).map(function(n){ return '<option>' + n + '</option>'; }).join('')
-    + '</select></span>'
+    + '</select>' + icon('chevron-down', { cls:'selchev' }) + '</span></span>'
     + '<span class="range">0 of 0</span>'
     /* ⚠️ THE FOUR PAGER BUTTONS GO THROUGH THE COMPONENT (2026-09-25). They were
        classless `<button>`s with their own 40px box in `.pagebtns button` — which is
@@ -1298,8 +1487,17 @@ function wirePeriod(sel, st, rerender){
   function closeMenu(){ menu.hidden=true; btn.setAttribute('aria-expanded','false'); }
   function syncSel(){ $$('[data-period]', menu).forEach(function(b){ b.classList.toggle('is-sel', b.getAttribute('data-period')===st.mode); }); }
   btn.addEventListener('click', function(e){
+    /* ⚠️⚠️ `closeAllMenus()` FIRST, and its absence is why two dropdowns could be open
+       at once (fixed 2026-09-28). Every other menu in the product opens through the
+       delegated toggle in shared.js, which closes the rest before it opens one — this
+       control has its own listener AND calls `stopPropagation`, so that delegated
+       handler never ran for it. Opening the period menu therefore left the event-types
+       menu standing, and the two overlapped.
+       ⚠️ `willOpen` is read BEFORE the close, or a second click on the same trigger
+       would close the menu and then reopen it. */
     e.stopPropagation();
     var willOpen = menu.hidden;
+    if(typeof closeAllMenus === 'function') closeAllMenus();
     menu.hidden = !willOpen;
     btn.setAttribute('aria-expanded', willOpen?'true':'false');
     // reopening while a custom range is active keeps its fields visible
@@ -1473,6 +1671,12 @@ function wireSearch(inputSel, opts){
     });
     clearSlot();
     syncClear();
+    /* ⚠️ A HOOK, because hiding rows can leave a HEADING behind. Tables have nothing
+       above their rows that depends on them; the activity feed has a date separator per
+       run of entries, and filtering every entry under one leaves a date with nothing
+       after it. The surface knows what its own headings are, so it is handed the
+       question rather than this function learning about feeds. */
+    if(opts.after) opts.after(shown);
     if(q && !shown){
       var host = opts.host();
       if(host){
@@ -1769,7 +1973,7 @@ function nlPlanCardHTML(c, set, sel){
      card from across the row rather than from inside it. */
   var popular = !current && c.badge === 'Popular';
   var badge = !current && c.badge
-    ? '<span class="pill pc-badge">' + c.badge + '</span>' : '';
+    ? '<span class="pill is-accent pc-badge">' + c.badge + '</span>' : '';
   /* ⚠️ ONE PRIMARY ON THE SURFACE, and it is the Popular card. The `set.cards.length === 1`
      clause is GONE (2026-09-24, by request): in practice the only one-card set is the
      perpetual group, so that clause made the perpetual Select a filled button standing
@@ -2406,9 +2610,16 @@ function allInstances(licId){
    GROUPED  Instance · Status · Version · Last check-in · actions
    ⚠️ Grouped drops License because the group heading above it IS the licence — printing
    it again on every row is the duplication the grouping exists to remove. */
+/* ⚠️ COLUMN ORDER CHANGED 2026-09-28 (by request): Instance · Status · Version · Last
+   check-in · License. The licence went from second to last, and that is the point — it
+   is the widest column and the one a reader scanning for "is anything wrong" needs
+   least. Status now sits where the eye lands after the name, and the three narrow facts
+   about the deployment read together before the thing that owns it.
+   ⚠️ IT MATCHES THE GROUPED VIEW, which has always been Instance · Status · Version ·
+   Last check-in (the licence being its heading). One order, two views. */
 function instAllHeadHTML(){
-  return '<tr><th>Instance</th><th>License</th><th>Last check-in</th>'
-    + '<th>Version</th><th>Status</th><th aria-label="Actions"></th></tr>';
+  return '<tr><th>Instance</th><th>Status</th><th>Version</th>'
+    + '<th>Last check-in</th><th>License</th><th aria-label="Actions"></th></tr>';
 }
 function instGroupHeadHTML(){
   return '<tr><th>Instance</th><th>Status</th><th>Version</th>'
@@ -2443,9 +2654,24 @@ function instNameCell(i){
    this link on every surface that loads LicenseDetails, so the href is only the fallback
    — but the fallback is exactly the case where being sent back to a page you did not
    come from is the whole of the damage. */
+/* ⚠️ THE COLOUR-CODED MARK CAME HERE TOO (2026-09-28, by request). Every other place a
+   licence is named in a table carries `licenseMark` — the licence row, the invoice row,
+   the grouped view's own heading — and this cell was the last one still naming a licence
+   in words alone. The square is what separates a TBMQ line from a ThingsBoard one before
+   either is read, and it is the same builder, so the six squares cannot drift.
+   ⚠️ 24px (`.lp-ic--sm`), not the 40 the licence tables use: this cell is two lines of
+   14px text inside a row that also holds an id, and a 40px square would set the row's
+   height from the mark rather than from its content — the same reasoning that sized the
+   invoice row's mark.
+   ⚠️ `aria-hidden`: the licence is spelled out beside it, product and kind included. */
 function instLicCell(l){
-  return '<td class="ia-lic"><a class="link" href="' + licenseHref(l, 'instances') + '" data-invlic="' + esc(l.id) + '">'
-    + esc(l.label || l.name) + '</a><div class="ia-licsub">' + esc(l.product || '') + ' · ' + esc(l.type) + '</div></td>';
+  return '<td class="ia-lic"><span class="lp-cell">'
+    + '<span class="lp-ic lp-ic--sm" aria-hidden="true">' + licenseMark(l) + '</span>'
+    + '<span class="ia-lictxt">'
+    +   '<a class="link" href="' + licenseHref(l, 'instances') + '" data-invlic="' + esc(l.id) + '">'
+    +   esc(l.label || l.name) + '</a>'
+    +   '<span class="ia-licsub">' + esc(l.product || '') + ' · ' + esc(l.type) + '</span>'
+    + '</span></span></td>';
 }
 function instAgoCell(i){ return '<td>' + agoText(i.agoMin) + '</td>'; }
 function instVerCell(i){
@@ -2468,8 +2694,8 @@ function instRowOpen(r, cls){
     + '" data-licid="' + esc(r.lic.id) + '">';
 }
 function instAllRow(r){
-  return instRowOpen(r) + instNameCell(r.inst) + instLicCell(r.lic) + instAgoCell(r.inst)
-    + instVerCell(r.inst) + instStatusCell(r.inst) + instActCell(r.inst) + '</tr>';
+  return instRowOpen(r) + instNameCell(r.inst) + instStatusCell(r.inst) + instVerCell(r.inst)
+    + instAgoCell(r.inst) + instLicCell(r.lic) + instActCell(r.inst) + '</tr>';
 }
 /* ⚠️ KEEPS `.inst-row` AND ADDS ONE. Everything already bound to an instance row — the
    kebab, the search, the ≤600px card base — reads `.inst-row`, and the second class is
@@ -2616,12 +2842,18 @@ function openDeleteInstanceModal(instId, after){
     if(typeof after === 'function') after();
   });
 }
+/* ⚠️ ONE REPAINT FOR EVERY SURFACE THAT SHOWS AN INSTANCE, and it is a top-level
+   function because the label dialog in license-details.js needs it too. Whoever changed
+   the instance, both possible hosts are restated: the Instances page's own list (the
+   name is rebound to `renderInstancesPage` there, so the filter and pager survive) and
+   the licence panel, whichever way it is mounted. A caller that repainted only its own
+   host is how an edit made in one place shows up stale in the other. */
+function afterInstanceChange(){
+  if(typeof renderInstancesView === 'function') renderInstancesView();
+  if(window.LicenseDetails && LicenseDetails.isOpen()) LicenseDetails.reopen(activeLicense);
+  else if(window.LicenseDetails) LicenseDetails.afterChange();
+}
 document.addEventListener('click', function(e){
-  function afterInstanceChange(){
-    if(typeof renderInstancesView === 'function') renderInstancesView();
-    if(window.LicenseDetails && LicenseDetails.isOpen()) LicenseDetails.reopen(activeLicense);
-    else if(window.LicenseDetails) LicenseDetails.afterChange();
-  }
   var off = e.target.closest('[data-instoff]');
   if(off){ closeAllMenus(); openDeactivateModal(off.getAttribute('data-instoff'), afterInstanceChange); return; }
   var del = e.target.closest('[data-instdel]');
@@ -2638,10 +2870,15 @@ document.addEventListener('click', function(e){
      Instances page — the markup was shared, the wiring was not. Both surfaces build the
      menu from `instRowMenu`, and the new ghost button beside the id carries the same
      attribute, so both now come from one place.
-     ⚠️ `data-instlabel` (Rename) deliberately did NOT move: `openInstanceLabelModal`
-     reads `activeLicense` and repaints through the panel's `renderInstances`, so on the
-     Instances page it would open nothing and repaint nothing. It is reported as a
-     finding rather than half-wired here — see NOTES. */
+     ⚠️ `data-instlabel` (Edit label) FOLLOWED IT ON 2026-09-28, and it was the last half
+     of the same fault: it stayed bound to `instPanel` on the argument that it only
+     worked there — `openInstanceLabelModal` read `activeLicense` and repainted through
+     the panel's own render. That was a description of the bug, not a reason to keep it.
+     The dialog now finds the licence from the instance (`findInstance`) like every other
+     row action does, so there is nothing left that ties it to the panel, and the menu
+     item means the same thing wherever the row is drawn. */
+  var lab = e.target.closest('[data-instlabel]');
+  if(lab){ closeAllMenus(); openInstanceLabelModal(lab.getAttribute('data-instlabel')); return; }
   var c = e.target.closest('[data-instcopy]');
   if(c){ closeAllMenus(); copyValue(c.getAttribute('data-instcopy'), 'Instance ID', c); return; }
 });

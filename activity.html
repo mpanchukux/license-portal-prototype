@@ -69,14 +69,14 @@
 
   <!-- chronological feed, rendered from ACTIVITY (newest first) -->
   <div class="feed" id="actFeed"></div>
-  <div class="pager air">
-    <span class="spacer"></span>
-    <span>Items per page<select aria-label="Items per page"><option>10</option><option>20</option><option>50</option><option>100</option></select></span>
-    <span class="range" id="actRange">1–5 of 5</span>
-    <span class="pagebtns">
-      <button type="button" class="btn btn--secondary btn--md btn--icon" disabled aria-disabled="true" aria-label="First page"><svg class="ic btn-ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevrons-left"></use></svg></button><button type="button" class="btn btn--secondary btn--md btn--icon" disabled aria-disabled="true" aria-label="Previous page"><svg class="ic btn-ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-left"></use></svg></button><button type="button" class="btn btn--secondary btn--md btn--icon" disabled aria-disabled="true" aria-label="Next page"><svg class="ic btn-ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-right"></use></svg></button><button type="button" class="btn btn--secondary btn--md btn--icon" disabled aria-disabled="true" aria-label="Last page"><svg class="ic btn-ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevrons-right"></use></svg></button>
-    </span>
-  </div>
+  <!-- ⚠️ NO PAGER (2026-09-28, by request). It was added on 09-25 because the derived
+       check-ins put well over a thousand entries here — measured at 22,093px of scroll
+       — and a footer saying `1-1400 of 1400` under all of them was worse than paging.
+       Two things changed since: the successful checks FOLD into one row per run, which
+       is what took the list from ~1400 to 315, and the feed became an axis you scan
+       rather than a stack of cards you read. What is left is a long page, which is what
+       a log is. ⚠️ If it grows again the answer is the shared controller
+       (`pageSlice`/`syncPager`/`wirePager`), not this markup back. -->
   </div>
 </div>
 </div><!-- /#shellMain -->

@@ -8,14 +8,30 @@
    opens the filter would never learn that the checks are there, which is the opposite
    of what a log is for. The noise is handled by FOLDING the successful ones, not by
    dropping them. */
-var actTypes = ACT_TYPES.map(function(t){ return t.v; });
-/* ⚠️ THE FEED IS PAGED NOW, and it had to be: instance check-ins are derived, so this
-   page renders well over a thousand entries on the demo account — measured at 22,093px
-   of scroll. The pager markup was already in the page and could not move.
-   ⚠️ While a SEARCH is active the page renders everything and the pager stands down —
-   `wireSearch` filters rows that are already in the DOM, so searching one page of many
-   would search ten rows and report the rest missing. See pageSlice in components.js. */
-var actPage = { page:1, size:10, total:0 };
+/* ⚠️⚠️ EMPTY IS THE DEFAULT, AND THE DEFAULT IS EVERYTHING (2026-09-28, by request),
+   which reverses the 09-25 rule that an empty selection meant an empty list. That rule
+   was written against a real fault — "unticking the last chip fell back to showing
+   everything, so the filter appeared to RESET ITSELF" — and the reason it appeared to
+   was that the control started with all four ticked: unticking the fourth looked like a
+   fifth click in a sequence, and the list jumping back to full was a surprise.
+   Start from NOTHING ticked and the same mechanic reads the other way round: no ticks
+   is the state the page opens in, the trigger says `All event types` while it holds,
+   and clearing the last tick is visibly a return to it rather than a reset out of
+   nowhere. The page shows every note by default, so the control that filters it should
+   open agreeing with the page.
+   ⚠️ AND THERE IS NO "ALL FOUR TICKED" STATE. Ticking the fourth collapses the
+   selection to empty — because those two are the same list, and a control with two
+   spellings of one answer is a control that can be left in the wrong one. */
+var actTypes = [];
+/* ⚠️⚠️ THE FEED IS NOT PAGED ANY MORE (2026-09-28, by request), and the argument that
+   added the pager on 09-25 is answered rather than dropped. It was: "instance check-ins
+   are derived, so this page renders well over a thousand entries — measured at 22,093px
+   of scroll". Two things changed. The successful checks FOLD into one row per run, which
+   is what took the list from ~1400 to 315; and the entry stopped being a filled card, so
+   315 rows are a column of sentences rather than 315 boxes.
+   ⚠️ IT ALSO REMOVES A PAIRING THIS FILE HAD TO MAINTAIN: search and paging cannot both
+   be on (`wireSearch` filters rows already in the DOM), so every render asked "is there
+   a query" before deciding how much to draw. There is one answer now — everything. */
 function actQuery(){
   var i = $('#activityView .searchbox input');
   return i ? i.value.trim() : '';
@@ -24,7 +40,10 @@ function actQuery(){
 var actRendered = [];
 function renderActFeed(){
   var el = $('#actFeed'); if(!el) return;
-  var all = activityFeed({ types:actTypes });
+  /* ⚠️ `null`, NOT `[]`. `activityFeed` reads "was a selection passed at all" — an empty
+     array is a selection of nothing and filters the list to nothing, which is exactly
+     what the default must not do. */
+  var all = activityFeed({ types: actTypes.length ? actTypes : null });
   var everything = activityFeed({});
   var list = filterFeedByPeriod(all, actPeriod);
   /* ⚠️ TWO different empties, and the old code only had one. "No events in the
@@ -46,16 +65,12 @@ function renderActFeed(){
   } else if(!list.length){
     el.innerHTML = '<div class="emptybox">No events in the selected period.</div>';
   } else {
-    var searching = !!actQuery();
-    var rows = searching ? list : pageSlice(list, actPage);
-    if(searching) actPage.total = list.length;
-    actRendered = rows;
-    el.innerHTML = activityList(rows, 'global', '');
+    actRendered = list;
+    el.innerHTML = activityList(list, 'global', '');
   }
   syncListEmpty(!everything.length);
-  var pg = $('#activityView .pager');
-  if(pg) pg.hidden = !!actQuery() || !list.length;
-  syncPager('#activityView .pager', actPage);
+  /* the feed's own chrome: a separator with nothing under it, and where the rail ends */
+  syncFeedChrome($('#actFeed'));
 }
 /* ---------- the type filter -------------------------------------------------------
    ⚠️ ONE DROPDOWN, NOT FOUR CHIPS. Four chips was four controls for one question, and
@@ -66,8 +81,7 @@ function renderActFeed(){
    ("changes and purchases"), so the menu holds checkboxes and stays open while they are
    used. It closes on the next click outside, like every other dropdown here. */
 function actTypeLabel(){
-  if(actTypes.length === ACT_TYPES.length) return 'All event types';
-  if(!actTypes.length) return 'No event types';
+  if(!actTypes.length) return 'All event types';
   if(actTypes.length === 1){
     var one = ACT_TYPES.filter(function(t){ return t.v === actTypes[0]; })[0];
     return one ? one.t : '1 type';
@@ -82,21 +96,25 @@ function renderActTypes(){
     row.setAttribute('aria-checked', on ? 'true' : 'false');
     row.classList.toggle('is-on', on);
   });
+  /* ⚠️ THE WAY BACK APPEARS ONLY WHEN THERE IS SOMEWHERE TO GO BACK TO. It used to be
+     `Select all`, standing there permanently — which under the old model was the way out
+     of a narrowed list and under this one would be a second name for doing nothing. */
+  var foot = $('#actTypeFoot');
+  if(foot) foot.hidden = !actTypes.length;
 }
 (function(){
   var menu = $('#actTypeMenu'); if(!menu) return;
   menu.innerHTML = ACT_TYPES.map(function(t){
-    return '<button role="menuitemcheckbox" class="dropcheck" data-acttype="' + t.v + '" aria-checked="true">'
+    return '<button role="menuitemcheckbox" class="dropcheck" data-acttype="' + t.v + '" aria-checked="false">'
       + '<svg class="ic cc-check" aria-hidden="true"><use href="assets/icons.svg#ti-check"></use></svg>'
       + '<span>' + t.t + '</span></button>';
   }).join('')
-    /* ⚠️ A way back to everything, because a multi-select can be left in a state whose
-       way out is four more clicks. */
-    + '<div class="dropfoot"><button class="link" id="actTypeAll">Select all</button></div>';
+    + '<div class="dropfoot" id="actTypeFoot" hidden><button class="link" id="actTypeAll">Clear</button></div>';
   menu.addEventListener('click', function(e){
     var all = e.target.closest('#actTypeAll');
     if(all){
-      actTypes = ACT_TYPES.map(function(t){ return t.v; });
+      e.stopPropagation();
+      actTypes = [];
       renderActTypes(); renderActFeed();
       return;
     }
@@ -106,6 +124,8 @@ function renderActTypes(){
     e.stopPropagation();
     var v = row.getAttribute('data-acttype'), i = actTypes.indexOf(v);
     if(i >= 0) actTypes.splice(i, 1); else actTypes.push(v);
+    /* every type ticked IS the default, so it is stored as the default */
+    if(actTypes.length === ACT_TYPES.length) actTypes = [];
     renderActTypes();
     renderActFeed();
   });
@@ -114,7 +134,6 @@ function renderActTypes(){
 
 renderActFeed();
 wirePeriod('#actPeriod', actPeriod, renderActFeed);
-wirePager('#activityView .pager', actPage, renderActFeed);
 /* ⚠️ Bound BEFORE wireSearch, and the order is the whole trick: this re-renders the
    feed (everything while there is a query, one page when there is not) and the
    listener wireSearch adds next then hides the non-matches in what was just drawn. */
@@ -132,8 +151,13 @@ wirePager('#activityView .pager', actPage, renderActFeed);
    only inside that dump, matched all 298 rows, as did `actionType` and `createdTime`.
    The rows render in the same order as the list they came from, so index lines them up. */
 wireSearch('#activityView .searchbox input', {
-  items: function(){ return $$('#actFeed > *').filter(function(n){ return !n.classList.contains('noresults'); }); },
+  /* ⚠️ `.fitem` ONLY, and it matters twice (2026-09-28). The feed's children are no
+     longer all entries — a date separator sits between the runs — so `> *` would both
+     hide separators as if they were non-matching rows AND shift every index by however
+     many separators came before, which is what lines `actRendered` up with the DOM. */
+  items: function(){ return $$('#actFeed > .fitem'); },
   text:  function(n, idx){ var r = actRendered[idx]; return r ? activityHaystack(r, 'global') : ''; },
   host:  function(){ return $('#actFeed'); },
+  after: function(){ syncFeedChrome($('#actFeed')); },
   empty: function(q){ return noResultsHTML(q); }
 });

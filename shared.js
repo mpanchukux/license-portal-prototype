@@ -143,11 +143,33 @@ function button(o){
    restored; the width is reserved by the hidden label now, so there is nothing to undo.
    ⚠️ The 600ms icon spin on Refresh is THIS state with a short duration, not a second
    mechanism: `runButtonBusy(btn, 600)`. */
+/* ⚠️⚠️ THE SPINNER IS INSERTED HERE, and until 2026-09-28 it was not (by request:
+   "the refresh button should show a loading circle inside itself"). `button()` emits
+   `BTN_SPIN` when it is asked for a button that is ALREADY busy; a button that becomes
+   busy at runtime only ever got the class — which hides its label and its icon
+   (`.btn.is-busy .btn-txt,.btn-ic{visibility:hidden}`) and put nothing in their place.
+   So Refresh went blank for 600ms and read as "the press did nothing / something else
+   is doing it", which is exactly the report.
+   ⚠️ IT REMOVES ONLY WHAT IT ADDED. A statically built busy button already carries its
+   own spinner, and restoring it must not strip that; the marker attribute is what tells
+   the two apart. */
 function setButtonBusy(el, on){
   if(!el) return;
   el.classList.toggle('is-busy', on !== false);
-  if(on === false){ el.removeAttribute('aria-busy'); el.removeAttribute('aria-disabled'); }
-  else { el.setAttribute('aria-busy', 'true'); el.setAttribute('aria-disabled', 'true'); }
+  if(on === false){
+    el.removeAttribute('aria-busy'); el.removeAttribute('aria-disabled');
+    var own = el.querySelector('.btn-spin[data-runtime]');
+    if(own) own.remove();
+  } else {
+    el.setAttribute('aria-busy', 'true'); el.setAttribute('aria-disabled', 'true');
+    if(!el.querySelector('.btn-spin')){
+      var sp = document.createElement('span');
+      sp.className = 'btn-spin';
+      sp.setAttribute('aria-hidden', 'true');
+      sp.setAttribute('data-runtime', '');
+      el.appendChild(sp);
+    }
+  }
 }
 function runButtonBusy(el, ms){
   setButtonBusy(el, true);
@@ -1507,8 +1529,15 @@ function custVariant(){ return Store.get('custVariant') === 'a' ? 'a' : 'b'; }
 /* ⚠️ C IS THE DEFAULT NOW (2026-09-25, by request) — the purchase flow is a full
    screen, not a dialog over the page. A and B stay selectable: the three were built to
    be compared and the comparison is not over, only decided for now. */
-function wizardPresent(){ var v = Store.get('wizardPresent'); return (v === 'a' || v === 'b') ? v : 'c'; }
-var WIZARD_PRESENTS = [['a', 'A \u2014 Dialog'], ['b', 'B \u2014 Inset'], ['c', 'C \u2014 Full screen (default)']];
+/* ⚠️ TWO PRESENTATIONS, NOT THREE (2026-09-28, by request). `a` (centred dialog) and
+   `b` (inset frame) are gone from the panel and from the stylesheet: full screen is the
+   decision, and what is still being compared is narrower — whether the header and the
+   stepper sit on a white band or straight on the gradient. A stored `a` or `b` from an
+   earlier session falls through to `c`, so nobody opens the wizard into a variant the
+   panel can no longer show. */
+function wizardPresent(){ return Store.get('wizardPresent') === 'd' ? 'd' : 'c'; }
+var WIZARD_PRESENTS = [['c', 'C \u2014 White header band (default)'],
+                       ['d', 'D \u2014 Header on the gradient']];
 /* The wizard is the only surface carrying the attribute; it is set where the node is
    born (wizard.js, right after the markup is injected), on every open, and whenever
    the panel writes a new value. Pages that never load wizard.js have no node and this
@@ -2035,7 +2064,8 @@ var PAY_MODAL_HTML = ''
 + '      <div class="field2">'
 + '        <div class="field"><label for="payName">Cardholder name</label><input type="text" id="payName" autocomplete="cc-name" value="Mariia Panchuk">'
 + '          <div class="fielderr" data-payerr="name" hidden></div></div>'
-+ '        <div class="field"><label for="payCountry">Country</label><select id="payCountry"><option value="">Select a country</option><option>United States</option><option>Ukraine</option><option>Germany</option><option>United Kingdom</option></select>'
++ '        <div class="field"><label for="payCountry">Country</label><span class="selwrap"><select id="payCountry"><option value="">Select a country</option><option>United States</option><option>Ukraine</option><option>Germany</option><option>United Kingdom</option></select>'
++           '<svg class="ic selchev" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-down"></use></svg></span>'
 + '          <div class="fielderr" data-payerr="country" hidden></div></div>'
 + '      </div>'
 + '    </div>'
@@ -2210,7 +2240,13 @@ var USERS_MODAL_HTML = ''
    what the rows are, and it is the same word the duplicate check already uses when it
    refuses an address (`already has access`), so the surface names the fact once. */
 +         '<h3 class="users-th">Who has access</h3>'
-+         '<table>'
+/* ⚠️ `.gridtbl` (2026-09-28, by request) — the opt-in name for the framed table look:
+   filled head band, hairline, 10px corners. This table was the last list in the product
+   still drawn as bare rows on the sheet, which was defensible while the modal's ground
+   was grey and the table was the only thing on it; with the ground white the rows had
+   nothing to sit inside at all. Same class the licence panel's three tables carry, so
+   there is still one definition of the look. */
++         '<table class="gridtbl">'
 +           '<thead><tr>'
 +             '<th>Name</th><th>Email</th>'
 +             '<th class="sortable" aria-sort="descending" tabindex="0">Added <span class="arrow" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-down"></use></svg></span></th>'

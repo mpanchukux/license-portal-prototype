@@ -41,8 +41,25 @@ var DETAILS_HTML = ''
 + '        </div>'
 + '        <div class="canvas">'
 + ''
+/* ⚠️⚠️ A FLAT LAVENDER TINT, NOT THE MESH (2026-09-28, by request). The header carried
+   the identical `.meshbg` node Home and the wizard carry, for one pass. Two things were
+   wrong with it and only one was visible:
+     · the request was for a light tint here, with Plan and everything under it on white;
+     · ⚠️⚠️ AND THE LAYER OVERFLOWED ITS HEADER. `.meshbg` is `height:48vh` — it is sized
+       for a PAGE's header zone — and inside a 234px header that is ~200px of gradient
+       hanging below it. `.head` is `position:relative`, so its whole stacking context
+       paints above the in-flow sections beneath, and the spill drew a band of gradient
+       across the top of the scrolled content and stayed there. Measured: the layer's box
+       ran to y=244 with the header ending at y=45.
+       `overflow:hidden` on the header would have clipped it AND the info-icon tooltips
+       that live in the same block. Taking the node out removes both problems at once.
+   ⚠️ `.on-tint` IS THE SURFACE AXIS (renamed from `.on-mesh` in the same pass — the
+   ground is not a mesh any more and a class that says so would be a lie). The notes
+   asked three times for the button model to gain an axis for WHAT IT STANDS ON; this is
+   it. The class goes on the CONTAINER, not on each button — what a button stands on is a
+   property of the place. */
 + '          <!-- header: back button in its own gutter, everything else in the content column -->'
-+ '          <div class="head">'
++ '          <div class="head on-tint">'
 + '           <div class="headgrid">'
 + '            <button type="button" class="btn btn--secondary btn--md btn--icon back" id="backBtn" aria-label="Back to Licenses" title="Back to Licenses">&larr;</button>'
 + '            <div class="headcol">'
@@ -55,10 +72,13 @@ var DETAILS_HTML = ''
 + '                <div class="titleblock">'
 + '                  <div class="titlekicker" data-page="sub" id="kickerSub">ThingsBoard &middot; Subscription</div>'
 + '                  <div class="titlekicker" data-page="perp" id="kickerPerp">ThingsBoard &middot; Perpetual</div>'
+/* ⚠️ THE STATUS LEFT THIS ROW ON 2026-09-28 (by request) for the key/period grid
+   below — see `#statusCol`. It sat beside an h1, which made it a decoration ON the
+   title rather than a fact about the licence, and it was the one status in the product
+   still wearing a chip while every table had moved to `statmark`. */
 + '                  <div class="titlerow">'
 + '                    <h1 class="planname" data-page="sub" id="planName">Prototype</h1>'
 + '                    <h1 class="planname" data-page="perp" id="planNamePerp">Perpetual License</h1>'
-+ '                    <span id="statusSlot"><span class="chip status"><span class="sdot"></span>Active</span></span>'
 + '                  </div>'
 + '                </div>'
 + '              </div>'
@@ -72,7 +92,12 @@ var DETAILS_HTML = ''
 + '                     with no proration and no renewal. -->'
 + '                <button class="btn btn--primary btn--md" data-modal="add-ons" data-page="perp">Manage</button>'
 + '                <div class="menu" data-page="sub" id="headKebabMenu">'
-+ '                  <button class="btn btn--secondary btn--md kebab-btn" id="headKebabBtn" aria-haspopup="true" aria-expanded="false" aria-label="More actions"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-dots-vertical"></use></svg></button>'
+/* ⚠️ `menu`, NOT `secondary`, AND `btn--icon` (2026-09-28, by request). This was the
+   one kebab in the product outside the model: without `btn--icon` it took the LABEL
+   padding — 13px either side against the 10px a menu trigger asks for — so the header's
+   overflow button came out wider than every other kebab in the product. The variant
+   exists for this control; naming it is the whole fix. */
++ '                  <button class="btn btn--menu btn--md btn--icon kebab-btn" id="headKebabBtn" aria-haspopup="true" aria-expanded="false" aria-label="More actions"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-dots-vertical"></use></svg></button>'
 + '                  <div class="pop" id="headKebabPop" role="menu" hidden>'
 + '                    <!-- mobile only: on a phone the header keeps just the primary'
 + '                         action, and Apply coupon moves in here (see the ≤600px'
@@ -131,6 +156,14 @@ var DETAILS_HTML = ''
 + '                     panel). Under the key it was the second message a freshly'
 + '                     purchased licence could show at once, and it read as a property'
 + '                     of the key rather than of the licence. -->'
++ '              </div>'
+/* ⚠️ FIRST OF THE RIGHT-HAND COLUMNS, so the row reads key · status · when · which
+   version — what it is, whether it works, and the two dates that qualify that. It is a
+   `.keycol` like the others rather than something bolted to the key column: it is a
+   fact of the same kind and gets the same caps heading. */
++ '              <div class="keycol right" id="statusCol">'
++ '                <h3 class="periodhead">Status</h3>'
++ '                <div class="period" id="statusSlot"></div>'
 + '              </div>'
 + '              <div class="keycol right" data-page="sub">'
 + '                <h3 class="periodhead">Subscription period</h3>'
@@ -340,17 +373,13 @@ var DETAILS_HTML = ''
 + '                </thead>'
 + '                <tbody id="licInvBody"></tbody>'
 + '              </table>'
-+ '              <div class="pager">'
-+ '                <span class="spacer"></span>'
-+ '                <span>Items per page<select aria-label="Items per page"><option>10</option><option>20</option><option>50</option><option>100</option></select></span>'
-+ '                <span class="range" id="licInvRange">0 of 0</span>'
-+ '                <span class="pagebtns">'
-+ '                  <button type="button" class="btn btn--secondary btn--md btn--icon" disabled aria-disabled="true" aria-label="First page"><svg class="ic btn-ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevrons-left"></use></svg></button>'
-+ '                  <button type="button" class="btn btn--secondary btn--md btn--icon" disabled aria-disabled="true" aria-label="Previous page"><svg class="ic btn-ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-left"></use></svg></button>'
-+ '                  <button type="button" class="btn btn--secondary btn--md btn--icon" disabled aria-disabled="true" aria-label="Next page"><svg class="ic btn-ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-right"></use></svg></button>'
-+ '                  <button type="button" class="btn btn--secondary btn--md btn--icon" disabled aria-disabled="true" aria-label="Last page"><svg class="ic btn-ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevrons-right"></use></svg></button>'
-+ '                </span>'
-+ '              </div>'
+/* ⚠️ THROUGH THE SHARED BUILDER (2026-09-28). This was fifteen lines of hand-written
+   pager with its own `#licInvRange`, and it showed: on a licence with no charges it
+   printed `Items per page 10 · 0 of 0` with four arrows, directly under an empty state
+   saying there is nothing here — which is exactly what the 09-28 rule ("nothing to
+   count, nothing to show") was written to stop, on the one pager that was not going
+   through the function that enforces it. */
++ pagerHTML('licInvPager')
 + '              </div>'
 + ''
 + '              <!-- inferred: a grant is free, so it has no invoices at all -->'
@@ -414,8 +443,13 @@ function labelSlot(){ return $('#labelSlot'); }
 function renderLabelSlot(lic){
   var slot = labelSlot(); if(!slot) return;
   if(lic && lic.label){
+    /* ⚠️ `btn--sm`, AND NO LOCAL GEOMETRY (2026-09-28, by request). It was `btn--md`
+       with `width/height:24px` and a transparent border written on top — three
+       declarations that took a component apart and rebuilt it smaller, which is exactly
+       what the four axes exist to stop. The size axis already has a 26px step, and the
+       label line is a 14px row: `sm` is the answer the model gives. */
     slot.innerHTML = '<span class="labeltext">' + esc(lic.label) + '</span>'
-      + '<button class="btn btn--secondary btn--md btn--icon labeledit" data-editlabel aria-label="Edit label" title="Edit label">' + PENCIL + '</button>';
+      + '<button class="btn btn--secondary btn--sm btn--icon labeledit" data-editlabel aria-label="Edit label" title="Edit label">' + PENCIL + '</button>';
   } else {
     slot.innerHTML = '<button class="chip ghost" data-editlabel>+ Add label</button>';
   }
@@ -538,19 +572,23 @@ function renderPeriodRow(lic, pk){
   lab.textContent = word;
   val.innerHTML = ic + '<span class="rowtxt">' + word + ' ' + fmtDate(lic.event) + '</span>';
 }
-function statusChipHTML(lic){
-  if(lic.status === 'canceled')
-    return '<span class="chip status off">Canceled &middot; active until ' + fmtDate(lic.event) + '</span>';
-  /* ⚠️ BLOCKED IS A STATUS, and this is the one exception to "attention states live in
-     the banner, not the chip". The rule holds for payment failed, expiring updates and
-     awaiting check-in: the licence still works, and the banner says what to do before
-     it stops. Over the instance limit is different — the banner says the licence IS
-     blocked right now, and a chip reading `● Active` beside that sentence contradicts
-     it outright. The chip answers "is this licence alive"; here the answer is no. */
-  if(instOverLimit(lic))
-    return '<span class="chip status blocked">Blocked &middot; over instance limit</span>';
-  return '<span class="chip status"><span class="sdot"></span>Active</span>';
-}
+/* ⚠️⚠️ `statusMark`, THE TABLES' BUILDER (2026-09-28, by request). This surface kept
+   its own chip vocabulary — `.chip.status`, `.chip.status.off`, `.chip.status.blocked`
+   — while every list in the product moved to the glyph-and-word mark, so the row you
+   clicked and the panel that opened disagreed about what a status looks like. One
+   builder answers it now, and the Blocked tooltip comes along for free.
+   ⚠️ WHAT THE CHIP SAID AND THE MARK DOES NOT: a cancelled licence carried its end date
+   in the chip (`Canceled · active until Sep 05`). That fact is not lost — the period
+   column beside this one already prints `Active until Sep 05, 2026`, which is where a
+   date belongs. The chip was saying it twice, two columns apart. */
+/* ⚠️ BLOCKED IS A STATUS, and it is the one exception to "attention states live in the
+   banner, not the chip". The rule holds for payment failed, expiring updates and
+   awaiting check-in: the licence still works, and the banner says what to do before it
+   stops. Over the instance limit is different — the banner says the licence IS blocked
+   right now, and `Active` beside that sentence contradicts it outright. This cell
+   answers "is this licence alive"; there, the answer is no. `statusMark` makes exactly
+   that distinction, which is why it can be the one builder for both surfaces. */
+function statusChipHTML(lic){ return statusMark(lic); }
 function renderEntitlements(entList, extras){
   extras = extras || {};
   var pr = $('#planRows'); if(!pr) return;
@@ -582,8 +620,10 @@ function renderLicInvoices(lic){
   body.innerHTML = list.length
     ? list.map(function(v){ return invRow(v, opts); }).join('')
     : '<tr><td colspan="' + invCols(opts) + '" class="emptybox">' + msg + '</td></tr>';
-  var r = $('#licInvRange');
-  if(r) r.textContent = list.length ? ('1–' + list.length + ' of ' + list.length) : '0 of 0';
+  /* every row is rendered and nothing pages, so the footer states one page — which is
+     also what takes the four dead arrows and the per-page select off the screen, and
+     what removes the footer entirely when the list is empty */
+  syncPagerUnpaged('#licInvPager', list.length);
 }
 function renderLicenseFeatures(lic, spec){
   var wl = (lic.whitelabel != null ? lic.whitelabel : spec.wl);
@@ -976,10 +1016,18 @@ function renderLicenseKey(lic){
    The cadence is stated ONCE, above the table (`#instNote`), because a column that
    says "Stale" without saying what it is measured against asks the reader to guess
    the very thing they came to find out. */
+/* ⚠️ THE SAME MARK THE LICENCE AND INVOICE COLUMNS CARRY (2026-09-28, by request).
+   It was a pair of PILLS — `attn` and `soft` — which made this the only status column in
+   the product wearing a different shape: three surfaces answering "what state is this
+   row in" with two vocabularies. `statmark` is the one builder for that answer, so the
+   glyph, the colour and the weight come from the same place as `Active` and `Paid`.
+   ⚠️ The WORDS do not change. `Healthy` / `Stale` are what the filter chips count and
+   what `instMatchesStatus` compares against; the mark is a presentation, not a state. */
 function instStatusCell(i){
-  return instStale(i)
-    ? '<td><span class="pill attn">Stale</span></td>'
-    : '<td><span class="pill soft">Healthy</span></td>';
+  var stale = instStale(i), tone = stale ? 'alert' : 'ok';
+  return '<td><span class="statmark is-' + tone + '">'
+    + icon(STATUS_IC[tone], { cls:'statmark-ic' }) + (stale ? 'Stale' : 'Healthy')
+    + '</span></td>';
 }
 /* ⚠️ The full id is on the page, not truncated away from it. It used to render as
    `a1b2c3d4…e5f` with no way to see or copy the rest — an identifier you cannot read
@@ -1050,10 +1098,14 @@ function renderInstances(lic){
    writer shape, the same activity entry — because it is the same job on a smaller
    object. ⚠️ It writes onto the instance INSIDE the store\'s licence, so it survives a
    reload like every other mutation; `Store.save()` is what makes that true. */
+/* ⚠️ THE LICENCE COMES FROM THE INSTANCE (2026-09-28), not from `activeLicense`. While
+   it read the panel's open licence, this dialog was dead on the Instances page — the
+   menu item was there, it was correctly named, and clicking it opened nothing. One
+   instance belongs to exactly one licence, so `findInstance` is the whole fix and the
+   surface stops mattering. */
 function openInstanceLabelModal(instId){
-  var lic = activeLicense; if(!lic) return;
-  var i = instancesOf(lic).filter(function(x){ return x.id === instId; })[0];
-  if(!i) return;
+  var hit = findInstance(instId); if(!hit) return;
+  var lic = hit.lic, i = hit.inst;
   openModal('Edit instance label',
     '<div class="field"><label for="instLabelInput">Label</label>'
     + '<input id="instLabelInput" type="text" autocomplete="off" placeholder="e.g. HQ node 1" value="' + esc(i.label || '') + '">'
@@ -1074,7 +1126,8 @@ function openInstanceLabelModal(instId){
             f:{ entity:i.id, license:(lic.label || lic.name) },
             detail:[['Previous name', was]] });
     }
-    renderInstances(lic);
+    /* ⚠️ Both hosts, not this one — the same repaint the row's other actions use. */
+    afterInstanceChange();
     closeModal();
     Snack.show(i.label ? 'Instance label saved' : 'Instance label cleared');
   });
@@ -1352,16 +1405,12 @@ function wireDetailsOnce(){
        a control that responds and does nothing is the exact fault this pass is for.
        If a bulk action arrives, the column comes back with it.
 
-       ---------- rename an instance ----------
-       ⚠️ COPY MOVED OUT (2026-09-25) to the delegated block in components.js: it was
-       scoped here, so `Copy instance ID` in the INSTANCES PAGE's row menu did nothing at
-       all. Rename stays, because it only works here — `openInstanceLabelModal` reads
-       `activeLicense` and repaints through `renderInstances`, both of which are this
-       panel's. Reported as a finding rather than moved with the other one. */
-    instPanel.addEventListener('click', function(e){
-      var l = e.target.closest('[data-instlabel]');
-      if(l){ openInstanceLabelModal(l.getAttribute('data-instlabel')); return; }
-    });
+       ---------- the row menu is wired NOWHERE IN THIS FILE ----------
+       ⚠️ `Copy instance ID` moved out on 2026-09-25 and `Edit label` on 2026-09-28, both
+       to the delegated block in components.js, and for one reason: the menu is built by
+       `instRowMenu`, which two surfaces draw, so a listener scoped to `instPanel` gives
+       the Instances page items that exist and do nothing. Nothing scoped to this panel
+       may handle a row action — if the markup is shared, the wiring is shared. */
   }
 
   var STUB = 'Placeholder — not part of this wireframe spec yet.';
@@ -1418,10 +1467,12 @@ function wireDetailsOnce(){
        re-renders to everything while a query is present (see renderLicFeed) */
     box.addEventListener('input', function(){ if(activeLicense) renderLicFeed(activeLicense); });
     wireSearch('#panel-audit .searchbox input', {
-      items: function(){ return $$('#licFeed > *').filter(function(n){ return !n.classList.contains('noresults'); }); },
+      /* `.fitem` only — the date separators are siblings now; see the Activity page */
+      items: function(){ return $$('#licFeed > .fitem'); },
       /* the record, not the node — same reason as the Activity page */
       text:  function(n, idx){ var r = licRendered[idx]; return r ? activityHaystack(r, 'license') : ''; },
       host:  function(){ return $('#licFeed'); },
+      after: function(){ syncFeedChrome($('#licFeed')); },
       empty: function(q){ return noResultsHTML(q); }
     });
   })();

@@ -67,7 +67,11 @@ function renderProducts(){
      itself (every filter chip carries its own facet count). */
   var total = $('#licTotal');
   if(total) total.textContent = DATA().licenses.length;
-  $('#licRange').textContent = vis ? ('1–' + vis + ' of ' + vis) : '0 of 0';
+  /* ⚠️ THROUGH THE SHARED FOOTER (2026-09-28), not a hand-written count. This list
+     renders every row and pages nothing — see `syncPagerUnpaged` and the report — so it
+     reports one page, which is both true and what hides the four arrows and the
+     items-per-page select that nothing here has ever read. */
+  syncPagerUnpaged('#licensesView .pager', vis);
   syncLicChipCounts();
 }
 /* ---------- what each chip would show ------------------------------------------

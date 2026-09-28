@@ -34,8 +34,9 @@ function renderInvoicesPage(){
     });
   }
   syncListEmpty(!inv.length);
-  var r = $('#invoicesView .pager .range');
-  if(r) r.textContent = inv.length ? ('1–' + inv.length + ' of ' + inv.length) : '0 of 0';
+  /* same as Licenses: every row is rendered, nothing pages, so the footer says one page
+     and the controls that would imply otherwise stand down (see syncPagerUnpaged) */
+  syncPagerUnpaged('#invoicesView .pager', inv.length);
 }
 renderInvoicesPage();
 

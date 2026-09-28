@@ -214,13 +214,20 @@ function renderInstancesPage(){
     }).length;
   });
   if(!rows.length) instPage.total = 0;
-  var pg = $('#instancesView .pager');
-  if(pg) pg.hidden = !!instQuery() || instView() === 'grouped' || !rows.length;
-  syncPager('#instancesView .pager', instPage);
+  /* ⚠️ THE FOOTER NO LONGER DISAPPEARS (2026-09-28). It used to be hidden outright while
+     grouping or searching, on the correct observation that neither of those pages — and
+     the frame then ended in nothing, with the control that says how long the list is
+     gone exactly when the list is at its longest. The COUNT is true in all three modes;
+     what changes is whether there is more than one page, and in these two modes there
+     never is. `syncPagerUnpaged` states that, and the arrows and the per-page select
+     take themselves off.
+     ⚠️ An empty ACCOUNT still removes it, via `body.list-empty` — nothing to count. */
+  if(instQuery() || grouped) syncPagerUnpaged('#instancesView .pager', rows.length);
+  else syncPager('#instancesView .pager', instPage);
 }
 renderInstancesPage();
 
-/* ⚠️ The row actions (Deactivate, Delete, Rename, Copy ID, Open license) are wired by
+/* ⚠️ The row actions (Edit label, Copy ID, Open license, Deactivate, Delete) are wired by
    DELEGATED listeners in components.js, and their callback calls `renderInstancesView`
    — which only exists to repaint the old toggle. It is still defined and still finds
    `#instAllHead` / `#instAllBody` on this page, so the actions repaint correctly; this

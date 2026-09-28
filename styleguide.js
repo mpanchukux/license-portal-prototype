@@ -42,7 +42,11 @@ var COLORS_MEANING = [
   ['--status-off',   'switched off rather than wrong — cancelled, ended'],
   ['--accent',       'Popular card ring and tag — LITERAL, not through a primitive'],
   ['--tick',         'plan-card ticks — points at --accent'],
-  ['--page-bg',      'Home ground under the mesh — LITERAL, not through a primitive']
+  ['--page-bg',      'Home ground under the mesh — LITERAL, not through a primitive'],
+  /* ⚠️ Added 2026-09-28 with the licence header's flat tint. It is the mesh's own
+     lavender at ~12% on white — derived from the pool colour, not picked — so the two
+     surfaces read as one family without one being a copy of the other. */
+  ['--c-lav-50',     'licence header tint — the mesh lavender, flattened']
 ];
 function sgSwatches(list){
   return list.map(function(c){
@@ -265,7 +269,7 @@ $$('#sgWizStep').forEach(function(box){
       [['Server', 'Stops at its next check-in'], ['Record', 'Removed permanently']],
       'Delete, from the same menu.'],
     'instance.renamed':         [HUMAN, { entity:'HQ primary', license:'On-prem HQ' },
-      [['Previous name', '8e2a6c04']], 'Rename, from the same menu.'],
+      [['Previous name', '8e2a6c04']], 'Edit label, from the same menu.'],
     'instance.name_cleared':    [HUMAN, { entity:'8e2a6c04', license:'On-prem HQ' },
       [['Previous name', 'HQ primary']], 'The same dialog, emptied.'],
     'instance.check_ok':        [null, { entity:'HQ primary' }, null,

@@ -61,14 +61,19 @@
           <button class="link" id="emailCancel">Cancel</button>
         </div>
       </div>
-      <div class="field"><label for="prof-lang">Language</label><select id="prof-lang" data-field="lang"><option>English</option><option>Українська</option><option>Deutsch</option><option>Español</option></select></div>
+      <div class="field"><label for="prof-lang">Language</label><span class="selwrap"><select id="prof-lang" data-field="lang"><option>English</option><option>Українська</option><option>Deutsch</option><option>Español</option></select><svg class="ic selchev" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-down"></use></svg></span></div>
     </div>
 
     <!-- quiet, low-emphasis delete: a muted text link below a divider; the friction
          lives in the confirm dialog, not on the page -->
     <div class="setdiv"></div>
     <div class="setdelete">
-      <button class="btn btn--text btn--md" id="deleteAcctBtn">Delete account</button>
+      <!-- ⚠️ THE DESTRUCTIVE TONE, not a second variant (2026-09-28, by request). The
+           button model has an axis for exactly this: the VARIANT decides the shape and
+           the TONE decides which colour the surface is made of. `text` + `destructive`
+           is a red text button — the quietest shape the page can give the one action
+           that cannot be undone, in the colour that says so. -->
+      <button class="btn btn--text btn--md btn--destructive" id="deleteAcctBtn">Delete account</button>
       <div class="cardhelp" style="margin-top:4px">Removes your profile and access. Active licenses and billing history are not affected. You'll confirm on the next step.</div>
     </div>
   </div>
