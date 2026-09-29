@@ -266,6 +266,12 @@ var LIC_STATUS_OPTS = [
   { v:'canceled',  t:'Canceled' },
   { v:'attention', t:'Needs attention', sep:true }
 ];
+/* ⚠️ TOOLBAR C'S MENU IS THE SAME LIST WITH THE FOURTH ITEM TAKEN OUT (2026-09-29, by
+   request: "Needs attention as its own toggle"). It is derived rather than retyped, so
+   a state added to `LIC_STATUS_OPTS` appears in both menus and cannot be added to one.
+   ⚠️ And the rule goes with it: `sep` exists to say "the item below is the other axis",
+   and with that item gone there is nothing for a rule to separate. */
+var LIC_STATUS_OPTS_C = LIC_STATUS_OPTS.filter(function(o){ return o.v !== 'attention'; });
 /* Does a licence pass a Status choice? `null` is All and passes everything. */
 function licStatusMatch(l, v){
   if(!v) return true;
@@ -780,15 +786,82 @@ function rowHtmlB(p, opts){
     + licenseCellB(p) + statusCell(p) + versionCell(p) + actionsCell(p, opts) + '</tr>';
 }
 
+/* ============================================================================
+   VARIANT C — variant A's columns, with the licence folded into the name cell
+   ============================================================================
+   ⚠️ A'S TABLE, NOT B'S. B answered "what can this list lose" and dropped three
+   columns; C answers a different question — "what belongs together" — and moves one.
+   Status, Version and Updated all stay, so C is A with the License column folded into
+   the first cell as a third line.
+
+   THREE LINES, top to bottom, and the order is the order you narrow by:
+     1  product · type   what kind of thing this is        (A's line one, unchanged)
+     2  the plan         what A's License column held      (moved, not copied)
+     3  the label        what this one is called
+
+   ⚠️⚠️ THE LICENSE COLUMN IS GONE, because the brief says the plan MOVES here. Leaving
+   the column as well would print the plan twice on every row — the duplication variant
+   B exists to remove — and leaving it empty would be a column of blanks. So C is five
+   cells where A is six, and the head below says so.
+   ⚠️ LINE 3 COLLAPSES WHEN THERE IS NO LABEL, it does not become an empty line. Six of
+   the seeded licences have no label; a reserved blank row under each of them would make
+   every unlabelled licence look like it was missing something rather than simply not
+   named yet. The cell is shorter, and that is the honest shape.
+   ⚠️ THE LABEL IS CLAMPED TO ONE LINE, like B's head and unlike A's. A's labels wrap to
+   two rows and that is part of what A is; here the cell already owns three lines, and a
+   fourth would put the tallest row at double the shortest. Full text in `title`. */
+function productCellC(p){
+  var label = (p.label || '').trim();
+  return '<td class="lic-prodcell licc-cell">'
+    + '<div class="lp-cell">'
+    +   '<span class="lp-ic" aria-hidden="true">' + licenseMark(p) + '</span>'
+    +   '<div class="lp-txt">'
+    +     '<div class="lp-name">' + (p.product || '')
+    +       '<span class="lp-type"> &middot; ' + p.type + '</span></div>'
+    /* ⚠️ The same words the phone's two-line identity uses, emitted for the same reason
+       they are in `productCell`: CSS cannot repour one element's text into another's
+       flow, so both arrangements exist and the breakpoint hides one. */
+    +     '<div class="lp-eyebrow mob-only">' + p.type + '</div>'
+    +     '<div class="lp-head mob-only">' + (p.product || '') + ' &middot; ' + p.name + '</div>'
+    +     '<div class="licc-plan">' + esc(p.name || '') + '</div>'
+    +     (label ? '<div class="lic-prodlabel licc-label" title="' + esc(label) + '">'
+                 + esc(label) + '</div>' : '')
+    +   '</div>'
+    + '</div></td>';
+}
+function headHtmlC(){
+  /* no License column: its content is line two of the cell on the left.
+     ⚠️ AND NO `Updated` EITHER (2026-09-29, by request). Variant B dropped it with the
+     reasoning "one reader, nothing sorts or filters by it"; C now agrees. What is left
+     is the three questions a list of licences is read for: what is this, is it alright,
+     is it current. */
+  return '<tr><th class="lic-prodhead">License</th><th>Status</th>'
+    + '<th>Version</th><th aria-label="Actions"></th></tr>';
+}
+function rowHtmlC(p, opts){
+  return rowOpen(p).replace('class="lic-row', 'class="lic-row licc-row')
+    + productCellC(p) + statusCell(p) + versionCell(p)
+    + actionsCell(p, opts) + '</tr>';
+}
+
 /* ---------- which table, and the sort that comes with it -----------------------
    ⚠️ THE SORT BELONGS TO THE VARIANT, not to the page. B's first screen has to answer
    "is anything wrong" without reading every row, so it leads with the licences that
    need attention; A keeps newest-first, which is what it has always done and what it
    is being compared as. Changing A's order would make the two differ by two things at
    once and the comparison would prove nothing. */
-function licRowHTML(p, opts){ return licTable() === 'b' ? rowHtmlB(p, opts) : rowHtml(p, opts); }
-function licHeadHTML(){ return licTable() === 'b' ? headHtmlB() : headHtml(); }
-function licColSpan(){ return licTable() === 'b' ? 4 : 6; }
+function licRowHTML(p, opts){
+  var v = licTable();
+  return v === 'b' ? rowHtmlB(p, opts) : v === 'c' ? rowHtmlC(p, opts) : rowHtml(p, opts);
+}
+function licHeadHTML(){
+  var v = licTable();
+  return v === 'b' ? headHtmlB() : v === 'c' ? headHtmlC() : headHtml();
+}
+/* ⚠️ THE SPAN IS PER VARIANT AND IT IS READ BY THE EMPTY STATES. A wrong number here
+   does not throw — it draws an empty-state cell that stops short of the table's width,
+   which reads as a broken table rather than as a message. Four · five · six. */
+function licColSpan(){ var v = licTable(); return v === 'b' ? 4 : v === 'c' ? 4 : 6; }
 /* attention first · then the nearest dated event · then the label, A to Z.
    ⚠️ `dateKey('')` is NaN — a licence with no event (a grant, a free plan) must not
    land wherever an unstable comparison drops it, so it is pushed to the end explicitly. */
@@ -1013,10 +1086,23 @@ function activitySentence(rec, scope){
   /* ⚠️ `{by}` IS FILLED HERE, not in the copy, so the clause is worded once for all
      28 types — and so an event with no human actor drops it without the template
      needing a second version of itself. */
-  return activitySeg(spec.t, scope).replace(/\{(\w+)\}/g, function(_, k){
+  var out = activitySeg(spec.t, scope).replace(/\{(\w+)\}/g, function(_, k){
     if(k === 'by') return rec.actor ? (' by ' + rec.actor) : '';
     return f[k] == null ? '' : String(f[k]);
   }).replace(/\s+/g, ' ').trim();
+  /* ⚠️⚠️ THE FULL STOP IS DROPPED HERE, NOT IN THE 29 TEMPLATES (2026-09-29, by
+     request). A feed row does not end with the sentence — it ends with the time, and
+     the time brings its own middot, so the row read `…on On-prem HQ. · 12:24`: two
+     terminators back to back, one of them punctuating nothing.
+     ⚠️ SAME ARGUMENT AS THE MIDDOT, WHICH THIS FILE ALREADY SETTLED: "put it in the
+     copy and 29 templates have to remember it; put it here and the slot brings its own
+     punctuation wherever it is used". The templates keep their stops — they are
+     sentences, and a copy map that reads as fragments is harder to write and to
+     review — and the component, which knows what follows the sentence, takes the last
+     one off. Template 30 cannot get this wrong.
+     ⚠️ ONE stop, and only when it is not part of something else: `..` is left alone so
+     an ellipsis written as dots survives. `…`, `?` and `!` are not touched at all. */
+  return (out.slice(-1) === '.' && out.slice(-2) !== '..') ? out.slice(0, -1) : out;
 }
 /* The same sentence with the entity emphasised. Built by splitting the plain sentence on
    the entity's own value, so the markup can only ever land on that value — there is no
@@ -1039,8 +1125,44 @@ function activitySentenceHTML(rec, scope){
      to a slot of its own, because the wording depends on where it sits ("Payment failed
      on X", "Label set to Y on X") and a chip in a fixed position would have to invent a
      word for what it is. */
-  return esc(plain.slice(0, at)) + '<span class="fi-chip">' + esc(val) + '</span>'
-    + esc(plain.slice(at + val.length));
+  /* ⚠️⚠️ TWO MARKS NOW, NOT ONE (2026-09-29, by request: "link the licence right in the
+     text"). The entity keeps its chip; the licence named by `[ on {license}]` becomes a
+     real link to that licence. They are assembled in ONE pass over the plain sentence
+     rather than by two `replace` calls, because two passes can nest one mark inside the
+     other's markup — an instance called the same thing as its licence is enough to do
+     it, and the seed has labels that repeat.
+     ⚠️ LEFTMOST WINS ON OVERLAP. If the two values are the same string in the same
+     place, the first mark takes it and the second is dropped rather than drawn on top.
+     ⚠️ STILL NO HTML IN THE COPY. The templates gained a `{license}` slot, not a tag —
+     the component decides that the slot is a link, exactly as it decides the entity is
+     a chip. That is what keeps search matching the sentence. */
+  var marks = [{ at:at, len:val.length, kind:'chip', text:val }];
+  var licName = rec.licId && (rec.f || {}).license;
+  if(licName){
+    var lat = plain.indexOf(String(licName));
+    if(lat >= 0) marks.push({ at:lat, len:String(licName).length, kind:'lic', text:String(licName) });
+  }
+  marks.sort(function(a, b){ return a.at - b.at; });
+  var out = '', cur = 0;
+  marks.forEach(function(m){
+    if(m.at < cur) return;                       // overlaps a mark already placed
+    out += esc(plain.slice(cur, m.at));
+    out += m.kind === 'chip' ? '<span class="fi-chip">' + esc(m.text) + '</span>'
+                             : activityLicLink(rec.licId, m.text);
+    cur = m.at + m.len;
+  });
+  return out + esc(plain.slice(cur));
+}
+/* ⚠️ `data-invlic` IS THE CONTRACT, not the href. The delegated interceptor in this file
+   reads that attribute and opens the licence as a panel in whatever presentation is set;
+   the href is the fallback for a middle-click, a new tab, and for the case where
+   `license-details.js` is not loaded on this page. Same pair `instLicCell` and the
+   Instances group heading use — three call sites, one route. */
+function activityLicLink(licId, text){
+  var lic = licById(licId);
+  if(!lic) return esc(text);                     // a licence the datasets no longer have
+  return '<a class="fi-lic" href="' + licenseHref(lic, 'activity') + '"'
+    + ' data-invlic="' + esc(licId) + '">' + esc(text) + '</a>';
 }
 /* The detail block. ⚠️ IT IS NOT THE RAW RECORD (decided 2026-09-24) and it is NOT
    BEHIND A BUTTON (2026-09-24, second pass): once the payload became five words of
@@ -1151,10 +1273,16 @@ function activityEntry(rec, scope, i){
          hang off the group's mark, and a second column of identical glyphs would say
          the rail had twelve more events on it than it has. */
       + '<div class="fi-subs" id="' + key + '" hidden>'
+/* ⚠️⚠️ THE TIME GOES LAST, LIKE EVERY OTHER ROW IN THE FEED (2026-09-29, by request).
+   It used to lead the line in a fixed 52px column, which made a folded run read as a
+   little timetable — a different component from the feed it is inside — and put the
+   one number these rows share where the eye looks for the sentence. Same order and
+   the same `.fi-time` treatment as the row the fold hangs off: sentence, then middot,
+   then the time. */
       +   mem.map(function(m){
             var t = activitySentenceHTML(m, scope);
-            return t == null ? '' : '<div class="fi-sub"><span class="fi-subtime">'
-              + esc(activityTime(m.ts)) + '</span><span>' + t + '</span></div>';
+            return t == null ? '' : '<div class="fi-sub"><span>' + t + '</span>'
+              + '<span class="fi-time">' + esc(activityTime(m.ts)) + '</span></div>';
           }).join('')
       + '</div>';
   }
@@ -1353,7 +1481,12 @@ function foldChecks(checks){
       out.push(run.length === 1 ? run[0] : {
         type:'instance.checks_grouped',
         ts: run[0].ts, tsMin: run[0].tsMin,
-        f: { entity: run[0].f.entity, count: run.length,
+        /* ⚠️ `license` carried through from the run's members, or the folded row would
+           be the one entry in the feed that cannot name its licence — the members all
+           can (see instanceChecks). `from`/`to` are kept though the copy stopped
+           printing them: the fold still knows its span, and the note that removed the
+           clause says so. */
+        f: { entity: run[0].f.entity, count: run.length, license: run[0].f.license,
              from: fmtDateTime(run[run.length - 1].ts), to: fmtDateTime(run[0].ts) },
         members: run.slice(),
         instId: run[0].instId, licId: run[0].licId });
@@ -1427,8 +1560,12 @@ function pageSlice(list, st){
    is four controls teaching the reader that this footer does not respond.
    ⚠️ `hidden`, not removed: the nodes stay in the markup, so nothing has to be rebuilt
    when a filter takes the list across the boundary in either direction. */
-function syncPager(sel, st){
+/* ⚠️ `opts.unpaged` says the `st` handed in is SYNTHETIC — one page holding everything,
+   built by `syncPagerUnpaged` — so the parts of this function that write the reader's
+   own settings back to the controls must stand down. See the select below. */
+function syncPager(sel, st, opts){
   var el = $(sel); if(!el) return;
+  var unpaged = !!(opts && opts.unpaged);
   var last = Math.max(1, Math.ceil(st.total / st.size));
   var from = st.total ? (st.page - 1) * st.size + 1 : 0;
   var to = Math.min(st.total, st.page * st.size);
@@ -1457,7 +1594,23 @@ function syncPager(sel, st){
     }
   }
   var sz = el.querySelector('select');
-  if(sz && sz.value !== String(st.size)) sz.value = String(st.size);
+  /* ⚠️⚠️ THE SIZE CONTROL WENT BLANK WHENEVER A LIST RENDERED UNPAGED (found and fixed
+     2026-09-29, reviewing "does pagination work the same everywhere"). `syncPagerUnpaged`
+     calls this with `size: total`, and this line wrote that straight into the <select> —
+     so searching Licenses set it to `16`, which is not one of its options (10 / 20 / 50),
+     and `selectedIndex` went to -1: an empty control in the middle of the footer.
+     Measured: `value:""`, `selectedIndex:-1` on any query. Where the total HAPPENED to
+     match an option it was worse than blank — grouping Instances silently moved the
+     control from 10 to 20 and left it there, so the reader's own choice had changed
+     without them.
+     ⚠️ DISABLED, NOT HIDDEN, while unpaged. The list really is showing everything, so
+     the control genuinely does nothing — and a control that vanishes and comes back as
+     you type in a search box is a footer that changes shape under the hand. It keeps
+     the reader's number and stops being pressable. */
+  if(sz){
+    sz.disabled = unpaged;
+    if(!unpaged && sz.value !== String(st.size)) sz.value = String(st.size);
+  }
   /* ⚠️ NOTHING TO COUNT, NOTHING TO SHOW (2026-09-28, by request). An empty list —
      whether the account is empty or a filter matched nothing — had a footer reading
      `0 of 0` under its own empty state, which is a control describing the absence of
@@ -1481,7 +1634,7 @@ function syncPager(sel, st){
    takes the dead controls off the screen. Replace this call with `pageSlice` +
    `wirePager` the day those two lists really page. */
 function syncPagerUnpaged(sel, total){
-  syncPager(sel, { page:1, size:Math.max(1, total), total:total });
+  syncPager(sel, { page:1, size:Math.max(1, total), total:total }, { unpaged:true });
 }
 /* ⚠️ Bound ONCE per pager and guarded, because several of these live inside surfaces
    that are re-rendered (the licence panel remounts its whole markup). A second
@@ -2112,9 +2265,20 @@ function nlProductStatedHTML(sel){
   return '<div class="nl-prodcards" role="radiogroup" aria-label="Product">'
     + PRODUCT_CHOICES.map(function(o){
         var on = o.v === cur.v;
+/* ⚠️⚠️ THE MARK IS THE RADIO (2026-09-29, by request) — the drawn dot is gone.
+   `.nl-prodradio` sat in front of artwork that already says which product this is, so
+   the card carried TWO indicators of the same thing and the smaller, greyer one was
+   the one that actually reported the state.
+   ⚠️ WHAT REPLACES IT IS NOT NOTHING. A radio group has to say which member is chosen
+   without relying on one signal, so the mark now carries the selection three ways at
+   once: it is full-strength while the unchosen one is desaturated and dimmed, the card
+   keeps its ink border, and `aria-checked` is unchanged on the button itself. Take the
+   colour away and the border still answers; take the border away and the mark does.
+   ⚠️ `role="radio"` and `aria-checked` stay exactly as they were: what changed is the
+   drawing, not the contract, and a screen reader never read the dot in the first
+   place — it was `aria-hidden`. */
         return '<button type="button" class="dblock nl-prodcard' + (on ? ' on' : '') + '"'
           + ' role="radio" aria-checked="' + on + '" data-nl-product="' + o.v + '">'
-          + '<span class="nl-prodradio" aria-hidden="true"></span>'
           + '<span class="nl-prodic">' + (productMark(o.v) || icon(o.ic, { size:24 })) + '</span>'
           + '<span class="nl-prodtxt"><span class="nl-prodname">' + esc(o.t) + '</span>'
           +   '<span class="nl-proddesc">' + esc(o.d) + '</span></span>'
@@ -2610,7 +2774,21 @@ function bannerKey(c){
    bar lets you look at a real banner you would otherwise have to arrange the data to
    see, and it cannot show you one the account could not produce.
    ⚠️ Stored in the demo key, so `Reset demo data` clears them with everything else. */
-function bannerForce(){ var v = Store.get('bannerForce'); return v || null; }
+/* ⚠️⚠️ `'none'` IS A REAL ANSWER AND IT IS THE DEFAULT (2026-09-29, by request). The
+   key used to be null-or-a-condition, where null meant "auto — show the most urgent",
+   and there was no way to say "show nothing". Two things follow:
+     · the page-state bar can now offer the state every OTHER page in the portal is
+       already in, which is the state most of a review is spent looking at;
+     · a store that has never been touched starts with no banner. `Store.get` returning
+       undefined is read as `'none'`, so `auto` is now the explicit opt-IN.
+   ⚠️ THIS CHANGES WHAT A FRESH DEMO SHOWS ON HOME. The blocked banner no longer greets
+   a reviewer who has not asked for it; it is one click away in the bar, first tab,
+   second option. Named here rather than buried, because it is the one product-visible
+   consequence of what was framed as a settings tidy-up. */
+function bannerForce(){
+  var v = Store.get('bannerForce');
+  return (v === undefined || v === null) ? 'none' : v;
+}
 function bannerShape(){ var v = Store.get('bannerShape'); return v === 'one' || v === 'many' ? v : 'auto'; }
 function homeBannerVisible(){
   var all = attentionConditions();
@@ -2629,7 +2807,12 @@ function homeBannerVisible(){
      this account has. Narrowing to one would make the bar show a banner that lies about
      how much else is wrong. */
   var force = bannerForce();
-  if(force){
+  /* ⚠️ `none` EMPTIES THE LIST, it does not just hide the slot. Everything downstream —
+     the `and N more` count, the dismiss key, `bannerShape`'s own option counts — reads
+     the length of this array, so a banner suppressed anywhere else would leave those
+     three describing a banner that is not on screen. */
+  if(force === 'none') return [];
+  if(force && force !== 'auto'){
     var hit = out.filter(function(c){ return c.state === force; });
     if(hit.length) out = hit.concat(out.filter(function(c){ return c.state !== force; }));
   }

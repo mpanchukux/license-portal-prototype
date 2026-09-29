@@ -387,7 +387,10 @@ function instView(){ return Store.get('instView') === 'grouped' ? 'grouped' : 'f
    and a proposal that ships as the default has been decided rather than proposed.
    Stored, so it survives a reload; in the same key as everything else, so
    `Reset demo data` drops it with the rest. */
-function licTable(){ return Store.get('licTable') === 'b' ? 'b' : 'a'; }
+/* ⚠️ THREE VALUES SINCE 2026-09-29. Written as a membership test rather than a chain
+   of ternaries so a fourth costs one character — the two-value form was already
+   duplicated across three accessors and each one grew differently. */
+function licTable(){ var v = Store.get('licTable'); return (v === 'b' || v === 'c') ? v : 'a'; }
 /* ⚠️ A SECOND, INDEPENDENT VARIANT AXIS (2026-09-28, by request). `licTable` is about
    the ROWS (five columns or four); this is about the TOOLBAR above them (chips plus an
    `Active only` switch, or two dropdowns). They are deliberately not one setting: the
@@ -396,14 +399,36 @@ function licTable(){ return Store.get('licTable') === 'b' ? 'b' : 'a'; }
    ⚠️ 'a' IS THE DEFAULT for the same reason `licTable` is: a proposal that ships as the
    default has been decided rather than proposed. Same store key, so `Reset demo data`
    drops it with everything else. */
-function licBar(){ return Store.get('licBar') === 'b' ? 'b' : 'a'; }
+/* ⚠️ C IS B'S DROPDOWNS WITH TWO CHANGES (2026-09-29, by request): `Needs attention`
+   comes out of the Status menu and becomes a switch of its own, and the list opens
+   filtered to `Active` instead of to everything.
+   ⚠️⚠️ THAT SECOND CHANGE REVERSES WHAT B WAS FOR, and the reversal is the request, not
+   an oversight. B's whole proposal was "nothing is hidden until the reader narrows it"
+   — it dropped the `Active only` switch on purpose. C puts the narrowing back, but on a
+   CONTROL THAT STATES IT: the Status trigger reads `Active`, so the list is filtered and
+   says so, which is the part A's silent switch and B's absent one both got wrong in
+   different directions. */
+function licBar(){ var v = Store.get('licBar'); return (v === 'b' || v === 'c') ? v : 'a'; }
 /* ⚠️ A THIRD AXIS, and it is about the table's EDGES (2026-09-28, by request) — not its
    rows (`licTable`) and not the controls above them (`licBar`). B takes the frame off
    every table on the page: no outline, no rounded head, no side padding, so the table
    fills its block edge to edge. Written to <body> because "all tables" is a page-level
    statement; the CSS hangs off `body[data-tableframe]`.
    ⚠️ 'a' is the default, same as the other two: a proposal ships beside what exists. */
-function tableFrame(){ return Store.get('tableFrame') === 'b' ? 'b' : 'a'; }
+/* ⚠️ THREE VALUES SINCE 2026-09-29. C is B with one more thing removed — the column
+   head's grey fill — so it is a third point on one line rather than a second idea.
+   'a' is still the default and still the shape of the test. */
+function tableFrame(){ var v = Store.get('tableFrame'); return (v === 'b' || v === 'c') ? v : 'a'; }
+/* ⚠️ HOW MUCH OF A BLOCK HOME SHOWS (2026-09-29, by request). A is what exists: five
+   licence rows, three invoice rows, and a button in the heading carrying the count.
+   B shows THREE rows and a fourth fading out under a `See all N` button laid over it.
+   ⚠️ THE FOURTH ROW IS THE WHOLE IDEA and it is why this is not just "show 3". A block
+   that stops cleanly at three looks like a block with three things in it; one that
+   stops mid-row says "there is more of this" without a word. The button is the word.
+   ⚠️ The heading's button LOSES ITS COUNT in B and keeps only the arrow — the number
+   moved into `See all N`, and printing it twice in one block would make two controls
+   look like two different destinations. Named here because it is the same decision. */
+function homeBlocks(){ return Store.get('homeBlocks') === 'b' ? 'b' : 'a'; }
 /* ⚠️ THE LANDING'S BACKGROUND, AND ONLY THE LANDING'S (2026-09-28, by request). Same
    shape as the three axes above — a stored key, an explicit opt-out, 'current' as the
    default — because a proposal ships beside what exists rather than replacing it.
@@ -835,6 +860,17 @@ function bottomNavHTML(){
       }).join('')
     + '</nav>';
 }
+/* ⚠️ THE GLYPH FOR A DESTINATION, BY NAME. `NAV_ITEMS` is the one list that says which
+   symbol means Licenses, Instances, Invoices or Activity; anything else that wants to
+   label the same subject asks here instead of picking again (the licence panel's tabs
+   do — see license-details.js). Returns '' for a name that is not a destination, so a
+   caller cannot silently get the wrong picture. */
+function navIcon(key, opt){
+  var it = null;
+  NAV_ITEMS.forEach(function(n){ if(n.key === key) it = n; });
+  return it ? icon(it.ic, opt) : '';
+}
+
 /* The logo lockup, used by both headers. Its destination is the only thing that
    differs: signed in it leads Home, signed out it leads back to the landing page —
    which is the whole of requirement "the logo goes to Home instead". */
@@ -849,18 +885,25 @@ function brandHTML(){
      ground; this prototype's ground is light), so the ink comes from CSS.
      ⚠️ It is the ONE drawing that is not from the icon sprite, and it lives in its own
      file so that exception is a named file rather than a hole in the rule. */
-  /* ⚠️ The mark is the WHOLE lockup — it already sets "License Portal" under the
-     product name, so the separate caption that used to sit beside it is gone. Keeping
-     both printed the words twice and pushed the second copy under the nav strip. */
-  /* ⚠️ AN <img>, NOT THE SPRITE (2026-09-25): the supplied file is `logo_updated.png`.
-     What that costs is `currentColor` — a raster cannot be recoloured, so this wordmark
-     is black on transparent and only works on a light bar. Every bar it sits on today is
-     light (or glass over a light mesh), so nothing breaks; if the chrome ever goes dark,
-     this is the one thing that will not follow it.
-     ⚠️ `assets/logo.svg` and `tools/build-logo.py` are now unused. Left in place rather
-     than deleted — that is a separate decision, and the SVG is the only recolourable
-     copy of the mark if the above ever matters. */
-    + '<img class="tblogo" src="assets/logo_updated.png" alt="ThingsBoard License Portal">'
+  /* ⚠️⚠️ THE CAPTION IS TEXT AGAIN (2026-09-29, by request): the brand mark, and
+     "License Portal" set beside it in the product's own type rather than baked into a
+     drawing. Two things follow from that, and both are the point.
+     ⚠️ A DIFFERENT SYMBOL, not a crop. `tb-logo` carries the caption inside the artwork;
+     printing it AND the span would say "License Portal" twice, at two sizes, one of them
+     unselectable. `tools/build-logo.py` now emits `tb-wordmark` — the same lockup with
+     the caption group dropped, identified by the `aria-label="License Portal"` the brand
+     file puts on it, not by slicing coordinates.
+     ⚠️ AND IT IS THE SPRITE AGAIN, so `currentColor` comes back. This reverses the
+     2026-09-25 move to `logo_updated.png`, whose cost was written down at the time: a
+     raster cannot be recoloured, so the wordmark was black-on-transparent and "the one
+     thing that will not follow" a dark chrome. With the caption out of the artwork there
+     is nothing the raster was carrying that the symbol does not, so the cost is simply
+     not worth paying. ⚠️ `logo_updated.png` is now the unused one — left in place, like
+     the SVG was, rather than deleted in the same pass.
+     ⚠️ The <svg> is aria-hidden and the caption is not read either: the <a> above carries
+     `aria-label="ThingsBoard License Portal"`, which already says both halves once. */
+    + '<svg class="tblogo" aria-hidden="true"><use href="assets/logo.svg#tb-wordmark"></use></svg>'
+    + '<span class="bportal" aria-hidden="true">License Portal</span>'
     + '</a>';
 }
 
@@ -937,7 +980,7 @@ function chromeHTML(){
   /* Who else can get in is an account fact, so it sits with Account and Billing.
      ⚠️ A button, not a link: there is no Users page any longer — it opens the modal
      that replaced it. */
-  +       '<button role="menuitem" id="usersMenuBtn">Users</button>'
+  +       '<button role="menuitem" id="usersMenuBtn">Manage users</button>'
   /* Support, in the one menu that is on every page. ⚠️ Above the separator, with the
      other account-level things: it is not a destructive action and not a way out. */
   +       '<a role="menuitem" href="' + EXT.support + '" target="_blank" rel="noopener">Help &amp; support' + EXTSVG + '</a>'
@@ -1056,7 +1099,8 @@ function settingsBodyHTML(){
     out += group('Licenses toolbar',
       '<label class="sp-opt"><input type="radio" name="licBar" value="a"' + (licBar() === 'a' ? ' checked' : '') + '><span>A \u2014 current (chips + Active only)</span></label>'
       + '<label class="sp-opt"><input type="radio" name="licBar" value="b"' + (licBar() === 'b' ? ' checked' : '') + '><span>B \u2014 proposal (two dropdowns)</span></label>'
-      + '<div class="sp-hint">B replaces the type chips and the Active only switch with a Type and a Status dropdown, both starting at All \u2014 so nothing is hidden until you narrow it.</div>');
+      + '<label class="sp-opt"><input type="radio" name="licBar" value="c"' + (licBar() === 'c' ? ' checked' : '') + '><span>C \u2014 dropdowns + attention switch</span></label>'
+      + '<div class="sp-hint">B replaces the type chips and the Active only switch with a Type and a Status dropdown, both starting at All \u2014 so nothing is hidden until you narrow it. C keeps those dropdowns, lifts Needs attention out of the Status menu into its own switch, and opens on Active.</div>');
   }
 
   /* ---- the table's EDGES, on every page that has a table ----
@@ -1072,16 +1116,28 @@ function settingsBodyHTML(){
       + '<div class="sp-hint">Variant 2 follows the product picked on the page \u2014 it is not a setting.</div>');
   }
 
+  /* ---- how much of a Home block is shown. Scoped to Home: the control describes
+     the preview blocks, and on any other page it would be a setting for something not
+     on screen — the same rule the Licenses toolbar group follows. */
+  if(c.home){
+    out += group('Home blocks',
+      '<label class="sp-opt"><input type="radio" name="homeBlocks" value="a"' + (homeBlocks() === 'a' ? ' checked' : '') + '><span>A \u2014 current (5 rows, count in heading)</span></label>'
+      + '<label class="sp-opt"><input type="radio" name="homeBlocks" value="b"' + (homeBlocks() === 'b' ? ' checked' : '') + '><span>B \u2014 3 rows, 4th fading under See all</span></label>'
+      + '<div class="sp-hint">B shows three rows and lets a fourth fade out under a centred <b>See all N</b>; the heading keeps its arrow and gives up the number.</div>');
+  }
+
   out += group('Table frame',
     '<label class="sp-opt"><input type="radio" name="tableFrame" value="a"' + (tableFrame() === 'a' ? ' checked' : '') + '><span>A \u2014 current (framed)</span></label>'
     + '<label class="sp-opt"><input type="radio" name="tableFrame" value="b"' + (tableFrame() === 'b' ? ' checked' : '') + '><span>B \u2014 proposal (no frame)</span></label>'
-    + '<div class="sp-hint">Every table on the page at once \u2014 outline, rounded head and side padding all go.</div>');
+    + '<label class="sp-opt"><input type="radio" name="tableFrame" value="c"' + (tableFrame() === 'c' ? ' checked' : '') + '><span>C \u2014 no frame, no head fill</span></label>'
+    + '<div class="sp-hint">Every table on the page at once. B drops the outline and the rounded head and fills the block edge to edge. C is B with the column row\u2019s grey taken off as well, so the head sits on the card\u2019s white with only its hairline under it.</div>');
 
   if(c.licenses || c.home){
     out += group('Licenses table',
       '<label class="sp-opt"><input type="radio" name="licTable" value="a"' + (licTable() === 'a' ? ' checked' : '') + '><span>A — current (5 columns)</span></label>'
       + '<label class="sp-opt"><input type="radio" name="licTable" value="b"' + (licTable() === 'b' ? ' checked' : '') + '><span>B — proposal (4 columns)</span></label>'
-      + '<div class="sp-hint">B folds product, type and plan into one column and sorts attention first. Home\u2019s block follows the same setting.</div>');
+      + '<label class="sp-opt"><input type="radio" name="licTable" value="c"' + (licTable() === 'c' ? ' checked' : '') + '><span>C — three-line name (4 columns + actions)</span></label>'
+      + '<div class="sp-hint">B folds product, type and plan into one column and sorts attention first. C keeps A\u2019s Status, Version and Updated and folds only the License column in, as line two of a three-line name cell. Home\u2019s block follows the same setting.</div>');
   }
 
   /* ---- which product the session behaves as having arrived for. Scoped to the three
@@ -1204,11 +1260,25 @@ function settingsHTML(){
        id:    'home',                       // one spec per surface, re-defining replaces
        label: 'Home',                       // what the bar calls the surface
        when:  function(){ return true; },   // is this surface on screen right now?
-       tabs:  [{ id, label, get(), set(v), options:[{ v, t, note, disabled }] }]
+       tabs:  [{ id, label, get(), set(v), options:[{ v, t, note, disabled }],
+                 sub:{ label, get(), set(v), options } }]
      });
 
    `options` may be a function, so a tab that counts live conditions recomputes on every
-   render rather than freezing whatever was true at boot. */
+   render rather than freezing whatever was true at boot.
+
+   ⚠️⚠️ `sub` IS A SECOND ROW UNDER THE TAB'S OWN, NOT A SECOND TAB (2026-09-29, by
+   request). Some of these settings are not siblings — `Shape` only says how the banner
+   chosen above it looks, and `Tier` only picks among the licences of the `Type` above
+   it. As sibling tabs they read as four independent questions, and picking one hides
+   the answer the other depends on: you set a Shape, moved to Banner to change the
+   condition, and could no longer see what the Shape was.
+   ⚠️ A DEPENDENT ROW IS NOT A SMALLER ROW. It takes the same radios and the same
+   counts; what marks it as dependent is its own label at the head of the row and the
+   rule above it, not a quieter treatment. It is a real setting, just a narrower one.
+   ⚠️ ONE LEVEL ONLY, deliberately. A `sub` of a `sub` is a tree, and a tree in a 3-row
+   bar at the foot of the window is a second navigation problem. If something needs
+   that depth, it needs its own tab. */
 var PageStates = (function(){
   var specs = [];        // every surface that has declared states, in declaration order
   var bar = null, activeTab = {};
@@ -1264,23 +1334,39 @@ var PageStates = (function(){
     /* ⚠️ RADIOS IN LABELS, exactly like `.sp-opt` in the ⚙ panel. They are one control
        with one answer, the browser gives the grouping and the arrow keys for free, and
        it keeps the two settings surfaces reading as one idea at two scales. */
-    var cur = null;
-    try { cur = tab.get ? tab.get() : null; } catch(e){ cur = null; }
-    var rows = opts(tab).map(function(o, i){
-      var on = String(o.v) === String(cur);
-      return '<label class="sb-opt' + (o.disabled ? ' is-off' : '') + (on ? ' is-on' : '') + '">'
-        + '<input type="radio" name="sbopt" value="' + esc(o.v) + '" data-sbopt="' + i + '"'
-        + (on ? ' checked' : '') + (o.disabled ? ' disabled' : '') + '>'
-        + '<span class="sb-opt-t">' + esc(o.t) + '</span>'
-        + (o.note ? '<span class="sb-opt-n">' + esc(o.note) + '</span>' : '')
-        + '</label>';
-    }).join('');
+    /* one builder for the tab's own row and for its dependent one — they are the same
+       control at two levels, and writing them twice is how the two drift apart */
+    function rowFor(src, group){
+      var cur = null;
+      try { cur = src.get ? src.get() : null; } catch(e){ cur = null; }
+      return opts(src).map(function(o, i){
+        var on = String(o.v) === String(cur);
+        return '<label class="sb-opt' + (o.disabled ? ' is-off' : '') + (on ? ' is-on' : '') + '">'
+          + '<input type="radio" name="' + group + '" value="' + esc(o.v) + '" data-' + group + '="' + i + '"'
+          + (on ? ' checked' : '') + (o.disabled ? ' disabled' : '') + '>'
+          + '<span class="sb-opt-t">' + esc(o.t) + '</span>'
+          + (o.note ? '<span class="sb-opt-n">' + esc(o.note) + '</span>' : '')
+          + '</label>';
+      }).join('');
+    }
+    var rows = rowFor(tab, 'sbopt');
+    /* ⚠️ The dependent row is labelled, because without a name it reads as a second
+       page of the row above it rather than as a different question about the same
+       subject. */
+    var subRow = tab.sub
+      ? '<div class="sb-sub">'
+        + '<span class="sb-sublabel">' + esc(tab.sub.label) + '</span>'
+        + '<div class="sb-opts sb-subopts">' + rowFor(tab.sub, 'sbsub') + '</div>'
+        + '</div>'
+      : '';
 
     bar.innerHTML = head
       + '<div class="sb-body" id="sbBody"' + (open() ? '' : ' hidden') + '>'
       +   tablist
       +   '<div class="sb-opts">' + rows + '</div>'
+      +   subRow
       +   (tab.hint ? '<p class="sb-hint">' + tab.hint + '</p>' : '')
+      +   (tab.sub && tab.sub.hint ? '<p class="sb-hint sb-subhint">' + tab.sub.hint + '</p>' : '')
       + '</div>';
     /* the bar overlays the page, so the page is told how much of itself is covered */
     document.body.style.setProperty('--sbH', Math.round(bar.getBoundingClientRect().height) + 'px');
@@ -1295,12 +1381,17 @@ var PageStates = (function(){
       if(e.target.closest('#sbToggle')){ Store.set('stateBarOpen', !open()); render(); }
     });
     bar.addEventListener('change', function(e){
-      var r = e.target.closest('[data-sbopt]'); if(!r) return;
+      var r = e.target.closest('[data-sbopt],[data-sbsub]'); if(!r) return;
       var sp = current(); if(!sp) return;
       var tab = sp.tabs.filter(function(t){ return t.id === activeTab[sp.id]; })[0];
       if(!tab) return;
-      var o = opts(tab)[+r.getAttribute('data-sbopt')];
+      /* which of the two rows fired — the tab's own, or its dependent one */
+      var isSub = r.hasAttribute('data-sbsub');
+      var src = isSub ? tab.sub : tab;
+      if(!src) return;
+      var o = opts(src)[+r.getAttribute(isSub ? 'data-sbsub' : 'data-sbopt')];
       if(!o || o.disabled) return;
+      tab = src;
       /* ⚠️ The setter may navigate or reload — so nothing is done after it that assumes
          this document is still here. A setter that stays puts the page back in step by
          calling `PageStates.sync()` itself. */
@@ -1764,7 +1855,18 @@ function arrivedProduct(){ return Store.get('arrived') === 'tbmq' ? 'tbmq' : 'th
 // page you were on (B). Read by the row wiring in components.js.
 /* The modal is the default presentation; the page variant stays in the settings
    panel for comparison. Only an explicit 'page' choice opts out. */
-function licDetailsMode(){ return Store.get('licDetails') === 'page' ? 'page' : 'modal'; }
+/* ⚠️ THREE MODES SINCE 2026-09-29 (by request). `shared` is the page WITHOUT a back
+   control: the panel standing on its own as a destination under the Licenses tab,
+   which is what a licence URL pasted to a colleague actually opens into. `page` keeps
+   its Back because it is the presentation you reach FROM a list you were reading;
+   `shared` is the presentation you ARRIVE at, and a Back that returns to a list the
+   reader has never seen is an invitation to somewhere they did not come from.
+   ⚠️ Modal is still the default and still the shape of the test: anything that is not
+   one of the two explicit opt-outs reads as `modal`. */
+function licDetailsMode(){
+  var v = Store.get('licDetails');
+  return (v === 'page' || v === 'shared') ? v : 'modal';
+}
 // Whether the account already has billing data. With it the wizard commits on
 // Review & pay (3 steps); without it a Payment & Billing step is appended and the
 // commit moves there (4 steps). Nothing hardcodes the count — see totalSteps().
@@ -1996,6 +2098,10 @@ function wireSettingsPanel(){
         Store.set('tableFrame', r.value);
         applyTableFrame();
         return;
+      case 'homeBlocks':
+        Store.set('homeBlocks', r.value);
+        if(window.renderHome) renderHome();
+        break;
       case 'licTable':
         Store.set('licTable', r.value);
         if(typeof renderProducts === 'function') renderProducts();
@@ -2417,7 +2523,12 @@ var USERS_MODAL_HTML = ''
    one control with two buttons. One copy-link now serves both states, which is also
    why the invite row below could stop being mounted twice. */
 +     '<div class="fs-header usershead">'
-+       '<h2 class="fs-maintitle" id="usersModalTitle">Users</h2>'
+/* ⚠️ "Manage users", not "Users" (2026-09-29, by request), and the account-menu item
+   says the same. The surface is not a list you look at — every control on it writes:
+   invite, copy a link, log in as, delete. A noun named the page this used to be; the
+   verb names what the modal is for, and the two labels have to match or the menu item
+   and the sheet it opens read as two different places. */
++       '<h2 class="fs-maintitle" id="usersModalTitle">Manage users</h2>'
 +       '<span class="spacer"></span>'
 +       '<button class="link invite-link" data-invitelink>'
 +         '<svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-link"></use></svg>'
@@ -2440,9 +2551,32 @@ var USERS_MODAL_HTML = ''
    any more: the invite row is ALWAYS here and only the table comes and goes, so the
    duplicate is gone and with it the pair of ids the controller had to keep in step. */
 +       '<p class="solo-line" id="usersSoloLine" hidden>You’re the only person with access. Invite users by sending link to the e-mail or copy invite link and send directly.</p>'
+/* ⚠️⚠️ A TOKEN FIELD, NOT A TEXT FIELD (2026-09-29, by request): an address that
+   parses becomes a chip and stops being editable text. What that buys is the answer to
+   "did it take my address?" BEFORE anything is sent — the old field accepted a comma
+   list and only told you what it made of it after you pressed Invite.
+   ⚠️ The BORDER MOVES to the wrapper. The input keeps the caret and nothing else; if it
+   kept the border the chips would either sit outside the box they belong to or need a
+   second box drawn around both. One box, chips and caret inside it.
+   ⚠️ The chips host is `display:contents` — the chips have to be flex items of the
+   field itself so they wrap into the same rows as the caret. A real box around them
+   would put every chip on one line and the caret under it. */
 +       '<div class="inviterow" id="usersInvite">'
-+         '<input type="email" class="invite-in" id="usersEmail" autocomplete="off"'
-+           ' placeholder="Add comma separated emails to invite" aria-label="Emails to invite">'
++         '<div class="invite-field" id="usersField">'
++           '<span class="invite-chips" id="usersChips"></span>'
+/* ⚠️⚠️ `type="text"`, NOT `type="email"` — and this is a correctness fix, not a
+   preference. The email input state runs a value sanitisation algorithm that strips
+   leading and trailing whitespace, so `value` never holds the SPACE the reader just
+   typed: the separator was deleted by the platform before any handler could see it,
+   and space simply did not commit a chip. Comma worked, space silently did not.
+   ⚠️ Two other reasons it was already the wrong type: the field holds a LIST, which
+   `type="email"` cannot represent without `multiple`, and its native bubble would
+   contradict the message line this surface writes itself.
+   `inputmode="email"` keeps the phone keyboard; `parse` was always the real validator. */
++           '<input type="text" inputmode="email" class="invite-in" id="usersEmail"'
++             ' autocomplete="off" autocapitalize="off" spellcheck="false"'
++             ' placeholder="Add comma separated emails to invite" aria-label="Emails to invite">'
++         '</div>'
 +         '<button class="btn btn--primary btn--md invite-go" data-invite>Invite</button>'
 +       '</div>'
 /* ⚠️ The message slot is ALWAYS in the layout, empty or not: toggled with visibility,
@@ -2888,6 +3022,48 @@ var UsersModal = (function(){
   function hasAccess(email){
     return (DATA().users || []).some(function(u){ return u.email.toLowerCase() === email.toLowerCase(); });
   }
+  /* ---------- the accepted addresses ----------
+     ⚠️⚠️ THE CHIP LIST IS THE FIELD'S REAL VALUE (2026-09-29). Everything that used to
+     be decided at Invite time — is this an address, have I already got it — is decided
+     the moment a token is committed, and what is left in the <input> afterwards is by
+     definition the text that did NOT parse. That is the whole state model: chips are
+     accepted, input text is unresolved, and no third place holds an address.
+     ⚠️ `hasAccess` is deliberately NOT checked here. A chip means "this parses as an
+     address", not "this person can be invited" — the account check belongs at Invite,
+     where it already has copy to explain itself, and refusing a chip silently would
+     make a colleague's address look malformed. */
+  var chips = [];
+  function known(e){
+    return chips.some(function(c){ return c.toLowerCase() === e.toLowerCase(); });
+  }
+  function chipHTML(e){
+    return '<span class="chip label invite-chip">'
+      + '<span class="invite-chip-t">' + esc(e) + '</span>'
+      + '<button class="chip-x" type="button" data-chipx="' + esc(e) + '"'
+      +   ' aria-label="Remove ' + esc(e) + '">' + icon('x') + '</button>'
+      + '</span>';
+  }
+  function renderChips(){
+    var host = $('#usersChips'), fld = $('#usersField'), input = $('#usersEmail');
+    if(!host) return;
+    host.innerHTML = chips.map(chipHTML).join('');
+    if(fld) fld.classList.toggle('has-chips', chips.length > 0);
+    /* ⚠️ The placeholder goes once there is a chip. "Add comma separated emails to
+       invite" is an instruction for an empty field; printed after the caret, beside
+       two chips, it reads as a third chip that will not delete. */
+    if(input) input.placeholder = chips.length ? '' : 'Add comma separated emails to invite';
+  }
+  /* Commit what is typed: every address that parses becomes a chip, and whatever does
+     not parse stays in the field as text — so the field always holds exactly the part
+     still needing the reader's attention. Returns how many chips were added. */
+  function commit(){
+    var input = $('#usersEmail'), p = parse(input.value), added = 0;
+    p.ok.forEach(function(e){ if(!known(e)){ chips.push(e); added++; } });
+    input.value = p.bad.join(' ');
+    if(added || p.ok.length) renderChips();
+    return added;
+  }
+
   /* ⚠️ The slot never leaves the layout — `visibility`, not `hidden` — so showing or
      clearing a message cannot change the block's height. PROBLEMS only; confirmations
      go to the snackbar, which is outside the layout entirely. */
@@ -2910,8 +3086,16 @@ var UsersModal = (function(){
   }
 
   function invite(){
-    var input = $('#usersEmail'), p = parse(input.value);
+    /* ⚠️ COMMIT FIRST. Whatever is still being typed when Invite is pressed is an
+       address the reader meant to send — they simply did not press comma. Without this
+       the button would silently ignore the one address in a field with no chips yet,
+       which is the single most likely way this surface gets used. */
+    var input = $('#usersEmail');
+    commit();
+    var bad = parse(input.value).bad;
+    var p = { ok: chips.slice(), bad: bad };
     if(!p.ok.length && !p.bad.length){ say(null); return; }
+    if(!p.ok.length){ say(badText(p.bad)); return; }
 
     var dupes = p.ok.filter(hasAccess), fresh = p.ok.filter(function(e){ return !hasAccess(e); });
     if(!fresh.length){ say(dupesText(dupes)); return; }
@@ -2925,7 +3109,10 @@ var UsersModal = (function(){
     });
     refreshUsersSurfaces();
 
+    /* the chips have become rows in the table below — the field starts empty again */
+    chips = [];
     input.value = '';
+    renderChips();
     /* ⚠️ The confirmation is a SNACKBAR, not a line under the field: it reports a
        finished event whose result is already on screen — the new rows — so it has no
        reason to stay, and no reason to occupy the block's height. */
@@ -2934,7 +3121,7 @@ var UsersModal = (function(){
       : 'Invitations sent to ' + fresh.length + ' people';
     Snack.show(sent + (dupes.length ? ' · ' + dupesPhrase(dupes) + ' already had access' : ''));
     /* whatever was not an address stays in the field, and the reason stays with it */
-    if(p.bad.length){ input.value = p.bad.join(' '); say(badText(p.bad)); }
+    if(p.bad.length){ input.value = p.bad.join(' '); renderChips(); say(badText(p.bad)); }
     else say(null);
   }
 
@@ -2980,21 +3167,78 @@ var UsersModal = (function(){
   /* one listener on the whole sheet: the copy-link is in the header, the Invite button
      in the body, and the table is re-rendered under both */
   scr.addEventListener('click', function(e){
+    var x = e.target.closest('[data-chipx]');
+    if(x){
+      var gone = x.getAttribute('data-chipx').toLowerCase();
+      chips = chips.filter(function(c){ return c.toLowerCase() !== gone; });
+      renderChips(); say(null); $('#usersEmail').focus();
+      return;
+    }
     if(e.target.closest('[data-invite]')){ invite(); return; }
     var cl = e.target.closest('[data-invitelink]');
     if(cl){ copyLink(cl); return; }
   });
   var inp = $('#usersEmail');
-  inp.addEventListener('keydown', function(e){
-    if(e.key === 'Enter'){ e.preventDefault(); invite(); }
+  /* ⚠️ THE WHOLE BOX IS THE FIELD. The input is a narrow strip inside a box that is
+     mostly chips and padding, so a click anywhere in the box has to land on the caret —
+     otherwise the visible target and the real target are different shapes.
+     ⚠️ Guarded on the chip's own ✕: that click has already been handled above, and
+     re-focusing would be harmless but the `closest` test keeps the two intents apart. */
+  var fld = $('#usersField');
+  if(fld) fld.addEventListener('mousedown', function(e){
+    if(e.target === fld || e.target.id === 'usersChips'){ e.preventDefault(); inp.focus(); }
   });
-  // typing again clears the previous answer: a stale "already has access" beside a
-  // field you are editing is answering a question you stopped asking
-  inp.addEventListener('input', function(){ say(null); });
+  inp.addEventListener('keydown', function(e){
+    /* ⚠️ ENTER COMMITS, IT DOES NOT SEND — unless there is nothing left to commit.
+       This reverses the old behaviour (Enter = Invite) deliberately: in a token field
+       Enter is how a token is closed, and every field of this shape behaves that way.
+       With an empty caret there is no token to close, so Enter falls through to the
+       action — which is also what makes "type one address, Enter, Enter" work. */
+    if(e.key === 'Enter'){
+      e.preventDefault();
+      if(inp.value.trim() && commit()) return;
+      invite();
+      return;
+    }
+    /* ⚠️ Backspace on an empty caret edits the chip before it rather than deleting it
+       outright: the address goes back into the field as text, which is what someone
+       fixing a typo wants. Deleting it would make a one-character mistake cost the
+       whole address. The ✕ on the chip is the delete. */
+    if(e.key === 'Backspace' && !inp.value && chips.length){
+      e.preventDefault();
+      inp.value = chips.pop();
+      renderChips(); say(null);
+    }
+  });
+  /* ⚠️ COMMIT ON THE SEPARATOR, AND ONLY UP TO IT. Splitting the whole value would
+     eat the space the reader just typed in the middle of an address they are still
+     writing; this takes the text BEFORE the last separator and leaves the tail alone.
+     Nothing happens unless something in that head actually parses, so typing a comma
+     into a half-written address does not rearrange the field under the caret. */
+  inp.addEventListener('input', function(){
+    say(null);
+    var m = inp.value.match(/^(.*[,;\s])([^,;\s]*)$/);
+    if(!m) return;
+    var p = parse(m[1]), added = 0;
+    if(!p.ok.length) return;
+    p.ok.forEach(function(e){ if(!known(e)){ chips.push(e); added++; } });
+    inp.value = p.bad.concat(m[2] ? [m[2]] : []).join(' ');
+    renderChips();
+  });
+  /* ⚠️ Leaving the field commits too, so clicking Invite with an address still typed
+     sends it: mousedown fires blur before click, so the chip exists by the time the
+     button's handler runs. Without this the most ordinary use of the surface — type
+     one address, click Invite — would depend on having pressed comma first. */
+  inp.addEventListener('blur', function(){ if(inp.value.trim()) commit(); });
 
   /* ---------- open / close ---------- */
   function open(){
     lastFocus = document.activeElement;
+    /* ⚠️ The field starts empty every time. A chip left over from a sheet that was
+       closed without sending is an address the reader walked away from; carrying it
+       into the next session would invite someone they had decided not to. */
+    chips = []; renderChips(); say(null);
+    var em = $('#usersEmail'); if(em) em.value = '';
     render();                              // the list may have changed since last time
     scr.hidden = false;
     $('#usersModalClose').focus();

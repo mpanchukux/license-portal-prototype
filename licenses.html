@@ -135,6 +135,38 @@
     <button class="btn btn--primary btn--md" id="licNewBtnB"><svg class="ic lnb-ic" aria-hidden="true"><use href="assets/icons.svg#ti-plus"></use></svg><span class="lnb-txt">Buy a license</span></button>
   </div>
 
+  <!-- ==========================================================================
+       TOOLBAR C — B's dropdowns, attention on its own switch (2026-09-29, by request)
+       ==========================================================================
+       ⚠️ A THIRD TOOLBAR IN THE MARKUP, hidden like B, for the reasons stated above B:
+       swapping is an attribute and a repaint, the filters already set survive it, and
+       all three can be read against each other in one file.
+       ⚠️ WHAT MAKES IT NOT-B, in two places only:
+         · `Needs attention` is a SWITCH here, not the fourth item in the Status menu.
+           It is the other axis — a licence can be Blocked AND need attention — and in
+           the menu it could only ever be chosen INSTEAD of a state. As a switch it
+           combines: `Active` + attention is a question B cannot ask.
+         · the Status dropdown opens on `Active` rather than on `All statuses`.
+       ⚠️ THE SWITCH IS THE SAME COMPONENT `Active only` USES in toolbar A — `.lic-toggle`
+       wrapping `.switch` — and not a `.filterchip`. A chip row is the vocabulary of
+       toolbar A; this bar speaks in dropdowns and a switch, and mixing in one chip would
+       make it read as a fourth control style rather than as B plus one. -->
+  <div class="lic-controls lic-barb lic-barc stickybar" id="licBarC" hidden>
+    <div class="searchbox"><svg class="ic searchglyph" aria-hidden="true"><use href="assets/icons.svg#ti-search"></use></svg><input type="text" placeholder="Search licenses" aria-label="Search licenses"></div>
+    <div class="dropwrap perctl" id="licTypeCtlC">
+      <button class="btn btn--secondary btn--md perbtn" aria-haspopup="true" aria-expanded="false" aria-label="License type"><b id="licTypeLabelC">All types</b> <svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-down"></use></svg></button>
+      <div class="dropmenu licfiltermenu" id="licTypeMenuC" role="menu" hidden></div>
+    </div>
+    <div class="dropwrap perctl" id="licStatusCtlC">
+      <button class="btn btn--secondary btn--md perbtn" aria-haspopup="true" aria-expanded="false" aria-label="License status"><b id="licStatusLabelC">Active</b> <svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-down"></use></svg></button>
+      <div class="dropmenu licfiltermenu" id="licStatusMenuC" role="menu" hidden></div>
+    </div>
+    <label class="lic-toggle"><span class="switch"><input type="checkbox" id="licAttnSwitch"><span class="track"></span></span> Needs attention</label>
+    <span class="spacer"></span>
+    <button class="btn btn--secondary btn--md btn--icon" data-refresh aria-label="Refresh" title="Refresh"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-refresh"></use></svg></button>
+    <button class="btn btn--primary btn--md" id="licNewBtnC"><svg class="ic lnb-ic" aria-hidden="true"><use href="assets/icons.svg#ti-plus"></use></svg><span class="lnb-txt">Buy a license</span></button>
+  </div>
+
   <div id="licensesList">
   <div class="tablescroll">
     <table id="prodTable">

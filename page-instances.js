@@ -22,8 +22,10 @@
    practically does not. */
 var instParams = new URLSearchParams(location.search);
 var instLicId = instParams.get('lic') || null;
-/* null = no chip pressed = every status shown, the same reading the Licenses type
-   filter uses for its own null. */
+/* ⚠️ `null` = the switch is off = every status shown. It held `'Healthy'` or
+   `'Stale'` while this was a chip pair (2026-09-29 replaced them with one switch); the
+   variable keeps its shape because `instMatchesStatus` and the blocked-banner route
+   both read it, and only `'Stale'` can now be written to it. */
 var instStatus = null;
 /* the same pairing the Activity feed uses: a query renders everything and the pager
    stands down, because `wireSearch` can only filter rows that are in the DOM */
@@ -85,18 +87,53 @@ function instGroupIsOpen(licId, index){
 function instGroupHeadRow(lic, n, open, idx){
   var id = esc(lic.id);
   return '<tr class="instgroup' + (open ? ' is-open' : '') + (idx % 2 ? ' is-alt' : '')
-    + '" data-instgroupid="' + id + '"><td colspan="5">'
+    + '" data-instgroupid="' + id + '"><td colspan="5"><div class="ig-row">'
     + '<button type="button" class="ig-btn" data-instgroup="' + id + '"'
     +   ' aria-expanded="' + (open ? 'true' : 'false') + '">'
     +   '<span class="ig-chev" aria-hidden="true">'
     +     '<svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-down"></use></svg></span>'
     +   '<span class="ig-mark" aria-hidden="true">' + licenseMark(lic) + '</span>'
-    +   '<span class="ig-name">' + esc(lic.label || lic.name) + '</span>'
-    +   '<span class="ig-sub">' + esc(lic.product || '') + ' · ' + esc(lic.type || '') + '</span>'
+    /* ⚠️⚠️ THE HEADING NAMES THE PRODUCT FIRST (2026-09-29, by request): bold
+       `ThingsBoard`, then `· Subscription`, then the label as a description. It used to
+       lead with `label || name` and put `product · type` beside it in grey — so the
+       same list of groups opened with `Factory A`, `On-prem HQ`, `Demo`, and you had to
+       read the grey to learn what kind of thing each one was.
+       ⚠️ THE FALLBACK MOVED WITH IT. `label || name` meant an unlabelled licence was
+       headed by its plan; now the product line is always there and the label line is
+       simply absent, so nothing has to stand in for it. */
+    +   '<span class="ig-name"><b>' + esc(lic.product || '') + '</b>'
+    +     '<span class="ig-kind"> · ' + esc(lic.type || '') + '</span></span>'
+    +   (lic.label ? '<span class="ig-desc">' + esc(lic.label) + '</span>' : '')
     /* ⚠️ The count is the GROUP's size, not the number of rows currently shown: it is a
-       fact about the licence, and it has to stay true while a status chip is filtering. */
+       fact about the licence, and it has to stay true while the Stale switch filters. */
     +   '<span class="ig-count">' + n + ' instance' + (n === 1 ? '' : 's') + '</span>'
-    + '</button></td></tr>';
+    + '</button>'
+    /* ⚠️⚠️ THE WAY TO THE LICENCE (2026-09-29, by request). In the flat list every row
+       carries a License cell with a link in it (`instLicCell`); the grouped view drops
+       that column BECAUSE the group heading is the licence — and until now the heading
+       was a toggle and nothing else, so grouping the list removed the only route from
+       an instance to the licence that owns it.
+       ⚠️ A SIBLING OF THE BUTTON, NOT A CHILD OF IT. An <a> inside a <button> is
+       invalid and the browser's fix-up is to break one of them; they share a flex row
+       instead. `data-invlic` is what the delegated interceptor in components.js reads
+       to open the licence as a panel rather than following the href — the same contract
+       `instLicCell` uses, so both routes land on the same surface. */
+/* ⚠️ AN ICON BUTTON, NOT A TEXT LINK (2026-09-29, by request). Fourteen group heads
+   each ended in the same two words, so the column read as a list of `View license`
+   with the licences as captions — the repeated label carried no information after the
+   first row. The glyph does the same job once.
+   ⚠️ `arrow-right`, and the set already fixes that meaning: the note on
+   `corner-down-right` says `arrow-right` means "goes to", which is exactly this.
+   ⚠️ It keeps `.btn--secondary.btn--icon` — the same control the row kebab and the
+   copy button wear — so it takes the 20px glyph and the grey-to-ink hover from the
+   component rather than declaring anything of its own.
+   ⚠️ THE NAME SURVIVES IN `aria-label` and in the tooltip: dropping the words from the
+   screen must not drop them from the accessibility tree, and `data-tip` is what the
+   pointer gets instead. */
+    + '<a class="btn btn--secondary btn--md btn--icon tip ig-open" href="' + licenseHref(lic, 'instances') + '"'
+    +   ' data-invlic="' + id + '" aria-label="View license" data-tip="View license">'
+    +   icon('arrow-right') + '</a>'
+    + '</div></td></tr>';
 }
 /* ⚠️ THE GROUP IS ONE OUTLINE AROUND SEVERAL `<tr>`s, and that is the whole of the
    layout problem. A table cannot be given a border per group, so the outline is drawn
@@ -157,10 +194,12 @@ function renderInstancesPage(){
      always had. */
   var tbl = $('#instTable');
   if(tbl) tbl.classList.toggle('is-grouped', grouped);
-  /* the view switcher is the page's own control now; keep it showing the stored answer
-     after any repaint, including the first */
-  var seg = $('#instancesView .viewseg input[value="' + (grouped ? 'grouped' : 'flat') + '"]');
-  if(seg) seg.checked = true;
+  /* the grouping switch is the page's own control now; keep it showing the stored
+     answer after any repaint, including the first */
+  var gsw = $('#instGroupSwitch');
+  if(gsw) gsw.checked = grouped;
+  var ssw = $('#instStaleSwitch');
+  if(ssw) ssw.checked = instStatus === 'Stale';
   var all = allInstances(instLicId);
   var rows = all.filter(instMatchesStatus);
 
@@ -205,14 +244,17 @@ function renderInstancesPage(){
      toolbar and the pager, and doing that because a chip matched nothing would take
      away the control the reader needs to undo it. */
   syncListEmpty(!all.length);
-  /* the same facet reading the Licenses chips use: each chip counts what it would show,
-     and the status group is excluded from its own count because the chips are exclusive */
-  $$('#instancesView .chipcount').forEach(function(el){
-    var k = el.getAttribute('data-count');
-    el.textContent = all.filter(function(r){
-      return (instStale(r.inst) ? 'Stale' : 'Healthy') === k;
-    }).length;
-  });
+  /* ⚠️ THE ACCOUNT'S TOTAL, NOT THE FILTERED COUNT — the same reading the Licenses chip
+     takes. It sits with the TITLE, and the title names the page rather than the current
+     filter; a number beside it that fell to 2 when `Stale` was switched on would be
+     describing the toolbar. `allInstances(null)` rather than `all`, because `all` is
+     already narrowed by the licence the blocked banner may have routed in with. */
+  var instTotal = $('#instTotal');
+  if(instTotal) instTotal.textContent = allInstances(null).length;
+  /* ⚠️ THE FACET COUNTS WENT WITH THE CHIPS (2026-09-29). Each chip carried "how many
+     rows would I leave", which is a reading a two-way partition needs and a single
+     switch does not: `Stale` either narrows the list or it does not, and the pager
+     below already states what is left. Nothing writes `.chipcount` on this page now. */
   if(!rows.length) instPage.total = 0;
   /* ⚠️ THE FOOTER NO LONGER DISAPPEARS (2026-09-28). It used to be hidden outright while
      grouping or searching, on the correct observation that neither of those pages — and
@@ -234,36 +276,31 @@ renderInstancesPage();
    hook is what keeps THIS page's filters applied when they do. */
 var renderInstancesView = renderInstancesPage;   // one repaint entry point per surface
 
-$$('#instancesView .inst-statusseg .typechip').forEach(function(chip){
-  chip.addEventListener('click', function(){
-    var v = chip.getAttribute('data-status');
-    instStatus = instStatus === v ? null : v;    // pressing the pressed one clears it
-    $$('#instancesView .inst-statusseg .typechip').forEach(function(c){
-      var on = c.getAttribute('data-status') === instStatus;
-      /* ⚠️ `is-on`, not `on`. `.typechip` is styled by `.typechip.is-on` — the class
-         this page set was never in the stylesheet, so Healthy and Stale filtered the
-         rows correctly and never LOOKED pressed. The same control on the Licenses page
-         has always written `is-on`; this was one filter group disagreeing with the
-         other about its own class name. */
-      c.classList.toggle('is-on', on);
-      c.setAttribute('aria-pressed', on ? 'true' : 'false');
-    });
-    renderInstancesPage();
-  });
+/* ---------- the two switches ------------------------------------------------------
+   ⚠️ Both are plain checkboxes with a `change` listener, and the DOM holds their state:
+   nothing here has to keep a class in step with a variable, which is what the chip pair
+   this replaces got wrong for three days (it wrote `on` where the stylesheet said
+   `is-on`, so the filter worked and never looked pressed). */
+var instStaleSwitch = $('#instStaleSwitch');
+if(instStaleSwitch) instStaleSwitch.addEventListener('change', function(){
+  instStatus = instStaleSwitch.checked ? 'Stale' : null;
+  instPage.page = 1;
+  renderInstancesPage();
 });
 
 /* ⚠️ The view is still a STORED setting (`instView`), so it survives a reload and resets
-   with the demo — only the control moved out of the settings panel. */
-$$('#instancesView .viewseg input').forEach(function(r){
-  r.addEventListener('change', function(){
-    if(!r.checked) return;
-    Store.set('instView', r.value);
+   with the demo — only the control changed shape. */
+var instGroupSwitch = $('#instGroupSwitch');
+if(instGroupSwitch){
+  instGroupSwitch.checked = instView() === 'grouped';
+  instGroupSwitch.addEventListener('change', function(){
+    Store.set('instView', instGroupSwitch.checked ? 'grouped' : 'flat');
     /* ⚠️ Paging and grouping cannot both be on, so a switch back to the flat list must
        not land on page 4 of a list it never paged. */
     instPage.page = 1;
     renderInstancesPage();
   });
-});
+}
 
 wirePager('#instancesView .pager', instPage, renderInstancesPage);
 (function(){   // before wireSearch, so the rows exist by the time it filters them

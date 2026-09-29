@@ -63,6 +63,22 @@ ICONS = [
     # styleguide's placement example names it, and an example pointing at a symbol that
     # does not exist is the one broken icon on the page that documents icons.
     'device-desktop',
+    # ⚠️ ADDED 2026-09-29 for the purchase modal's block titles (Capacity and Add-ons).
+    # Each one names a block that until now was a bare heading, and each is the literal
+    # Tabler icon for the thing rather than a near miss:
+    #   devices     the Devices row. NOT `topology-star`, which is already spoken for —
+    #               it is the ThingsBoard PRODUCT mark in the picker, and one glyph
+    #               meaning both "this product" and "devices" is two vocabularies.
+    #   sparkles    AI credits. The set had nothing for AI at all.
+    #   affiliate   Edge Computing — nodes away from the centre, which is what an edge
+    #               deployment is. `topology-star` again would have been the near miss.
+    #   chart-line  Trendz Analytics.
+    #   cloud-off   Offline Mode. The one add-on defined by an absence, and the only
+    #               icon here whose meaning is the negation.
+    #   palette     White labeling — your own logo and colours.
+    # `server-2` already covers the merged Instances block; it is the nav's Instances
+    # glyph and means the same thing here.
+    'devices', 'sparkles', 'affiliate', 'chart-line', 'cloud-off', 'palette',
     # products and brands
     'topology-star', 'rss', 'credit-card',
     'brand-google', 'brand-github', 'brand-mastercard',

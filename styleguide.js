@@ -88,9 +88,14 @@ var TIERS = [
 ];
 /* the key is monospace and hand-sized; no token owns these, so they are listed
    as measured rather than read from a variable */
+/* ⚠️ `key` WAS 28px UNTIL 2026-09-29, when the licence key was put back on one line
+   with Status, the period and the version and had to stop being the largest type on
+   the panel. Desktop and phone are now the same 16, so this table has two rows where
+   it had three — `key-sm` is gone rather than left stating a size nothing renders.
+   The rule of this page still holds: if the table and the product disagree, the table
+   is the one that is lying. */
 var MONOROWS = [
-  ['key',        '.keyline .mono',    '28px / 1.15 / -0.01em / 400', 'TB-8F2A-…-4C71', 'font-size:28px;line-height:1.15;letter-spacing:-0.01em'],
-  ['key-sm',     '.keyline .mono',    '16px / 1.15 / -0.01em / 400', 'TB-8F2A-…-4C71', 'font-size:16px;letter-spacing:-0.01em'],
+  ['key',        '.keyline .mono',    '16px / 1.35 / 0 / 400', 'TB-8F2A-…-4C71', 'font-size:16px;line-height:1.35'],
   ['key-inline', '.nl-keybox code',   '15px / inherit / 0.02em / 400', 'TB-8F2A-…-4C71', 'font-size:15px;letter-spacing:.02em']
 ];
 

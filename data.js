@@ -174,7 +174,14 @@ function instanceChecks(lic, inst){
        facts only — `type` and `f` — and the wording lives in ACTIVITY_TEXT. */
     out.push({ type: why ? 'instance.check_failed' : 'instance.check_ok',
       ts: agoStamp(minsAgo), tsMin: minsAgo,
-      f: { entity: inst.label || inst.id, reason: why ? CHECK_FAIL[why] : null },
+/* ⚠️ `license` IS FILLED HERE SO THE SENTENCE CAN NAME IT (2026-09-29, by request:
+   "say which licence the note belongs to, and link it in the text"). The record already
+   carried `licId` — what it did not carry was the label the copy needs, so the
+   `[ on {license}]` clause the three check templates now have had nothing to print.
+   ⚠️ `label || name`, the same fallback every other event uses: an unnamed licence is
+   identified by its plan, which is what the row in the list shows too. */
+      f: { entity: inst.label || inst.id, reason: why ? CHECK_FAIL[why] : null,
+           license: lic.label || lic.name },
       instId: inst.id, licId: lic.id });
   }
   return out;
@@ -873,9 +880,21 @@ var ACTIVITY_TEXT = {
      before any call site was moved. */
   'instance.renamed':         { t:'Instance renamed to {entity}[ on {license}]{by}.', entity:'entity' },
   'instance.name_cleared':    { t:'Instance {entity} name cleared[ on {license}]{by}.', entity:'entity' },
-  'instance.check_ok':        { t:'Instance {entity} checked in.', entity:'entity' },
-  'instance.check_failed':    { t:'Check failed for instance {entity} — {reason}.', entity:'entity' },
-  'instance.checks_grouped':  { t:'{count} successful checks for instance {entity}, {from} to {to}.', entity:'entity' },
+/* ⚠️ THE LICENCE CLAUSE (2026-09-29, by request). A check entry named the instance and
+   nothing else, so the global feed — which is mostly check entries — never said which
+   licence any of it belonged to. Bracketed like every other instance event, so the
+   licence's own Activity tab still drops it as redundant. */
+  'instance.check_ok':        { t:'Instance {entity} checked in[ on {license}].', entity:'entity' },
+  'instance.check_failed':    { t:'Check failed for instance {entity}[ on {license}] — {reason}.', entity:'entity' },
+/* ⚠️⚠️ `, {from} to {to}` IS GONE (2026-09-29, by request), and this closes the open
+   note "три речення згорнутої групи кажуть дату тричі". The row read
+   `4 successful checks for instance X, Sep 28, 2026, 08:08 to Sep 28, 2026, 11:08. · 11:08`
+   — the day is already the divider the row sits under, the time is already at the end
+   of the row, and every member inside the fold carries its own. Three statements of
+   one fact, two of them spelled out in full.
+   ⚠️ The span is NOT lost: the group's own time is its last check, and unfolding it
+   shows the first. What goes is the prose restating both. */
+  'instance.checks_grouped':  { t:'{count} successful checks for instance {entity}[ on {license}].', entity:'entity' },
 
   /* ---- users and the account --------------------------------------------- */
   'user.invited':             { t:'Invitation sent to {entity}{by}.', entity:'entity' },

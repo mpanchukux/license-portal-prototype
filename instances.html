@@ -39,40 +39,46 @@
        title it is what it always was — the page's one piece of standing advice — and it
        costs the table nothing. Baselines are aligned, so the sentence reads as a
        subtitle of the heading rather than as a line that happens to be near it. -->
+  <!-- ⚠️ THE COUNT CHIP, the same one Licenses carries (2026-09-29, by request). Same
+       class, same place, same reading: it states how many the ACCOUNT has, and the
+       controls below narrow what is shown without changing it. A chip rather than
+       Home's button, for the same reason Licenses uses one — there is nowhere further
+       to go from here. Filled by renderInstancesPage.
+       ⚠️ It sits BETWEEN the title and the hint. `.lic-titlerow:has(> .titlecount)`
+       turns the row into a flex line, so the hint joins that line as a third item and
+       keeps the baseline it already had beside the heading. -->
   <div class="lic-titlerow">
     <h1 class="lic-h1">Instances</h1>
+    <span class="titlecount" id="instTotal"></span>
     <p class="inst-hint">Moved a deployment to a new server? Deactivate the old instance and
       activate the new one with the same key.</p>
   </div>
   <div class="insttoolbar stickybar">
     <div class="searchbox"><svg class="ic searchglyph" aria-hidden="true"><use href="assets/icons.svg#ti-search"></use></svg><input type="text" placeholder="Search instances" aria-label="Search instances"></div>
-    <!-- ⚠️ STATUS IS THE ONE HONEST PARTITION HERE. The Licenses toolbar filters by
-         product type and by cancellation, and an instance has neither — which is why
-         both stood down when this was a view on that page. What an instance does have
-         is the thing its own column already states: is it reporting. Same
-         mutually-exclusive `.typechip` group as the Licenses type filter, so "a chip
-         group narrows the list" means the same thing on both pages.
-         ⚠️ Version is NOT a filter, though the column is here: "behind latest" is a
-         fact about a release, not a state of the deployment, and a reader after it is
-         after one licence's instances rather than every old one in the account. -->
-    <div class="inst-statusseg" role="group" aria-label="Filter by status">
-      <button class="typechip" data-status="Healthy" aria-pressed="false">Healthy<span class="chipcount" data-count="Healthy"></span></button>
-      <button class="typechip" data-status="Stale" aria-pressed="false">Stale<span class="chipcount" data-count="Stale"></span></button>
-    </div>
+    <!-- ⚠️⚠️ ONE SWITCH, NOT A CHIP PAIR (2026-09-29, by request), and this REVERSES
+         "STATUS IS THE ONE HONEST PARTITION HERE" — the argument that put a
+         mutually-exclusive `Healthy`/`Stale` group here in the first place. That
+         argument is not wrong, it is answering a question nobody asks: `Healthy` is
+         the state of seventeen of nineteen rows, so pressing it hides two and leaves
+         the list looking unchanged. The one thing a reader comes here to do is find
+         what has STOPPED reporting, and that is an on/off, not a partition.
+         ⚠️ What goes with the chips: their facet counts. A switch has one state to
+         count and the column already says which rows it would leave.
+         ⚠️ Version is still NOT a filter: "behind latest" is a fact about a release,
+         not a state of the deployment. -->
+    <label class="lic-toggle"><span class="switch"><input type="checkbox" id="instStaleSwitch"><span class="track"></span></span> Stale</label>
     <span class="spacer"></span>
-    <!-- ⚠️ A VIEW SWITCHER, AND IT SITS AFTER THE SPACER ON PURPOSE (2026-09-25). The
-         controls on the left NARROW the list; this one does not — both views show every
-         instance and neither hides anything. Filters left, presentation right, beside
-         Refresh, so the toolbar reads as two groups rather than four controls.
-         ⚠️ NOT a `.typechip` pair, though one is right beside it: a chip group means
-         "this is filtering" on both pages that carry one, and reusing the same control
-         for a choice that filters nothing would teach the chips to mean two things.
-         ⚠️ Real radios (the `.seg` mechanic), so the arrow keys, the grouping and the
-         checked state come from the elements rather than from script. -->
-    <div class="seg viewseg" role="radiogroup" aria-label="Instance list view">
-      <label><input type="radio" name="instViewSeg" value="flat" checked><span>All instances</span></label>
-      <label><input type="radio" name="instViewSeg" value="grouped"><span>By license</span></label>
-    </div>
+    <!-- ⚠️⚠️ A SWITCH, NOT A SEGMENTED PAIR (2026-09-29, by request). The `.seg` radios
+         said "All instances / By license" — two names for two views, which reads as two
+         destinations. Grouping is not a second list, it is one list with the rows
+         gathered, so the control is the thing it does and has an off state.
+         ⚠️ OFF BY DEFAULT, and the default is the plain list. The radios defaulted to
+         flat too, so nothing about what opens has changed — but a switch makes the
+         default legible: you can see that grouping is something you turn ON.
+         ⚠️ It sits AFTER the spacer for the reason the radios did: the control on the
+         left NARROWS the list, this one only rearranges it. Filters left, presentation
+         right, beside Refresh. -->
+    <label class="lic-toggle"><span class="switch"><input type="checkbox" id="instGroupSwitch"><span class="track"></span></span> Group by license</label>
     <button class="btn btn--secondary btn--md btn--icon" data-refresh aria-label="Refresh" title="Refresh"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-refresh"></use></svg></button>
   </div>
 

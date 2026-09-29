@@ -57,13 +57,21 @@ function dashLicList(){
   ls.sort(function(a,b){ return dateKey(b.created)-dateKey(a.created); });
   return ls;
 }
+/* ⚠️ VARIANT B TAKES FOUR ROWS, NOT THREE, and the fourth is the whole point: it is
+   rendered in full and then faded out, so the block stops mid-row and says "there is
+   more of this" by its shape. Three rows and a hard edge would read as a block that
+   contains three things. */
+var DASH_FADE_ROWS = 4;
 function renderDashLicenses(){
   var head=$('#dashLicHead'), body=$('#dashLicBody'); if(!head||!body) return;
   head.innerHTML = licHeadHTML();
+  var list = dashLicList();
+  if(homeBlocks() === 'b') list = list.slice(0, DASH_FADE_ROWS);
   // no Edit label in the row menu here: this block is a summary, and renaming a
   // licence belongs on the Licenses page and its details, where it is the subject.
   // Explicit callback — rowHtml takes options second, and .map would pass the index.
-  body.innerHTML = dashLicList().map(function(p){ return licRowHTML(p, { noLabelEdit:true }); }).join('');
+  body.innerHTML = list.map(function(p){ return licRowHTML(p, { noLabelEdit:true }); }).join('');
+  markFadeRow(body);
 }
 // a dataset may legitimately have no invoices (the grant is free) — say so
 function renderDashInvoices(){
@@ -72,9 +80,25 @@ function renderDashInvoices(){
   // bareProduct: in a three-row preview the licence only has to be named — the mark
   // and the label line belong to the Invoices page, where the table is the subject
   var opts = { bareProduct:true };
+  /* ⚠️ Three in A, four in B — and the block that shows three anyway still changes,
+     because in B the third is no longer the last thing but the one before the fade. */
+  var take = homeBlocks() === 'b' ? DASH_FADE_ROWS : 3;
   b.innerHTML = inv.length
-    ? inv.slice(0, 3).map(function(v){ return invRow(v, opts); }).join('')
+    ? inv.slice(0, take).map(function(v){ return invRow(v, opts); }).join('')
     : invEmptyRow(opts);
+  markFadeRow(b);
+}
+/* ⚠️ THE LAST ROW IS MARKED IN THE DOM, not chosen by `:last-child`, for the reason the
+   grouped Instances table marks `.is-last`: a row hidden by a search would otherwise
+   hand the fade to whatever row happened to be last, and the block would fade a row
+   that is not the fourth. It is also only ever applied when there was something to cut
+   — a block with three rows in total has nothing more behind it and must not pretend. */
+function markFadeRow(body){
+  $$('tr.is-fading', body).forEach(function(tr){ tr.classList.remove('is-fading'); });
+  if(homeBlocks() !== 'b') return;
+  var rows = $$('tr', body);
+  if(rows.length < DASH_FADE_ROWS) return;
+  rows[DASH_FADE_ROWS - 1].classList.add('is-fading');
 }
 /* Each block ends with the way out of it: one button naming how much is behind it.
    The count is everything in the section, which is what the block is a preview of —
@@ -87,16 +111,55 @@ function renderDashInvoices(){
    so a demo switch repaints it without either block knowing. */
 function renderBlockFooters(){
   var lic = $('#dashLicCount'), inv = $('#dashInvCount');
-  if(lic) lic.innerHTML = button({ variant:'secondary', size:'sm', iconEnd:'arrow-right',
-    label:String(DATA().licenses.length), href:'licenses.html',
-    ariaLabel:'Open all ' + DATA().licenses.length + ' licenses' });
+  /* ⚠️ IN B THE HEADING BUTTON IS ARROW-ONLY. The count moved into `See all N` over the
+     fade, and a block carrying the same number twice reads as two destinations. Dropping
+     `label` is what makes `button()` build the icon-only form, so the size ladder and
+     the square width come from the component rather than from a rule here. */
+  var bare = homeBlocks() === 'b';
+  var nL = DATA().licenses.length;
+  if(lic) lic.innerHTML = button({ variant:'secondary', size:'sm',
+    iconEnd: bare ? null : 'arrow-right', icon: bare ? 'arrow-right' : null,
+    label: bare ? '' : String(nL), href:'licenses.html',
+    ariaLabel:'Open all ' + nL + ' licenses' });
   if(inv){
     var n = DATA().invoices.length;
     /* an account with no invoices has nothing to open — the button goes, the heading stays */
-    inv.innerHTML = n ? button({ variant:'secondary', size:'sm', iconEnd:'arrow-right',
-      label:String(n), href:'invoices.html',
+    inv.innerHTML = n ? button({ variant:'secondary', size:'sm',
+      iconEnd: bare ? null : 'arrow-right', icon: bare ? 'arrow-right' : null,
+      label: bare ? '' : String(n), href:'invoices.html',
       ariaLabel:'Open all ' + n + ' invoices' }) : '';
   }
+  renderBlockFades();
+}
+/* ---------- the fade and the button laid over it (variant B) --------------------
+   ⚠️ THE OVERLAY IS APPENDED TO THE BLOCK, not to the scroller the table sits in.
+   `.tablescroll` is `overflow-x:auto`, so a child positioned in it scrolls sideways
+   with the columns — the button would drift off the block the moment a narrow window
+   made the table scroll. `.dblock` is the box the reader sees.
+   ⚠️ BUILT AND DESTROYED, not hidden: the blocks repaint on every demo switch, and a
+   leftover overlay over a block that has gone back to variant A would cover a row the
+   reader can otherwise click. */
+function renderBlockFades(){
+  $$('#dashView .blockmore').forEach(function(n){ n.remove(); });
+  $$('#dashView .dblock').forEach(function(b){ b.classList.remove('has-fade'); });
+  if(homeBlocks() !== 'b') return;
+  [['#dashLicBody', 'licenses.html', DATA().licenses.length],
+   ['#dashInvBody', 'invoices.html', DATA().invoices.length]].forEach(function(spec){
+    var body = $(spec[0]); if(!body) return;
+    var fading = $('tr.is-fading', body); if(!fading) return;   // nothing was cut
+    var block = body.closest('.dblock'); if(!block) return;
+    block.classList.add('has-fade');
+    var wrap = document.createElement('div');
+    wrap.className = 'blockmore';
+    wrap.innerHTML = button({ variant:'secondary', size:'md', href:spec[1],
+      label:'See all ' + spec[2], cls:'blockmore-go' });
+    block.appendChild(wrap);
+    /* ⚠️ MEASURED, not a constant. Licence rows are two and three lines tall depending
+       on the table variant and on whether the licence has a label, so a fixed 96px
+       would either clip a tall row or eat into the third. The overlay is exactly the
+       fading row plus its own breathing room. */
+    block.style.setProperty('--fadeH', (fading.getBoundingClientRect().height + 18) + 'px');
+  });
 }
 /* Home greeting follows the viewer's own clock — the one place the prototype
    reads real time (dataset dates stay pinned to Aug 19 2026).
@@ -391,16 +454,33 @@ if(dashEmptyV && !dashEmptyV.hidden){
     label:'Home',
     when:function(){ return document.body.getAttribute('data-page') === 'home'; },
     tabs:[
+/* ⚠️⚠️ `Signed out` BELONGS IN THIS ROW (2026-09-29, by request), even though it is
+   not a dashboard state and lives in a different store key (`auth`, not `dash`). The
+   row answers "what does this surface look like right now", and signed out is one of
+   the answers — the one where the surface is the landing page. Leaving it only in the
+   ⚙ panel's Session group meant the one state that replaces Home entirely was the one
+   state this row could not reach.
+   ⚠️ IT NAVIGATES rather than reloading: signed out, the guard on `index.html` sends
+   you to `landing.html` anyway, so a reload would be a redirect the reader watches
+   happen. `setSession` is the same helper the ⚙ panel's Session group calls.
+   ⚠️ IT IS LAST, not first. The five before it are the dashboard's own densities and
+   they are what the row is mostly used for; this one leaves the page. */
       { id:'dash', label:'Dashboard',
-        hint:'What the account owns. This is the only tab that changes the data — the other three only decide what is shown.',
-        get:function(){ return Store.get('dash'); },
-        set:function(v){ Store.set('dash', v); location.reload(); },
+        hint:'What the account owns. This is the only tab that changes the data — the other tabs only decide what is shown. `Signed out` leaves Home for the landing page; it is the same Session setting the settings panel carries.',
+        get:function(){ return isSignedIn() ? Store.get('dash') : 'out'; },
+        set:function(v){
+          if(v === 'out'){ setSession('out'); return; }
+          /* coming BACK from signed out: the session has to be restored too, or the
+             guard bounces straight to the landing page again and the pick looks dead */
+          if(!isSignedIn()) Store.set('auth', 'existing');
+          Store.set('dash', v); location.reload();
+        },
         options:function(){
           return Object.keys(DASH_STATES).map(function(k){
             var d = DASH_STATES[k];
             var n = ((DATASETS[d.variant] || {}).licenses || []).length;
             return { v:k, t:d.label.replace(/^Dashboard — /, ''), note:n + ' lic' };
-          });
+          }).concat([{ v:'out', t:'Signed out (landing)', note:'no session' }]);
         } },
 
       { id:'pay', label:'Payment',
@@ -426,30 +506,47 @@ if(dashEmptyV && !dashEmptyV.hidden){
           });
         } },
 
+/* ⚠️⚠️ `No banner` IS FIRST AND IS THE DEFAULT (2026-09-29, by request). It is the
+   state every other page in the portal is in, and until now the bar could not express
+   it — the row went straight to `Auto`, so a reviewer looking at Home's layout had a
+   black band across it and no way to put it away. First in the row because it is where
+   the page starts; see `bannerForce` for what changed in the store.
+   ⚠️ `Auto` is now the opt-IN, and its note still counts what it WOULD show, so the
+   row says what picking it costs before you pick it. */
       { id:'banner', label:'Banner',
-        hint:'Which of the conditions that are TRUE right now is the one on screen. A condition the account cannot produce is disabled — the bar narrows what is real, it never invents one.',
-        get:function(){ return bannerForce() || 'auto'; },
-        set:function(v){ Store.set('bannerForce', v === 'auto' ? null : v); renderHomeBanner(); PageStates.sync(); },
+        hint:'Which of the conditions that are TRUE right now is the one on screen. `No banner` is where the page starts — it is the state every other page is in. A condition the account cannot produce is disabled: the bar narrows what is real, it never invents one.',
+        get:function(){ return bannerForce(); },
+        set:function(v){ Store.set('bannerForce', v); renderHomeBanner(); PageStates.sync(); },
         options:function(){
           var m = live();
           var total = Object.keys(m).reduce(function(a,k){ return a + m[k]; }, 0);
-          return [{ v:'auto', t:'Auto (most urgent)', note:total ? total + ' live' : 'none live' }]
+          return [{ v:'none', t:'No banner', note:'default' },
+                  { v:'auto', t:'Auto (most urgent)', note:total ? total + ' live' : 'none live', disabled:!total }]
             .concat(COND.map(function(c){
               return { v:c[0], t:c[1], note:m[c[0]] ? String(m[c[0]]) : '0', disabled:!m[c[0]] };
             }));
-        } },
-
-      { id:'shape', label:'Shape',
-        hint:'One alert gets the fact, what fixes it and its actions. Several get the fact and `and N more` only — deliberately poorer, because an action button beside a list acts on one of them while looking like it settles all.',
-        get:bannerShape,
-        set:function(v){ Store.set('bannerShape', v); renderHomeBanner(); PageStates.sync(); },
-        options:function(){
-          var n = homeBannerVisible().length;
-          return [
-            { v:'auto', t:'Auto', note:n + ' live' },
-            { v:'one',  t:'Alone — full', disabled:!n },
-            { v:'many', t:'With others — count', note:n > 1 ? 'and ' + (n-1) + ' more' : 'needs 2+', disabled:n < 2 }
-          ];
+        },
+/* ⚠️⚠️ SHAPE IS A DEPENDENT ROW OF BANNER, NOT A TAB (2026-09-29, by request). It
+   only ever describes the banner chosen directly above it: as a fourth sibling tab it
+   read as an independent question, and choosing a shape then moving to Banner to
+   change the condition hid the shape you had just set. Under Banner, the condition and
+   how it is drawn are one screen.
+   ⚠️ Every option is disabled while the row above says `No banner`, and that is the
+   honest state rather than a hidden row: there is nothing to shape, and the reader can
+   see that the control exists and why it is not available. */
+        sub:{
+          label:'Shape',
+          hint:'One alert gets the fact, what fixes it and its actions. Several get the fact and `and N more` only — deliberately poorer, because an action button beside a list acts on one of them while looking like it settles all.',
+          get:bannerShape,
+          set:function(v){ Store.set('bannerShape', v); renderHomeBanner(); PageStates.sync(); },
+          options:function(){
+            var n = homeBannerVisible().length;
+            return [
+              { v:'auto', t:'Auto', note:n ? n + ' live' : 'no banner', disabled:!n },
+              { v:'one',  t:'Alone — full', disabled:!n },
+              { v:'many', t:'With others — count', note:n > 1 ? 'and ' + (n-1) + ' more' : 'needs 2+', disabled:n < 2 }
+            ];
+          }
         } }
     ]
   });

@@ -105,7 +105,11 @@ var DETAILS_HTML = ''
 + '                         there is one coupon controller, not two. -->'
 + '                    <button role="menuitem" class="mob-only" data-couponmenu>Apply coupon</button>'
 + '                    <button role="menuitem" class="mob-only" data-revealmenu>Reveal key</button>'
-+ '                    <button role="menuitem" class="mob-only" data-installmenu>Installation instructions</button>'
+/* ⚠️ `data-installmenu` WENT WITH `#installBtn` (2026-09-29). This entry existed to
+   press that button on a phone, where the icon row is hidden; with the button replaced
+   by a sentence carrying its own link, the entry had nothing to defer to and `if(btn)`
+   below would have made it silently do nothing — the same shape as the `Rename` item
+   that did nothing for three days. The link is in the sentence on every breakpoint. */
 + '                    <button role="menuitem" data-editlabel>Edit label</button>'
 + '                    <button role="menuitem" data-cancel-active>Cancel subscription</button>'
 + '                  </div>'
@@ -127,6 +131,16 @@ var DETAILS_HTML = ''
 + ''
 + '            <div class="hairline"></div>'
 + ''
+/* ⚠️⚠️ EVERYTHING BELOW THE DIVIDER IS ITS OWN BAND (2026-09-29, by request: "the
+   tint only in the first block, white after the divider"). The head is one element
+   with one background, so the second colour needs something to paint — this wrapper
+   is that something, and it holds exactly what follows the hairline: the key grid and
+   the conditional alert.
+   ⚠️ IT BLEEDS THROUGH THE HEAD'S PADDING. `.head` insets its content by 22px, so a
+   background applied here would stop 22px short of the modal's edges and read as a
+   white card floating on the tint. Negative margins plus matching padding put the fill
+   on the head's own edges while the content stays where it was. */
++ '            <div class="head-rest">'
 + '            <!-- row 3: license key (left) / subscription period (right) -->'
 + '            <div class="keygrid">'
 + '              <div class="keycol">'
@@ -141,16 +155,25 @@ var DETAILS_HTML = ''
 + '                  <button class="btn btn--secondary btn--md btn--icon tip" id="copyBtn" aria-label="Copy license key" data-tip="Copy">'
 + '                    <svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-copy"></use></svg>'
 + '                  </button>'
-+ '                  <!-- what to do with the key, next to the actions that get you the'
-+ '                       key. It used to be a button inside the post-purchase banner,'
-+ '                       which meant it disappeared the moment that banner was dismissed. -->'
-/* ⚠️ An outbound LINK, not a button with a placeholder. Installing a key is not
-   the portal's job — the key is entered in ThingsBoard itself, the platform syncs,
-   and this surface reflects what came back. The honest control is one that leaves. */
-+ '                  <a class="btn btn--secondary btn--md btn--icon tip" id="installBtn" href="' + EXT.install + '" target="_blank" rel="noopener" aria-label="Installation instructions (opens in a new tab)" data-tip="Installation instructions">'
-+ '                    <svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-file-text"></use></svg>'
-+ '                  </a>'
 + '                </div>'
+/* ⚠️⚠️ THE BUTTON BECAME A SENTENCE (2026-09-29, by request). `#installBtn` was a
+   third icon-only button in this row — a document glyph beside an eye and a copy —
+   and an icon is the wrong shape for the one thing here that needs explaining. A
+   reader who does not already know what to do with a licence key cannot learn it from
+   a picture of a page, and the tooltip that carried the words only appeared for
+   someone who already suspected they were there.
+   ⚠️ WHAT THE SENTENCE SAYS is what the panel already knew and never stated in one
+   place: the key is entered in ThingsBoard, not here; a deployment that has been given
+   it reports back; and that is why the Instances tab below fills in by itself. The
+   post-purchase banner said the last part and disappeared when dismissed.
+   ⚠️ Still an outbound LINK at the end of it, for the reason the button was one:
+   installing is not the portal's job — the key goes into ThingsBoard itself, the
+   platform syncs, and this surface reflects what came back. */
++ '                <p class="keyhelp">Enter this key in your ThingsBoard or TBMQ'
++ '                  installation to activate it. Each running deployment checks in with'
++ '                  the key and appears under Instances below.'
++ '                  <a class="link" href="' + EXT.install + '" target="_blank" rel="noopener">Installation instructions' + EXTSVG + '</a>'
++ '                </p>'
 + '                <!-- ⚠️ The "License created" note that used to sit here has moved'
 + '                     ABOVE the licence title (see #licNewBanner at the top of the'
 + '                     panel). Under the key it was the second message a freshly'
@@ -208,6 +231,7 @@ var DETAILS_HTML = ''
 + '              <svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg>'
 + '              <span class="atxt"></span>'
 + '            </div>'
++ '            </div><!-- /head-rest -->'
 + '            </div><!-- /headcol -->'
 + '           </div><!-- /headgrid -->'
 + '          </div>'
@@ -260,9 +284,17 @@ var DETAILS_HTML = ''
    RUNNING on this licence before what it cost. The panels below are in the same order:
    `aria-controls` would make any order work, but a tablist whose panels are sourced in
    a different sequence is a trap for the next person reading the file. */
-+ '            <button class="tab" role="tab" id="tab-prod" aria-controls="panel-prod" aria-selected="true" tabindex="0">Instances</button>'
-+ '            <button class="tab" role="tab" id="tab-invoices" aria-controls="panel-invoices" aria-selected="false" tabindex="-1">Invoices</button>'
-+ '            <button class="tab" role="tab" id="tab-logs" aria-controls="panel-audit" aria-selected="false" tabindex="-1">Activity</button>'
+/* ⚠️ ICONS ON THE TABS (2026-09-29, by request), and they are `aria-hidden` beside a
+   text label — the rule for an icon that sits next to the word it illustrates, or the
+   reader hears "Instances Instances".
+   ⚠️ THE SAME THREE SYMBOLS THE TOP BAR USES for the same three destinations, read out
+   of `NAV_ITEMS` rather than chosen again here: these tabs slice one licence the way
+   the nav slices the account, and a tab meaning Invoices while wearing a different
+   glyph from the Invoices nav item would be two vocabularies for one product. Reading
+   the list also means a glyph changed in the nav cannot leave these behind. */
++ '            <button class="tab" role="tab" id="tab-prod" aria-controls="panel-prod" aria-selected="true" tabindex="0">' + navIcon('instances') + 'Instances</button>'
++ '            <button class="tab" role="tab" id="tab-invoices" aria-controls="panel-invoices" aria-selected="false" tabindex="-1">' + navIcon('invoices') + 'Invoices</button>'
++ '            <button class="tab" role="tab" id="tab-logs" aria-controls="panel-audit" aria-selected="false" tabindex="-1">' + navIcon('activity') + 'Activity</button>'
 + '          </div>'
 + ''
 + '          <!-- Instances -->'
@@ -274,9 +306,16 @@ var DETAILS_HTML = ''
    hardcoded rows that are identical for every licence — theatre, and a control that
    survives to a demo either works or is not there. It comes back with real instance
    data; see NOTES. */
+/* ⚠️ THE CHIPS CARRY THEIR COUNTS (2026-09-29, by request), the same `.chipcount` the
+   Licenses type chips wear. Two chips that only say `Production` / `Development` make
+   the reader press one to find out whether there is anything behind it — and on most
+   licences one of the two is empty. The number answers before the press.
+   ⚠️ NOT a facet count: these two are the whole set and they do not interact, so each
+   simply states how many instances of its kind this licence has. Filled by
+   `renderInstances`, which is the one place that already counts both. */
 + '                <div class="lic-typeseg" role="group" aria-label="Instance type">'
-+ '                  <button class="typechip is-on" data-insttype="prod" aria-pressed="true">Production</button>'
-+ '                  <button class="typechip" data-insttype="dev" aria-pressed="false">Development</button>'
++ '                  <button class="typechip is-on" data-insttype="prod" aria-pressed="true">Production<span class="chipcount" data-instcount="prod"></span></button>'
++ '                  <button class="typechip" data-insttype="dev" aria-pressed="false">Development<span class="chipcount" data-instcount="dev"></span></button>'
 + '                </div>'
 + '                <span class="spacer"></span>'
 + '                <button class="btn btn--secondary btn--md btn--icon" data-refresh aria-label="Refresh" title="Refresh"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-refresh"></use></svg></button>'
@@ -1074,6 +1113,10 @@ function instRow(i){
 var licInstPage = { prod:{ page:1, size:10, total:0 }, dev:{ page:1, size:10, total:0 } };
 function renderInstances(lic){
   var prod = instancesOf(lic, 'prod'), dev = instancesOf(lic, 'dev');
+  /* the chips state what each holds — see the note on the markup */
+  var pc = $('[data-instcount="prod"]'), dc = $('[data-instcount="dev"]');
+  if(pc) pc.textContent = prod.length;
+  if(dc) dc.textContent = dev.length;
   var note = $('#instNote');
   if(note){
     /* one sentence, and it carries the number the column is read against */
@@ -1088,9 +1131,32 @@ function renderInstances(lic){
     ? pageSlice(prod, licInstPage.prod).map(instRow).join('')
     : '<tr><td colspan="6" class="emptybox">Instances appear here automatically when a deployment is activated with this license.</td></tr>';
   var db = $('#instBodyDev');
+  /* ⚠️⚠️ THE DEVELOPMENT EMPTY STATE EXPLAINS ITSELF (2026-09-29, by request). It said
+     "No development instances are running with this license." — true, and useless to
+     the reader who does not already know what a development instance IS or why they
+     would want one. This is the only place in the product where the distinction is
+     ever explained, and the tab is where somebody meets it.
+     ⚠️ IT USES THE SHARED BUILDER, `emptyStateRow` — the same title / sentence / action
+     shape the Licenses page and the empty account use. The production tab above keeps
+     its one-liner on purpose: production instances need no explanation, and a reader
+     with none is simply waiting for a deployment to check in.
+     ⚠️ TWO WAYS OUT, and they answer different questions. The docs link answers "how do
+     I start one"; `Manage add-ons` answers "where do I get another", because on this
+     prototype development instances are capacity, bought through the wizard — the same
+     entry point the row kebab and the Plan block use, not a second one. */
   if(db) db.innerHTML = dev.length
     ? pageSlice(dev, licInstPage.dev).map(instRow).join('')
-    : '<tr><td colspan="6" class="emptybox">No development instances are running with this license.</td></tr>';
+    : emptyStateRow(6, {
+        title:'No development instances',
+        line:'A development instance runs this same license on a deployment that is not '
+           + 'serving anyone — a staging server, a test rig, a local build — so changes '
+           + 'can be tried before they reach production. It is counted separately, so '
+           + 'running one never uses up a production instance. '
+           + '<a class="link" href="' + EXT.install + '" target="_blank" rel="noopener">'
+           + 'How to activate an instance' + EXTSVG + '</a>',
+        action: button({ variant:'secondary', size:'md', label:'Manage add-ons',
+                         attrs:'data-devaddons' })
+      });
   if(!prod.length) licInstPage.prod.total = 0;
   if(!dev.length)  licInstPage.dev.total  = 0;
   var pp = $('#instPagerProd'); if(pp) pp.hidden = !prod.length;
@@ -1367,12 +1433,13 @@ function wireDetailsOnce(){
   /* The ⋮ entry that mobile uses for Apply coupon just presses the real button, so
      the coupon modal keeps one controller. The button is display:none on a phone —
      a programmatic click still fires its handler. */
-  /* Three ⋮ entries the phone needs — coupon, reveal, install — and each just
-     presses the real button, so every one of them keeps a single controller. The
-     buttons are display:none on a phone; a programmatic click still fires. */
+  /* Two ⋮ entries the phone needs — coupon and reveal — and each just presses the
+     real button, so every one of them keeps a single controller. The buttons are
+     display:none on a phone; a programmatic click still fires.
+     ⚠️ It was three until 2026-09-29: `install` is gone with `#installBtn`, whose job
+     a sentence with a link does now, at every width. */
   [['[data-couponmenu]', '#couponBtn'],
-   ['[data-revealmenu]', '#revealBtn'],
-   ['[data-installmenu]', '#installBtn']].forEach(function(pair){
+   ['[data-revealmenu]', '#revealBtn']].forEach(function(pair){
     document.addEventListener('click', function(e){
       if(!e.target.closest(pair[0])) return;
       closeAllMenus();
@@ -1393,6 +1460,15 @@ function wireDetailsOnce(){
       Coupon.open(function(code){ Snack.show('Coupon ' + code + ' applied'); }, btn);
     });
   })();
+
+  /* ⚠️ Delegated: the empty state is rendered and destroyed with the tab, so a listener
+     bound to the button would be bound to a node that is replaced on the next repaint.
+     It routes through `openManageAddons` — the one entry point the row kebab and the
+     Plan block already use — rather than opening the wizard itself. */
+  document.addEventListener('click', function(e){
+    if(!e.target.closest('[data-devaddons]')) return;
+    if(activeLicense) openManageAddons(activeLicense);
+  });
 
   /* ---------- Instances tab: Production / Development switcher + select-all ---------- */
   var instPanel = $('#panel-prod');
@@ -1681,10 +1757,18 @@ var LicenseDetails = (function(){
     show(lic);
     resetScroll();
     var b = $('#backBtn');
-    if(b && opts && opts.back){
-      b.setAttribute('aria-label', opts.back.label);
-      b.setAttribute('title', opts.back.label);
-      b.addEventListener('click', function(){ location.href = opts.back.href; });
+    /* ⚠️ NO `opts.back` MEANS NO BUTTON, not an unwired one (2026-09-29). Before the
+       `shared` mode existed every caller passed a back, so the falsy branch only ever
+       had to skip the wiring — and left the control sitting in the header doing
+       nothing, which is worse than either showing it or not. */
+    if(b){
+      var hasBack = !!(opts && opts.back);
+      b.hidden = !hasBack;
+      if(hasBack){
+        b.setAttribute('aria-label', opts.back.label);
+        b.setAttribute('title', opts.back.label);
+        b.addEventListener('click', function(){ location.href = opts.back.href; });
+      }
     }
   }
   // a change made inside the surface: restate the details and the page behind
@@ -1754,17 +1838,23 @@ var LicenseDetails = (function(){
   }
 
   /* the seven branches of `renderLicenseAlert`, in its own order of seriousness */
+/* ⚠️⚠️ `No banner` IS FIRST (2026-09-29, by request), and it is the ONLY re-ordering:
+   the six that follow are still in `renderLicenseAlert`'s own order of seriousness.
+   The list used to read most-serious-first and end on "nothing is wrong", which put
+   the state most licences are actually in at the far end of a seven-item row — and it
+   is the one a reviewer reaches for most, because it is the panel with nothing in the
+   way of it. Same reason `No banner` leads Home's row. */
   var STATES = [
+    ['none',             'No banner',           function(l){
+      return !instOverLimit(l) && l.status !== 'payment_failed' && l.status !== 'canceled'
+        && l.status !== 'awaiting_checkin' && l.status !== 'updates_expiring'
+        && !(hasUpdatesTerm(l) && daysUntil(l.event) < 0); }],
     ['over_limit',       'Over instance limit', function(l){ return instOverLimit(l); }],
     ['payment_failed',   'Payment failed',      function(l){ return !instOverLimit(l) && l.status === 'payment_failed'; }],
     ['updates_expired',  'Updates ended',       function(l){ return !instOverLimit(l) && l.status !== 'payment_failed' && hasUpdatesTerm(l) && daysUntil(l.event) < 0; }],
     ['updates_expiring', 'Updates ending',      function(l){ return !instOverLimit(l) && l.status === 'updates_expiring'; }],
     ['canceled',         'Canceled',            function(l){ return l.status === 'canceled'; }],
-    ['awaiting_checkin', 'Awaiting check-in',   function(l){ return l.status === 'awaiting_checkin'; }],
-    ['none',             'No banner',           function(l){
-      return !instOverLimit(l) && l.status !== 'payment_failed' && l.status !== 'canceled'
-        && l.status !== 'awaiting_checkin' && l.status !== 'updates_expiring'
-        && !(hasUpdatesTerm(l) && daysUntil(l.event) < 0); }]
+    ['awaiting_checkin', 'Awaiting check-in',   function(l){ return l.status === 'awaiting_checkin'; }]
   ];
   var TYPES = [
     ['Subscription', 'Subscription', function(l){ return l.type === 'Subscription' && l.tier !== 'free'; }],
@@ -1809,21 +1899,60 @@ var LicenseDetails = (function(){
       { id:'type', label:'Type',
         hint:'Type swaps whole blocks (data-page sub / perp). A grant takes the perpetual branch and then strips coupon, add-ons, invoices and the instances toolbar on top of it.',
         get:currentOf(TYPES), set:pickFrom(TYPES),
-        options:function(){ return group(TYPES); } },
+        options:function(){ return group(TYPES); },
+/* ⚠️⚠️ TIER IS A DEPENDENT ROW OF TYPE (2026-09-29, by request), because it is
+   literally a narrowing of it: every tier below is a subscription or a perpetual, so
+   picking one always answers the row above as a side effect. As sibling tabs the two
+   read as independent questions and the answer to the first kept changing under the
+   reader when they touched the second.
+   ⚠️ IT STILL NAVIGATES, and that is why it cannot merge INTO the Type row rather than
+   sitting under it: Type opens a licence that exists in the datasets, Tier routes
+   through `?tier=` to a page synthesised from `TIER_SPECS` for plans no licence is on.
+   Two different mechanisms answering two levels of one question. */
+        sub:{
+          label:'Tier',
+          hint:'Synthesised plan pages — there is no licence in the datasets for these, so they are routed through ?tier= rather than opened from data.',
+          get:function(){ var m = /[?&]tier=([^&]+)/.exec(location.search); return m ? m[1] : null; },
+          set:function(v){ location.href = 'license.html?tier=' + encodeURIComponent(v); },
+          options:[['maker','Maker'],['prototype','Prototype'],['pilot','Pilot'],['startup','Startup'],
+                   ['business','Business'],['prototypeaddons','Prototype + add-ons'],['perp','Perpetual']]
+                  .map(function(t){ return { v:t[0], t:t[1] }; })
+        } },
 
       { id:'present', label:'Presentation',
-        hint:'Modal over the list is the default. The full page is the same surface with a Back button instead of a close control, and a header band the modal collapses on the desktop.',
+        hint:'Modal over the list is the default. Full page is the same surface with a Back button instead of a close control. Shared link is that page with no Back at all \u2014 the licence as a destination of its own under the Licenses tab, which is what somebody opening a pasted URL lands on. Picking one re-opens the licence you are looking at in that presentation.',
         get:licDetailsMode,
-        set:function(v){ Store.set('licDetails', v); PageStates.sync(); },
-        options:[{ v:'modal', t:'Modal (default)' }, { v:'page', t:'Full page' }] },
+/* ⚠️⚠️ THE SETTER HAS TO RE-PRESENT, NOT JUST STORE (fixed 2026-09-29). It wrote
+   `licDetails` and called `PageStates.sync()`, which repaints the BAR — so the radio
+   moved and the surface did not, and the setting looked broken. It was only ever
+   honoured by the NEXT open: picking `Full page` inside a modal left the modal
+   standing, and picking `Modal` on the page left the page.
+   ⚠️ IT HAS TO CROSS HOSTS, which is why this is not a re-render. Modal and page are
+   two different surfaces on two different documents:
+     · to a PAGE presentation — navigate to `license.html`, which is that surface;
+     · to MODAL from a page — go back to the list and open it there, because a modal
+       needs something behind it and `license.html` behind a licence modal would be
+       the same licence twice. `?open=` carries which one (read by page-licenses.js).
+   ⚠️ `page` -> `shared` and back is a RELOAD, not a no-op: the two differ only in the
+   back control, which `mountPage` decides at mount time.
+   ⚠️ Falls back to a plain sync when there is no licence to re-present — the styleguide
+   mounts this surface with nothing open. */
+        set:function(v){
+          Store.set('licDetails', v);
+          var id = active(), lic = id && licById(id);
+          var onPage = document.body.getAttribute('data-page') === 'license';
+          if(!lic){ PageStates.sync(); return; }
+          if(v === 'modal'){
+            if(onPage) location.href = 'licenses.html?open=' + encodeURIComponent(id);
+            else PageStates.sync();                 // already a modal, nothing moves
+            return;
+          }
+          if(onPage) location.reload();             // page <-> shared: same document
+          else location.href = licenseHref(lic, 'licenses');
+        },
+        options:[{ v:'modal', t:'Modal (default)' }, { v:'page', t:'Full page' },
+                 { v:'shared', t:'Shared link (no Back)' }] },
 
-      { id:'tier', label:'Tier',
-        hint:'Synthesised plan pages — there is no licence in the datasets for these, so they are routed through ?tier= rather than opened from data.',
-        get:function(){ var m = /[?&]tier=([^&]+)/.exec(location.search); return m ? m[1] : null; },
-        set:function(v){ location.href = 'license.html?tier=' + encodeURIComponent(v); },
-        options:[['maker','Maker'],['prototype','Prototype'],['pilot','Pilot'],['startup','Startup'],
-                 ['business','Business'],['prototypeaddons','Prototype + add-ons'],['perp','Perpetual']]
-                .map(function(t){ return { v:t[0], t:t[1] }; }) }
     ]
   });
   PageStates.sync();

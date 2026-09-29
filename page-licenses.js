@@ -26,6 +26,20 @@ var licStatus = null;
    Status menu offers `Canceled` as one of four answers, so a switch that pre-hides those
    rows would both contradict the menu and make its `Canceled 1` count unreachable. */
 var licShowCanceled = !!Store.get('showCanceled');
+/* ⚠️⚠️ TOOLBAR C NEEDS A SECOND STATUS VARIABLE, and that is the whole reason it is a
+   third toolbar rather than a tweak to B. `licStatus` holds ONE value, so in A and B
+   "Needs attention" is chosen INSTEAD of a state — you cannot ask for blocked licences
+   that also need attention, because the two answers occupy the same slot. C lifts
+   attention onto its own switch, so it needs its own variable and the two combine.
+   ⚠️ NOT stored. The type and status filters are not stored either; a filter that
+   survives a reload is a list that is narrowed for reasons off screen. */
+var licAttnOnly = false;
+/* ⚠️ HAS THE READER ANSWERED THE STATUS QUESTION THEMSELVES? Toolbar C opens on
+   `Active`, and "opens on" has to mean "until you say otherwise" — without this flag,
+   picking `All statuses` in C would be undone by the next `applyLicBar`, which runs on
+   every toolbar swap and on every settings change, and the menu item would look broken.
+   Set by the pick handlers and by `?attention=1`; never reset. */
+var licStatusTouched = false;
 /* ⚠️ ONE URL parameter now, and it arrives from a Home banner rather than from a menu:
    `?attention=1` is where "3 other licenses need attention" lands. It exists so a
    banner can hand the reader a filtered surface instead of a list to search.
@@ -48,11 +62,23 @@ var licShowCanceled = !!Store.get('showCanceled');
    removed to make it so. */
 var licPage = { page:1, size:10, total:0 };
 function licQuery(){
-  var i = $('#licBarA:not([hidden]) .searchbox input, #licBarB:not([hidden]) .searchbox input');
+  /* ⚠️ THE VISIBLE TOOLBAR'S FIELD, whichever toolbar that is — NOT a list of ids.
+     This read `#licBarA…, #licBarB…` until a third toolbar arrived (2026-09-29) and
+     the omission would have been silent: C's search box would have typed into a query
+     nobody read, and the list would simply not have filtered. Same lesson as
+     `.periodhead,#periodSub,#periodPerp` — a rule that names its members falls behind
+     the next member. `.lic-controls` is what all three already are. */
+  var i = $('.lic-controls:not([hidden]) .searchbox input');
   return i ? i.value.trim() : '';
 }
 var licParams = new URLSearchParams(location.search);
-if(licParams.get('attention') === '1') licStatus = 'attention';
+if(licParams.get('attention') === '1'){ licStatus = 'attention'; licStatusTouched = true; }
+/* ⚠️ `?open=<id>` OPENS A LICENCE AS A MODAL OVER THIS LIST (2026-09-29). Its one
+   caller is the Presentation switch in the page-state bar: going from the full page
+   back to the modal has to land somewhere the modal can sit ON, and that is the list.
+   ⚠️ Deferred to the end of the file — `LicenseDetails` and the rendered rows both
+   have to exist first. See the call site there. */
+var licOpenId = licParams.get('open');
 /* ⚠️ `licNeedsAttention` MOVED TO components.js (2026-09-28). Three surfaces read it
    now — both toolbars and the styleguide's specimen — and the predicate the Home banner
    and this list must agree on does not belong to one page's script. */
@@ -72,6 +98,10 @@ function licPasses(p){
   if(licType && p.type !== licType) return false;
   if(!licStatusMatch(p, licStatus)) return false;
   if(licBar() === 'a' && !licShowCanceled && p.status === 'canceled') return false;
+  /* ⚠️ C's switch is an AND, not another value of the line above — see licAttnOnly.
+     Guarded on the toolbar so the variable cannot narrow a list whose toolbar has no
+     control showing it, which is the fault the 09-28 pass was opened to remove. */
+  if(licBar() === 'c' && licAttnOnly && !licNeedsAttention(p)) return false;
   return true;
 }
 function renderProducts(){
@@ -187,9 +217,28 @@ function renderLicMenus(){
   var tl = $('#licTypeLabel'), sl = $('#licStatusLabel');
   if(tl) tl.textContent = filterOptLabel(LIC_TYPE_OPTS, licType, 'All types');
   if(sl) sl.textContent = filterOptLabel(LIC_STATUS_OPTS, licStatus, 'All statuses');
+  /* ⚠️ C's pair reads the SAME variables and the same counts — it is the same filter
+     with a different list of answers (`LIC_STATUS_OPTS_C` drops `Needs attention`,
+     which is C's switch). A reader switching between B and C keeps what they set. */
+  var tmc = $('#licTypeMenuC'), smc = $('#licStatusMenuC');
+  if(tmc) tmc.innerHTML = filterMenuHTML('lictypec', LIC_TYPE_OPTS, licType, 'All types', total, licTypeCount);
+  if(smc) smc.innerHTML = filterMenuHTML('licstatusc', LIC_STATUS_OPTS_C, licStatus, 'All statuses', total, licStatusCount);
+  var tlc = $('#licTypeLabelC'), slc = $('#licStatusLabelC');
+  if(tlc) tlc.textContent = filterOptLabel(LIC_TYPE_OPTS, licType, 'All types');
+  if(slc) slc.textContent = filterOptLabel(LIC_STATUS_OPTS_C, licStatus, 'All statuses');
+  var sw = $('#licAttnSwitch');
+  if(sw) sw.checked = licAttnOnly;
 }
 wireFilterDrop('#licTypeCtl', 'lictype', function(v){ licType = v; licPage.page = 1; syncTypeChips(); renderProducts(); });
-wireFilterDrop('#licStatusCtl', 'licstatus', function(v){ licStatus = v; licPage.page = 1; syncAttnChip(); renderProducts(); });
+wireFilterDrop('#licStatusCtl', 'licstatus', function(v){ licStatus = v; licStatusTouched = true; licPage.page = 1; syncAttnChip(); renderProducts(); });
+wireFilterDrop('#licTypeCtlC', 'lictypec', function(v){ licType = v; licPage.page = 1; syncTypeChips(); renderProducts(); });
+wireFilterDrop('#licStatusCtlC', 'licstatusc', function(v){ licStatus = v; licStatusTouched = true; licPage.page = 1; syncAttnChip(); renderProducts(); });
+var licAttnSwitch = $('#licAttnSwitch');
+if(licAttnSwitch) licAttnSwitch.addEventListener('change', function(){
+  licAttnOnly = licAttnSwitch.checked;
+  licPage.page = 1;
+  renderProducts();
+});
 
 /* ---------- the switch ------------------------------------------------------------
    ⚠️ NAMED ON `window` because the ⚙ panel calls it by name from shared.js, which loads
@@ -199,14 +248,29 @@ wireFilterDrop('#licStatusCtl', 'licstatus', function(v){ licStatus = v; licPage
    height. Without this the column row would stick at the height of whichever toolbar
    happened to be visible when the page loaded. */
 function applyLicBar(){
-  var b = licBar() === 'b';
-  var A = $('#licBarA'), B = $('#licBarB');
-  if(A) A.hidden = b;
-  if(B) B.hidden = !b;
+  var v = licBar();
+  var A = $('#licBarA'), B = $('#licBarB'), C = $('#licBarC');
+  if(A) A.hidden = v !== 'a';
+  if(B) B.hidden = v !== 'b';
+  if(C) C.hidden = v !== 'c';
   /* ⚠️ A CANNOT SHOW A STATE IT HAS NO CONTROL FOR. Its only status control is the
      attention chip, so any other value is dropped on the way back rather than left
      narrowing the list invisibly — the fault this whole pass exists to remove. */
-  if(!b && licStatus && licStatus !== 'attention') licStatus = null;
+  if(v === 'a' && licStatus && licStatus !== 'attention') licStatus = null;
+  /* ⚠️ AND NEITHER CAN C, for the mirror-image reason: `attention` is not one of the
+     answers its Status menu offers, so arriving with it set would leave the trigger
+     reading `All statuses` over a list of five. It becomes the switch instead — the
+     same question, asked by the control C actually has. */
+  if(v === 'c' && licStatus === 'attention'){ licStatus = null; licAttnOnly = true; }
+  /* ⚠️⚠️ C OPENS ON `Active`, and this is the one place that decision lives. It is
+     applied only when the reader has not chosen a status — an explicit `All statuses`
+     picked in C, or anything carried in from B, is theirs and is left alone. Without
+     the guard the menu would silently snap back to Active every time the toolbar was
+     re-applied, and `All statuses` would be unselectable. */
+  if(v === 'c' && licStatus === null && !licStatusTouched) licStatus = 'active';
+  /* the switch belongs to C: leaving it set behind A or B would narrow their lists
+     from a control neither of them draws */
+  if(v !== 'c') licAttnOnly = false;
   syncTypeChips(); syncAttnChip(); renderProducts();
   window.dispatchEvent(new Event('resize'));
 }
@@ -243,6 +307,7 @@ function syncAttnChip(){
 var licAttnChip = $('#licAttnChip');
 if(licAttnChip) licAttnChip.addEventListener('click', function(){
   licStatus = (licStatus === 'attention') ? null : 'attention';
+  licStatusTouched = true;
   licPage.page = 1;
   syncAttnChip(); renderProducts();
 });
@@ -283,10 +348,12 @@ licCanceledBox.addEventListener('change', function(){ setShowCanceled(!this.chec
 if(licCanceledChip) licCanceledChip.addEventListener('click', function(){ setShowCanceled(!licShowCanceled); });
 
 // + New license → the wizard; product and billing type are chosen on its step 1
-/* ⚠️ BOTH toolbars carry one, and they are two nodes rather than one moved between
-   them: each toolbar is a whole layout, and a button that hopped hosts on every switch
-   would be the one control whose position depended on history. */
-$$('#licNewBtn, #licNewBtnB').forEach(function(b){
+/* ⚠️ EVERY toolbar carries one, and they are separate nodes rather than one moved
+   between them: each toolbar is a whole layout, and a button that hopped hosts on every
+   switch would be the one control whose position depended on history.
+   ⚠️ Selected by CLASS, not by an id per toolbar — see licQuery for what an id list
+   costs when a toolbar is added. */
+$$('.lic-controls [id^="licNewBtn"]').forEach(function(b){
   b.addEventListener('click', function(){ NL.open({}); });
 });
 /* delegated: the empty state's button is rendered and destroyed with the table */
@@ -312,10 +379,14 @@ document.addEventListener('click', function(e){
 /* ⚠️ Bound BEFORE wireSearch, and the order is the whole trick: this re-renders the
    table (everything while there is a query, one page when there is not) and the listener
    wireSearch adds next then hides the non-matches in what was just drawn. */
-$$('#licBarA .searchbox input, #licBarB .searchbox input').forEach(function(i){
+$$('.lic-controls .searchbox input').forEach(function(i){
   i.addEventListener('input', renderProducts);
 });
-['#licBarA .searchbox input', '#licBarB .searchbox input'].forEach(function(sel){
+/* ⚠️ `wireSearch` takes a SELECTOR, not a node, and resolves it with `$` — so it has to
+   be given one selector per field rather than one that matches them all. The ids are
+   derived from the toolbars present in the markup instead of retyped. */
+$$('.lic-controls').map(function(bar){ return '#' + bar.id + ' .searchbox input'; })
+  .forEach(function(sel){
   wireSearch(sel, {
     items: function(){ return $$('#licensesView tbody tr.lic-row'); },
     // the row already carries every one of those as text, so the row IS the query
@@ -331,3 +402,15 @@ $$('#licBarA .searchbox input, #licBarB .searchbox input').forEach(function(i){
    one that agrees with the controls. */
 wirePager('#licensesView .pager', licPage, renderProducts);
 applyLicBar();
+
+/* ---------- arriving from the Presentation switch ------------------------------
+   ⚠️ LAST IN THE FILE, and it has to be: the modal is mounted by `license-details.js`
+   and the rows behind it by `renderProducts()` above, so anything earlier would open
+   a surface over a list that is not drawn yet.
+   ⚠️ It opens the modal DIRECTLY rather than through `openLicenseDetails`, which
+   reads `licDetailsMode()` — and the mode has just been set to `modal`, so routing
+   through it would work by luck. This route exists to show a modal; it says so. */
+if(licOpenId && window.LicenseDetails){
+  var licToOpen = licById(licOpenId);
+  if(licToOpen) LicenseDetails.openModal(licToOpen);
+}

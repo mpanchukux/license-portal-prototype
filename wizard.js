@@ -25,15 +25,38 @@ var WIZARD_HTML = ''
 + '    <div class="meshbg" aria-hidden="true">'
 + '      <span class="mb-lav"></span><span class="mb-cream2"></span><span class="mb-cream"></span><span class="mb-lav2"></span>'
 + '    </div>'
-+ '    <div class="fs-header">'
+/* ⚠️⚠️ THE STEPPER IS IN THE HEADER (2026-09-29, by request), and the band it used to
+   have below it is gone. Two reasons it works and one thing it cost:
+     · the map of the flow and the way out of the flow are the same kind of
+       information — where am I, how do I leave — so they belong on one line;
+     · the wizard is full screen, and a separate 46px band under a 52px header was
+       two chrome strips above the first thing the reader came to do.
+   ⚠️ IT HUGS AND IS CENTRED ON THE BAR, not stretched across it. `.nl-steps` used to
+   take `flex:1` and spread its connectors the full width, which made a four-step flow
+   and a two-step flow look equally long. Sized by its content and centred absolutely
+   (see the CSS), so the row reads as one object and the title and ✕ keep their ends.
+   ⚠️ BACK IS A REAL CONTROL AGAIN. The 2026-09-25 pass removed the back chevron with
+   the argument that "every step behind you is its own way back" via the stepper — true,
+   and not enough: that makes going back a matter of hitting a 20px numbered circle, and
+   on the phone the stepper is the first thing that gets cramped. It sits at the head of
+   the bar, before the title, which is where a back control goes.
+   ⚠️ It is HIDDEN on the first step rather than disabled — there is nothing behind step
+   one, and a permanently dead control at the start of every flow teaches the reader to
+   ignore the place it sits in. */
++ '    <div class="fs-header nl-header">'
+/* ⚠️⚠️ BACK IS NOT IN THE HEADER ANY MORE (2026-09-29, by request) — it sits at the
+   top of the step's own content column, above the plan block. It was put here earlier
+   the same day, and the header was the wrong home for it: the bar carries the flow's
+   IDENTITY (its name, its map, the way out of it), and Back is a move WITHIN the flow.
+   In the content column it stands directly above the thing it takes you back from.
+   ⚠️ It is injected by `gotoStep`, not written into each step's builder — see there. */
 + '      <h2 class="fs-maintitle" id="nlTitle">Buy a license</h2>'
++ '      <div class="nl-stepbar" id="nlStepbar"><div id="nlSteps"></div></div>'
 + '      <span class="spacer"></span>'
 + '      <div class="fs-headactions">'
 + '        <button class="btn btn--ghost btn--md btn--icon fs-close" id="nlClose" aria-label="Close"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-x"></use></svg></button>'
 + '      </div>'
 + '    </div>'
-+ '    <!-- the one stepper: a thin progress line + "Step N of M · Label" -->'
-+ '    <div class="nl-stepbar" id="nlStepbar"><div id="nlSteps"></div></div>'
 + '    <div class="fs-body" id="nlBody">'
 + '      <!-- ⚠️ THE STEPS ARE NAMED, NOT NUMBERED. Which of them a flow has depends on'
 + '           the flow — Customize is two steps, a free plan has neither of them nor a'
@@ -702,6 +725,18 @@ var NL = (function(){
      ⚠️ Assets is dropped from the wizard entirely (not relevant any more). It still
      lives in TIER_SPECS, so the licence details page and the plan cards still list it;
      purging it there is a separate decision. */
+/* ⚠️ THE GLYPH PER SUBJECT, declared once. `lockedCell` renders whichever entitlements
+   the plan fixes and it is handed only a LABEL, so the mapping cannot live at the call
+   site — a locked `Devices` row and a live `Devices` row have to wear the same icon or
+   the step looks like it has two kinds of device.
+   ⚠️ A label with no entry simply gets no glyph, which is the right failure: a new
+   entitlement appears without an icon rather than with a wrong one. */
+  var CAP_IC = {
+    'Devices': 'devices',
+    'Production instances': 'server-2',
+    'Development instances': 'server-2',
+    'AI credits': 'sparkles'
+  };
   function skipEnt(label){ return label === 'Assets'; }
   function fixedEnt(spec){
     return (spec.ent || []).filter(function(e){
@@ -772,13 +807,25 @@ var NL = (function(){
      ⚠️ A locked row with no description of its own (Sessions, Messages / sec) is not
      left blank: the lock sentence becomes its description, so every row in the stack
      has exactly one, in exactly one place. */
+  /* ---- a block's title, with the glyph that names its subject ---------------------
+     ⚠️ ONE BUILDER FOR EVERY BLOCK TITLE on these two steps (2026-09-29, by request:
+     "icons to the left of the block titles"). Five call sites wrote
+     `<div class="am-celltop">` + the label; a glyph added at each of them is five
+     chances for one of them to be missed, and the one that is missed is the one that
+     looks broken beside its four neighbours.
+     ⚠️ `aria-hidden` and no label of its own: the word is right there. An icon that
+     names the same thing as the text beside it makes a screen reader say it twice. */
+  function cellTop(label, ic){
+    return '<div class="am-celltop' + (ic ? ' has-ic' : '') + '">'
+      + (ic ? icon(ic) : '') + '<span>' + label + '</span></div>';
+  }
   function lockedCell(lbl, val, desc){
     var why = lbl === 'Devices'
       ? 'The device limit is set by this plan. To change it, change the plan.'
       : 'Set by this plan. To change it, change the plan.';
     var full = desc ? desc + ' ' + why : why;
     return '<div class="am-cell am-locked"><div class="fs-cellhead"><div class="fs-celltext">'
-      + '<div class="am-celltop">' + lbl + '</div>'
+      + cellTop(lbl, CAP_IC[lbl])
       + '<div class="fs-celldesc">' + full + '</div></div>'
       + '<span class="fs-lockfield">' + LOCKSVG
       + '<input class="fs-devinput locked" type="text" value="' + val + '" disabled aria-label="' + lbl + ' — ' + why + '"></span>'
@@ -788,9 +835,9 @@ var NL = (function(){
   /* Devices: typed, not stepped. The error lives under the field and the commit
      is held while the value is below the plan's own allowance — a licence cannot
      carry fewer devices than the plan it is on. */
-  function numberCell(field, label, desc, priceNote, val, min){
+  function numberCell(field, label, desc, priceNote, val, min, ic){
     return '<div class="am-cell"><div class="fs-cellhead"><div class="fs-celltext">'
-      + '<div class="am-celltop">' + label + '</div>'
+      + cellTop(label, ic)
       + (desc ? '<div class="fs-celldesc">' + desc + '</div>' : '') + '</div>'
       + '<input class="fs-devinput numfield" type="text" inputmode="numeric" autocomplete="off"'
       +   ' data-nl-num="' + field + '" data-nl-min="' + min + '" value="' + val.toLocaleString('en-US') + '"'
@@ -806,16 +853,22 @@ var NL = (function(){
      instance IS belongs where you are still deciding, not where you are adjusting.
      `info` stays a parameter of stepCell so the choice is visible at the call sites
      rather than baked in, but nothing on this step passes it. */
-  function stepCell(field, label, desc, priceNote, val, min, info){
+  /* ⚠️ `aria` is the name the STEPPER's two buttons announce, and it is separate from
+     `label` because the two are no longer the same string. Inside the Instances group
+     the visible label is `Production` — the group heading above it supplies the noun —
+     but "Increase Production" is not a sentence, so the buttons keep the full
+     "Production instances". Where they are the same, `aria` is simply omitted. */
+  function stepCell(field, label, desc, priceNote, val, min, info, ic, aria){
     var minus = val <= min ? ' disabled' : '', plus = val >= MAXQ[field] ? ' disabled' : '';
+    var name = aria || label;
     return '<div class="am-cell"><div class="fs-cellhead"><div class="fs-celltext">'
       + (info ? cellTopWithInfo(label, desc)
-              : '<div class="am-celltop">' + label + '</div>'
+              : cellTop(label, ic)
                 + (desc ? '<div class="fs-celldesc">' + desc + '</div>' : '')) + '</div>'
       + '<div class="stepper" data-nl-field="' + field + '">'
-      + '<button type="button" class="stepbtn" data-dir="-1"' + minus + ' aria-label="Decrease ' + label + '">−</button>'
+      + '<button type="button" class="stepbtn" data-dir="-1"' + minus + ' aria-label="Decrease ' + name + '">−</button>'
       + '<span class="val" aria-live="polite">' + qtyLabel(field, val) + '</span>'
-      + '<button type="button" class="stepbtn" data-dir="1"' + plus + ' aria-label="Increase ' + label + '">+</button></div></div>'
+      + '<button type="button" class="stepbtn" data-dir="1"' + plus + ' aria-label="Increase ' + name + '">+</button></div></div>'
       + '<div class="am-cardprice">' + priceNote + '</div></div>';
   }
   /* Add-ons sit in the same rows as the steppers: text left, control on the right
@@ -851,7 +904,7 @@ var NL = (function(){
   }
   function featureRow(name, desc, state){
     return '<div class="am-cell am-feature"><div class="fs-cellhead"><div class="fs-celltext">'
-      + '<div class="am-celltop">' + name + '</div>'
+      + cellTop(name, 'palette')
       + '<div class="fs-celldesc">' + desc + '</div></div>'
       /* ⚠️ THE SAME FILLED ACCENT PILL AS `Popular` (2026-09-28, by request). It was
          `.pill.soft` — an outlined grey — which put the one thing on this step that is
@@ -861,9 +914,9 @@ var NL = (function(){
       + '<span class="pill is-accent am-featstate">' + state + '</span>'
       + '</div></div>';
   }
-  function addonRow(key, name, desc, price, on){
+  function addonRow(key, name, desc, price, on, ic){
     return '<label class="am-cell am-addon' + (on ? ' on' : '') + '"><div class="fs-cellhead"><div class="fs-celltext">'
-      + '<div class="am-celltop">' + name + '</div>'
+      + cellTop(name, ic)
       + '<div class="fs-celldesc">' + desc + '</div>'
       // price == null: not settled yet (Offline Mode) — the row simply has no figure
       + (price == null ? '' : '<div class="am-cardprice">+' + money(price) + ' /mo</div>') + '</div>'
@@ -931,8 +984,13 @@ var NL = (function(){
     seededTier = t;
   }
   /* ---- CAPACITY: everything measured in a number you can raise ---------------- */
+  /* ⚠️ A marker string, not a DOM placeholder: this function returns HTML, so the only
+     thing it can leave a hole in is the string. Chosen to be something no label or
+     description could ever contain. */
+  var INSTANCES_SLOT = '<!--nl-instances-slot-->';
   function capacityCellsHTML(){
     var t = tier(), i = INCL[t] || { prod:1, ai:0 }, u = units(), spec = TIER_SPECS[t] || { ent:[] };
+    var prodCell = '';
     var per = isPerp() ? ' one-time' : ' / mo';
     var variantA = custVariant() === 'a';
     var cells = '';
@@ -941,7 +999,7 @@ var NL = (function(){
       if(skipEnt(lbl)) return;                       // Assets is out of the wizard
       if(lbl === 'Devices' && hasDevices()){
         cells += numberCell('devices', 'Devices', devicesDesc(),
-          devicesPriceNote(), cust.devices, devicesIncluded());
+          devicesPriceNote(), cust.devices, devicesIncluded(), CAP_IC['Devices']);
       } else if(lbl === 'Production instances'){
         /* ⚠️ A perpetual instance is not just compute — it is 5,000 devices, and that
            is the fact the buyer needs before pressing +. The subscription sentence is
@@ -951,27 +1009,61 @@ var NL = (function(){
             + PERP_DEV_PER_INSTANCE.toLocaleString('en-US')
             + ' devices. Add more at any time to horizontally scale your solution.'
           : 'Production compute — ' + i.prod + ' included. Enables clustering and HA.';
-        cells += stepCell('prod', 'Production instances', prodDesc,
-          '+' + money(u.prod) + per + ' each', cust.prod, i.prod);
+        /* ⚠️⚠️ HELD BACK, NOT EMITTED HERE (2026-09-29, by request). Production and
+           Development are one block titled `Instances` now, and Development is not in
+           `spec.ent` at all — it is appended after this loop. So the production row is
+           parked and the pair is assembled below, in one place, where the group's
+           heading and both rows can be written together. */
+        prodCell = stepCell('prod', 'Production', prodDesc,
+          '+' + money(u.prod) + per + ' each', cust.prod, i.prod, null, null,
+          'Production instances');
+        cells += INSTANCES_SLOT;
       } else if(lbl === 'AI credits'){
-        cells += stepCell('ai', 'AI credits', 'Monthly allowance, in blocks of 1M credits. Minimum matches your plan — increase to buy more.', '+' + money(u.ai) + per + ' per 1M AI credits', cust.ai, i.ai);
+        cells += stepCell('ai', 'AI credits', 'Monthly allowance, in blocks of 1M credits. Minimum matches your plan — increase to buy more.', '+' + money(u.ai) + per + ' per 1M AI credits', cust.ai, i.ai, null, CAP_IC['AI credits']);
       } else if(!variantA){
         // variant A shows these in the plan card instead
         cells += lockedCell(lbl, val, lbl === 'Devices' ? DEVICES_DESC : '');
       }
     });
-    if(hasDev()) cells += stepCell('dev', 'Development instances', 'Dedicated instances for dev, test, and CI/CD — keeps production data clean.', '+' + money(u.dev) + per + ' each', cust.dev, 0);
+    /* ⚠️⚠️ ONE `Instances` BLOCK (2026-09-29, by request): one heading, both rows under
+       it. They were two sibling blocks titled `Production instances` and `Development
+       instances`, separated by the AI credits block because Development is appended
+       after the entitlement loop and AI credits comes from inside it — so the two rows
+       that are the same subject were not even adjacent.
+       ⚠️ THE ROWS DROP THE WORD `instances` from their own labels. The heading says it;
+       repeating it gives the block a title and two near-copies of that title. The
+       steppers' `aria-label`s keep the full phrase (see `aria` on stepCell).
+       ⚠️ IT IS A PLACEHOLDER SWAP, not a reorder. The group has to appear where
+       Production instances sat in `spec.ent` — that order is the plan's, not this
+       function's — so the loop emits a marker and it is replaced here. Building the
+       group in place would have meant knowing, mid-loop, whether a Development row is
+       coming, which is decided by `hasDev()` after the loop ends. */
+    var devCell = hasDev()
+      ? stepCell('dev', 'Development', 'Dedicated instances for dev, test, and CI/CD — keeps production data clean.', '+' + money(u.dev) + per + ' each', cust.dev, 0, null, null, 'Development instances')
+      : '';
+    if(cells.indexOf(INSTANCES_SLOT) >= 0){
+      cells = cells.replace(INSTANCES_SLOT,
+        '<div class="am-group"><div class="am-grouphead">'
+        + icon(CAP_IC['Production instances']) + '<span>Instances</span></div>'
+        + '<div class="am-groupbody">' + prodCell + devCell + '</div></div>');
+    } else if(devCell){
+      /* a plan with a Development row and no Production one: the heading still belongs,
+         because the block is about instances either way */
+      cells += '<div class="am-group"><div class="am-grouphead">'
+        + icon(CAP_IC['Development instances']) + '<span>Instances</span></div>'
+        + '<div class="am-groupbody">' + devCell + '</div></div>';
+    }
     return cells;
   }
   /* ---- ADD-ONS: everything that is a switch, plus what the plan simply states ---- */
   function addonCellsHTML(){
     var cells = '';
     if(hasAddons()){
-      cells += addonRow('edge', 'Edge Computing', 'Edge instances at remote sites for offline processing and auto-sync.', ADD.edge, cust.edge)
-        + addonRow('trendz', 'Trendz Analytics', 'Advanced analytics, custom dashboards, and trend discovery.', ADD.trendz, cust.trendz);
+      cells += addonRow('edge', 'Edge Computing', 'Edge instances at remote sites for offline processing and auto-sync.', ADD.edge, cust.edge, 'affiliate')
+        + addonRow('trendz', 'Trendz Analytics', 'Advanced analytics, custom dashboards, and trend discovery.', ADD.trendz, cust.trendz, 'chart-line');
     }
     // a perpetual licence gets one add-on of its own: running without internet
-    if(hasOffline()) cells += addonRow('offline', 'Offline Mode', OFFLINE_DESC, cust.offline == null ? false : cust.offline);
+    if(hasOffline()) cells += addonRow('offline', 'Offline Mode', OFFLINE_DESC, cust.offline == null ? false : cust.offline, 'cloud-off');
     return cells;
   }
   /* last in the list: it is the one row you cannot act on, so it must not sit among —
@@ -983,10 +1075,32 @@ var NL = (function(){
   /* The two Customize steps are the same screen with different contents, so they are
      built by one function: a left column of rows and the Calculation summary on the
      right, carrying this step's own forward action. */
+/* ⚠️⚠️ BACK IS PART OF THE STEP'S MARKUP, NOT INJECTED AFTER IT (fixed 2026-09-29).
+   It WAS injected by `gotoStep` into `.fs-col`, which worked exactly once: every
+   control on Capacity and Add-ons re-renders its whole step with `innerHTML`, so
+   toggling a single add-on wiped the row and the reader lost the only way back
+   mid-flow. Reported as "when I pick an add-on, the Back button disappears".
+   ⚠️ A BUILDER, NOT A POST-STEP HOOK, is the fix rather than "call the hook again
+   after each render": a hook has to be remembered at every re-render site (there are
+   five, and the add-on toggle was the one that forgot), while markup that is part of
+   the step cannot be forgotten by anything that rebuilds the step.
+   ⚠️ It returns '' on the first step, so the three call sites do not each have to
+   know which step they are — the helper answers that once. */
+  function backRowHTML(){
+    if(stepIdx() < 1) return '';
+    return '<div class="nl-backrow">'
+      + button({ variant:'text', size:'md', icon:'chevron-left', label:'Back',
+                 cls:'nl-back', attrs:'data-nlback' })
+      + '</div>';
+  }
   function customizeShell(leftHTML, cta){
     return '<div class="fs-grid">'
-      + '<div class="fs-col">' + leftHTML + '</div>'
-      + '<div class="am-sec fs-right">'
+      + '<div class="fs-col">' + backRowHTML() + leftHTML + '</div>'
+/* ⚠️ `nl-calcsum` NAMES THIS CARD SPECIFICALLY (2026-09-29). `.fs-right` is worn by
+   three summary cards — this one, Review's and Billing's — and the request to make
+   the Calculation summary wider and louder is about this one. Scoping by class rather
+   than by step keeps the two Customize steps in step with each other automatically. */
+      + '<div class="am-sec fs-right nl-calcsum">'
       /* ⚠️ `Monthly`, not `New monthly` (2026-09-27). This card is the running total of
          the step you are on, not a comparison with what you had — "new" promised an old
          figure beside it that the card never showed. The Review step's own order row
@@ -1048,11 +1162,21 @@ var NL = (function(){
      burial the split was made to undo. */
   function renderAddons(){
     seedCust();
+    var t = tier(), spec = TIER_SPECS[t] || { ent:[] };
     var variantA = custVariant() === 'a';
     var cells = addonCellsHTML() + featureCellsHTML();
-    var left = variantA
-      ? '<div class="am-sec fs-panel"><div class="am-capgrid">' + cells + '</div></div>'
-      : '<div class="am-sec nl-cardstack">' + cells + '</div>';
+/* ⚠️⚠️ THE PLAN BLOCK IS BACK ON THIS STEP (2026-09-29, by request). It was dropped
+   here deliberately — "NO PLAN CARD HERE, it is on the step before this one" — and the
+   argument does not survive the flow it describes: Capacity, Review and Billing all
+   open with it, so Add-ons was the one step in four where the thing being bought
+   stopped being named. A reader who arrives after two screens of numbers has nothing
+   on this screen saying which plan the switches belong to.
+   ⚠️ Same builder, same card, same position as every other step — so this is one
+   omission corrected, not a new element. */
+    var left = planSummaryHTML(t, spec)
+      + (variantA
+        ? '<div class="am-sec fs-panel"><div class="am-capgrid">' + cells + '</div></div>'
+        : '<div class="am-sec nl-cardstack">' + cells + '</div>');
     $('#nlStepAdd').innerHTML = customizeShell(left, 'Review order');
   }
 
@@ -1219,15 +1343,44 @@ var NL = (function(){
     if(isFree()){ dueLabel = ''; dueVal = ''; }
     // with a card on file the review commits; without one it leads to the billing step
     var cta = isLastStep() ? confirmLabel() : 'Continue to billing';
-    var payline = isFree()
-      ? 'No payment method needed — this plan is free.'
+/* ⚠️⚠️ THE PAY LINE IS A CARD (2026-09-29, by request, modelled on the licence panel's
+   Next charge block). It was one run-on sentence carrying three different things —
+   which card, that it is automatic, and a link to go and change it — and the card
+   number, the only part a reader checks, was set in the middle of it at link size.
+   ⚠️ SAME PARTS, SAME CLASSES, SAME SOURCE as Next charge and as Payment method on
+   Payment & Billing: `paymentMethodHTML` builds the badge and the number, and the
+   pencil icon-button is the one that routes to Billing. Three surfaces, one card, so
+   a brand or a format change lands on all of them at once.
+   ⚠️ `auto-pay` KEEPS ITS PLACE as a caption under the number rather than being
+   dropped: it is the one thing in the old sentence the card does not say by itself,
+   and it is the difference between "this is where it will be charged" and "you will
+   be asked again". A perpetual has no auto-pay, and says nothing instead.
+   ⚠️ STILL `#nlPayChange`, because the handler is the one that matters: it goes through
+   `attemptClose` so leaving a half-filled purchase asks first. A plain <a href> here
+   would walk out of the flow silently. */
+    var payCard = isFree()
+      ? '<div class="nl-payline">No payment method needed — this plan is free.</div>'
       : billingSaved()
-      ? (isPerp() ? 'Charged once to' : 'Charged to') + ' Visa ••4242'
-        + (isPerp() ? '' : ' · auto-pay') + ' · <button class="link" id="nlPayChange">Change <svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-arrow-right"></use></svg> Payment &amp; Billing</button>'
-      : 'You’ll add billing and payment details on the next step.';
+      ? '<div class="billcard nl-paycard">'
+        + '<div class="nl-pc-main">'
+        +   '<div class="nl-pc-method">' + paymentMethodHTML({ expiry:false }) + '</div>'
+        +   '<span class="sp"></span>'
+        +   '<button class="btn btn--secondary btn--md btn--icon tip" id="nlPayChange"'
+        +     ' aria-label="Payment and Billing" data-tip="Payment &amp; Billing">'
+        +     '<svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-pencil"></use></svg>'
+        +   '</button>'
+        + '</div>'
+/* ⚠️ `Charged automatically` REMOVED (2026-09-29, by request). It was carried over from
+   the sentence this card replaced, and on the card it restated what the surface already
+   settles: the step is `Review & pay`, the row above says `Due today`, and the button
+   below says `Subscribe`. A caption under a card explaining that the card will be
+   charged is the third statement of one fact. */
+        + '</div>'
+      : '<div class="nl-payline">You\u2019ll add billing and payment details on the next step.</div>';
     $('#nlStepRev').innerHTML =
       '<div class="fs-grid">'
       + '<div class="fs-col">'
+      +   backRowHTML()
       /* the SAME card step 2 opens with — see planSummaryHTML */
       +   planSummaryHTML(t, TIER_SPECS[t] || { ent:[] })
       /* the plan block and the terms card are one joined unit: no gap between
@@ -1358,7 +1511,7 @@ var NL = (function(){
               + 'there is no payment method to add and no invoice for it.</div>'
             : '<div class="nl-duerow"><div class="am-duelabel">' + dueLabel + '</div>'
               + '<div class="am-dueval">' + dueVal + '</div></div>')
-      +   '<div class="nl-payline">' + payline + '</div>'
+      +   payCard
       /* ⚠️ Three figures, because one would not be enough to check: what came off the
          balance, what the card is taking, and what is left for next time. */
       +   (creditApplied() > 0
@@ -1542,6 +1695,7 @@ var NL = (function(){
     $('#nlStepBill').innerHTML =
       '<div class="fs-grid">'
       + '<div class="fs-col">'
+      +   backRowHTML()
       +   '<div class="am-sec fs-panel">'
       +     '<div class="am-sechead"><h4>Billing information</h4></div>'
       +     '<div class="field2">'
@@ -1690,6 +1844,13 @@ var NL = (function(){
       var el = $(STEP_NODE[key]); if(el) el.hidden = key !== k;
     });
     renderSteps();
+    /* ⚠️ THE STEP IS PUBLISHED ON THE SCREEN NODE so CSS can react to it — step one is
+       50% wider than the rest (see `--fs-work` below), and a width that depends on
+       which step you are on cannot be expressed any other way without a second class
+       per step. One attribute, and the stylesheet reads it. */
+    if(scr) scr.setAttribute('data-nlstep', k);
+    /* ⚠️ The Back control is built by `backRowHTML()` inside each step's own markup —
+       see there for why it is not injected here any more. */
     if(body) body.scrollTop = 0;
     /* after the step is visible and laid out — a hidden step measures as zero */
     syncPinnedSummary();
@@ -2023,6 +2184,10 @@ var NL = (function(){
          has no Capacity step and lands on Review. */
       if(what === 'picked'){ st.dirty = true; gotoStep(stepAt(1)); return; }
     }
+    /* ⚠️ `stepAt(-1)`, the same helper Continue uses with +1 — so Back walks the flow
+       that is actually in effect. A free plan has no Capacity step and Back from Review
+       has to land on the picker, not on a step that does not exist in this flow. */
+    if(e.target.closest('[data-nlback]')){ gotoStep(stepAt(-1)); return; }
     // every step acts from the card that carries its total
     if(e.target.closest('[data-nlnext]')){ if(!isLastStep()) gotoStep(stepAt(1)); return; }
     var commit = e.target.closest('#nlCommit');

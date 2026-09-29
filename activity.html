@@ -83,7 +83,16 @@
 
 <script src="data.js"></script>
 <script src="shared.js"></script>
+<!-- ⚠️ `wizard.js` and `license-details.js` are loaded here for the same reason the
+     Invoices and Instances pages load them (2026-09-29): the feed's sentences now name
+     the licence an event belongs to and link it, and the delegated interceptor in
+     components.js only opens that licence as a panel `if(window.LicenseDetails)`.
+     Without them the guard fails silently and the link follows its href to the full
+     page — so this one route would land somewhere every other licence link in the
+     product does not. `wizard.js` comes with it because the panel's actions call `NL`. -->
 <script src="components.js"></script>
+<script src="wizard.js"></script>
+<script src="license-details.js"></script>
 <script src="page-activity.js"></script>
 </body>
 </html>
