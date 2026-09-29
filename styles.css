@@ -101,14 +101,20 @@
   --c-aqua-200:#AEEFFF;
   --c-orchid-200:#F0D0FF;
   /* ---------- and the two trios, as VALUES that reference them ----------
-     The layer a rule is allowed to read. Swapping which colour a product wears is an
-     edit here; the primitives above do not move. */
-  --mesh-tb-1:var(--c-mint-200);
-  --mesh-tb-2:var(--c-sky-200);
-  --mesh-tb-3:var(--c-peach-200);
-  --mesh-mq-1:var(--c-periwinkle-200);
-  --mesh-mq-2:var(--c-aqua-200);
-  --mesh-mq-3:var(--c-orchid-200);
+     The layer a rule is allowed to read. Swapping which colour a set wears is an edit
+     here; the primitives above do not move.
+     ⚠️⚠️ `-tb-` / `-mq-` → `-a-` / `-b-` (2026-09-29, by request), AND THE NOTE ABOVE
+     PREDICTED THIS DAY: "`--c-tb-1` would have to be renamed the day the mapping moves."
+     It moved. The trios no longer belong to a product — they are set one and set two of
+     a background that crossfades between them on its own — so a name that says `tb`
+     would be pointing at a binding that no longer exists. The primitives were named by
+     colour precisely so that they did not have to change today, and they did not. */
+  --mesh-a-1:var(--c-mint-200);
+  --mesh-a-2:var(--c-sky-200);
+  --mesh-a-3:var(--c-peach-200);
+  --mesh-b-1:var(--c-periwinkle-200);
+  --mesh-b-2:var(--c-aqua-200);
+  --mesh-b-3:var(--c-orchid-200);
   /* ⚠️ A STEP LIGHTER THAN THE PAGE GROUND, added 2026-09-25 by request. The row hover
      started as `--c-blue-50` — the exact colour Home fades into — and at 1.075:1 against
      white that was already faint; it is 1.046 now. The two are separate values rather
@@ -2981,13 +2987,44 @@ body[data-page="landing"][data-lbg="mesh"] > .lmesh{display:block}
 body[data-page="landing"][data-lbg="mesh"] > .meshbg{display:none}
 
 /* both trios fill the layer and sit on top of each other; only opacity separates them */
-.lm-trio{position:absolute; inset:0; opacity:0; transition:opacity .5s ease}
-/* ⚠️ THE DEFAULT IS THE ThingsBoard TRIO, and it is written as "not tbmq" rather than
-   as a third state: the landing has no "nothing selected yet" — `lsel.product` is
-   seeded from `arrivedProduct()` before the first render, so one of the two is always
-   the answer. Checked in page-landing.js before this was written. */
-body[data-lprod="tbmq"] .lm-mq{opacity:1}
-body:not([data-lprod="tbmq"]) .lm-tb{opacity:1}
+.lm-trio{position:absolute; inset:0}
+/* ============================================================================
+   THE CROSSFADE (2026-09-29, by request) — set one drifts into set two and back
+   ============================================================================
+   ⚠️⚠️ IT IS NO LONGER TIED TO THE PRODUCT, and the product rules are GONE rather than
+   left beside this. They set the same property this animation sets, and two mechanisms
+   owning one `opacity` is a fight decided by the cascade rather than by intent — the
+   animation would have won and the old rules would have looked live while doing
+   nothing. `body[data-lprod]` had exactly two readers in the product, both of them
+   those two rules, so the attribute's writer in page-landing.js went with them.
+
+   ⚠️⚠️ ONE LAYER ANIMATES, NOT TWO, and that is what keeps it clean as well as cheap.
+   The obvious build is A fading out while B fades in — and it dips in the middle: two
+   half-transparent layers over a page compose to about three quarters of the colour,
+   so the sphere visibly dims as it passes through. Here set A is simply always on and
+   set B fades over it. Nothing dims, nothing moves, and the whole effect is one
+   compositor-friendly property on one element.
+
+   ⚠️ IT HOLDS AT BOTH ENDS rather than sweeping continuously. A bare 0→1 `alternate`
+   spends most of its time mid-blend, so neither set of colours is ever really what you
+   are looking at. The 16% / 50%..66% stops give each set a few seconds of being itself
+   before the next drift — which is the difference between "it changes colour" and "set
+   one becomes set two".
+   ⚠️ 48s, against variant 1's 34s drift: colour is louder than position, so it moves
+   slower. Same `ease-in-out`, same family.
+   ⚠️ REST STATE IS SET A. With motion reduced `.lm-b` stays at 0 — the page keeps the
+   first set, which is what it would have shown on load anyway, rather than freezing
+   mid-blend on a colour neither set owns. */
+.lm-a{opacity:1}
+.lm-b{opacity:0; will-change:opacity; animation:lmCrossfade 48s ease-in-out infinite}
+@keyframes lmCrossfade{
+  0%,16%  {opacity:0}
+  50%,66% {opacity:1}
+  100%    {opacity:0}
+}
+@media (prefers-reduced-motion: reduce){
+  .lm-b{animation:none; will-change:auto}
+}
 
 /* the three positions, shared by both trios — left/top name the blob's CENTRE and the
    -50%/-50% moves the box onto it, the same mechanic variant 1 uses */
@@ -3002,29 +3039,29 @@ body:not([data-lprod="tbmq"]) .lm-tb{opacity:1}
 /* ⚠️ `color-mix` rather than a channel triplet: the primitives are hex, like every
    other primitive in this file, and a second spelling of the same six colours is a
    second thing to keep in step. Same three stops for all six. */
-.lm-tb .lm-1{background:radial-gradient(circle closest-side,
-  color-mix(in srgb,var(--mesh-tb-1) 62%,transparent) 0%,
-  color-mix(in srgb,var(--mesh-tb-1) 50%,transparent) 34%,
+.lm-a .lm-1{background:radial-gradient(circle closest-side,
+  color-mix(in srgb,var(--mesh-a-1) 62%,transparent) 0%,
+  color-mix(in srgb,var(--mesh-a-1) 50%,transparent) 34%,
   transparent 100%)}
-.lm-tb .lm-2{background:radial-gradient(circle closest-side,
-  color-mix(in srgb,var(--mesh-tb-2) 62%,transparent) 0%,
-  color-mix(in srgb,var(--mesh-tb-2) 50%,transparent) 34%,
+.lm-a .lm-2{background:radial-gradient(circle closest-side,
+  color-mix(in srgb,var(--mesh-a-2) 62%,transparent) 0%,
+  color-mix(in srgb,var(--mesh-a-2) 50%,transparent) 34%,
   transparent 100%)}
-.lm-tb .lm-3{background:radial-gradient(circle closest-side,
-  color-mix(in srgb,var(--mesh-tb-3) 62%,transparent) 0%,
-  color-mix(in srgb,var(--mesh-tb-3) 50%,transparent) 34%,
+.lm-a .lm-3{background:radial-gradient(circle closest-side,
+  color-mix(in srgb,var(--mesh-a-3) 62%,transparent) 0%,
+  color-mix(in srgb,var(--mesh-a-3) 50%,transparent) 34%,
   transparent 100%)}
-.lm-mq .lm-1{background:radial-gradient(circle closest-side,
-  color-mix(in srgb,var(--mesh-mq-1) 62%,transparent) 0%,
-  color-mix(in srgb,var(--mesh-mq-1) 50%,transparent) 34%,
+.lm-b .lm-1{background:radial-gradient(circle closest-side,
+  color-mix(in srgb,var(--mesh-b-1) 62%,transparent) 0%,
+  color-mix(in srgb,var(--mesh-b-1) 50%,transparent) 34%,
   transparent 100%)}
-.lm-mq .lm-2{background:radial-gradient(circle closest-side,
-  color-mix(in srgb,var(--mesh-mq-2) 62%,transparent) 0%,
-  color-mix(in srgb,var(--mesh-mq-2) 50%,transparent) 34%,
+.lm-b .lm-2{background:radial-gradient(circle closest-side,
+  color-mix(in srgb,var(--mesh-b-2) 62%,transparent) 0%,
+  color-mix(in srgb,var(--mesh-b-2) 50%,transparent) 34%,
   transparent 100%)}
-.lm-mq .lm-3{background:radial-gradient(circle closest-side,
-  color-mix(in srgb,var(--mesh-mq-3) 62%,transparent) 0%,
-  color-mix(in srgb,var(--mesh-mq-3) 50%,transparent) 34%,
+.lm-b .lm-3{background:radial-gradient(circle closest-side,
+  color-mix(in srgb,var(--mesh-b-3) 62%,transparent) 0%,
+  color-mix(in srgb,var(--mesh-b-3) 50%,transparent) 34%,
   transparent 100%)}
 /* the cross-fade is the point of the pass; motion is not part of it */
 @media (prefers-reduced-motion: reduce){ .lm-trio{transition:none} }

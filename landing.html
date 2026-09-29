@@ -29,16 +29,21 @@
 
      ⚠️ TWO TRIOS, BOTH MOUNTED, AND THAT IS WHAT MAKES THE CROSS-FADE OPACITY-ONLY.
      They are stacked on identical geometry — same centre, same orbit, same size — so
-     switching product fades one group out while the other fades in and NOTHING moves.
-     Building it as one group whose colours change would animate the colour, which is a
-     different picture: the sphere would shift hue through grey on the way across.
+     one group fades over the other and NOTHING moves. Building it as one group whose
+     colours change would animate the colour, which is a different picture: the sphere
+     would shift hue through grey on the way across.
+     ⚠️⚠️ `lm-tb` / `lm-mq` → `lm-a` / `lm-b` (2026-09-29, by request). The trios used to
+     BE the two products and the picker chose between them; they are set one and set two
+     of a background that drifts between them on its own now, and a class saying `tb`
+     would name a binding that no longer exists. The crossfade itself is in styles.css —
+     `.lm-b` is the only thing that animates.
 
      ⚠️ Three blobs per trio, arranged around a shared centre in the upper half. Each
      one is bigger than its offset from that centre, so they overlap heavily and the
      combined falloff reads as one sphere of light rather than three spots. -->
 <div class="lmesh" id="landingMesh" aria-hidden="true">
-  <div class="lm-trio lm-tb"><span class="lm-1"></span><span class="lm-2"></span><span class="lm-3"></span></div>
-  <div class="lm-trio lm-mq"><span class="lm-1"></span><span class="lm-2"></span><span class="lm-3"></span></div>
+  <div class="lm-trio lm-a"><span class="lm-1"></span><span class="lm-2"></span><span class="lm-3"></span></div>
+  <div class="lm-trio lm-b"><span class="lm-1"></span><span class="lm-2"></span><span class="lm-3"></span></div>
 </div>
 
 <div id="shellMain">
