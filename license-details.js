@@ -129,7 +129,6 @@ var DETAILS_HTML = ''
 + '              <div class="supportline mob-only" id="supportMob"></div>'
 + '            </div>'
 + ''
-+ '            <div class="hairline"></div>'
 + ''
 /* ⚠️⚠️ EVERYTHING BELOW THE DIVIDER IS ITS OWN BAND (2026-09-29, by request: "the
    tint only in the first block, white after the divider"). The head is one element
@@ -144,7 +143,18 @@ var DETAILS_HTML = ''
 + '            <!-- row 3: license key (left) / subscription period (right) -->'
 + '            <div class="keygrid">'
 + '              <div class="keycol">'
-+ '                <h3 class="minihead">License key</h3>'
+/* ⚠️ `.keyfield` IS `display:contents` EVERYWHERE EXCEPT VARIANT A (2026-09-29). The
+   `facts first` layout needs the cap and the key row inside ONE inset box with the
+   sentence below it, and those two are siblings — CSS cannot draw a box around a
+   subset of siblings. A wrapper that generates no box until a variant asks for one
+   changes nothing in the other two layouts, and dissolves on the phone exactly as
+   `.keycol` around it does (see the ≤600 block).
+   ⚠️ TWO SPELLINGS OF THE CAP, one shown at a time — the same idiom the product cell
+   uses for its desktop and phone identity lines. Variant A's field is 560px wide with
+   the value and two buttons in it; `License key` above that reads as a heading for the
+   whole zone rather than a label on the field. */
++ '              <div class="keyfield">'
++ '                <h3 class="minihead"><span class="mh-full">License key</span><span class="mh-short">Key</span></h3>'
 + '                <div class="keyline">'
 + '                  <span class="rowic mob-only" id="keyIc"></span>'
 + '                  <span class="mono" id="keyText" data-masked="••••••••••••3f2a" data-full="d41d-8cd9-8f00-b204-e980-3f2a">••••••••••••3f2a</span>'
@@ -156,6 +166,7 @@ var DETAILS_HTML = ''
 + '                    <svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-copy"></use></svg>'
 + '                  </button>'
 + '                </div>'
++ '              </div><!-- /keyfield -->'
 /* ⚠️⚠️ THE BUTTON BECAME A SENTENCE (2026-09-29, by request). `#installBtn` was a
    third icon-only button in this row — a document glyph beside an eye and a copy —
    and an icon is the wrong shape for the one thing here that needs explaining. A
@@ -169,9 +180,21 @@ var DETAILS_HTML = ''
    ⚠️ Still an outbound LINK at the end of it, for the reason the button was one:
    installing is not the portal's job — the key goes into ThingsBoard itself, the
    platform syncs, and this surface reflects what came back. */
-+ '                <p class="keyhelp">Enter this key in your ThingsBoard or TBMQ'
++ '                <p class="keyhelp keyhelp-full">Enter this key in your ThingsBoard or TBMQ'
 + '                  installation to activate it. Each running deployment checks in with'
 + '                  the key and appears under Instances below.'
++ '                  <a class="link" href="' + EXT.install + '" target="_blank" rel="noopener">Installation instructions' + EXTSVG + '</a>'
++ '                </p>'
+/* ⚠️⚠️ VARIANT A's SHORT LINE, AND THE PARAGRAPH ABOVE IS ONLY HIDDEN THERE, NOT MOVED.
+   The brief asks for the full paragraph to go into the `License created` banner; it is
+   not moved, and that is a reported conflict rather than an oversight — the panel has
+   this sentence precisely BECAUSE it used to live in that banner and vanished with it
+   (see the note above, and the 2026-09-21 record about the banner showing once per
+   licence forever). Putting it back would undo a decision twice made.
+   ⚠️ Both paragraphs are switched by the zone attribute, NOT by `hidden`: `.keyhelp`
+   carries `display` of its own in the ≤600 block, and `[hidden]` loses to that — the
+   fault this file has now recorded four times. */
++ '                <p class="keyhelp keyhelp-short">Enter this key in your installation to activate it.'
 + '                  <a class="link" href="' + EXT.install + '" target="_blank" rel="noopener">Installation instructions' + EXTSVG + '</a>'
 + '                </p>'
 + '                <!-- ⚠️ The "License created" note that used to sit here has moved'
@@ -180,6 +203,14 @@ var DETAILS_HTML = ''
 + '                     purchased licence could show at once, and it read as a property'
 + '                     of the key rather than of the licence. -->'
 + '              </div>'
+/* ⚠️ VARIANT B's HAIRLINE, AND ONLY ON THE PHONE. On the desktop the rule is a
+   `border-left` on the fact column itself; on a phone there is no column to put it
+   beside, so the brief asks for a rule ABOVE the facts — and there is nothing to hang
+   it on, because `.keycol` dissolves to `display:contents` at that width and the facts
+   are loose `.rowvalue` flex items. One empty element with the facts' own `order` is
+   the only thing that lands reliably between the key and them.
+   ⚠️ `display:none` by default, not `hidden`: same reason as the two paragraphs above. */
++ '              <div class="zonerule" aria-hidden="true"></div>'
 /* ⚠️ FIRST OF THE RIGHT-HAND COLUMNS, so the row reads key · status · when · which
    version — what it is, whether it works, and the two dates that qualify that. It is a
    `.keycol` like the others rather than something bolted to the key column: it is a
@@ -221,6 +252,18 @@ var DETAILS_HTML = ''
 + '                <div class="period" id="licVersion"></div>'
 + '                <h3 class="rowlabel mob-only">Product version</h3>'
 + '                <div class="rowvalue mob-only" id="licVersionMob"></div>'
++ '              </div>'
+/* ⚠️ THE FOURTH FACT, AND IT EXISTS FOR VARIANT B ALONE (2026-09-29, by request). Every
+   other `.keycol` here is shown in all three layouts; this one is rendered only when the
+   zone is `b` AND `hasNextCharge()` is true, which is why it carries its own id rather
+   than a `data-page`. Its content comes from `nextChargeParts()`, the same reading the
+   `Next charge` card below the header uses — two spellings of one amount is how the two
+   would start disagreeing about what a cancelled subscription owes. */
++ '              <div class="keycol right" id="ncCol" hidden>'
++ '                <h3 class="periodhead">Next charge</h3>'
++ '                <div class="period" id="ncColVal"></div>'
++ '                <h3 class="rowlabel mob-only">Next charge</h3>'
++ '                <div class="rowvalue mob-only" id="ncColValMob"></div>'
 + '              </div>'
 + '            </div>'
 + ''
@@ -990,7 +1033,7 @@ function renderLicenseDetails(lic){
        about itself wherever it is shown. */
     if(ps) ps.textContent = neverExpires(lic) ? 'No expiry'
       : (lic.status==='canceled' ? 'Active until ' : 'Renews ') + fmtDate(lic.event);
-    var price = String(lic.price).replace(/\s*\/\s*mo/i,'');
+    var ncp = nextChargeParts(lic);
     var nc=$('#ncAmount'), when=$('#ncWhen');
     /* ⚠️ NO CHARGE AHEAD → NO BLOCK. A cancelled subscription used to keep the card
        and fill it with an em dash and "No upcoming charge" — a framed block, a heading
@@ -1001,12 +1044,12 @@ function renderLicenseDetails(lic){
        this covers the one recurring licence that has stopped. */
     var bill = $('#appView .billgrid');
     if(bill) bill.hidden = !hasNextCharge(lic);
-    if(nc) nc.textContent = price;
+    if(nc) nc.textContent = ncp.amount;
     /* ⚠️ The "on " prefix is its own span so the phone can drop it. With the
        "NEXT CHARGE" label restored to the line, label + date + amount measured
        302px against a 284px box — and "on" is redundant once the label says what
        the date is. Removing it buys the 22px the line was short of. */
-    if(when) when.innerHTML='<span class="nc-on">on </span>'+fmtDate(lic.event);
+    if(when) when.innerHTML='<span class="nc-on">on </span>'+ncp.when;
   }
   renderLicenseKey(lic);
   renderLicInvoices(lic);
@@ -1016,7 +1059,48 @@ function renderLicenseDetails(lic){
   renderLicenseAlert(lic);
   renderLicenseVersion(lic);
   renderLicenseActions(lic);
+  applyLicZone(lic);
   renderLicFeed(lic);
+}
+/* ---------- the header zone's layout (2026-09-29, by request) ---------------------
+   Three arrangements of the SAME nodes: `current`, `a · facts first`, `b · two columns`.
+   ⚠️⚠️ NOTHING IS MOVED AND NOTHING IS REBUILT. The status is still `statusChipHTML`
+   into `#statusSlot`, the term is still whatever `renderLicenseDetails` and
+   `renderPeriodRow` wrote into the per-kind `.period` / `.rowvalue`, the version is
+   still `renderLicenseVersion`, and every `[data-page]` and `[hidden]` guard is the one
+   that was already there. One attribute on `.head-rest` and the stylesheet re-lays them
+   out — so a variant cannot drift from what the panel actually says, and switching costs
+   a repaint rather than a second renderer.
+   ⚠️ IT RUNS FROM `renderLicenseDetails`, i.e. on every open in either host. The ⚙ only
+   has to write the store and ask for a refresh.
+   ⚠️ THE ONE NODE THAT IS NOT ALWAYS THERE is `#ncCol`: it is variant B's fourth fact,
+   and outside B it must stay hidden or the current layout would grow a column nobody
+   asked for. Its visibility is `zone === 'b' && hasNextCharge(lic)`, which is the same
+   predicate the card below the header uses. */
+function applyLicZone(lic){
+  var zone = licZone();
+  $$('#appView .head-rest').forEach(function(el){ el.setAttribute('data-zone', zone); });
+  var nccol = $('#ncCol');
+  if(nccol){
+    var show = zone === 'b' && hasNextCharge(lic);
+    nccol.hidden = !show;
+    if(show){
+      var ncp = nextChargeParts(lic);
+      var txt = ncp.amount + ' on ' + ncp.when;
+      var v = $('#ncColVal'); if(v) v.textContent = txt;
+      /* ⚠️ THE PHONE ROW IS BUILT LIKE ITS SIBLINGS, glyph and all — `renderPeriodRow`
+         emits `.rowic` + `.rowtxt`, and a fact row without the glyph would be the one
+         line in that stack with nothing in its left gutter.
+         ⚠️ AND IT KEEPS THE WORD `on`, which is why this is not the card's `.nc-on`
+         span: the ≤600 block drops that class because the card still has its `NEXT
+         CHARGE` label to say what the date is. This row's label is hidden at that width
+         (the word moves into the value, which is the pattern), so borrowing the class
+         would have left `$499.00 Oct 07, 2026` with nothing between the two numbers. */
+      var m = $('#ncColValMob');
+      if(m) m.innerHTML = '<span class="rowic">' + icon('credit-card') + '</span>'
+        + '<span class="rowtxt">' + esc(txt) + '</span>';
+    }
+  }
 }
 
 /* Is there a scheduled charge ahead? One reading, so the block's visibility and any
@@ -1025,6 +1109,15 @@ function renderLicenseDetails(lic){
    amount and date are exactly what the person needs while the banner tells them to
    update the card. Cancelled does not: it runs to the end of what was paid for and
    then stops. Perpetual and grant never had one. */
+/* ⚠️ THE AMOUNT AND THE DATE, READ ONCE (2026-09-29). The `Next charge` card built both
+   inline; variant B of the header zone states the same fact, and a second copy of
+   `String(lic.price).replace(/\s*\/\s*mo/i,'')` is how one surface would keep the
+   `/ mo` suffix the day somebody edits only the other. `hasNextCharge` still decides
+   WHETHER there is one — this only says what it is. */
+function nextChargeParts(lic){
+  return { amount: String((lic && lic.price) || '').replace(/\s*\/\s*mo/i,''),
+           when: fmtDate(lic && lic.event) };
+}
 function hasNextCharge(lic){
   if(!lic || lic.grant) return false;
   if(lic.type !== 'Subscription') return false;
@@ -1920,7 +2013,11 @@ var LicenseDetails = (function(){
         } },
 
       { id:'present', label:'Presentation',
-        hint:'Modal over the list is the default. Full page is the same surface with a Back button instead of a close control. Shared link is that page with no Back at all \u2014 the licence as a destination of its own under the Licenses tab, which is what somebody opening a pasted URL lands on. Picking one re-opens the licence you are looking at in that presentation.',
+        /* ⚠️ REWRITTEN 2026-09-29: the Back button went from `Full page` too, so the copy
+           that told them apart by it was describing a difference that no longer exists.
+           What is left really is only the nav highlight — said plainly, because a hint
+           that oversells a distinction is worse than one that admits a small one. */
+        hint:'Modal over the list is the default. Full page and Shared link are the same page \u2014 neither carries a Back button \u2014 and they differ only in which section stays lit: Full page keeps the one you came from, Shared link always shows Licenses, which is what somebody opening a pasted URL lands on. Picking one re-opens the licence you are looking at in that presentation.',
         get:licDetailsMode,
 /* ⚠️⚠️ THE SETTER HAS TO RE-PRESENT, NOT JUST STORE (fixed 2026-09-29). It wrote
    `licDetails` and called `PageStates.sync()`, which repaints the BAR — so the radio

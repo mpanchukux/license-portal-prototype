@@ -94,12 +94,24 @@
      ⚠️ THE EXISTING MESH LITERALS STAY LITERAL. `rgb(197 200 247)` / `rgb(255 248 229)`
      in `.meshbg`, and `--page-bg` with its neighbours, are NOT folded in here — NOTES
      calls that its own pass and this is not it. */
-  --c-mint-200:#82FFBE;
-  --c-sky-200:#B0D9FF;
-  --c-peach-200:#FFE5C9;
-  --c-periwinkle-200:#CAD5FF;
-  --c-aqua-200:#AEEFFF;
-  --c-orchid-200:#F0D0FF;
+  /* ⚠️⚠️ SATURATION HALVED (2026-09-29, by request: "make the colours 50% less
+     saturated"). Every one of the six was S 100%; each is S 50% now, with HUE AND
+     LIGHTNESS UNTOUCHED — so the trios keep their positions in the wheel and the layer
+     keeps its weight against the page, and only the intensity moves. The old values, if
+     they are ever wanted back: #82FFBE #B0D9FF #FFE5C9 #CAD5FF #AEEFFF #F0D0FF.
+     ⚠️ EDITED IN THE PRIMITIVES, and that is safe here precisely because of the two-layer
+     split above: these six are read by the six `--mesh-*` values and by nothing else, and
+     the `--mesh-*` values are read by the variant-2 layer and by nothing else. Variant 1
+     (`.meshbg`, which is also Home's and the licence header's ground) carries its own
+     literals — `rgb(197 200 247)` and `rgb(255 248 229)` — and does not move.
+     ⚠️ The names stay true: a desaturated mint is still mint, which is the whole reason
+     the primitives were named by colour rather than by product. */
+  --c-mint-200:#A1E0BF;
+  --c-sky-200:#C4D8EB;
+  --c-peach-200:#F2E4D6;
+  --c-periwinkle-200:#D7DDF2;
+  --c-aqua-200:#C2E3EB;
+  --c-orchid-200:#ECDCF3;
   /* ---------- and the two trios, as VALUES that reference them ----------
      The layer a rule is allowed to read. Swapping which colour a set wears is an edit
      here; the primitives above do not move.
@@ -354,7 +366,12 @@ a{color:inherit}
 .sheet{width:100%}
 
 /* ---------- canvas ---------- */
-.canvas{background:var(--card);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+/* ⚠️ NO STROKE (2026-09-29, by request). The white slab and its radius are what make
+   this a surface; the `--line` outline around it was a second edge on a shape the fill
+   already draws, and it was the only 1px `--line` box left on a page whose every other
+   frame is either `--line2` or nothing. The modal and the phone already dropped it —
+   this was the one presentation still carrying it. */
+.canvas{background:var(--card);border:0;border-radius:6px;overflow:hidden}
 /* ⚠️ THE BLUE HOME FADES INTO, not a grey of its own (2026-09-27). `#fafafa` was a
    one-off literal — a near-white that belonged to no scale and sat a shade off every
    other quiet ground in the file. `--c-blue-50` is the colour the Home gradient resolves
@@ -388,7 +405,7 @@ a{color:inherit}
    so the content inside keeps the position it had.
    ⚠️ `margin-top` is 0: the hairline directly above is the boundary, and any gap here
    would show a strip of tint between the line and the white it introduces. */
-.head-rest{background:var(--card);margin:0 -22px -20px;padding:14px 22px 20px}
+.head-rest{background:var(--card);margin:12px -22px -20px;padding:14px 22px 20px}
 /* the back button sits alone in a narrow left gutter; every content block
    below aligns to one vertical line at --contentX from the canvas edge
    (head padding-left + gutter + gap) */
@@ -483,7 +500,19 @@ a{color:inherit}
 .labelsave{height:26px;padding:0 10px;font-size:14px}
 .period{font-size:14px;color:var(--ink);font-variant-numeric:tabular-nums}
 /* thin divider between the meta row and the license key row */
-.hairline{height:1px;background:var(--line2);margin-top:12px}
+/* ⚠️⚠️ `.hairline` IS GONE FROM THE LICENCE HEADER (2026-09-29, by request), node and
+   rule both. The note above `.head` used to say "the hairline stays — with the fill gone
+   it is the only thing that separates the header from the white below it". That was true
+   of the day it was written and stopped being true on 09-29, when the tint came back and
+   was made to STOP at this boundary: the change from `--c-blue-50` to white is now the
+   separator, and a rule drawn on top of it was a second line saying what the colour
+   already said.
+   ⚠️ Removed rather than left unused — a class with an obvious name and no reader is how
+   `.keynote` silently restyled a paragraph six hundred rules later.
+   ⚠️ ITS 12px MOVED TO `.head-rest`. The gap belonged to the boundary, not to the line;
+   dropping both would have closed the tint up against the white. `margin-top` there now
+   shows 12px more tint before the white starts, which is what the space was always
+   doing. */
 /* license key (left) and subscription period (right) as a symmetric pair */
 /* ⚠️⚠️ TWO ROWS, NOT ONE (2026-09-28, by request): the key on its own line, then
    Status · Subscription period · Product version beneath it. Four columns on one line
@@ -1017,8 +1046,14 @@ th.inv-amt,td.inv-amt{padding-right:30px}
    plate is only a ground — which also fixes the contrast note the audit left open:
    `--status-ok` measures 4.56 on `--card` and 4.17 on a tint, and this puts the word
    back on `--card`. */
-#statusCol .period{display:inline-flex;align-items:center;background:var(--card);
-  border-radius:6px;padding:5px 10px;line-height:1.2}
+/* ⚠️⚠️ THE WHITE PLATE AND ITS PADDING ARE GONE (2026-09-29, by request), and the
+   contrast argument that put it there is ANSWERED rather than dropped. It read: "the
+   plate is only a ground — `--status-ok` measures 4.56 on `--card` and 4.17 on a tint,
+   and this puts the word back on `--card`". True while this block sat on the header's
+   tint; it has not since the tint was made to stop at the divider and everything below
+   it became `.head-rest`, which IS `--card`. The word is on 4.56 either way now, and a
+   plate on a ground of its own colour was a box drawn around nothing. */
+#statusCol .period{display:inline-flex;align-items:center;line-height:1.2}
 .periodhead .infoic{vertical-align:-1.5px;margin-left:4px;width:var(--ic-20);height:var(--ic-20)}
 .periodhead .infoic .ic{width:var(--ic-16);height:var(--ic-16)}
 /* ⚠️ This icon sits at the RIGHT EDGE of the surface, so it takes the base tooltip's
@@ -1216,7 +1251,11 @@ th.inv-amt,td.inv-amt{padding-right:30px}
 .creditcard{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;
   border:1px solid var(--line);border-radius:6px;padding:14px 16px;background:var(--card)}
 .credit-amt{font-size:22px;font-weight:500;font-variant-numeric:tabular-nums;color:var(--ink)}
-.credit-note,.credit-none{font-size:14px;line-height:1.5;color:var(--mid)}
+/* ⚠️ `.credit-none` GOES WITH THE EMPTY STATE IT DRESSED (2026-09-29). The section is
+   hidden below a positive balance now, so nothing emits that class — and a live rule on a
+   dead, obvious class name is exactly how `.keynote` restyled a paragraph six hundred
+   rules later. Removed with its only writer, in the same pass. */
+.credit-note{font-size:14px;line-height:1.5;color:var(--mid)}
 /* the wizard's own three-line summary: what came off, what the card takes, what is left */
 .nl-creditsum{margin:12px 0 4px;border-top:1px solid var(--line2);padding-top:10px}
 .nl-crow{display:flex;justify-content:space-between;gap:12px;font-size:14px;padding:2px 0}
@@ -1294,6 +1333,216 @@ th.inv-amt,td.inv-amt{padding-right:30px}
    instead of gaining a fourth. ⚠️ `MONOROWS` in styleguide.js states these by hand, as
    measured values — it has to be updated with this or the type table starts lying. */
 .keyline .mono{font-size:16px;line-height:1.35;letter-spacing:0}
+
+/* ============================================================================
+   THE LICENCE PANEL'S FIRST ZONE — two alternative layouts (2026-09-29, by request)
+   ============================================================================
+   `data-zone` on `.head-rest`, written by `applyLicZone()`: `current` · `a` · `b`.
+   ⚠️⚠️ THREE LAYOUTS, ONE SET OF NODES. Nothing below renders anything — the status is
+   still whatever `statusChipHTML` put in `#statusSlot`, the term is still whatever the
+   per-kind branch wrote into `#periodSub` / `#periodPerp` (so the word `Renews` /
+   `Updates until` / `Expiry` is never spelled here), the version is still
+   `renderLicenseVersion`, and every `[data-page]` and `[hidden]` guard is the one that
+   was already doing the work. A variant that re-derived any of that could disagree with
+   the panel it is a variant of.
+   ⚠️⚠️ THE DESKTOP RULES ARE INSIDE `min-width:601px`, AND THAT IS LOAD-BEARING. The
+   ≤600 block rebuilds this whole zone as one flex column with `display:contents` on
+   `.keygrid` and `.keycol` — and it sits LATER in this file with lower specificity, so
+   an unguarded `[data-zone] #verCol{display:flex}` here would beat
+   `.keycol:not([hidden]){display:contents}` there and silently break the phone.
+   ⚠️ `current` gets no rules at all: it is the file above this line, untouched. */
+
+/* the two spellings of the key's cap, and the two lengths of its help line — switched
+   by the zone rather than by `hidden`, because both carry `display` of their own in the
+   ≤600 block and `[hidden]` loses to a `display` declaration (four times on record) */
+/* ⚠️ THE WRAPPER GENERATES NO BOX UNTIL VARIANT A ASKS FOR ONE. Stated once, here,
+   rather than left to chance: `.keycol` around it is `display:contents` on the phone, and
+   a wrapper that made a box would take its two children out of whatever flex column they
+   belong to. (Today `.head-rest` is a plain block, so that column does not reach in here
+   anyway — see the finding in NOTES — but the wrapper must not be the reason it cannot
+   when that is fixed.) */
+.keyfield{display:contents}
+.mh-short,.keyhelp-short{display:none}
+[data-zone="a"] .mh-full{display:none}
+[data-zone="a"] .mh-short{display:inline}
+/* ⚠️⚠️ THE SHORT LINE IS NOW THE DEFAULT TOO (2026-09-29, by request: the description
+   under the key becomes `Enter this key in your installation to activate it.
+   Installation instructions`). ⚠️ THAT LEAVES THE FULL PARAGRAPH VISIBLE IN VARIANT B
+   ALONE — the sentence naming ThingsBoard and TBMQ and explaining check-in and Instances
+   no longer appears on the layout the panel opens with. It is the same conflict already
+   reported for A, now reaching the baseline; the paragraph is still only HIDDEN, and the
+   `License created` banner is still untouched. See the debt list. */
+[data-zone="a"] .keyhelp-full,
+[data-zone="current"] .keyhelp-full{display:none}
+[data-zone="a"] .keyhelp-short,
+[data-zone="current"] .keyhelp-short{display:block}
+/* variant B's phone rule; the desktop draws its hairline as a full-height pseudo */
+.zonerule{display:none}
+
+@media (min-width:601px){
+  /* ---------- A · facts first ------------------------------------------------
+     The zone reads: what state is it in and until when · what is installed · the key.
+     ⚠️ `flex-basis:100%` IS THE LINE BREAK. `.keygrid` is already a wrapping flex row,
+     so which items share a line is decided by how much they are allowed to take —
+     status and the term stay `auto` and sit together, the version and the key take the
+     full width and therefore start their own lines. No wrapper is needed to say it. */
+  [data-zone="a"] .keygrid{gap:10px 12px;align-items:baseline}
+  [data-zone="a"] #statusCol,
+  [data-zone="a"] .keycol.right[data-page]{order:1;flex:0 0 auto}
+  /* the summary line has no caps labels: the words ARE the facts.
+     ⚠️ `#verCol` KEEPS ITS LABEL — `3.9.4` alone is a number nobody can place, and the
+     brief spells the fact as `Product version 3.9.4`. It is restyled quiet and inline
+     below rather than hidden. */
+  [data-zone="a"] #statusCol .periodhead,
+  [data-zone="a"] .keycol.right[data-page] .periodhead{display:none}
+  /* ⚠️⚠️ `--t-h2-fs` (20px), NOT the 22px the brief says "roughly". The scale has one
+     desktop step between body and h1 and this is it; 22 would be a seventh step, which
+     is a change to the system rather than to this zone. Named here because "roughly"
+     is what makes the substitution honest rather than silent. */
+  [data-zone="a"] #statusCol .statmark{font-size:var(--t-h2-fs);gap:8px}
+  [data-zone="a"] #statusCol .statmark .statmark-ic{width:var(--ic-24);height:var(--ic-24)}
+  [data-zone="a"] .keycol.right[data-page] .period{font-size:var(--t-h2-fs);color:var(--mid)}
+  /* ⚠️⚠️ ONE RULE FOR EVERY SEPARATOR, AND IT IS A SIBLING SELECTOR (2026-09-29). It was
+     an `::after` on the status column, which could only ever produce ONE dot — fine while
+     the line held two facts, wrong the moment the version joined them. `#statusCol ~
+     .keycol.right` is "every fact after the first", so the line punctuates itself however
+     many facts a licence turns out to have.
+     ⚠️ A HIDDEN COLUMN DRAWS NO PSEUDO, which is what keeps a perpetual (no subscription
+     period) or a grant (no version) from printing a dot with nothing after it. The first
+     fact is always `#statusCol` and the combinator excludes it by construction. */
+  [data-zone="a"] #statusCol ~ .keycol.right::before,
+  [data-zone="current"] #statusCol ~ .keycol.right::before{
+    content:"\00b7";color:var(--faint);line-height:1}
+  [data-zone="a"] #statusCol ~ .keycol.right::before{font-size:var(--t-h2-fs)}
+  /* ⚠️⚠️ THE COLUMN HAS TO BE A FLEX ROW OR THE DOT LANDS ON ITS OWN LINE. `.period` is a
+     BLOCK, so an inline `::before` in front of it becomes an anonymous block ABOVE it —
+     measured: the dot sat beside `Active` and `Renews Oct 07, 2026` printed underneath,
+     which is exactly the "one thing above, one below" this pass was asked to remove. As
+     flex items the pseudo and the value are two things on one line, and `baseline` is
+     then what lines the 14px version up with the 20px status beside it.
+     ⚠️ `:not([hidden])` on every one of them, not just on `#verCol`: `display` beats the
+     UA's `[hidden]` rule, and BOTH period columns carry the attribute (the render pass
+     hides the one for the other licence kind). Without it a subscription would print its
+     perpetual row as well. Sixth and seventh instances of the same trap, avoided rather
+     than discovered. */
+  [data-zone="a"] .keycol.right:not([hidden]),
+  [data-zone="current"] .keycol.right:not([hidden]){display:flex;align-items:baseline;
+    gap:10px;flex:0 0 auto}
+  /* ⚠️⚠️ ON THE SAME LINE AS THE REST (2026-09-29, by request: "put Product version on
+     one line with the status and the details, and line them all up — not one above and
+     one below"). It was `flex:0 0 100%`, i.e. a row of its own; `auto` puts it back on
+     the summary's line and `align-items:baseline` on `.keygrid` is what sits the quiet
+     14px label on the same baseline as the 20px status beside it.
+     ⚠️⚠️ `:not([hidden])` — AND THIS IS THE FIFTH TIME THIS FILE HAS BEEN CAUGHT BY IT.
+     `display:flex` beats the UA's `[hidden]{display:none}`, and `renderLicenseVersion`
+     hides this column by ATTRIBUTE when no instance has reported a version. Without the
+     guard a grant — which has never checked in — printed `Product version 3.9.4` left
+     over from whichever licence was opened before it. Found on screen, not by reasoning:
+     the measurement that should have caught it was filtering by `offsetParent`, which is
+     null inside a fixed modal and quietly reported the column as absent.
+     `.btn` · `.icon` · `#subAlert` · `.fitem` · this. */
+  /* the version's own label and value sit closer than the facts do to each other */
+  [data-zone="a"] #verCol:not([hidden]),
+  [data-zone="current"] #verCol:not([hidden]){gap:6px}
+  [data-zone="a"] #verCol:not([hidden]){order:1}
+  [data-zone="a"] #verCol .periodhead,
+  [data-zone="current"] #verCol .periodhead{margin:0;font-size:14px;line-height:1.45;
+    letter-spacing:0;font-weight:400;text-transform:none;color:var(--faint)}
+  [data-zone="a"] #verCol .period,
+  [data-zone="current"] #verCol .period{font-size:14px}
+  /* the key, as an inset field: cap, value, then the two actions on the right edge */
+  [data-zone="a"] .keygrid > .keycol:not(.right){order:3;flex:0 0 100%}
+  [data-zone="a"] .keyfield,
+  [data-zone="current"] .keyfield{display:flex;align-items:center;gap:12px;max-width:560px;
+    margin-top:6px;padding:5px 5px 5px 14px;
+    background:var(--surface-quiet);border-radius:8px}
+  [data-zone="a"] .keyfield .minihead,
+  [data-zone="current"] .keyfield .minihead{margin:0;flex:none;color:var(--faint)}
+  /* ⚠️ `margin-left:auto` on the FIRST button, not `justify-content` on the row: the
+     value has to keep the space it needs and the pair has to end at the field's edge,
+     and a `space-between` row would have spread the key and the two buttons instead. */
+  [data-zone="a"] .keyfield .keyline,
+  [data-zone="current"] .keyfield .keyline{flex:1;min-width:0;gap:6px;flex-wrap:nowrap}
+  [data-zone="a"] .keyfield .keyline .mono,
+  [data-zone="current"] .keyfield .keyline .mono{min-width:0;overflow:hidden;
+    text-overflow:ellipsis;white-space:nowrap}
+  [data-zone="a"] .keyfield .keyline .btn,
+  [data-zone="current"] .keyfield .keyline .btn{flex:none}
+  [data-zone="a"] .keyfield .keyline #revealBtn,
+  [data-zone="current"] .keyfield .keyline #revealBtn{margin-left:auto}
+  /* the buttons stand on the field's tint, so they take the white fill the surface axis
+     gives a quiet control on a tinted ground */
+  [data-zone="a"] .keyfield .btn--secondary,
+  [data-zone="current"] .keyfield .btn--secondary{background:var(--card)}
+  [data-zone="a"] .keyhelp-short,
+  [data-zone="current"] .keyhelp-short{margin-top:10px}
+
+  /* ---------- `current` · key left, facts right ------------------------------
+     ⚠️⚠️ THE BASELINE OPTION IS NO LONGER UNTOUCHED (2026-09-29, by request), and the
+     word `Current` in the ⚙ now means "the one being evolved" rather than "the file as it
+     was". Its parenthetical still describes it — key left, facts right — and this pass is
+     what makes that literal: the key becomes one inset field with its cap on the same
+     line, its sentence under it, and the three facts run as one line to its right.
+     ⚠️ IT SHARES A's FIELD AND A's SUMMARY, and shares them by sharing the RULES above
+     rather than by repeating their values. What is left different is only the placement:
+     A stacks the summary over the field, this sets them side by side. */
+  [data-zone="current"] .keygrid{align-items:baseline;gap:12px 24px}
+  /* ⚠️ THE KEY COLUMN GROWS, THE FIELD INSIDE IT DOES NOT. At `flex:0 1 560px` the three
+     facts needed 178px more than the row had and the version wrapped to a line of its own
+     — measured: line one ended at 1054 against a grid of 222→1218, and `Product version`
+     landed at 222 on the next row, i.e. the one-above-one-below this pass was asked to
+     remove. A growing column with a capped FIELD (`max-width:560px`, shared with A) keeps
+     the field the size it should be and hands the slack to the gap before the facts, so
+     they sit at the right edge — which is what "key left, facts right" means. */
+  [data-zone="current"] .keygrid > .keycol:not(.right){flex:1 1 420px}
+  [data-zone="current"] #statusCol .periodhead,
+  [data-zone="current"] .keycol.right[data-page] .periodhead{display:none}
+
+  /* ---------- B · two columns ------------------------------------------------
+     The key block exactly as it is, and the facts stacked in a fixed column beside it.
+     ⚠️ THE HAIRLINE IS A PSEUDO ON THE GRID, NOT A BORDER ON THE FACTS. Bordering each
+     fact draws a line only as tall as the facts, so a grant — two facts against a key
+     block with a paragraph — would have shown a rule that stopped a third of the way
+     down and read as truncation. Anchored to the grid it runs the zone's full height,
+     which is what makes a short column look deliberate. That is the case the brief asks
+     to check, and it is answered here rather than by padding the column out.
+     ⚠️ `right:300px` is the SAME number as the column, stated twice on purpose: the
+     alternative is a variable read by two rules that must never disagree, and this is
+     two lines apart. */
+  [data-zone="b"] .keygrid{position:relative;display:grid;
+    grid-template-columns:minmax(0,1fr) 300px;column-gap:0;row-gap:0;align-items:start}
+  [data-zone="b"] .keygrid::before{content:"";position:absolute;top:0;bottom:0;
+    right:300px;width:1px;background:var(--line2)}
+  [data-zone="b"] .keygrid > .keycol:not(.right){grid-column:1;padding-right:28px}
+  [data-zone="b"] .keycol.right{grid-column:2;padding:0 0 18px 28px}
+  /* ⚠️ Status · version · the period · next charge — the first two say what the licence
+     IS and what it entitles, the last two are dates and money. `order` and not DOM
+     order, because the DOM order is the current layout's row and that one is not moving. */
+  [data-zone="b"] #statusCol{order:1}
+  [data-zone="b"] #verCol{order:2}
+  [data-zone="b"] .keycol.right[data-page]{order:3}
+  [data-zone="b"] #ncCol{order:4;padding-bottom:0}
+}
+
+/* ⚠️ BETWEEN THE PHONE AND A FULL WINDOW, `current` GIVES UP THE SIDE-BY-SIDE. Measured
+   with the modal at ~92vw of a 760px window: the key field and the status shared line one
+   and the term and the version dropped to line two — the facts split across two lines,
+   which is worse than all three under the key. Below 1000 the key takes the full width and
+   the facts get a line of their own, which is the same shape A has at every width. */
+@media (min-width:601px) and (max-width:1000px){
+  [data-zone="current"] .keygrid > .keycol:not(.right){flex:0 0 100%}
+}
+
+@media (max-width:600px){
+  /* ⚠️ BOTH VARIANTS FALL BACK TO THE PHONE'S OWN STACK, which is already one column in
+     a fixed order — there is nothing for a two-column or a summary-line layout to do at
+     this width, and re-deciding the order here would fork the zone a third time.
+     What B keeps is its separator, turned on its side: a rule ABOVE the facts.
+     ⚠️ `order:6` is the facts' own number (`.rowvalue`), and same-order items keep
+     document order — this element sits before them in the DOM, so it lands first. */
+  [data-zone="b"] .zonerule{display:block;order:6;height:1px;
+    background:var(--line2);margin:20px 0 0}
+}
 /* the key actions stay on the control band (--btnH) like every other icon button */
 
 /* data grid (production instances) */
@@ -1476,7 +1725,48 @@ body:is([data-tableframe="b"],[data-tableframe="c"]) .licmodal .section > .gridt
 body:is([data-tableframe="b"],[data-tableframe="c"]) .licmodal .section > .tablescroll,
 body:is([data-tableframe="b"],[data-tableframe="c"]) .licmodal .insttype > .gridtbl,
 body:is([data-tableframe="b"],[data-tableframe="c"]) .licmodal .insttype > .tablescroll{
-  margin-left:-22px;margin-right:-22px;width:calc(100% + 44px);max-width:none}
+  margin-left:-22px;margin-right:-22px;width:calc(100% + 44px);max-width:none;
+  /* the table now starts at the shell's own edge, so its cells take the shell's gutter
+     to land the first column back on the content line — see `--cellx` below */
+  --cellx:22px}
+
+/* ---------- every column starts on the content line (2026-09-29, by request) --------
+   ⚠️⚠️ THE BLOCK HEADINGS ARE THE LINE, and the tables did not meet it in any frame.
+   Measured in the licence panel at 1440, before: headings at 222 in all three frames;
+   the first column's text at 241 in A (the frame sits on the line and the cell insets
+   18px inside it) and at 218 in B and C (the frame escapes to the shell's edge and the
+   cell's 18px lands short of the gutter). Nineteen pixels out one way, four the other.
+   ⚠️ ONE VARIABLE, NOT A RULE PER FRAME. The inset a cell needs is exactly "how far the
+   table starts from the content line", which is 0 when the table sits on it and 22 when
+   it has escaped to the shell's edge. Naming that as `--cellx` puts the number where the
+   escape is declared — so the next variant that moves a table cannot move it without
+   also answering for its columns, which is how these two drifted apart in the first
+   place. Custom properties inherit, so setting it on `.tablescroll` reaches the table.
+   ⚠️ SCOPED TO `.canvas`, WHICH IS THE DETAILS SURFACE — not to `.licmodal`. The modal
+   and the full page mount the same markup, and a fix written for one host is the fault
+   this file has already recorded once (`.licmodal .headgrid`, renamed to its cause).
+   The Users modal's `.gridtbl` is outside `.canvas` and keeps the framed inset. */
+/* ⚠️⚠️ THE FRAME STEPS OUT; THE CELLS KEEP THEIR INSET. Zeroing the padding instead was
+   the first build and it aligned the text — against the frame's own border and the head
+   band's grey edge, with nothing between them. A framed table needs that 18px; what it
+   does not need is to spend it moving its first column off the line. So the table shifts
+   left by exactly the inset it keeps, and the content lands where the headings are. It is
+   the same move variant B and C already make at 22px — this is the framed variant's
+   smaller version of it, not a second idea.
+   ⚠️ `width` HAS TO GROW WITH THE SHIFT for a table that fills its block: a negative
+   left margin alone would leave a 100%-wide table ending 18px short on the right.
+   ⚠️ `.plantable` RESTATES ITS OWN 69%, because `width` is set per table and one rule
+   cannot both keep a percentage and add to it. (That 69% is an open question of its own —
+   see the debt — and this changes nothing about it.) */
+.canvas .gridtbl{--cellx:18px;
+  margin-left:calc(-1 * var(--cellx));
+  width:calc(100% + var(--cellx) * 2)}
+.canvas .plantable{width:calc(69% + var(--cellx) * 2)}
+@media(max-width:900px){ .canvas .plantable{width:calc(100% + var(--cellx) * 2)} }
+.canvas .gridtbl thead th:first-child,
+.canvas .gridtbl tbody td:first-child{padding-left:var(--cellx)}
+.canvas .gridtbl thead th:last-child,
+.canvas .gridtbl tbody td:last-child{padding-right:var(--cellx)}
 /* ---------- VARIANT C: B, and the column head gives up its fill (2026-09-29) --------
    ⚠️ C IS B PLUS ONE DECLARATION, and it is written that way on purpose. Every rule
    above already reaches it through `:is()`, so this block is the whole difference
@@ -1486,16 +1776,24 @@ body:is([data-tableframe="b"],[data-tableframe="c"]) .licmodal .insttype > .tabl
    from the rows once the frame is gone, so taking it away leaves the head standing on
    the card's white with nothing but its own hairline under it and its label colour
    above. That is the proposal — a column row that is type, not a band.
-   ⚠️ THE HAIRLINE STAYS. Without the fill it is the only edge the head has; removing
-   both would leave the column names floating over the first row.
-   ⚠️ The corner patches on the grouped Instances head go too — they exist to paint
-   `--surface-quiet` into the 12px the table's padding leaves, and with no fill to
-   continue they would be two grey tabs either side of a transparent band. */
+   ⚠️⚠️ WHITE, NOT `transparent` (2026-09-29, by request: "the head should have a white
+   fill, not none at all"). On a white card the two look identical, and that is exactly
+   why the difference is worth having: `transparent` means "whatever is behind me", so
+   the moment a table stands on a tinted ground — the mesh on Home, the lavender licence
+   header, a striped row — the column names would take that ground and the head would
+   stop being a surface. `--card` says what the head IS rather than what it is not. Same
+   argument the debt list already makes about the white patch under the rounded corner.
+   ⚠️ THE HAIRLINE STAYS. It is the only edge the head has now; removing both would leave
+   the column names floating over the first row.
+   ⚠️ The corner patches on the grouped Instances head take the same white: they exist to
+   carry the head's fill into the 12px the table's padding leaves, and their job is
+   unchanged — only the colour they continue is. Left `--surface-quiet` they would be two
+   grey tabs either side of a white band. */
 body[data-tableframe="c"] .dblock thead th,
 body[data-tableframe="c"] .listframe thead th,
-body[data-tableframe="c"] .gridtbl thead th{background:transparent}
+body[data-tableframe="c"] .gridtbl thead th{background:var(--card)}
 body[data-tableframe="c"] #instTable.is-grouped thead th:first-child::before,
-body[data-tableframe="c"] #instTable.is-grouped thead th:last-child::before{background:transparent}
+body[data-tableframe="c"] #instTable.is-grouped thead th:last-child::before{background:var(--card)}
 /* ---------- the grouped table's columns do not move (2026-09-29, by request) --------
    ⚠️⚠️ THEY MOVED BECAUSE A COLLAPSED GROUP HAS NO CELLS TO MEASURE. Every group head
    is a single `colspan="5"` cell, so with all groups folded the only thing `auto`
@@ -1609,7 +1907,7 @@ body:is([data-tableframe="b"],[data-tableframe="c"]) #dashView .dblock > table{m
   .modal.wide .fs-grid{display:block}
   .modal.wide .fs-right{margin-top:12px}
 }
-.modal .mh{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line2)}
+.modal .mh{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:0}
 .modal .mh h3{margin:0;font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw)}
 .modal .mh .spacer{flex:1}
 .modal .mb{padding:16px;font-size:14px;color:var(--mid);line-height:1.5}
@@ -1648,7 +1946,18 @@ body:is([data-tableframe="b"],[data-tableframe="c"]) #dashView .dblock > table{m
 .am-cap{font-size:14px;color:var(--faint)}
 .am-capgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
 .am-cell{border:1px solid var(--line2);border-radius:6px;padding:12px;display:flex;flex-direction:column}
-.am-celltop{font-size:14.5px;font-weight:600;color:var(--ink);margin-bottom:9px}
+/* ⚠️⚠️ 14.5 → `--t-body-fs` (16px), ONE STEP UP (2026-09-29, by request). These are the
+   block titles on Capacity and Add-ons — `Devices`, `Production instances`, `AI credits`
+   — and they were set BELOW the scale's floor: 14.5px, a half-pixel nudge taken years'
+   worth of passes ago so a long cell would fit its column. A title half a pixel smaller
+   than the body text under it is not a title.
+   ⚠️ IT ALSO PUTS THEM BACK ON THE SCALE. `small` (14) is the floor and these sat under
+   it; `body` (16) is the step above, and the styleguide no longer has to document a
+   half-pixel exception that only ever existed to avoid a reflow.
+   ⚠️ THE REFLOW THAT NUDGE WAS AVOIDING IS THE THING TO CHECK, not to assume away — the
+   longest title on either step has to still fit its column. Measured after: see the batch
+   note. The weight is untouched at 600; only the size was asked for. */
+.am-celltop{font-size:var(--t-body-fs);font-weight:600;color:var(--ink);margin-bottom:9px}
 
 .am-cardtop{display:flex;align-items:flex-start;gap:10px}
 .am-cardtop>div{flex:1}
@@ -1818,8 +2127,18 @@ body:is([data-tableframe="b"],[data-tableframe="c"]) #dashView .dblock > table{m
 .sb-hint{margin:10px 0 0;color:rgba(255,255,255,.62);line-height:1.45;max-width:96ch}
 /* the dependent row's own explanation sits under it, quieter than the tab's */
 .sb-subhint{margin-top:4px;opacity:.82}
-/* the page keeps its own bottom clear of the bar, and the gear rides above it */
-body.has-statebar #shellMain{padding-bottom:var(--sbH,0px)}
+/* ⚠️⚠️ THE BAR FLOATS OVER THE PAGE (2026-09-29, by request) — it no longer RESERVES
+   the strip it covers. `#shellMain` used to take `padding-bottom:var(--sbH)`, so opening
+   the bar moved every page under it: the thing being reviewed changed layout the moment
+   the review tool was opened, which is the one thing a review tool must not do. It is a
+   floating block at the foot of the window now, like the ⚙ fab beside it.
+   ⚠️ THE OVERLAYS ARE NOT TREATED THE SAME WAY, and that is deliberate: a modal is the
+   whole surface being reviewed, so the bar covering ITS last 90px hides content there is
+   no way to scroll to. The page can be scrolled past the bar; a centred sheet cannot.
+   ⚠️ THE COST, NAMED: the last rows of a long page now sit under the bar and the reader
+   scrolls a little further to clear them. The bar collapses to its title row (34px) and
+   that is the answer to it. */
+body.has-statebar #shellMain{padding-bottom:0}
 /* ⚠️ A FIXED OVERLAY CANNOT BE PADDED OUT OF THE WAY, so the overlay's own box is given
    a shorter window to centre in: `.fs-screen` is `inset:0` and the modal centres inside
    it, so lifting its bottom edge lifts the sheet with it. Measured without this: the
@@ -1840,6 +2159,8 @@ body.has-statebar .gearfab{bottom:calc(var(--sbH, 0px) + 16px)}
 body.has-statebar .settings-panel{--sp-bottom:calc(var(--sbH, 0px) + 70px)}
 @media (max-width:600px){
   .statebar{display:none}
+  /* kept although the desktop value is now the same: this block is what the phone
+     reads if the rules above ever go back to reserving space */
   body.has-statebar #shellMain{padding-bottom:0}
   body.has-statebar .fs-screen,
   body.has-statebar .payoverlay,
@@ -2046,11 +2367,36 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
    grey showed only as a rim around content and as a strip under a short list. `--bg`
    is now the ground of nothing at all; it survives as the disabled-field fill. */
 .licmodal .fs-box,#usersModal .fs-box{background:var(--card)}
+/* ⚠️⚠️ THIS ONE HUGS ITS CONTENT (2026-09-29, by request). `.fs-box` is `height:90vh`
+   because the two surfaces it was built for — the purchase wizard and the licence panel
+   — are always taller than the window, so a share of the window IS their height. Manage
+   users is not: it is an invite field and a table of three to five people, and a fixed
+   90vh left it as a tall sheet with a paragraph in the top third and nothing under it.
+   ⚠️ A CAP, NOT A FREE HEIGHT. Past the cap `.fs-body` scrolls — it is already
+   `flex:1;min-height:0;overflow:auto`, so nothing here has to arrange that; the only
+   change is that the box stops being told to fill the window.
+   ⚠️ THE CAP KEEPS THE STATE BAR'S SUBTRACTION, exactly as `body.has-statebar .fs-box`
+   does for the others. Written as one `max-height` rather than as two rules because the
+   `--sbH` fallback is 0 — with the bar absent it resolves to `min(90vh, 100vh - 32px)`,
+   which is 90vh, so the bar costs nothing when it is not there.
+   ⚠️ An id, so it outranks both `.fs-box` and `body.has-statebar .fs-box` wherever they
+   sit in this file. */
+#usersModal .fs-box{height:auto;max-height:min(90vh, calc(100vh - var(--sbH,0px) - 32px))}
 .fs-screen[hidden]{display:none}
 /* one header row: muted label + title on the left, Change plan + close on the right */
 /* one row, always: a wrapping header dropped ✕ below the title once a licence
    label grew long. The title ellipsizes instead (see .fs-maintitle). */
-.fs-header{flex:none;display:flex;align-items:center;gap:12px;flex-wrap:nowrap;padding:13px 24px;background:#fff;border-bottom:1px solid var(--line2)}
+/* ⚠️⚠️ NO STROKE UNDER A MODAL'S HEADER (2026-09-29, by request) — the grey fill is the
+   separation, and a line under a band that already changes colour is the second time the
+   same thing is said. Written as "the default has none, and two surfaces keep theirs"
+   rather than as a list of the ones that lose it: a list falls behind the next dialog,
+   and the next dialog should get the new rule, not the old one.
+   ⚠️ The two that keep it are named right below: the purchase wizard and the licence
+   panel. Both put a stepper or a tab strip immediately under the band, where the line is
+   doing work the fill cannot. */
+.fs-header{flex:none;display:flex;align-items:center;gap:12px;flex-wrap:nowrap;padding:13px 24px;background:#fff;border-bottom:0}
+#nlModal .fs-header,
+#licModal .fs-header{border-bottom:1px solid var(--line2)}
 .fs-header .spacer{flex:1}
 /* ---------- the header band of a DIALOG is grey (2026-09-28, by request) ----------
    ⚠️ NAMED SURFACES, NOT `.fs-header` WHOLESALE. Four things wear this class and one of
@@ -2735,7 +3081,26 @@ button.nl-step:focus-visible{outline:2px solid var(--ink);outline-offset:3px;bor
    The table now sits directly on the sheet, and the only lines left are the ones that
    belong to the table itself — the column rule and the row separators. */
 .usersbody .inviterow{margin-bottom:0}
-.usersbody table{width:100%}
+/* ⚠️⚠️ EDGE TO EDGE, AND THE COLUMNS SPREAD (2026-09-29, by request: "stretch the users
+   table to the full width so it fills the modal"). Two changes, and the second is what
+   actually makes it read as filled:
+     · the table escapes the body's 24px inset and its cells take that inset back, so the
+       column band spans the modal rather than stopping short of it — the same move the
+       licence panel's tables make against their section;
+     · ⚠️ `table-layout:fixed` WITH WIDTHS. `auto` sizes columns to their content, so the
+       three text columns bunched at the left and the whole surplus opened as a gap
+       between `ADDED` and the row actions. Widening the table with `auto` still in place
+       would have made that gap wider, not the table fuller. Measured before: the first
+       column ran 336→636 inside a table 336→1105.
+     · the last column is sized for what it holds — two 58px pill buttons and their gap —
+       and everything else shares what is left. */
+.usersbody table{width:calc(100% + 48px);margin-left:-24px;table-layout:fixed}
+.usersbody table th:first-child,.usersbody table td:first-child{padding-left:24px}
+.usersbody table th:last-child,.usersbody table td:last-child{padding-right:24px}
+.usersbody table th:nth-child(1),.usersbody table td:nth-child(1){width:38%}
+.usersbody table th:nth-child(2),.usersbody table td:nth-child(2){width:24%}
+.usersbody table th:nth-child(3),.usersbody table td:nth-child(3){width:20%}
+.usersbody table th:nth-child(4),.usersbody table td:nth-child(4){width:18%}
 /* the list starts on its own band, separated by space rather than by a border */
 .usersbody #usersTable{margin-top:22px}
 /* the list's name. h2 is the sheet's title, so the list one step below it takes h2-sm —
@@ -3397,7 +3762,11 @@ body[data-mesh] .dtopbar:not(.docked) .tnav-item:not(.on):hover{background:var(-
    control in the chrome takes, it appears only under the pointer, and it lights the
    whole hit area rather than just the word, which is what a control with no resting box
    most needs to show. */
-.dprofbtn{padding:6px 10px}
+/* ⚠️ THE HOVER NEEDS A SHAPE, AND IT IS THE BAR'S OWN (2026-09-29, by request). The
+   fill arrived on 09-28 and landed as a hard-cornered rectangle beside five pill nav
+   items — the only square hit area in a bar made of pills. `999px` is not a number
+   chosen here: it is `.tnav-item`'s, and this control sits in the same row. */
+.dprofbtn{padding:6px 10px;border-radius:999px}
 /* ⚠️ ONE RULE WITH THE NAV ITEMS NOW (2026-09-28, second pass). This was white
    UNCONDITIONALLY for a day — right on the gradient, wrong once the bar docks and is
    itself white, where a white fill is invisible. It takes the same base as every other
@@ -3963,6 +4332,211 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
 .gridtbl tbody tr:last-child > td:last-child{border-bottom-right-radius:10px}
 .dblock .tablescroll{overflow:visible}
 
+/* ============================================================================
+   HOME — LAYOUT B: cards  (2026-09-29, by request; `homeLayout` in the ⚙ picks)
+   ============================================================================
+   A second FORM for the same three blocks. Layout A above is untouched: both hosts
+   sit in index.html and one carries `hidden`, so swapping is a repaint, not a reload.
+   ⚠️ Nothing here is scoped by `[data-tableframe]` — there is no table in this layout.
+   The frame axis has nothing to act on, and the ⚙ still offers it because it is a
+   page-level setting, not a Home one. */
+#homeCards[hidden]{display:none}
+#homeTable[hidden]{display:none}
+.hcsect{margin-top:28px}
+/* the heading sits ABOVE the frames here, which is why the activity block's own
+   `.dblock-head` stays behind when its feed is moved across */
+.hc-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+/* ⚠️ `--t-h2-fs`, NOT the reference's ~24px. The type scale has exactly one desktop
+   step between body and h1, and h1 (36) is the greeting at the top of this very page.
+   A seventh step is a change to the system, and a layout proposal is not the place to
+   decide one — reported instead. One token if it is wanted. */
+.hc-head h2{margin:0;font-family:var(--font-ui);font-size:var(--t-h2-fs);
+  line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw)}
+/* ⚠️ `.hc-count` IS GONE (2026-09-29). The count was a separate chip beside a bare
+   arrow for one pass; both layouts carry layout A's one button now, so there is nothing
+   left for a chip rule to dress. `.hc-go` is only the slot it sits in. */
+.hc-go{display:inline-flex;font-variant-numeric:tabular-nums}
+/* invoices and activity share the row underneath; they stack when there is no room
+   for two readable columns (see the ≤900px block at the foot of this section) */
+/* ⚠️ NOT 1:1. The invoice row carries five things across, two of them 40px buttons;
+   the feed carries one column of sentences that reflow at any width. Measured at 1440:
+   an even split leaves the invoice's product cell 68px and it ellipses to nothing, while
+   the feed has room to spare.
+   ⚠️ 1.35:1, NOT THE REFERENCE'S 1.15:1, and the 68px of difference has a name: our row
+   actions are PILLS (`.btn--icon.btn--md` is `padding:0 18px`, so 58px wide, decided
+   2026-09-25 when every icon button in a list row became the quiet filled one), while
+   the reference draws two bare glyphs. Two of them plus their gap cost 122px against the
+   reference's ~54. The proportion pays for a decision this layout is not allowed to
+   re-open. Measured after: `ThingsBoard · Startup` and `· Business` fit; only
+   `· Perpetual License` ellipses, and it carries its full text in `title`. */
+.hc-cols{display:grid;grid-template-columns:1.35fr 1fr;gap:24px;align-items:start}
+.hc-cols .hcsect{margin-top:28px}
+/* the frame both lower blocks wear — the same white card `.dblock` is on Home, said
+   once so the two cannot drift apart */
+.hc-card{background:var(--card);border-radius:10px;padding:6px 18px}
+/* ⚠️⚠️ THE TWO LOWER FRAMES ARE ONE HEIGHT (2026-09-29, by request). They hold different
+   things — three invoice rows against a feed that runs to seventeen entries — so left to
+   themselves one was a third of the other, and two cards side by side at wildly different
+   heights read as a layout fault rather than as two blocks.
+   ⚠️ A FIXED HEIGHT, NOT `align-items:stretch`. Stretch would match them to the TALLER,
+   which is the feed, and the pair would be as long as the whole activity list.
+   ⚠️ THE SCROLL IS ON THE BODY, NOT THE CARD, so the card keeps its padding and its
+   rounded corners while the content inside moves.
+   ⚠️ THE COST, NAMED: three invoice rows in a 600px frame leave about half of it empty.
+   The row count is the earlier decision ("the selection does not move"); at this height
+   the block has room for seven. One number if that is wanted. */
+.hc-cols .hc-card{height:600px;display:flex;flex-direction:column}
+.hc-cols .hc-card > *{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain}
+
+/* ---------- licence cards -------------------------------------------------------
+   ⚠️ `auto-fit` WITH A FLOOR, not three fixed columns: the brief says three across and
+   stacking down, and a `minmax` does both with one rule — 1180 gives three, and the
+   count falls to two and then one as the window narrows, with no breakpoint to keep in
+   step with the phone grid.
+   ⚠️ `align-items:stretch` (the default) is doing real work: a card with a two-line
+   label must not make its neighbours short. Every card in a row is as tall as the
+   tallest, and the label zone is what absorbs the difference. */
+.hc-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px}
+.lcard{background:var(--card);border-radius:10px;padding:14px 16px 0;
+  display:flex;flex-direction:column;cursor:pointer;
+  box-shadow:0 0 0 1px var(--line2)}
+.lcard:hover{box-shadow:0 0 0 1px var(--line)}
+.lcard:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+/* a cancelled licence is quieter, exactly as its row is */
+.lcard.off .lcard-name,.lcard.off .lcard-kind{color:var(--mid)}
+/* 1 — status, term, and the overflow menu at the right edge */
+.lcard-top{display:flex;align-items:flex-start;gap:8px;min-height:var(--btnH)}
+.lcard-state{display:flex;align-items:center;gap:6px;flex-wrap:wrap;flex:1;min-width:0;
+  min-height:var(--btnH);font-size:14px;color:var(--mid)}
+.lcard-dot{color:var(--faint)}
+.lcard-term{min-width:0}
+.lcard .lic-actions{flex:none}
+/* ⚠️⚠️ NO RESTING FILL ON THIS SURFACE (2026-09-29, by request: "in this variant the
+   buttons go without a background — the menu and the key copy both, just the icon").
+   ⚠️ IT IS THE `surface` AXIS, NOT A CHANGE OF VARIANT. The kebab is still `btn--menu`
+   and the copy is still `btn--secondary` — they are the same controls doing the same
+   jobs as in the table, and a caller swapping them for `btn--ghost` would be describing
+   the PLACE in the button's own name. What the place says is said here, on the
+   container, exactly as `.on-tint` says the opposite for a tinted ground.
+   ⚠️ ONLY THE RESTING FILL GOES. Hover and press keep theirs — with no box at rest, the
+   wash under the pointer is the only thing left that says this is a control, which is
+   the same argument the account button in the top bar is built on.
+   ⚠️ Scoped to `.lcard` rather than given a name of its own because one surface wants
+   it. The day a second does, this becomes a class and the rule takes both. */
+.lcard .btn--menu,
+.lcard .btn--secondary{background:transparent}
+/* 2 — the product square and the two lines beside it */
+.lcard-prod{display:flex;align-items:center;gap:10px;margin-top:2px}
+/* the cell's 230px cap is a TABLE COLUMN's measure; here the card is the measure */
+.lcard-prod .lp-txt{max-width:none;flex:1}
+.lcard-kind{font-size:14px;color:var(--mid);line-height:1.2}
+.lcard-name{font-size:15px;font-weight:500;color:var(--ink);line-height:1.3;margin-top:1px}
+/* 3 — the key, on its own inset field */
+.lcard-key{display:flex;align-items:center;gap:8px;margin-top:14px;
+  background:var(--surface-quiet);border-radius:6px;padding:4px 4px 4px 12px}
+.lcard-keytxt{flex:1;min-width:0;font-size:14px;color:var(--mid);letter-spacing:0.06em;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* ⚠️ THE WHITE-ON-TINT PATCH IS GONE WITH THE FILL. It existed so the copy button read
+   as a control against the key field's grey; the card now asks every control on it to be
+   a bare glyph, and a white box on the one field that is already grey would be the single
+   exception to that. */
+/* 4 — the label zone, under its divider.
+   ⚠️ WHAT KEEPS A ROW OF CARDS LEVEL IS THAT EVERYTHING ABOVE THE DIVIDER IS FIXED, not
+   this min-height: the status row carries `min-height:--btnH` whether or not the licence
+   has a menu (a grant has none), and the product and key rows are their own content — so
+   the divider lands at the same y in every card, and the grid's own stretch equalises the
+   frames below it. Measured on B8 · B3 · B11 · B17 · B15 (one of them menuless): divider
+   at 172 in all five, card height 232 in all five. And on the two-line label (B13, whose
+   label runs to two lines at every column count) beside a one-line and a chip: 238 each,
+   divider at the same y.
+   ⚠️ The min-height is for a different job — a card ALONE in its row, where there is no
+   taller neighbour to stretch to. Without it an unnamed licence ends on its chip and the
+   block looks cut off. */
+/* ⚠️⚠️ EXACTLY TWO LINES, ALWAYS (2026-09-29, by request: "keep the card height as it
+   is"). The zone used to be `min-height:60` and grew — so a two-line label made its own
+   card 6px taller than the ones beside it, and the grid then stretched all of them to
+   match. With three cards on screen showing three different label shapes on purpose, that
+   would have been three heights or one inflated one. A fixed box the height of two lines
+   plus its padding is the same for every shape: a one-line label, a two-line label and
+   the chip all sit in the same band, and the card height stops depending on the data.
+   ⚠️ `40px` is `2 × 1.4 × 14px` rounded up — the label's own line box, twice. */
+.lcard-label{margin-top:14px;border-top:1px solid var(--line2);
+  padding:12px 0 14px;height:66px;display:flex;align-items:flex-start}
+/* ⚠️ CLAMPED TO THE BOX, since the box no longer grows. Three seeded labels run past two
+   lines at the narrowest column; without this they would be drawn over the card's edge.
+   Full text stays in `title`, as it does in the table's variants B and C. */
+.lcard-labeltxt{margin-top:0;color:var(--mid);line-height:1.4;max-height:40px;
+  overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2}
+.lcard-add{align-self:flex-start}
+.lcard-addic{width:var(--ic-16);height:var(--ic-16)}
+
+/* ---------- invoice rows inside one card ----------------------------------------
+   ⚠️ A GRID, NOT A TABLE: the row stacks two of its five facts, which a `<td>` cannot
+   be repoured into. Columns are named here once so every row lines up without a table
+   to do it for them. */
+/* ⚠️ ONLY THE PRODUCT COLUMN FLEXES, and it is the only one that can: the other four
+   are their own content — a date over a number, a figure, a word with a glyph, two
+   40px buttons. Giving `when` a `minmax(120px,…)` share as well is what starved the
+   product cell to 68px: the floor won, and the remainder went to the wrong column. */
+.hcinv{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto auto;
+  align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--line2)}
+.hcinv:last-child{border-bottom:0}
+.hcinv-date{font-size:14px;font-weight:500;color:var(--ink)}
+.hcinv-num{font-size:14px;color:var(--faint);margin-top:2px}
+.hcinv-lic{display:block;text-decoration:none;min-width:0}
+.hcinv-licname{display:block;font-size:14px;font-weight:500;color:var(--ink);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hcinv-lic:hover .hcinv-licname{text-decoration:underline}
+.hcinv-licmodel{display:block;font-size:14px;color:var(--faint);margin-top:2px}
+.hcinv-amt{font-size:14px;font-weight:500;color:var(--ink);font-variant-numeric:tabular-nums;
+  white-space:nowrap}
+.hcinv-status{white-space:nowrap}
+
+/* ---------- activity, in the second column --------------------------------------
+   The feed itself is the SAME NODES, moved here; nothing about an entry is restyled.
+   All this does is give the card the padding the table block's own frame was giving. */
+#hcActBody{padding:6px 0}
+
+/* two readable columns need the room for them; below that they stack, and the
+   licence grid has already dropped to two by the same width */
+@media (max-width:900px){
+  .hc-cols{grid-template-columns:1fr;gap:0}
+  /* ⚠️ THE MATCHED HEIGHT GOES WITH THE COLUMNS. Once the two blocks are stacked there is
+     nothing to match, and a 600px scroller inside a page that also scrolls is two scroll
+     regions under one finger — the trap the licence panel's tab list already documents. */
+  .hc-cols .hc-card{height:auto;display:block}
+  .hc-cols .hc-card > *{overflow:visible}
+}
+
+/* ---------- the phone (≤600px) --------------------------------------------------
+   ⚠️ THE INVOICE ROW HAS TO REFLOW OR IT LOSES ITS PRODUCT ALTOGETHER. Measured at 390:
+   the four content columns plus two 58px pill buttons and the gaps demand 406px of the
+   358 there are, so the one flexible column — the product — resolved to 0px and the line
+   simply was not there. `minmax(0,1fr)` is what lets a grid do that silently.
+   Three bands instead, in the order the table's own phone card reads in: who it is, what
+   it was for, what it cost and whether it went through. */
+@media (max-width:600px){
+  .hc-head h2{font-size:var(--t-h2-sm-fs);line-height:var(--t-h2-sm-lh);
+    letter-spacing:var(--t-h2-sm-ls);font-weight:var(--t-h2-sm-fw)}
+  .hc-card{padding:2px 14px}
+  .hcinv{grid-template-columns:minmax(0,1fr) auto;row-gap:10px;column-gap:10px;
+    align-items:start;padding:14px 0}
+  .hcinv-when{grid-column:1}
+  .hcinv-act{grid-column:2;grid-row:1;justify-self:end}
+  /* the product line carries the divider, exactly as it does on the table's card */
+  .hcinv-prod{grid-column:1/-1;padding-top:12px;border-top:1px solid var(--line2)}
+  .hcinv-licname{white-space:normal}
+  .hcinv-amt{grid-column:1;font-size:var(--t-body-sm-fs)}
+  .hcinv-status{grid-column:2;justify-self:end}
+  /* ⚠️ THE LABEL ZONE KEEPS ITS FIXED HEIGHT HERE TOO. This block used to release it
+     (`min-height:0`) on the argument that a full-width card has no neighbour to line up
+     with — true of a ROW, and the cards are a column here, where an unlabelled card
+     ending early against three that do not is the same raggedness one turn of the head
+     further down. The rule was also already inert: `height` beats `min-height`, so it had
+     stopped doing anything the moment the zone became a fixed box. Removed rather than
+     left as a line that looks like it decides something. */
+}
+
 /* New-user empty state: plan structure. Switchers reuse the .seg segmented
    control; cards reuse .dblock + .pill + .btn — no new colors or components. */
 /* ---------- Community Grant states (pending / approved) ----------
@@ -4365,7 +4939,14 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
    ⚠️ The panel's old "flip to white inside a framed entry" rule goes with the framed
    entry. There is no container left for it to be lighter than; it sits on the page and
    its hairline is what separates it. */
-.fi-card{margin-top:8px;padding:10px 14px;background:var(--card);
+/* ⚠️ HALF THE BODY'S WIDTH, NOT ALL OF IT (2026-09-29, by request). The box holds two
+   or three key/value pairs — `Charge $299.00`, `Attempt Auto-pay` — and stretched to the
+   full measure of the feed the values sat a screen away from their own keys, so a box
+   that exists to be read at a glance had to be scanned. Half is the widest it can be and
+   still read as a pair of columns.
+   ⚠️ `max-width`, not `width`: the box may be NARROWER than half when its content is,
+   and a fixed half would leave white space inside a frame that is itself the content. */
+.fi-card{margin-top:8px;padding:10px 14px;max-width:50%;background:var(--card);
   border:1px solid var(--line2);border-radius:8px}
 .fd-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;
   padding:2px 0;font-size:14px;line-height:1.5}
@@ -4396,7 +4977,11 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
   /* the row already wraps; what it needs at this width is to start each change on its
      own line rather than squeezing a struck value, an arrow and a pill into one */
   .fd-k{flex:0 0 100%}
-  .fi-card{padding:9px 11px}
+  /* ⚠️ FULL WIDTH AGAIN ON THE PHONE. Half of a 330px body is 165px, and `Charge`
+     beside `$299.00` needs ~140 — so the pair wrapped onto two lines and the box got
+     taller than the sentence above it. The half-measure exists to stop a value drifting
+     away from its key across a wide feed; there is no wide feed here. */
+  .fi-card{padding:9px 11px;max-width:none}
 }
 /* the styleguide's per-type specimen: the key and where it occurs, then the entry */
 .sg-actrow{padding:14px 0;border-bottom:1px dashed var(--line2)}
@@ -4591,6 +5176,15 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
 /* the overshoot has to clear the LARGEST gap, which is the 34px above a separator */
 .feed > .fsep::before,.feed > .fitem::before{content:"";position:absolute;left:11px;
   top:0;bottom:-40px;width:1px;background:var(--line)}
+/* ⚠️ THE SEPARATOR REACHES UP FOR THE RAIL rather than the entry above it reaching
+   down. An entry's segment overshoots by a constant 40; with the gap above a separator
+   now 64 it would stop 24px short and the axis would break at every date. Raising every
+   entry's overshoot to 64 instead would make the one before the LAST entry run 32px past
+   a 24px mark and leave a stub beside the final sentence — so the gap is owned by the
+   element whose own margin makes it. */
+.feed > .fsep::before{top:-64px}
+/* ⚠️ AFTER the rule above on purpose: same specificity, so this is what keeps a feed
+   that OPENS on a date from drawing a rail up into the air above it. */
 .feed > :first-child::before{top:12px}
 /* ⚠️ `.is-tail` IS SET BY SCRIPT, not `:last-child`, and the difference is a search:
    while one is running the last CHILD is usually a hidden row, so the rail carried on
@@ -4608,7 +5202,16 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
    sentences apart is the gap, and at 14px a screen of one-line entries read as a
    paragraph. 22 and 34: the rhythm is now "an entry is nearer its own detail box than
    it is to the next entry", which is what makes a grouped row read as one thing. */
-.fsep{align-items:center;margin:34px 0 14px}
+/* ⚠️⚠️ ONE GAP INSIDE A DAY, A BIGGER ONE BETWEEN DAYS (2026-09-29, by request), and
+   the hierarchy this replaces was inverted. It was 34 above a separator, 14 under it and
+   32 between entries: the date row hugged its first entry while the entries themselves
+   stood twice as far apart, and the space between two DAYS (34) was all but the space
+   between two entries of the same day (32). So the largest visual break in the feed fell
+   in the wrong place, and the days did not read as blocks at all.
+   Now the block is uniform — the date is 32 from its first entry, exactly as the entries
+   are 32 from each other — and the break between blocks is 64, twice that. Two numbers,
+   one ratio, and the ratio is what does the reading. */
+.fsep{align-items:center;margin:64px 0 32px}
 .feed > .fsep:first-child{margin-top:4px}
 .fsep-dot{justify-self:center;width:7px;height:7px;border-radius:50%;
   background:var(--card);box-shadow:0 0 0 1px var(--line)}
@@ -4732,7 +5335,17 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
    own they would wrap among themselves and the caret would be pushed to a line below,
    however few of them there were. */
 .invite-chips{display:contents}
-.invite-chip{max-width:100%;background:#fff;color:var(--ink);padding-right:4px}
+/* ⚠️ A FILL, NOT AN OUTLINE (2026-09-29, by request). The chips sit INSIDE the input's
+   own box — that box is the outline — so every chip drew a second stroke a few pixels in
+   from the first, and three addresses read as three boxes inside a box. `--surface-quiet`
+   is the same grey the field's own quiet furniture uses. */
+/* ⚠️ `.chip.invite-chip`, NOT `.invite-chip`. The chip wears `chip label invite-chip`,
+   and `.chip.label` (two classes) sets `background:#fff` — a single-class rule loses to
+   it. It had always lost; nobody noticed because the value it lost with was the same
+   white. The moment the fill changed, the old declaration was simply ignored. This is
+   two classes and sits later in the file, so it wins on both counts. */
+.chip.invite-chip{max-width:100%;background:var(--surface-quiet);border-color:transparent;
+  color:var(--ink);padding-right:4px}
 .invite-chip-t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* the chip's own delete. Not the shared ✕ (30px, its own box): that one closes a
    surface, this one removes a token inside a control and has to fit the chip's line. */
@@ -4958,8 +5571,18 @@ td.noresults-cell .noresults{margin:14px}
    outline the block owns itself, identical whether it stands in a cell or in a feed.
    Owning it is the point — a box drawn by its container can only ever have the sides
    that container happens to give it. */
+/* ⚠️⚠️ A FILL, NOT AN OUTLINE (2026-09-29, by request). `--surface-quiet` (#F4F5F6) is
+   the same grey the column heads and the icon buttons already wear, so the block reads as
+   an empty SURFACE rather than as a box someone drew around nothing.
+   ⚠️ The paragraph above — "a complete solid outline the block owns itself" — is answered,
+   not dropped: the point of that pass was that the box must not be assembled out of
+   whichever sides its container happened to give it, and a fill cannot be. It is still
+   one form, still owned here, still identical in a cell and in a feed.
+   ⚠️ `.noresults` STAYS DASHED AND UNFILLED, and now the two differ by more than they
+   did: this one says "the account has nothing", that one says "your filter hid it all".
+   Same argument as before, better served. */
 .emptybox.eb{padding:34px 20px;text-align:center;
-  border:1px solid var(--line2);border-radius:10px;background:var(--card)}
+  border:0;border-radius:10px;background:var(--surface-quiet)}
 .eb-t{font-size:var(--t-body-fs);line-height:var(--t-body-lh);color:var(--ink)}
 .eb-p{margin:6px auto 0;max-width:46ch;font-size:14px;line-height:1.5;color:var(--mid)}
 /* ⚠️ WIDER INSIDE THE LICENCE PANEL'S INSTANCE TABS (2026-09-29, by request). 46ch is
@@ -5183,7 +5806,13 @@ body.list-empty #pageTitleRow #licNewBtnB{display:none !important}
    gone from Account and Billing. Two containers and two titles for one subject read
    as two areas; the card IS the page now. The header keeps the stickiness — that part
    was doing real work, holding Save in reach while you are in the fields below. */
-.setcard-page{padding:0 24px 22px}
+/* ⚠️ NO STROKE ON THE PAGE-LEVEL CARD (2026-09-29, by request: Account, Change password
+   and Payment & Billing). All three are `.setcard.setcard-page`, and the outline was the
+   one thing making a full-width page read as a card sitting on the page rather than as
+   the page itself. The white fill and the radius stay — they are what the surface IS.
+   ⚠️ Scoped to `.setcard-page`, NOT to `.setcard`: the plain `.setcard` is a real card
+   among others and keeps its edge. Nothing else wears `.setcard-page` — checked. */
+.setcard-page{padding:0 24px 22px;border:0}
 /* ⚠️ The header carries its own background and is pulled out to the card's edges with
    a negative margin, so it paints OVER the card's rounded top corners and squared
    them off. It has to repeat the radius — the card cannot clip it, because
@@ -5198,6 +5827,12 @@ body.list-empty #pageTitleRow #licNewBtnB{display:none !important}
 .setcard > .setcard-h-page,.setcard > .setdiv{max-width:none}
 .setsec > .setcard-h{margin-bottom:14px}
 .setdiv{border-top:1px solid var(--line2);margin:22px 0}
+/* ⚠️ A HIDDEN SECTION TAKES ITS DIVIDER WITH IT. `#creditSec` is shown only on a positive
+   balance now, and the rule that follows it would otherwise sit against the one that
+   precedes it — two hairlines 22px apart with nothing between them. Written as a sibling
+   selector rather than as a second id in the JS, so the markup keeps saying which divider
+   belongs to which section. */
+#creditSec[hidden] + .setdiv{display:none}
 .modal .mf .btn[disabled]{opacity:.45;cursor:not-allowed}
 /* sticky page header carrying a single page-level Save (Profile / Billing settings) */
 .pagehead{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:12px;background:var(--bg);padding:14px 0 12px}
@@ -5219,7 +5854,7 @@ body.list-empty #pageTitleRow #licNewBtnB{display:none !important}
 .plantable .usecol{display:none}
 /* ⚠️ moved to the sticky block above: it is now conditional (`.is-scrollable`) */
 .paymodal{background:#fff;border:1px solid var(--line);border-radius:10px;width:min(560px,96vw);box-shadow:0 18px 48px rgba(0,0,0,.20);display:flex;flex-direction:column}
-.paymodal-h{display:flex;align-items:center;gap:12px;padding:20px 24px;border-bottom:1px solid var(--line2)}
+.paymodal-h{display:flex;align-items:center;gap:12px;padding:20px 24px;border-bottom:0}
 .paymodal-h h3{margin:0;font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw)}
 .paymodal-h .sp{flex:1}
 
@@ -6000,6 +6635,11 @@ th.lic-num{text-align:right}
      here still holds, it is just a different light colour doing the job now */
   .head{background:var(--c-lav-50);border-bottom:1px solid var(--line2)}
   .headcol{display:flex;flex-direction:column}
+  /* ⚠️ THE 12px THAT REPLACED THE HAIRLINE MEANS NOTHING HERE. On the desktop it is the
+     gap between the tinted title block and the white below it; in this column
+     `.head-rest` is not below the title (see the finding recorded in NOTES about its
+     missing `order`), so the space would just be a strip of tint above the key row. */
+  .head-rest{margin-top:0}
   .head .top{display:contents}
   .keygrid{display:contents}
   /* ⚠️ `:not([hidden])` on `.keycol` is the STRUCTURAL guard, not a cosmetic one.

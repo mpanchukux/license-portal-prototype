@@ -29,18 +29,30 @@ function renderPayCard(){
              btn.removeAttribute('title'); }
   }
 }
-/* ⚠️ A zero balance still renders the block, saying it is empty and where credit comes
-   from. Hiding it would mean the one place that explains what account credit IS only
-   appears once you already have some — and the first time anyone has some is the moment
-   after a downgrade, when they have already been told about it on a screen they left. */
+/* ⚠️⚠️ THE SECTION IS SHOWN ONLY ON A POSITIVE BALANCE (2026-09-29, by request), AND
+   THAT REVERSES THE ARGUMENT THIS COMMENT USED TO MAKE. It said: "A zero balance still
+   renders the block, saying it is empty and where credit comes from. Hiding it would
+   mean the one place that explains what account credit IS only appears once you already
+   have some — and the first time anyone has some is the moment after a downgrade, when
+   they have already been told about it on a screen they left."
+   The reversal is the decision, not an oversight: an empty state whose whole content is
+   "you have none of this" is a section every account without credit — which is nearly all
+   of them — scrolls past forever, to teach a word it will never need. Where credit IS
+   explained stays what it was: the downgrade screen that creates it, and the section
+   itself the moment there is a balance to head.
+   ⚠️ The empty-state copy is DELETED, not left unreachable. A branch nothing can enter is
+   the thing that looks alive in a grep and is not.
+   ⚠️ `hidden` on the SECTION, not on the card: the heading and its hint are the half that
+   would otherwise be left standing over nothing. Its divider goes too — see
+   `#creditSec[hidden] + .setdiv` in the stylesheet. */
 function renderCreditBlock(){
   var el = $('#creditCard'); if(!el) return;
   var c = accountCredit();
-  el.innerHTML = c > 0
-    ? '<span class="credit-amt">' + fmtMoney(c) + '</span>'
-      + '<span class="credit-note">Applied automatically to your next purchase.</span>'
-    : '<span class="credit-none">No credit on this account. Credit is added when a change '
-      + 'lowers what you pay and part of the period is already paid for.</span>';
+  var sec = $('#creditSec');
+  if(sec) sec.hidden = !(c > 0);
+  if(!(c > 0)) return;
+  el.innerHTML = '<span class="credit-amt">' + fmtMoney(c) + '</span>'
+    + '<span class="credit-note">Applied automatically to your next purchase.</span>';
 }
 renderCreditBlock();
 

@@ -49,6 +49,16 @@
            that banner names how many other licences need attention. -->
       <div class="gbanner homebanner" id="homeBanner" role="status" hidden></div>
 
+      <!-- ⚠️ TWO LAYOUTS, BOTH IN THE MARKUP, ONE HIDDEN (2026-09-29, by request) — the
+           same shape as the Licenses page's two toolbars, and for the same reason:
+           swapping is then `hidden` plus a repaint, with nothing to reload and nothing
+           for a half-built second copy to get wrong. `homeLayout` in the ⚙ picks.
+           ⚠️ THE FEED IS NOT DUPLICATED. #dashFeed and #dashFeedMore are ONE pair of
+           nodes that applyHomeLayout() MOVES between the two hosts — ids, the lazy-load
+           observer and the growing batch all travel with them. Two copies would mean two
+           #dashFeed, and `$('#…')` takes the first: the exact defect already recorded
+           for the details modal opened over the details page. -->
+      <div id="homeTable">
       <!-- Licenses: full width, rendered with the same head/row builders as the
            Licenses page, capped at the top five attention-first for the large
            account and showing every row for the small one (renderDashLicenses). -->
@@ -113,12 +123,44 @@
         <div class="dblock-head"><h2>Recent activity</h2>
           <a class="btn btn--secondary btn--sm btn--icon" href="activity.html" aria-label="Open all activity"><svg class="ic btn-ic" aria-hidden="true"><use href="assets/icons.svg#ti-arrow-right"></use></svg></a>
         </div>
-        <div class="feed" id="dashFeed"></div>
-        <!-- lazy load: the sentinel appends the next batch when it scrolls into
-             view; the button is the fallback (and the keyboard path) -->
-        <div class="feedmore" id="dashFeedMore" hidden>
-          <span class="feedsentinel" id="dashFeedSentinel" aria-hidden="true"></span>
-          <button class="link" id="dashFeedMoreBtn">Load more</button>
+        <!-- the move target: applyHomeLayout() appends the feed pair to whichever of
+             #dashActBody / #hcActBody belongs to the layout that is up -->
+        <div id="dashActBody">
+          <div class="feed" id="dashFeed"></div>
+          <!-- lazy load: the sentinel appends the next batch when it scrolls into
+               view; the button is the fallback (and the keyboard path) -->
+          <div class="feedmore" id="dashFeedMore" hidden>
+            <span class="feedsentinel" id="dashFeedSentinel" aria-hidden="true"></span>
+            <button class="link" id="dashFeedMoreBtn">Load more</button>
+          </div>
+        </div>
+      </div>
+      </div><!-- /#homeTable -->
+
+      <!-- ====================================================================
+           LAYOUT B — cards. Same records, same order, same components; the form
+           is what changes. Section headings sit ABOVE the frames here (title,
+           count chip, arrow link), which is why the activity block's own
+           `.dblock-head` does not travel with the feed.
+           ==================================================================== -->
+      <div id="homeCards" hidden>
+        <section class="hcsect">
+          <div class="hc-head" id="hcLicHead"></div>
+          <!-- three across on desktop, stacking down as the window narrows -->
+          <div class="hc-cards" id="hcLicGrid"></div>
+        </section>
+        <!-- invoices and activity side by side; they stack at narrow widths -->
+        <div class="hc-cols">
+          <section class="hcsect">
+            <div class="hc-head" id="hcInvHead"></div>
+            <div class="hc-card"><div class="hc-invlist" id="hcInvList"></div></div>
+          </section>
+          <section class="hcsect">
+            <!-- ⚠️ NO COUNT CHIP ON THIS ONE, and the absence is deliberate — see the
+                 note on the table layout's activity heading, and the report. -->
+            <div class="hc-head" id="hcActHead"></div>
+            <div class="hc-card"><div id="hcActBody"></div></div>
+          </section>
         </div>
       </div>
     </div>

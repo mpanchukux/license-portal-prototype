@@ -48,14 +48,21 @@ function syncDashSurface(){
 }
 
 /* ---------- populated dashboard ---------- */
-function dashLicList(){
+/* ⚠️ SPLIT IN TWO (2026-09-29) so the cap and the ORDER are separate facts. The order is
+   what both layouts share; the cap of five belongs to the table block alone, and the
+   cards block needs to look past it (see dashCardList). Nothing about either changed. */
+function dashLicSorted(){
   var ls = DATA().licenses.slice();
   if(dashVariant() === 'B'){
     ls.sort(function(a,b){ return attnRank(a)-attnRank(b) || dateKey(a.event)-dateKey(b.event); });
-    return ls.slice(0, 5);
+    return ls;
   }
   ls.sort(function(a,b){ return dateKey(b.created)-dateKey(a.created); });
   return ls;
+}
+function dashLicList(){
+  var ls = dashLicSorted();
+  return dashVariant() === 'B' ? ls.slice(0, 5) : ls;
 }
 /* ⚠️ VARIANT B TAKES FOUR ROWS, NOT THREE, and the fourth is the whole point: it is
    rendered in full and then faded out, so the block stops mid-row and says "there is
@@ -109,6 +116,22 @@ function markFadeRow(body){
    what was being counted. Same control, moved to where the question is asked.
    ⚠️ Still `renderBlockFooters`, still one function: the count comes from the dataset,
    so a demo switch repaints it without either block knowing. */
+/* ⚠️ ONE BUILDER FOR BOTH LAYOUTS (2026-09-29, by request: the cards layout's headings
+   must carry "the same button with the count and the arrow together"). It was a chip plus
+   a separate bare arrow there and this control here — two answers to "how much is behind
+   this block, and the way there", one per layout, which is exactly the fork a second
+   layout is not allowed to introduce.
+   ⚠️ `n === null` IS THE ICON-ONLY FORM, and it has two callers for two reasons: the
+   table layout's variant B moves its number into `See all N` over the fade, and the
+   activity block has no honest number at all. Same absence, same shape.
+   ⚠️ `aria` IS PASSED, NOT DERIVED: variant B drops the number from the FACE and keeps it
+   in the accessible name, so the two cannot be built from one string. */
+function blockGoHTML(n, href, aria){
+  return n === null
+    ? button({ variant:'secondary', size:'sm', icon:'arrow-right', href:href, ariaLabel:aria })
+    : button({ variant:'secondary', size:'sm', label:String(n), iconEnd:'arrow-right',
+               href:href, ariaLabel:aria });
+}
 function renderBlockFooters(){
   var lic = $('#dashLicCount'), inv = $('#dashInvCount');
   /* ⚠️ IN B THE HEADING BUTTON IS ARROW-ONLY. The count moved into `See all N` over the
@@ -117,17 +140,13 @@ function renderBlockFooters(){
      the square width come from the component rather than from a rule here. */
   var bare = homeBlocks() === 'b';
   var nL = DATA().licenses.length;
-  if(lic) lic.innerHTML = button({ variant:'secondary', size:'sm',
-    iconEnd: bare ? null : 'arrow-right', icon: bare ? 'arrow-right' : null,
-    label: bare ? '' : String(nL), href:'licenses.html',
-    ariaLabel:'Open all ' + nL + ' licenses' });
+  if(lic) lic.innerHTML = blockGoHTML(bare ? null : nL, 'licenses.html',
+    'Open all ' + nL + ' licenses');
   if(inv){
     var n = DATA().invoices.length;
     /* an account with no invoices has nothing to open — the button goes, the heading stays */
-    inv.innerHTML = n ? button({ variant:'secondary', size:'sm',
-      iconEnd: bare ? null : 'arrow-right', icon: bare ? 'arrow-right' : null,
-      label: bare ? '' : String(n), href:'invoices.html',
-      ariaLabel:'Open all ' + n + ' invoices' }) : '';
+    inv.innerHTML = n ? blockGoHTML(bare ? null : n, 'invoices.html',
+      'Open all ' + n + ' invoices') : '';
   }
   renderBlockFades();
 }
@@ -190,12 +209,249 @@ function dashFeedLoadMore(){
   dashFeedShown += DASH_FEED_BATCH;
   renderDashFeed();
 }
+/* ============================================================================
+   LAYOUT B — cards. A second form for the same three blocks (2026-09-29, by request);
+   `homeLayout` in the ⚙ picks, and A is untouched so the comparison is honest.
+
+   ⚠️ NOTHING ABOUT THE SELECTION MOVES. The licences are `dashLicList()` — the same
+   list, in the same order, capped the same way — and the invoices are the same first
+   three. The feed is not re-rendered at all: its nodes are MOVED here (see
+   applyHomeLayout), so what it shows, how it grows and what it looks like are the feed's
+   business exactly as before.
+   ⚠️ `homeBlocks` B AND `licTable` DO NOT REACH THIS LAYOUT, and the ⚙ hides both groups
+   while it is up: one is a fourth table ROW faded under a button, the other picks between
+   sets of table COLUMNS. Neither has anything to act on in a grid of cards.
+   ============================================================================ */
+
+/* The section heading: the title, and beside it the same control layout A puts there —
+   one button carrying the count and the arrow together.
+   ⚠️⚠️ IT WAS A CHIP PLUS A BARE ARROW FOR ONE PASS, and that was the fork: the count is
+   a fact and the arrow a control, so splitting them read defensibly on its own — but it
+   made the two layouts answer "how much is behind this, and how do I get there" with two
+   different objects. One layout may differ from another in FORM; it may not differ in
+   what its controls are. `blockGoHTML` is now the single answer (2026-09-29, by request).
+   ⚠️ `count === null` is the icon-only form, which is how the activity heading comes out
+   without a number — see the note at its call. */
+function hcHeadHTML(title, count, href, aria){
+  return '<h2>' + title + '</h2>'
+    + '<span class="hc-go">' + blockGoHTML(count === undefined ? null : count, href, aria) + '</span>';
+}
+/* ⚠️ THE SAME RULE AS THE TABLE ROW: a grant carries no overflow menu, because it cannot
+   be changed, cancelled or topped up. `actionsCell` decides that for layout A; repeating
+   the decision rather than the markup is the point — the card splits the row's two
+   actions across two zones (the kebab in the status row, copy in the key row), so there
+   is no cell to reuse, only a rule. */
+function lcardMenuHTML(p){
+  if(p && p.grant) return '';
+  return '<div class="lic-actions"><div class="menu">'
+    + button({ variant:'menu', size:'md', icon:'dots-vertical', ariaLabel:'More actions',
+               attrs:'aria-haspopup="true" aria-expanded="false"' })
+    /* ⚠️ `noLabelEdit`, exactly as layout A's block passes it: renaming a licence belongs
+       where the licence is the subject. The card's own label zone is a different thing —
+       it NAMES an unnamed licence, which is what the brief asks the zone to offer. */
+    + '<div class="pop" role="menu" hidden>' + menuItems(p, { noLabelEdit:true }) + '</div>'
+    + '</div></div>';
+}
+/* Status · term, then product, then key, then the label zone under a divider.
+   ⚠️ EVERY PART IS THE COMPONENT LAYOUT A USES — `statusMark` and `stateText` for the
+   first line (so `Blocked · Over instance limit` reads the same here as in the table),
+   `licenseMark` for the square, `licenseKeyFor`/`licenseKeyMask` for the key, and the
+   details surface's own `+ Add label` chip for an unnamed licence. What the card owns is
+   the arrangement.
+   ⚠️ `data-licid` IS THE CONTRACT with `wireLicenseRows` — the element may be anything,
+   as long as it carries the id (see `opts.rowSel` there). */
+function licCardHTML(p){
+  var label = (p.label || '').trim();
+  var alive = p.status === 'canceled' ? 'Canceled' : 'Active';
+  return '<div class="lcard' + (p.status === 'canceled' ? ' off' : '') + '"'
+    + ' data-licid="' + esc(p.id || '') + '"'
+    + ' data-goto="' + esc(p.goto || '') + '"'
+    + ' data-product="' + esc(p.product || '') + '"'
+    + ' tabindex="0" aria-label="' + esc((p.product ? p.product + ' ' : '') + p.name
+        + ', status: ' + alive + '. Open details') + '">'
+    + '<div class="lcard-top">'
+    +   '<div class="lcard-state">' + statusMark(p)
+    +     '<span class="lcard-dot" aria-hidden="true">&middot;</span>'
+    +     '<span class="lcard-term">' + stateText(p) + '</span></div>'
+    +   lcardMenuHTML(p)
+    + '</div>'
+    + '<div class="lcard-prod">'
+    +   '<span class="lp-ic" aria-hidden="true">' + licenseMark(p) + '</span>'
+    +   '<div class="lp-txt">'
+    +     '<div class="lcard-kind">' + esc(p.type || '') + '</div>'
+    +     '<div class="lcard-name">' + esc(p.product || '') + ' &middot; ' + esc(p.name || '') + '</div>'
+    +   '</div>'
+    + '</div>'
+    + '<div class="lcard-key">'
+    +   '<span class="mono lcard-keytxt">' + licenseKeyMask(licenseKeyFor(p)) + '</span>'
+    +   button({ variant:'secondary', size:'md', icon:'copy', cls:'tip lic-copy',
+                ariaLabel:'Copy license key', attrs:'data-tip="Copy license key"' })
+    + '</div>'
+    /* ⚠️ THE ZONE IS ALWAYS THERE, LABEL OR NOT, and that is what keeps a row of cards
+       level: an unnamed licence shows the chip in the same band a name would occupy. The
+       two-line label is absorbed by the zone's own min-height, not by the card growing
+       past its neighbours — see `.lcard-label` in the stylesheet. */
+    + '<div class="lcard-label">' + (label
+        ? '<span class="lic-prodlabel lcard-labeltxt">' + esc(label) + '</span>'
+        : '<button class="chip ghost lcard-add" data-editlabel>'
+          + icon('pencil', { cls:'lcard-addic' }) + 'Add label</button>')
+    + '</div>'
+  + '</div>';
+}
+/* One invoice, as a row of the card that holds them. ⚠️ A DIFFERENT SHAPE FROM `invRow`,
+   not a restyling of it: the brief reorders the facts (when · what · how much · did it
+   go through · act) and stacks two of them, and a `<td>` cannot be repoured into that.
+   What is NOT rebuilt is any of the parts — the status is `invStatusMark`, the
+   auto-charge glyph is `autoChargeIcon`, and the two actions come from `invActionsHTML`
+   so this row cannot end up offering a different pair from the table's.
+   ⚠️ The licence stays a LINK, as it is in every other invoice row: `data-invlic` is the
+   contract the delegated interceptor reads, so the panel opens over Home here too. */
+function invCardRowHTML(v){
+  var lic = v.licId && licById(v.licId);
+  return '<div class="hcinv">'
+    + '<div class="hcinv-when">'
+    +   '<div class="hcinv-date">' + fmtDate(v.date) + '</div>'
+    +   '<div class="hcinv-num mono">' + esc(v.num) + '</div>'
+    + '</div>'
+    + '<div class="hcinv-prod">' + (lic
+        ? '<a class="hcinv-lic" data-invlic="' + esc(lic.id) + '" href="' + licenseHref(lic, 'invoices') + '">'
+          /* the longest product name does not fit a half-width column beside two pill
+             buttons; it ellipses and keeps its full text where a reader can get it */
+          + '<span class="hcinv-licname" title="' + esc((lic.product || '') + ' \u00b7 ' + (lic.name || '')) + '">'
+          + esc(lic.product || '') + ' &middot; ' + esc(lic.name || '') + '</span>'
+          + '<span class="hcinv-licmodel">' + esc(lic.type || '') + '</span></a>'
+        : '<span class="muted">&mdash;</span>') + '</div>'
+    + '<div class="hcinv-amt">' + esc(v.amount) + '</div>'
+    + '<div class="hcinv-status"><span class="statwrap">' + invStatusMark(v) + autoChargeIcon(v) + '</span></div>'
+    + '<div class="hcinv-act"><span class="rowactions">' + invActionsHTML() + '</span></div>'
+  + '</div>';
+}
+/* ⚠️ THE FEED IS MOVED, NOT COPIED. Both layouts live in the markup at once, so a second
+   `#dashFeed` would put two nodes with one id in the document — and `$('#…')` takes the
+   first, which is the defect already on record for the details modal opened over the
+   details page. Moving keeps the ids, the IntersectionObserver on the sentinel and the
+   batch count the feed has grown to, all without the feed knowing this happened. */
+function applyHomeLayout(){
+  var cards = homeLayout() === 'cards';
+  var t = $('#homeTable'), c = $('#homeCards');
+  if(!t || !c) return;
+  t.hidden = cards;
+  c.hidden = !cards;
+  var host = $(cards ? '#hcActBody' : '#dashActBody');
+  var feed = $('#dashFeed'), more = $('#dashFeedMore');
+  if(host && feed && more && feed.parentNode !== host){
+    host.appendChild(feed);
+    host.appendChild(more);
+    /* the sentinel has just changed which box clips it — see wireFeedSentinel */
+    wireFeedSentinel();
+  }
+}
+/* ---------- the feed's lazy load, and the box it is watched in --------------------
+   ⚠️ AN OBSERVER WITH NO `root` WATCHES THE VIEWPORT, and the cards layout put the feed
+   inside a 600px scroller — a target clipped by an ancestor never intersects the
+   viewport, so that observer could not fire there. The root is given explicitly now.
+   ⚠️⚠️ REASONED, NOT MEASURED, AND THE DIFFERENCE MATTERS HERE. I first wrote this up as
+   a regression I had measured: the box scrolled to its end, the entry count stayed at 5.
+   That measurement proves nothing — `IntersectionObserver` NEVER fires in the embedded
+   browser panel, layout or no layout. Checked afterwards, in the table layout, with a
+   viewport-rooted observer and the sentinel plainly on screen: the callback did not run
+   once in 1.2s. Same family as the note above `syncStickyAction` about rAF in an embedded
+   panel, and the same reason the `Load more` button exists. So this change is right by
+   construction and is UNTESTED on the behaviour it fixes; the button is what works here.
+   ⚠️ THE ROOT IS FOUND, NOT NAMED. Which box clips the sentinel depends on the layout,
+   and the layout switches at runtime — a hard-coded `#hcActBody` would be wrong in the
+   table layout and a hard-coded `#shellMain` wrong in the cards one. Walking up to the
+   nearest scrollable ancestor answers it wherever the feed has been moved to.
+   ⚠️ IT ALSO CORRECTS THE TABLE LAYOUT rather than leaving it alone: there the root
+   becomes `#shellMain`, which is the box that actually scrolls that feed. `null` was only
+   ever nearly-right there, because `#shellMain` happens to fill the viewport.
+   ⚠️ DISCONNECTED BEFORE RE-OBSERVING: `applyHomeLayout` runs on every render, and a
+   stack of observers on one sentinel would append a batch per layout switch. */
+var feedObserver = null;
+function scrollParentOf(el){
+  for(var n = el && el.parentNode; n && n.nodeType === 1; n = n.parentNode){
+    var o = getComputedStyle(n).overflowY;
+    if(o === 'auto' || o === 'scroll') return n;
+  }
+  return null;
+}
+function wireFeedSentinel(){
+  var sentinel = $('#dashFeedSentinel');
+  if(!sentinel || !window.IntersectionObserver) return;
+  if(feedObserver) feedObserver.disconnect();
+  feedObserver = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){ if(e.isIntersecting) dashFeedLoadMore(); });
+  }, { root: scrollParentOf(sentinel), rootMargin:'80px' });
+  feedObserver.observe(sentinel);
+}
+/* ⚠️⚠️ THREE CARDS, AND WHICH THREE IS A DEMO DECISION (2026-09-29, by request) — it is
+   the one place this layout departs from "the selection does not move", and it departs on
+   purpose. The brief asks the block to SHOW the card's three label shapes side by side:
+   a plain label, one that runs to two lines, and none at all. Attention-first order gives
+   five licences that all happen to carry a short label, so the two other shapes would
+   never appear on this page and the thing being reviewed could not be seen.
+   Same kind of decision as the 2%% of hours `instanceChecks` leaves empty so a gap between
+   runs is visible at all: demo data arranged so a state has somewhere to be.
+   ⚠️ IT PICKS FROM THE WHOLE SORTED LIST, not from the table block's five — the cap of
+   five is that block's, and looking past it is the whole reason the sort was split out.
+   ⚠️ THE LONGEST LABEL IS THE PROXY FOR "WRAPS TO TWO LINES", because nothing in the data
+   says how a string will break. Measured: B13 at 61 characters is the only seeded label
+   that takes two lines at every column count, and it is the longest.
+   ⚠️ IT DEGRADES RATHER THAN FAILS. An account with no unlabelled licence, or with three
+   licences and nothing to choose between, falls through to the plain order — `forEach(add)`
+   at the end is that fallback, and `add` refuses duplicates, so the first three of the
+   sorted list fill whatever the shapes could not. */
+var DASH_CARDS = 3;
+function dashCardList(){
+  var list = dashLicSorted();
+  var lab = function(l){ return String((l && l.label) || '').trim(); };
+  var pick = [];
+  function add(l){ if(l && pick.indexOf(l) < 0) pick.push(l); }
+  add(list[0]);
+  add(list.slice().sort(function(a, b){ return lab(b).length - lab(a).length; })[0]);
+  add(list.filter(function(l){ return !lab(l); })[0]);
+  list.forEach(add);
+  return pick.slice(0, DASH_CARDS);
+}
+function renderHomeCards(){
+  var grid = $('#hcLicGrid'); if(!grid) return;
+  var list = dashCardList();
+  // explicit callback: .map would hand licCardHTML the index as its second argument
+  grid.innerHTML = list.map(function(p){ return licCardHTML(p); }).join('');
+
+  var inv = invoicesSorted();
+  $('#hcInvList').innerHTML = inv.length
+    ? inv.slice(0, 3).map(function(v){ return invCardRowHTML(v); }).join('')
+    : '<div class="emptybox">' + (DATA().noInvoicesNote || 'No invoices yet.') + '</div>';
+
+  var nL = DATA().licenses.length, nI = DATA().invoices.length;
+  $('#hcLicHead').innerHTML = hcHeadHTML('Licenses', nL, 'licenses.html',
+    'Open all ' + nL + ' licenses');
+  /* an account with no invoices has nothing to count and nowhere to go — same rule the
+     table layout's heading follows */
+  $('#hcInvHead').innerHTML = nI
+    ? hcHeadHTML('Recent invoices', nI, 'invoices.html', 'Open all ' + nI + ' invoices')
+    : '<h2>Recent invoices</h2>';
+  /* ⚠️ NO COUNT, AND IT IS THE ONE PART OF THE BRIEF THIS LAYOUT DOES NOT FOLLOW. The
+     brief asks for `Recent activity 15 →`; the decision already on record for the table
+     layout is that this block cannot honestly say how much is behind it — the page the
+     arrow leads to renders the DERIVED check-ins folded (`activityFeed`), hundreds a
+     day, while Home reads the seeded list. A chip saying 17 next to an arrow to a
+     longer list is a number that means neither thing. Reported rather than overridden;
+     it is one argument in `hcHeadHTML` the day the count is decided. */
+  $('#hcActHead').innerHTML = hcHeadHTML('Recent activity', null, 'activity.html',
+    'Open all activity');   /* null: the icon-only form, same as layout A's */
+}
 function renderHome(){
   syncDashSurface();                 // surface first: the blocks below fill #dashView
   renderGreeting();
+  /* before the block renderers: `renderBlockFades` MEASURES a row, and a hidden block
+     measures zero — so which host is on screen has to be settled first */
+  applyHomeLayout();
   renderDashLicenses();
   renderDashInvoices();
   renderBlockFooters();
+  renderHomeCards();
   renderDashFeed();
 }
 renderHome();
@@ -203,19 +459,20 @@ renderHome();
 /* rows behave exactly as on the Licenses page; `home` tells the details page
    which section to highlight and where its back button goes */
 wireLicenseRows('#dashLicTable', { from:'home', rerender: renderHome });
+/* the cards carry the same five actions on a different element — one wiring, one
+   contract (`data-licid`), so neither layout can drift from the other */
+wireLicenseRows('#hcLicGrid', { from:'home', rerender: renderHome, rowSel:'.lcard' });
 // modal mode: a change made inside the details modal restates this page too
 if(window.LicenseDetails) LicenseDetails.setRerender(renderHome);
 
 /* Reaching the end of the feed appends the next batch; the button is the
-   keyboard path and the fallback where IntersectionObserver is missing. */
+   keyboard path and the fallback where IntersectionObserver is missing.
+   ⚠️ The observer itself lives in `wireFeedSentinel` now, because which box it has to
+   watch depends on where the layout has put the feed. */
 (function(){
-  var btn = $('#dashFeedMoreBtn'), sentinel = $('#dashFeedSentinel');
+  var btn = $('#dashFeedMoreBtn');
   if(btn) btn.addEventListener('click', dashFeedLoadMore);
-  if(sentinel && window.IntersectionObserver){
-    new IntersectionObserver(function(entries){
-      entries.forEach(function(e){ if(e.isIntersecting) dashFeedLoadMore(); });
-    }, { rootMargin:'80px' }).observe(sentinel);
-  }
+  wireFeedSentinel();
 })();
 
 /* ⚠️ The mesh layer's scroll and the bar's docking used to be wired HERE. They moved

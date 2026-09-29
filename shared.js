@@ -429,6 +429,29 @@ function tableFrame(){ var v = Store.get('tableFrame'); return (v === 'b' || v =
    moved into `See all N`, and printing it twice in one block would make two controls
    look like two different destinations. Named here because it is the same decision. */
 function homeBlocks(){ return Store.get('homeBlocks') === 'b' ? 'b' : 'a'; }
+/* ⚠️ WHAT SHAPE HOME'S BLOCKS ARE (2026-09-29, by request) — a different question from
+   `homeBlocks`, which is how MUCH of one it shows. `table` is what exists: three framed
+   tables down the page. `cards` lays the licences out as a row of cards and puts the
+   invoice rows and the activity feed side by side underneath.
+   ⚠️ 'table' IS THE DEFAULT, same as every other axis here: a proposal ships beside what
+   exists rather than replacing it. Same store key, so `Reset demo data` drops it too.
+   ⚠️ IT SUPERSEDES `homeBlocks` RATHER THAN COMBINING WITH IT, and the ⚙ says so by
+   hiding that group while cards are up. B's whole idea is a fourth table ROW rendered
+   and then faded — there is no row to fade in a grid of cards, so the two axes have no
+   product. The cards layout reads the plain selection (`dashLicList`, three invoices).
+   ⚠️ `licTable` is likewise inert here: it picks between three sets of table COLUMNS. */
+function homeLayout(){ return Store.get('homeLayout') === 'cards' ? 'cards' : 'table'; }
+/* ⚠️ HOW THE LICENCE PANEL'S FIRST ZONE IS ARRANGED (2026-09-29, by request) — the block
+   under the header holding the key, the status and the period. `current` is what exists;
+   `a` leads with the facts and compresses the key into an inset field; `b` puts the key
+   on the left and a 300px column of facts on the right.
+   ⚠️ 'current' IS THE DEFAULT and the word is deliberate: the other axes here call their
+   baseline `a`, and this one has two proposals rather than one, so naming the baseline
+   `a` would have made `A` mean "the current one" here and "the proposal" everywhere else.
+   ⚠️ All three read the SAME nodes — the variants are a stylesheet, not a second
+   renderer (see `applyLicZone` in license-details.js). Same store key as the rest, so
+   `Reset demo data` drops it too. */
+function licZone(){ var v = Store.get('licZone'); return (v === 'a' || v === 'b') ? v : 'current'; }
 /* ⚠️ THE LANDING'S BACKGROUND, AND ONLY THE LANDING'S (2026-09-28, by request). Same
    shape as the three axes above — a stored key, an explicit opt-out, 'current' as the
    default — because a proposal ships beside what exists rather than replacing it.
@@ -1051,6 +1074,11 @@ function settingsContext(){
     /* the details surface counts in either presentation: the full page, or the
        modal mounted over any list */
     details: page === 'license' || !!(lic && !lic.hidden && $('#licModal #appView')),
+    /* ⚠️ THE NODE, NOT ITS STATE — the same distinction `wizardPage` makes just below,
+       and for the same reason: you pick the zone's layout and THEN open a licence to
+       look at it. `#licModal` exists on exactly the pages that load license-details.js,
+       and the full page is the other host. */
+    detailsPage: page === 'license' || !!lic,
     wizard: !!(nl && !nl.hidden),
     /* ⚠️ The NODE, not its state. The presentation setting has to be reachable
        BEFORE a wizard is open — you set the frame, then open one to look at it —
@@ -1116,10 +1144,29 @@ function settingsBodyHTML(){
       + '<div class="sp-hint">Variant 2 follows the product picked on the page \u2014 it is not a setting.</div>');
   }
 
-  /* ---- how much of a Home block is shown. Scoped to Home: the control describes
-     the preview blocks, and on any other page it would be a setting for something not
-     on screen — the same rule the Licenses toolbar group follows. */
+  /* ---- how the licence panel's first zone is arranged. Scoped to the surfaces that
+     can OPEN one, not to one being open — see `detailsPage`. */
+  if(c.detailsPage){
+    out += group('License zone',
+      '<label class="sp-opt"><input type="radio" name="licZone" value="current"' + (licZone() === 'current' ? ' checked' : '') + '><span>Current (key left, facts right)</span></label>'
+      + '<label class="sp-opt"><input type="radio" name="licZone" value="a"' + (licZone() === 'a' ? ' checked' : '') + '><span>A \u2014 facts first</span></label>'
+      + '<label class="sp-opt"><input type="radio" name="licZone" value="b"' + (licZone() === 'b' ? ' checked' : '') + '><span>B \u2014 two columns</span></label>'
+      + '<div class="sp-hint">Only the block under the header. A leads with status and the term, then a compact key field and one line of help. B keeps the key block as it is and stacks the facts in a 300px column beside it, adding Next charge where there is one.</div>');
+  }
+  /* ---- which SHAPE Home's blocks take. Scoped to Home: the control describes the
+     preview blocks, and on any other page it would be a setting for something not on
+     screen — the same rule the Licenses toolbar group follows. */
   if(c.home){
+    out += group('Home layout',
+      '<label class="sp-opt"><input type="radio" name="homeLayout" value="table"' + (homeLayout() === 'table' ? ' checked' : '') + '><span>A — current (three tables)</span></label>'
+      + '<label class="sp-opt"><input type="radio" name="homeLayout" value="cards"' + (homeLayout() === 'cards' ? ' checked' : '') + '><span>B — cards (licences across, invoices + activity in two columns)</span></label>'
+      + '<div class="sp-hint">B keeps the same records and the same order; it changes the form. Section headings carry a count chip and an arrow, licences become cards, and the invoice rows and the activity feed sit side by side.</div>');
+  }
+  /* ---- how much of a Home block is shown.
+     ⚠️ HIDDEN WHILE THE CARDS ARE UP, not merely inert: B is a fourth table ROW faded
+     under a button, and a grid of cards has no such row. A control for something that
+     is not on the screen is the thing this panel was cleaned up to stop doing. */
+  if(c.home && homeLayout() === 'table'){
     out += group('Home blocks',
       '<label class="sp-opt"><input type="radio" name="homeBlocks" value="a"' + (homeBlocks() === 'a' ? ' checked' : '') + '><span>A \u2014 current (5 rows, count in heading)</span></label>'
       + '<label class="sp-opt"><input type="radio" name="homeBlocks" value="b"' + (homeBlocks() === 'b' ? ' checked' : '') + '><span>B \u2014 3 rows, 4th fading under See all</span></label>'
@@ -1132,7 +1179,9 @@ function settingsBodyHTML(){
     + '<label class="sp-opt"><input type="radio" name="tableFrame" value="c"' + (tableFrame() === 'c' ? ' checked' : '') + '><span>C \u2014 no frame, no head fill</span></label>'
     + '<div class="sp-hint">Every table on the page at once. B drops the outline and the rounded head and fills the block edge to edge. C is B with the column row\u2019s grey taken off as well, so the head sits on the card\u2019s white with only its hairline under it.</div>');
 
-  if(c.licenses || c.home){
+  /* ⚠️ `c.home` ONLY WHILE HOME IS SHOWING THE TABLE — this axis picks between three sets
+     of table COLUMNS, and the cards layout has none. Same rule as `Home blocks` above. */
+  if(c.licenses || (c.home && homeLayout() === 'table')){
     out += group('Licenses table',
       '<label class="sp-opt"><input type="radio" name="licTable" value="a"' + (licTable() === 'a' ? ' checked' : '') + '><span>A — current (5 columns)</span></label>'
       + '<label class="sp-opt"><input type="radio" name="licTable" value="b"' + (licTable() === 'b' ? ' checked' : '') + '><span>B — proposal (4 columns)</span></label>'
@@ -2097,6 +2146,25 @@ function wireSettingsPanel(){
       case 'tableFrame':
         Store.set('tableFrame', r.value);
         applyTableFrame();
+        return;
+      /* ⚠️ THE PANEL ITSELF HAS TO BE REBUILT, and this is the only case here that does:
+         switching the layout takes two groups off the panel (`Home blocks`, `Licenses
+         table`) and puts them back. Every other setting changes the page, not the list
+         of settings. The same one line the panel opens with (`settingsBodyHTML` into
+         `#settingsBody`) redraws it, so the radio the reader just pressed comes back
+         checked from the STORE, not from the DOM.
+         ⚠️ Safe to replace that radio mid-event: this listener is
+         delegated on the panel, which is exactly why it survives every other rebuild. */
+      case 'homeLayout':
+        Store.set('homeLayout', r.value);
+        if(window.renderHome) renderHome();
+        $('#settingsBody').innerHTML = settingsBodyHTML();
+        return;
+      /* the panel is the same nodes in a different arrangement, so a repaint is all it
+         needs — and only when one is actually mounted */
+      case 'licZone':
+        Store.set('licZone', r.value);
+        if(window.LicenseDetails) LicenseDetails.refresh();
         return;
       case 'homeBlocks':
         Store.set('homeBlocks', r.value);

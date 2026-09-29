@@ -124,13 +124,15 @@ function instGroupHeadRow(lic, n, open, idx){
    first row. The glyph does the same job once.
    ⚠️ `arrow-right`, and the set already fixes that meaning: the note on
    `corner-down-right` says `arrow-right` means "goes to", which is exactly this.
-   ⚠️ It keeps `.btn--secondary.btn--icon` — the same control the row kebab and the
-   copy button wear — so it takes the 20px glyph and the grey-to-ink hover from the
-   component rather than declaring anything of its own.
+   ⚠️ `.btn--ghost`, NOT `.btn--secondary` (2026-09-29, by request). It sits on the group
+   HEADING — a row that is already a filled band inside the group's outline — and a second
+   filled box on it read as a control stuck onto a surface rather than as part of it. The
+   instance copy button in the panel is ghost for the same reason. It still takes the
+   20px glyph and the grey-to-ink hover from the component; only the resting fill goes.
    ⚠️ THE NAME SURVIVES IN `aria-label` and in the tooltip: dropping the words from the
    screen must not drop them from the accessibility tree, and `data-tip` is what the
    pointer gets instead. */
-    + '<a class="btn btn--secondary btn--md btn--icon tip ig-open" href="' + licenseHref(lic, 'instances') + '"'
+    + '<a class="btn btn--ghost btn--md btn--icon tip ig-open" href="' + licenseHref(lic, 'instances') + '"'
     +   ' data-invlic="' + id + '" aria-label="View license" data-tip="View license">'
     +   icon('arrow-right') + '</a>'
     + '</div></td></tr>';

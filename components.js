@@ -505,26 +505,32 @@ function invStatusMark(v){
   return '<span class="statmark is-' + tone + '">'
     + icon(STATUS_IC[tone], { cls:'statmark-ic' }) + esc(st) + '</span>';
 }
+/* ⚠️ ICON-ONLY, BOTH OF THEM (2026-09-25, by request). They were text buttons that
+   carried a hidden glyph and swapped to icons on the phone — one control with two
+   shapes, decided by a breakpoint. Now they are one shape everywhere, and the words
+   they lost come back as the tooltip every other icon button here uses. */
+/* ⚠️ SECONDARY, not ghost (2026-09-25, by request). The licence row's copy button is
+   secondary and these two sat beside it as bare glyphs — two kinds of control for the
+   same kind of job, one table apart. Every icon button in a list row is the quiet
+   filled one now. */
+/* ⚠️ LIFTED OUT OF `invRow` (2026-09-29), because Home's cards layout builds an invoice
+   row of a different shape and a different column order. The row decides what it LOOKS
+   like; it does not get to decide what an invoice can DO — two hand-written pairs is how
+   one surface quietly ends up with an action the other lost. */
+function invActionsHTML(){
+  return button({ variant:'secondary', size:'md', icon:'download', cls:'tip ra-act',
+                  ariaLabel:'Download PDF',
+                  attrs:'data-dlinv data-tip="Download PDF"' })
+    + button({ variant:'secondary', size:'md', icon:'external-link', cls:'tip ra-act',
+               ariaLabel:'View invoice (opens in a new tab)', href:'#',
+               attrs:'data-viewinv target="_blank" rel="noopener" data-tip="View invoice"' });
+}
 function invRow(v, opts){
   opts = opts || {};
-  /* ⚠️ ICON-ONLY, BOTH OF THEM (2026-09-25, by request). They were text buttons that
-     carried a hidden glyph and swapped to icons on the phone — one control with two
-     shapes, decided by a breakpoint. Now they are one shape everywhere, and the words
-     they lost come back as the tooltip every other icon button here uses. */
-  /* ⚠️ SECONDARY, not ghost (2026-09-25, by request). The licence row's copy button is
-     secondary and these two sat beside it as bare glyphs — two kinds of control for the
-     same kind of job, one table apart. Every icon button in a list row is the quiet
-     filled one now. */
-  var dl = button({ variant:'secondary', size:'md', icon:'download', cls:'tip ra-act',
-                    ariaLabel:'Download PDF',
-                    attrs:'data-dlinv data-tip="Download PDF"' });
-  var view = button({ variant:'secondary', size:'md', icon:'external-link', cls:'tip ra-act',
-                      ariaLabel:'View invoice (opens in a new tab)', href:'#',
-                      attrs:'data-viewinv target="_blank" rel="noopener" data-tip="View invoice"' });
   return '<tr class="inv-row"><td class="mono">'+v.num+'</td><td>'+fmtDate(v.date)+'</td><td class="num inv-amt">'+v.amount+'</td>'
     + '<td><span class="statwrap">'+invStatusMark(v)+autoChargeIcon(v)+'</span></td>'
     + (opts.noProduct ? '' : invProductCell(v, opts))
-    + '<td class="cellact"><span class="rowactions">' + dl + view + '</span></td></tr>';
+    + '<td class="cellact"><span class="rowactions">' + invActionsHTML() + '</span></td></tr>';
 }
 // how many columns invRow produces — the empty-state row has to span them
 function invCols(opts){ return (opts && opts.noProduct) ? 5 : 6; }
@@ -945,10 +951,17 @@ document.addEventListener('click', function(e){
 
 /* Wire a table of licence rows: the row itself navigates, its actions do not.
    `opts.from` labels the origin, `opts.rerender` redraws the page after a change. */
+/* ⚠️ `opts.rowSel` — THE WIRING IS SHARED, THE MARKUP IS NOT (2026-09-29). Home's cards
+   layout carries the same five actions (open · copy · edit label · cancel / change plan /
+   manage add-ons) on a `<div class="lcard">` instead of a `<tr class="lic-row">`, and a
+   second copy of this listener is how one of the two would quietly stop doing something
+   the other does — which is what happened to `Rename` on the Instances kebab. One
+   parameter, one contract: whatever the element is, it carries `data-licid`. */
 function wireLicenseRows(rootSel, opts){
   var root = $(rootSel);
   if(!root) return;
   opts = opts || {};
+  var ROW = opts.rowSel || '.lic-row';
   var rerender = opts.rerender || function(){};
   root.addEventListener('click', function(e){
     var copy = e.target.closest('.lic-copy');
@@ -956,11 +969,11 @@ function wireLicenseRows(rootSel, opts){
       e.stopPropagation();
       /* ⚠️ Was the literal string 'license-secret' — the row's copy button put a
          placeholder on the clipboard, not a key, and every row put the SAME one. */
-      var lrow = copy.closest('.lic-row');
+      var lrow = copy.closest(ROW);
       copyValue(licenseKeyFor(lrow && licById(lrow.getAttribute('data-licid'))), 'License key', copy);
       return;
     }
-    var licOf = function(el){ var r = el.closest('.lic-row'); return r && licById(r.getAttribute('data-licid')); };
+    var licOf = function(el){ var r = el.closest(ROW); return r && licById(r.getAttribute('data-licid')); };
     var labelItem = e.target.closest('[data-editlabel]');
     if(labelItem){ e.stopPropagation(); closeAllMenus(); openLabelModal(licOf(labelItem)); return; }
     var cancelItem = e.target.closest('[data-cancel]');
@@ -970,12 +983,12 @@ function wireLicenseRows(rootSel, opts){
     var maItem = e.target.closest('[data-manageaddons]');
     if(maItem){ e.stopPropagation(); closeAllMenus(); openManageAddons(licOf(maItem)); return; }
     if(e.target.closest('.lic-actions')) return;       // menus and their items never navigate
-    var row = e.target.closest('.lic-row');
+    var row = e.target.closest(ROW);
     if(row) openRowLink(row, opts.from);
   });
   root.addEventListener('keydown', function(e){
     if(e.key !== 'Enter' && e.key !== ' ') return;
-    var row = e.target.closest('.lic-row');
+    var row = e.target.closest(ROW);
     if(row && e.target === row){ e.preventDefault(); openRowLink(row, opts.from); }
   });
 }
