@@ -331,8 +331,21 @@ function invCardRowHTML(v){
    first, which is the defect already on record for the details modal opened over the
    details page. Moving keeps the ids, the IntersectionObserver on the sentinel and the
    batch count the feed has grown to, all without the feed knowing this happened. */
+/* ⚠️⚠️ THE PHONE GETS THE CARDS, WHATEVER THE SETTING SAYS (2026-09-30, by request).
+   The table layout's phone form was the table row re-poured by CSS — a different shape
+   again, so the prototype had three answers for "a licence in a list" and the phone's
+   was the only one nobody had designed. The cards ARE the phone's answer, so the axis
+   stops at the desktop: `homeLayout` still picks between A and B where both exist.
+   ⚠️ A `matchMedia` LISTENER, not a one-time read. `applyHomeLayout` runs from
+   `renderHome`, which a resize does not trigger — so crossing the breakpoint with the
+   setting on `table` would leave the phone showing the desktop table until something
+   else repainted. The listener re-runs the whole render, which is also what moves the
+   feed back to the host it belongs in. */
+var PHONE_MQ = window.matchMedia('(max-width:600px)');
+function onPhone(){ return PHONE_MQ.matches; }
+PHONE_MQ.addEventListener('change', function(){ renderHome(); });
 function applyHomeLayout(){
-  var cards = homeLayout() === 'cards';
+  var cards = homeLayout() === 'cards' || onPhone();
   var t = $('#homeTable'), c = $('#homeCards');
   if(!t || !c) return;
   t.hidden = cards;
@@ -441,6 +454,20 @@ function renderHomeCards(){
      it is one argument in `hcHeadHTML` the day the count is decided. */
   $('#hcActHead').innerHTML = hcHeadHTML('Recent activity', null, 'activity.html',
     'Open all activity');   /* null: the icon-only form, same as layout A's */
+  /* ⚠️ `See all N` UNDER THE CARDS, AND ONLY THE PHONE SHOWS IT (2026-09-30, by
+     request). The desktop already answers "how many are there" in the heading, where
+     the count chip sits beside the arrow; on the phone the three cards fill the screen
+     and the heading has scrolled away by the time the reader reaches the end of them,
+     so the way out has to be at the end. Built here and hidden by CSS above 600 rather
+     than branched in JS: it is the same markup either way, and a width is a CSS
+     question.
+     ⚠️ Same button the table layout's fade overlay uses (`blockmore-go`), so the two
+     ways of saying "there are more" are one control wearing one label. */
+  var more = $('#hcLicMore');
+  if(more) more.innerHTML = nL > DASH_CARDS
+    ? button({ variant:'secondary', size:'md', href:'licenses.html',
+               label:'See all ' + nL, cls:'blockmore-go' })
+    : '';
 }
 function renderHome(){
   syncDashSurface();                 // surface first: the blocks below fill #dashView

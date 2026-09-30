@@ -148,6 +148,10 @@
           <div class="hc-head" id="hcLicHead"></div>
           <!-- three across on desktop, stacking down as the window narrows -->
           <div class="hc-cards" id="hcLicGrid"></div>
+          <!-- ⚠️ PHONE ONLY (hidden above 600 in the stylesheet): the desktop says how
+               many there are in the heading above, which is off screen by the time a
+               phone reader reaches the third card. Filled by renderHomeCards. -->
+          <div class="hc-more" id="hcLicMore"></div>
         </section>
         <!-- invoices and activity side by side; they stack at narrow widths -->
         <div class="hc-cols">

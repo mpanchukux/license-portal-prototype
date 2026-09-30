@@ -4783,6 +4783,8 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
    label must not make its neighbours short. Every card in a row is as tall as the
    tallest, and the label zone is what absorbs the difference. */
 .hc-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px}
+/* the count lives in the heading at this width — see the phone block */
+.hc-more{display:none}
 .lcard{background:var(--card);border-radius:10px;padding:14px 16px 0;
   display:flex;flex-direction:column;cursor:pointer;
   box-shadow:0 0 0 1px var(--line2)}
@@ -6696,9 +6698,51 @@ th.lic-num{text-align:right}
 
   /* ---------- tap targets and page gutter ---------- */
   /* The band carries every control, so raising it once gives the whole prototype
-     44px targets. Type never goes below 14px anywhere, so nothing to do there. */
+     44px targets. */
   :root{--btnH:44px; --pageX:16px; --pageY:20px; --backW:44px; --contentX:22px;
          --bnavH:64px}   /* icon 26 + gap 3 + label 16 + padding 13 + border */
+
+  /* ⚠️⚠️ THE COMPACT TIER NOW APPLIES TO THE WHOLE PHONE (2026-09-30, by request:
+     "text one level smaller on mobile"). `--t-h1-sm` / `--t-h2-sm` / `--t-body-sm` have
+     existed since 09-28 and were named from values ~17 rules were already rendering as
+     literals — what was missing is that they only reached those seventeen. Pointing the
+     BASE tokens at them here steps the whole phone down one level at once: h1 36→28,
+     h2 20→18, body 16→15. Nothing new is invented; the tier the system already
+     documented for this width finally is the tier.
+     ⚠️ `small` AND `label` STAY AT 14, and that is the scale's floor, stated in the
+     token block and defended once already when Home's column heads were asked to shrink.
+     Stepping them to 13 would put body text at caption size on the smallest screen —
+     a separate decision, and one that needs to be taken for the system rather than for
+     a breakpoint. Reported rather than taken.
+     ⚠️ Rules that already name a `-sm-` token are unaffected: those resolve to the same
+     18 or 15 they always did, so this cannot double-reduce anything. */
+  :root{--t-h1-fs:var(--t-h1-sm-fs);   --t-h1-lh:var(--t-h1-sm-lh);   --t-h1-ls:var(--t-h1-sm-ls);
+        --t-h2-fs:var(--t-h2-sm-fs);   --t-h2-lh:var(--t-h2-sm-lh);   --t-h2-ls:var(--t-h2-sm-ls);
+        --t-body-fs:var(--t-body-sm-fs); --t-body-lh:var(--t-body-sm-lh)}
+
+  /* ---------- Home, layout B on the phone ----------------------------------------
+     ⚠️⚠️ THE CARDS BECOME TABLE ROWS (2026-09-30, by request). On the desktop they are
+     three separate objects in a grid, each with its own hairline box; at this width the
+     brief asks for one surface with rules between the rows — which is what a list of
+     licences is on a phone, and what every other list page in this pass becomes. So the
+     card keeps its INSIDES (the same `licCardHTML` the desktop builds) and gives up its
+     outline, its radius and the gap between it and the next one.
+     ⚠️ THE DIVIDER IS A `border-top` ON THE CARD, not a rule on the frame: the card is
+     the full width of the frame, so its own top edge spans exactly what a table row's
+     would, and the card's padding insets the content without insetting the line. */
+  #homeCards .hc-cards{display:block;gap:0;background:var(--card);border-radius:10px}
+  #homeCards .hc-cards > .lcard{box-shadow:none;border-radius:0}
+  #homeCards .hc-cards > .lcard + .lcard{border-top:1px solid var(--line2)}
+  /* the hover ring was the card's own edge lighting up; on a row it would draw a box
+     around one row of a table */
+  #homeCards .hc-cards > .lcard:hover{box-shadow:none;background:var(--row-hover)}
+  .hc-more{display:block;margin-top:12px}
+  .hc-more .blockmore-go{width:100%}
+  /* the two lower blocks are one column here, and the fixed 600px height the desktop
+     gives them is a desktop measure — on a phone the page scrolls instead */
+  #homeCards .hc-cols{grid-template-columns:1fr;gap:0}
+  #homeCards .hc-cols .hc-card{height:auto}
+  #homeCards .hc-cols .hc-card > *{overflow:visible}
 
   /* ---------- signed out, on a phone ----------
      ⚠️ The app bar below turns .dtopbar-inner into a GRID with named areas for the
@@ -6888,16 +6932,31 @@ th.lic-num{text-align:right}
   .listframe .stickybar{position:static;padding-top:0;padding-bottom:0}
   .listframe .stickybar::after{display:none}
   .listframe .stickyhead th{top:0}
-  /* ⚠️ The children give the padding BACK here, rather than the frame taking it: at
-     this width the frame is not a surface at all (rule above), so 18px of inset on its
-     children would push the toolbar and the row cards off the page's own margin. */
+  /* ⚠️ The desktop's 18px inset comes off every child; the few that need the phone's
+     own gutter are given it by name above. Rows take theirs from the cell rule, so a
+     divider can span the full surface while the text stays on the page's left edge. */
   .listframe > *{padding-left:0;padding-right:0}
   table:has(.lic-row) thead,table:has(.inv-row) thead,table:has(.user-row) thead,
   table:has(.inst-row) thead{display:none}
-  .lic-row,.inv-row,.user-row,.inst-row{display:block;position:relative;
+  /* ⚠️⚠️ ROWS, NOT CARDS (2026-09-30, by request). These three were each their own
+     bordered card with 10px between them — a stack of boxes on a page that is itself a
+     box. They are table rows again at this width: no outline, no radius, no gap, and a
+     hairline between one and the next. What they keep is the CARD'S LAYOUT — the cells
+     are still re-poured by the rules below — so nothing about what a row says changes,
+     only the frame it says it in.
+     ⚠️ `.user-row` IS DELIBERATELY LEFT A CARD. It lives in the Users MODAL, which has
+     no page frame to be a row of; the brief names the four list pages and this is not
+     one of them. Splitting the rule is the honest way to say that — the alternative is
+     one selector that silently means "and also the modal". */
+  .lic-row,.inv-row,.inst-row{display:block;position:relative;
+    border:0;border-radius:0;padding:12px var(--pageX);
+    margin:0;background:var(--card)}
+  .lic-row + .lic-row,.inv-row + .inv-row,.inst-row + .inst-row{
+    border-top:1px solid var(--line2)}
+  .user-row{display:block;position:relative;
     border:1px solid var(--line2);border-radius:10px;padding:12px;
     margin-bottom:10px;background:var(--card)}
-  .lic-row:last-child,.inv-row:last-child,.user-row:last-child,.inst-row:last-child{margin-bottom:0}
+  .user-row:last-child{margin-bottom:0}
   /* ⚠️ `tr.` on the front is load-bearing: .dblock table td sets an 11px cell
      padding at the same specificity, and without the extra type selector every
      line of the card keeps a 22px band of dead space (measured: 42px lines). */
@@ -6991,7 +7050,9 @@ th.lic-num{text-align:right}
   .user-row .rowactions{gap:18px}
   /* the invited row has no actions, so its empty cell must not add a line */
   tr.user-pending > td.cellact{margin-top:0}
-  tr.lic-row > td.cellact{position:absolute;top:8px;right:8px;
+  /* the kebab pins to the ROW's right edge, which is now the page gutter rather than
+     a card's 12px inset */
+  tr.lic-row > td.cellact{position:absolute;top:8px;right:var(--pageX);
     width:auto;margin:0;padding:0;text-align:right}
   .lic-row > td.cellact .lic-actions{gap:2px}
   /* An invoice card's actions are two text links, not icons: pinning those to a
@@ -7002,9 +7063,11 @@ th.lic-num{text-align:right}
      the rule that actually sets the invoice card's gap — change it here, or the
      value below does nothing. */
   .inv-row .rowactions{gap:8px}
-  /* The invoice card reads in the order it was asked for — number, product, then
-     amount · status · date on one line, actions last — which is not the column
-     order of the table, so the cells are re-ordered rather than re-rendered. */
+  /* ⚠️ THE INVOICE CARD IS NOT BUILT HERE. This block is the flex fallback from an
+     earlier pass; the card the phone actually shows is a GRID with named areas, ~1000
+     lines further down, and it overrides every one of these. Left as it was — a pass
+     that edits this one and not that one changes nothing on screen, which is exactly
+     what happened on 2026-09-30 before the cascade was read. */
   tr.inv-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
   tr.inv-row > td.mono{order:1;flex:0 0 100%;font-size:var(--t-body-sm-fs)}
   tr.inv-row > td.lic-prodcell{order:2;flex:0 0 100%}
@@ -7589,14 +7652,32 @@ th.lic-num{text-align:right}
     margin-left:calc(-1 * var(--pageX));margin-right:calc(-1 * var(--pageX));
     border-radius:0;border-left:0;border-right:0}
   .listcard,.setcard{padding-left:var(--pageX);padding-right:var(--pageX)}
-  /* the toolbar's own wrapper is not a surface at all (see below), so it must not
-     take the negative margin — its controls would hang off both edges.
-     ⚠️ `.listframe` is that wrapper now: the toolbar and the list share one card, and
-     on the phone the rows carry their own card each, so the frame around them has
-     nothing left to draw. */
+  /* ⚠️⚠️ THE FRAME IS A SURFACE AGAIN, AND FULL-BLEED (2026-09-30, by request). It was
+     explicitly NOT one, and the recorded reason was sound at the time: "on the phone the
+     rows carry their own card each, so the frame around them has nothing left to draw."
+     That premise is what changed — the rows stop being cards in this same pass and
+     become divided rows, so there IS something for the frame to be the edge of. The
+     toolbar and the list now share one white surface that runs to both screen edges,
+     which is what the brief asks for on all four list pages at once.
+     ⚠️ Negative margin plus matching padding, the trick `.listcard` above already uses:
+     the surface grows to the screen, the content keeps the page gutter. */
   .listframe,
   .listcard:has(> .lic-controls),.listcard:has(> .insttoolbar){
-    margin-left:0;margin-right:0;padding-left:0;padding-right:0}
+    margin-left:calc(-1 * var(--pageX));margin-right:calc(-1 * var(--pageX));
+    padding-left:0;padding-right:0;
+    background:var(--card);border-radius:0;border-left:0;border-right:0}
+  /* the children carry the gutter, so a divider can still run edge to edge while the
+     text inside it lines up with the page */
+  .listframe > .lic-controls,.listframe > .insttoolbar,
+  .listframe > .lic-titlerow,.listframe > .pager,.listframe > .inst-hint,
+  .listframe > .pagetitlerow,.listframe > .feed,.listframe > .feedmore,
+  .listframe > .emptybox,.listframe > .noresults{
+    padding-left:var(--pageX);padding-right:var(--pageX)}
+  /* ⚠️ THE TITLE ROW IS A DIRECT CHILD ON SOME PAGES AND A GRANDCHILD ON OTHERS.
+     Licenses and Instances wrap their H1 in `.lic-titlerow`, so the row `syncTitleRow`
+     builds inherits that gutter; Activity and Invoices put the H1 straight in the
+     frame, so the built row IS the direct child and needs its own. Both spellings are
+     listed rather than one selector guessing — measured: "Activity" sat on x=0. */
 
   /* ================= the page title row =================
      Title left, the page's actions right, on one line. Built by syncTitleRow(). */
@@ -7748,15 +7829,27 @@ th.lic-num{text-align:right}
      Refresh is not here at all: it is a trailing app-bar action (see .tb-refresh).
      One spacing scale: 12px between the three parts, 8px between chips, 16px to
      the list below. */
-  /* ⚠️ The card around the toolbar goes, but ONLY the one holding a toolbar — the
-     list's own card must keep its surface. `:has()` is the only way to tell them
-     apart without touching four HTML files, and it is already used elsewhere in
-     this file (the invoice card's divider). */
+  /* ⚠️⚠️ THE CARD AROUND THE TOOLBAR STAYS, AND IT IS WHITE (2026-09-30, by request).
+     This rule used to strip it — "the card around the toolbar goes, but only the one
+     holding a toolbar" — on the premise that the rows below carried their own surface
+     each. They no longer do (see the row rule above), so the toolbar and the list share
+     one white frame that runs to both screen edges, which is what the brief asks for on
+     every list page. The sizing half of that lives in the earlier block; what is left
+     here is the edge and the space under it.
+     ⚠️ The same selector appeared twice in this file, 165 lines apart, and the LATER
+     one won — so the first spelling of the new frame applied its background and had it
+     quietly turned back to `transparent` by this. Found by reading the cascade, not by
+     looking: the rows are white on their own, so the only thing that showed was a
+     toolbar band a shade off. */
   .listframe,
   .listcard:has(> .lic-controls),.listcard:has(> .insttoolbar){
-    background:transparent;border:0;border-radius:0;padding:0;margin-bottom:16px;
+    border:0;border-radius:0;padding-top:0;padding-bottom:0;margin-bottom:16px;
     overflow:visible}
   .lic-controls,.insttoolbar{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+  /* the grouped view is not offered at this width — see `instView` for why. The
+     control goes with the thing it controls rather than staying as a switch that
+     flips a setting nothing reads. */
+  .insttoolbar:has(#instGroupSwitch) .lic-toggle:has(#instGroupSwitch){display:none}
   /* ⚠️ On the phone the two rows are the first thing above the list, so they are made
      to cost as little as possible: the view toggle's row loses its own bottom margin
      (the filter row below it supplies the separation) and the segment takes the full
@@ -7947,13 +8040,17 @@ th.lic-num{text-align:right}
   /* ⚠️ ONE `grid-template-areas` for this card, in the rule above. There used to be
      a second one here that silently overrode it — two layouts for one card, and the
      dead one still looked authoritative. */
-  /* ⚠️ SQUARE, and the side follows the height rather than the other way round:
-     the height is set by the two text lines it spans (`align-self:stretch`), so
-     `aspect-ratio:1` makes the width match whatever that comes to — measured 40×46
-     before, 46×46 now. Do not put a fixed width back; it un-squares the moment the
-     headline wraps. */
-  tr.lic-row .lp-ic{grid-area:ic;align-self:stretch;width:auto;height:auto;
-    aspect-ratio:1;min-height:40px;margin-top:2px}
+  /* ⚠️⚠️ A FIXED 40px SQUARE (2026-09-30, by request: the phone "has drifted"). It was
+     `align-self:stretch` + `aspect-ratio:1`, sized by the two text lines it spans — and
+     measured on this page it came out **132×132**, a third of the screen's width for a
+     product mark, because the headline wraps to two lines and the square then follows
+     its own height. Home's card mark is 40 and has always been; the two surfaces show
+     the same licence, so they show it at the same size.
+     ⚠️ The old note warned "do not put a fixed WIDTH back; it un-squares the moment the
+     headline wraps" — and it was right about a fixed width ALONE, which is why both
+     sides are fixed here. A square with two equal sides cannot un-square. */
+  tr.lic-row .lp-ic{grid-area:ic;align-self:start;width:40px;height:40px;
+    aspect-ratio:auto;margin-top:2px}
   tr.lic-row .lp-name{display:none}                  /* the desktop one-liner */
   tr.lic-row .lp-eyebrow{grid-area:type;display:block;
     font-size:var(--t-body-sm-fs);line-height:1.3;color:var(--mid)}
@@ -8012,23 +8109,37 @@ th.lic-num{text-align:right}
   tr.lic-row .lic-copy:hover{background:var(--hover);color:var(--ink)}
   tr.lic-row .lic-copy .ic{width:var(--ic-20);height:var(--ic-20)}
   /* the invoice card's pair gets the same treatment, for the same reason */
-  /* ⚠️ Size comes from the component's touch rule; what the CARD adds is the filled
-     chip, the same one the licence card gives its copy button. */
-  tr.inv-row .ra-act{border-radius:10px;background:var(--sel);color:var(--ink)}
+  /* ⚠️⚠️ BARE GLYPHS AGAIN (2026-09-30, from the reference), and the note below about
+     the 8px gap inverts with them: it argued for 8 BECAUSE the buttons painted their
+     whole 44px box and at 2px the two fills touched. With no fill there is nothing to
+     touch, and the 22px glyph centred in a 44px target already carries 11px of empty
+     box either side — so the gap goes back to 2, which reads as the ~24px the earlier
+     note measured. The touch target is unchanged; only the paint is. */
+  tr.inv-row .ra-act{border-radius:10px;background:transparent;color:var(--ink)}
+  tr.inv-row .ra-act:hover{background:var(--hover)}
 
   /* ---------- invoice card ----------
-       NAWE49WG-0021                    [↓] [↗]     ← top band: the number and
-       ─────────────────────────────────────────       its two documents
-       ThingsBoard · Subscription                    ← the licence this bills (a link)
        $499.00 · Sep 02, 2026        [↻] (Paid)      ← what and when · how and state
+       ThingsBoard · Subscription                    ← the licence this bills (a link)
+       ─────────────────────────────────────────
+       NAWE49WG-0021                     ↓   ↗      ← the document, and the two things
+                                                       you can do with it
+     ⚠️⚠️ THE ORDER IS INVERTED FROM THE PREVIOUS CARD (2026-09-30, from a reference).
+     It opened with the number and closed with the money; it now opens with the money.
+     An invoice is read for what it cost and whether it went through — the number is
+     what you need only when you are about to act on the document, which is why it sits
+     on the line with the two actions, under a rule that separates the record from the
+     paper.
+     ⚠️ ONLY `grid-template-areas` AND THE DIVIDER MOVE. Every cell keeps its area name,
+     its padding and its content, so this is the same card re-poured, not a second one.
      No status stripe here and no whole-card tap: unlike a licence card, an invoice
      has no single obvious destination — it has three explicit ones (download, view,
      the licence), so making the card itself tappable would leave the user guessing
      which of the three they got. The chip stays: an invoice's state is Paid / Past
      due, which is not the two-state thing a stripe can carry. */
   tr.inv-row{display:grid;grid-template-columns:auto auto 1fr;align-items:center;
-    grid-template-areas:"num num num" "prod prod prod" "amt date stat";
-    gap:0;padding:var(--cardpad) 0;margin-bottom:12px}
+    grid-template-areas:"amt date stat" "prod prod prod" "num num num";
+    gap:0;padding:var(--cardpad) 0;margin-bottom:0}
   tr.inv-row > td{padding:0;margin:0}
   /* ⚠️ `.invtable` — carried by exactly ONE table, the licence's own Invoices tab
      (`license-details.js`) — pins five percentage column widths, and
@@ -8050,8 +8161,17 @@ th.lic-num{text-align:right}
      row 3 and pushed the date away from its middot. Spanning all three keeps row 3's
      tracks sized by row 3 alone; the padding-right below is what stops the wrapping
      number from running under the buttons. */
+  /* ⚠️⚠️ TWO HAIRLINES, AND THEY MUST NOT LOOK ALIKE. The card carries one inside it
+     (the reference draws it) and the list now carries one BETWEEN cards — same colour,
+     same weight, and at that point a reader cannot tell where one invoice ends. So the
+     between-card rule runs the full screen width, and this one is INSET to the page
+     gutter: an inset line reads as belonging to the thing it is inside, an edge-to-edge
+     line as the boundary of it. The 12px gap that used to separate the cards is gone
+     with the same change — it was doing the job the outer rule does now, and keeping
+     both would put a line in the middle of a gap. */
   tr.inv-row > td.mono{grid-area:num;
-    padding:0 110px var(--cardpad) var(--cardpad);font-size:var(--t-body-sm-fs)}
+    margin:0 var(--pageX);padding:var(--cardpad) 110px 0 0;font-size:var(--t-body-sm-fs);
+    border-top:1px solid var(--line2)}
   /* the action pair closes on the same edge as everything else in the card — 6px
      left a 7px right inset against the 13px on every other row */
   /* ⚠️ The buttons need the band's OWN bottom padding, not zero. The `num` area's
@@ -8060,7 +8180,7 @@ th.lic-num{text-align:right}
      height and the glyphs sat flush on the hairline below. Top padding comes from
      the row, bottom from here — equal, so the band is symmetric. */
   tr.inv-row > td.cellact{grid-area:num;justify-self:end;align-self:center;
-    padding:0 var(--cardpad) var(--cardpad) 0}
+    padding:var(--cardpad) var(--pageX) 0 0}
   /* ⚠️ 2px → 8px, and the reasoning INVERTED when the buttons changed. While they
      were bare glyphs the flex gap was not the gap you saw: a 22px glyph centred in
      a 44px target already carried 11px of empty box either side, so 2px read as
@@ -8070,12 +8190,14 @@ th.lic-num{text-align:right}
      and matches the chip row's gap.
      Headroom: the pair grows 90px → 96px, and the number cell reserves 110px on its
      right, so nothing collides; measured 125px of clear space to the number's text. */
-  tr.inv-row .rowactions{display:flex;gap:8px;align-items:center}
+  tr.inv-row .rowactions{display:flex;gap:2px;align-items:center}
   tr.inv-row .ra-act .ic{width:var(--ic-24);height:var(--ic-24)}
 
-  /* band 2 opens with the product line, and its top border is the divider */
-  tr.inv-row > td.lic-prodcell{grid-area:prod;padding:var(--cardpad) var(--cardpad) 0;
-    border-top:1px solid var(--line2)}
+  /* ⚠️ THE DIVIDER MOVED WITH THE BANDS (2026-09-30). It used to ride the product
+     line's top border, because the product line opened the second band; the number
+     band is the one separated now, so the rule goes there and this cell keeps only
+     its spacing. */
+  tr.inv-row > td.lic-prodcell{grid-area:prod;padding:2px var(--pageX) var(--cardpad)}
   /* The licence's own Invoices tab has no product cell, so the divider has no
      full-width cell to ride. Hanging it on row 3's amount produced a **stub**: that
      cell holds column 1 only. The `prod` row is empty in this variant and is exactly
@@ -8089,7 +8211,7 @@ th.lic-num{text-align:right}
      pseudo-element carries the 6px, adding up to the 11px the product-cell variant
      puts above its own text. */
   tr.inv-row:not(:has(.lic-prodcell))::before{content:"";grid-area:prod;
-    border-top:1px solid var(--line2);margin-bottom:var(--cardpad)}
+    margin-bottom:var(--cardpad)}
   /* the line is just "product · type": on this card the mark and the label are
      someone else's business — the licence card carries them */
   tr.inv-row .lp-ic,tr.inv-row .lic-prodlabel{display:none}
@@ -8100,7 +8222,7 @@ th.lic-num{text-align:right}
   tr.inv-row .lp-link{text-decoration:none;color:inherit;display:block}
 
   /* row 3 — amount and date joined by a middot on the left, how-and-state on the right */
-  tr.inv-row > td.num{grid-area:amt;padding:5px 0 0 var(--cardpad);font-weight:500;font-size:var(--t-body-sm-fs)}
+  tr.inv-row > td.num{grid-area:amt;padding:0 0 0 var(--pageX);font-weight:600;font-size:var(--t-body-sm-fs);color:var(--ink)}
   /* ⚠️ The separator carries only its LEADING space. A trailing one inside `content`
      sits at the end of the amount's line box and gets collapsed away, which is what
      printed "$499.00 ·Aug 18, 2026" — the gap on the right of the middot has to come
@@ -8108,8 +8230,8 @@ th.lic-num{text-align:right}
      "\00b7" escape trap: never trust whitespace inside `content`.) */
   tr.inv-row > td.num::after{content:" ·";font-weight:400;color:var(--faint)}
   tr.inv-row > td:nth-child(2){grid-area:date;justify-self:start;
-    padding:5px 0 0 5px;color:var(--mid);font-size:var(--t-body-sm-fs)}
-  tr.inv-row > td:nth-child(4){grid-area:stat;justify-self:end;padding:5px var(--cardpad) 0 0}
+    padding:0 0 0 5px;color:var(--mid);font-size:var(--t-body-sm-fs)}
+  tr.inv-row > td:nth-child(4){grid-area:stat;justify-self:end;padding:0 var(--pageX) 0 0}
   /* the auto-charge mark comes before the chip here, so the pair reads
      "charged automatically · Paid" from the left (the chip is first in the DOM) */
   tr.inv-row .statwrap{flex-direction:row-reverse}
@@ -8156,7 +8278,45 @@ th.lic-num{text-align:right}
      `row-gap:10px` was quietly overriding the shared 12px scale on Activity. The
      toolbar layout now belongs to that one place; only the Instances table below
      needs anything here. */
-  .insttoolbar .searchbox{flex:0 0 100%}
+  /* ⚠️⚠️ THE SEARCH IS A BUTTON UNTIL IT IS ASKED FOR (2026-09-30, by request). A
+     280px field took the whole first line of every list toolbar on a 375px screen, so
+     the filters — the control a reader actually reaches for on a phone — were pushed to
+     a second row or off the edge. Collapsed it is one 44px target on the left; tapping
+     it hands the row to the field and takes the filters out of the way until it is
+     dismissed.
+     ⚠️ THE INPUT IS NEVER REMOVED, only made invisible and untappable. `wireSearch`
+     holds a reference to it and a live filter may already be typed in it — a collapsed
+     search that threw the query away would be a filter the reader cannot see and cannot
+     clear. `opacity`, not `display:none`, for the same reason `.btn.is-busy` hides its
+     label that way: the node keeps its place and its value.
+     ⚠️ It reads as the product's own quiet control because it wears that control's
+     colours, not because it is one: `.searchbox` is a div, and making it a real
+     `button()` would mean a second focusable thing wrapping an input. */
+  .lic-controls .searchbox,.insttoolbar .searchbox{
+    flex:0 0 var(--btnH);width:var(--btnH);height:var(--btnH);
+    border-radius:var(--btn-r);background:var(--surface-quiet);cursor:pointer}
+  .lic-controls .searchbox input,.insttoolbar .searchbox input{
+    opacity:0;pointer-events:none;padding:0;border-color:transparent;background:none}
+  .lic-controls .searchbox .searchglyph,.insttoolbar .searchbox .searchglyph{
+    left:50%;transform:translate(-50%,-50%);color:var(--mid);width:var(--ic-20);height:var(--ic-20)}
+  .lic-controls .searchbox .searchclear,.insttoolbar .searchbox .searchclear{display:none}
+  /* open: the field takes the row, and the filters stand down until it closes */
+  .lic-controls.is-searching .searchbox,.insttoolbar.is-searching .searchbox{
+    flex:1 1 auto;width:auto;background:none;cursor:auto}
+  .lic-controls.is-searching .searchbox input,.insttoolbar.is-searching .searchbox input{
+    opacity:1;pointer-events:auto;padding:0 40px 0 38px;border-color:var(--line);background:#fff}
+  .lic-controls.is-searching .searchbox .searchglyph,.insttoolbar.is-searching .searchbox .searchglyph{
+    left:14px;transform:translateY(-50%);width:var(--ic-16);height:var(--ic-16);color:var(--faint)}
+  .lic-controls.is-searching .searchbox .searchclear,.insttoolbar.is-searching .searchbox .searchclear{display:inline-flex}
+  .lic-controls.is-searching .lic-typeseg,.lic-controls.is-searching .lic-toggle,
+  .lic-controls.is-searching .perctl,.lic-controls.is-searching .dropwrap,
+  .insttoolbar.is-searching .lic-toggle,.insttoolbar.is-searching .dropwrap{display:none}
+  /* ⚠️ FILTERS TO THE RIGHT, and `margin-left:auto` rather than `justify-content` on
+     the bar: the bar also holds the spacer and, on some pages, controls the title row
+     has not taken yet. Pushing from the first filter is the one thing that means "these
+     start after the search" whatever else is in the row. */
+  .lic-controls .lic-typeseg,.insttoolbar .dropwrap:first-of-type,
+  .lic-controls .dropwrap:first-of-type{margin-left:auto}
   .insttable{display:block;width:100%;background:#fff;border:1px solid var(--line2);
     border-radius:8px;padding:0 12px}
   .insttable thead{display:none}

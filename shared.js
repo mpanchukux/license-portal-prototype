@@ -382,7 +382,18 @@ var DASH_STATES = {
 };
 function dashState(){ return DASH_STATES[Store.get('dash')] || DASH_STATES.dashboard; }
 /* flat is the default: it is the order the check-in question is asked in */
-function instView(){ return Store.get('instView') === 'grouped' ? 'grouped' : 'flat'; }
+/* ⚠️⚠️ THE PHONE HAS NO GROUPED VIEW (2026-09-30, by request). Grouping turns each
+   licence into a sticky heading with its instances indented under it — a two-level
+   table, and at 375px the rows are already cards with the licence named inside each
+   one, so the heading repeats what every row below it says and costs a third of the
+   screen doing it. The setting is not cleared, it is IGNORED at this width: switch to
+   a wider window and the stored answer is still there.
+   ⚠️ The switch itself is hidden by CSS rather than removed here — one source for
+   "does this control apply", and the renderer already reads this function. */
+function instView(){
+  if(window.matchMedia('(max-width:600px)').matches) return 'flat';
+  return Store.get('instView') === 'grouped' ? 'grouped' : 'flat';
+}
 /* ⚠️ 'a' IS THE DEFAULT AND MUST STAY IT while the decision is open: B is a proposal,
    and a proposal that ships as the default has been decided rather than proposed.
    Stored, so it survives a reload; in the same key as everything else, so
@@ -2865,7 +2876,19 @@ function syncTitleRow(){
      left pointing at `.secgrid`, a node that no longer exists. */
   var back = $('#secBackBtn');
   if(!existing){
+    /* ⚠️ THE COUNT TRAVELS WITH THE TITLE (2026-09-30, by request: the page's action
+       belongs at the right of this line). Only the H1 was moved, so the chip stayed
+       behind in `.lic-titlerow` — and since that row is a flex when it holds a chip, it
+       laid out as [title … refresh, buy][17], putting the count AFTER the buttons it has
+       nothing to do with. Moved with the title it belongs to, it reads `Licenses 17`
+       with the actions on the far right.
+       ⚠️ READ BEFORE THE H1 MOVES. The first spelling looked in `h1.parentNode` after
+       `row.appendChild(h1)` — which by then is the new row, so it found nothing and the
+       chip stayed where it was. Captured first, appended after. */
+    var cnt = h1.nextElementSibling;
+    cnt = (cnt && cnt.classList.contains('titlecount')) ? cnt : null;
     row.appendChild(h1);
+    if(cnt){ cnt.setAttribute('data-homed', '#shellMain .lic-titlerow'); row.appendChild(cnt); }
     var sp = document.createElement('span');
     sp.className = 'ptr-sp';
     row.appendChild(sp);
@@ -2906,6 +2929,34 @@ function homeToolbarControls(row){
     });
 }
 window.addEventListener('resize', syncTitleRow);
+
+/* ---------- the phone's collapsed search -------------------------------------
+   ⚠️ ONE DELEGATED PAIR FOR EVERY LIST TOOLBAR. Licenses, Invoices, Activity and
+   Instances all carry the same `.searchbox`, and the collapse is a property of the
+   WIDTH, not of the page — so a per-page wiring would be four copies of one rule and
+   the fifth surface added later would be the one that forgot.
+   ⚠️ IT CLOSES ON BLUR ONLY WHEN THE FIELD IS EMPTY. A query that is still filtering
+   the list has to keep its field on screen: collapsing it would leave the reader
+   looking at a short list with no visible reason and no way to clear it. Typed and
+   blurred, the field stays; cleared and blurred, it folds back to the button.
+   ⚠️ `matches` is read at click time rather than cached — the breakpoint can be
+   crossed by a resize between one tap and the next. */
+document.addEventListener('click', function(e){
+  if(!window.matchMedia('(max-width:600px)').matches) return;
+  var box = e.target.closest('.searchbox');
+  if(!box) return;
+  var bar = box.closest('.lic-controls, .insttoolbar');
+  if(!bar || bar.classList.contains('is-searching')) return;
+  bar.classList.add('is-searching');
+  var input = $('input', box);
+  if(input) input.focus();
+});
+document.addEventListener('focusout', function(e){
+  var input = e.target.closest && e.target.closest('.searchbox input');
+  if(!input || input.value.trim()) return;
+  var bar = input.closest('.lic-controls, .insttoolbar');
+  if(bar) bar.classList.remove('is-searching');
+});
 
 /* ============================================================================
    THE STICKY LIST BLOCK — the measuring half of the pattern in styles.css
