@@ -163,6 +163,14 @@ function syncLicChipCounts(){
     if(!licShowCanceled && p.status === 'canceled') return false;
     return true;
   });
+  /* ⚠️ C'S COUNT IS A DIFFERENT FACET, and it has to be. In A, `Needs attention` IS the
+     status, so its count excludes the status filter — counting through itself would print
+     the number already on screen. In C it stands BESIDE a status dropdown, so the honest
+     answer is "how many of what the dropdown is showing need attention": type and status
+     both applied, only its own on/off excluded. One component, two readings, because the
+     two bars ask two different questions with it. */
+  var attnC = $('#licBarC .chipcount');
+  if(attnC) attnC.textContent = base.filter(licNeedsAttention).length;
   $$('#licBarA .chipcount').forEach(function(el){
     var k = el.getAttribute('data-count'), n;
     if(k === 'active') n = currentProducts().filter(function(p){ return p.status !== 'canceled'; }).length;
@@ -226,18 +234,28 @@ function renderLicMenus(){
   var tlc = $('#licTypeLabelC'), slc = $('#licStatusLabelC');
   if(tlc) tlc.textContent = filterOptLabel(LIC_TYPE_OPTS, licType, 'All types');
   if(slc) slc.textContent = filterOptLabel(LIC_STATUS_OPTS_C, licStatus, 'All statuses');
-  var sw = $('#licAttnSwitch');
-  if(sw) sw.checked = licAttnOnly;
+  syncAttnChipC();
+}
+/* ⚠️ C'S ATTENTION CONTROL IS A CHIP (2026-09-30, by request) — it was a `.switch`, and
+   the reason it changed is the COUNT: a switch cannot say how many it would leave you.
+   Same component as toolbar A's chip, different state behind it: A's chip IS the status
+   (`licStatus === 'attention'`), C's is an independent AND on top of one
+   (`licAttnOnly`). Same object, two readings, and that difference is the whole point of
+   toolbar C — see `licVisible`. */
+function syncAttnChipC(){
+  var chip = $('#licAttnChipC'); if(!chip) return;
+  chip.classList.toggle('is-on', licAttnOnly);
+  chip.setAttribute('aria-pressed', licAttnOnly ? 'true' : 'false');
 }
 wireFilterDrop('#licTypeCtl', 'lictype', function(v){ licType = v; licPage.page = 1; syncTypeChips(); renderProducts(); });
 wireFilterDrop('#licStatusCtl', 'licstatus', function(v){ licStatus = v; licStatusTouched = true; licPage.page = 1; syncAttnChip(); renderProducts(); });
 wireFilterDrop('#licTypeCtlC', 'lictypec', function(v){ licType = v; licPage.page = 1; syncTypeChips(); renderProducts(); });
 wireFilterDrop('#licStatusCtlC', 'licstatusc', function(v){ licStatus = v; licStatusTouched = true; licPage.page = 1; syncAttnChip(); renderProducts(); });
-var licAttnSwitch = $('#licAttnSwitch');
-if(licAttnSwitch) licAttnSwitch.addEventListener('change', function(){
-  licAttnOnly = licAttnSwitch.checked;
+var licAttnChipC = $('#licAttnChipC');
+if(licAttnChipC) licAttnChipC.addEventListener('click', function(){
+  licAttnOnly = !licAttnOnly;
   licPage.page = 1;
-  renderProducts();
+  syncAttnChipC(); renderProducts();
 });
 
 /* ---------- the switch ------------------------------------------------------------

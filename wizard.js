@@ -663,13 +663,16 @@ var NL = (function(){
     var out = '';
     list.forEach(function(k, n){
       var done = n < here, cur = n === here;
-      /* ⚠️ The connector is drawn with the step it LEADS TO, so its own state is the
-         state of the step BEFORE it: the line into the current step has been travelled,
-         even though the step it arrives at has not been completed. `done` on this item
-         is `n < here`, which is one short — the test is `n <= here`. Caught by eye and
-         confirmed by the row: with `done` the line between step 1 and the current step 2
-         drew grey, and the stepper said nothing had been finished. */
-      if(n) out += '<span class="nl-sline' + (n <= here ? ' is-done' : '') + '" aria-hidden="true"></span>';
+      /* ⚠️⚠️ THE CONNECTORS ARE GONE (2026-09-30, by request) — the row is the steps and
+         nothing between them. Two things went with them. The progress reading the
+         connector carried (solid ink behind you, `--line` ahead) now rests entirely on
+         the marks: done is an ink ring, current an ink fill, ahead a grey ring. And the
+         `n <= here` off-by-one this comment used to document goes with the element it
+         described; it is kept in the notes, not in the code.
+         ⚠️ It also ended a NAME COLLISION: `.nl-sline` is ALSO the product card's
+         sub-line in components.js, and the two CSS rules were merging into each other
+         — the connector was inheriting `margin-top:8px` and the card's sentence was
+         inheriting `height:1px`. See the note in styles.css. */
       var inner = '<span class="nl-smark">' + (n + 1) + '</span>'
         + '<span class="nl-stxt"><span class="nl-sname">' + esc(stepLabel(k)) + '</span>'
         /* ⚠️ `(Optional)` IS GONE FROM THE STEPPER (2026-09-28, by request). It was the
@@ -776,6 +779,9 @@ var NL = (function(){
            input instead of a "fixed by …" helper under it.
      Both keep Continue inside the (sticky) summary card and Back in the step
      header, so this step has no bottom footer at all. ---- */
+  /* ⚠️ Written out rather than built with `icon()` because it carries a positioning
+     class of its own; the size travels with `.fs-lockic` in styles.css, which is where
+     the 2026-09-30 step up to 20 was made. */
   var LOCKSVG = '<svg class="ic fs-lockic" aria-hidden="true"><use href="assets/icons.svg#ti-lock"></use></svg>';
   /* Entitlements the plan fixes — everything the controls below cannot change.
      ⚠️ Assets is dropped from the wizard entirely (not relevant any more). It still
@@ -826,19 +832,21 @@ var NL = (function(){
        the string "undefined" inside it, in the old `.icon` class that no longer exists.
        Invisible, so nobody saw it. Now it is the product's own artwork, the same one the
        licence rows and the picker use. */
-    /* ⚠️⚠️ BACK LIVES IN THIS CARD (2026-09-30, by request) — in the DEFAULT placement.
-       It was its own row above the card on three steps; inside it, the way out of the
-       step sits on the thing the step is about, and the column starts with one object
-       instead of a control floating over one. Putting it in the BUILDER rather than at
-       the three call sites is the same argument that moved it out of `gotoStep`: markup
-       that is part of the card cannot be forgotten by anything that rebuilds the card.
+    /* ⚠️⚠️ BACK IS NO LONGER IN THIS CARD BY DEFAULT (2026-09-30, second request of the
+       same day). It moved in here that morning — the argument was that the way out of a
+       step should sit on the thing the step is about — and moved back out that evening,
+       to a plain text row above the grid, because inside the card it pushed only the
+       left column down and left the Calculation summary starting a row higher.
+       The in-card form is kept as the `card` option; this branch is what draws it.
+       ⚠️ THE VALUE WAS RENAMED `current` -> `card`. It stopped being current, and a
+       setting whose value says "current" while a different option is the default is a
+       trap for the next reader. Unknown stored values fall through to the default, so
+       anyone carrying the old string simply gets the new default.
        ⚠️ `backRowHTML()` still answers "is there a step behind this one" — Manage add-ons
        opens on Capacity, so this card is the FIRST screen there and returns no Back.
-       ⚠️ TWO ALTERNATIVES ARE OFFERED IN ⚙ (2026-09-30) and this stays the default: A
-       puts it in the top bar, B back into a row of its own above the card. One reader of
-       `nlBackPlace()` per host, so exactly one of the three ever renders it. */
+       One reader of `nlBackPlace()` per host, so exactly one of the three ever draws it. */
     return '<div class="fs-panel nl-plansum">'
-      + (nlBackPlace() === 'current' ? backRowHTML() : '')
+      + (nlBackPlace() === 'card' ? backRowHTML() : '')
       /* ⚠️ THE MARK AND THE TEXT ARE A ROW INSIDE THE CARD NOW, not the card itself:
          Back is a third child and a flex row would have stood it beside them. */
       + '<div class="nl-plansum-main">'
@@ -887,9 +895,11 @@ var NL = (function(){
      looks broken beside its four neighbours.
      ⚠️ `aria-hidden` and no label of its own: the word is right there. An icon that
      names the same thing as the text beside it makes a screen reader say it twice. */
+  /* ⚠️ 20, NOT THE BASE 16 (2026-09-30, by request: "every icon in the flow bigger").
+     The ladder has three rungs and nothing between them, so "bigger" is the next rung. */
   function cellTop(label, ic){
     return '<div class="am-celltop' + (ic ? ' has-ic' : '') + '">'
-      + (ic ? icon(ic) : '') + '<span>' + label + '</span></div>';
+      + (ic ? icon(ic, { size:20 }) : '') + '<span>' + label + '</span></div>';
   }
   function lockedCell(lbl, val, desc){
     var why = lbl === 'Devices'
@@ -1116,13 +1126,13 @@ var NL = (function(){
     if(cells.indexOf(INSTANCES_SLOT) >= 0){
       cells = cells.replace(INSTANCES_SLOT,
         '<div class="am-group"><div class="am-grouphead">'
-        + icon(CAP_IC['Production instances']) + '<span>Instances</span></div>'
+        + icon(CAP_IC['Production instances'], { size:20 }) + '<span>Instances</span></div>'
         + '<div class="am-groupbody">' + prodCell + devCell + '</div></div>');
     } else if(devCell){
       /* a plan with a Development row and no Production one: the heading still belongs,
          because the block is about instances either way */
       cells += '<div class="am-group"><div class="am-grouphead">'
-        + icon(CAP_IC['Development instances']) + '<span>Instances</span></div>'
+        + icon(CAP_IC['Development instances'], { size:20 }) + '<span>Instances</span></div>'
         + '<div class="am-groupbody">' + devCell + '</div></div>';
     }
     return cells;
@@ -1165,15 +1175,24 @@ var NL = (function(){
                  cls:'nl-back', attrs:'data-nlback' })
       + '</div>';
   }
-  /* ⚠️ VARIANT B ONLY (2026-09-30). In the default placement both callers open
-     `leftHTML` with `planSummaryHTML`, which carries Back inside the card — emitting it
-     here as well would put two of them on the screen. `backAboveHTML()` is the one
-     reader that answers "does this placement want a row here", so the three call sites
-     do not each have to know the setting. */
+  /* ⚠️⚠️ THIS IS THE DEFAULT NOW, AND IT SITS ABOVE THE GRID (2026-09-30, by request).
+     Two things moved in one change. Back left the plan card — it is a plain text button
+     on a row of its own again, with no frame and no fill of its own. And that row is a
+     sibling of `.fs-grid` rather than the first child of `.fs-col`, which is what makes
+     the Calculation summary line up with the plan card instead of starting a row above
+     it: inside the column, only the LEFT side was pushed down by the button.
+     ⚠️ Hoisting rather than offsetting the right column is deliberate. The alternative
+     — `margin-top` on `.nl-calcsum` equal to the back row's height — is a number that
+     has to be kept in step with a control's size, and it would be wrong on every step
+     where Back is absent (Manage add-ons opens on Capacity and has no step behind it).
+     A sibling row costs nothing and is right by construction.
+     ⚠️ `backRowHTML()` still answers "is there a step behind this one", so the three
+     call sites do not each have to know either the setting or the step. */
   function backAboveHTML(){ return nlBackPlace() === 'b' ? backRowHTML() : ''; }
   function customizeShell(leftHTML, cta){
-    return '<div class="fs-grid">'
-      + '<div class="fs-col">' + backAboveHTML() + leftHTML + '</div>'
+    return backAboveHTML()
+      + '<div class="fs-grid">'
+      + '<div class="fs-col">' + leftHTML + '</div>'
 /* ⚠️ `nl-calcsum` NAMES THIS CARD SPECIFICALLY (2026-09-29). `.fs-right` is worn by
    three summary cards — this one, Review's and Billing's — and the request to make
    the Calculation summary wider and louder is about this one. Scoping by class rather
@@ -1459,10 +1478,10 @@ var NL = (function(){
         + '</div>'
       : '<div class="nl-payline">You\u2019ll add billing and payment details on the next step.</div>';
     $('#nlStepRev').innerHTML =
-      '<div class="fs-grid">'
+      backAboveHTML()
+      + '<div class="fs-grid">'
       + '<div class="fs-col">'
-      +   backAboveHTML()
-      /* the SAME card step 2 opens with — see planSummaryHTML, which carries Back */
+      /* the SAME card step 2 opens with — see planSummaryHTML */
       +   planSummaryHTML(t, TIER_SPECS[t] || { ent:[] })
       /* the plan block and the terms card are one joined unit: no gap between
          them and no radius where they meet, so a single line divides them */
@@ -1587,6 +1606,16 @@ var NL = (function(){
       /* right: Due today, the payment context, then the commit — all sitting in
          .fs-right's own padding, the same internal spacing step 2 uses */
       + '<div class="am-sec fs-right">'
+      /* ⚠️ A HEADING, ADDED 2026-09-30 by request, "so it is consistent with the blocks
+         on the other steps": Capacity and Add-ons open their right card with
+         `Calculation summary`, Billing with `Order summary`, and this one opened with a
+         bare figure. Same `.am-sechead` shell, so the three cards now read as one
+         component with three contents.
+         ⚠️ `Payment` IS NEW COPY and it is `inferred`. It names what the card is FOR —
+         the amount, the method it goes to, the commit — rather than repeating `Due
+         today`, which is a row inside it, or `Order summary`, which is the name the
+         Billing step already uses for a different card. Reported for confirmation. */
+      +   '<div class="am-sechead"><h4>Payment</h4></div>'   /* inferred */
       +   (isFree()
             ? '<div class="nl-free"><b>Nothing will be charged.</b> This plan is free — '
               + 'there is no payment method to add and no invoice for it.</div>'
@@ -1782,9 +1811,9 @@ var NL = (function(){
    it brings Back with it, which is why the bare `backRowHTML()` that stood here is
    gone rather than kept above it. */
     $('#nlStepBill').innerHTML =
-      '<div class="fs-grid">'
+      backAboveHTML()
+      + '<div class="fs-grid">'
       + '<div class="fs-col">'
-      +   backAboveHTML()
       +   planSummaryHTML(t, TIER_SPECS[t] || { ent:[] })
       +   '<div class="am-sec fs-panel">'
       +     '<div class="am-sechead"><h4>Billing information</h4></div>'

@@ -20,6 +20,7 @@
      the view switcher. At 40px tall it clamps to a pill; the number is what matters on
      anything shorter. */
   --btn-r:24px;
+  --feed-col:720px;        /* measured: 24 mark + 14 gutter + 667 longest line */
   --fill:#3d3d3d; --track:#e6e6e6;
   --chrome:#efefec; --chromeLine:#dcdcd8; --hover:#f0f0ee; --sel:#e4e4e0;
   /* ⚠️ THE THIRD COLOUR EXCEPTION, and the first one INSIDE a component rather than
@@ -429,18 +430,25 @@ a{color:inherit}
 /* ⚠️ `--c-blue-50`, NOT the lavender (2026-09-29, by request). It is the same tint
    `Next charge` and the purchase modal's pay card already carry, so the product has one
    "this block holds the facts" colour rather than two that are nearly the same.
-   ⚠️⚠️ AND IT STOPS AT THE DIVIDER. Everything after `.hairline` is wrapped in
-   `.head-rest` and painted white — see there. The head used to be one tinted band all
-   the way down to the alert, which made the key, the status and the period look like
-   part of the title block rather than the facts under it. */
+   ⚠️⚠️ AND IT RUNS THE WHOLE HEAD AGAIN, DOWN TO THE PLAN BLOCK (2026-09-30, by
+   request). For one day it stopped at the hairline and `.head-rest` painted the rest
+   white, on the argument that a single tint "made the key, the status and the period
+   look like part of the title block rather than the facts under it". The request puts
+   the one band back: the head is the licence's identity AND its facts, and the divider
+   inside it is enough to say where one ends. `.head-rest` still exists — it is what the
+   phone's order ladder and two other rules hang off — it just stopped carrying a fill. */
 .head{padding:22px 22px 20px;border-bottom:1px solid var(--line2);background:var(--c-blue-50)}
-/* ⚠️ THE NEGATIVE MARGINS ARE THE POINT. `.head` insets by 22px at the sides and 20px
-   at the bottom; this band has to reach the head's own edges or the white would be a
-   card floating on the tint. Each negative margin is paired with the padding it undoes,
-   so the content inside keeps the position it had.
-   ⚠️ `margin-top` is 0: the hairline directly above is the boundary, and any gap here
-   would show a strip of tint between the line and the white it introduces. */
-.head-rest{background:var(--card);margin:12px -22px -20px;padding:14px 22px 20px}
+/* ⚠️⚠️ NO FILL OF ITS OWN ANY MORE (2026-09-30, by request) — the tint above runs
+   straight through it. What is left is spacing: 12px of air under the hairline and 14px
+   before the first row.
+   ⚠️ THE NEGATIVE SIDE MARGINS AND THEIR PADDING ARE KEPT, AND THEY ARE A NO-OP TODAY.
+   They existed to make the white band reach `.head`'s own edges instead of floating 22px
+   inside it as a card; with no fill they cancel exactly and move nothing. They are kept
+   rather than deleted because they are what any future full-bleed child of this band —
+   a rule, a strip, a second tint — needs in order to reach the edges, and re-deriving
+   the pair is how the "card floating on the tint" bug comes back. If this band never
+   paints anything again, both go and `margin:12px 0 0` is the whole rule. */
+.head-rest{margin:12px -22px -20px;padding:14px 22px 20px}
 /* the back button sits alone in a narrow left gutter; every content block
    below aligns to one vertical line at --contentX from the canvas edge
    (head padding-left + gutter + gap) */
@@ -691,6 +699,33 @@ a{color:inherit}
    `display:contents` and flexes `.amsg`); the desktop did not. */
 .alert .atxt{flex:1;min-width:0;display:flex;align-items:center;gap:14px}
 .alert .amsg{flex:1;min-width:0}
+/* ⚠️⚠️ WHITE INSIDE THE MODAL (2026-09-30, by request: "give the alert banner a white
+   fill on the modal, instead of the red or the black"). It overrides BOTH tones, so the
+   ground stops carrying the tone here and the MARK is the only thing that does — which
+   is why the mark rules are left completely alone: `mark-red` / `mark-warn` still paint
+   the glyph, and the bold lead is already `--status-alert` on a light ground.
+   ⚠️ `--surface-notice`, not `#fff`: the panel behind it IS white, so the banner needs a
+   hairline to exist at all, and the notice pair is the token that already means "a quiet
+   white card that has to show its edge".
+   ⚠️ SCOPED TO `.licmodal`, so the licence PAGE keeps the tinted and ink grounds. That is
+   a deliberate split between two hosts of the same markup and it is the first one in this
+   panel — see the debt list, which already tracks the banner's mark disagreeing between
+   Home and the panel. This adds a second axis to that question rather than settling it.
+   ⚠️ `tone-black`'s white text has to be put back too, or an ink-toned banner renders
+   white-on-white. Every one of its overrides is undone here in one place. */
+.licmodal .alert.tone-red,
+.licmodal .alert.tone-black{background:var(--surface-notice);
+  border:1px solid var(--border-notice);color:var(--ink)}
+.licmodal .alert.tone-black .atxt b{color:var(--status-alert)}
+.licmodal .alert.tone-black .aact,
+.licmodal .alert.tone-black .link{color:var(--ink)}
+.licmodal .alert.tone-black .aact:not([disabled]):hover,
+.licmodal .alert.tone-black .aact:not([disabled]):active{color:var(--ink);background:var(--hover)}
+.licmodal .alert.tone-black .btn:focus-visible{outline-color:var(--ink)}
+/* the glyph keeps the tone — on a white ground it is the only thing left carrying it */
+.licmodal .alert.tone-black .ic{color:var(--status-alert)}
+.licmodal .alert.mark-warn .ic{color:var(--status-warn)}
+.licmodal .alert.mark-quiet .ic{color:var(--mid)}
 
 .actions{display:flex;gap:9px;margin-top:14px;flex-wrap:wrap;align-items:center}
 /* ============================================================================
@@ -1140,18 +1175,15 @@ th.inv-amt,td.inv-amt{padding-right:30px}
    the version as well, and read as a note about all four.
    ⚠️ `max-width` in ch, not px: it is a sentence, and the measure is what keeps it
    readable regardless of how wide the panel gets on a large screen. */
-/* ⚠️⚠️ `.keyhelp`, NOT `.keynote` — the name was TAKEN, and taking it back cost half
-   an hour of measuring. `.keynote` was the one-time post-purchase band that used to sit
-   under the key; its markup moved above the licence title in an earlier pass and the
-   rules stayed behind, dead but live. A new <p class="keynote"> therefore inherited
-   `display:flex;align-items:center` from 600 lines further down — later in the file, so
-   it won on source order — and the sentence rendered as a flex row with the link as a
-   second column beside it, at 150px wide. Nothing errored; it just looked wrong.
-   ⚠️ The dead block went with this rename (see where `.keynote` used to be defined).
-   A rule with no markup is not harmless when its name is a word someone will reach for
-   again — this is the proof. */
-.keyhelp{margin:8px 0 0;max-width:62ch;font-size:14px;line-height:1.45;color:var(--mid)}
-.keyhelp .link{white-space:nowrap}
+/* ⚠️⚠️ EVERY `.keyhelp` RULE IS GONE (2026-09-30): the sentence under the key was
+   removed by request, and a rule outlives its markup only as a trap. Five declarations
+   went — the base pair here, variant A's margin, variant B's, and the phone's `order:5`.
+   ⚠️ THE LESSON THE NAME CARRIED IS KEPT, because it is the reason this class existed at
+   all: it was written as `.keynote` first, which was ALREADY TAKEN by a dead block 600
+   lines further down, so the new paragraph silently inherited `display:flex` from it and
+   rendered as a two-column row 150px wide. Nothing errored. That is why this file removes
+   rules with their last writer instead of leaving them — and why these are going now
+   rather than being kept "in case the sentence comes back". */
 
 /* ---------- the panel's tabs carry their destination's glyph (2026-09-29) ----------
    ⚠️ The tab was a bare text button, so it had no rule for laying out two children.
@@ -1160,7 +1192,10 @@ th.inv-amt,td.inv-amt{padding-right:30px}
 .tabs .tab{display:inline-flex;align-items:center;gap:7px}
 /* ⚠️ The glyph takes the tab's own colour through `currentColor`, like every icon in
    the product — so the selected tab's ink and the resting tab's grey both arrive
-   without a rule painting a glyph. */
+   without a rule painting a glyph.
+   ⚠️ ITS SIZE COMES FROM THE CALL SITE (20 since 2026-09-30, by request), not from here:
+   `navIcon` takes the same options `icon()` does, so the tab asks for the rung it wants
+   and this rule stays about layout. The three tabs are the only callers that pass one. */
 .tabs .tab .ic{flex:none}
 
 /* ---------- the status, on a plate of its own (2026-09-29, by request) ----------
@@ -1564,8 +1599,7 @@ th.inv-amt,td.inv-amt{padding-right:30px}
      ⚠️ A HIDDEN COLUMN DRAWS NO PSEUDO, which is what keeps a perpetual (no subscription
      period) or a grant (no version) from printing a dot with nothing after it. The first
      fact is always `#statusCol` and the combinator excludes it by construction. */
-  [data-zone="a"] #statusCol ~ .keycol.right::before,
-  [data-zone="current"] #statusCol ~ .keycol.right::before{
+  [data-zone="a"] #statusCol ~ .keycol.right::before{
     content:"\00b7";color:var(--faint);line-height:1}
   /* the separators follow the facts they punctuate and inherit 14px with them — a 20px
      middot between two 14px facts was the status's size standing on somebody else's line */
@@ -1580,8 +1614,7 @@ th.inv-amt,td.inv-amt{padding-right:30px}
      hides the one for the other licence kind). Without it a subscription would print its
      perpetual row as well. Sixth and seventh instances of the same trap, avoided rather
      than discovered. */
-  [data-zone="a"] .keycol.right:not([hidden]),
-  [data-zone="current"] .keycol.right:not([hidden]){display:flex;align-items:baseline;
+  [data-zone="a"] .keycol.right:not([hidden]){display:flex;align-items:baseline;
     gap:10px;flex:0 0 auto}
   /* ⚠️⚠️ THE LINE WAS RAGGED BY 3px, AND THE CAUSE IS THE ICONS, NOT THE SIZES
      (measured 2026-09-30: text bottoms 210 · 213 · 213 · 210 — the two items carrying a
@@ -1600,13 +1633,9 @@ th.inv-amt,td.inv-amt{padding-right:30px}
      in every licence row; both are correct as they are in a cell, where nothing is
      asked to share a line with a different size. */
   [data-zone="a"] .statmark,
-  [data-zone="current"] .statmark,
-  [data-zone="a"] .ver-run,
-  [data-zone="current"] .ver-run{align-items:baseline}
+  [data-zone="a"] .ver-run{align-items:baseline}
   [data-zone="a"] .statmark > .statmark-ic,
-  [data-zone="current"] .statmark > .statmark-ic,
-  [data-zone="a"] .ver-run > .verm,
-  [data-zone="current"] .ver-run > .verm{align-self:center}
+  [data-zone="a"] .ver-run > .verm{align-self:center}
   /* ⚠️⚠️ ON THE SAME LINE AS THE REST (2026-09-29, by request: "put Product version on
      one line with the status and the details, and line them all up — not one above and
      one below"). It was `flex:0 0 100%`, i.e. a row of its own; `auto` puts it back on
@@ -1621,62 +1650,48 @@ th.inv-amt,td.inv-amt{padding-right:30px}
      null inside a fixed modal and quietly reported the column as absent.
      `.btn` · `.icon` · `#subAlert` · `.fitem` · this. */
   /* the version's own label and value sit closer than the facts do to each other */
-  [data-zone="a"] #verCol:not([hidden]),
-  [data-zone="current"] #verCol:not([hidden]){gap:6px}
+  [data-zone="a"] #verCol:not([hidden]){gap:6px}
   [data-zone="a"] #verCol:not([hidden]){order:1}
-  [data-zone="a"] #verCol .periodhead,
-  [data-zone="current"] #verCol .periodhead{margin:0;font-size:14px;line-height:1.45;
+  [data-zone="a"] #verCol .periodhead{margin:0;font-size:14px;line-height:1.45;
     letter-spacing:0;font-weight:400;text-transform:none;color:var(--ink)}
-  [data-zone="a"] #verCol .period,
-  [data-zone="current"] #verCol .period{font-size:14px}
+  [data-zone="a"] #verCol .period{font-size:14px}
   /* the key, as an inset field: cap, value, then the two actions on the right edge */
   [data-zone="a"] .keygrid > .keycol:not(.right){order:3;flex:0 0 100%}
-  [data-zone="a"] .keyfield,
-  [data-zone="current"] .keyfield{display:flex;align-items:center;gap:12px;max-width:560px;
+  [data-zone="a"] .keyfield{display:flex;align-items:center;gap:12px;max-width:560px;
     margin-top:6px;padding:5px 5px 5px 14px;
     background:var(--surface-quiet);border-radius:8px}
-  [data-zone="a"] .keyfield .minihead,
-  [data-zone="current"] .keyfield .minihead{margin:0;flex:none;color:var(--faint)}
+  [data-zone="a"] .keyfield .minihead{margin:0;flex:none;color:var(--faint)}
   /* ⚠️ `margin-left:auto` on the FIRST button, not `justify-content` on the row: the
      value has to keep the space it needs and the pair has to end at the field's edge,
      and a `space-between` row would have spread the key and the two buttons instead. */
-  [data-zone="a"] .keyfield .keyline,
-  [data-zone="current"] .keyfield .keyline{flex:1;min-width:0;gap:6px;flex-wrap:nowrap}
-  [data-zone="a"] .keyfield .keyline .mono,
-  [data-zone="current"] .keyfield .keyline .mono{min-width:0;overflow:hidden;
+  [data-zone="a"] .keyfield .keyline{flex:1;min-width:0;gap:6px;flex-wrap:nowrap}
+  [data-zone="a"] .keyfield .keyline .mono{min-width:0;overflow:hidden;
     text-overflow:ellipsis;white-space:nowrap}
-  [data-zone="a"] .keyfield .keyline .btn,
-  [data-zone="current"] .keyfield .keyline .btn{flex:none}
-  [data-zone="a"] .keyfield .keyline #revealBtn,
-  [data-zone="current"] .keyfield .keyline #revealBtn{margin-left:auto}
+  [data-zone="a"] .keyfield .keyline .btn{flex:none}
+  [data-zone="a"] .keyfield .keyline #revealBtn{margin-left:auto}
   /* the buttons stand on the field's tint, so they take the white fill the surface axis
      gives a quiet control on a tinted ground */
-  [data-zone="a"] .keyfield .btn--secondary,
-  [data-zone="current"] .keyfield .btn--secondary{background:var(--card)}
-  [data-zone="a"] .keyhelp,
-  [data-zone="current"] .keyhelp{margin-top:10px}
+  [data-zone="a"] .keyfield .btn--secondary{background:var(--card)}
 
-  /* ---------- `current` · key left, facts right ------------------------------
-     ⚠️⚠️ THE BASELINE OPTION IS NO LONGER UNTOUCHED (2026-09-29, by request), and the
-     word `Current` in the ⚙ now means "the one being evolved" rather than "the file as it
-     was". Its parenthetical still describes it — key left, facts right — and this pass is
-     what makes that literal: the key becomes one inset field with its cap on the same
-     line, its sentence under it, and the three facts run as one line to its right.
-     ⚠️ IT SHARES A's FIELD AND A's SUMMARY, and shares them by sharing the RULES above
-     rather than by repeating their values. What is left different is only the placement:
-     A stacks the summary over the field, this sets them side by side. */
-  [data-zone="current"] .keygrid{align-items:baseline;gap:12px 24px}
-  /* ⚠️ THE KEY COLUMN GROWS, THE FIELD INSIDE IT DOES NOT. At `flex:0 1 560px` the three
-     facts needed 178px more than the row had and the version wrapped to a line of its own
-     — measured: line one ended at 1054 against a grid of 222→1218, and `Product version`
-     landed at 222 on the next row, i.e. the one-above-one-below this pass was asked to
-     remove. A growing column with a capped FIELD (`max-width:560px`, shared with A) keeps
-     the field the size it should be and hands the slack to the gap before the facts, so
-     they sit at the right edge — which is what "key left, facts right" means. */
-  [data-zone="current"] .keygrid > .keycol:not(.right){flex:1 1 420px}
-  [data-zone="current"] #statusCol .periodhead,
-  [data-zone="current"] .keycol.right[data-page] .periodhead{display:none}
-
+  /* ---------- `current` · the file, untouched again --------------------------
+     ⚠️⚠️ EVERY `[data-zone="current"]` RULE IS GONE (2026-09-30, by request: "put key,
+     status, period and version back on one line WITH their headings, the way it was").
+     `current` had stopped meaning "the file as it was" on 09-29 — it was given A's inset
+     key field, A's caps-less summary run and the middot separators between the facts —
+     and the ask is for that whole borrowing to be undone rather than tuned. Seventeen
+     selectors came out of shared rules and four rules went entirely; nothing was left
+     behind as a no-op, because a `current` rule that is not doing anything is exactly
+     what makes the next reader think the base file is doing it.
+     ⚠️ WHAT THAT RESTORES, and it restores it by SUBTRACTION rather than by new rules:
+     `.keygrid` is a wrapping flex row with a 44px gutter, each `.keycol` stacks its caps
+     heading over its value, and the key column grows (`flex:1 1 380px`) while the three
+     fact columns sit at their content width — key · status · period · version, one line,
+     four headings. That is the base file above this section; it never changed.
+     ⚠️ THE DOTS WENT WITH THE HEADINGS, and that is not a separate decision: a `·` is how
+     a run of unlabelled facts is punctuated, and a column with `STATUS` over it does not
+     need one. Variant A keeps both, because A is the variant that has no headings.
+     ⚠️ A's own rules are untouched — the inset field, the summary run and the separators
+     all still exist there. This is a change of DEFAULT, not a deletion of the idea. */
   /* ---------- B · two columns ------------------------------------------------
      The key block exactly as it is, and the facts stacked in a fixed column beside it.
      ⚠️ THE HAIRLINE IS A PSEUDO ON THE GRID, NOT A BORDER ON THE FACTS. Bordering each
@@ -1730,7 +1745,6 @@ th.inv-amt,td.inv-amt{padding-right:30px}
   /* they stand on the field's tint, so they take the white fill the surface axis gives a
      quiet control on a tinted ground */
   [data-zone="b"] .keyfield .btn--secondary{background:var(--card)}
-  [data-zone="b"] .keyhelp{margin:12px 0 0;max-width:none}
   /* B takes the short cap too — inside a labelled field `License key` names the field and
      the block it is in twice */
   [data-zone="b"] .mh-full{display:none}
@@ -1806,9 +1820,7 @@ th.inv-amt,td.inv-amt{padding-right:30px}
    and the term and the version dropped to line two — the facts split across two lines,
    which is worse than all three under the key. Below 1000 the key takes the full width and
    the facts get a line of their own, which is the same shape A has at every width. */
-@media (min-width:601px) and (max-width:1000px){
-  [data-zone="current"] .keygrid > .keycol:not(.right){flex:0 0 100%}
-}
+@media (min-width:601px) and (max-width:1000px){}
 
 @media (max-width:600px){
   /* ⚠️ BOTH VARIANTS FALL BACK TO THE PHONE'S OWN STACK, which is already one column in
@@ -1991,14 +2003,24 @@ body:is([data-tableframe="b"],[data-tableframe="c"]) .gridtbl:has(+ .pager[hidde
 body:is([data-tableframe="b"],[data-tableframe="c"]) .listframe:has(.pager[hidden]) #instTable.is-grouped,
 body:is([data-tableframe="b"],[data-tableframe="c"]).list-empty #instTable.is-grouped{
   border-bottom:0;border-bottom-left-radius:0;border-bottom-right-radius:0}
-/* ---------- and in the modal the tables fill it (2026-09-29, by request) ----------
+/* ---------- and in the modal the LIST tables fill it (2026-09-29, by request) -------
    ⚠️ `.section` insets by 22px, which is right for prose and headings and wrong for a
    table in a variant whose whole statement is "the table owns its block edge to edge".
    The table escapes the inset with negative margins; the section keeps it, so the
    block heading above each table stays on the modal's own gutter.
    ⚠️ `.tablescroll` is included because two of these tables sit in one and the
-   scroller, not the table, is the child that carries the width. */
-body:is([data-tableframe="b"],[data-tableframe="c"]) .licmodal .section > .gridtbl,
+   scroller, not the table, is the child that carries the width.
+   ⚠️⚠️ `:not(.plantable)` — THE PLAN TABLE IS EXCLUDED (2026-09-30, by request: "put the
+   table in the Plan block back to not filling the whole modal frame, to having a width of
+   its own"). It was swept up by `.gridtbl` and stretched edge to edge with the lists, and
+   it is not one of them: the instance, invoice and activity tables are LISTS, which are
+   as wide as the surface allows, while the Plan table is four short numeric columns that
+   read as a group. Stretched, its figures ended up a modal apart from the words they
+   belong to. Excluded here rather than overridden after, so it simply keeps the width
+   `.canvas .plantable` already gives it (69% plus its cell inset) in every frame variant.
+   ⚠️ That 69% is an open question of its own — see the debt — and this does not settle
+   it; it only stops one variant answering it differently from the others. */
+body:is([data-tableframe="b"],[data-tableframe="c"]) .licmodal .section > .gridtbl:not(.plantable),
 body:is([data-tableframe="b"],[data-tableframe="c"]) .licmodal .section > .tablescroll,
 body:is([data-tableframe="b"],[data-tableframe="c"]) .licmodal .insttype > .gridtbl,
 body:is([data-tableframe="b"],[data-tableframe="c"]) .licmodal .insttype > .tablescroll{
@@ -2310,9 +2332,11 @@ body:is([data-tableframe="b"],[data-tableframe="c"]) #dashView .dblock > table{m
    behind with nothing in the product wearing them — verified by grep across every
    `.js` and `.html` before removing.
    ⚠️ REMOVED RATHER THAN LEFT, because a dead rule is not inert when its name is one
-   somebody will reach for again: `.keyhelp` above was written as `.keynote` first and
-   silently inherited `display:flex` from here, 600 lines further down and therefore
-   winning on source order. The sentence rendered as a two-column flex row. */
+   somebody will reach for again: the key's help sentence was written as `.keynote` first
+   and silently inherited `display:flex` from here, 600 lines further down and therefore
+   winning on source order. It rendered as a two-column flex row. (That sentence has since
+   been removed too, and its `.keyhelp` rules went with it — same principle, applied to
+   the class that was named to get around this one.) */
 .am-duelabel{font-size:14px}
 .am-dueval{font-size:var(--t-h2-fs);font-weight:var(--t-h2-fw);font-variant-numeric:tabular-nums;flex:none}
 .am-figures{margin-top:8px;border:1px solid var(--line2);border-radius:6px;padding:10px 12px;font-size:14px;font-variant-numeric:tabular-nums}
@@ -2753,19 +2777,48 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
 /* review step: white itemised card, Due today carries the payment line */
 .fs-screen .am-order{background:var(--card)}
 .fs-body{padding:24px;width:100%;max-width:var(--fs-work,1040px);margin:0 auto;flex:1;min-height:0;overflow:auto;overscroll-behavior:contain}
-.fs-grid{display:grid;grid-template-columns:2fr 1fr;gap:24px;align-items:start}
-/* ⚠️⚠️ THE CALCULATION SUMMARY IS WIDER ON THE TWO CUSTOMIZE STEPS (2026-09-29, by
-   request). 2:1 put it at 323px of the 968 available, which is narrower than the
-   longest row it has to print (`Production instances × $29.00` plus a figure) — so
-   the one card on the step whose whole job is arithmetic was the one that wrapped.
-   1.3:1 gives it ~420. Keyed on the step rather than on `.fs-right`, because Review
-   and Billing wear that class too and their cards were not asked to change. */
-.fs-screen[data-nlstep="capacity"] .fs-grid,
-.fs-screen[data-nlstep="addons"] .fs-grid{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr)}
+/* ⚠️⚠️ ONE RATIO FOR EVERY STEP (2026-09-30, by request: "make Due today and Order
+   summary the same width as Calculation summary").
+   HISTORY, because the previous note argued the opposite and is now wrong: on 09-29 the
+   1.3:1 column was added for the two Customize steps ALONE, on the ground that 2:1 gave
+   the Calculation summary 323px — narrower than its own longest row — while "Review and
+   Billing wear `.fs-right` too and their cards were not asked to change". They have now
+   been asked. The step-scoped rule is gone rather than extended to four selectors: when
+   every step wants the same answer, that answer belongs in the base rule.
+   ⚠️ 1.3:1 ≈ 414px of the 968 available. It is the number the arithmetic card needed,
+   and the other two cards inherit it — not the other way round. */
+.fs-grid{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:24px;
+  align-items:start}
 .fs-col{min-width:0}
 .fs-screen .am-cell{background:#fff;border:0;padding:0}
-/* item subheads sit clearly below the "Plan" / "Add-ons" block titles */
-.fs-screen .am-celltop{font-size:14px}
+/* ⚠️⚠️ THE STEP UP TO 16 (2026-09-30, by request: "the headings on Capacity and Add-ons
+   bigger"). This override held the wizard's item headings at 14 so they read as subheads
+   under the "Plan" / "Add-ons" labels; the request reverses that ranking, so the rule
+   goes rather than taking a third number — `.am-celltop`'s own `--t-body-fs` is 16, the
+   next rung up, and the scale has nothing between 14 and 16.
+   ⚠️ WHAT THIS COSTS, named: the section labels above them are `--t-label-fs` and stay
+   where they are, so the two levels are now separated by weight and case rather than by
+   size. If they stop reading as two levels, that is the place to look. */
+.fs-screen .am-celltop{font-size:var(--t-body-fs)}
+
+/* ---------- the flow's glyphs take the next rung (2026-09-30, by request) ---------
+   ⚠️ SCOPED TO `.fs-screen`, and that is the whole point: `.pc-tick` and `.infoic` are
+   worn by the plan cards, which also stand on the LANDING page, and the request was
+   about the purchase flow. A bare rule would have moved a surface nobody asked about.
+   ⚠️ A RULE RATHER THAN A CALL-SITE ARGUMENT for these three, because each is emitted
+   by a shared builder in components.js that serves both surfaces — the size is a fact
+   about where the glyph is standing, not about what it means. The wizard's OWN glyphs
+   (block titles, group heads) pass `size:20` at their call sites instead, because those
+   builders exist nowhere else. Same rung either way. */
+.fs-screen .fs-lockic{width:var(--ic-20);height:var(--ic-20)}
+/* the inset grew with the glyph: 9 + 20 = 29, so a 28px pad would have let a long value
+   touch the lock. Both sides move together — the padding is symmetric on purpose, so
+   the value centres on the FIELD and not on the space the lock leaves over. */
+.fs-screen .fs-devinput.locked{padding:0 32px}
+.fs-screen .pc-tick{width:var(--ic-20);height:var(--ic-20)}
+.fs-screen .infoic{width:var(--ic-24);height:var(--ic-24)}
+.fs-screen .infoic .ic,.fs-screen .pc-feat .infoic .ic{width:var(--ic-20);height:var(--ic-20)}
+.fs-screen .pc-feat .infoic{width:var(--ic-24);height:var(--ic-24)}
 /* "Plan" / "Add-ons" read as quiet section labels, not headings */
 .fs-screen .fs-col .am-sechead h4{color:var(--mid)}
 /* divider between the Plan and Add-ons sections, full-bleed inside the panel */
@@ -3035,12 +3088,12 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
   display:flex;align-items:center;max-width:calc(100% - 420px);pointer-events:none}
 .nl-stepbar > div{min-width:0;pointer-events:auto}
 .nl-header{position:relative}
-/* ⚠️ THE STEPPER HUGS (2026-09-29, by request). `.nl-sline` keeps `flex:1` so a
-   connector still absorbs the slack between two steps of different widths — but the
-   ROW no longer stretches, so "the slack" is now only what the row's own content
-   needs. A fixed connector would make the row jitter as step names change length. */
+/* ⚠️ THE STEPPER HUGS (2026-09-29, by request; rewritten 2026-09-30 when the connectors
+   went). The row sizes to its own content and no longer stretches to the bar. The
+   previous wording explained this through `.nl-sline`'s `flex:1` absorbing the slack
+   between steps — there are no connectors any more, so the slack is simply not taken:
+   the steps sit at a fixed `gap` and the row is as wide as they are. */
 .nl-stepbar .nl-steps{flex:none}
-.nl-stepbar .nl-sline{flex:0 0 28px;min-width:0}
 /* ⚠️ The back control LEFT THE HEADER (2026-09-29) — see the markup note. What is left
    here is only its row at the top of the step's content column.
    ⚠️ `margin-left:-13px` pulls the text variant's own padding back so the word `Back`
@@ -3083,9 +3136,19 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
    frame around the row, the padded box per step, the ink fill across the whole current
    step, and `.nl-sdesc` — the description line under every name, which put five
    sentences in a band that has room for none.
-   ⚠️ THE CONNECTOR CARRIES PROGRESS, and it is why the tick could go. `.nl-sline` is
-   solid ink behind the step you are on and `--line` ahead of it, so the row's own shape
-   says how far along you are; that reading survives with no colour and no glyph.
+   ⚠️⚠️ THE CONNECTORS ARE GONE (2026-09-30, by request): the row is the steps and
+   nothing between them. The previous pass put progress in the connector — solid ink
+   behind you, `--line` ahead — and said that was why the tick could go. That reading now
+   rests on the MARKS alone, which still carry it three ways: an ink ring behind you, an
+   ink fill where you are, a grey ring ahead. Quieter than a line across the row, and
+   worth a second look if the steps stop reading as a sequence.
+   ⚠️⚠️ AND IT ENDED A LIVE NAME COLLISION. `.nl-sline` was declared TWICE with two
+   different meanings — the connector here, and the product card's sub-line 40 lines
+   below — and both writers are real (wizard.js and components.js). Neither rule was
+   dead, so neither was a "losing" declaration: they MERGED. The connector was picking
+   up `margin-top:8px` from the card's rule, and the card's sentence was picking up
+   `height:1px` and a grey `background` from this one. Removing the connector leaves the
+   card's rule alone with the name, which is what it needed all along.
    ⚠️ One rule for `.nl-step` covering both elements: a done step is a <button> and the
    rest are <div>s, so font, background, border and alignment have to be reset back to
    the div it stands beside. Anything added here that is not in that reset makes the
@@ -3093,8 +3156,6 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
 .nl-steps{display:flex;align-items:center;gap:10px}
 .nl-step{flex:none;display:flex;align-items:center;gap:10px;text-align:left;
   font:inherit;background:none;border:0;padding:0;color:var(--faint)}
-.nl-sline{flex:1;min-width:16px;height:1px;background:var(--line);border-radius:1px}
-.nl-sline.is-done{background:var(--ink)}
 button.nl-step{cursor:pointer}
 button.nl-step:hover .nl-sname{text-decoration:underline;text-underline-offset:3px}
 button.nl-step:focus-visible{outline:2px solid var(--ink);outline-offset:3px;border-radius:6px}
@@ -3114,13 +3175,13 @@ button.nl-step:focus-visible{outline:2px solid var(--ink);outline-offset:3px;bor
    and no other reader. */
 @media (max-width:900px){
   /* names go before the row does: five of them across a narrow band become five
-     ellipses, and a row of circles joined by lines still reads as a stepper */
+     ellipses, and a row of numbered circles still reads as a stepper */
   .nl-step:not(.is-cur) .nl-stxt{display:none}
 }
 @media (max-width:600px){
   /* on a phone the map does not fit at all — the current step, named, is what is left */
   .nl-steps{gap:0}
-  .nl-step,.nl-sline{display:none}
+  .nl-step{display:none}
   .nl-step.is-cur{display:flex}
   .nl-step.is-cur .nl-smark{border-color:var(--line);background:none;color:var(--mid)}
   .nl-step.is-cur .nl-stxt{display:flex}
@@ -3679,10 +3740,24 @@ button.dbrand{background:none;border:0;padding:0;color:inherit;font:inherit;curs
    moment the pointer touched it. The selected item is not standing on the gradient at
    all: it stands on its own ink fill, so the ground argument never reached it. */
 body[data-mesh] .dtopbar:not(.docked) .tnav-item:not(.on):hover{background:var(--card)}
-.tnav-item.on{background:var(--ink);color:#fff;font-weight:600}
+/* ⚠️⚠️ THE SELECTED TAB IS AN UNDERLINE, NOT A FILL (2026-09-30, by request). It was an
+   ink pill; it is now ink text over a 3px ink rule. Two consequences the fill hid:
+   the item no longer paints a surface of its own, so the ground argument above
+   (`:not(.on)` on the mesh hover) stops being load-bearing — the selected item now
+   stands on the same ground as its neighbours and may take the same hover; and the
+   rule has to be drawn by a pseudo-element rather than `border-bottom`, because the
+   item's box is a 999px pill whose padding would hold the rule 8px off the bar's
+   baseline and round its ends with the pill.
+   ⚠️ Scoped to `.tnav` so the phone's bottom bar never sees it: `.bnav-item` carries
+   `.tnav-item` too (one source of truth for syncTopNav), and its reset block below
+   resets FILLS — it would not have reset a pseudo-element. */
+.tnav-item.on{background:transparent;color:var(--ink);font-weight:600}
+.tnav .tnav-item.on{position:relative}
+.tnav .tnav-item.on::after{content:"";position:absolute;left:10px;right:10px;bottom:-2px;
+  height:3px;border-radius:2px;background:var(--ink)}
 /* the current tab does not answer the pointer — "you are already here" is the whole
    state, and a hover fill on it would read as a second, different destination */
-.tnav-item.on:hover{background:var(--ink);color:#fff}
+.tnav-item.on:hover{background:transparent;color:var(--ink)}
 .tnav-item:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 
 /* ---------- the count a filter chip carries (2026-09-25) ------------------------
@@ -4621,6 +4696,32 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
 .dblock-head{display:flex;align-items:center;gap:12px;margin-bottom:12px}
 .dblock-head h2{margin:0;font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw)}
 .dblock-head .sp{flex:1}
+
+/* ---------- the heading IS the way through again (2026-09-30, by request) --------
+   ⚠️⚠️ THE TARGET IS THE ROW, NOT A SQUARE AT THE END OF IT. `.dbh-link` fills the
+   heading line, so the click area is the line the reader is already reading. It is
+   `inline-flex` with `align-self:stretch` rather than `display:block` because the
+   heading row is itself a flex container: a block child would collapse to its content
+   width and the empty half of the row would stop being clickable.
+   ⚠️ `flex:1`, so the anchor OWNS the empty half of the row: "the whole area where the
+   heading sits" is the ask, and a link sized to its own words would have left two
+   thirds of that line inert. Its contents stay packed left, so the arrow is still
+   beside the title — what grew is the target, not the gap between them.
+   ⚠️ NO UNDERLINE AT REST. This is a heading first and a link second; the arrow is what
+   says it goes somewhere, and it leans into its own direction on hover.
+   ⚠️ THE ARROW IS 24, THE ONE STEP UP THE SPRITE HAS — the icon ladder is 16/20/24 and
+   nothing between, so "bigger" is that step and not a number invented here. */
+.dbh-link{display:flex;flex:1;min-width:0;align-items:center;gap:12px;align-self:stretch;
+  color:var(--ink);text-decoration:none}
+.dbh-link h2{margin:0}
+.dbh-link:hover h2{text-decoration:underline;text-underline-offset:3px}
+.dbh-link:hover .dbh-arrow{transform:translateX(3px)}
+.dbh-link:focus-visible{outline:2px solid var(--ink);outline-offset:4px;border-radius:4px}
+/* the count is a FACT, not a control: the quiet treatment the list pages already give
+   the same number beside their own titles, with tabular figures so it cannot jitter */
+.dbh-count{color:var(--faint);font-size:var(--t-body-fs);font-weight:400;
+  font-variant-numeric:tabular-nums}
+.dbh-arrow{flex:none;transition:transform .12s}
 /* The block heading IS the navigation — there is no second "Show all" link. It is
    a heading first, so no underline at rest; the chevron carries the affordance and
    leans into the direction it goes on hover. */
@@ -4778,10 +4879,10 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
    decide one — reported instead. One token if it is wanted. */
 .hc-head h2{margin:0;font-family:var(--font-ui);font-size:var(--t-h2-fs);
   line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw)}
-/* ⚠️ `.hc-count` IS GONE (2026-09-29). The count was a separate chip beside a bare
-   arrow for one pass; both layouts carry layout A's one button now, so there is nothing
-   left for a chip rule to dress. `.hc-go` is only the slot it sits in. */
-.hc-go{display:inline-flex;font-variant-numeric:tabular-nums}
+/* ⚠️ `.hc-count` AND `.hc-go` ARE BOTH GONE (2026-09-29 / 2026-09-30). The count was a
+   separate chip beside a bare arrow for one pass; then both layouts carried layout A's
+   one button, and `.hc-go` was the slot it sat in. The heading is now the link itself
+   (`.dbh-link`), so there is no slot and no button — the rule went with its last user. */
 /* invoices and activity share the row underneath; they stack when there is no room
    for two readable columns (see the ≤900px block at the foot of this section) */
 /* ⚠️ NOT 1:1. The invoice row carries five things across, two of them 40px buttons;
@@ -4841,10 +4942,13 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
 .lcard:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 /* a cancelled licence is quieter, exactly as its row is */
 .lcard.off .lcard-name,.lcard.off .lcard-kind{color:var(--mid)}
-/* 1 — status, term, and the overflow menu at the right edge */
-.lcard-top{display:flex;align-items:flex-start;gap:8px;min-height:var(--btnH)}
-.lcard-state{display:flex;align-items:center;gap:6px;flex-wrap:wrap;flex:1;min-width:0;
-  min-height:var(--btnH);font-size:14px;color:var(--mid)}
+/* ⚠️ `.lcard-top` IS GONE (2026-09-30). It was row 1 — status and term on the left, the
+   overflow menu at the right edge — and both of its children moved: the status under the
+   product name, the menu to the end of the product row. A wrapper with nothing left to
+   wrap goes with its contents. */
+/* the state, now the third line of the text block beside the product square */
+.lcard-state{display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-width:0;
+  margin-top:5px;font-size:14px;color:var(--mid)}
 .lcard-dot{color:var(--faint)}
 .lcard-term{min-width:0}
 .lcard .lic-actions{flex:none}
@@ -4862,30 +4966,32 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
    it. The day a second does, this becomes a class and the rule takes both. */
 .lcard .btn--menu,
 .lcard .btn--secondary{background:transparent}
-/* 2 — the product square and the two lines beside it */
-.lcard-prod{display:flex;align-items:center;gap:10px;margin-top:2px}
+/* 1 — the product square, the three lines beside it, and the menu at the right edge
+   ⚠️ `flex-start`, not `center`: the text block is three lines now (kind · name · state)
+   and a centred square would float halfway down them instead of sitting on the first.
+   ⚠️ `min-height:var(--btnH)` MOVED HERE FROM `.lcard-top`, and it is what keeps a row of
+   cards level: a grant carries no overflow menu, so without it this row would be shorter
+   on exactly the cards that have nothing to put in it. */
+.lcard-prod{display:flex;align-items:flex-start;gap:10px;margin-top:2px;
+  min-height:var(--btnH)}
 /* the cell's 230px cap is a TABLE COLUMN's measure; here the card is the measure */
 .lcard-prod .lp-txt{max-width:none;flex:1}
 .lcard-kind{font-size:14px;color:var(--mid);line-height:1.2}
 .lcard-name{font-size:15px;font-weight:500;color:var(--ink);line-height:1.3;margin-top:1px}
-/* 3 — the key, on its own inset field */
-.lcard-key{display:flex;align-items:center;gap:8px;margin-top:14px;
-  background:var(--surface-quiet);border-radius:6px;padding:4px 4px 4px 12px}
-.lcard-keytxt{flex:1;min-width:0;font-size:14px;color:var(--mid);letter-spacing:0.06em;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-/* ⚠️ THE WHITE-ON-TINT PATCH IS GONE WITH THE FILL. It existed so the copy button read
-   as a control against the key field's grey; the card now asks every control on it to be
-   a bare glyph, and a white box on the one field that is already grey would be the single
-   exception to that. */
-/* 4 — the label zone, under its divider.
+/* ⚠️ ROW 3 — THE KEY FIELD — IS GONE (2026-09-30, by request), and both its rules with
+   it. `.lcard-key` was an inset tinted field holding the masked key and a copy button;
+   the whole row left the card, so the rules left with it rather than waiting to be
+   noticed as dead. The key itself is unchanged everywhere else — the table row still
+   carries it, and the panel behind the card still shows and reveals it. */
+/* 2 — the label zone, under its divider.
    ⚠️ WHAT KEEPS A ROW OF CARDS LEVEL IS THAT EVERYTHING ABOVE THE DIVIDER IS FIXED, not
-   this min-height: the status row carries `min-height:--btnH` whether or not the licence
-   has a menu (a grant has none), and the product and key rows are their own content — so
-   the divider lands at the same y in every card, and the grid's own stretch equalises the
-   frames below it. Measured on B8 · B3 · B11 · B17 · B15 (one of them menuless): divider
-   at 172 in all five, card height 232 in all five. And on the two-line label (B13, whose
-   label runs to two lines at every column count) beside a one-line and a chip: 238 each,
-   divider at the same y.
+   this min-height. That was three rows and is now one: the product row carries
+   `min-height:--btnH` whether or not the licence has a menu (a grant has none), and its
+   three text lines are the same three lines on every card — so the divider lands at the
+   same y in every one of them, and the grid's own stretch equalises the frames below it.
+   ⚠️ RE-MEASURED after the key row was removed (2026-09-30), on B8 · B3 · B11 · B17 · B15,
+   one of them menuless — the numbers below are from the three-row card and are kept only
+   as the shape of the check: divider at one y in all five, card height equal in all five.
    ⚠️ The min-height is for a different job — a card ALONE in its row, where there is no
    taller neighbour to stretch to. Without it an unnamed licence ends on its chip and the
    block looks cut off. */
@@ -5711,6 +5817,21 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
    content, so without the `z-index` pair below the line would be drawn on top of the
    marks it is supposed to run behind. */
 .feed{position:relative;margin-top:8px}
+/* ⚠️⚠️ THE FEED IS CENTRED IN ITS FRAME (2026-09-30, by request). The axis sat hard
+   against the left edge of a 976px band while the widest sentence painted 705px, so
+   the block read as a column that had been pushed aside rather than one that had been
+   placed. `--feed-col` is MEASURED, not chosen: the longest line in the seeded data
+   paints 667px from the text column's left plus the 24px mark and its 14px gutter.
+   A smaller number would start wrapping sentences that fit today.
+   ⚠️ NAMED BY ID, and that is deliberate twice over. Only two of the three hosts were
+   asked for — the license panel's own Activity tab keeps its full width, because there
+   the frame is narrow enough that the column already fills it. And `applyHomeLayout`
+   MOVES the Home pair between `#dashActBody` and `#hcActBody`, so a rule keyed on an
+   ancestor would stop applying the moment the layout axis was switched; a rule keyed
+   on the node itself travels with it.
+   ⚠️ `#dashFeedMore` takes the same box or "Load more" would sit under the left edge
+   of a column that is no longer there. */
+#dashFeed,#dashFeedMore,#actFeed{max-width:var(--feed-col);margin-inline:auto}
 .fsep,.fitem{position:relative;display:grid;grid-template-columns:24px minmax(0,1fr);
   column-gap:14px}
 /* ⚠️⚠️ A `display` DECLARATION BEATS THE UA'S `[hidden]{display:none}`, and search
@@ -6313,6 +6434,19 @@ body.list-empty #pageTitleRow #licNewBtnB{display:none !important}
 @media(max-width:640px){.field2{grid-template-columns:1fr}}
 .cardhelp{font-size:var(--t-small-fs);line-height:var(--t-small-lh);letter-spacing:var(--t-small-ls);color:var(--faint);margin-top:12px}
 .paycard{display:flex;align-items:center;gap:14px;flex-wrap:wrap;border:1px solid var(--line2);border-radius:8px;padding:12px 14px}
+/* ⚠️⚠️ THE EMPTY STATE IS TINTED AND UNBORDERED (2026-09-30, by request). An account with
+   no card on file has one job on this page, and a grey hairline round a grey sentence is
+   the shape of a FILLED field waiting to be read — it looked like something already set.
+   The tint is the same `--c-blue-50` the licence header and the purchase modal's pay card
+   carry, so the product keeps one "this block holds the facts" colour rather than
+   inventing a second for an empty state.
+   ⚠️ THE BORDER GOES RATHER THAN CHANGING COLOUR. A tint and a hairline together would
+   draw the box twice; the fill is what makes the block an object here.
+   ⚠️ `.is-empty` is written by `renderPayCard`, which is the one function that knows
+   which of the two states this row is in — the class is not derived from `:empty` or from
+   `:has(.paycard-none)`, because the row is never empty (it always holds the button) and
+   a `:has()` test would tie the styling to the spelling of a child. */
+.paycard.is-empty{background:var(--c-blue-50);border-color:transparent}
 .paycard .sp{flex:1}
 .pc-expw{display:inline}
 .brandbadge{font-size:14px;font-weight:800;letter-spacing:.08em;border:1px solid var(--line);border-radius:4px;padding:3px 7px;background:#fff;color:var(--ink)}
@@ -6823,6 +6957,12 @@ th.lic-num{text-align:right}
      the full width of the frame, so its own top edge spans exactly what a table row's
      would, and the card's padding insets the content without insetting the line. */
   #homeCards .hc-cards{display:block;gap:0;background:var(--card);border-radius:10px}
+  /* ⚠️ THE SEPARATOR GOES ON THE PHONE (2026-09-30). The state moved into the text
+     column beside the product square, which is ~120px narrower than the full-width row
+     it used to have, so `Blocked · Over instance limit` now wraps at 375 in every card —
+     and a wrapping flex row leaves the middot stranded at the end of line one, pointing
+     at nothing. Two lines need no separator; the line break is the separator. */
+  .lcard-dot{display:none}
   #homeCards .hc-cards > .lcard{box-shadow:none;border-radius:0}
   #homeCards .hc-cards > .lcard + .lcard{border-top:1px solid var(--line2)}
   /* the hover ring was the card's own edge lighting up; on a row it would draw a box
@@ -7338,11 +7478,10 @@ th.lic-num{text-align:right}
      DOM left it. Same `order` as `.keyline`, which puts it immediately after the key —
      same-order items keep document order — rather than at a number of its own that
      would have to be renumbered the next time something is inserted.
-     ⚠️ IT IS SHOWN, not hidden. The phone is where the icon-button it replaced was
-     already unreachable (that is what the ⋮ entry was for), so hiding the sentence
-     would leave the phone with no explanation of the key at all — the exact shape of
-     the open note about `UPDATES_LAPSE` being desktop-only. */
-  .keyhelp{order:5;margin:8px 0 16px;max-width:none}
+     ⚠️ THE RULE IS GONE WITH THE SENTENCE (2026-09-30). It read `order:5` and was
+     annotated "IT IS SHOWN, not hidden — hiding it would leave the phone with no
+     explanation of the key at all". That concern is now the product's state on every
+     width, not just the phone's, and it is recorded in the debt list rather than here. */
 
   /* ---------- zone 2: identity ----------
      Overline and status chip share line 1; the headline owns line 2; the label,

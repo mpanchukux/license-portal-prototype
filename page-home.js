@@ -126,28 +126,45 @@ function markFadeRow(body){
    activity block has no honest number at all. Same absence, same shape.
    ⚠️ `aria` IS PASSED, NOT DERIVED: variant B drops the number from the FACE and keeps it
    in the accessible name, so the two cannot be built from one string. */
-function blockGoHTML(n, href, aria){
-  return n === null
-    ? button({ variant:'secondary', size:'sm', icon:'arrow-right', href:href, ariaLabel:aria })
-    : button({ variant:'secondary', size:'sm', label:String(n), iconEnd:'arrow-right',
-               href:href, ariaLabel:aria });
+/* ⚠️⚠️ THE WHOLE HEADING IS THE LINK, AND THE ARROW IS NO LONGER A CONTROL
+   (2026-09-30, by request). It was an h2 beside a secondary button that carried the
+   count and the arrow together; now the h2, the count and a 24px arrow sit INSIDE one
+   anchor that fills the heading row, so the target is the line the reader was already
+   looking at instead of a 26px square at the end of it.
+   ⚠️ THIS RETIRES `blockGoHTML`, and with it the `n === null` fork that chose between
+   the icon-only and the labelled button. The absence of a count is now the absence of
+   a span — there is no second shape to choose.
+   ⚠️ The arrow is `aria-hidden` and the anchor carries the name: the icon no longer
+   stands for the destination on its own, the sentence does.
+   ⚠️ ONE BUILDER FOR BOTH LAYOUTS still holds (the rule from 2026-09-29): layout B's
+   `hcHeadHTML` calls straight through, so the two layouts cannot answer "how much is
+   behind this, and how do I get there" with two different objects. */
+function blockHeadHTML(n, title, href, aria){
+  return '<a class="dbh-link" href="' + href + '" aria-label="' + esc(aria) + '">'
+    + '<h2>' + title + '</h2>'
+    + (n === null ? '' : '<span class="dbh-count">' + n + '</span>')
+    + icon('arrow-right', { size:24, cls:'dbh-arrow' })
+    + '</a>';
 }
 function renderBlockFooters(){
-  var lic = $('#dashLicCount'), inv = $('#dashInvCount');
-  /* ⚠️ IN B THE HEADING BUTTON IS ARROW-ONLY. The count moved into `See all N` over the
-     fade, and a block carrying the same number twice reads as two destinations. Dropping
-     `label` is what makes `button()` build the icon-only form, so the size ladder and
-     the square width come from the component rather than from a rule here. */
+  var lic = $('#dashLicHead'), inv = $('#dashInvHead'), act = $('#dashActHead');
+  /* ⚠️ IN B THE HEADING CARRIES NO COUNT. It moved into `See all N` over the fade, and a
+     block stating the same number twice reads as two destinations. */
   var bare = homeBlocks() === 'b';
   var nL = DATA().licenses.length;
-  if(lic) lic.innerHTML = blockGoHTML(bare ? null : nL, 'licenses.html',
+  if(lic) lic.innerHTML = blockHeadHTML(bare ? null : nL, 'Licenses', 'licenses.html',
     'Open all ' + nL + ' licenses');
   if(inv){
     var n = DATA().invoices.length;
-    /* an account with no invoices has nothing to open — the button goes, the heading stays */
-    inv.innerHTML = n ? blockGoHTML(bare ? null : n, 'invoices.html',
-      'Open all ' + n + ' invoices') : '';
+    /* an account with no invoices has nothing to open — the link goes, the heading stays */
+    inv.innerHTML = n ? blockHeadHTML(bare ? null : n, 'Recent invoices', 'invoices.html',
+      'Open all ' + n + ' invoices') : '<h2>Recent invoices</h2>';
   }
+  /* ⚠️ NO NUMBER HERE, and the absence is the honest part — the feed is mostly derived
+     check-ins, so a count would say "the machine reported a lot", not "you have a lot to
+     read". Same heading, same link, no invented figure. */
+  if(act) act.innerHTML = blockHeadHTML(null, 'Recent activity', 'activity.html',
+    'Open all activity');
   renderBlockFades();
 }
 /* ---------- the fade and the button laid over it (variant B) --------------------
@@ -233,8 +250,7 @@ function dashFeedLoadMore(){
    ⚠️ `count === null` is the icon-only form, which is how the activity heading comes out
    without a number — see the note at its call. */
 function hcHeadHTML(title, count, href, aria){
-  return '<h2>' + title + '</h2>'
-    + '<span class="hc-go">' + blockGoHTML(count === undefined ? null : count, href, aria) + '</span>';
+  return blockHeadHTML(count === undefined ? null : count, title, href, aria);
 }
 /* ⚠️ THE SAME RULE AS THE TABLE ROW: a grant carries no overflow menu, because it cannot
    be changed, cancelled or topped up. `actionsCell` decides that for layout A; repeating
@@ -252,12 +268,25 @@ function lcardMenuHTML(p){
     + '<div class="pop" role="menu" hidden>' + menuItems(p, { noLabelEdit:true }) + '</div>'
     + '</div></div>';
 }
-/* Status · term, then product, then key, then the label zone under a divider.
-   ⚠️ EVERY PART IS THE COMPONENT LAYOUT A USES — `statusMark` and `stateText` for the
-   first line (so `Blocked · Over instance limit` reads the same here as in the table),
-   `licenseMark` for the square, `licenseKeyFor`/`licenseKeyMask` for the key, and the
-   details surface's own `+ Add label` chip for an unnamed licence. What the card owns is
-   the arrangement.
+/* Product, with status and term under its name, then the label zone under a divider.
+   ⚠️⚠️ THE KEY IS GONE FROM THE CARD, AND THE STATUS MOVED UNDER THE NAME (2026-09-30,
+   by request). Two changes, one rearrangement: the card was `status · term` on its own
+   top line, then the product, then the key on an inset field, then the label. What it
+   says now is what the card is ABOUT first — the product and plan — with its state
+   directly under the name it qualifies, which is the order the table's own product cell
+   already reads in. The masked key was the one fact on the card nobody can act on from a
+   preview: it is twelve dots and four characters, it cannot be read, and the copy button
+   beside it duplicated the row action the panel behind the card carries anyway.
+   ⚠️ `.lcard-top` WENT WITH THE STATUS. The kebab was sharing that row and is now the
+   last child of the product row; there is no line left for a wrapper to hold.
+   ⚠️ WHAT THIS COSTS, and it is measured rather than assumed: the divider's y no longer
+   comes from three fixed rows. It comes from one row whose height is `--btnH` or three
+   text lines, whichever is taller — still independent of the DATA, which is the property
+   that keeps a row of cards level. Verified across five licences, one of them menuless.
+   ⚠️ EVERY PART IS STILL THE COMPONENT LAYOUT A USES — `statusMark` and `stateText` (so
+   `Blocked · Over instance limit` reads the same here as in the table), `licenseMark` for
+   the square, and the details surface's own `+ Add label` chip. What the card owns is the
+   arrangement.
    ⚠️ `data-licid` IS THE CONTRACT with `wireLicenseRows` — the element may be anything,
    as long as it carries the id (see `opts.rowSel` there). */
 function licCardHTML(p){
@@ -269,23 +298,16 @@ function licCardHTML(p){
     + ' data-product="' + esc(p.product || '') + '"'
     + ' tabindex="0" aria-label="' + esc((p.product ? p.product + ' ' : '') + p.name
         + ', status: ' + alive + '. Open details') + '">'
-    + '<div class="lcard-top">'
-    +   '<div class="lcard-state">' + statusMark(p)
-    +     '<span class="lcard-dot" aria-hidden="true">&middot;</span>'
-    +     '<span class="lcard-term">' + stateText(p) + '</span></div>'
-    +   lcardMenuHTML(p)
-    + '</div>'
     + '<div class="lcard-prod">'
     +   '<span class="lp-ic" aria-hidden="true">' + licenseMark(p) + '</span>'
     +   '<div class="lp-txt">'
     +     '<div class="lcard-kind">' + esc(p.type || '') + '</div>'
     +     '<div class="lcard-name">' + esc(p.product || '') + ' &middot; ' + esc(p.name || '') + '</div>'
+    +     '<div class="lcard-state">' + statusMark(p)
+    +       '<span class="lcard-dot" aria-hidden="true">&middot;</span>'
+    +       '<span class="lcard-term">' + stateText(p) + '</span></div>'
     +   '</div>'
-    + '</div>'
-    + '<div class="lcard-key">'
-    +   '<span class="mono lcard-keytxt">' + licenseKeyMask(licenseKeyFor(p)) + '</span>'
-    +   button({ variant:'secondary', size:'md', icon:'copy', cls:'tip lic-copy',
-                ariaLabel:'Copy license key', attrs:'data-tip="Copy license key"' })
+    +   lcardMenuHTML(p)
     + '</div>'
     /* ⚠️ THE ZONE IS ALWAYS THERE, LABEL OR NOT, and that is what keeps a row of cards
        level: an unnamed licence shows the chip in the same band a name would occupy. The

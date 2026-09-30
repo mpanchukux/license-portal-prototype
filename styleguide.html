@@ -969,9 +969,13 @@
     </div>
     <div class="sg-item">
       <h3>Dashboard block</h3>
-      <p class="sg-note"><code class="sg-cls">.dblock</code> with <code class="sg-cls">.dblock-head</code> — the Home page's section container.</p>
+      <p class="sg-note"><code class="sg-cls">.dblock</code> with <code class="sg-cls">.dblock-head</code> — the Home page's section container.
+        The heading is the way through: <code class="sg-cls">.dbh-link</code> fills the row, so the whole
+        line is the target, and the arrow beside the title is an icon rather than a button.</p>
       <div class="dblock">
-        <div class="dblock-head"><h2>Licenses</h2><a class="link" href="licenses.html">Show all</a></div>
+        <div class="dblock-head">
+          <a class="dbh-link" href="licenses.html" aria-label="Open all 17 licenses"><h2>Licenses</h2><span class="dbh-count">17</span><svg class="ic ic-24 dbh-arrow" aria-hidden="true"><use href="assets/icons.svg#ti-arrow-right"></use></svg></a>
+        </div>
         <p class="sg-note" style="margin:0">Block body.</p>
       </div>
     </div>

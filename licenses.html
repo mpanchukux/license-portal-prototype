@@ -147,10 +147,15 @@
            the menu it could only ever be chosen INSTEAD of a state. As a switch it
            combines: `Active` + attention is a question B cannot ask.
          · the Status dropdown opens on `Active` rather than on `All statuses`.
-       ⚠️ THE SWITCH IS THE SAME COMPONENT `Active only` USES in toolbar A — `.lic-toggle`
-       wrapping `.switch` — and not a `.filterchip`. A chip row is the vocabulary of
-       toolbar A; this bar speaks in dropdowns and a switch, and mixing in one chip would
-       make it read as a fourth control style rather than as B plus one. -->
+       ⚠️⚠️ IT IS A CHIP NOW, NOT A SWITCH (2026-09-30, by request), AND THIS REVERSES
+       THE ARGUMENT THAT STOOD HERE. It read: "a chip row is the vocabulary of toolbar A;
+       this bar speaks in dropdowns and a switch, and mixing in one chip would make it
+       read as a fourth control style rather than as B plus one." What the switch could
+       not do is STATE HOW MANY — a filter that cannot say what it would leave you is one
+       the reader has to try before they can judge it — and the count is what was asked
+       for. The chip is the same component toolbar A uses, so the two bars now answer the
+       same question with the same object; only the count's facet differs, because here
+       attention combines with a status instead of replacing one. -->
   <div class="lic-controls lic-barb lic-barc stickybar" id="licBarC" hidden>
     <div class="searchbox"><svg class="ic searchglyph" aria-hidden="true"><use href="assets/icons.svg#ti-search"></use></svg><input type="text" placeholder="Search licenses" aria-label="Search licenses"></div>
     <div class="dropwrap perctl" id="licTypeCtlC">
@@ -161,7 +166,9 @@
       <button class="btn btn--secondary btn--md perbtn" aria-haspopup="true" aria-expanded="false" aria-label="License status"><b id="licStatusLabelC">Active</b> <svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-down"></use></svg></button>
       <div class="dropmenu licfiltermenu" id="licStatusMenuC" role="menu" hidden></div>
     </div>
-    <label class="lic-toggle"><span class="switch"><input type="checkbox" id="licAttnSwitch"><span class="track"></span></span> Needs attention</label>
+    <button class="filterchip attnchip" id="licAttnChipC" aria-pressed="false">
+      <svg class="ic cc-check" aria-hidden="true"><use href="assets/icons.svg#ti-check"></use></svg>
+      <span>Needs attention</span><span class="chipcount" data-count="attention"></span></button>
     <span class="spacer"></span>
     <button class="btn btn--secondary btn--md btn--icon" data-refresh aria-label="Refresh" title="Refresh"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-refresh"></use></svg></button>
     <button class="btn btn--primary btn--md" id="licNewBtnC"><svg class="ic lnb-ic" aria-hidden="true"><use href="assets/icons.svg#ti-plus"></use></svg><span class="lnb-txt">Buy a license</span></button>

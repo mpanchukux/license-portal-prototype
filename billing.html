@@ -74,12 +74,19 @@
          — a control that took typing and threw it away. -->
     <div class="setsec">
       <div class="setcard-h"><h2>Company details</h2><span class="setcard-hint">Printed on every invoice</span></div>
-      <div class="field"><label for="bill-company">Company name</label><input id="bill-company" data-field="company" type="text" value="ThingsBoard"></div>
       <!-- ⚠️ The tax number sits WITH the company name and address, not in a section of
            its own: it is one of the identifying details an invoice prints, and every
            other one of them is here. Optional — not every buyer is registered for tax,
-           and a required field would block the ones who are not. -->
-      <div class="field"><label for="bill-taxid">Tax number <span class="help-inline">(optional)</span></label><input id="bill-taxid" data-field="taxId" type="text" placeholder="e.g. DE123456789" value=""></div>
+           and a required field would block the ones who are not.
+           ⚠️ AND ON THE SAME LINE AS THE NAME (2026-09-30, by request). `.field2` is the
+           pair this form already uses for billing email + phone and for the address
+           quartet; it collapses to one column at 640px, so the phone is unaffected. Both
+           are short, single-line identifiers of the same company — stacked, they spent
+           two full rows saying what fits in one. -->
+      <div class="field2">
+        <div class="field"><label for="bill-company">Company name</label><input id="bill-company" data-field="company" type="text" value="ThingsBoard"></div>
+        <div class="field"><label for="bill-taxid">Tax number <span class="help-inline">(optional)</span></label><input id="bill-taxid" data-field="taxId" type="text" placeholder="e.g. DE123456789" value=""></div>
+      </div>
       <div class="field"><label for="bill-descr">Description</label><textarea id="bill-descr" data-field="descr">IoT platform provider.</textarea></div>
       <div class="field2">
         <div class="field"><label for="bill-email">Billing email</label><input id="bill-email" data-field="email" type="email" value="hello@thingsboard.io"></div>

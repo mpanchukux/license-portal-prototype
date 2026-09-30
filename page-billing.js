@@ -16,6 +16,9 @@ function renderPayCard(){
   var card = $('#payCard'); if(!card) return;
   var btn = $('#payUpdateBtn', card);
   $$('.brandbadge, .pc-num, .pc-exp, .paycard-none', card).forEach(function(n){ n.remove(); });
+  /* ⚠️ THE STATE IS NAMED ON THE ROW (2026-09-30), so the stylesheet can dress the empty
+     one without testing for the spelling of a child. See `.paycard.is-empty`. */
+  card.classList.toggle('is-empty', !billingSaved());
   if(billingSaved()){
     card.insertAdjacentHTML('afterbegin', paymentMethodHTML());
     if(btn){ btn.className = 'btn btn--secondary btn--md btn--icon'; btn.innerHTML = PENCIL_SVG;

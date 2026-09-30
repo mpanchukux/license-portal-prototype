@@ -200,8 +200,12 @@ function renderInstancesPage(){
      answer after any repaint, including the first */
   var gsw = $('#instGroupSwitch');
   if(gsw) gsw.checked = grouped;
-  var ssw = $('#instStaleSwitch');
-  if(ssw) ssw.checked = instStatus === 'Stale';
+  var schip = $('#instStaleChip');
+  if(schip){
+    var son = instStatus === 'Stale';
+    schip.classList.toggle('is-on', son);
+    schip.setAttribute('aria-pressed', son ? 'true' : 'false');
+  }
   var all = allInstances(instLicId);
   var rows = all.filter(instMatchesStatus);
 
@@ -253,10 +257,16 @@ function renderInstancesPage(){
      already narrowed by the licence the blocked banner may have routed in with. */
   var instTotal = $('#instTotal');
   if(instTotal) instTotal.textContent = allInstances(null).length;
-  /* ⚠️ THE FACET COUNTS WENT WITH THE CHIPS (2026-09-29). Each chip carried "how many
-     rows would I leave", which is a reading a two-way partition needs and a single
-     switch does not: `Stale` either narrows the list or it does not, and the pager
-     below already states what is left. Nothing writes `.chipcount` on this page now. */
+  /* ⚠️⚠️ THE FACET COUNT IS BACK (2026-09-30, by request), and it is the reason the
+     switch became a chip again. The note that stood here said a single switch does not
+     need the reading, because "`Stale` either narrows the list or it does not, and the
+     pager below already states what is left" — true only AFTER the press. The count
+     answers before it, which is when the reader is deciding.
+     ⚠️ ITS OWN STATE IS EXCLUDED, like every facet count in the product: it counts stale
+     rows in `all` — the licence route applied, the chip itself not — so pressing it does
+     not make the number collapse to the number already on screen. */
+  var staleCount = $('#instStaleCount');
+  if(staleCount) staleCount.textContent = all.filter(function(r){ return instStale(r.inst); }).length;
   if(!rows.length) instPage.total = 0;
   /* ⚠️ THE FOOTER NO LONGER DISAPPEARS (2026-09-28). It used to be hidden outright while
      grouping or searching, on the correct observation that neither of those pages — and
@@ -278,14 +288,16 @@ renderInstancesPage();
    hook is what keeps THIS page's filters applied when they do. */
 var renderInstancesView = renderInstancesPage;   // one repaint entry point per surface
 
-/* ---------- the two switches ------------------------------------------------------
-   ⚠️ Both are plain checkboxes with a `change` listener, and the DOM holds their state:
-   nothing here has to keep a class in step with a variable, which is what the chip pair
-   this replaces got wrong for three days (it wrote `on` where the stylesheet said
-   `is-on`, so the filter worked and never looked pressed). */
-var instStaleSwitch = $('#instStaleSwitch');
-if(instStaleSwitch) instStaleSwitch.addEventListener('change', function(){
-  instStatus = instStaleSwitch.checked ? 'Stale' : null;
+/* ---------- the filter chip and the grouping switch --------------------------------
+   ⚠️ THE GROUPING SWITCH IS A CHECKBOX and the DOM holds its state. The Stale FILTER is
+   a chip, so its pressed look has to be written by hand — and that is exactly what the
+   chip pair before it got wrong for three days (it wrote `on` where the stylesheet says
+   `is-on`, so the filter worked and never looked pressed). The class is set in ONE place,
+   `renderInstancesPage`, which every path already goes through; the click handler flips
+   the variable and repaints rather than touching the class itself. */
+var instStaleChip = $('#instStaleChip');
+if(instStaleChip) instStaleChip.addEventListener('click', function(){
+  instStatus = instStatus === 'Stale' ? null : 'Stale';
   instPage.page = 1;
   renderInstancesPage();
 });

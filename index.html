@@ -72,7 +72,7 @@
              button beside it carrying the number — so how much is behind the block and
              how to get there are one control instead of two halves at opposite ends of
              the table. The count is filled by renderBlockFooters. -->
-        <div class="dblock-head"><h2>Licenses</h2><span id="dashLicCount"></span></div>
+        <div class="dblock-head" id="dashLicHead"></div>
         <div class="tablescroll">
           <table id="dashLicTable">
             <thead id="dashLicHead"></thead>
@@ -89,7 +89,7 @@
              different heads, different frames and their links at opposite ends would read
              as a defect rather than as two components. Same argument as the dashed/solid
              divider. -->
-        <div class="dblock-head"><h2>Recent invoices</h2><span id="dashInvCount"></span></div>
+        <div class="dblock-head" id="dashInvHead"></div>
         <table>
           <thead>
             <tr>
@@ -120,9 +120,7 @@
              The feed is mostly DERIVED check-ins — hundreds a day on this account — so a
              count here would be a big number that means "the machine reported a lot",
              not "you have a lot to read". Same control, same family, no invented figure. -->
-        <div class="dblock-head"><h2>Recent activity</h2>
-          <a class="btn btn--secondary btn--sm btn--icon" href="activity.html" aria-label="Open all activity"><svg class="ic btn-ic" aria-hidden="true"><use href="assets/icons.svg#ti-arrow-right"></use></svg></a>
-        </div>
+        <div class="dblock-head" id="dashActHead"></div>
         <!-- the move target: applyHomeLayout() appends the feed pair to whichever of
              #dashActBody / #hcActBody belongs to the layout that is up -->
         <div id="dashActBody">

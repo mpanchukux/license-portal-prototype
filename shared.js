@@ -874,7 +874,7 @@ function navItemsHTML(extraClass){
   return NAV_ITEMS.map(function(n){
     return '<a class="tnav-item' + (extraClass ? ' ' + extraClass : '') + '" data-nav="' + n.key
       + '" href="' + n.href + '">'
-      + icon(n.ic, { size:20 })
+      + icon(n.ic, { size:24 })
       + '<span class="tn-lb">' + n.label + '</span></a>';
   }).join('');
 }
@@ -1604,9 +1604,9 @@ var PageStates = (function(){
           Store.set('nlBack', v);
           if(window.NL && NL.refreshOpen) NL.refreshOpen();
         },
-        options:[{ v:'current', t:'Current — in the plan card' },
-                 { v:'a', t:'A — in the top bar' },
-                 { v:'b', t:'B — above the card' }] },
+        options:[{ v:'b', t:'Current — above both columns' },
+                 { v:'card', t:'Card — inside the plan card' },
+                 { v:'a', t:'Bar — in the step bar' }] },
 
       /* ⚠️ Rendered on every wizard page and DISABLED until a flow is open, rather than
          hidden: it sits beside two controls that are usable there, and a row that
@@ -2108,7 +2108,11 @@ function wizardPresent(){ return Store.get('wizardPresent') === 'd' ? 'd' : 'c';
    ⚠️ IT DOES NOT TOUCH THE STEP RAIL. A completed step is still a button that jumps
    back (see renderSteps); this setting is only about the service control, and the two
    ways back have coexisted since 09-29 on purpose. */
-function nlBackPlace(){ var v = Store.get('nlBack'); return (v === 'a' || v === 'b') ? v : 'current'; }
+/* ⚠️ THE DEFAULT MOVED TO `b` (2026-09-30, by request) and `current` was renamed `card`:
+   Back is a plain text row above the grid, so the Calculation summary lines up with the
+   plan card instead of starting a row higher. A stored `current` from earlier in the day
+   falls through to the default, which is where it should land anyway. */
+function nlBackPlace(){ var v = Store.get('nlBack'); return (v === 'a' || v === 'card') ? v : 'b'; }
 /* ⚠️ WHICH FORM HOME'S BANNER TAKES when more than one condition is true. `stacked` is
    the default and is what the slot has done since 2026-09-24: one band, the seniormost
    condition, everything else folded into a count. `separate` gives each condition its

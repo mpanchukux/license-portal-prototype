@@ -2385,13 +2385,33 @@ function nlPlanCardHTML(c, set, sel){
      exactly the shape the checker cannot verify and the shape that let five spellings of
      "make this one quieter" exist. The VARIANT is the choice: a recommended plan takes
      primary, the rest take secondary. */
-  var cta = current ? '' : button({
-    variant: primary ? 'primary' : 'secondary', size:'md', cls:'pc-cta',
-    label: sel.cta || 'Select', attrs:'data-nl-pick="' + esc(c.name) + '"' });
-  return '<div class="dblock plancard ' + (current ? 'nl-current' : 'nl-select') + (on ? ' on' : '')
-    + (popular ? ' is-popular' : '')
-    + '" data-plan="' + c.name + '" role="button" tabindex="' + (current ? '-1' : '0') + '"'
-    + ' aria-pressed="' + on + '"' + (current ? ' aria-disabled="true"' : '') + '>'
+  /* ⚠️⚠️ THE FREE CARD IS NOT PICKED, IT IS INSTALLED (2026-09-30, by request). Its
+     button leaves the product: there is nothing to buy, so the next step is the install
+     docs rather than sign-up, and it opens in a new tab carrying the same
+     `external-link` mark every other outbound action in the product carries.
+     ⚠️ AND THE CARD STOPS BEING SELECTABLE WITH IT. The body of a plan card is itself a
+     control — `planPickerClick` reads `.plangrid .nl-select` — so leaving the class on
+     would have given this one card two different answers to a click: the button installs,
+     the card beside it opens sign-up with `Free` chosen. `.nl-install` is the third state
+     of a card (`nl-select` · `nl-current` · `nl-install`), and it drops `data-plan`,
+     `role`, `tabindex` and `aria-pressed` along with the class, because all four exist to
+     say "this is a control" and it is not one any more.
+     ⚠️ This card only ever renders SIGNED OUT (see `offeredSet`), so "free" and "on the
+     landing" are the same condition here and no second test is needed. */
+  var install = !current && !!c.free;
+  var cta = current ? '' : install
+    ? button({ variant:'secondary', size:'md', cls:'pc-cta', label:'Install',
+               iconEnd:'external-link', href:EXT.install,
+               attrs:'target="_blank" rel="noopener"' })
+    : button({
+        variant: primary ? 'primary' : 'secondary', size:'md', cls:'pc-cta',
+        label: sel.cta || 'Select', attrs:'data-nl-pick="' + esc(c.name) + '"' });
+  return '<div class="dblock plancard '
+    + (current ? 'nl-current' : install ? 'nl-install' : 'nl-select') + (on ? ' on' : '')
+    + (popular ? ' is-popular' : '') + '"'
+    + (install ? '' : ' data-plan="' + c.name + '" role="button" tabindex="'
+        + (current ? '-1' : '0') + '" aria-pressed="' + on + '"')
+    + (current ? ' aria-disabled="true"' : '') + '>'
     + strip + badge
     + '<div class="pc-head"><h2>' + c.name + '</h2></div>'
     /* ⚠️ ONE PRICE LINE FOR EVERY CARD (2026-09-25). The free plans used to print a `Free`
@@ -2481,6 +2501,31 @@ function planPickerKey(sel){
    `single` rides on the set, so a one-card group (both of TBMQ's, and ThingsBoard's
    perpetual) gets the single-card treatment rather than a card stretched across a
    four-column track. */
+/* ⚠️⚠️ THE FREE PLAN IS A SIGNED-OUT OFFER ONLY (2026-09-30, by request). It is on the
+   landing page and nowhere else: a reader who already has an account is not being sold
+   the free tier, and Home's first-run screen — which renders this very same picker — is
+   a signed-in surface.
+   ⚠️ THE TEST IS THE SESSION, NOT THE PAGE. `!isSignedIn()` is exactly "the signed-out
+   landing" today, because the guard sends every other portal page to `landing.html` when
+   there is no session and the landing is the only public surface that renders cards. A
+   `data-page` test would have said the same thing less truthfully and would be wrong the
+   day a second public surface wants a price list.
+   ⚠️ FILTERED HERE, AT THE SET, and that is load-bearing: `renderPlanPicker` counts
+   `set.cards.length` to lay out the one wide row (`--pg-cols`, and each group's span).
+   Filtering at the CARD would have left the row reserving a column for a card that is
+   not drawn, and every card would have come out narrow by a fifth.
+   ⚠️ The copy is shallow and made only when something was actually dropped, so every
+   other surface keeps the identical object out of `EC_PLANS` — no set is rebuilt for a
+   filter that removed nothing. */
+function offeredSet(set){
+  if(!set || !set.cards || !isSignedIn()) return set;
+  var cards = set.cards.filter(function(c){ return !c.free; });
+  if(cards.length === set.cards.length) return set;
+  var out = {};
+  for(var k in set) if(Object.prototype.hasOwnProperty.call(set, k)) out[k] = set[k];
+  out.cards = cards;
+  return out;
+}
 function planGroupsFor(sel){
   var product = sel.product || 'thingsboard';
   /* ⚠️ A LOCKED SELECTION GETS ONE GROUP, and it must. `locked` is Change plan — an
@@ -2491,7 +2536,7 @@ function planGroupsFor(sel){
                          : ['subscription', 'perpetual'];
   return kinds.map(function(k){
     return { kind:k, choice:BILLING_CHOICES.filter(function(o){ return o.v === k; })[0],
-             set: EC_PLANS[product + '|' + (k === 'perpetual' ? 'perpetual' : 'payg')] };
+             set: offeredSet(EC_PLANS[product + '|' + (k === 'perpetual' ? 'perpetual' : 'payg')]) };
   }).filter(function(g){ return g.set && g.set.cards.length; });
 }
 /* `pos` is the group's place in the ONE row the wide layout lays out: `span` is how
@@ -2547,7 +2592,9 @@ function planPickerExtraHTML(set, sel){
 /* ⚠️ `baseEl` is gone from the signature with the block it filled. Callers that still
    pass a fifth argument are harmless, but there is nothing left to put in it. */
 function renderPlanPicker(choicesEl, gridEl, sel, extraEl){
-  var set = EC_PLANS[planPickerKey(sel)];
+  /* ⚠️ Through `offeredSet` too: the extra block under the grid asks whether this is a
+     single-card set, and it has to be asked about the set the reader is looking at. */
+  var set = offeredSet(EC_PLANS[planPickerKey(sel)]);
   /* ⚠️ `sel.locked` means "this is an EXISTING licence" — Change plan. Neither of the
      choices above the grid can change on one: a ThingsBoard subscription does not
      become TBMQ, and a monthly plan does not become perpetual. Those are different

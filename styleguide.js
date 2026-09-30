@@ -202,7 +202,7 @@ $$('#sgWizStep').forEach(function(box){
     /* the connector takes the state of the step BEFORE it, so the line INTO the current
        step reads as travelled — `n <= here`, not `n < here`. Same off-by-one the
        product's own renderSteps had for one pass. */
-    if(n) out += '<span class="nl-sline' + (n <= here ? ' is-done' : '') + '" aria-hidden="true"></span>';
+
     out += '<div class="nl-step' + (done ? ' is-done' : '') + (cur ? ' is-cur' : '') + '">'
       + '<span class="nl-smark">' + (n + 1) + '</span>'
       + '<span class="nl-stxt"><span class="nl-sname">' + esc(d[0]) + '</span>'

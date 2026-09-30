@@ -174,37 +174,26 @@ var DETAILS_HTML = ''
 + '                  </button>'
 + '                </div>'
 + '              </div><!-- /keyfield -->'
-/* ⚠️⚠️ THE BUTTON BECAME A SENTENCE (2026-09-29, by request). `#installBtn` was a
-   third icon-only button in this row — a document glyph beside an eye and a copy —
-   and an icon is the wrong shape for the one thing here that needs explaining. A
-   reader who does not already know what to do with a licence key cannot learn it from
-   a picture of a page, and the tooltip that carried the words only appeared for
-   someone who already suspected they were there.
-   ⚠️ WHAT THE SENTENCE SAYS is what the panel already knew and never stated in one
-   place: the key is entered in ThingsBoard, not here; a deployment that has been given
-   it reports back; and that is why the Instances tab below fills in by itself. The
-   post-purchase banner said the last part and disappeared when dismissed.
-   ⚠️ Still an outbound LINK at the end of it, for the reason the button was one:
-   installing is not the portal's job — the key goes into ThingsBoard itself, the
-   platform syncs, and this surface reflects what came back. */
-/* ⚠️⚠️ ONE SENTENCE, AND THE LONG ONE IS DELETED RATHER THAN HIDDEN (2026-09-30, by
-   request — the third time this copy has been asked for, now on the last variant that
-   still carried the other). The paragraph that named ThingsBoard and TBMQ and explained
-   that a deployment checks in with the key and appears under Instances is GONE from the
-   product. It is not parked behind a variant: a branch nothing can reach is the thing
-   that looks alive in a grep and is not.
-   ⚠️⚠️ AND THAT CLOSES THE CONFLICT THIS FILE REPORTED TWICE, in the direction of
-   removal rather than of the move that was refused. The refusal still stands and is
-   still the reason it was never put into the `License created` banner: that banner shows
-   once per licence forever, and the panel had this sentence precisely BECAUSE it used to
-   live there and vanished with it. What changed is that the sentence is no longer wanted
-   anywhere — which is a decision, not a hiding place.
-   ⚠️ What the product no longer says anywhere: that the key goes into ThingsBoard or
-   TBMQ rather than here, and that this is why the Instances tab fills in by itself. See
-   the debt list. */
-+ '                <p class="keyhelp">Enter this key in your installation to activate it.'
-+ '                  <a class="link" href="' + EXT.install + '" target="_blank" rel="noopener">Installation instructions' + EXTSVG + '</a>'
-+ '                </p>'
+/* ⚠️⚠️ THE KEY'S HELP LINE IS GONE ENTIRELY (2026-09-30, by request — "remove the text
+   'Enter this key in your installation to activate it. Installation instructions'").
+   HISTORY, because this is the third removal in the same place and each one took a
+   different thing with it. 09-29 turned an icon-only `#installBtn` into a sentence,
+   because a reader who does not know what to do with a licence key cannot learn it from
+   a picture of a page. Earlier on 09-30 the LONG paragraph went — the one that named
+   ThingsBoard and TBMQ and explained that a deployment checks in with the key and so
+   fills the Instances tab by itself. This removes what was left of it, the short line
+   and the outbound link with it.
+   ⚠️⚠️ SO THE PANEL NOW SAYS NOTHING AT ALL ABOUT WHAT THE KEY IS FOR. Not the
+   activation step, not where the key is entered, not why Instances fills in by itself,
+   and — new with this pass — no route to the install documentation from this surface at
+   all. `EXT.install` still has readers elsewhere (the `awaiting_checkin` alert), so the
+   link is not orphaned, but a healthy licence no longer offers one. The debt entry that
+   tracks this is now about all three, and it is the entry to read before anyone adds a
+   fourth version of this sentence.
+   ⚠️ The refusal to move it into the `License created` banner still stands and is still
+   the reason this was ever here: that banner shows once per licence forever, and the
+   panel carried the sentence precisely BECAUSE it used to live there and vanished with
+   it. Nothing about that changed; what changed is that the sentence is not wanted. */
 + '                <!-- ⚠️ The "License created" note that used to sit here has moved'
 + '                     ABOVE the licence title (see #licNewBanner at the top of the'
 + '                     panel). Under the key it was the second message a freshly'
@@ -352,9 +341,9 @@ var DETAILS_HTML = ''
    the nav slices the account, and a tab meaning Invoices while wearing a different
    glyph from the Invoices nav item would be two vocabularies for one product. Reading
    the list also means a glyph changed in the nav cannot leave these behind. */
-+ '            <button class="tab" role="tab" id="tab-prod" aria-controls="panel-prod" aria-selected="true" tabindex="0">' + navIcon('instances') + 'Instances</button>'
-+ '            <button class="tab" role="tab" id="tab-invoices" aria-controls="panel-invoices" aria-selected="false" tabindex="-1">' + navIcon('invoices') + 'Invoices</button>'
-+ '            <button class="tab" role="tab" id="tab-logs" aria-controls="panel-audit" aria-selected="false" tabindex="-1">' + navIcon('activity') + 'Activity</button>'
++ '            <button class="tab" role="tab" id="tab-prod" aria-controls="panel-prod" aria-selected="true" tabindex="0">' + navIcon('instances', { size:20 }) + 'Instances</button>'
++ '            <button class="tab" role="tab" id="tab-invoices" aria-controls="panel-invoices" aria-selected="false" tabindex="-1">' + navIcon('invoices', { size:20 }) + 'Invoices</button>'
++ '            <button class="tab" role="tab" id="tab-logs" aria-controls="panel-audit" aria-selected="false" tabindex="-1">' + navIcon('activity', { size:20 }) + 'Activity</button>'
 + '          </div>'
 + ''
 + '          <!-- Instances -->'
