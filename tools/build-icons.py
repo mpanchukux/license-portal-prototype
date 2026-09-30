@@ -87,6 +87,13 @@ ICONS = [
     # and fill, never by colour), so an outline triangle would read as the quiet variant
     # of itself. `-filled` is Tabler's own suffix for the variant.
     'alert-triangle-filled',
+    # ⚠️ ADDED 2026-09-30 for the licence panel's alert, from a reference that draws a
+    # solid disc with an exclamation in it. The banner's mark is 24px and prominent now;
+    # the outline `alert-circle` at that size reads as a ring with something in it, and
+    # the filled triangle the activity feed uses is the wrong SHAPE here — the reference
+    # asks for a circle. Tabler's own `-filled` variant of the circle we already carry,
+    # so the set gains a variant rather than a new idea.
+    'alert-circle-filled',
 ]
 
 ATTRS = ('viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '

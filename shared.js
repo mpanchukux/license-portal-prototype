@@ -458,7 +458,14 @@ function licZone(){ var v = Store.get('licZone'); return (v === 'a' || v === 'b'
    ⚠️ The PRODUCT trio is deliberately NOT a setting: it comes from what the visitor
    picks on the page, which is the one place a product is genuinely in context. The ⚙
    chooses the gradient, the page chooses the colours. */
-function landingBg(){ return Store.get('landingBg') === 'mesh' ? 'mesh' : 'current'; }
+/* ⚠️ THREE VALUES SINCE 2026-09-30. `lifted` is variant 1's pools in variant 2's
+   arrangement, raised so the colour lands in the top of the page — so it is a placement
+   of the existing layer, not a third one (see the stylesheet). Written as a membership
+   test rather than a chain of ternaries, the same shape `licTable` took when it grew a
+   third value. 'current' is still the default and still the fallback for anything
+   unrecognised, so an old store cannot land on a variant that did not exist when it was
+   written. */
+function landingBg(){ var v = Store.get('landingBg'); return (v === 'mesh' || v === 'lifted') ? v : 'current'; }
 function applyLandingBg(){
   if(document.body.getAttribute('data-page') === 'landing')
     document.body.setAttribute('data-lbg', landingBg());
@@ -1141,7 +1148,8 @@ function settingsBodyHTML(){
     out += group('Landing gradient',
       '<label class="sp-opt"><input type="radio" name="landingBg" value="current"' + (landingBg() === 'current' ? ' checked' : '') + '><span>1 \u2014 current</span></label>'
       + '<label class="sp-opt"><input type="radio" name="landingBg" value="mesh"' + (landingBg() === 'mesh' ? ' checked' : '') + '><span>2 \u2014 mesh</span></label>'
-      + '<div class="sp-hint">Variant 2 follows the product picked on the page \u2014 it is not a setting.</div>');
+      + '<label class="sp-opt"><input type="radio" name="landingBg" value="lifted"' + (landingBg() === 'lifted' ? ' checked' : '') + '><span>3 \u2014 1\u2019s pools, 2\u2019s arrangement, lifted</span></label>'
+      + '<div class="sp-hint">Variant 2 follows the product picked on the page \u2014 it is not a setting. Variant 3 is variant 1: the same two colours and the same drift, placed as 2 places them (a high pair either side of centre, one below between them) and raised so the colour falls in the top of the page. Three circles, not four \u2014 that arrangement has three places.</div>');
   }
 
   /* ---- how the licence panel's first zone is arranged. Scoped to the surfaces that

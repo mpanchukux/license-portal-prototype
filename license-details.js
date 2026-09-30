@@ -180,21 +180,22 @@ var DETAILS_HTML = ''
    ⚠️ Still an outbound LINK at the end of it, for the reason the button was one:
    installing is not the portal's job — the key goes into ThingsBoard itself, the
    platform syncs, and this surface reflects what came back. */
-+ '                <p class="keyhelp keyhelp-full">Enter this key in your ThingsBoard or TBMQ'
-+ '                  installation to activate it. Each running deployment checks in with'
-+ '                  the key and appears under Instances below.'
-+ '                  <a class="link" href="' + EXT.install + '" target="_blank" rel="noopener">Installation instructions' + EXTSVG + '</a>'
-+ '                </p>'
-/* ⚠️⚠️ VARIANT A's SHORT LINE, AND THE PARAGRAPH ABOVE IS ONLY HIDDEN THERE, NOT MOVED.
-   The brief asks for the full paragraph to go into the `License created` banner; it is
-   not moved, and that is a reported conflict rather than an oversight — the panel has
-   this sentence precisely BECAUSE it used to live in that banner and vanished with it
-   (see the note above, and the 2026-09-21 record about the banner showing once per
-   licence forever). Putting it back would undo a decision twice made.
-   ⚠️ Both paragraphs are switched by the zone attribute, NOT by `hidden`: `.keyhelp`
-   carries `display` of its own in the ≤600 block, and `[hidden]` loses to that — the
-   fault this file has now recorded four times. */
-+ '                <p class="keyhelp keyhelp-short">Enter this key in your installation to activate it.'
+/* ⚠️⚠️ ONE SENTENCE, AND THE LONG ONE IS DELETED RATHER THAN HIDDEN (2026-09-30, by
+   request — the third time this copy has been asked for, now on the last variant that
+   still carried the other). The paragraph that named ThingsBoard and TBMQ and explained
+   that a deployment checks in with the key and appears under Instances is GONE from the
+   product. It is not parked behind a variant: a branch nothing can reach is the thing
+   that looks alive in a grep and is not.
+   ⚠️⚠️ AND THAT CLOSES THE CONFLICT THIS FILE REPORTED TWICE, in the direction of
+   removal rather than of the move that was refused. The refusal still stands and is
+   still the reason it was never put into the `License created` banner: that banner shows
+   once per licence forever, and the panel had this sentence precisely BECAUSE it used to
+   live there and vanished with it. What changed is that the sentence is no longer wanted
+   anywhere — which is a decision, not a hiding place.
+   ⚠️ What the product no longer says anywhere: that the key goes into ThingsBoard or
+   TBMQ rather than here, and that this is why the Instances tab fills in by itself. See
+   the debt list. */
++ '                <p class="keyhelp">Enter this key in your installation to activate it.'
 + '                  <a class="link" href="' + EXT.install + '" target="_blank" rel="noopener">Installation instructions' + EXTSVG + '</a>'
 + '                </p>'
 + '                <!-- ⚠️ The "License created" note that used to sit here has moved'
@@ -219,8 +220,17 @@ var DETAILS_HTML = ''
 + '                <h3 class="periodhead">Status</h3>'
 + '                <div class="period" id="statusSlot"></div>'
 + '              </div>'
+/* ⚠️⚠️ `Period`, NOT `Subscription period` / `Software updates` / `Expiry` (2026-09-30,
+   from a reference). THIS OVERRIDES A DECISION THIS FILE ARGUED FOR — that the label
+   differs by kind, because "a grant's period IS its expiry, and there is none; a Free
+   subscription is still a subscription". What makes the override safe rather than a loss
+   is that the VALUE never stopped saying which kind of period it is: `Renews Oct 13`,
+   `Until Aug 13 2027`, `Expires …`, `No expiry`. The word moved out of the label and it
+   was already in the value; it is not said twice now instead of once.
+   ⚠️ The label is visible in variant B alone — A and `current` hide it and let the value
+   carry everything — so this is a change to one surface, not to four. */
 + '              <div class="keycol right" data-page="sub">'
-+ '                <h3 class="periodhead">Subscription period</h3>'
++ '                <h3 class="periodhead">Period</h3>'
 + '                <div class="period" id="periodSub">Aug 13 2026 to Sep 13 2026</div>'
 + '                <!-- phone: the same fact as a list row — the word moves up into the'
 + '                     label and the value is the bare date. Desktop keeps its caps'
@@ -231,7 +241,7 @@ var DETAILS_HTML = ''
 + '              <!-- the license itself never expires; what is dated here is the'
 + '                   software-updates term -->'
 + '              <div class="keycol right" data-page="perp">'
-+ '                <h3 class="periodhead">Software updates<span id="updatesInfo"></span></h3>'
++ '                <h3 class="periodhead">Period<span id="updatesInfo"></span></h3>'
 + '                <div class="period" id="periodPerp">1 year &middot; until Aug 13 2027</div>'
 + '                <h3 class="rowlabel mob-only" id="periodLabelPerp"></h3>'
 + '                <div class="rowvalue mob-only" id="periodValuePerp"></div>'
@@ -248,30 +258,26 @@ var DETAILS_HTML = ''
 + '                   gap is a number, and a number argues better than a warning. Filled by'
 + '                   renderLicenseVersion(); hidden when no instance has reported one. -->'
 + '              <div class="keycol right" id="verCol" hidden>'
-+ '                <h3 class="periodhead">Product version</h3>'
+/* ⚠️ `Version`, NOT `Product version` (2026-09-30, by request). Renamed in the MARKUP,
+   so every variant says it — the caps label in B changes with the inline one in A and
+   `current`. Two names for one fact, chosen by which layout you happen to be looking at,
+   is the drift this panel spends most of its comments refusing. */
++ '                <h3 class="periodhead">Version</h3>'
 + '                <div class="period" id="licVersion"></div>'
-+ '                <h3 class="rowlabel mob-only">Product version</h3>'
++ '                <h3 class="rowlabel mob-only">Version</h3>'
 + '                <div class="rowvalue mob-only" id="licVersionMob"></div>'
 + '              </div>'
-/* ⚠️ THE FOURTH FACT, AND IT EXISTS FOR VARIANT B ALONE (2026-09-29, by request). Every
-   other `.keycol` here is shown in all three layouts; this one is rendered only when the
-   zone is `b` AND `hasNextCharge()` is true, which is why it carries its own id rather
-   than a `data-page`. Its content comes from `nextChargeParts()`, the same reading the
-   `Next charge` card below the header uses — two spellings of one amount is how the two
-   would start disagreeing about what a cancelled subscription owes. */
-+ '              <div class="keycol right" id="ncCol" hidden>'
-+ '                <h3 class="periodhead">Next charge</h3>'
-+ '                <div class="period" id="ncColVal"></div>'
-+ '                <h3 class="rowlabel mob-only">Next charge</h3>'
-+ '                <div class="rowvalue mob-only" id="ncColValMob"></div>'
-+ '              </div>'
+/* ⚠️ `#ncCol` IS GONE (2026-09-30, by request). Variant B carried a `Next charge` fact
+   beside the key for one day; the card under the header already answers that question,
+   and the fact standing in both places meant the same number was on screen twice. The
+   CARD is untouched — it is the one that stays. */
 + '            </div>'
 + ''
 + '            <!-- Conditional alert. Rendered ONLY when the subscription needs attention'
 + '                 (payment failed, card expiring, usage over limit). Healthy state shows nothing.'
 + '                 Demo hooks: window.showSubAlert(\'msg…\') / window.clearSubAlert() -->'
 + '            <div class="alert" id="subAlert" role="alert" hidden>'
-+ '              <svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg>'
++ '              <svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-circle-filled"></use></svg>'
 + '              <span class="atxt"></span>'
 + '            </div>'
 + '            </div><!-- /head-rest -->'
@@ -736,10 +742,13 @@ function renderLicenseFeatures(lic, spec){
    change. Both are emitted and CSS picks, which also keeps the accessible name
    right: `display:none` drops a label out of the a11y tree, so the button is
    named "Update" on the phone and "Update payment method" on the desktop.
-   `mobact` marks an action the desktop never had — it stays hidden there rather
-   than appearing as a new control on a surface that was not in scope. */
-function alertAction(short, long, attrs, mobOnly){
-  return '<button class="btn btn--text btn--md aact' + (mobOnly ? ' mobact' : '') + '" ' + attrs + '>'
+   ⚠️ `mobOnly` / `.mobact` IS GONE (2026-09-30). It marked an action the desktop never
+   had, and its one user was the awaiting-check-in banner, which carried an in-sentence
+   link on the desktop and a band button on the phone. That banner now has ONE action on
+   both breakpoints like every other, so nothing passed the flag any more — and a
+   parameter no call site uses is a branch that looks alive in a grep and is not. */
+function alertAction(short, long, attrs){
+  return '<button class="btn btn--text btn--md aact" ' + attrs + '>'
     + '<span class="aact-long">' + long + '</span>'
     + '<span class="aact-short">' + short + '</span>'
     + '</button>';
@@ -806,9 +815,16 @@ function renderLicenseAlert(lic){
        only above the Instances list. Home now says what is wrong and what fixes it;
        this is the surface that explains HOW a licence ends up over its limit, next to
        the instances you would act on. One constant, shared with `.inst-hint`. */
+    /* ⚠️⚠️ THE BLOCKING CLAUSE IS GONE FROM THIS BANNER (2026-09-30, by request). It
+       read "— this license is blocked until the count is back within its limit", and the
+       note above still applies to it: that wording was PROVISIONAL, said verbally and
+       never confirmed. What is left is the count and what to do about it.
+       ⚠️ The word `Blocked` has NOT left the product: the status mark on this licence
+       still says it, and `ATTN_TIP.blocked` still carries the full sentence as the
+       table's tooltip. So the claim is still made — it is no longer made twice, and the
+       banner is now the one that explains rather than the one that asserts. */
     t.innerHTML = '<span class="amsg"><b>Over the production instance limit.</b> '
-      + instRunning(lic) + ' running, ' + instAllowed(lic) + ' allowed on this plan \u2014 '
-      + 'this license is blocked until the count is back within its limit. '
+      + instRunning(lic) + ' running, ' + instAllowed(lic) + ' allowed on this plan. '
       + DETACH_HINT
       + alsoClause('over_limit') + '</span>';
       /* ⚠️ NO ACTION ON THIS ONE (2026-09-24). It carried `Manage instances`, and the
@@ -863,8 +879,12 @@ function renderLicenseAlert(lic){
        modal the menu item opens, so the instruction and the means are in one place.
        ⚠️ The same UPDATES_LOSS sentence as the expired branch: what is at stake does
        not change with the date, only when it starts. */
-    t.innerHTML = '<span class="amsg"><b>Software updates end on ' + fmtDate(lic.event)
-      + ', in ' + daysUntil(lic.event) + ' days.</b> ' + UPDATES_LOSS + '</span>'
+    /* ⚠️ THE COUNT LEADS AND THE DATE QUALIFIES IT (2026-09-30, by request). It was
+       "end on Oct 12, 2026, in 12 days" — a date first, with the number of days as an
+       afterthought behind a second comma. What makes this banner urgent is the twelve
+       days; the date is what you check afterwards, so it goes in brackets. */
+    t.innerHTML = '<span class="amsg"><b>Software updates end in ' + daysUntil(lic.event)
+      + ' days (on ' + fmtDate(lic.event) + ').</b> ' + UPDATES_LOSS + '</span>'
       + alertAction('Renew updates', 'Renew software updates', 'data-renewupdates="' + esc(lic.id) + '"');
     al.hidden=false;
   }
@@ -878,10 +898,14 @@ function renderLicenseAlert(lic){
   }
   // the key exists but nothing has used it yet — the one thing left to do is activate
   else if(st==='awaiting_checkin'){
+    /* ⚠️ ONE ACTION, AT THE RIGHT EDGE, ON BOTH BREAKPOINTS (2026-09-30, by request).
+       This branch used to carry two routes to the same page: an in-sentence link for the
+       desktop and a phone-only band button, with `.inlineact` hidden at ≤600 so only one
+       showed at a time. Now that every banner puts its action on the right, this one has
+       no reason to be the exception — and one control is one thing to keep working. */
     t.innerHTML = '<span class="amsg"><b>No instance has checked in yet.</b> The license key was issued '
-      + fmtDate(lic.created) + ' \u2014 activate an instance with it and it appears here. '
-      + '<a class="link inlineact" href="' + EXT.install + '" target="_blank" rel="noopener" style="margin-left:6px">Installation guide' + EXTSVG + '</a></span>'
-      + '<a class="btn btn--text btn--md aact mobact" href="' + EXT.install + '" target="_blank" rel="noopener">'
+      + fmtDate(lic.created) + ' \u2014 activate an instance with it and it appears here.</span>'
+      + '<a class="btn btn--text btn--md aact" href="' + EXT.install + '" target="_blank" rel="noopener">'
       +   '<span class="aact-long">Installation guide' + EXTSVG + '</span><span class="aact-short">Set up' + EXTSVG + '</span></a>';
     al.hidden=false;
   }
@@ -972,16 +996,13 @@ function renderKicker(lic, pk){
    in with the new key. Every non-grant licence restores the same nodes. */
 function renderGrantChrome(lic){
   var isGrant = !!(lic && lic.grant);
-  /* ⚠️ `textContent` here WIPED the heading's info-icon slot — it rewrites the whole
-     node, span included, and this runs after the markup is mounted. The word is set on
-     its own text node instead, and `#updatesInfo` (which renderLicenseDetails fills)
-     is left alone. A grant has no updates term, so it gets the word and no icon. */
-  var ph = $('#appView .keycol[data-page="perp"] .periodhead');
-  if(ph){
-    var slot = $('#updatesInfo', ph);
-    ph.textContent = isGrant ? 'Expiry' : 'Software updates';
-    if(slot) ph.appendChild(slot);
-  }
+  /* ⚠️ THE HEADING'S WORD IS NO LONGER SWAPPED HERE (2026-09-30). It said `Expiry` for a
+     grant and `Software updates` otherwise; the label is `Period` for every kind now (see
+     the markup), so there is nothing to swap — and with the assignment gone, the
+     `#updatesInfo` slot this code had to rescue from its own `textContent` is safe by
+     construction rather than by putting it back afterwards.
+     ⚠️ The ICON still differs and is still set by renderLicenseDetails: a grant has no
+     updates term, so it gets no info icon. */
   var coupon = $('#couponBtn'); if(coupon) coupon.hidden = isGrant;
   // the data-page pass above already restored these for a perpetual licence,
   // so a grant only has to take them back out
@@ -1073,34 +1094,13 @@ function renderLicenseDetails(lic){
    a repaint rather than a second renderer.
    ⚠️ IT RUNS FROM `renderLicenseDetails`, i.e. on every open in either host. The ⚙ only
    has to write the store and ask for a refresh.
-   ⚠️ THE ONE NODE THAT IS NOT ALWAYS THERE is `#ncCol`: it is variant B's fourth fact,
-   and outside B it must stay hidden or the current layout would grow a column nobody
-   asked for. Its visibility is `zone === 'b' && hasNextCharge(lic)`, which is the same
-   predicate the card below the header uses. */
+   ⚠️ IT IS NOW ONE LINE, and that is the shape it should have had all along: every node
+   in the zone is shown by the same rules in all three layouts, so nothing here has to
+   decide visibility. It briefly did — variant B had a `Next charge` fact of its own, gone
+   2026-09-30 — and `lic` is kept in the signature because the caller passes it and the
+   next variant that needs a per-licence decision will want it back. */
 function applyLicZone(lic){
-  var zone = licZone();
-  $$('#appView .head-rest').forEach(function(el){ el.setAttribute('data-zone', zone); });
-  var nccol = $('#ncCol');
-  if(nccol){
-    var show = zone === 'b' && hasNextCharge(lic);
-    nccol.hidden = !show;
-    if(show){
-      var ncp = nextChargeParts(lic);
-      var txt = ncp.amount + ' on ' + ncp.when;
-      var v = $('#ncColVal'); if(v) v.textContent = txt;
-      /* ⚠️ THE PHONE ROW IS BUILT LIKE ITS SIBLINGS, glyph and all — `renderPeriodRow`
-         emits `.rowic` + `.rowtxt`, and a fact row without the glyph would be the one
-         line in that stack with nothing in its left gutter.
-         ⚠️ AND IT KEEPS THE WORD `on`, which is why this is not the card's `.nc-on`
-         span: the ≤600 block drops that class because the card still has its `NEXT
-         CHARGE` label to say what the date is. This row's label is hidden at that width
-         (the word moves into the value, which is the pattern), so borrowing the class
-         would have left `$499.00 Oct 07, 2026` with nothing between the two numbers. */
-      var m = $('#ncColValMob');
-      if(m) m.innerHTML = '<span class="rowic">' + icon('credit-card') + '</span>'
-        + '<span class="rowtxt">' + esc(txt) + '</span>';
-    }
-  }
+  $$('#appView .head-rest').forEach(function(el){ el.setAttribute('data-zone', licZone()); });
 }
 
 /* Is there a scheduled charge ahead? One reading, so the block's visibility and any
@@ -1109,11 +1109,11 @@ function applyLicZone(lic){
    amount and date are exactly what the person needs while the banner tells them to
    update the card. Cancelled does not: it runs to the end of what was paid for and
    then stops. Perpetual and grant never had one. */
-/* ⚠️ THE AMOUNT AND THE DATE, READ ONCE (2026-09-29). The `Next charge` card built both
-   inline; variant B of the header zone states the same fact, and a second copy of
-   `String(lic.price).replace(/\s*\/\s*mo/i,'')` is how one surface would keep the
-   `/ mo` suffix the day somebody edits only the other. `hasNextCharge` still decides
-   WHETHER there is one — this only says what it is. */
+/* The amount and the date of the next charge, read in one place.
+   ⚠️ ONE READER SINCE 2026-09-30 — the `Next charge` card. It was extracted when the
+   header zone stated the same fact too; that second statement is gone, and this is kept
+   rather than inlined back because what it holds is a RULE (`/ mo` comes off the stored
+   price) and not a convenience. `hasNextCharge` still decides WHETHER there is one. */
 function nextChargeParts(lic){
   return { amount: String((lic && lic.price) || '').replace(/\s*\/\s*mo/i,''),
            when: fmtDate(lic && lic.event) };

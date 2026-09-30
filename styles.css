@@ -149,6 +149,9 @@
   --surface-quiet-press:var(--c-grey-200);
   /* the same three steps in red, for the one tone that is not grey */
   --surface-danger:var(--c-red-50);
+  /* the edge that goes with that ground. A VALUE, because `--c-red-100` is a primitive
+     and no rule reads a primitive — see the two-layer note at the top of this block. */
+  --border-danger:var(--c-red-100);
   --surface-danger-hover:var(--c-red-100);
   --surface-danger-press:var(--c-red-200);
   /* ⚠️ A SURFACE TOKEN, NOT `--surface-quiet` (2026-09-28, by request). The two
@@ -573,27 +576,49 @@ a{color:inherit}
 /* conditional attention alert (hidden in healthy state) */
 /* Banner actions are emitted twice — a short verb for the phone's one-row band, the
    full phrase for the desktop's line — and CSS picks. The DEFAULTS live here, outside
-   the media query, or the desktop prints both ("Update payment methodUpdate") and
-   grows controls it never had. `.mobact` marks an action that exists only on the
-   phone; `.inlineact` is the desktop's in-sentence link, which the band replaces. */
-.aact-short,.aact.mobact{display:none}
+   the media query, or the desktop prints both ("Update payment methodUpdate").
+   ⚠️ `.mobact` AND `.inlineact` ARE GONE (2026-09-30). They were the pair that let the
+   awaiting-check-in banner carry a link inside its sentence on the desktop and a button
+   in the band on the phone; that banner has one action on both breakpoints now, so both
+   classes lost their only writer. Removed with it — a live rule on a dead, obvious class
+   name is how `.keynote` restyled somebody else's paragraph. */
+.aact-short{display:none}
 .aact-long{display:inline}
-/* ⚠️⚠️ WHITE GROUND, RED EDGE (2026-09-28, by request). It was a grey plate with an ink
-   stripe — the monochrome answer, from the days when a red one was not allowed. Two
-   things changed: the palette gained `--status-alert`, and the surface under this banner
-   became a gradient, so a `#f4f4f2` plate stopped being "the quiet grey" and became a
-   fourth colour on the screen. White is the frame's own card colour; the stripe and the
-   emphasis carry the meaning.
-   ⚠️ THE GLYPH GOES RED TOO, and that is a judgement rather than part of the request:
-   an ink triangle between a red stripe and a red phrase is the only part of the banner
-   not saying the thing. Colour is still not the only carrier — the triangle's SHAPE and
-   the sentence both survive it being printed in grey.
-   ⚠️ The BODY of the sentence stays `--ink`. Red is for the part that names the fault;
-   a whole paragraph in it is a banner shouting its own prose. */
-.alert{margin-top:12px;display:flex;align-items:center;gap:9px;font-size:14px;color:var(--ink);background:var(--card);border:1px solid var(--line);border-left:3px solid var(--status-alert);border-radius:6px;padding:9px 12px}
+/* ⚠️⚠️ A RED GROUND, NOT A WHITE ONE WITH A RED STRIPE (2026-09-30, from a reference).
+   The stripe was the 09-28 answer — white card, one red edge, red emphasis — and it was
+   right while the banner had to be quiet on a white sheet. The reference asks the whole
+   card to carry the state: `--surface-danger` is the ground the destructive menu row and
+   the danger button already stand on, so the banner joins a colour the product has
+   rather than introducing a fourth.
+   ⚠️ COLOUR IS STILL NOT THE ONLY CARRIER: the mark keeps its shape, the fault keeps its
+   bold lead, and the sentence says the thing in words. Print the banner in grey and it
+   still reads as the one block that is not like the others.
+   ⚠️ THE BODY STAYS `--ink` and the lead stays `--status-alert` — the reference draws
+   exactly that split, and it is the one the 09-28 note already argued for: red names the
+   fault, and a whole paragraph in red is a banner shouting its own prose. */
+.alert{margin-top:12px;display:flex;align-items:center;gap:12px;font-size:14px;
+  color:var(--ink);background:var(--surface-danger);
+  border:1px solid var(--border-danger);border-radius:10px;padding:14px 16px}
 .alert[hidden]{display:none}
-.alert .ic{width:var(--ic-16);height:var(--ic-16);flex:none;color:var(--status-alert)}
-.alert .atxt b{font-weight:600;color:var(--status-alert)}
+/* ⚠️ 16 -> 24px, the largest of the three named sizes — "bigger", without a fourth. */
+.alert .ic{width:var(--ic-24);height:var(--ic-24);flex:none;color:var(--status-alert)}
+/* ⚠️⚠️ THE LEAD IS ITS OWN LINE (2026-09-30, from a reference: the fault above, the
+   remedy under it). Done as `display:block` on the `<b>` rather than by splitting six
+   message strings into two spans each: every branch already wraps its prose in one
+   `.amsg` and opens it with the bold lead, so one declaration restructures all of them
+   and no branch can be forgotten. */
+.alert .atxt b{font-weight:600;color:var(--status-alert);display:block}
+/* ⚠️⚠️ THE ACTIONS LIVE INSIDE `.atxt`, NOT BESIDE IT — and the first version of this
+   rule missed that and did nothing. `renderLicenseAlert` writes the whole banner into
+   `$('.atxt')`: the message, the button and the support link are all children of that
+   one span, so making the SPAN take the slack pushes nothing. The span has to become the
+   row: `.amsg` takes the slack inside it, and whatever follows the message — a button,
+   the support link, both — is carried to the far side of the band.
+   ⚠️ Measured before assuming: `.alert` reported exactly two children, the glyph and
+   `.atxt`. The phone block already knew this (it dissolves `.atxt` with
+   `display:contents` and flexes `.amsg`); the desktop did not. */
+.alert .atxt{flex:1;min-width:0;display:flex;align-items:center;gap:14px}
+.alert .amsg{flex:1;min-width:0}
 
 .actions{display:flex;gap:9px;margin-top:14px;flex-wrap:wrap;align-items:center}
 /* ============================================================================
@@ -1362,20 +1387,14 @@ th.inv-amt,td.inv-amt{padding-right:30px}
    anyway — see the finding in NOTES — but the wrapper must not be the reason it cannot
    when that is fixed.) */
 .keyfield{display:contents}
-.mh-short,.keyhelp-short{display:none}
+.mh-short{display:none}
 [data-zone="a"] .mh-full{display:none}
 [data-zone="a"] .mh-short{display:inline}
-/* ⚠️⚠️ THE SHORT LINE IS NOW THE DEFAULT TOO (2026-09-29, by request: the description
-   under the key becomes `Enter this key in your installation to activate it.
-   Installation instructions`). ⚠️ THAT LEAVES THE FULL PARAGRAPH VISIBLE IN VARIANT B
-   ALONE — the sentence naming ThingsBoard and TBMQ and explaining check-in and Instances
-   no longer appears on the layout the panel opens with. It is the same conflict already
-   reported for A, now reaching the baseline; the paragraph is still only HIDDEN, and the
-   `License created` banner is still untouched. See the debt list. */
-[data-zone="a"] .keyhelp-full,
-[data-zone="current"] .keyhelp-full{display:none}
-[data-zone="a"] .keyhelp-short,
-[data-zone="current"] .keyhelp-short{display:block}
+/* ⚠️ THE `.keyhelp-full` / `.keyhelp-short` PAIR IS GONE (2026-09-30). There is one
+   paragraph now and one wording, on every variant, so there is nothing for a switch to
+   switch — and rules naming classes that no longer exist are the dead-name hazard this
+   file keeps a debt entry about. What the long paragraph said is gone from the product;
+   see the note where it was emitted, and the debt list. */
 /* variant B's phone rule; the desktop draws its hairline as a full-height pseudo */
 .zonerule{display:none}
 
@@ -1401,7 +1420,12 @@ th.inv-amt,td.inv-amt{padding-right:30px}
      is what makes the substitution honest rather than silent. */
   [data-zone="a"] #statusCol .statmark{font-size:var(--t-h2-fs);gap:8px}
   [data-zone="a"] #statusCol .statmark .statmark-ic{width:var(--ic-24);height:var(--ic-24)}
-  [data-zone="a"] .keycol.right[data-page] .period{font-size:var(--t-h2-fs);color:var(--mid)}
+  /* ⚠️⚠️ THE TERM IS A FACT, NOT A HEADLINE (2026-09-30, by request: "make `Renews Oct
+     13, 2026` the size of `Product version`", and both black). It was 20px and `--mid` —
+     the size of the status beside it and the tone of something secondary, which is both
+     ways round: it read as loud as the status while looking like an aside. Dropping the
+     override is the whole edit, because `.period` is already 14px on `--ink`; only the
+     status keeps the larger step now. */
   /* ⚠️⚠️ ONE RULE FOR EVERY SEPARATOR, AND IT IS A SIBLING SELECTOR (2026-09-29). It was
      an `::after` on the status column, which could only ever produce ONE dot — fine while
      the line held two facts, wrong the moment the version joined them. `#statusCol ~
@@ -1413,7 +1437,8 @@ th.inv-amt,td.inv-amt{padding-right:30px}
   [data-zone="a"] #statusCol ~ .keycol.right::before,
   [data-zone="current"] #statusCol ~ .keycol.right::before{
     content:"\00b7";color:var(--faint);line-height:1}
-  [data-zone="a"] #statusCol ~ .keycol.right::before{font-size:var(--t-h2-fs)}
+  /* the separators follow the facts they punctuate and inherit 14px with them — a 20px
+     middot between two 14px facts was the status's size standing on somebody else's line */
   /* ⚠️⚠️ THE COLUMN HAS TO BE A FLEX ROW OR THE DOT LANDS ON ITS OWN LINE. `.period` is a
      BLOCK, so an inline `::before` in front of it becomes an anonymous block ABOVE it —
      measured: the dot sat beside `Active` and `Renews Oct 07, 2026` printed underneath,
@@ -1428,6 +1453,30 @@ th.inv-amt,td.inv-amt{padding-right:30px}
   [data-zone="a"] .keycol.right:not([hidden]),
   [data-zone="current"] .keycol.right:not([hidden]){display:flex;align-items:baseline;
     gap:10px;flex:0 0 auto}
+  /* ⚠️⚠️ THE LINE WAS RAGGED BY 3px, AND THE CAUSE IS THE ICONS, NOT THE SIZES
+     (measured 2026-09-30: text bottoms 210 · 213 · 213 · 210 — the two items carrying a
+     glyph sat 3px ABOVE the two that are plain text).
+     A flex container's baseline is the baseline of its FIRST baseline-aligned item.
+     `.statmark` and `.ver-run` are `inline-flex` with `align-items:center`, so no item
+     participates in baseline alignment at all and the browser synthesises one from the
+     box's bottom edge — which is the icon's edge, not the text's. Every plain fact then
+     lines up with the letters and every icon-bearing one with a box.
+     ⚠️ THE FIX IS TO LET THE TEXT BE THE BASELINE, not to abandon baselines for
+     centring: the container opts INTO baseline alignment, and the glyph opts OUT with
+     `align-self:center` — so the first item that still participates is the word, and the
+     word is what the row lines up on. The glyph keeps sitting on the middle of its own
+     text, which is what `align-items:center` was there for.
+     ⚠️ SCOPED TO THIS ZONE. `.statmark` is the tables' own builder and `.ver-run` rides
+     in every licence row; both are correct as they are in a cell, where nothing is
+     asked to share a line with a different size. */
+  [data-zone="a"] .statmark,
+  [data-zone="current"] .statmark,
+  [data-zone="a"] .ver-run,
+  [data-zone="current"] .ver-run{align-items:baseline}
+  [data-zone="a"] .statmark > .statmark-ic,
+  [data-zone="current"] .statmark > .statmark-ic,
+  [data-zone="a"] .ver-run > .verm,
+  [data-zone="current"] .ver-run > .verm{align-self:center}
   /* ⚠️⚠️ ON THE SAME LINE AS THE REST (2026-09-29, by request: "put Product version on
      one line with the status and the details, and line them all up — not one above and
      one below"). It was `flex:0 0 100%`, i.e. a row of its own; `auto` puts it back on
@@ -1447,7 +1496,7 @@ th.inv-amt,td.inv-amt{padding-right:30px}
   [data-zone="a"] #verCol:not([hidden]){order:1}
   [data-zone="a"] #verCol .periodhead,
   [data-zone="current"] #verCol .periodhead{margin:0;font-size:14px;line-height:1.45;
-    letter-spacing:0;font-weight:400;text-transform:none;color:var(--faint)}
+    letter-spacing:0;font-weight:400;text-transform:none;color:var(--ink)}
   [data-zone="a"] #verCol .period,
   [data-zone="current"] #verCol .period{font-size:14px}
   /* the key, as an inset field: cap, value, then the two actions on the right edge */
@@ -1474,8 +1523,8 @@ th.inv-amt,td.inv-amt{padding-right:30px}
      gives a quiet control on a tinted ground */
   [data-zone="a"] .keyfield .btn--secondary,
   [data-zone="current"] .keyfield .btn--secondary{background:var(--card)}
-  [data-zone="a"] .keyhelp-short,
-  [data-zone="current"] .keyhelp-short{margin-top:10px}
+  [data-zone="a"] .keyhelp,
+  [data-zone="current"] .keyhelp{margin-top:10px}
 
   /* ---------- `current` · key left, facts right ------------------------------
      ⚠️⚠️ THE BASELINE OPTION IS NO LONGER UNTOUCHED (2026-09-29, by request), and the
@@ -1509,19 +1558,77 @@ th.inv-amt,td.inv-amt{padding-right:30px}
      ⚠️ `right:300px` is the SAME number as the column, stated twice on purpose: the
      alternative is a variable read by two rules that must never disagree, and this is
      two lines apart. */
-  [data-zone="b"] .keygrid{position:relative;display:grid;
+  /* ⚠️⚠️ THE HAIRLINE IS GONE (2026-09-30, from a reference). It was drawn as a
+     full-height pseudo precisely so a short fact column would not look truncated — that
+     argument is answered rather than dropped: the key side is a FILLED field now, and a
+     filled shape beside a plain one separates them without a line. A rule as well would
+     be the second time the same thing is said, which is what this panel took the stroke
+     off its modal headers for. */
+  [data-zone="b"] .keygrid{display:grid;
     grid-template-columns:minmax(0,1fr) 300px;column-gap:0;row-gap:0;align-items:start}
-  [data-zone="b"] .keygrid::before{content:"";position:absolute;top:0;bottom:0;
-    right:300px;width:1px;background:var(--line2)}
-  [data-zone="b"] .keygrid > .keycol:not(.right){grid-column:1;padding-right:28px}
-  [data-zone="b"] .keycol.right{grid-column:2;padding:0 0 18px 28px}
-  /* ⚠️ Status · version · the period · next charge — the first two say what the licence
-     IS and what it entitles, the last two are dates and money. `order` and not DOM
-     order, because the DOM order is the current layout's row and that one is not moving. */
+  /* ⚠️⚠️ THE KEY COLUMN SPANS EVERY ROW, and without that the first gap is wrong by
+     72px. Placed in row 1 alone it SIZES row 1 — and it is the tall one, key field plus
+     sentence — so the first fact sat at the top of a 130px row and the next one began
+     only where that row ended. Measured before: Status ended at 248 and Version began at
+     320, a 72px hole, while Version to Subscription period was 0. Spanning, the rows are
+     sized by the facts alone and every gap is the padding under each fact — one number
+     for all of them.
+     ⚠️ `span 99`, NOT `1 / -1`: with no explicit rows declared, `-1` resolves against the
+     EXPLICIT grid, which is one line, so `1 / -1` quietly means `1 / span 1` and changes
+     nothing. The surplus implicit rows are empty and `row-gap` is 0, so they cost no
+     height. */
+  /* ⚠️⚠️ THE WHOLE KEY COLUMN IS THE FIELD (2026-09-30, from a reference), not just the
+     cap and the value. A's field holds two of the column's three children and leaves the
+     sentence outside it; here the sentence belongs INSIDE — so the box is the column and
+     `.keyfield` can stay the `display:contents` wrapper it is everywhere else. Nothing is
+     re-nested to do it: cap, key row and sentence are already three blocks in that order.
+     ⚠️ `margin-right` and not `padding-right`: the gap between the field and the facts
+     has to be OUTSIDE the fill, or the field would run under the labels. */
+  [data-zone="b"] .keygrid > .keycol:not(.right){grid-column:1;grid-row:1 / span 99;
+    margin-right:28px;padding:18px 20px;
+    background:var(--surface-quiet);border-radius:12px}
+  [data-zone="b"] .keyfield .minihead{margin:0 0 10px}
+  [data-zone="b"] .keyline{gap:8px;flex-wrap:nowrap}
+  [data-zone="b"] .keyline .mono{min-width:0;overflow:hidden;text-overflow:ellipsis;
+    white-space:nowrap}
+  [data-zone="b"] .keyline .btn{flex:none}
+  /* the pair ends at the field's edge; `margin-left:auto` on the first of them, not
+     `space-between` on the row, which would have spread the key and the buttons */
+  [data-zone="b"] .keyline #revealBtn{margin-left:auto}
+  /* they stand on the field's tint, so they take the white fill the surface axis gives a
+     quiet control on a tinted ground */
+  [data-zone="b"] .keyfield .btn--secondary{background:var(--card)}
+  [data-zone="b"] .keyhelp{margin:12px 0 0;max-width:none}
+  /* B takes the short cap too — inside a labelled field `License key` names the field and
+     the block it is in twice */
+  [data-zone="b"] .mh-full{display:none}
+  [data-zone="b"] .mh-short{display:inline}
+
+  /* ⚠️⚠️ EACH FACT IS A LABEL AND A VALUE ON ONE ROW (2026-09-30, from a reference), not
+     a caps heading with the value under it.
+     ⚠️ THE LABEL COLUMN IS A FIXED WIDTH, and it has to be: every fact is its OWN grid —
+     they are separate `.keycol`s — so `max-content` would size each label column to its
+     own word and the three values would start at three different x. 96px clears the
+     widest label the zone can show (`VERSION`, ~72px at the caps step) with room to
+     spare.
+     ⚠️ `:not([hidden])` ON THE `display` RULE ONLY. Both period columns carry the
+     attribute and the render pass hides the one for the other licence kind; `display`
+     beats the UA's `[hidden]`, and `grid-column` on its own cannot reveal anything. */
+  [data-zone="b"] .keycol.right{grid-column:2;padding:0 0 14px}
+  [data-zone="b"] .keycol.right:not([hidden]){display:grid;
+    grid-template-columns:96px minmax(0,1fr);column-gap:20px;align-items:baseline}
+  [data-zone="b"] .keycol.right .periodhead{margin:0}
+  /* ⚠️⚠️ STATUS · PERIOD · VERSION (2026-09-30, from a reference), REVERSING the pair
+     order of 09-29. That order was argued as "the first two say what the licence IS and
+     what it entitles, the last two are dates and money" — and the money half of it went
+     with `Next charge` the day before, so what it was balancing no longer exists. Three
+     facts read best in the order the licence is asked about: is it alive, until when, and
+     what is installed.
+     ⚠️ `order` and not DOM order, because the DOM order is the current layout's row and
+     that one is not moving. */
   [data-zone="b"] #statusCol{order:1}
-  [data-zone="b"] #verCol{order:2}
-  [data-zone="b"] .keycol.right[data-page]{order:3}
-  [data-zone="b"] #ncCol{order:4;padding-bottom:0}
+  [data-zone="b"] .keycol.right[data-page]{order:2}
+  [data-zone="b"] #verCol{order:3}
 }
 
 /* ⚠️ BETWEEN THE PHONE AND A FULL WINDOW, `current` GIVES UP THE SIDE-BY-SIDE. Measured
@@ -3995,6 +4102,46 @@ body[data-page="home"] .dwrap,body[data-page="landing"] .dwrap{padding-top:48px}
 .lmesh{display:none}
 body[data-page="landing"][data-lbg="mesh"] > .lmesh{display:block}
 body[data-page="landing"][data-lbg="mesh"] > .meshbg{display:none}
+
+/* ============================================================================
+   LANDING GRADIENT 3 — variant 1's pools, variant 2's arrangement, lifted
+   ============================================================================
+   ⚠️ IT IS VARIANT 1, RE-PLACED — not a third layer. `.meshbg` keeps its own pools,
+   its own two colours, its own four drift paths and its own mask; what changes is
+   WHERE the circles sit. So there is nothing here that can drift from variant 1: change
+   a colour or a drift there and this variant changes with it.
+   ⚠️ `.lmesh` STAYS HIDDEN. It is revealed by `[data-lbg="mesh"]` alone, so variant 3
+   needs no rule to keep variant 2's layer out of the way.
+   ⚠️ SCOPED TO THE LANDING, like the switch itself. `.meshbg` is also Home's ground and
+   the licence header's; `applyLandingBg` only ever writes `data-lbg` on the landing, and
+   these selectors say so a second time so a stray attribute cannot move Home's pools.
+
+   ⚠️⚠️ FOUR POOLS, THREE PLACES — and dropping one is the one judgement call in this
+   variant. Variant 2's arrangement IS three circles: a high pair either side of centre
+   and one hanging under the gap between them. Variant 1 has four. Keeping the fourth
+   would mean inventing a position that variant 2 does not have, which is the opposite of
+   "use the arrangement from 2", so the second cream steps out and the three that remain
+   read lavender · cream · lavender — the pair at the top with a lavender below, which is
+   the colour variant 1 leads with.
+
+   ⚠️ THE LIFT IS THE SECOND HALF OF THE REQUEST and it is a separate number from the
+   arrangement. Variant 2 centres its pair at 130px; here the pair sits at 56 and the one
+   below it at 176, so the dense core of every circle — the 0→32% stops of the radial —
+   falls inside the first ~250px of the page. The mask below is untouched: with the pools
+   this high the lower half of the layer has nothing in it to fade. */
+body[data-page="landing"][data-lbg="lifted"] > .meshbg{
+  /* named as variant 2 names them, because they are variant 2's numbers */
+  --lm-cx:50%; --lm-spread:18%;
+  /* and these two are this variant's own */
+  --pair-y:56px; --pair-drop:120px;
+}
+body[data-page="landing"][data-lbg="lifted"] > .meshbg .mb-lav{
+  left:calc(var(--lm-cx) - var(--lm-spread)); top:var(--pair-y)}
+body[data-page="landing"][data-lbg="lifted"] > .meshbg .mb-cream2{
+  left:calc(var(--lm-cx) + var(--lm-spread)); top:var(--pair-y)}
+body[data-page="landing"][data-lbg="lifted"] > .meshbg .mb-lav2{
+  left:var(--lm-cx); top:calc(var(--pair-y) + var(--pair-drop))}
+body[data-page="landing"][data-lbg="lifted"] > .meshbg .mb-cream{display:none}
 
 /* both trios fill the layer and sit on top of each other; only opacity separates them */
 .lm-trio{position:absolute; inset:0}
@@ -6671,10 +6818,16 @@ th.lic-num{text-align:right}
      shape this zone was designed for — message left, verb right, one row — and lets the
      actions drop underneath the moment the sentence needs the width. Not caused by the
      recolour; made impossible to miss by it. */
+  /* ⚠️ THE GROUND FOLLOWS THE DESKTOP BANNER, and the note above says so in as many
+     words — it moved to `--card` the day the desktop did. The desktop went to
+     `--surface-danger` on 2026-09-30, so this follows again. What does NOT follow is the
+     SHAPE: this is a full-bleed band under the app bar, not an inset card, so it keeps
+     square corners and a single bottom edge — now the danger edge rather than the
+     neutral one, or a red band would close on a grey hairline. */
   #subAlert:not([hidden]){order:1;display:flex;align-items:center;gap:12px;flex-wrap:wrap;
     padding:10px var(--headX);border-radius:0;
-    border-width:0 0 1px 0;border-bottom-color:var(--line2);
-    background:var(--card)}
+    border-width:0 0 1px 0;border-bottom-color:var(--border-danger);
+    background:var(--surface-danger)}
   /* ⚠️ Reaching the screen edge means cancelling BOTH insets it sits inside: the
      header's own padding and, in the page presentation, `.sheet`'s --pageX gutter.
      Cancelling only --headX left the band stopping 16px short on each side with the
@@ -6696,10 +6849,6 @@ th.lic-num{text-align:right}
   /* short verb here, full phrase on the desktop — see alertAction() */
   #subAlert .aact-long{display:none}
   #subAlert .aact-short{display:inline}
-  #subAlert .aact.mobact{display:inline-flex}
-  /* …and where the desktop carried the action INSIDE the sentence, the band's own
-     button replaces it rather than doubling it */
-  #subAlert .inlineact{display:none}
   /* ⚠️ `.keycol` becomes `display:contents` on the phone, so this <p> is a direct flex
      child of the head column and needs a place in the ladder or it lands wherever the
      DOM left it. Same `order` as `.keyline`, which puts it immediately after the key —
