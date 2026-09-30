@@ -674,47 +674,19 @@ if(dashEmptyV && !dashEmptyV.hidden){
 (function(){
   if(!window.PageStates) return;
 
-  /* ---------- the card that makes `card_expiring` reachable at all ----------------
-     ⚠️ Without this the condition CANNOT FIRE from a fresh demo, and that is a finding
-     rather than a convenience: `cardExpiryDay` parses only a STORED card's `MMYY`, and
-     the seeded `PAYMENT_METHOD` is display markup ("12 / 2028") with no parseable date.
-     So `savedCard()` is null, the expiry is null, and the branch is dead.
-     ⚠️⚠️ THE DATE IS DERIVED FROM THE NEXT CHARGE, NOT SET TO "SOON". First attempt was
-     `TODAY + 20 days`, and it did not fire: a card dies at the END of its month, so
-     `cardExpiryDay` rounded 20 days up to 34 — past the soonest renewal, which is the
-     very comparison the condition makes. The card is dated one month BEFORE the month
-     of the soonest renewal, so its end-of-life always lands before that charge, whatever
-     the demo's dates have been shifted to. */
-  function soonestRenewal(){
-    var next = null;
-    (DATA().licenses || []).forEach(function(l){
-      if(l.status === 'canceled' || l.type !== 'Subscription' || !l.event) return;
-      var d = dayOf(l.event);
-      if(d != null && (next == null || d < next)) next = d;
-    });
-    return next;
-  }
-  function expiringCard(){
-    var next = soonestRenewal(); if(next == null) return null;
-    /* the month that CONTAINS the day before the charge, stepped back one: the card's
-       first-of-next-month is then that month's first day, which is before the charge */
-    var q = dayToDate(next - 1).split(' ');               // "Oct 06 2026"
-    var m = MONN.indexOf(q[0]) + 1, y = +q[2];
-    m -= 1; if(m < 1){ m = 12; y -= 1; }
-    return { brand:'VISA', last4:'4242', num:'4242 4242 4242 4242',
-             exp:('0' + m).slice(-2) + String(y).slice(-2),
-             name:'Mariia Panchuk', country:'Germany' };
-  }
-  function payState(){
-    if(!billingSaved() && !savedCard()) return 'none';
-    var c = savedCard();
-    return (c && cardExpiryDay() != null) ? 'expiring' : 'saved';
-  }
-  var PAY = [
-    { v:'saved',    t:'Card on file' },
-    { v:'none',     t:'No payment method', note:'fires no_card' },
-    { v:'expiring', t:'Card expires soon', note:'fires card_expiring' }
-  ];
+  /* ⚠️⚠️ TWO TABS LEFT THIS SPEC (2026-09-30, by request) AND ONE ARGUMENT WENT WITH
+     THEM. `Dashboard` and `Payment` were facts about the ACCOUNT, not about Home, and
+     both had a second control in the ⚙ panel writing the same store key. They stand in
+     the global `Data` group now, reachable from every page — see shared.js. What is
+     left here is what is genuinely Home's: the shape of its blocks and its banner.
+     ⚠️ `Signed out` WENT WITH `Dashboard` and is not replaced by anything here: the
+     session is `Data › Session`, which owns `auth` alone now. The 2026-09-29 argument
+     for putting it in this row ("the one state that replaces Home entirely was the one
+     state this row could not reach") is answered by the merge instead — both rows are
+     on screen together, so neither has to carry the other's question.
+     ⚠️ EVERY OPTION CARRIES A LIVE COUNT OR A REASON, and the ones that cannot fire are
+     DISABLED rather than hidden: "this banner cannot happen on this account" is the most
+     useful thing the bar can tell you about it, and a hidden row says nothing. */
 
   /* what each banner condition is called in the bar, in the order the code ranks them */
   var COND = [
@@ -738,56 +710,36 @@ if(dashEmptyV && !dashEmptyV.hidden){
     label:'Home',
     when:function(){ return document.body.getAttribute('data-page') === 'home'; },
     tabs:[
-/* ⚠️⚠️ `Signed out` BELONGS IN THIS ROW (2026-09-29, by request), even though it is
-   not a dashboard state and lives in a different store key (`auth`, not `dash`). The
-   row answers "what does this surface look like right now", and signed out is one of
-   the answers — the one where the surface is the landing page. Leaving it only in the
-   ⚙ panel's Session group meant the one state that replaces Home entirely was the one
-   state this row could not reach.
-   ⚠️ IT NAVIGATES rather than reloading: signed out, the guard on `index.html` sends
-   you to `landing.html` anyway, so a reload would be a redirect the reader watches
-   happen. `setSession` is the same helper the ⚙ panel's Session group calls.
-   ⚠️ IT IS LAST, not first. The five before it are the dashboard's own densities and
-   they are what the row is mostly used for; this one leaves the page. */
-      { id:'dash', label:'Dashboard',
-        hint:'What the account owns. This is the only tab that changes the data — the other tabs only decide what is shown. `Signed out` leaves Home for the landing page; it is the same Session setting the settings panel carries.',
-        get:function(){ return isSignedIn() ? Store.get('dash') : 'out'; },
+      /* ---- Home: the shape of the page itself ---- */
+      { id:'homeLayout', group:'Home', label:'Layout',
+        get:homeLayout,
         set:function(v){
-          if(v === 'out'){ setSession('out'); return; }
-          /* coming BACK from signed out: the session has to be restored too, or the
-             guard bounces straight to the landing page again and the pick looks dead */
-          if(!isSignedIn()) Store.set('auth', 'existing');
-          Store.set('dash', v); location.reload();
+          Store.set('homeLayout', v);
+          if(window.renderHome) renderHome();
+          /* ⚠️ THE BAR ITSELF CHANGES, and this is the only setter here that does:
+             two tabs are scoped to the table layout (`Blocks`, and `Licenses › Table`)
+             and one (`Everywhere › Table frame`) to there being a table at all, so
+             switching to cards takes three tabs off the row. `render()` runs after every
+             setter, so nothing extra is needed — this note exists so the next person does
+             not go looking for the call that redraws it. */
         },
-        options:function(){
-          return Object.keys(DASH_STATES).map(function(k){
-            var d = DASH_STATES[k];
-            var n = ((DATASETS[d.variant] || {}).licenses || []).length;
-            return { v:k, t:d.label.replace(/^Dashboard — /, ''), note:n + ' lic' };
-          }).concat([{ v:'out', t:'Signed out (landing)', note:'no session' }]);
-        } },
+        options:[{ v:'table', t:'A — three tables' },
+                 { v:'cards', t:'B — cards' }] },
 
-      { id:'pay', label:'Payment',
-        hint:'A fact about the account that two banners read. `Card expires soon` writes a real card dated 20 days out, which is what makes card_expiring reachable at all.',
-        get:payState,
+      /* ⚠️ DISABLED, NOT HIDDEN, while the cards are up. It is a variant of the TABLE
+         layout chosen directly above it, so it belongs beside the control it depends on
+         and says why it cannot be used — a tab that vanished would look like a bug in
+         the row rather than a consequence of the answer above. */
+      { id:'homeBlocks', group:'Home', label:'Blocks',
+        get:homeBlocks,
         set:function(v){
-          if(v === 'none'){ Store.set('billingData','none'); Store.set('paymentMethod', null); }
-          else if(v === 'expiring'){
-            var c = expiringCard(); if(!c) return;
-            Store.set('billingData','saved'); Store.set('paymentMethod', c);
-          }
-          else { Store.set('billingData','saved'); Store.set('paymentMethod', null); }
-          renderHomeBanner(); PageStates.sync();
+          Store.set('homeBlocks', v);
+          if(window.renderHome) renderHome();
         },
-        /* ⚠️ `Card expires soon` needs a charge to expire BEFORE — an account with no
-           renewing subscription (the empty and grant states) has nothing to compare
-           against, so the option says why rather than doing nothing. */
         options:function(){
-          var can = soonestRenewal() != null;
-          return PAY.map(function(o){
-            return o.v === 'expiring' && !can
-              ? { v:o.v, t:o.t, note:'no renewal to precede', disabled:true } : o;
-          });
+          var t = homeLayout() === 'table';
+          return [{ v:'a', t:'A — 5 rows', note:t ? '' : 'tables only', disabled:!t },
+                  { v:'b', t:'B — 3 rows, 4th fading', note:t ? '' : 'tables only', disabled:!t }];
         } },
 
 /* ⚠️⚠️ `No banner` IS FIRST AND IS THE DEFAULT (2026-09-29, by request). It is the
@@ -797,8 +749,7 @@ if(dashEmptyV && !dashEmptyV.hidden){
    the page starts; see `bannerForce` for what changed in the store.
    ⚠️ `Auto` is now the opt-IN, and its note still counts what it WOULD show, so the
    row says what picking it costs before you pick it. */
-      { id:'banner', label:'Banner',
-        hint:'Which of the conditions that are TRUE right now is the one on screen. `No banner` is where the page starts — it is the state every other page is in. A condition the account cannot produce is disabled: the bar narrows what is real, it never invents one.',
+      { id:'bannerCond', group:'Banner', label:'Condition',
         get:function(){ return bannerForce(); },
         set:function(v){ Store.set('bannerForce', v); renderHomeBanner(); PageStates.sync(); },
         options:function(){
@@ -810,25 +761,20 @@ if(dashEmptyV && !dashEmptyV.hidden){
               return { v:c[0], t:c[1], note:m[c[0]] ? String(m[c[0]]) : '0', disabled:!m[c[0]] };
             }));
         },
-/* ⚠️⚠️ SHAPE IS A DEPENDENT ROW OF BANNER, NOT A TAB (2026-09-29, by request). It
-   only ever describes the banner chosen directly above it: as a fourth sibling tab it
-   read as an independent question, and choosing a shape then moving to Banner to
-   change the condition hid the shape you had just set. Under Banner, the condition and
-   how it is drawn are one screen.
+/* ⚠️⚠️ SHAPE IS A DEPENDENT ROW OF CONDITION, NOT A TAB (2026-09-29, by request). It
+   only ever describes the banner chosen directly above it: as a sibling tab it read as
+   an independent question, and choosing a shape then moving to Condition to change the
+   banner hid the shape you had just set.
    ⚠️ Every option is disabled while the row above says `No banner`, and that is the
    honest state rather than a hidden row: there is nothing to shape, and the reader can
-   see that the control exists and why it is not available. */
+   see that the control exists and why it is not available.
+   ⚠️ SHAPE IS A PROPERTY OF THE STACKED FORM ONLY (2026-09-30). The separate layout
+   gives every card the full form by definition — that is the whole reason it exists —
+   so there is no "poorer shape" to choose. */
         sub:{
           label:'Shape',
-          hint:'One alert gets the fact, what fixes it and its actions. Several get the fact and `and N more` only — deliberately poorer, because an action button beside a list acts on one of them while looking like it settles all.',
           get:bannerShape,
           set:function(v){ Store.set('bannerShape', v); renderHomeBanner(); PageStates.sync(); },
-/* ⚠️ SHAPE IS A PROPERTY OF THE STACKED FORM ONLY (2026-09-30). The separate layout
-   gives every card the full form by definition — that is the whole reason it exists —
-   so there is no "poorer shape" to choose. Disabled with the reason written in the
-   note, which is the same answer this row already gives when the banner is off: the
-   control stays visible and says why it cannot be used, rather than disappearing and
-   leaving the reader to wonder where it went. */
           options:function(){
             var n = homeBannerVisible().length;
             var sep = homeBannerLayout() === 'separate';
@@ -838,7 +784,22 @@ if(dashEmptyV && !dashEmptyV.hidden){
               { v:'many', t:'With others — count', note:sep ? 'stacked only' : (n > 1 ? 'and ' + (n-1) + ' more' : 'needs 2+'), disabled:sep || n < 2 }
             ];
           }
-        } }
+        } },
+
+      /* ⚠️⚠️ THE BANNER'S FOUR SETTINGS ARE ONE GROUP NOW (2026-09-30). Two of them —
+         this and the tone — were in the ⚙ panel while the condition and its shape were
+         in this bar, so seeing a chosen condition drawn in a chosen layout meant walking
+         between two surfaces to set one banner. The tone is the one that did NOT come
+         here: it is read by the licence panel as well, so it stands in `Everywhere`. */
+      { id:'bannerLayout', group:'Banner', label:'Layout',
+        get:homeBannerLayout,
+        set:function(v){
+          Store.set('bannerLayout', v);
+          renderHomeBanner();
+          PageStates.sync();
+        },
+        options:[{ v:'stacked', t:'Stacked — one band' },
+                 { v:'separate', t:'Separate — a card each' }] }
     ]
   });
   PageStates.sync();

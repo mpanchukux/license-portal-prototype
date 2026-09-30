@@ -7,7 +7,10 @@
 <title>Styleguide — ThingsBoard License Portal</title>
 <link rel="stylesheet" href="styles.css">
 </head>
-<!-- data-public: readable signed out — prototype scaffolding, reachable from the gear panel signed out (see isPublicPage) -->
+<!-- data-public: readable signed out — prototype scaffolding, reachable from the page-state
+     bar's Dev actions signed out (see isPublicPage). It was the gear panel's Reference link
+     until 2026-09-30, when that panel was folded into the bar; the page's own reason for
+     being public did not change with it. -->
 <body data-page="styleguide" data-nav="" data-title="Design system" data-public>
 
 <div id="shellMain">
@@ -116,7 +119,9 @@
 
     <div class="sg-item">
       <h3>Shadows</h3>
-      <p class="sg-note">Elevation appears only on things that float: menus, dialogs, the settings panel.</p>
+      <p class="sg-note">Elevation appears only on things that float: menus and dialogs.
+        <b>The settings panel is gone</b> (2026-09-30) &mdash; the prototype&rsquo;s settings are the
+        docked page-state bar now, and a docked bar carries no shadow.</p>
       <div class="sg-shadow">
         <div style="box-shadow:0 3px 12px rgba(0,0,0,.14)">fab</div>
         <div style="box-shadow:0 12px 32px rgba(0,0,0,.16)">menu</div>
@@ -404,7 +409,7 @@
         </div>
         <div class="sg-cell"><label class="lic-toggle"><span class="switch"><input type="checkbox" checked><span class="track"></span></span> Display canceled products</label><span class="sg-cls">.switch</span></div>
         <div class="sg-cell"><span class="switch lg"><input type="checkbox" checked><span class="track"></span></span><span class="sg-cls">.switch.lg</span></div>
-        <div class="sg-cell"><label class="sp-opt"><input type="checkbox" checked><span>Checkbox option</span></label><span class="sg-cls">.sp-opt &gt; input</span></div>
+        <div class="sg-cell"><label class="sb-opt is-on"><input type="checkbox" checked><span class="sb-opt-t">Checkbox option</span></label><span class="sg-cls">.sb-opt &gt; input</span></div>
         <div class="sg-cell">
           <div class="stepper"><button type="button" class="stepbtn" aria-label="Decrease">−</button><input type="text" value="2" aria-label="Amount"><button type="button" class="stepbtn" aria-label="Increase">+</button></div>
           <span class="sg-cls">.stepper</span>

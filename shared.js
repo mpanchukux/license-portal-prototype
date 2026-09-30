@@ -1088,15 +1088,28 @@ function settingsContext(){
        what a new group is written against, and the next one added for this page would
        otherwise have to re-derive it. */
     instances: page === 'instances',
+    /* ⚠️ ADDED 2026-09-30 with the `Table frame` tab's own `when`. Both pages draw a
+       table and neither was named here, so the list of surfaces a setting can be scoped
+       to was short by two — which is exactly how that group ended up with no scope at
+       all and stood on a page with no table in it. */
+    invoices: page === 'invoices',
+    activity: page === 'activity',
     billing: page === 'billing',
     /* the details surface counts in either presentation: the full page, or the
        modal mounted over any list */
     details: page === 'license' || !!(lic && !lic.hidden && $('#licModal #appView')),
-    /* ⚠️ THE NODE, NOT ITS STATE — the same distinction `wizardPage` makes just below,
-       and for the same reason: you pick the zone's layout and THEN open a licence to
-       look at it. `#licModal` exists on exactly the pages that load license-details.js,
-       and the full page is the other host. */
-    detailsPage: page === 'license' || !!lic,
+    /* ⚠️ THE SURFACE EXISTING, NOT ITS STATE — the same distinction `wizardPage` makes
+       just below, and for the same reason: you pick the zone's layout and THEN open a
+       licence to look at it.
+       ⚠️⚠️ AND IT ASKS THE MODULE, NOT THE DOM — fixed 2026-09-30, and the old spelling
+       was WRONG, not merely fragile. It read `!!$('#licModal')`, and that node is built
+       LAZILY by `buildModal()` on the first open — so on `licenses.html` this returned
+       false until a licence had been opened once, and the `Zone` control was missing
+       from a page whose whole job is opening licences. It came back after the first
+       open, which is why it read as "sometimes there", not as a bug.
+       `window.LicenseDetails` is declared by the file itself, so it is true from the
+       moment the page loads the module — which is exactly the question being asked. */
+    detailsPage: page === 'license' || !!window.LicenseDetails,
     wizard: !!(nl && !nl.hidden),
     /* ⚠️ The NODE, not its state. The presentation setting has to be reachable
        BEFORE a wizard is open — you set the frame, then open one to look at it —
@@ -1109,211 +1122,82 @@ function settingsContext(){
     billStep: !!(nl && !nl.hidden && $('#nlStepBill') && !$('#nlStepBill').hidden)
   };
 }
-function settingsBodyHTML(){
-  var c = settingsContext(), out = '';
-  function group(head, body){ return body ? '<div class="sp-grouphead">' + head + '</div>' + body : ''; }
+/* ============================================================================
+   ⚠️⚠️ THE ⚙ PANEL IS GONE (2026-09-30, by request) — ONE SETTINGS SURFACE, NOT TWO.
+   ============================================================================
+   Its sixteen radio groups and three dev actions are declared below as tabs of the
+   page-state bar, which is now simply "Prototype settings". What the consolidation
+   fixed, beyond the count of surfaces:
 
-  /* ⚠️⚠️ THREE GROUPS LEFT THIS PANEL (2026-09-28, by request): `Dashboard state`,
-     `Details presentation` and `Open another tier`. They are the local half of the
-     settings — facts about ONE surface — and they now live at the foot of that surface
-     in the page-state bar (see `PageStates`). What stays here is what is true of the
-     prototype wherever you are standing: the session, the product it arrived for, the
-     variant a SHARED component wears, and the dev actions.
-     The store keys did not move (`dash`, `licDetails`, the `?tier=` routes); only the
-     place they are set did, so nothing stored had to be migrated.
-     ⚠️ `settingsContext().home` and `.details` are still computed above — the panel no
-     longer reads them, and the next group scoped to either page will. */
+     · ONE QUESTION WAS CUT IN HALF. Home's banner had FOUR settings living on two
+       surfaces — layout and tone in the panel, condition and shape in the bar — so
+       seeing a chosen condition in a chosen tone meant walking between them. They are
+       one group now (`Banner`).
+     · TWO CONTROLS WROTE ONE KEY, TWICE. `billingData` was set by the panel's
+       `Billing data` group AND by the bar's `Payment` tab; `auth` by the panel's
+       `Session` group AND by the `Signed out` option inside the bar's dashboard row.
+       Two writers and no statement of which one is authoritative is a bug waiting for
+       the day they disagree. Each key now has exactly one control.
+     · DEPENDENCIES WERE REAL BUT MOSTLY UNSAID. Three of seven were expressed; the
+       rest the reader had to know. Every one of them is now either a `when` (the
+       control is not on screen) or a disabled option carrying its reason.
+     · THE ORDER WAS AN ACCIDENT of which pass added which group — `Licenses toolbar`
+       rendered above `Session`. `PS_GROUPS` states the hierarchy once.
 
-  /* ⚠️ THE INSTANCES VIEW GROUP IS GONE FROM HERE (2026-09-25, by request). It is a
-     switcher on the page's own toolbar now — see `.viewseg` in instances.html. It was
-     never a demo setting like the ones around it: those change what the prototype IS
-     for the sake of comparing, and this changes how a reader is looking at their own
-     list right now. Leaving it in both places would be two controls for one question.
-     ⚠️ `instView()` and the `instView` store key are UNCHANGED — the toolbar writes the
-     same key, so the choice still survives a reload and still resets with the demo. */
+   ⚠️ THE SCOPING RULE IS UNCHANGED and it is why this fits in one bar at all: a
+   control for something not on screen is not rendered. `when` on a tab is that rule.
+   ⚠️ NOTHING HERE OWNS STATE. Every tab reads and writes the same store key its panel
+   group did, so nothing stored had to be migrated and no default moved.
+   ⚠️⚠️ AND IT COSTS THE PHONE. The bar is desktop-only — ≤600px has a bottom navigation
+   bar of its own and 390px of width — so with the gear gone there is no settings
+   surface under 600px at all. Named as the price of the choice, not hidden: see NOTES.
+   ============================================================================ */
 
-  /* ---- Licenses table: the current one, or the four-column proposal ----
-     ⚠️ Offered on Home as well as on the Licenses page, because Home's block renders
-     THE SAME row component — a setting that changed one and not the other would make
-     two tables out of one and the comparison would be against a fork. */
-  /* ---- Licenses toolbar: the current controls, or the two-dropdown proposal ----
-     ⚠️ Scoped to the Licenses page ONLY, unlike `Licenses table` above. The table row is
-     rendered on Home too, so a setting that changed one and not the other would fork it;
-     a TOOLBAR exists on exactly one surface, and offering the switch on Home would be a
-     control for something not on the screen. */
-  if(c.licenses){
-    out += group('Licenses toolbar',
-      '<label class="sp-opt"><input type="radio" name="licBar" value="a"' + (licBar() === 'a' ? ' checked' : '') + '><span>A \u2014 current (chips + Active only)</span></label>'
-      + '<label class="sp-opt"><input type="radio" name="licBar" value="b"' + (licBar() === 'b' ? ' checked' : '') + '><span>B \u2014 proposal (two dropdowns)</span></label>'
-      + '<label class="sp-opt"><input type="radio" name="licBar" value="c"' + (licBar() === 'c' ? ' checked' : '') + '><span>C \u2014 dropdowns + attention switch</span></label>'
-      + '<div class="sp-hint">B replaces the type chips and the Active only switch with a Type and a Status dropdown, both starting at All \u2014 so nothing is hidden until you narrow it. C keeps those dropdowns, lifts Needs attention out of the Status menu into its own switch, and opens on Active.</div>');
-  }
-
-  /* ---- the table's EDGES, on every page that has a table ----
-     ⚠️ NOT scoped to Licenses like the toolbar above: this is a page-level statement
-     (`data-tableframe` on <body>), and every list page, Home's blocks and the licence
-     panel's three tables all read it. Offering it only where the licence rows are would
-     hide the setting on four of the surfaces it changes. */
-  /* the landing's own ground, offered only where it applies */
-  if(c.landing){
-    out += group('Landing gradient',
-      '<label class="sp-opt"><input type="radio" name="landingBg" value="current"' + (landingBg() === 'current' ? ' checked' : '') + '><span>1 \u2014 current</span></label>'
-      + '<label class="sp-opt"><input type="radio" name="landingBg" value="mesh"' + (landingBg() === 'mesh' ? ' checked' : '') + '><span>2 \u2014 mesh</span></label>'
-      + '<label class="sp-opt"><input type="radio" name="landingBg" value="lifted"' + (landingBg() === 'lifted' ? ' checked' : '') + '><span>3 \u2014 1\u2019s pools, 2\u2019s arrangement, lifted</span></label>'
-      + '<div class="sp-hint">Variant 2 follows the product picked on the page \u2014 it is not a setting. Variant 3 is variant 1: the same two colours and the same drift, placed as 2 places them (a high pair either side of centre, one below between them) and raised so the colour falls in the top of the page. Three circles, not four \u2014 that arrangement has three places.</div>');
-  }
-
-  /* ---- how the licence panel's first zone is arranged. Scoped to the surfaces that
-     can OPEN one, not to one being open — see `detailsPage`. */
-  if(c.detailsPage){
-    out += group('License zone',
-      '<label class="sp-opt"><input type="radio" name="licZone" value="current"' + (licZone() === 'current' ? ' checked' : '') + '><span>Current (key left, facts right)</span></label>'
-      + '<label class="sp-opt"><input type="radio" name="licZone" value="a"' + (licZone() === 'a' ? ' checked' : '') + '><span>A \u2014 facts first</span></label>'
-      + '<label class="sp-opt"><input type="radio" name="licZone" value="b"' + (licZone() === 'b' ? ' checked' : '') + '><span>B \u2014 two columns</span></label>'
-      + '<div class="sp-hint">Only the block under the header. A leads with status and the term, then a compact key field and one line of help. B keeps the key block as it is and stacks the facts in a 300px column beside it, adding Next charge where there is one.</div>');
-  }
-  /* ---- which SHAPE Home's blocks take. Scoped to Home: the control describes the
-     preview blocks, and on any other page it would be a setting for something not on
-     screen — the same rule the Licenses toolbar group follows. */
-  if(c.home){
-    out += group('Home layout',
-      '<label class="sp-opt"><input type="radio" name="homeLayout" value="table"' + (homeLayout() === 'table' ? ' checked' : '') + '><span>A — current (three tables)</span></label>'
-      + '<label class="sp-opt"><input type="radio" name="homeLayout" value="cards"' + (homeLayout() === 'cards' ? ' checked' : '') + '><span>B — cards (licences across, invoices + activity in two columns)</span></label>'
-      + '<div class="sp-hint">B keeps the same records and the same order; it changes the form. Section headings carry a count chip and an arrow, licences become cards, and the invoice rows and the activity feed sit side by side.</div>');
-  }
-  /* ---- how much of a Home block is shown.
-     ⚠️ HIDDEN WHILE THE CARDS ARE UP, not merely inert: B is a fourth table ROW faded
-     under a button, and a grid of cards has no such row. A control for something that
-     is not on the screen is the thing this panel was cleaned up to stop doing. */
-  /* ---- what the banner slot does with several conditions. Scoped to Home like the
-     two groups above it: the banner is Home's, and on any other page this would be a
-     control for something not on the screen. */
-  if(c.home){
-    out += group('Home banner',
-      '<label class="sp-opt"><input type="radio" name="bannerLayout" value="stacked"' + (homeBannerLayout() === 'stacked' ? ' checked' : '') + '><span>Stacked \u2014 current (one band, the rest a count)</span></label>'
-      + '<label class="sp-opt"><input type="radio" name="bannerLayout" value="separate"' + (homeBannerLayout() === 'separate' ? ' checked' : '') + '><span>Separate \u2014 a card each, side by side</span></label>'
-      + '<div class="sp-hint">Same conditions, same order, same dismissal. Separate gives every card the full form \u2014 fact, fix and its own actions \u2014 and its own tone, so a red condition and a black one sit next to each other. One card fills the slot and the next one peeks; the pager sits above them. The Shape control in the page-state bar applies to the stacked form only.</div>');
-  }
-  if(c.home && homeLayout() === 'table'){
-    out += group('Home blocks',
-      '<label class="sp-opt"><input type="radio" name="homeBlocks" value="a"' + (homeBlocks() === 'a' ? ' checked' : '') + '><span>A \u2014 current (5 rows, count in heading)</span></label>'
-      + '<label class="sp-opt"><input type="radio" name="homeBlocks" value="b"' + (homeBlocks() === 'b' ? ' checked' : '') + '><span>B \u2014 3 rows, 4th fading under See all</span></label>'
-      + '<div class="sp-hint">B shows three rows and lets a fourth fade out under a centred <b>See all N</b>; the heading keeps its arrow and gives up the number.</div>');
-  }
-
-  out += group('Table frame',
-    '<label class="sp-opt"><input type="radio" name="tableFrame" value="a"' + (tableFrame() === 'a' ? ' checked' : '') + '><span>A \u2014 current (framed)</span></label>'
-    + '<label class="sp-opt"><input type="radio" name="tableFrame" value="b"' + (tableFrame() === 'b' ? ' checked' : '') + '><span>B \u2014 proposal (no frame)</span></label>'
-    + '<label class="sp-opt"><input type="radio" name="tableFrame" value="c"' + (tableFrame() === 'c' ? ' checked' : '') + '><span>C \u2014 no frame, no head fill</span></label>'
-    + '<div class="sp-hint">Every table on the page at once. B drops the outline and the rounded head and fills the block edge to edge. C is B with the column row\u2019s grey taken off as well, so the head sits on the card\u2019s white with only its hairline under it.</div>');
-
-  /* ⚠️ `c.home` ONLY WHILE HOME IS SHOWING THE TABLE — this axis picks between three sets
-     of table COLUMNS, and the cards layout has none. Same rule as `Home blocks` above. */
-  if(c.licenses || (c.home && homeLayout() === 'table')){
-    out += group('Licenses table',
-      '<label class="sp-opt"><input type="radio" name="licTable" value="a"' + (licTable() === 'a' ? ' checked' : '') + '><span>A — current (5 columns)</span></label>'
-      + '<label class="sp-opt"><input type="radio" name="licTable" value="b"' + (licTable() === 'b' ? ' checked' : '') + '><span>B — proposal (4 columns)</span></label>'
-      + '<label class="sp-opt"><input type="radio" name="licTable" value="c"' + (licTable() === 'c' ? ' checked' : '') + '><span>C — three-line name (4 columns + actions)</span></label>'
-      + '<div class="sp-hint">B folds product, type and plan into one column and sorts attention first. C keeps A\u2019s Status, Version and Updated and folds only the License column in, as line two of a three-line name cell. Home\u2019s block follows the same setting.</div>');
-  }
-
-  /* ---- which product the session behaves as having arrived for. Scoped to the three
-     surfaces that STATE a product — the landing page, Home's new-user screen and the
-     wizard — because nowhere else reads it. It stands in for a referrer the prototype
-     has no way to see. */
-  if(c.landing || c.home || c.wizard){
-    out += group('Arrived for', PRODUCT_CHOICES.map(function(o){
-      return '<label class="sp-opt"><input type="radio" name="arrived" value="' + o.v + '"'
-        + (arrivedProduct() === o.v ? ' checked' : '') + '><span>' + o.t + '</span></label>';
-    }).join(''));
-  }
-
-  /* ---- the wizard's own options. `Billing data` decides whether the flow has a
-     billing step at all, so it belongs to the wizard — and it also drives the
-     Payment & Billing page, which is why it appears in both contexts. */
-  /* ---- the frame the purchase wizard wears. Scoped to `wizardPage` rather than
-     `wizard`: the point of the setting is to compare presentations, and you choose
-     one before opening a flow as often as while looking at it. It applies to all
-     three modes of this wizard at once — they are one modal. */
-  if(c.wizardPage){
-    out += group('Purchase modal', WIZARD_PRESENTS.map(function(o){
-      return '<label class="sp-opt"><input type="radio" name="wizardPresent" value="' + o[0] + '"'
-        + (wizardPresent() === o[0] ? ' checked' : '') + '><span>' + o[1] + '</span></label>';
-    }).join('')
-      + '<div class="sp-hint">Desktop only \u2014 below 600px all three are the same full-screen sheet.</div>');
-    /* ⚠️ Scoped to `wizardPage`, like the frame above and for the same reason: you pick
-       a placement and THEN open a flow to look at it. */
-    out += group('Purchase Back',
-      '<label class="sp-opt"><input type="radio" name="nlBack" value="current"' + (nlBackPlace() === 'current' ? ' checked' : '') + '><span>Current (inside the plan card)</span></label>'
-      + '<label class="sp-opt"><input type="radio" name="nlBack" value="a"' + (nlBackPlace() === 'a' ? ' checked' : '') + '><span>A \u2014 in the top bar</span></label>'
-      + '<label class="sp-opt"><input type="radio" name="nlBack" value="b"' + (nlBackPlace() === 'b' ? ' checked' : '') + '><span>B \u2014 above the card</span></label>'
-      + '<div class="sp-hint">Never on step 1 in any of the three. A puts it left of the step rail, which stays centred whether it is there or not; B gives it its own row above the plan card. The rail\u2019s completed steps stay clickable in all three.</div>');
-  }
-
-  if(c.wizard){
-    out += group('Customize step',
-      '<label class="sp-opt"><input type="radio" name="custVariant" value="a"' + (custVariant() === 'a' ? ' checked' : '') + '><span>A — Plan card</span></label>'
-      + '<label class="sp-opt"><input type="radio" name="custVariant" value="b"' + (custVariant() === 'b' ? ' checked' : '') + '><span>B — Locked inputs (default)</span></label>');
-  }
-  /* ⚠️ A demo lever for a state that is otherwise unreachable in one sitting: to see a
-     purchase spend credit you would first have to downgrade something, and the credit a
-     downgrade produces depends on where in its cycle that licence happens to be. This
-     puts a known balance on the account so the applied-credit purchase can be shown. */
-  if(c.billing || c.wizard){
-    out += group('Account credit',
-      '<label class="sp-opt"><input type="radio" name="credit" value="0"' + (accountCredit() ? '' : ' checked') + '><span>None</span></label>'
-      + '<label class="sp-opt"><input type="radio" name="credit" value="120"' + (accountCredit() ? ' checked' : '') + '><span>$120.00 balance</span></label>');
-  }
-  if(c.wizard || c.billing){
-    out += group('Billing data',
-      '<label class="sp-opt"><input type="radio" name="billingData" value="saved"' + (billingSaved() ? ' checked' : '') + '><span>Saved</span></label>'
-      + '<label class="sp-opt"><input type="radio" name="billingData" value="none"' + (billingSaved() ? '' : ' checked') + '><span>None</span></label>');
-  }
-
-  /* ---- the wizard's billing step: a demo shortcut, labelled as one.
-     Eleven required fields is a lot to type to reach the one screen after them, and
-     a reviewer is here to look at the flow, not to be a typist. It is scoped to the
-     step because there is nothing to fill anywhere else. */
-  if(c.billStep){
-    out += group('Billing step',
-      '<label class="sp-opt"><button class="link" id="devFillBilling">Demo: fill billing with test data</button></label>');
-  }
-
-  /* ---- always: the session. It is the one setting that applies to every page
-     including the landing one, because it decides which of them you are even
-     allowed to be on — so it is rendered first and never scoped to a context. */
-  out += group('Session', Object.keys(AUTH_STATES).map(function(k){
-    return '<label class="sp-opt"><input type="radio" name="session" value="' + k + '"'
-      + (authState() === k ? ' checked' : '') + '><span>' + AUTH_STATES[k].label + '</span></label>';
-  }).join(''));
-
-  // ---- always: chrome-wide variant, dev actions, and the reference page
-  out += group('Reference',
-    '<a class="sp-opt" href="styleguide.html"><span>Design system <svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-arrow-right"></use></svg> styleguide</span></a>');
-  /* ⚠️ `Confirm email change` is RENDERED ONLY while a change is pending — not
-     rendered-and-disabled. It used to be a permanent disabled button, which is the
-     same mistake the whole panel just stopped making: a control that is always there
-     but almost never usable makes the reader work out why. The body is rebuilt on
-     every open, so it appears the moment Account starts a change and is gone again
-     the moment it is confirmed or cancelled. */
-  out += group('Dev actions',
-    (Store.get('pendingEmail')
-      ? '<label class="sp-opt"><button class="link" id="devConfirmEmail">Confirm email change</button></label>'
-      : '')
-    + '<label class="sp-opt"><button class="link" id="resetDemo">Reset demo data</button></label>');
-  return out;
+/* ---------- the card that makes `card_expiring` reachable at all ----------------
+   ⚠️ MOVED HERE FROM page-home.js (2026-09-30) with the `Payment` tab, because that tab
+   is a fact about the ACCOUNT and now stands in the global `Data` group — reachable
+   from every page, not only from the one whose banner reads it.
+   ⚠️ Without this the condition CANNOT FIRE from a fresh demo, and that is a finding
+   rather than a convenience: `cardExpiryDay` parses only a STORED card's `MMYY`, and
+   the seeded `PAYMENT_METHOD` is display markup ("12 / 2028") with no parseable date.
+   ⚠️⚠️ THE DATE IS DERIVED FROM THE NEXT CHARGE, NOT SET TO "SOON". First attempt was
+   `TODAY + 20 days`, and it did not fire: a card dies at the END of its month, so
+   `cardExpiryDay` rounded 20 days up to 34 — past the soonest renewal, which is the
+   very comparison the condition makes. The card is dated one month BEFORE the month
+   of the soonest renewal, so its end-of-life always lands before that charge. */
+function soonestRenewal(){
+  var next = null;
+  (DATA().licenses || []).forEach(function(l){
+    if(l.status === 'canceled' || l.type !== 'Subscription' || !l.event) return;
+    var d = dayOf(l.event);
+    if(d != null && (next == null || d < next)) next = d;
+  });
+  return next;
 }
-function settingsHTML(){
-  return '<button class="gearfab" id="gearBtn" aria-haspopup="dialog" aria-expanded="false" aria-label="Prototype settings" title="Prototype settings">'
-    /* a real gear: a toothed ring around a hub, not a sun of spokes */
-    + '<svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-settings"></use></svg>'
-    + '</button>'
-    + '<div class="settings-panel" id="settingsPanel" role="dialog" aria-label="Prototype settings" hidden>'
-    +   '<h4>Prototype settings</h4>'
-    +   '<div class="sp-note">Prototype-only — not part of the product UI.</div>'
-    +   '<div class="sp-pick" id="settingsBody"></div>'
-    + '</div>';
+function expiringCard(){
+  var next = soonestRenewal(); if(next == null) return null;
+  /* the month that CONTAINS the day before the charge, stepped back one: the card's
+     first-of-next-month is then that month's first day, which is before the charge */
+  var q = dayToDate(next - 1).split(' ');               // "Oct 06 2026"
+  var m = MONN.indexOf(q[0]) + 1, y = +q[2];
+  m -= 1; if(m < 1){ m = 12; y -= 1; }
+  return { brand:'VISA', last4:'4242', num:'4242 4242 4242 4242',
+           exp:('0' + m).slice(-2) + String(y).slice(-2),
+           name:'Mariia Panchuk', country:'Germany' };
 }
+/* ⚠️⚠️ ONE CONTROL FOR `billingData`, AND THIS IS IT. The old panel had a two-option
+   `Billing data` group (saved / none) beside this three-option one, both writing the
+   same key, and `none` in the panel left `paymentMethod` untouched while `none` here
+   cleared it — so the two could leave the account in states the other could not
+   describe. Three answers, one writer: no method · a card on file · a card about to
+   expire. The wizard still reads `billingData` for whether it needs a billing step. */
+function payState(){
+  if(!billingSaved() && !savedCard()) return 'none';
+  var c = savedCard();
+  return (c && cardExpiryDay() != null) ? 'expiring' : 'saved';
+}
+
+/* ---------- the settings every page carries ---------------------------------- */
 
 /* ============================================================================
    PAGE STATES — the second level of the prototype's settings (2026-09-28, by request)
@@ -1363,30 +1247,72 @@ function settingsHTML(){
    ⚠️ ONE LEVEL ONLY, deliberately. A `sub` of a `sub` is a tree, and a tree in a 3-row
    bar at the foot of the window is a second navigation problem. If something needs
    that depth, it needs its own tab. */
+/* ⚠️⚠️ THE GROUP ORDER IS DECLARED HERE AND NOWHERE ELSE. Tabs arrive from three
+   different files, so declaration order is an accident of which script loaded first —
+   this list is the hierarchy, and `visibleTabs` sorts by it. The order is the reader's
+   question order: what the account IS, then what this surface looks like, then what is
+   true everywhere, then the dev levers.
+   ⚠️ A tab whose `group` is not in this list sorts to the FRONT (indexOf -1), which is
+   loud rather than silent — a missing group shows up immediately instead of quietly
+   landing at the end. */
+var PS_GROUPS = ['Data', 'Home', 'Banner', 'Licenses', 'License', 'Purchase',
+                 'Landing', 'Everywhere', 'Dev'];
 var PageStates = (function(){
   var specs = [];        // every surface that has declared states, in declaration order
-  var bar = null, activeTab = {};
+  var bar = null, picked = null;
 
   function open(){ return Store.get('stateBarOpen') !== false; }
-  function current(){
-    for(var i = 0; i < specs.length; i++){
-      var sp = specs[i];
-      var on = true;
-      try { on = sp.when ? !!sp.when() : true; } catch(e){ on = false; }
-      if(on) return sp;
-    }
-    return null;
+  function live(fn, dflt){ try { return fn ? !!fn() : dflt; } catch(e){ return false; } }
+  /* ⚠️⚠️ EVERY MATCHING SPEC CONTRIBUTES — this used to return the FIRST one and show
+     only its tabs, which is what made two settings surfaces necessary in the first
+     place. Merging them is the whole consolidation: one bar, one hierarchy, and a
+     setting lives in exactly one place in it.
+     ⚠️ TWO LEVELS OF VISIBILITY, and they answer different questions. A SPEC's `when`
+     asks "is this surface on screen" — it is the file's own statement about itself. A
+     TAB's `when` asks "does this control apply right now", which is finer: `Table frame`
+     is declared by the global spec but must not appear on a page with no table, and
+     `Customize` needs a flow actually open. Without the second level the global spec
+     would have to be split into one spec per condition. */
+  function visibleTabs(){
+    var out = [];
+    specs.forEach(function(sp){
+      if(!live(sp.when, true)) return;
+      (sp.tabs || []).forEach(function(t){ if(live(t.when, true)) out.push(t); });
+    });
+    /* ⚠️ Sort is STABLE in every engine this runs on, and that is load-bearing: tabs
+       inside one group must keep the order their file declares them in. */
+    out.sort(function(a, b){ return PS_GROUPS.indexOf(a.group) - PS_GROUPS.indexOf(b.group); });
+    return out;
+  }
+  /* the right-hand label names the surface — the LAST matching spec that claims one,
+     i.e. the most specific: the licence panel over a list says `License details`
+     ⚠️ A LABEL MAY BE A FUNCTION, because one of them is conditional: the licence spec
+     is on screen wherever a licence can be OPENED, but it only names the surface once
+     one actually is. A string that lied about that would put `License details` at the
+     foot of the plain list page. An empty answer defers to the spec before it. */
+  function where(){
+    var lbl = '';
+    specs.forEach(function(sp){
+      if(!live(sp.when, true) || !sp.label) return;
+      var v = typeof sp.label === 'function' ? sp.label() : sp.label;
+      if(v) lbl = v;
+    });
+    return lbl;
   }
   function opts(tab){
     var o = typeof tab.options === 'function' ? tab.options() : tab.options;
     return o || [];
   }
+  function items(tab){
+    var it = typeof tab.items === 'function' ? tab.items() : tab.items;
+    return (it || []).filter(function(i){ return live(i.when, true); });
+  }
   function render(){
     if(!bar) return;
-    var sp = current();
+    var tabs = visibleTabs();
     /* ⚠️ The BAR hides, not the body: a surface with no states declared has no bar at
        all, rather than an empty one asking to be filled. */
-    if(!sp || !sp.tabs || !sp.tabs.length){
+    if(!tabs.length){
       bar.hidden = true;
       document.body.classList.remove('has-statebar');
       document.body.style.removeProperty('--sbH');
@@ -1394,30 +1320,39 @@ var PageStates = (function(){
     }
     bar.hidden = false;
     document.body.classList.add('has-statebar');
-    var tabs = sp.tabs;
-    var pick = activeTab[sp.id];
-    if(!tabs.some(function(t){ return t.id === pick; })) pick = tabs[0].id;
-    activeTab[sp.id] = pick;
-    var tab = tabs.filter(function(t){ return t.id === pick; })[0];
+    /* ⚠️ THE PICK IS ONE VALUE, NOT ONE PER SURFACE. With the tabs merged there is one
+       row, so remembering a pick per spec would mean the row jumped when a modal opened
+       and added tabs to it. It falls back to the first tab whenever the remembered one
+       is not on screen — which is what happens when you leave the page that had it. */
+    if(!tabs.some(function(t){ return t.id === picked; })) picked = tabs[0].id;
+    var tab = tabs.filter(function(t){ return t.id === picked; })[0];
 
     var head = '<button type="button" class="sb-toggle" id="sbToggle" aria-expanded="'
       + (open() ? 'true' : 'false') + '" aria-controls="sbBody">'
       + icon(open() ? 'chevron-down' : 'chevron-up', { cls:'sb-chev' })
-      + '<span class="sb-title">Page states</span>'
-      + '<span class="sb-where">' + esc(sp.label || sp.id) + '</span></button>';
+      + '<span class="sb-title">Prototype settings</span>'
+      + '<span class="sb-where">' + esc(where()) + '</span></button>';
 
-    var tablist = '<div class="sb-tabs" role="tablist" aria-label="State groups">'
+    /* ⚠️⚠️ THE GROUP LABEL IS A RUN HEADER INSIDE THE TAB ROW, not a second row of
+       tabs. A group level rendered as its own row would put three rows of chrome above
+       the options — the bar is at the foot of the window and it has to stay short. As a
+       label leading each run, the hierarchy is legible at a glance and the row still
+       wraps as one list. */
+    var lastGroup = null;
+    var tablist = '<div class="sb-tabs" role="tablist" aria-label="Settings">'
       + tabs.map(function(t){
-          var on = t.id === pick;
-          return '<button type="button" class="sb-tab' + (on ? ' is-on' : '') + '" role="tab"'
+          var lead = t.group !== lastGroup
+            ? '<span class="sb-group">' + esc(t.group) + '</span>' : '';
+          lastGroup = t.group;
+          var on = t.id === picked;
+          return lead + '<button type="button" class="sb-tab' + (on ? ' is-on' : '') + '" role="tab"'
             + ' aria-selected="' + (on ? 'true' : 'false') + '" data-sbtab="' + esc(t.id) + '">'
             + esc(t.label) + '</button>';
         }).join('')
       + '</div>';
 
-    /* ⚠️ RADIOS IN LABELS, exactly like `.sp-opt` in the ⚙ panel. They are one control
-       with one answer, the browser gives the grouping and the arrow keys for free, and
-       it keeps the two settings surfaces reading as one idea at two scales. */
+    /* ⚠️ RADIOS IN LABELS. They are one control with one answer, and the browser gives
+       the grouping and the arrow keys for free. */
     /* one builder for the tab's own row and for its dependent one — they are the same
        control at two levels, and writing them twice is how the two drift apart */
     function rowFor(src, group){
@@ -1433,7 +1368,18 @@ var PageStates = (function(){
           + '</label>';
       }).join('');
     }
-    var rows = rowFor(tab, 'sbopt');
+    /* ⚠️⚠️ AN ACTIONS TAB IS BUTTONS, NOT RADIOS, and the distinction is not cosmetic:
+       `Reset demo data` is not one of a set of answers to a question, it is a thing that
+       happens once. Rendered in the same box as an option so the row reads as one kind
+       of control, but it is a `<button>` and it carries no checked state. */
+    var rows = tab.kind === 'actions'
+      ? items(tab).map(function(it, i){
+          return '<button type="button" class="sb-opt sb-act" data-sbact="' + i + '">'
+            + '<span class="sb-opt-t">' + esc(it.label) + '</span>'
+            + (it.note ? '<span class="sb-opt-n">' + esc(it.note) + '</span>' : '')
+            + '</button>';
+        }).join('')
+      : rowFor(tab, 'sbopt');
     /* ⚠️ The dependent row is labelled, because without a name it reads as a second
        page of the row above it rather than as a different question about the same
        subject. */
@@ -1444,13 +1390,17 @@ var PageStates = (function(){
         + '</div>'
       : '';
 
+    /* ⚠️⚠️ NO HINT PARAGRAPHS ANY MORE (2026-09-30, by request). Nineteen of them across
+       the two old surfaces, and each was a paragraph of prose explaining a control the
+       reader was already looking at. What survives is the `note` beside an option — a
+       count, or the reason it is disabled — which is the half that says something the
+       control itself cannot. The prose is not lost: every argument that was in a hint is
+       in the comment above the rule or the builder it describes, where it belongs. */
     bar.innerHTML = head
       + '<div class="sb-body" id="sbBody"' + (open() ? '' : ' hidden') + '>'
       +   tablist
       +   '<div class="sb-opts">' + rows + '</div>'
       +   subRow
-      +   (tab.hint ? '<p class="sb-hint">' + tab.hint + '</p>' : '')
-      +   (tab.sub && tab.sub.hint ? '<p class="sb-hint sb-subhint">' + tab.sub.hint + '</p>' : '')
       + '</div>';
     /* the bar overlays the page, so the page is told how much of itself is covered */
     document.body.style.setProperty('--sbH', Math.round(bar.getBoundingClientRect().height) + 'px');
@@ -1458,16 +1408,22 @@ var PageStates = (function(){
   function wire(){
     bar.addEventListener('click', function(e){
       var t = e.target.closest('[data-sbtab]');
-      if(t){
-        var sp = current(); if(sp) activeTab[sp.id] = t.getAttribute('data-sbtab');
-        render(); return;
+      if(t){ picked = t.getAttribute('data-sbtab'); render(); return; }
+      if(e.target.closest('#sbToggle')){ Store.set('stateBarOpen', !open()); render(); return; }
+      var a = e.target.closest('[data-sbact]');
+      if(a){
+        var tabA = visibleTabs().filter(function(x){ return x.id === picked; })[0];
+        if(!tabA || tabA.kind !== 'actions') return;
+        var it = items(tabA)[+a.getAttribute('data-sbact')];
+        /* ⚠️ The action may navigate or reload — nothing after it may assume this
+           document is still here. */
+        if(it && it.on){ try { it.on(); } catch(err){ /* a demo lever must never break the page */ } }
+        render();
       }
-      if(e.target.closest('#sbToggle')){ Store.set('stateBarOpen', !open()); render(); }
     });
     bar.addEventListener('change', function(e){
       var r = e.target.closest('[data-sbopt],[data-sbsub]'); if(!r) return;
-      var sp = current(); if(!sp) return;
-      var tab = sp.tabs.filter(function(t){ return t.id === activeTab[sp.id]; })[0];
+      var tab = visibleTabs().filter(function(t){ return t.id === picked; })[0];
       if(!tab) return;
       /* which of the two rows fired — the tab's own, or its dependent one */
       var isSub = r.hasAttribute('data-sbsub');
@@ -1475,11 +1431,10 @@ var PageStates = (function(){
       if(!src) return;
       var o = opts(src)[+r.getAttribute(isSub ? 'data-sbsub' : 'data-sbopt')];
       if(!o || o.disabled) return;
-      tab = src;
       /* ⚠️ The setter may navigate or reload — so nothing is done after it that assumes
          this document is still here. A setter that stays puts the page back in step by
          calling `PageStates.sync()` itself. */
-      try { tab.set(o.v, o); } catch(err){ /* a demo lever must never break the page */ }
+      try { src.set(o.v, o); } catch(err){ /* a demo lever must never break the page */ }
       render();
     });
     window.addEventListener('resize', render);
@@ -1499,12 +1454,239 @@ var PageStates = (function(){
       bar.className = 'statebar';
       bar.id = 'stateBar';
       bar.hidden = true;
-      bar.setAttribute('aria-label', 'Prototype page states');
+      bar.setAttribute('aria-label', 'Prototype settings');
       document.body.appendChild(bar);
       wire();
       render();
     }
   };
+})();
+
+(function(){
+  if(!window.PageStates) return;
+  function ctx(){ return settingsContext(); }
+  /* a page that draws at least one table — the only place `Table frame` says anything */
+  function hasTable(){
+    var c = ctx();
+    return c.licenses || c.invoices || c.activity || c.instances || c.details
+      || (c.home && homeLayout() === 'table');
+  }
+
+  PageStates.define({
+    id:'global',
+    when:function(){ return true; },
+    /* the page's own name, so the bar always says where it is standing; a more specific
+       spec (the licence panel) overrides it when its surface is actually open */
+    label:function(){
+      return document.body.getAttribute('data-title')
+        || (document.body.getAttribute('data-page') || '').replace(/^./, function(m){ return m.toUpperCase(); });
+    },
+    tabs:[
+      /* ---- Data: what the account IS. These are the only tabs that change the data;
+         everything below them only decides how it is drawn. ---- */
+      { id:'session', group:'Data', label:'Session',
+        get:authState,
+        set:function(v){ setSession(v); },
+        /* ⚠️⚠️ EVERY `options` HERE IS A FUNCTION, AND THAT IS NOT A STYLE CHOICE. This
+           spec is defined where it stands in the file, and half the tables it reads —
+           `PRODUCT_CHOICES`, `WIZARD_PRESENTS` — are `var`s declared FURTHER DOWN. An
+           array literal is evaluated at define time and threw `PRODUCT_CHOICES is not
+           defined`, which took the whole bar with it: no settings surface at all, on
+           every page. Evaluated on render, the file's own load order stops mattering.
+           ⚠️ The counts want this anyway — an option that says `3 live` has to recount
+           when the account changes, not report what was true at boot. */
+        options:function(){
+          return Object.keys(AUTH_STATES).map(function(k){
+            return { v:k, t:AUTH_STATES[k].label };
+          });
+        } },
+
+      /* ⚠️⚠️ `Signed out` IS NOT AN OPTION HERE ANY MORE (2026-09-30). It was, in the
+         bar's old dashboard row, while `Session` above also owned it in the ⚙ panel —
+         two controls on `auth`. The account a session HAS and whether there is a session
+         are two questions, and the second one is the row above. What replaces the
+         convenience: this tab goes dead while signed out, saying why. */
+      { id:'account', group:'Data', label:'Account',
+        get:function(){ return Store.get('dash'); },
+        set:function(v){ Store.set('dash', v); location.reload(); },
+        options:function(){
+          var out = !isSignedIn();
+          return Object.keys(DASH_STATES).map(function(k){
+            var d = DASH_STATES[k];
+            var n = ((DATASETS[d.variant] || {}).licenses || []).length;
+            return { v:k, t:d.label.replace(/^Dashboard — /, ''),
+                     note:out ? 'signed out' : n + ' lic', disabled:out };
+          });
+        } },
+
+      /* it stands in for a referrer the prototype has no way to see */
+      { id:'product', group:'Data', label:'Arrived for',
+        get:arrivedProduct,
+        set:function(v){ Store.set('arrived', v); location.reload(); },
+        options:function(){ return PRODUCT_CHOICES.map(function(o){ return { v:o.v, t:o.t }; }); } },
+
+      { id:'payment', group:'Data', label:'Payment',
+        get:payState,
+        set:function(v){
+          if(v === 'none'){ Store.set('billingData','none'); Store.set('paymentMethod', null); }
+          else if(v === 'expiring'){
+            var c = expiringCard(); if(!c) return;
+            Store.set('billingData','saved'); Store.set('paymentMethod', c);
+          }
+          else { Store.set('billingData','saved'); Store.set('paymentMethod', null); }
+          if(window.renderHomeBanner) renderHomeBanner();
+          if(window.NL && NL.refreshOpen) NL.refreshOpen();
+          PageStates.sync();
+        },
+        /* ⚠️ `Card expires soon` needs a charge to expire BEFORE — an account with no
+           renewing subscription (the empty and grant states) has nothing to compare
+           against, so the option says why rather than doing nothing. */
+        options:function(){
+          var can = soonestRenewal() != null;
+          return [
+            { v:'saved',    t:'Card on file' },
+            { v:'none',     t:'No payment method', note:'fires no_card' },
+            { v:'expiring', t:'Card expires soon',
+              note:can ? 'fires card_expiring' : 'no renewal to precede', disabled:!can }
+          ];
+        } },
+
+      /* ⚠️ A demo lever for a state that is otherwise unreachable in one sitting: to see
+         a purchase spend credit you would first have to downgrade something, and the
+         credit a downgrade produces depends on where in its cycle that licence is. */
+      { id:'credit', group:'Data', label:'Credit',
+        get:function(){ return accountCredit() ? '120' : '0'; },
+        set:function(v){
+          Store.set('credit', +v || 0);
+          if(typeof renderCreditBlock === 'function') renderCreditBlock();
+          if(window.NL && NL.refreshOpen) NL.refreshOpen();
+        },
+        options:[{ v:'0', t:'None' }, { v:'120', t:'$120.00 balance' }] },
+
+      /* ---- Licenses: the list page's own two variants. `Toolbar` is the page's alone;
+         `Table` is offered on Home too, because Home's block renders THE SAME row
+         component and a setting that changed one and not the other would fork it. ---- */
+      { id:'licBar', group:'Licenses', label:'Toolbar',
+        when:function(){ return ctx().licenses; },
+        get:licBar,
+        set:function(v){
+          Store.set('licBar', v);
+          if(typeof applyLicBar === 'function') applyLicBar();
+        },
+        options:[{ v:'a', t:'A — chips + Active only' },
+                 { v:'b', t:'B — two dropdowns' },
+                 { v:'c', t:'C — dropdowns + attention switch' }] },
+
+      { id:'licTable', group:'Licenses', label:'Table',
+        when:function(){ var c = ctx(); return c.licenses || (c.home && homeLayout() === 'table'); },
+        get:licTable,
+        set:function(v){
+          Store.set('licTable', v);
+          if(typeof renderProducts === 'function') renderProducts();
+          if(typeof renderDashLicenses === 'function') renderDashLicenses();
+        },
+        options:[{ v:'a', t:'A — 5 columns' },
+                 { v:'b', t:'B — 4 columns' },
+                 { v:'c', t:'C — three-line name' }] },
+
+      /* ---- Purchase: the flow's frame and its Back placement are set BEFORE a flow is
+         open; `Customize` needs one open, because it re-renders a step. ---- */
+      { id:'nlPresent', group:'Purchase', label:'Frame',
+        when:function(){ return ctx().wizardPage; },
+        get:wizardPresent,
+        set:function(v){ Store.set('wizardPresent', v); applyWizardPresent(); },
+        options:function(){ return WIZARD_PRESENTS.map(function(o){ return { v:o[0], t:o[1] }; }); } },
+
+      { id:'nlBack', group:'Purchase', label:'Back',
+        when:function(){ return ctx().wizardPage; },
+        get:nlBackPlace,
+        set:function(v){
+          Store.set('nlBack', v);
+          if(window.NL && NL.refreshOpen) NL.refreshOpen();
+        },
+        options:[{ v:'current', t:'Current — in the plan card' },
+                 { v:'a', t:'A — in the top bar' },
+                 { v:'b', t:'B — above the card' }] },
+
+      /* ⚠️ Rendered on every wizard page and DISABLED until a flow is open, rather than
+         hidden: it sits beside two controls that are usable there, and a row that
+         appears and disappears as you open a modal is a layout moving under the reader. */
+      { id:'custVariant', group:'Purchase', label:'Customize',
+        when:function(){ return ctx().wizardPage; },
+        get:custVariant,
+        set:function(v){
+          Store.set('custVariant', v);
+          if(window.NL && NL.refreshCustomize) NL.refreshCustomize();
+        },
+        options:function(){
+          var on = ctx().wizard;
+          return [{ v:'a', t:'A — plan card', note:on ? '' : 'open a flow', disabled:!on },
+                  { v:'b', t:'B — locked inputs', note:on ? 'default' : 'open a flow', disabled:!on }];
+        } },
+
+      { id:'landingBg', group:'Landing', label:'Gradient',
+        when:function(){ return ctx().landing; },
+        get:landingBg,
+        set:function(v){ Store.set('landingBg', v); applyLandingBg(); },
+        options:[{ v:'current', t:'1 — current' },
+                 { v:'mesh', t:'2 — mesh', note:'follows the product' },
+                 { v:'lifted', t:'3 — 1’s pools, 2’s arrangement' }] },
+
+      /* ---- Everywhere: true of every table on the page at once.
+         ⚠️ SCOPED NOW (2026-09-30). It was the one group with no scope at all and it
+         stood on Home with the cards layout up, where there is no table to frame — a
+         recorded debt, closed by giving it the same `when` rule as everything else. ---- */
+      /* ⚠️⚠️ THE TONE AXIS STANDS HERE, NOT IN `Banner` (2026-09-30). It is read by TWO
+         surfaces — Home's banner and the licence panel's alert — and a group named for
+         one of them would be wrong on the other. `Everywhere` is the honest scope: it
+         says what the three tones are MADE of, wherever they are drawn. Its `when` still
+         keeps it off the pages that draw neither. */
+      { id:'alertTone', group:'Everywhere', label:'Alert tone',
+        when:function(){ var c = ctx(); return c.home || c.details; },
+        get:alertGround,
+        set:function(v){
+          Store.set('alertGround', v);
+          if(window.renderHomeBanner) renderHomeBanner();
+          if(window.LicenseDetails && LicenseDetails.refresh) LicenseDetails.refresh();
+        },
+        options:[{ v:'tinted', t:'Tinted — the ground carries it' },
+                 { v:'ink', t:'Ink — the mark carries it' }] },
+
+      { id:'tableFrame', group:'Everywhere', label:'Table frame',
+        when:hasTable,
+        get:tableFrame,
+        set:function(v){ Store.set('tableFrame', v); applyTableFrame(); },
+        options:[{ v:'a', t:'A — framed' },
+                 { v:'b', t:'B — no frame' },
+                 { v:'c', t:'C — no frame, no head fill' }] },
+
+      /* ---- Dev: things that HAPPEN, so buttons and not answers. Each carries its own
+         `when`, so `Confirm email change` exists only while a change is pending and the
+         billing autofill only on the step that has fields to fill. ---- */
+      { id:'dev', group:'Dev', label:'Actions', kind:'actions',
+        items:function(){
+          return [
+            { label:'Reset demo data',
+              on:function(){ Store.reset(); location.reload(); } },
+            { label:'Confirm email change', note:'pending',
+              when:function(){ return !!Store.get('pendingEmail'); },
+              on:function(){
+                var pend = Store.get('pendingEmail'); if(!pend) return;
+                Store.set('pendingEmail', null);
+                Store.set('emailConfirmed', pend.to);
+                location.reload();
+              } },
+            /* the wizard owns its own state, so this asks it rather than writing into
+               the DOM behind its back — NL.fillDemoBilling repaints the step from `bill` */
+            { label:'Fill billing with test data',
+              when:function(){ return ctx().billStep; },
+              on:function(){ if(window.NL && NL.fillDemoBilling) NL.fillDemoBilling(); } },
+            { label:'Design system', note:'styleguide',
+              on:function(){ location.href = 'styleguide.html'; } }
+          ];
+        } }
+    ]
+  });
 })();
 
 /* Shared dialogs. Every page gets all of them: they are defined once here, and
@@ -1533,7 +1715,7 @@ function injectChrome(){
   applyLandingBg();
   document.body.insertAdjacentHTML('afterbegin', chromeHTML());
   if(main) main.insertAdjacentHTML('beforeend', footerHTML());
-  document.body.insertAdjacentHTML('beforeend', modalsHTML() + settingsHTML());
+  document.body.insertAdjacentHTML('beforeend', modalsHTML());
   PageStates.mount();
 }
 
@@ -1810,7 +1992,6 @@ function wireGlobal(){
   document.addEventListener('click', function(e){
     if(e.target.closest('[data-paycard]')) PayCard.open(e.target.closest('[data-paycard]'));
   });
-  wireSettingsPanel();
   syncTopNav();
   syncAppBar();
 }
@@ -1935,6 +2116,24 @@ function nlBackPlace(){ var v = Store.get('nlBack'); return (v === 'a' || v === 
    ⚠️ It changes the FORM, not the data: both read `homeBannerVisible()`, in the same
    seniority order, with the same dismissal rules. */
 function homeBannerLayout(){ return Store.get('bannerLayout') === 'separate' ? 'separate' : 'stacked'; }
+/* ⚠️⚠️ WHAT THE THREE TONES ARE MADE OF (2026-09-30, by request) — a second answer to a
+   question the tones already answer, not a second set of tones. The conditions and their
+   seniority are untouched in both:
+     `tinted` — current. The GROUND carries the tone: a red condition sits on
+                `--surface-danger`, a dated one on ink, a quiet one on white.
+     `ink`    — every banner stands on ink, and the MARK carries the tone: the fault red,
+                the deadline amber, the quiet one white.
+   ⚠️ IT IS NOT A THIRD TONE AND IT IS NOT A CHOICE THE PRODUCT MAKES. The tone still
+   comes from the condition (`BANNER_TONE`, and the panel's copy in `alertTone`); this
+   only says which of the banner's two surfaces states it. A reader never sees this — it
+   is a comparison lever, like `Home banner` above it.
+   ⚠️ WHY `ink` CAN REUSE `tone-black` RATHER THAN NEEDING ITS OWN GROUND CLASS: on the
+   ink ground the banner's own palette is already written — the inverted primary, the
+   outlined secondary, the white todo line, the underlined licence link. Emitting
+   `tone-black` plus a `mark-*` class means every one of those rules keeps working
+   untouched, and the only new CSS in the pass is three colours. The alternative was
+   re-scoping nine button rules, which is nine chances to miss one. */
+function alertGround(){ return Store.get('alertGround') === 'ink' ? 'ink' : 'tinted'; }
 var WIZARD_PRESENTS = [['c', 'C \u2014 White header band (default)'],
                        ['d', 'D \u2014 Header on the gradient']];
 /* The wizard is the only surface carrying the attribute; it is set where the node is
@@ -2132,157 +2331,6 @@ function recoverFailedPayments(){
   });
   if(fixed.length) Store.save();
   return fixed.length;
-}
-function wireSettingsPanel(){
-  var gearBtn = $('#gearBtn'), panel = $('#settingsPanel');
-  /* ⚠️ Rebuilt on every open. The context (wizard open? details mounted?) changes
-     while the panel is closed, and the radios' checked state changes from other
-     surfaces too — rendering once at boot showed a panel that was right only for
-     the moment the page loaded. Cheap: it is a handful of labels. */
-  function toggle(open){
-    if(open) $('#settingsBody').innerHTML = settingsBodyHTML();
-    panel.hidden = !open;
-    gearBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
-    /* on a phone the gear is collapsed into the screen edge until you reach for it —
-       while its panel is open it has to be fully out (see .gearfab in the ≤600px block) */
-    gearBtn.classList.toggle('on', open);
-  }
-  gearBtn.addEventListener('click', function(e){ e.stopPropagation(); toggle(panel.hidden); });
-  panel.addEventListener('click', function(e){ e.stopPropagation(); });
-  document.addEventListener('click', function(){ if(!panel.hidden) toggle(false); });
-  document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && !panel.hidden) toggle(false); });
-
-  /* ⚠️ DELEGATED on the panel, not bound to the inputs. The panel body is rebuilt
-     on every open, so a handler attached to the radios at boot would be attached to
-     nodes that no longer exist — every setting would silently stop working. One
-     listener on the container survives any number of rebuilds. */
-  panel.addEventListener('change', function(e){
-    var r = e.target.closest('input[type="radio"]');
-    if(!r || !r.checked) return;
-    switch(r.name){
-      /* the session decides which pages exist at all, so it always navigates —
-         staying put would leave you on a page the guard is about to reject */
-      case 'session':
-        setSession(r.value);
-        return;
-      /* ⚠️ `dashState` and `licDetails` are GONE from this handler with their groups —
-         the page-state bar sets both through its own `set()`, which is the same
-         `Store.set` plus whatever that surface needs to repaint. */
-
-      /* the balance changes what a purchase charges, so an open wizard has to repaint */
-      case 'credit':
-        Store.set('credit', +r.value || 0);
-        if(typeof renderCreditBlock === 'function') renderCreditBlock();
-        if(window.NL && NL.refreshOpen) NL.refreshOpen();
-        return;
-      // billing data drives how many steps the wizard has; re-render it if it is open
-      case 'billingData':
-        Store.set('billingData', r.value);
-        if(window.NL && NL.refreshOpen) NL.refreshOpen();
-        return;
-      /* both surfaces that render licence rows repaint from their own entry point;
-         neither needs a reload, because nothing about which rows exist changed */
-      /* the frame is an attribute on <body>, so it needs no re-render — every table
-         reads it through CSS */
-      /* an attribute swap, like the table frame: the page needs no re-render, and the
-         trio already on screen keeps whichever product is selected */
-      case 'landingBg':
-        Store.set('landingBg', r.value);
-        applyLandingBg();
-        return;
-      case 'tableFrame':
-        Store.set('tableFrame', r.value);
-        applyTableFrame();
-        return;
-      /* ⚠️ THE PANEL ITSELF HAS TO BE REBUILT, and this is the only case here that does:
-         switching the layout takes two groups off the panel (`Home blocks`, `Licenses
-         table`) and puts them back. Every other setting changes the page, not the list
-         of settings. The same one line the panel opens with (`settingsBodyHTML` into
-         `#settingsBody`) redraws it, so the radio the reader just pressed comes back
-         checked from the STORE, not from the DOM.
-         ⚠️ Safe to replace that radio mid-event: this listener is
-         delegated on the panel, which is exactly why it survives every other rebuild. */
-      case 'homeLayout':
-        Store.set('homeLayout', r.value);
-        if(window.renderHome) renderHome();
-        $('#settingsBody').innerHTML = settingsBodyHTML();
-        return;
-      /* the panel is the same nodes in a different arrangement, so a repaint is all it
-         needs — and only when one is actually mounted */
-      case 'licZone':
-        Store.set('licZone', r.value);
-        if(window.LicenseDetails) LicenseDetails.refresh();
-        return;
-      /* the slot is rebuilt from the same data, so only the banner has to repaint —
-         and the page-state bar, whose Shape row is meaningless in the separate form */
-      case 'bannerLayout':
-        Store.set('bannerLayout', r.value);
-        if(window.renderHomeBanner) renderHomeBanner();
-        if(window.PageStates && PageStates.sync) PageStates.sync();
-        return;
-      case 'homeBlocks':
-        Store.set('homeBlocks', r.value);
-        if(window.renderHome) renderHome();
-        break;
-      case 'licTable':
-        Store.set('licTable', r.value);
-        if(typeof renderProducts === 'function') renderProducts();
-        if(typeof renderDashLicenses === 'function') renderDashLicenses();
-        return;
-      /* ⚠️ NO RELOAD. Both toolbars are in the markup and one of them is hidden, so
-         swapping is an attribute plus a repaint — and the filters the reader has already
-         set survive the swap, which is the whole point of being able to compare. */
-      case 'licBar':
-        Store.set('licBar', r.value);
-        if(typeof applyLicBar === 'function') applyLicBar();
-        return;
-      /* arrival changes what every selling surface states, and all three of them are
-         re-rendered from one entry point rather than each knowing about the others */
-      case 'arrived':
-        Store.set('arrived', r.value);
-        location.reload();
-        return;
-      /* the frame is an attribute, so it applies to an OPEN wizard without a
-         re-render — nothing about the steps or the state depends on it */
-      case 'wizardPresent':
-        Store.set('wizardPresent', r.value);
-        applyWizardPresent();
-        return;
-      /* ⚠️ A FULL STEP RE-RENDER, not an attribute swap. Two of the three placements
-         put the control inside markup a step BUILDS (the plan card, or a row above it),
-         so CSS alone cannot move it — `refreshOpen` re-runs the current step, which is
-         the one call that rebuilds every host at once. Harmless when nothing is open:
-         it returns on a hidden screen. */
-      case 'nlBack':
-        Store.set('nlBack', r.value);
-        if(window.NL && NL.refreshOpen) NL.refreshOpen();
-        return;
-      // switching the Customize variant re-renders whichever flow is open
-      case 'custVariant':
-        Store.set('custVariant', r.value);
-        if(window.NL && NL.refreshCustomize) NL.refreshCustomize();
-        return;
-    }
-  });
-
-  // the two dev actions, delegated for the same reason
-  panel.addEventListener('click', function(e){
-    if(e.target.closest('#resetDemo')){ Store.reset(); location.reload(); return; }
-    /* the wizard owns its own state, so the panel asks it rather than writing into
-       the DOM behind its back — NL.fillDemoBilling repaints the step from `bill` */
-    if(e.target.closest('#devFillBilling')){
-      if(window.NL && NL.fillDemoBilling) NL.fillDemoBilling();
-      return;
-    }
-    // dev affordance: play the confirmation click that would arrive by email
-    if(e.target.closest('#devConfirmEmail')){
-      var pend = Store.get('pendingEmail');
-      if(!pend) return;
-      Store.set('pendingEmail', null);
-      Store.set('emailConfirmed', pend.to);
-      location.reload();
-    }
-  });
 }
 
 /* ============================================================================

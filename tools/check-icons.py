@@ -255,7 +255,7 @@ BTN_EXTRA    = {'icon', 'destructive'}
 NOT_A_BUTTON = (
     'tab', 'typechip', 'filterchip', 'chip', 'seg', 'nl-step', 'ig-btn', 'faq-q',
     'faq-cat', 'faq-more', 'tnav-item', 'dprofbtn', 'bnav-item', 'dropcheck',
-    'infoic', 'alertic', 'verm', 'link', 'dblock', 'sg-', 'gearfab', 'totop',
+    'infoic', 'alertic', 'verm', 'link', 'dblock', 'sg-', 'sb-', 'totop',
     'tb-refresh', 'emailpend-v', 'nr-clear', 'dblock-link', 'lp-link', 'sdot',
     'plancard', 'nl-prodcard', 'switch', 'pc-', 'am-', 'ec-', 'inlineact',
     'stepbtn', 'menurow', 'searchclear',

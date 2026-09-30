@@ -2937,6 +2937,29 @@ var BANNER_TONE = {
   grant:'quiet'
 };
 function bannerTone(state){ return BANNER_TONE[state] || 'black'; }
+/* ⚠️⚠️ THE TONE AND THE CLASSES THAT CARRY IT ARE TWO DIFFERENT THINGS (2026-09-30, by
+   request) — `bannerTone` above answers WHICH tone, this answers WHAT WEARS IT, and the
+   `Alert tone` lever in the ⚙ picks between two answers to the second question only.
+     tinted — the ground states it: `tone-red` / `tone-black` / `tone-quiet`.
+     ink    — every banner is `tone-black` and a `mark-*` class colours the glyph.
+   ⚠️⚠️ `tone-black` IS REUSED IN THE INK FORM RATHER THAN A NEW GROUND CLASS BEING MINTED,
+   and that is what keeps this pass to three colours of CSS. The ink ground already has a
+   full palette written against it — an inverted primary, an outlined secondary, a white
+   todo line, an underlined licence link, a white focus ring — and every one of those
+   rules is keyed on being ink. Emitting the same class means they all keep working and
+   cannot be forgotten; the alternative was re-scoping nine button rules, which is nine
+   chances to miss one.
+   ⚠️ THE MARK CLASSES ARE NOT EMITTED IN THE TINTED FORM. There they would be inert on
+   two of the three tones and WRONG on the third — `mark-warn` would turn the black
+   band's glyph amber, which is this pass's proposal and not the current design.
+   ⚠️ THE SHAPE IS NOT IN THIS TABLE. `bannerIcon` still takes the semantic tone, so
+   trouble keeps the triangle and news keeps the circle in both forms — which is what
+   stops the ink form from making colour the only carrier. */
+var TONE_MARK = { red:'red', black:'warn', quiet:'quiet' };
+function toneClass(tone){
+  return alertGround() === 'ink' ? 'tone-black mark-' + (TONE_MARK[tone] || 'warn')
+                                 : 'tone-' + tone;
+}
 /* ⚠️⚠️ THE MARK FOLLOWS THE TONE, NOT A SEPARATE FLAG (2026-09-30, by request). It read
    `blocking ? triangle : circle`, which is the DISMISSAL question — so an ended updates
    term drew the calm circle while being the same kind of trouble as a failed payment,
@@ -2979,7 +3002,7 @@ function bannerCardHTML(c){
   var x = BANNER_BLOCKING[c.state] ? ''
     : '<button class="btn btn--ghost btn--md btn--icon gb-x" data-bannerx="' + esc(bannerKey(c))
       + '" aria-label="Dismiss"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-x"></use></svg></button>';
-  return '<div class="gbanner homebanner hbcard tone-' + tone + '">'
+  return '<div class="gbanner homebanner hbcard ' + toneClass(tone) + '">'
     + bannerIcon(tone)
     + '<div class="hb-body">'
     +   '<p class="hb-fact">' + copy.fact + '</p>'
@@ -2995,6 +3018,12 @@ function renderHomeBannerSeparate(slot, items){
      state the page-state bar uses. A control that appears only sometimes is a layout
      that moves under the reader as conditions clear. */
   var many = items.length > 1;
+  /* ⚠️⚠️ THE COUNT SITS BETWEEN THE TWO CHEVRONS (2026-09-30, by request), and the
+     whole group moved to the LEFT edge. Two things follow from that and neither is
+     cosmetic: the readout is now the thing the two arrows act ON rather than a label
+     trailing them, so it reads as one control instead of a control and a caption; and on
+     the left it starts where the cards under it start, which is the edge a reader is
+     already tracking down the page. */
   slot.innerHTML =
     '<div class="hbcar-ctl">'
     /* ⚠️ ICON-ONLY IS DERIVED FROM AN EMPTY LABEL in `button()`, and the name comes from
@@ -3004,10 +3033,10 @@ function renderHomeBannerSeparate(slot, items){
     +   button({ variant:'secondary', size:'sm', icon:'chevron-left',
                  ariaLabel:'Previous alert', cls:'hbcar-prev',
                  disabled:!many, attrs:'data-hbcar="prev"' })
+    +   '<span class="hbcar-pos" aria-live="polite">1 / ' + items.length + '</span>'
     +   button({ variant:'secondary', size:'sm', icon:'chevron-right',
                  ariaLabel:'Next alert', cls:'hbcar-next',
                  disabled:!many, attrs:'data-hbcar="next"' })
-    +   '<span class="hbcar-pos" aria-live="polite">1 / ' + items.length + '</span>'
     + '</div>'
     + '<div class="hbcar-track" id="hbcarTrack" tabindex="0" role="group" aria-label="Alerts">'
     +   items.map(bannerCardHTML).join('')
@@ -3027,17 +3056,36 @@ function renderHomeBannerSeparate(slot, items){
    ⚠️ The INDEX is the unit, not a delta. `scrollBy` accumulates rounding across taps
    and drifts off the snap points; `i * step` is absolute, so tap five and tap-back four
    returns to exactly card two. */
+/* ⚠️⚠️ HOW MANY CARDS ARE ON SCREEN IS MEASURED, NOT ASSUMED (2026-09-30). The track
+   shows two above 900px and one below it, and every number the pager works with depends
+   on which: the last reachable card is `total - visible`, not `total - 1`, and a readout
+   saying `1 / 6` while two cards are visible names one of the two things the reader is
+   looking at. Derived from the track's own box over the scroll step, so the CSS stays the
+   single place the count is decided and this function cannot disagree with it.
+   ⚠️ `Math.round`, and it is exact at both counts rather than approximately right:
+   one-up gives W/(W-slice) ≈ 1.04 and two-up (2c+g+slice)/(c+g) ≈ 2.05, so the rounding
+   has half a card of clearance either side of both answers.
+   ⚠️ THE OVERSHOOT ON THE LAST PAGE IS HARMLESS AND IS LEFT ALONE. `i * step` for the
+   last index lands `slice` px past the end, the browser clamps it, and `index()` reads the
+   clamped value back as the same index because `slice / step` is 0.08 — far under the
+   half-step that would round it down. Measured rather than reasoned about after the fact:
+   the `next` button has to actually go dead on the last page, and it does. */
 function wireBannerCarousel(slot, total){
   var track = $('#hbcarTrack', slot), pos = $('.hbcar-pos', slot);
   if(!track) return;
   function step(){ var card = track.firstElementChild; return card ? card.offsetWidth + 12 : track.clientWidth; }
-  function index(){ return Math.min(total - 1, Math.max(0, Math.round(track.scrollLeft / step()))); }
+  function visible(){ return Math.max(1, Math.min(total, Math.round(track.clientWidth / step()))); }
+  function maxIndex(){ return Math.max(0, total - visible()); }
+  function index(){ return Math.min(maxIndex(), Math.max(0, Math.round(track.scrollLeft / step()))); }
   function sync(){
-    var i = index();
-    if(pos) pos.textContent = (i + 1) + ' / ' + total;
+    var i = index(), v = visible(), last = Math.min(total, i + v);
+    /* a range when more than one card is showing, a single number when one is — the
+       readout says which alerts are in front of the reader, and with two on screen
+       `1 / 6` would be naming half of what they can see */
+    if(pos) pos.textContent = (v > 1 ? (i + 1) + '\u2013' + last : String(i + 1)) + ' / ' + total;
     var prev = $('[data-hbcar="prev"]', slot), next = $('[data-hbcar="next"]', slot);
     if(prev) prev.disabled = i <= 0;
-    if(next) next.disabled = i >= total - 1;
+    if(next) next.disabled = i >= maxIndex();
   }
   /* the swipe and the pager are one mechanism: both move `scrollLeft`, and the readout
      is driven by the scroll itself rather than by whichever of them caused it */
@@ -3045,7 +3093,7 @@ function wireBannerCarousel(slot, total){
   slot.addEventListener('click', function(e){
     var b = e.target.closest('[data-hbcar]');
     if(!b) return;
-    var i = Math.min(total - 1, Math.max(0, index() + (b.getAttribute('data-hbcar') === 'next' ? 1 : -1)));
+    var i = Math.min(maxIndex(), Math.max(0, index() + (b.getAttribute('data-hbcar') === 'next' ? 1 : -1)));
     track.scrollLeft = i * step();
     sync();
   });
@@ -3127,7 +3175,7 @@ function renderHomeBanner(){
      person picks the wrong one. `blocking` itself is untouched and still decides
      dismissal, three lines up. */
   var tone = bannerTone(items[0].state);
-  slot.className = 'gbanner homebanner tone-' + tone;
+  slot.className = 'gbanner homebanner ' + toneClass(tone);
   slot.innerHTML = bannerIcon(tone)
     + '<div class="hb-body">' + body + '</div>'
     + (dismissKeys.length

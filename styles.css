@@ -64,6 +64,18 @@
      never a different red. */
   --c-red-100:#FAD7D7;
   --c-red-200:#F7C4C4;
+  /* ⚠️⚠️ THE FIRST AMBER IN THE SYSTEM (2026-09-30, by request), and it exists for
+     exactly one job: the deadline mark on the ink alert band. It is a 400 and not a 600
+     because every other primitive here is picked to sit on WHITE and this one is picked
+     to sit on `--ink` — a 600 amber on near-black is a brown smudge. Measured against
+     #1c1c1c: 9.6:1, well past the 3:1 a mark answers to under 1.4.11, and past 4.5 as
+     well should a word ever join it.
+     ⚠️ IT IS NOT A STATUS COLOUR AND MUST NOT BECOME ONE BY DRIFT. `--status-ok`,
+     `--status-alert` and `--status-off` are the three the product's states are made of,
+     and nothing in the licence model is "warning". This is the middle of the three ALERT
+     tones — what will break on a known date — which is a property of a banner, not of a
+     licence. If a fourth status is ever wanted, that is a decision, not this token. */
+  --c-amber-400:#F5B325;
   --c-grey-600:#525252;
   /* one step off ink, for text that is a list item rather than a statement */
   --c-grey-800:#333333;
@@ -168,6 +180,12 @@
   --surface-notice:var(--card);
   --surface-notice-alt:var(--c-grey-50);
   --border-notice:var(--c-grey-200);
+  /* ⚠️ THE DEADLINE, AS A MARK ON A DARK BAND. Read only by the ink form of the alert
+     tones (the `Alert tone` lever in the ⚙), where the ground is one colour for all three
+     and the glyph is what separates them. `--status-alert` and `#fff` do the other two;
+     the middle tone had nothing, which is why this token exists and the other two did
+     not need inventing. ⚠️ ON INK ONLY — see the primitive's note. */
+  --status-warn:var(--c-amber-400);
   /* ⚠️ A SURFACE TOKEN, NOT `--surface-quiet` (2026-09-28, by request). The two
      resolve to the same primitive today, and that is exactly why they must be two
      names: `--surface-quiet` means "a control that is not the page's own action" and
@@ -313,7 +331,7 @@ a{color:inherit}
    settings panel became real <a> elements when the prototype split into pages;
    without this they pick up the browser's underline. Prose links keep .link,
    which underlines on purpose. */
-.dtopbar a,.dprofmenu a,.settings-panel a{text-decoration:none;font-style:normal}
+.dtopbar a,.dprofmenu a{text-decoration:none;font-style:normal}
 :focus-visible{outline:2px solid var(--ink);outline-offset:2px;border-radius:3px}
 /* ============================================================================
    ICONS — one source, one placement, three sizes
@@ -638,6 +656,16 @@ a{color:inherit}
 .alert .ic{width:var(--ic-24);height:var(--ic-24);flex:none;color:var(--status-alert)}
 /* on the ink band everything in it is white — mark, lead and the action beside them */
 .alert.tone-black .ic{color:#fff}
+/* ⚠️ THE SAME THREE MARKS AS HOME'S BANNER, on the same ground and from the same
+   `toneClass` — a licence panel opened over Home must not state the tone one way while
+   the band above it states it another. This surface has no quiet condition, so
+   `mark-quiet` never renders here; it is written anyway, because the rule that is missing
+   is the one nobody notices until a fourth condition arrives.
+   ⚠️ AFTER `.alert.tone-black .ic`, which is the white this has to override — both are
+   (0,2,1) and source order is the whole mechanism. */
+.alert.mark-red .ic{color:var(--status-alert)}
+.alert.mark-warn .ic{color:var(--status-warn)}
+.alert.mark-quiet .ic{color:#fff}
 /* ⚠️⚠️ THE LEAD IS ITS OWN LINE (2026-09-30, from a reference: the fault above, the
    remedy under it). Done as `display:block` on the `<b>` rather than by splitting six
    message strings into two spans each: every branch already wraps its prose in one
@@ -2299,20 +2327,18 @@ body:is([data-tableframe="b"],[data-tableframe="c"]) #dashView .dblock > table{m
 /* the generic stub overlay sits above the add-ons and wizard modals */
 #overlay{z-index:400}
 
-/* ---------- prototype settings gear (prototype-only) ---------- */
-/* ---------- prototype settings: dark, circular, and above EVERYTHING ----------
-   ⚠️ z-index 900/901 is deliberate and must stay the highest in the file. The
-   previous 90/96 put the gear under every overlay: modals and payoverlays sit at
-   100, the relocated overflow at 120–150, and `#overlay` at 400 — so the one
-   control that has to work while a flow is open was the one buried by it.
-   It is also NOT blurred: `.fs-screen` carries a backdrop-filter, which blurs what
-   is BEHIND it — a fixed sibling painted above it is untouched. Keep the gear a
-   sibling of the overlays in <body>; nest it inside one and the filter captures it. */
-.gearfab{position:fixed;right:16px;bottom:16px;width:44px;height:44px;border-radius:50%;
-  border:0;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;
-  z-index:900;box-shadow:0 4px 14px rgba(0,0,0,.28);cursor:pointer}
-.gearfab:hover{background:#000;color:#fff}
-.gearfab .ic{width:var(--ic-24);height:var(--ic-24)}
+/* ⚠️⚠️ THE ⚙ FAB AND ITS PANEL ARE GONE (2026-09-30, by request) — `.gearfab`,
+   `.settings-panel` and every `.sp-*` rule with them. One settings surface now, and it
+   is the bar below. What went with them, deliberately rather than by oversight:
+     · the z-index 900/901 note, which argued the gear had to outrank every overlay. The
+       bar sits at 880 and is not covered by anything, because overlays now stop at its
+       top edge instead of running under it (`body.has-statebar .fs-screen`, below);
+     · the phone treatment — a 38px disc hiding in the left edge. The bar is desktop-only,
+       so under 600px there is no settings surface at all. That is the price of the
+       consolidation and it is named in NOTES, not hidden here.
+   ⚠️ `.sp-opt` HAD ONE READER OUTSIDE THE PANEL — the checkbox specimen on the
+   styleguide — and it was moved to `.sb-opt` in the same pass rather than left pointing
+   at a class with no rules. */
 /* ============================================================================
    THE PAGE-STATE BAR — the local half of the prototype's settings
    ============================================================================
@@ -2322,9 +2348,11 @@ body:is([data-tableframe="b"],[data-tableframe="c"]) #dashView .dblock > table{m
    the page tells itself how much is covered through `--sbH`, set by the bar's own
    measurement rather than by a constant here (its height changes with the number of
    options and whether it is open).
-   ⚠️ IT SITS UNDER THE ⚙ FAB IN Z-ORDER AND PUSHES IT UP. Two floating controls in one
-   corner is one too many; the gear rides above the bar rather than behind it.
-   ⚠️ HIDDEN ≤600px — see the note in shared.js. */
+   ⚠️⚠️ IT IS THE PROTOTYPE'S ONLY SETTINGS SURFACE (2026-09-30, by request) — the ⚙ FAB
+   and its panel were folded into it. The z-order note that stood here is gone with them:
+   nothing floats in a corner any more, and the bar is not pushing anything up.
+   ⚠️ HIDDEN ≤600px, and that now means the phone has NO settings surface. Named in
+   shared.js and in NOTES as the price of the consolidation. */
 .statebar{position:fixed;left:0;right:0;bottom:0;z-index:880;
   background:var(--ink);color:#fff;font-size:14px;
   box-shadow:0 -6px 24px rgba(0,0,0,.24)}
@@ -2339,6 +2367,16 @@ body:is([data-tableframe="b"],[data-tableframe="c"]) #dashView .dblock > table{m
 .sb-where{margin-left:auto;opacity:.7}
 .sb-body{padding:0 18px 12px}
 .sb-body[hidden]{display:none}
+/* ⚠️⚠️ THE GROUP LABEL IS A RUN HEADER, NOT A ROW OF ITS OWN (2026-09-30). With every
+   setting merged into this bar the row carries up to a dozen tabs, and they are not
+   siblings — `Session` and `Table frame` answer questions two levels apart. A second row
+   of group chips would have put three strips of chrome above the options at the foot of
+   the window; a label leading each run says the same thing and costs one inline element.
+   ⚠️ It is a LABEL, not a control: no box, no hover, not tabbable. The `:first-child`
+   rule kills the leading gap so the first group starts on the row's own left edge. */
+.sb-group{flex:none;align-self:center;font-size:14px;font-weight:600;letter-spacing:.06em;
+  text-transform:uppercase;color:rgba(255,255,255,.45);margin-left:12px;pointer-events:none}
+.sb-group:first-child{margin-left:0}
 .sb-tabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px;
   border-bottom:1px solid rgba(255,255,255,.16);padding-bottom:8px}
 .sb-tab{padding:4px 11px;border:0;border-radius:999px;background:transparent;
@@ -2360,6 +2398,18 @@ body:is([data-tableframe="b"],[data-tableframe="c"]) #dashView .dblock > table{m
 .sb-opt.is-off{opacity:.38;cursor:not-allowed}
 .sb-opt:focus-within{outline:2px solid #fff;outline-offset:2px}
 /* the count or the reason, riding the chip it qualifies */
+/* ⚠️ AN ACTION WEARS THE OPTION'S BOX BUT IS NOT ONE — it is a `<button>`, it carries no
+   checked state, and it never gets `.is-on`, because nothing about it stays true after it
+   runs. Same box so the row reads as one kind of control; `font:inherit` and the border
+   reset are what a real button needs to stop looking like a UA button inside it. */
+/* ⚠️ `background:transparent` IS NOT REDUNDANT. `.sb-opt` is a `<label>` everywhere else
+   and a label has no UA background — so the base rule never had to declare one. A
+   `<button>` does: it comes with `buttonface`, and the first spelling of this put white
+   text on the browser's light grey. Measured, not spotted: computed background came back
+   `rgb(239,239,239)` on an ink band. */
+.sb-act{background:transparent;border:1px solid rgba(255,255,255,.32);
+  font:inherit;cursor:pointer;color:inherit}
+.sb-act:hover{border-color:rgba(255,255,255,.6);background:rgba(255,255,255,.12)}
 .sb-opt-n{opacity:.62;font-variant-numeric:tabular-nums}
 .sb-opt.is-on .sb-opt-n{opacity:.7}
 /* ---------- a dependent row, under the tab's own (2026-09-29) ----------
@@ -2373,9 +2423,10 @@ body:is([data-tableframe="b"],[data-tableframe="c"]) #dashView .dblock > table{m
   margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.14)}
 .sb-sublabel{flex:none;color:rgba(255,255,255,.62);font-size:14px}
 .sb-subopts{flex:1 1 auto}
-.sb-hint{margin:10px 0 0;color:rgba(255,255,255,.62);line-height:1.45;max-width:96ch}
-/* the dependent row's own explanation sits under it, quieter than the tab's */
-.sb-subhint{margin-top:4px;opacity:.82}
+/* ⚠️ `.sb-hint` / `.sb-subhint` ARE GONE (2026-09-30, by request) with the nineteen
+   paragraphs they drew. What survives is `.sb-opt-n` — the count or the reason beside an
+   option — which is the half of a hint that says something the control cannot say for
+   itself. See the note in `render` for where the prose went. */
 /* ⚠️⚠️ THE BAR FLOATS OVER THE PAGE (2026-09-29, by request) — it no longer RESERVES
    the strip it covers. `#shellMain` used to take `padding-bottom:var(--sbH)`, so opening
    the bar moved every page under it: the thing being reviewed changed layout the moment
@@ -2403,9 +2454,6 @@ body.has-statebar .overlay{bottom:var(--sbH,0px)}
    top of 723.5. `min()` keeps 90vh as the cap and takes whatever is actually left when
    that is less, so nothing changes while the bar is closed or absent. */
 body.has-statebar .fs-box{height:min(90vh, calc(100vh - var(--sbH,0px) - 32px))}
-body.has-statebar .gearfab{bottom:calc(var(--sbH, 0px) + 16px)}
-/* the bar lifts the panel — and, through `--sp-bottom`, shortens it by the same amount */
-body.has-statebar .settings-panel{--sp-bottom:calc(var(--sbH, 0px) + 70px)}
 @media (max-width:600px){
   .statebar{display:none}
   /* kept although the desktop value is now the same: this block is what the phone
@@ -2415,43 +2463,7 @@ body.has-statebar .settings-panel{--sp-bottom:calc(var(--sbH, 0px) + 70px)}
   body.has-statebar .payoverlay,
   body.has-statebar .overlay{bottom:0}
   body.has-statebar .fs-box{height:90vh}
-  body.has-statebar .gearfab{bottom:16px}
-  body.has-statebar .settings-panel{--sp-bottom:70px}
 }
-/* ⚠️⚠️ `max-height` HAS TO KNOW WHERE THE BOTTOM IS (fixed 2026-09-29, reported as
-   "the scroll inside the settings button is wrong, I cannot see the top of the list").
-   The panel is anchored by its BOTTOM and grows upward; `max-height` was the constant
-   `100vh - 100px`, which is only right while the bottom is the constant 70px. It is
-   not: with the page-state bar open the bottom becomes `--sbH + 70`, and on Home that
-   is 246 — so 246 + 800 = 1046 in a 900px window and the panel's top sat at **-146**,
-   off the screen, with `overflow-y:auto` unable to help because the overflow was
-   outside the viewport, not inside the box. Measured exactly that.
-   ⚠️ ONE VARIABLE, TWO READERS. The offset is named once and both `bottom` and the
-   height subtract it, so the next thing that raises this panel cannot get one of the
-   two right and the other wrong — which is precisely how this broke.
-   ⚠️ The extra 24px is the gap above the panel; without it the top edge would touch
-   the window and the shadow would be cut. */
-.settings-panel{--sp-bottom:70px;
-  position:fixed;right:16px;bottom:var(--sp-bottom);width:256px;background:#fff;border:1px solid var(--line);border-radius:8px;box-shadow:0 12px 32px rgba(0,0,0,.18);z-index:901;padding:14px;
-  max-height:calc(100vh - var(--sp-bottom) - 24px);overflow-y:auto}
-.settings-panel[hidden]{display:none}
-.settings-panel h4{margin:0 0 3px;font-size:14px}
-.settings-panel .sp-note{font-size:14px;color:var(--faint);margin-bottom:12px}
-.settings-panel .sp-label{font-size:14px;color:var(--mid);margin-bottom:8px}
-/* a sentence that belongs to ONE group, not to the panel — .sp-note is the
-   panel's own subtitle and carries its bottom margin */
-.settings-panel .sp-hint{font-size:14px;line-height:1.45;color:var(--faint);margin:5px 4px 2px}
-/* grouped page picker in the settings panel */
-.sp-pick{display:flex;flex-direction:column;gap:1px}
-.sp-grouphead{font-size:14px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin:6px 0 3px}
-.sp-grouphead:first-child{margin-top:0}
-.sp-opt{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink);padding:3px 4px;border-radius:6px;cursor:pointer}
-.sp-opt:hover{background:var(--hover)}
-.sp-opt input{accent-color:var(--ink);margin:0;flex:none}
-/* page-specific variant group, shown only in that page's context */
-.sp-ctx{display:flex;flex-direction:column;gap:1px}
-.sp-opt input:disabled + span{color:var(--faint)}
-.sp-ctx[hidden]{display:none}
 /* ⚠️ The same radius as the buttons it stands beside (2026-09-27) — `.seg` has exactly
    one instance, the Instances view switcher, and it sat at 6px in a toolbar of 24px
    buttons and 999px chips. `overflow:hidden` is what lets the checked half's fill follow
@@ -2978,6 +2990,24 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
    compared. The bands go transparent at both widths or the phone shows one variant. */
 .fs-screen[data-present="d"] .fs-header,
 .fs-screen[data-present="d"] .nl-stepbar{background:transparent;border-bottom:0}
+/* ⚠️⚠️ AND THE HAIRLINE NEEDED THE ID TO BE TAKEN OFF (2026-09-30). The rule above says
+   `border-bottom:0` and the header kept its line anyway: `#nlModal .fs-header` carries
+   `1px solid var(--line2)` at (1,0,1), which beats `.fs-screen[data-present="d"]
+   .fs-header` at (0,2,1). Measured in the panel — computed `border-bottom` came back
+   `1px solid rgb(226,226,226)` under a rule that had zeroed it. Same ID weight here and
+   it wins on source order. ⚠️ The same trap `#nlModal .dblock{border:0}` set for the
+   product card two rules-blocks up: an ID in the wizard's own scope silently outranks
+   every class-level statement about what is inside it.
+   ⚠️⚠️ THE LINE IS NOT DELETED, IT IS HANDED TO THE SCROLL — the portal's own top bar
+   over the gradient, exactly (`body[data-mesh] .dtopbar` / `.docked`). At rest the band
+   is glass and the mesh runs under it; the moment content starts passing beneath it, it
+   takes the card fill and its hairline back, because a surface has a bottom. Presentation
+   C is untouched: its bands are white by definition, so they have a line at rest and
+   nothing to dock into. `wireHeaderDock` in wizard.js sets `.docked`. */
+#nlModal[data-present="d"] .fs-header{border-bottom:0;
+  transition:background-color .18s ease,border-color .18s ease}
+#nlModal[data-present="d"].docked .fs-header{
+  background:var(--card);border-bottom:1px solid var(--line2)}
 /* ---------- New license flow (stepped; rides the manage-modal chrome) ---------- */
 /* the stepper: a thin full-width track directly under the header hairline,
    then one padded label row — "Step N of 4 · Plan" */
@@ -3030,7 +3060,7 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
    strip and only `> div` gets them again, and this is a grandchild. */
 .nl-steps{position:relative}
 .nl-barback{position:absolute;right:100%;top:50%;transform:translateY(-50%);
-  margin-right:6px;white-space:nowrap;pointer-events:auto}
+  margin-right:24px;white-space:nowrap;pointer-events:auto}
 /* ⚠️⚠️ ON THE PHONE, VARIANT A GIVES UP THE FLOW'S NAME — not Back's label. The bar
    cannot hold four things at 375: measured, `Buy a license` runs 16→134 and Back 108→182,
    a 26px overlap. The brief offered either shortening the title or dropping Back to a
@@ -3339,6 +3369,16 @@ button.nl-step:focus-visible{outline:2px solid var(--ink);outline-offset:3px;bor
 .nl-prodname{font-size:16px;font-weight:500;line-height:1.2}
 .nl-proddesc{font-size:14px;font-weight:400;line-height:1.35;color:var(--mid)}
 .nl-prodcard.on .nl-prodic{color:var(--ink)}
+/* ⚠️ THE NAME GOES QUIET WITH THE MARK (2026-09-30, by request). The unchosen card was
+   a desaturated logo beside a full-ink name — two halves of one object answering the
+   same question differently, and the text half is the louder of the two. `--mid` is the
+   step the product already uses for "present but not the point"; the name stays
+   readable, which it must, because it is what you are choosing BETWEEN.
+   ⚠️ Hover brings it all the way back rather than part of the way, as the mark does:
+   `--mid` -> `--ink` is the only step there is between them, and a third grey invented
+   for a hover would be a value no token holds. */
+.nl-prodcard:not(.on) .nl-prodname{color:var(--mid);transition:color .12s}
+.nl-prodcard:not([disabled]):not(.on):hover .nl-prodname{color:var(--ink)}
 /* ⚠️ HOVER AND PRESSED (2026-09-28, by request). The card had neither: it is a real
    `<button>` in a `role="radio"` pair and the only thing that ever changed under the
    pointer was nothing at all — so the two biggest targets on the first step of the
@@ -4785,9 +4825,18 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
 .hc-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px}
 /* the count lives in the heading at this width — see the phone block */
 .hc-more{display:none}
+/* ⚠️⚠️ NO RESTING OUTLINE (2026-09-30, by request). The white fill is already the
+   whole separation the card needs — it stands on `--page-bg`, which is tinted, so the
+   shape reads with nothing drawn around it. What the ring cost: every card on the grid
+   carried a second edge inside the section it already sits in.
+   ⚠️ THE HOVER RING STAYS, and that is the same argument the controls on this card are
+   built on two rules down — only the RESTING fill goes there too. With no box at rest
+   the ring under the pointer is the only thing left saying the whole card is pressable,
+   and a card that answers nothing to the cursor is the thing that pass was fixing.
+   ⚠️ `box-shadow`, not `border`, on both: a border at rest would make the card 2px
+   bigger the moment it gained one, and shove its neighbours in the grid. */
 .lcard{background:var(--card);border-radius:10px;padding:14px 16px 0;
-  display:flex;flex-direction:column;cursor:pointer;
-  box-shadow:0 0 0 1px var(--line2)}
+  display:flex;flex-direction:column;cursor:pointer}
 .lcard:hover{box-shadow:0 0 0 1px var(--line)}
 .lcard:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 /* a cancelled licence is quieter, exactly as its row is */
@@ -4981,9 +5030,15 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
    takes a smaller one because a 40px peek on a 343px slot eats the sentence. */
 .hbcar{margin:0 0 26px}
 .hbcar[hidden]{display:none}
-.hbcar-ctl{display:flex;align-items:center;justify-content:flex-end;gap:6px;margin:0 0 8px}
-/* the count reads as a statement, not a control: no box, and the digits do not jump */
-.hbcar-pos{margin-left:6px;font-size:14px;color:var(--mid);font-variant-numeric:tabular-nums}
+/* ⚠️ LEFT, AND THE COUNT IS BETWEEN THE CHEVRONS (2026-09-30, by request) — see the
+   markup note in `renderHomeBannerSeparate`. `flex-start` and nothing else: the order is
+   the markup's, not this rule's, so the DOM and the screen read the same way round. */
+.hbcar-ctl{display:flex;align-items:center;justify-content:flex-start;gap:6px;margin:0 0 8px}
+/* the count reads as a statement, not a control: no box, and the digits do not jump
+   ⚠️ NO MARGIN OF ITS OWN any more. It had 6px extra to separate it from the pair it
+   followed; between them the container's own gap is the whole spacing, and an extra
+   margin on one side would push the two chevrons out of square. */
+.hbcar-pos{font-size:14px;color:var(--mid);font-variant-numeric:tabular-nums}
 .hbcar-track{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;
   scroll-padding-left:0;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 .hbcar-track::-webkit-scrollbar{display:none}
@@ -4994,6 +5049,25 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
 .hbcar{--hb-peek:52px}
 .hbcar-track > .hbcard{flex:0 0 calc(100% - var(--hb-peek));scroll-snap-align:start;
   margin:0;min-width:0}
+/* ⚠️⚠️ TWO CARDS AND A SLICE ON THE DESKTOP (2026-09-30, by request). The slot is
+   `2·card + 2·gap + slice`, and `--hb-peek` is defined as slice + gap, so holding the
+   slice at the one-up form's own width gives `card = (100% - --hb-peek - gap) / 2`.
+   ⚠️ THE EXTRA `- 12px` IS THE SECOND GAP AND IT IS NOT DECORATION. The obvious
+   `(100% - --hb-peek) / 2` is the one-up formula halved, and it is wrong by exactly one
+   gap: two cards in the row means two gaps in front of the third, not one. Measured
+   before and after — it gave a 28px slice against the one-up form's 40, i.e. the peek
+   quietly got thinner the moment the layout could show more. One number still moves both
+   the width and the scroll step, which is the whole reason `--hb-peek` exists, and
+   `wireBannerCarousel` reads the card count back off the box rather than being told it.
+   ⚠️⚠️ AND IT STOPS AT 900, WHICH IS A JUDGEMENT AND NOT THE BRIEF'S NUMBER. Measured:
+   at a 601px viewport the content column is ~553, so two cards would be 250px each — a
+   20px mark, a licence name, two sentences and a ✕ in 250px is not a banner, it is a
+   column of single words. 900 is a breakpoint the stylesheet already carries rather
+   than an eleventh one invented here; below it the slot keeps the one-up form, which is
+   the same thing the phone block does one step further down for the same reason. */
+@media (min-width:901px){
+  .hbcar-track > .hbcard{flex:0 0 calc((100% - var(--hb-peek) - 12px) / 2)}
+}
 .homebanner{align-items:flex-start;padding:14px 12px 14px 16px;line-height:1.5}
 .homebanner .gb-ic{margin-top:3px}
 .hb-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
@@ -5093,6 +5167,24 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
 /* the mark takes the tone's own voice: the fault colour on red, ink on the quiet form */
 .gbanner.tone-red .gb-ic{color:var(--status-alert)}
 .gbanner.tone-quiet .gb-ic{color:var(--ink)}
+/* ⚠️⚠️ THE INK FORM: ONE GROUND, THREE MARKS (2026-09-30, by request). `toneClass`
+   (components.js) writes `tone-black` plus one of these, so everything the ink band
+   already knows how to do — the inverted primary, the white todo line, the underlined
+   licence link — applies untouched and only the glyph's colour is new.
+   ⚠️ ALL THREE ARE STATED, including the white one that matches `.gb-ic`'s base. A tone
+   that renders correctly by inheritance is a tone nobody can find when it changes, and
+   this block is where someone will look.
+   ⚠️ AFTER the two tinted rules above, deliberately: `mark-*` and `tone-*` are both
+   (0,2,1), so source order is what decides, and the ink form must win when both are on
+   the element. They never are today — `toneClass` emits one set or the other — but a
+   `tone-red mark-red` pair is one careless edit away and it should resolve to the ink
+   reading, which is the one the mark class was added to state.
+   ⚠️ THE SHAPE STILL CARRIES IT TOO: `bannerIcon` takes the semantic tone, so a fault is
+   a triangle and news is a circle in this form as well. Print it in grey and the three
+   still read as three — which is the constant, not a nicety. */
+.gbanner.mark-red .gb-ic{color:var(--status-alert)}
+.gbanner.mark-warn .gb-ic{color:var(--status-warn)}
+.gbanner.mark-quiet .gb-ic{color:#fff}
 .gb-txt{font-size:14px;color:#fff}
 
 /* same box as every other ✕ (above); on an ink banner only the colour changes */
@@ -7557,12 +7649,12 @@ th.lic-num{text-align:right}
      though the text itself stays 14px */
   .rowactions .link{min-height:44px;display:inline-flex;align-items:center}
 
-  /* the prototype's own gear sits bottom-left on a phone: bottom-right is exactly
-     where the licence cards keep their ⋮, and a fixed button there would cover it */
-  /* ⚠️ BOTTOM-LEFT on the phone, and that is the collision fix: the scroll-to-top
-     FAB is bottom-RIGHT at the same `bnavH + 16` offset, so both at right would
-     stack on each other. Lifted clear of the bottom navigation bar by its own
-     height, and the panel opens above it from the same corner. */
+  /* ⚠️ THE GEAR'S PHONE RULES WENT WITH IT (2026-09-30) and so did the collision they
+     solved: the scroll-to-top FAB had the bottom-RIGHT corner and the gear was pushed
+     bottom-LEFT to keep out of it. Nothing is in the left corner now. Recorded rather
+     than deleted silently, because the FAB's own comment further down still cites the
+     gear as the reason it sits where it does — that reason is now history, not a
+     constraint, and anything moved into the left corner is free to take it. */
   /* ⚠️ The wizard header keeps the LICENCE, and sheds the rest in order of how little
      it identifies: first the flow name (the step line and the commit button both say
      it), then the product word (you opened this licence from a page that named it).
@@ -7601,24 +7693,7 @@ th.lic-num{text-align:right}
     height:var(--btnH);border-top:1px solid var(--line2)}
   /* the divider went with the desktop one — see the note above */
 
-  /* ---------- the prototype's gear COLLAPSES to an edge tab on a phone ----------
-     ⚠️ It is scaffolding, and at 390px it was sitting on product: measured over prices,
-     section headings, pagination and — while testing this very batch — over a menu item
-     inside an open bottom sheet. A 44px disc pinned 16px in from the left edge has no
-     safe place on a full-width column, because there is no margin to hide in.
-     So it hides in the EDGE instead: mostly off-screen, small, and dimmed until you
-     reach for it, when it comes fully into view.
-     ⚠️ And it drops BELOW the sheets in the stack (z-index 900 → 95). Scaffolding that
-     can cover a product menu is worse than scaffolding that is hard to find. */
-  .gearfab{right:auto;left:0;bottom:calc(var(--bnavH) + 24px);
-    width:38px;height:38px;border-radius:0 50% 50% 0;z-index:95;
-    transform:translateX(-38%);opacity:.5;
-    transition:transform .15s ease,opacity .15s ease}
-  .gearfab:hover,.gearfab:focus-visible,.gearfab.on{transform:translateX(0);opacity:1}
-  .gearfab .ic{width:var(--ic-20);height:var(--ic-20);margin-left:6px}
-  .settings-panel{right:auto;left:16px;bottom:calc(var(--bnavH) + 70px);
-    width:auto;max-width:calc(100vw - 32px);max-height:calc(100vh - var(--bnavH) - 110px)}
-
+  
   /* ⚠️ ONE padding for every row card. The licence card used a flat 12px while the
      invoice card had none of its own and paid per cell (10px here, 12px there, plus
      a `padding-right:110px` reservation) — so two cards in the same list breathed

@@ -821,8 +821,12 @@ function alertTone(kind){
 }
 /* ⚠️ The class carries BOTH tones explicitly, so no branch renders on the base `.alert`
    with no ground at all — a forgotten tone would be a banner with layout and no colour,
-   which reads as a rendering failure rather than as a missing case. */
-function setAlertTone(al, kind){ al.className = 'alert tone-' + alertTone(kind); }
+   which reads as a rendering failure rather than as a missing case.
+   ⚠️⚠️ WHAT the tone is made of is `toneClass`'s question, not this one's (components.js,
+   2026-09-30). This function still decides WHICH tone; the ⚙'s `Alert tone` lever decides
+   whether the ground or the mark states it, and it states it the same way on both
+   surfaces — a licence panel opened over Home must not disagree with the banner above it. */
+function setAlertTone(al, kind){ al.className = 'alert ' + toneClass(alertTone(kind)); }
 function renderLicenseAlert(lic){
   var al = $('#subAlert'); if(!al) return;
   var t = $('.atxt', al), st = lic.status;
@@ -2062,18 +2066,29 @@ var LicenseDetails = (function(){
     };
   }
 
+  /* ⚠️⚠️ THE SPEC IS ON SCREEN WHEREVER A LICENCE CAN BE OPENED, not only while one IS
+     (2026-09-30). Every tab below works with the panel closed: `State` and `Type` OPEN a
+     licence rather than describing an open one, and `Presentation` and `Zone` are read at
+     the next open. Gated on the panel being up, half this group was unreachable from the
+     list page it opens from — which is exactly why `Zone` had to live in the ⚙ panel
+     under a different condition. One scope, one group, one place.
+     ⚠️ THE LABEL IS STILL TIED TO THE PANEL BEING OPEN. The bar names the surface it is
+     standing on, and `License details` at the foot of a plain list would be a lie; an
+     empty answer defers to the page's own name (see `where` in shared.js). */
   PageStates.define({
     id:'license',
-    label:'License details',
-    when:onScreen,
+    label:function(){ return onScreen() ? 'License details' : ''; },
+    when:function(){ return settingsContext().detailsPage; },
     tabs:[
-      { id:'state', label:'State',
-        hint:'The six branches of the panel’s own banner, in its order of seriousness. Picking one opens a licence that really carries it — a state no licence has is disabled with its count.',
+      /* ---- which licence: both of these NAVIGATE, and the count beside an option is
+         how many licences in the account really carry it. A state no licence has is
+         disabled rather than hidden — "this cannot happen on this account" is the most
+         useful thing the row can say about it. ---- */
+      { id:'licState', group:'License', label:'State',
         get:currentOf(STATES), set:pickFrom(STATES),
         options:function(){ return group(STATES); } },
 
-      { id:'type', label:'Type',
-        hint:'Type swaps whole blocks (data-page sub / perp). A grant takes the perpetual branch and then strips coupon, add-ons, invoices and the instances toolbar on top of it.',
+      { id:'licType', group:'License', label:'Type',
         get:currentOf(TYPES), set:pickFrom(TYPES),
         options:function(){ return group(TYPES); },
 /* ⚠️⚠️ TIER IS A DEPENDENT ROW OF TYPE (2026-09-29, by request), because it is
@@ -2087,7 +2102,6 @@ var LicenseDetails = (function(){
    Two different mechanisms answering two levels of one question. */
         sub:{
           label:'Tier',
-          hint:'Synthesised plan pages — there is no licence in the datasets for these, so they are routed through ?tier= rather than opened from data.',
           get:function(){ var m = /[?&]tier=([^&]+)/.exec(location.search); return m ? m[1] : null; },
           set:function(v){ location.href = 'license.html?tier=' + encodeURIComponent(v); },
           options:[['maker','Maker'],['prototype','Prototype'],['pilot','Pilot'],['startup','Startup'],
@@ -2095,12 +2109,10 @@ var LicenseDetails = (function(){
                   .map(function(t){ return { v:t[0], t:t[1] }; })
         } },
 
-      { id:'present', label:'Presentation',
-        /* ⚠️ REWRITTEN 2026-09-29: the Back button went from `Full page` too, so the copy
-           that told them apart by it was describing a difference that no longer exists.
-           What is left really is only the nav highlight — said plainly, because a hint
-           that oversells a distinction is worse than one that admits a small one. */
-        hint:'Modal over the list is the default. Full page and Shared link are the same page \u2014 neither carries a Back button \u2014 and they differ only in which section stays lit: Full page keeps the one you came from, Shared link always shows Licenses, which is what somebody opening a pasted URL lands on. Picking one re-opens the licence you are looking at in that presentation.',
+      /* ---- how it is drawn: the surface the licence opens ON, and the arrangement of
+         its first zone. Both are answered before the licence is opened, which is why
+         this spec is not gated on one being open. ---- */
+      { id:'licPresent', group:'License', label:'Presentation',
         get:licDetailsMode,
 /* ⚠️⚠️ THE SETTER HAS TO RE-PRESENT, NOT JUST STORE (fixed 2026-09-29). It wrote
    `licDetails` and called `PageStates.sync()`, which repaints the BAR — so the radio
@@ -2115,8 +2127,9 @@ var LicenseDetails = (function(){
        the same licence twice. `?open=` carries which one (read by page-licenses.js).
    ⚠️ `page` -> `shared` and back is a RELOAD, not a no-op: the two differ only in the
    back control, which `mountPage` decides at mount time.
-   ⚠️ Falls back to a plain sync when there is no licence to re-present — the styleguide
-   mounts this surface with nothing open. */
+   ⚠️ Falls back to a plain sync when there is no licence to re-present — which is now
+   the ordinary case, not the styleguide's edge: the tab is reachable from the list page
+   with nothing open, and there the choice simply waits for the next open. */
         set:function(v){
           Store.set('licDetails', v);
           var id = active(), lic = id && licById(id);
@@ -2133,6 +2146,19 @@ var LicenseDetails = (function(){
         options:[{ v:'modal', t:'Modal (default)' }, { v:'page', t:'Full page' },
                  { v:'shared', t:'Shared link (no Back)' }] },
 
+      /* ⚠️ MOVED HERE FROM THE ⚙ PANEL (2026-09-30). It was scoped there to "a page that
+         can open a licence", which is this spec's scope exactly — so it now sits beside
+         the three tabs it belongs with instead of in a different surface under a
+         condition nobody could see was the same one. */
+      { id:'licZone', group:'License', label:'Zone',
+        get:licZone,
+        set:function(v){
+          Store.set('licZone', v);
+          if(window.LicenseDetails) LicenseDetails.refresh();
+        },
+        options:[{ v:'current', t:'Current — key left, facts right' },
+                 { v:'a', t:'A — facts first' },
+                 { v:'b', t:'B — two columns' }] }
     ]
   });
   PageStates.sync();

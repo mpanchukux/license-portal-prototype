@@ -1952,6 +1952,11 @@ var NL = (function(){
     /* ⚠️ The Back control is built by `backRowHTML()` inside each step's own markup —
        see there for why it is not injected here any more. */
     if(body) body.scrollTop = 0;
+    /* ⚠️ The line above puts the body back to the top, and in this panel ASSIGNING a
+       scroll offset does not fire `scroll` (measured on the banner track the same day),
+       so the docked header would stay docked over an unscrolled step. Called, not
+       relied upon. */
+    syncHeaderDock();
     /* after the step is visible and laid out — a hidden step measures as zero */
     syncPinnedSummary();
   }
@@ -2258,10 +2263,32 @@ var NL = (function(){
        is the only thing carrying it */
     applyWizardPresent();
     scr.hidden = false;
+    syncHeaderDock();
     /* now that it has a layout, the stepper can be measured — see syncStepWidth */
     syncStepWidth();
     $('#nlClose').focus();
   }
+
+  /* ⚠️⚠️ THE HEADER DOCKS ON SCROLL, AND ONLY IN PRESENTATION D (2026-09-30, by
+     request). D's bands are transparent so the gradient runs from the top edge — which
+     means that at rest there is nothing for a hairline to separate, and under scroll
+     there is: content passes beneath the band. This is the portal top bar's own
+     behaviour, one mechanism copied deliberately (`wireMeshHeader` in shared.js, and
+     `body[data-mesh] .dtopbar.docked` in the stylesheet), so the two headers in this
+     product do not answer the same question two ways.
+     ⚠️ `.docked` goes on `#nlModal`, not on the header, because that is the node that
+     already carries `data-present` — the CSS then reads the two facts off one element
+     rather than pairing a state on the child with a mode on the parent.
+     ⚠️ THE THRESHOLD IS 4px, the top bar's number, not zero: a hairline that flickers on
+     the first pixel of an overscroll bounce is worse than one that arrives a moment late.
+     ⚠️ ONE LISTENER FOR THE LIFE OF THE PAGE. `#nlBody` is injected once with the rest of
+     the wizard and never replaced — only its CONTENTS are re-rendered per step — so there
+     is nothing to rebind and nothing to leak.
+     ⚠️ Synced on open as well as on scroll: `gotoStep` puts the body back to the top, and
+     a flow re-opened from a step that had been scrolled would otherwise show a docked
+     band over an unscrolled body. */
+  function syncHeaderDock(){ scr.classList.toggle('docked', body.scrollTop > 4); }
+  body.addEventListener('scroll', syncHeaderDock);
 
   /* ---- events (step content re-renders, so everything is delegated) ---- */
   // the stepper is rebuilt on every step, so delegate the jump back to a done step
