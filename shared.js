@@ -1174,6 +1174,15 @@ function settingsBodyHTML(){
      ⚠️ HIDDEN WHILE THE CARDS ARE UP, not merely inert: B is a fourth table ROW faded
      under a button, and a grid of cards has no such row. A control for something that
      is not on the screen is the thing this panel was cleaned up to stop doing. */
+  /* ---- what the banner slot does with several conditions. Scoped to Home like the
+     two groups above it: the banner is Home's, and on any other page this would be a
+     control for something not on the screen. */
+  if(c.home){
+    out += group('Home banner',
+      '<label class="sp-opt"><input type="radio" name="bannerLayout" value="stacked"' + (homeBannerLayout() === 'stacked' ? ' checked' : '') + '><span>Stacked \u2014 current (one band, the rest a count)</span></label>'
+      + '<label class="sp-opt"><input type="radio" name="bannerLayout" value="separate"' + (homeBannerLayout() === 'separate' ? ' checked' : '') + '><span>Separate \u2014 a card each, side by side</span></label>'
+      + '<div class="sp-hint">Same conditions, same order, same dismissal. Separate gives every card the full form \u2014 fact, fix and its own actions \u2014 and its own tone, so a red condition and a black one sit next to each other. One card fills the slot and the next one peeks; the pager sits above them. The Shape control in the page-state bar applies to the stacked form only.</div>');
+  }
   if(c.home && homeLayout() === 'table'){
     out += group('Home blocks',
       '<label class="sp-opt"><input type="radio" name="homeBlocks" value="a"' + (homeBlocks() === 'a' ? ' checked' : '') + '><span>A \u2014 current (5 rows, count in heading)</span></label>'
@@ -1221,6 +1230,13 @@ function settingsBodyHTML(){
         + (wizardPresent() === o[0] ? ' checked' : '') + '><span>' + o[1] + '</span></label>';
     }).join('')
       + '<div class="sp-hint">Desktop only \u2014 below 600px all three are the same full-screen sheet.</div>');
+    /* ⚠️ Scoped to `wizardPage`, like the frame above and for the same reason: you pick
+       a placement and THEN open a flow to look at it. */
+    out += group('Purchase Back',
+      '<label class="sp-opt"><input type="radio" name="nlBack" value="current"' + (nlBackPlace() === 'current' ? ' checked' : '') + '><span>Current (inside the plan card)</span></label>'
+      + '<label class="sp-opt"><input type="radio" name="nlBack" value="a"' + (nlBackPlace() === 'a' ? ' checked' : '') + '><span>A \u2014 in the top bar</span></label>'
+      + '<label class="sp-opt"><input type="radio" name="nlBack" value="b"' + (nlBackPlace() === 'b' ? ' checked' : '') + '><span>B \u2014 above the card</span></label>'
+      + '<div class="sp-hint">Never on step 1 in any of the three. A puts it left of the step rail, which stays centred whether it is there or not; B gives it its own row above the plan card. The rail\u2019s completed steps stay clickable in all three.</div>');
   }
 
   if(c.wizard){
@@ -1896,6 +1912,18 @@ function custVariant(){ return Store.get('custVariant') === 'a' ? 'a' : 'b'; }
    earlier session falls through to `c`, so nobody opens the wizard into a variant the
    panel can no longer show. */
 function wizardPresent(){ return Store.get('wizardPresent') === 'd' ? 'd' : 'c'; }
+/* ⚠️ WHERE THE PURCHASE FLOW'S `Back` SITS — three placements, `current` the default.
+   ⚠️ IT DOES NOT TOUCH THE STEP RAIL. A completed step is still a button that jumps
+   back (see renderSteps); this setting is only about the service control, and the two
+   ways back have coexisted since 09-29 on purpose. */
+function nlBackPlace(){ var v = Store.get('nlBack'); return (v === 'a' || v === 'b') ? v : 'current'; }
+/* ⚠️ WHICH FORM HOME'S BANNER TAKES when more than one condition is true. `stacked` is
+   the default and is what the slot has done since 2026-09-24: one band, the seniormost
+   condition, everything else folded into a count. `separate` gives each condition its
+   own card, side by side in the same slot.
+   ⚠️ It changes the FORM, not the data: both read `homeBannerVisible()`, in the same
+   seniority order, with the same dismissal rules. */
+function homeBannerLayout(){ return Store.get('bannerLayout') === 'separate' ? 'separate' : 'stacked'; }
 var WIZARD_PRESENTS = [['c', 'C \u2014 White header band (default)'],
                        ['d', 'D \u2014 Header on the gradient']];
 /* The wizard is the only surface carrying the attribute; it is set where the node is
@@ -2174,6 +2202,13 @@ function wireSettingsPanel(){
         Store.set('licZone', r.value);
         if(window.LicenseDetails) LicenseDetails.refresh();
         return;
+      /* the slot is rebuilt from the same data, so only the banner has to repaint —
+         and the page-state bar, whose Shape row is meaningless in the separate form */
+      case 'bannerLayout':
+        Store.set('bannerLayout', r.value);
+        if(window.renderHomeBanner) renderHomeBanner();
+        if(window.PageStates && PageStates.sync) PageStates.sync();
+        return;
       case 'homeBlocks':
         Store.set('homeBlocks', r.value);
         if(window.renderHome) renderHome();
@@ -2201,6 +2236,15 @@ function wireSettingsPanel(){
       case 'wizardPresent':
         Store.set('wizardPresent', r.value);
         applyWizardPresent();
+        return;
+      /* ⚠️ A FULL STEP RE-RENDER, not an attribute swap. Two of the three placements
+         put the control inside markup a step BUILDS (the plan card, or a row above it),
+         so CSS alone cannot move it — `refreshOpen` re-runs the current step, which is
+         the one call that rebuilds every host at once. Harmless when nothing is open:
+         it returns on a hidden screen. */
+      case 'nlBack':
+        Store.set('nlBack', r.value);
+        if(window.NL && NL.refreshOpen) NL.refreshOpen();
         return;
       // switching the Customize variant re-renders whichever flow is open
       case 'custVariant':

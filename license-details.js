@@ -87,10 +87,17 @@ var DETAILS_HTML = ''
 + '                <button class="btn btn--primary btn--md" id="changePlanBtn" data-modal="change-plan" data-page="sub">Change plan</button>'
 + '                <button class="btn btn--secondary btn--md" id="renewBtn" data-page="sub" hidden>Renew subscription</button>'
 + '                <!-- a perpetual does not renew and has nothing to cancel, so Change'
-+ '                     plan and the ⋮ menu are dropped. Its primary is `Manage`: the same'
-+ '                     wizard a subscription opens, committing as a one-time purchase'
-+ '                     with no proration and no renewal. -->'
-+ '                <button class="btn btn--primary btn--md" data-modal="add-ons" data-page="perp">Manage</button>'
++ '                     plan and the ⋮ menu are dropped. -->'
+/* ⚠️⚠️ AND ITS `Manage` IS NO LONGER HERE EITHER (2026-09-30, by request): it moved
+   down into the Plan block, where every other kind already carries it. The note that
+   used to sit in the Plan block argued the opposite — "the header ALREADY says Manage,
+   so a second one two inches below is the same word twice" — and that is still true;
+   what changed is WHICH of the two goes. Keeping the one in the Plan block puts the
+   control on the thing it edits and makes the header read the same on every kind: the
+   plan is managed from the Plan block, whatever the licence is.
+   ⚠️ A perpetual's zone 4 is now `Apply coupon` alone on the desktop, and on the phone
+   the coupon hides into the overflow — which is why the liveness test that collapses
+   this row had to learn about the ⋮ (see renderLicenseActions). */
 + '                <div class="menu" data-page="sub" id="headKebabMenu">'
 /* ⚠️ `menu`, NOT `secondary`, AND `btn--icon` (2026-09-28, by request). This was the
    one kebab in the product outside the model: without `btn--icon` it took the LABEL
@@ -289,15 +296,19 @@ var DETAILS_HTML = ''
 + '               below it now, so this heading says only what it is. -->'
 + '          <div class="section planblock">'
 + '              <div class="sh"><h3>Plan</h3><span class="spacer"></span>'
-+ '                <button class="btn btn--secondary btn--md" data-modal="add-ons" data-page="sub">Manage</button>'
+/* ⚠️⚠️ ONE `Manage` FOR EVERY KIND (2026-09-30, by request), so no `data-page`. It was
+   `data-page="sub"` and a perpetual's Manage lived up in the header instead; the block
+   that owns the plan now owns the control that changes it, whatever the licence is.
+   ⚠️ THE GRANT IS HIDDEN BY ID, NOT BY KIND. A grant is perpetual-LIKE, so it used to
+   be caught by the same `data-page` pass and then taken back out by `renderGrantChrome`;
+   with the attribute gone it needs its own handle, and a grant buys no capacity at all.
+   Hence `#planManageBtn` and one line in `renderGrantChrome`.
+   ⚠️ `secondary`, the shape it already had here — a perpetual's was `primary` because it
+   was the header's only action. In this block it sits beside a heading, not in zone 4. */
++ '                <button class="btn btn--secondary btn--md" id="planManageBtn" data-modal="add-ons">Manage</button>'
 + '                <!-- inferred: capacity is bought once, so this opens a one-time'
 + '                     purchase flow — not the recurring Manage add-ons flow, which'
 + '                     computes proration and a new monthly total. -->'
-+ '                <!-- ⚠️ NO perpetual Manage here. On a subscription the header says'
-+ '                     `Change plan` and this says `Manage` — two different actions, two'
-+ '                     words. On a perpetual the header ALREADY says `Manage` and opens'
-+ '                     this very wizard, so a second one two inches below it was the same'
-+ '                     word for the same thing twice on one screen. -->'
 + '              </div>'
 + ''
 + '              <!-- ⚠️ THE SCHEDULED-CHANGE BANNER USED TO BE HERE (#schedLine). It'
@@ -670,9 +681,10 @@ function renderPeriodRow(lic, pk){
    column beside this one already prints `Active until Sep 05, 2026`, which is where a
    date belongs. The chip was saying it twice, two columns apart. */
 /* ⚠️ BLOCKED IS A STATUS, and it is the one exception to "attention states live in the
-   banner, not the chip". The rule holds for payment failed, expiring updates and
-   awaiting check-in: the licence still works, and the banner says what to do before it
-   stops. Over the instance limit is different — the banner says the licence IS blocked
+   banner, not the chip". The rule holds for payment failed and expiring updates: the
+   licence still works, and the banner says what to do before it stops. ⚠️ `awaiting
+   check-in` used to be named here too and is no longer, because it no longer HAS a
+   banner (2026-09-30) — it is a status the chip states and nothing interrupts about. Over the instance limit is different — the banner says the licence IS blocked
    right now, and `Active` beside that sentence contradicts it outright. This cell
    answers "is this licence alive"; there, the answer is no. `statusMark` makes exactly
    that distinction, which is why it can be the one builder for both surfaces. */
@@ -756,13 +768,25 @@ function alertAction(short, long, attrs){
 /* The running version against the latest released, on the licence itself — the same two
    facts the Licenses table shows, in the same order and with the same rule: the licence
    reports the LOWEST of its instances, and says so when they disagree.
-   ⚠️ Hidden, not blank, when nothing has reported: a licence waiting for its first
-   check-in has no version, and an empty row under a caps heading reads as a bug. */
+   ⚠️⚠️ ALWAYS PRESENT, AND A DASH WHEN NOTHING HAS REPORTED (2026-09-30, by request).
+   This used to hide the whole column on the argument that "an empty row under a caps
+   heading reads as a bug" — but hiding it means the header has three facts on one
+   licence and two on the next, so the reader cannot learn where a fact lives. An em
+   dash is the same answer the Licenses table has always given in this column
+   (`versionCell`), and it says something the absence did not: there IS a version fact,
+   and nothing has reported one yet.
+   ⚠️ `.muted`, the table's own class for it, so the two surfaces say "no value" the
+   same way rather than inventing a second grey. */
 function renderLicenseVersion(lic){
   var col = $('#verCol'); if(!col) return;
   var v = licenseVersion(lic);
-  if(v == null){ col.hidden = true; return; }
   col.hidden = false;
+  if(v == null){
+    var dash = '<span class="muted">&mdash;</span>';
+    var e0 = $('#licVersion'); if(e0) e0.innerHTML = dash;
+    var m0 = $('#licVersionMob'); if(m0) m0.innerHTML = dash;
+    return;
+  }
   var behind = cmpVersion(v, LATEST_VERSION) < 0;
   /* ⚠️ THE SAME MARK AS THE TABLE (2026-09-25). This line printed a bare number and a
      `latest 3.9.4` beside it and carried no mark at all — so the one surface a reader
@@ -777,6 +801,28 @@ function renderLicenseVersion(lic){
   var el = $('#licVersion'); if(el) el.innerHTML = txt;
   var mob = $('#licVersionMob'); if(mob) mob.innerHTML = txt;
 }
+/* ⚠️⚠️ THE PANEL'S OWN COPY OF THE TONE MAPPING (2026-09-30, by request). The three
+   tones are Home's — red already broken, black will break on a known date, quiet
+   nothing is broken — and this surface uses two of them: it has no quiet condition,
+   because a licence with nothing wrong shows no banner at all here.
+     red   — over instance limit · payment failed · updates ended
+     black — updates end in N days · subscription canceled
+   ⚠️ `over_limit` IS RED BECAUSE `blocked` IS RED ON HOME. Same condition, two scopes;
+   the brief names them as one, so they must not read as two kinds of trouble. The other
+   table is `BANNER_TONE` in components.js — a condition that changes tone changes in
+   both, and there is no shared key to make that automatic because these branches are
+   derived (a date comparison) rather than stored states.
+   ⚠️ `awaiting_checkin` IS ABSENT ON PURPOSE and is not a missing entry: that branch was
+   deleted earlier today and nothing renders a banner for it. Checked by grep before
+   writing this table — the status still exists, the banner does not. */
+function alertTone(kind){
+  return (kind === 'over_limit' || kind === 'payment_failed' || kind === 'updates_expired')
+    ? 'red' : 'black';
+}
+/* ⚠️ The class carries BOTH tones explicitly, so no branch renders on the base `.alert`
+   with no ground at all — a forgotten tone would be a banner with layout and no colour,
+   which reads as a rendering failure rather than as a missing case. */
+function setAlertTone(al, kind){ al.className = 'alert tone-' + alertTone(kind); }
 function renderLicenseAlert(lic){
   var al = $('#subAlert'); if(!al) return;
   var t = $('.atxt', al), st = lic.status;
@@ -799,8 +845,9 @@ function renderLicenseAlert(lic){
      the first rather than stacked under it. Two banners is two problems competing for
      the same glance and pushing the licence itself off screen; a clause is enough to
      say "and there is also this", and the reader can act on the blocking one first.
-     Order of seriousness: blocked → payment failed → updates expiring → cancelled →
-     awaiting check-in. */
+     Order of seriousness: blocked → payment failed → updates expiring → cancelled.
+     ⚠️ `awaiting check-in` used to close this list and is no longer a banner at all
+     (2026-09-30, by request) — see the note where its branch was. */
   function alsoClause(skip){
     var also = [];
     if(skip !== 'payment_failed' && lic.status === 'payment_failed') also.push('a failed payment');
@@ -824,9 +871,14 @@ function renderLicenseAlert(lic){
        table's tooltip. So the claim is still made — it is no longer made twice, and the
        banner is now the one that explains rather than the one that asserts. */
     t.innerHTML = '<span class="amsg"><b>Over the production instance limit.</b> '
-      + instRunning(lic) + ' running, ' + instAllowed(lic) + ' allowed on this plan. '
+      /* ⚠️ `allowed`, NOT `allowed on this plan` (2026-09-30, by request). The plan is
+         named twice above this banner already — the title carries it and the Plan block
+         repeats it with its table — so the qualifier was the third mention in one
+         screen and the sentence is about the two numbers. */
+      + instRunning(lic) + ' running, ' + instAllowed(lic) + ' allowed. '
       + DETACH_HINT
       + alsoClause('over_limit') + '</span>';
+    setAlertTone(al, 'over_limit');
       /* ⚠️ NO ACTION ON THIS ONE (2026-09-24). It carried `Manage instances`, and the
          note here argued for it — but that argument was about which of three Manages it
          was, not about whether the banner needed one. You are already ON this licence:
@@ -853,10 +905,16 @@ function renderLicenseAlert(lic){
          the single-file era's row router, reused as if it were a mechanism. The one
          banner whose action matters most had no handler at all. It now opens the card
          modal OVER this licence: the person stays where the problem is. */
-      + alertAction('Update', 'Update payment method', 'data-paycard')
-      /* the third contextual support route: a failed payment is the other place
-         people get stuck with nothing left to try */
-      + '<a class="link alert-help" href="' + EXT.support + '" target="_blank" rel="noopener">Contact support' + EXTSVG + '</a>';
+      /* ⚠️⚠️ `Contact support` IS GONE (2026-09-30, by request), and with it the only
+         banner in the panel that offered two routes. It was argued as "the third
+         contextual support route — a failed payment is the other place people get stuck
+         with nothing left to try", and that argument loses to the shape every other
+         branch now has: one banner, one action, at the right edge. A second link beside
+         the primary also competed with it at exactly the moment the reader has one
+         obvious thing to do. Support is still reachable from the footer and the account
+         menu; this was a shortcut, not the route. */
+      + alertAction('Update', 'Update payment method', 'data-paycard');
+    setAlertTone(al, 'payment_failed');
     al.hidden=false;
   }
   /* ⚠️ EXPIRED IS ITS OWN BRANCH, above "expiring", and it is DERIVED from the date
@@ -871,6 +929,7 @@ function renderLicenseAlert(lic){
     t.innerHTML = '<span class="amsg"><b>Software updates ended on ' + fmtDate(lic.event)
       + '.</b> ' + UPDATES_LOSS + alsoClause('updates_expired') + '</span>'
       + alertAction('Renew updates', 'Renew software updates', 'data-renewupdates="' + esc(lic.id) + '"');
+    setAlertTone(al, 'updates_expired');
     al.hidden=false;
   }
   else if(st==='updates_expiring'){
@@ -886,6 +945,7 @@ function renderLicenseAlert(lic){
     t.innerHTML = '<span class="amsg"><b>Software updates end in ' + daysUntil(lic.event)
       + ' days (on ' + fmtDate(lic.event) + ').</b> ' + UPDATES_LOSS + '</span>'
       + alertAction('Renew updates', 'Renew software updates', 'data-renewupdates="' + esc(lic.id) + '"');
+    setAlertTone(al, 'updates_expiring');
     al.hidden=false;
   }
   /* A cancelled subscription's banner states a fact and has no action of its own:
@@ -894,21 +954,22 @@ function renderLicenseAlert(lic){
   else if(st==='canceled'){
     t.innerHTML = '<span class="amsg"><b>Subscription canceled.</b> It stays active until '
       + fmtDate(lic.event) + '. After that its instances will stop.</span>';
+    setAlertTone(al, 'canceled');
     al.hidden=false;
   }
   // the key exists but nothing has used it yet — the one thing left to do is activate
-  else if(st==='awaiting_checkin'){
-    /* ⚠️ ONE ACTION, AT THE RIGHT EDGE, ON BOTH BREAKPOINTS (2026-09-30, by request).
-       This branch used to carry two routes to the same page: an in-sentence link for the
-       desktop and a phone-only band button, with `.inlineact` hidden at ≤600 so only one
-       showed at a time. Now that every banner puts its action on the right, this one has
-       no reason to be the exception — and one control is one thing to keep working. */
-    t.innerHTML = '<span class="amsg"><b>No instance has checked in yet.</b> The license key was issued '
-      + fmtDate(lic.created) + ' \u2014 activate an instance with it and it appears here.</span>'
-      + '<a class="btn btn--text btn--md aact" href="' + EXT.install + '" target="_blank" rel="noopener">'
-      +   '<span class="aact-long">Installation guide' + EXTSVG + '</span><span class="aact-short">Set up' + EXTSVG + '</span></a>';
-    al.hidden=false;
-  }
+  /* ⚠️⚠️ THE `awaiting_checkin` BRANCH IS GONE (2026-09-30, by request), not hidden.
+     It said "No instance has checked in yet" and pointed at the installation guide —
+     which is not a fault, it is the ordinary first minute of a licence, and the panel
+     already says the same thing twice in calmer places: the sentence under the key
+     ("Enter this key in your installation to activate it", with the same link) and the
+     Instances tab's own empty state. A banner is for something being wrong.
+     ⚠️ DELETED RATHER THAN COMMENTED OUT, and its row in the states strip below went
+     with it in the same pass — a branch nothing can reach is the thing that looks alive
+     in a grep and is not. A licence in that state now falls through to `No banner`,
+     which is where the strip counts it.
+     ⚠️ Nothing else changes for those licences: the status mark still says what they
+     are, and `awaiting_checkin` is still a status the rest of the product reads. */
   else al.hidden = true;
 }
 /* ⚠️ `renderScheduled()`, `SCHEDSVG` and the `Cancel this change` handler ARE GONE.
@@ -943,11 +1004,28 @@ function renderLicenseActions(lic){
     kebab.hidden = phone ? false : (isPerp || canceled);
   }
   /* zone 4 owns the hairline that closes the header block, so a licence with no
-     primary action (a grant) must drop the whole row, rule included. */
+     action at all must drop the whole row, rule included.
+     ⚠️⚠️ THE ⋮ COUNTS AS AN ACTION NOW (2026-09-30), and it has to since the perpetual
+     `Manage` moved to the Plan block. The test used to exclude `headKebabBtn` by name,
+     which was right while every kind had a primary beside it: the overflow alone was
+     not worth a row. On the phone a perpetual's only remaining zone-4 child is the
+     coupon button, which that breakpoint hides into the overflow — so the row would
+     have collapsed and taken the ⋮ with it, and the ⋮ is the perpetual's ONLY home at
+     that width for Reveal key, Installation instructions and the label pencil (see the
+     note above). Collapsing on "no primary" would have deleted the menu to tidy away
+     the row it lives in.
+     ⚠️ AND IT GIVES THE GRANT ITS ⋮ BACK ON THE PHONE, which it had been losing the
+     same way and for longer — `renderGrantChrome` hides the coupon, so the row went
+     empty and the menu went with it. Same defect, found by making the perpetual walk
+     into it; fixed once, for both.
+     ⚠️ NOT A REGRESSION OF THIS PASS, and measured rather than reasoned: the HEAD build
+     was served to the mirror and `?id=B15` opened at 375 — `.headactions` came back
+     `class="headactions empty"`, `display:none`, and `#headKebabBtn` with `hidden`
+     FALSE and a box of 0×0. The menu was in the DOM, unhidden, and unreachable. */
   var zone4 = $('#appView .headactions');
   if(zone4){
     var live = $$('.btn', zone4).some(function(b){
-      return !b.hidden && b.id !== 'headKebabBtn' && getComputedStyle(b).display !== 'none';
+      return !b.hidden && getComputedStyle(b).display !== 'none';
     });
     zone4.classList.toggle('empty', !live);
   }
@@ -1004,9 +1082,12 @@ function renderGrantChrome(lic){
      ⚠️ The ICON still differs and is still set by renderLicenseDetails: a grant has no
      updates term, so it gets no info icon. */
   var coupon = $('#couponBtn'); if(coupon) coupon.hidden = isGrant;
-  // the data-page pass above already restored these for a perpetual licence,
-  // so a grant only has to take them back out
-  if(isGrant) $$('#appView [data-page="perp"][data-modal="add-ons"]').forEach(function(b){ b.hidden = true; });
+  /* ⚠️ BY ID SINCE 2026-09-30. This read `[data-page="perp"][data-modal="add-ons"]` —
+     the header's perpetual `Manage`, which no longer exists: the one Manage is in the
+     Plan block and carries no `data-page`, so nothing restores or hides it by kind and
+     the grant has to name it. A selector that matches nothing fails silently, which is
+     how the grant would have grown a capacity button nobody meant to give it. */
+  var planManage = $('#planManageBtn'); if(planManage) planManage.hidden = isGrant;
   var invEmpty = $('#grantInvEmpty'); if(invEmpty) invEmpty.hidden = !isGrant;
   // the invoice block is no longer keyed by data-page (one table serves sub and perp),
   // so the grant hides it by id
@@ -1241,10 +1322,9 @@ function renderInstances(lic){
     ? pageSlice(dev, licInstPage.dev).map(instRow).join('')
     : emptyStateRow(6, {
         title:'No development instances',
-        line:'A development instance runs this same license on a deployment that is not '
-           + 'serving anyone — a staging server, a test rig, a local build — so changes '
-           + 'can be tried before they reach production. It is counted separately, so '
-           + 'running one never uses up a production instance. '
+        line:'A development instance uses the same license on a deployment that serves '
+           + 'no one: a staging server, test rig, or local build where you try changes '
+           + "before production. It doesn't count against your production instances. "
            + '<a class="link" href="' + EXT.install + '" target="_blank" rel="noopener">'
            + 'How to activate an instance' + EXTSVG + '</a>',
         action: button({ variant:'secondary', size:'md', label:'Manage add-ons',
@@ -1930,7 +2010,11 @@ var LicenseDetails = (function(){
     return host ? host.getAttribute('data-lic') : null;
   }
 
-  /* the seven branches of `renderLicenseAlert`, in its own order of seriousness */
+  /* the six branches of `renderLicenseAlert`, in its own order of seriousness
+     ⚠️ SIX, not seven, since 2026-09-30: `Awaiting check-in` stopped being a banner, so
+     its row went from this strip in the same pass. Licences in that state are counted by
+     `No banner` now, which is where they land — the predicate below dropped the status
+     from its exclusion list for exactly that reason. */
 /* ⚠️⚠️ `No banner` IS FIRST (2026-09-29, by request), and it is the ONLY re-ordering:
    the six that follow are still in `renderLicenseAlert`'s own order of seriousness.
    The list used to read most-serious-first and end on "nothing is wrong", which put
@@ -1940,14 +2024,13 @@ var LicenseDetails = (function(){
   var STATES = [
     ['none',             'No banner',           function(l){
       return !instOverLimit(l) && l.status !== 'payment_failed' && l.status !== 'canceled'
-        && l.status !== 'awaiting_checkin' && l.status !== 'updates_expiring'
+        && l.status !== 'updates_expiring'
         && !(hasUpdatesTerm(l) && daysUntil(l.event) < 0); }],
     ['over_limit',       'Over instance limit', function(l){ return instOverLimit(l); }],
     ['payment_failed',   'Payment failed',      function(l){ return !instOverLimit(l) && l.status === 'payment_failed'; }],
     ['updates_expired',  'Updates ended',       function(l){ return !instOverLimit(l) && l.status !== 'payment_failed' && hasUpdatesTerm(l) && daysUntil(l.event) < 0; }],
     ['updates_expiring', 'Updates ending',      function(l){ return !instOverLimit(l) && l.status === 'updates_expiring'; }],
-    ['canceled',         'Canceled',            function(l){ return l.status === 'canceled'; }],
-    ['awaiting_checkin', 'Awaiting check-in',   function(l){ return l.status === 'awaiting_checkin'; }]
+    ['canceled',         'Canceled',            function(l){ return l.status === 'canceled'; }]
   ];
   var TYPES = [
     ['Subscription', 'Subscription', function(l){ return l.type === 'Subscription' && l.tier !== 'free'; }],
@@ -1985,7 +2068,7 @@ var LicenseDetails = (function(){
     when:onScreen,
     tabs:[
       { id:'state', label:'State',
-        hint:'The seven branches of the panel’s own banner, in its order of seriousness. Picking one opens a licence that really carries it — a state no licence has is disabled with its count.',
+        hint:'The six branches of the panel’s own banner, in its order of seriousness. Picking one opens a licence that really carries it — a state no licence has is disabled with its count.',
         get:currentOf(STATES), set:pickFrom(STATES),
         options:function(){ return group(STATES); } },
 

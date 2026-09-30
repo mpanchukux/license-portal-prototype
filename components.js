@@ -1893,8 +1893,13 @@ var pageDirty = false;
    button, Invoices gets a quiet link back to it, and Activity gets no action at all.
    Four buttons saying different words for the same next step would be four decisions
    where there is one. */
+/* ⚠️ `.on-tint` (2026-09-30): this box is filled `--surface-quiet`, so a secondary
+   inside it — the Development tab's `Manage add-ons` is the one that exists today —
+   stands on grey and has to turn white. The surface axis is a fact about the place;
+   the place is here. Found by auditing every secondary in the product against its
+   nearest painting ancestor, not by noticing it. */
 function emptyStateHTML(o){
-  return '<div class="emptybox eb">'
+  return '<div class="emptybox eb on-tint">'
     + '<div class="eb-t">' + o.title + '</div>'
     + (o.line ? '<p class="eb-p">' + o.line + '</p>' : '')
     + (o.action ? '<div class="eb-a">' + o.action + '</div>' : '')
@@ -2912,15 +2917,146 @@ function cardLabel(){
    rows you would act on. */
 var DETACH_HINT = 'This usually happens after moving a deployment to a new server. '
   + 'If that is what happened, deactivate the old one.';
-function bannerIcon(blocking){
-  /* a triangle when something is stopped, a circle when it is only coming */
-  return icon(blocking ? 'alert-triangle' : 'alert-circle', { cls:'gb-ic' });
+/* ⚠️⚠️ THE TONE IS A PROPERTY OF THE CONDITION (2026-09-30, by request), and it is
+   declared here — beside `BANNER_BLOCKING` and `BANNER_RETURN`, which key on the same
+   eight states — so the three tables that describe a condition sit together.
+     red    — already broken, or the money did not go through
+     black  — will break on a known date
+     quiet  — nothing is broken
+   ⚠️ `blocked` IS RED, and `Over instance limit` in the licence panel is red with it:
+   the brief names them as the same condition at two scopes, so they cannot read as two
+   different kinds of trouble. The panel's own copy of the mapping is in
+   `renderLicenseAlert`; if a condition ever changes tone it has to change in both.
+   ⚠️ NOT THE SAME SPLIT AS `BANNER_BLOCKING`. That one answers "may this be dismissed"
+   and covers blocked · payment_failed · no_card; `updates_expired` is red here and not
+   blocking there, because a term that has already run out is broken but is not stopping
+   you from working today. Two questions, two tables, deliberately. */
+var BANNER_TONE = {
+  blocked:'red', payment_failed:'red', no_card:'red', updates_expired:'red',
+  card_expiring:'black', updates_14:'black', updates_30:'black',
+  grant:'quiet'
+};
+function bannerTone(state){ return BANNER_TONE[state] || 'black'; }
+/* ⚠️⚠️ THE MARK FOLLOWS THE TONE, NOT A SEPARATE FLAG (2026-09-30, by request). It read
+   `blocking ? triangle : circle`, which is the DISMISSAL question — so an ended updates
+   term drew the calm circle while being the same kind of trouble as a failed payment,
+   and a card expiring in 30 days drew it while being a deadline. Triangle on red and on
+   black, circle on quiet: the shape now says "something is wrong or will be" versus
+   "this is just news", which is what the three tones say. */
+function bannerIcon(tone){
+  return icon(tone === 'quiet' ? 'alert-circle' : 'alert-triangle', { cls:'gb-ic' });
+}
+/* ⚠️⚠️ THE SEPARATE LAYOUT (2026-09-30, by request) — one card per condition, side by
+   side in the slot the single band occupies. It is a SECOND FORM of the same data:
+   `homeBannerVisible()`, the same seniority order, the same dismissal rules.
+
+   ⚠️⚠️ AND IT ANSWERS THE TWO DECISIONS IT LOOKS LIKE IT REVERSES, rather than
+   overriding them. Both are from 2026-09-24 and both are about STACKING:
+     · "three stacked BANNERS would push the licence list off the screen" — these are
+       not stacked. The slot stays one banner tall and the axis is horizontal, so the
+       cost the old rule was protecting against is not paid.
+     · "the several-alerts shape is deliberately poorer, because an action button beside
+       a list acts on ONE of them while looking like it settles the banner" — the
+       objection was to an action DETACHED from the question it answers. Here every card
+       carries its own fact, its own fix and its own buttons, so the action is beside its
+       question. That is the whole point of the layout, and it is the condition the old
+       argument set for having actions at all.
+   Neither note is deleted: the stacked form is still the default and both still hold
+   for it.
+
+   ⚠️ NO SENIORMOST-WINS RULE HERE. The stacked band takes one tone because it is one
+   statement; these are several statements, so each card takes its own — a red condition
+   and a black one side by side is the layout working, not a bug.
+   ⚠️ NO `IntersectionObserver` for the position readout: it does not fire AT ALL in the
+   embedded panel (measured 2026-09-29), so the pager reads `scrollLeft` arithmetic on a
+   scroll listener instead. That is also the cheaper answer — one number, no observer. */
+function bannerCardHTML(c){
+  var copy = homeBannerCopy(c);
+  if(!copy) return '';
+  var tone = bannerTone(c.state);
+  /* the dismissal rule is the condition's own, unchanged: a blocking condition is not
+     something a reader gets to file away, so it carries no ✕ in either layout */
+  var x = BANNER_BLOCKING[c.state] ? ''
+    : '<button class="btn btn--ghost btn--md btn--icon gb-x" data-bannerx="' + esc(bannerKey(c))
+      + '" aria-label="Dismiss"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-x"></use></svg></button>';
+  return '<div class="gbanner homebanner hbcard tone-' + tone + '">'
+    + bannerIcon(tone)
+    + '<div class="hb-body">'
+    +   '<p class="hb-fact">' + copy.fact + '</p>'
+    +   '<p class="hb-todo">' + copy.todo + '</p>'
+    +   '<div class="hb-acts">' + copy.act + '</div>'
+    + '</div>'
+    + x
+    + '</div>';
+}
+function renderHomeBannerSeparate(slot, items){
+  slot.className = 'hbcar';
+  /* ⚠️ The pager is rendered even for a single card, and disabled — the same honest
+     state the page-state bar uses. A control that appears only sometimes is a layout
+     that moves under the reader as conditions clear. */
+  var many = items.length > 1;
+  slot.innerHTML =
+    '<div class="hbcar-ctl">'
+    /* ⚠️ ICON-ONLY IS DERIVED FROM AN EMPTY LABEL in `button()`, and the name comes from
+       `ariaLabel` — passing a label here would have printed the words `Previous alert`
+       on a 26px chevron. `disabled` is the option, not a string in `attrs`: the builder
+       writes `aria-disabled` alongside it, which a hand-written attribute would not. */
+    +   button({ variant:'secondary', size:'sm', icon:'chevron-left',
+                 ariaLabel:'Previous alert', cls:'hbcar-prev',
+                 disabled:!many, attrs:'data-hbcar="prev"' })
+    +   button({ variant:'secondary', size:'sm', icon:'chevron-right',
+                 ariaLabel:'Next alert', cls:'hbcar-next',
+                 disabled:!many, attrs:'data-hbcar="next"' })
+    +   '<span class="hbcar-pos" aria-live="polite">1 / ' + items.length + '</span>'
+    + '</div>'
+    + '<div class="hbcar-track" id="hbcarTrack" tabindex="0" role="group" aria-label="Alerts">'
+    +   items.map(bannerCardHTML).join('')
+    + '</div>';
+  slot.hidden = false;
+  wireBannerCarousel(slot, items.length);
+}
+/* one listener per render, on a node the render just created — nothing to unbind
+   ⚠️⚠️ THE PAGER JUMPS, IT DOES NOT ANIMATE, AND THAT IS MEASURED. On a track with
+   `scroll-snap-type: x mandatory`, EVERY smooth scroll in this engine is cancelled and
+   the track returns to where it started: `scrollBy({left:step, behavior:'smooth'})`
+   ended at 0, and so did CSS `scroll-behavior:smooth` with `scrollLeft` assigned, twice
+   in a row. The same call with `behavior:'auto'` landed exactly on 856. So the button
+   sets `scrollLeft` to a snap point and the snapping agrees with it instead of fighting
+   it. Not a workaround that breaks elsewhere — an instant jump is correct in any
+   engine; what it gives up is the animation, and only here.
+   ⚠️ The INDEX is the unit, not a delta. `scrollBy` accumulates rounding across taps
+   and drifts off the snap points; `i * step` is absolute, so tap five and tap-back four
+   returns to exactly card two. */
+function wireBannerCarousel(slot, total){
+  var track = $('#hbcarTrack', slot), pos = $('.hbcar-pos', slot);
+  if(!track) return;
+  function step(){ var card = track.firstElementChild; return card ? card.offsetWidth + 12 : track.clientWidth; }
+  function index(){ return Math.min(total - 1, Math.max(0, Math.round(track.scrollLeft / step()))); }
+  function sync(){
+    var i = index();
+    if(pos) pos.textContent = (i + 1) + ' / ' + total;
+    var prev = $('[data-hbcar="prev"]', slot), next = $('[data-hbcar="next"]', slot);
+    if(prev) prev.disabled = i <= 0;
+    if(next) next.disabled = i >= total - 1;
+  }
+  /* the swipe and the pager are one mechanism: both move `scrollLeft`, and the readout
+     is driven by the scroll itself rather than by whichever of them caused it */
+  track.addEventListener('scroll', sync);
+  slot.addEventListener('click', function(e){
+    var b = e.target.closest('[data-hbcar]');
+    if(!b) return;
+    var i = Math.min(total - 1, Math.max(0, index() + (b.getAttribute('data-hbcar') === 'next' ? 1 : -1)));
+    track.scrollLeft = i * step();
+    sync();
+  });
+  sync();
 }
 function renderHomeBanner(){
   var slot = $('#homeBanner');
   if(!slot) return;
   var items = homeBannerVisible();
-  if(!items.length){ slot.hidden = true; slot.innerHTML = ''; return; }
+  if(!items.length){ slot.hidden = true; slot.innerHTML = ''; slot.className = ''; return; }
+  if(homeBannerLayout() === 'separate'){ renderHomeBannerSeparate(slot, items); return; }
   var blocking = items.some(function(c){ return BANNER_BLOCKING[c.state]; });
   /* ⚠️ The ✕ dismisses THE ONE ON SCREEN, and only it. While the banner listed three,
      one ✕ closing all three was the honest reading of "I have seen these"; with a single
@@ -2980,8 +3116,19 @@ function renderHomeBanner(){
       + '<p class="hb-todo">' + copy.todo + '</p>'
       + '<div class="hb-acts">' + copy.act + '</div>';
   }
-  slot.className = 'gbanner homebanner' + (blocking ? ' is-blocking' : '');
-  slot.innerHTML = bannerIcon(blocking)
+  /* ⚠️⚠️ ONE TONE FOR THE WHOLE BANNER, TAKEN FROM THE SENIORMOST CONDITION. `items` is
+     already sorted by seriousness, so `items[0]` is that condition — the same entry the
+     copy comes from. Nothing inside is coloured per row, and `alsoClause`-style
+     additions bring no tone of their own: a band in two colours would be asking the
+     reader to rank the problems themselves, which is the job the sort already did.
+     ⚠️ `is-blocking` IS GONE FROM THIS LINE. Grepped before removing: no rule in
+     `styles.css` and no script ever read it, so it was a class that looked like state
+     and was not — and leaving it beside a tone class that IS read is how the next
+     person picks the wrong one. `blocking` itself is untouched and still decides
+     dismissal, three lines up. */
+  var tone = bannerTone(items[0].state);
+  slot.className = 'gbanner homebanner tone-' + tone;
+  slot.innerHTML = bannerIcon(tone)
     + '<div class="hb-body">' + body + '</div>'
     + (dismissKeys.length
         ? '<button class="btn btn--ghost btn--md btn--icon gb-x" data-bannerx="' + esc(dismissKeys.join('|')) + '" aria-label="Dismiss"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-x"></use></svg></button>'

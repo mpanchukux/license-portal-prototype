@@ -75,11 +75,14 @@ function renderInvoicesPage(){
       title:'No invoices yet.',
       /* ⚠️ Only ever reached with zero invoices in the account, and a purchase now
          writes one — so this can no longer be read by someone who has just paid. */
-      line:'Your first invoice appears here as soon as a license is charged.',
-      /* ⚠️ A quiet LINK, not a button. Buying is one decision and it belongs to one
-         page; a primary here would be a second button for the same next step, phrased
-         differently, on a page that fills itself as a side effect of it. */
-      action:'<a class="link" href="licenses.html">Go to Licenses</a>'
+      /* ⚠️⚠️ NO ACTION (2026-09-30, by request). `Go to Licenses` stood here as a quiet
+         link, argued as "buying is one decision and it belongs to one page". The same
+         argument finishes the other way: if the decision belongs to another page, this
+         block does not need a second door to it — Licenses is one tap away in the
+         navigation that is already on screen, and an empty state whose only offer is
+         "go somewhere else" is a dead end dressed as a next step. The sentence says
+         what will fill the page; nothing here has to be done. */
+      line:'Your first invoice appears here as soon as a license is charged.'
     });
     invPage.total = 0;
   }

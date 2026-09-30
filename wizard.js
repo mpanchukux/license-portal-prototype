@@ -684,7 +684,63 @@ var NL = (function(){
       else out += '<div class="nl-step' + (cur ? ' is-cur' : '') + '"'
         + (cur ? ' aria-current="step"' : '') + '>' + inner + '</div>';
     });
-    $('#nlSteps').innerHTML = '<div class="nl-steps">' + out + '</div>';
+/* ⚠️⚠️ VARIANT A'S BACK IS AN OUT-OF-FLOW CHILD OF THE RAIL, and that is the whole
+   reason the rail does not move when it appears. The brief asks for the rail to stay
+   optically centred at every step, present or not — and `.nl-stepbar` is centred by
+   `left:50%` plus a translate, so ANY in-flow sibling would widen the centred box and
+   slide the rail right by half its own width on the step-1 → step-2 move. Absolutely
+   positioned at `right:100%` of `.nl-steps`, it hangs off the rail's left edge and
+   contributes nothing to its width.
+   ⚠️ INSIDE `.nl-steps`, NOT inside `.nl-stepbar`: the bar carries 40px+ of padding in
+   presentations C and D, so `right:100%` there would have parked it outside the padding
+   box, a gutter away from the rail rather than beside it.
+   ⚠️ `text`, not `secondary`: it must read quieter than `2 Capacity` — a service
+   control, not a peer of the steps. `md` because the ✕ in this same bar is `md`, so the
+   header band already carries that height. */
+    var barBack = (nlBackPlace() === 'a' && stepIdx() >= 1)
+      ? button({ variant:'text', size:'md', icon:'chevron-left', label:'Back',
+                 cls:'nl-barback', attrs:'data-nlback' })
+      : '';
+    $('#nlSteps').innerHTML = '<div class="nl-steps">' + barBack + out + '</div>';
+    /* ⚠️⚠️ THE STEPPER PUBLISHES ITS OWN WIDTH, and step 1's product switcher is sized
+       from it (`--nl-stepw`, see styles.css). The brief asked for "the switcher as wide
+       as the stepper", and the stepper is CONTENT-sized: a five-step purchase is wider
+       than a three-step Manage add-ons, so a number copied into the stylesheet would
+       have been right for one flow only. Written here because this is the one place
+       that knows the row has just changed.
+       ⚠️ Measured after the write, not before — `innerHTML` above is what determines it.
+       ⚠️ A reflow per step change, and only per step change: this runs once in
+       `gotoStep`, not on the re-renders a control triggers inside a step. */
+    syncStepWidth();
+  }
+  /* ⚠️ `scr` IS `#nlModal` ITSELF — it is the `.fs-screen`, not something inside it. The
+     first spelling of this looked for a descendant and found nothing, which is the
+     failure mode a custom property has: no error, no style, the fallback quietly
+     standing in for the measurement.
+     ⚠️⚠️ AND A HIDDEN SCREEN MEASURES ZERO. `renderSteps` runs from `gotoStep`, which
+     `open()` calls BEFORE `scr.hidden = false` — so the first write of the flow was
+     `0px`, and `width:0` is not a fallback, it is a collapsed switcher. `var(…, 444px)`
+     never got a chance to stand in, because the property WAS set. Hence the guard on
+     `offsetWidth` and the second call after the screen is shown: skip the measurement
+     that cannot be made rather than publish it. Same family as the rAF-in-a-hidden-tab
+     note in `syncStickyAction`. */
+  /* ⚠️⚠️ `scrollWidth`, THE CONTENT, NOT `offsetWidth`, THE BOX — and the difference is
+     not academic. Measured at 944 with five steps: the row's box is 444 while the steps
+     themselves run 250 → 1008, i.e. 758 wide. The box is 444 because the bar constrains
+     it; the stepper OVERFLOWS that box and the last step is clipped by the window (an
+     older defect of the five-step flow — see the debt list). "As wide as the stepper"
+     is about what the eye measures, so the first spelling of this, `offsetWidth`, gave a
+     switcher exactly half the length of the row it was supposed to match.
+     ⚠️ The two are equal whenever the stepper fits, which is every four-step flow — so
+     this changes nothing there and is only load-bearing in the case that is broken.
+     ⚠️ The overflow is NOT copied into the switcher: `.nl-prodcards` carries
+     `max-width:100%`, so it stops at the content column instead of running off the same
+     edge. Matching a clipped object exactly would be reproducing the defect twice. */
+  function syncStepWidth(){
+    var row = $('.nl-steps', $('#nlSteps'));
+    if(!row || !scr) return;
+    var w = Math.round(Math.max(row.scrollWidth, row.offsetWidth));
+    if(w > 0) scr.style.setProperty('--nl-stepw', w + 'px');
   }
 
   /* ---- step 1 — choose your product and plan ------------------------------
@@ -770,7 +826,22 @@ var NL = (function(){
        the string "undefined" inside it, in the old `.icon` class that no longer exists.
        Invisible, so nobody saw it. Now it is the product's own artwork, the same one the
        licence rows and the picker use. */
+    /* ⚠️⚠️ BACK LIVES IN THIS CARD (2026-09-30, by request) — in the DEFAULT placement.
+       It was its own row above the card on three steps; inside it, the way out of the
+       step sits on the thing the step is about, and the column starts with one object
+       instead of a control floating over one. Putting it in the BUILDER rather than at
+       the three call sites is the same argument that moved it out of `gotoStep`: markup
+       that is part of the card cannot be forgotten by anything that rebuilds the card.
+       ⚠️ `backRowHTML()` still answers "is there a step behind this one" — Manage add-ons
+       opens on Capacity, so this card is the FIRST screen there and returns no Back.
+       ⚠️ TWO ALTERNATIVES ARE OFFERED IN ⚙ (2026-09-30) and this stays the default: A
+       puts it in the top bar, B back into a row of its own above the card. One reader of
+       `nlBackPlace()` per host, so exactly one of the three ever renders it. */
     return '<div class="fs-panel nl-plansum">'
+      + (nlBackPlace() === 'current' ? backRowHTML() : '')
+      /* ⚠️ THE MARK AND THE TEXT ARE A ROW INSIDE THE CARD NOW, not the card itself:
+         Back is a third child and a flex row would have stood it beside them. */
+      + '<div class="nl-plansum-main">'
       + '<span class="nl-plansum-ic" aria-hidden="true">'
       +   productMark(st.product) + '</span>'
       + '<span class="nl-plansum-tx">'
@@ -785,6 +856,7 @@ var NL = (function(){
          plan, billing kind — and every other thing the plan carries is listed with the
          rest of the entitlements, not appended to the title block. One list, not two. */
       + '</span>'
+      + '</div>'
       + '</div>';
   }
   /* Variant B: same row as every other card in the stack — label left, control right.
@@ -1093,9 +1165,15 @@ var NL = (function(){
                  cls:'nl-back', attrs:'data-nlback' })
       + '</div>';
   }
+  /* ⚠️ VARIANT B ONLY (2026-09-30). In the default placement both callers open
+     `leftHTML` with `planSummaryHTML`, which carries Back inside the card — emitting it
+     here as well would put two of them on the screen. `backAboveHTML()` is the one
+     reader that answers "does this placement want a row here", so the three call sites
+     do not each have to know the setting. */
+  function backAboveHTML(){ return nlBackPlace() === 'b' ? backRowHTML() : ''; }
   function customizeShell(leftHTML, cta){
     return '<div class="fs-grid">'
-      + '<div class="fs-col">' + backRowHTML() + leftHTML + '</div>'
+      + '<div class="fs-col">' + backAboveHTML() + leftHTML + '</div>'
 /* ⚠️ `nl-calcsum` NAMES THIS CARD SPECIFICALLY (2026-09-29). `.fs-right` is worn by
    three summary cards — this one, Review's and Billing's — and the request to make
    the Calculation summary wider and louder is about this one. Scoping by class rather
@@ -1361,7 +1439,10 @@ var NL = (function(){
     var payCard = isFree()
       ? '<div class="nl-payline">No payment method needed — this plan is free.</div>'
       : billingSaved()
-      ? '<div class="billcard nl-paycard">'
+      /* ⚠️ `.on-tint` (2026-09-30): the row is filled `--page-bg`, and the pencil in it
+         is a secondary — on a tinted ground it takes the white fill. Same audit as the
+         empty-state box. */
+      ? '<div class="billcard nl-paycard on-tint">'
         + '<div class="nl-pc-main">'
         +   '<div class="nl-pc-method">' + paymentMethodHTML({ expiry:false }) + '</div>'
         +   '<span class="sp"></span>'
@@ -1380,8 +1461,8 @@ var NL = (function(){
     $('#nlStepRev').innerHTML =
       '<div class="fs-grid">'
       + '<div class="fs-col">'
-      +   backRowHTML()
-      /* the SAME card step 2 opens with — see planSummaryHTML */
+      +   backAboveHTML()
+      /* the SAME card step 2 opens with — see planSummaryHTML, which carries Back */
       +   planSummaryHTML(t, TIER_SPECS[t] || { ent:[] })
       /* the plan block and the terms card are one joined unit: no gap between
          them and no radius where they meet, so a single line divides them */
@@ -1692,10 +1773,19 @@ var NL = (function(){
       var left = c.unit ? (c.t + ' × ' + money(c.unit)) : c.t;
       rows += '<div class="am-sumrow"><span>' + left + '</span><span>' + money(c.amt) + '</span></div>';
     });
+/* ⚠️⚠️ THE PLAN CARD IS ON THIS STEP NOW (2026-09-30, by request), and it was the last
+   step without it. Capacity, Add-ons and Review all open with it; Billing & Payment —
+   the screen where the card details are typed — was the one place the flow stopped
+   naming what the money is for. The same omission, and the same correction, as Add-ons
+   on 2026-09-29.
+   ⚠️ Same builder, same position, so this adds no element and no second spelling — and
+   it brings Back with it, which is why the bare `backRowHTML()` that stood here is
+   gone rather than kept above it. */
     $('#nlStepBill').innerHTML =
       '<div class="fs-grid">'
       + '<div class="fs-col">'
-      +   backRowHTML()
+      +   backAboveHTML()
+      +   planSummaryHTML(t, TIER_SPECS[t] || { ent:[] })
       +   '<div class="am-sec fs-panel">'
       +     '<div class="am-sechead"><h4>Billing information</h4></div>'
       +     '<div class="field2">'
@@ -1849,6 +1939,16 @@ var NL = (function(){
        which step you are on cannot be expressed any other way without a second class
        per step. One attribute, and the stylesheet reads it. */
     if(scr) scr.setAttribute('data-nlstep', k);
+    /* the placement rides the screen node for the same reason the step does: the phone
+       rules for variant A need to know which one is on before they can give the title up
+       ⚠️⚠️ `data-nlbackplace`, NOT `data-nlback` — AND THE SHORT NAME BROKE EVERY CLICK
+       IN THE WIZARD. `data-nlback` is the CONTROL's attribute, and both delegates find
+       it with `e.target.closest('[data-nlback]')`; put the same name on `#nlModal` and
+       that `closest` walks up to the screen and matches for ANY click inside the flow,
+       so `Continue` on Capacity went BACK to step 1. Measured, not spotted: the step
+       attribute said `pick` after pressing a button labelled Continue. A state attribute
+       must never reuse the name of a control attribute a delegate reads. */
+    if(scr) scr.setAttribute('data-nlbackplace', nlBackPlace());
     /* ⚠️ The Back control is built by `backRowHTML()` inside each step's own markup —
        see there for why it is not injected here any more. */
     if(body) body.scrollTop = 0;
@@ -2158,12 +2258,20 @@ var NL = (function(){
        is the only thing carrying it */
     applyWizardPresent();
     scr.hidden = false;
+    /* now that it has a layout, the stepper can be measured — see syncStepWidth */
+    syncStepWidth();
     $('#nlClose').focus();
   }
 
   /* ---- events (step content re-renders, so everything is delegated) ---- */
   // the stepper is rebuilt on every step, so delegate the jump back to a done step
   $('#nlStepbar').addEventListener('click', function(e){
+    /* ⚠️ VARIANT A'S BACK IS IN THE HEADER, AND THE BODY DELEGATE CANNOT SEE IT. Every
+       other `[data-nlback]` is inside `#nlBody`, which is where that handler is bound —
+       a control moved into the bar would have been a button that looked right and did
+       nothing. Handled here, beside the step jumps, because this is the listener that
+       owns this bar. */
+    if(e.target.closest('[data-nlback]')){ gotoStep(stepAt(-1)); return; }
     var t = e.target.closest('[data-nl-step]');
     if(!t) return;
     var k = t.getAttribute('data-nl-step');

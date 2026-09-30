@@ -796,12 +796,19 @@ if(dashEmptyV && !dashEmptyV.hidden){
           hint:'One alert gets the fact, what fixes it and its actions. Several get the fact and `and N more` only — deliberately poorer, because an action button beside a list acts on one of them while looking like it settles all.',
           get:bannerShape,
           set:function(v){ Store.set('bannerShape', v); renderHomeBanner(); PageStates.sync(); },
+/* ⚠️ SHAPE IS A PROPERTY OF THE STACKED FORM ONLY (2026-09-30). The separate layout
+   gives every card the full form by definition — that is the whole reason it exists —
+   so there is no "poorer shape" to choose. Disabled with the reason written in the
+   note, which is the same answer this row already gives when the banner is off: the
+   control stays visible and says why it cannot be used, rather than disappearing and
+   leaving the reader to wonder where it went. */
           options:function(){
             var n = homeBannerVisible().length;
+            var sep = homeBannerLayout() === 'separate';
             return [
-              { v:'auto', t:'Auto', note:n ? n + ' live' : 'no banner', disabled:!n },
-              { v:'one',  t:'Alone — full', disabled:!n },
-              { v:'many', t:'With others — count', note:n > 1 ? 'and ' + (n-1) + ' more' : 'needs 2+', disabled:n < 2 }
+              { v:'auto', t:'Auto', note:sep ? 'stacked only' : (n ? n + ' live' : 'no banner'), disabled:sep || !n },
+              { v:'one',  t:'Alone — full', note:sep ? 'stacked only' : '', disabled:sep || !n },
+              { v:'many', t:'With others — count', note:sep ? 'stacked only' : (n > 1 ? 'and ' + (n-1) + ' more' : 'needs 2+'), disabled:sep || n < 2 }
             ];
           }
         } }
