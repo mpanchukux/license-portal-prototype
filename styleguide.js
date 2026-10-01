@@ -245,8 +245,9 @@ $$('#sgWizStep').forEach(function(box){
   function row(label, count, on){
     return '<button type="button" role="menuitemradio" class="dropcheck' + (on ? ' is-on' : '')
       + '" aria-checked="' + (on ? 'true' : 'false') + '" tabindex="-1">'
-      + '<svg class="ic cc-check" aria-hidden="true"><use href="assets/icons.svg#ti-check"></use></svg>'
-      + '<span>' + label + '</span><span class="dropcount">' + count + '</span></button>';
+      /* the specimen follows the product: tick last on a single-select row (2026-10-01) */
+      + '<span>' + label + '</span><span class="dropcount">' + count + '</span>'
+      + '<svg class="ic cc-check" aria-hidden="true"><use href="assets/icons.svg#ti-check"></use></svg></button>';
   }
   function menu(opts, allLabel, countOf){
     return row(allLabel, lic.length, true)

@@ -303,12 +303,25 @@ function licCardHTML(p){
     +   '<div class="lp-txt">'
     +     '<div class="lcard-kind">' + esc(p.type || '') + '</div>'
     +     '<div class="lcard-name">' + esc(p.product || '') + ' &middot; ' + esc(p.name || '') + '</div>'
-    +     '<div class="lcard-state">' + statusMark(p)
-    +       '<span class="lcard-dot" aria-hidden="true">&middot;</span>'
-    +       '<span class="lcard-term">' + stateText(p) + '</span></div>'
     +   '</div>'
     +   lcardMenuHTML(p)
     + '</div>'
+    /* ⚠️⚠️ THE STATE ROW LEFT `.lp-txt` (2026-10-01, by request: it must start on the
+       MARK's line, not the name's). Inside the text column it began at the card's 40px
+       product square plus its 10px gap — measured x90 against the square's x40 — so the
+       card had two left edges: the square and the label zone on one, the three text rows
+       on another. Out here it is a child of the card, so it starts where the square does
+       and the card reads down one line.
+       ⚠️ IT IS NOT A THIRD TEXT LINE ANY MORE, and that is the point: the kind and the
+       name qualify each other and belong in the column beside the mark; the state
+       qualifies the LICENCE, which is the whole card. The divider zone below already
+       takes the card's full width for the same reason.
+       ⚠️ THE INVARIANT STILL HOLDS and was re-measured, not assumed: everything above the
+       divider has to be a fixed height or a row of cards goes ragged. The row that moved
+       is one line of text whatever the data says, exactly as it was inside the column. */
+    + '<div class="lcard-state">' + statusMark(p)
+    +   '<span class="lcard-dot" aria-hidden="true">&middot;</span>'
+    +   '<span class="lcard-term">' + stateText(p) + '</span></div>'
     /* ⚠️ THE ZONE IS ALWAYS THERE, LABEL OR NOT, and that is what keeps a row of cards
        level: an unnamed licence shows the chip in the same band a name would occupy. The
        two-line label is absorbed by the zone's own min-height, not by the card growing

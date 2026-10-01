@@ -108,9 +108,27 @@ function licenseKeyFor(lic){
   }
   return g.join('-');
 }
+/* ⚠️⚠️ THE MASK KEEPS THE KEY'S OWN GROUPING (2026-10-01, by request), and that is what
+   makes the two states the same width. It used to be twelve bullets and the last four
+   characters — a clump that was both unreadable AND 29 characters narrower than the key
+   it stands for, so revealing one jumped the row and everything after it.
+   Masked:   ••••-••••-••••-••••-••••-37ed
+   Revealed: 67f2-a6a9-bff4-eac3-9146-37ed
+   Same count, same separators, same mono width, in every licence — because the mask is
+   built FROM the key rather than written as a constant.
+   ⚠️ THE BRIEF'S EXAMPLE HAD THREE GROUPS AND SPACES (`•••• - •••• - •••• - 7301`) and
+   was given as a direction, not a format. Three groups cannot be the same width as a
+   six-group key, and the spaces would have to be added to the revealed form too — which
+   is a change to what the key IS, not to how it is hidden. The key's own shape does the
+   job the example was asking for.
+   ⚠️ The LAST group stays readable on purpose: it is what someone reads aloud to confirm
+   they are looking at the right licence. */
 function licenseKeyMask(key){
-  var tail = String(key).slice(-4);
-  return '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' + tail;
+  var parts = String(key).split('-');
+  if(parts.length < 2) return String(key).replace(/./g, '\u2022');
+  return parts.map(function(g, i){
+    return i === parts.length - 1 ? g : g.replace(/./g, '\u2022');
+  }).join('-');
 }
 
 /* ---------- instance check-ins as ACTIVITY --------------------------------------

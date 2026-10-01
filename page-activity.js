@@ -91,10 +91,11 @@ function actTypeLabel(){
 function renderActTypes(){
   var lbl = $('#actTypeLabel');
   if(lbl) lbl.textContent = actTypeLabel();
-  $$('#actTypeMenu [data-acttype]').forEach(function(row){
-    var on = actTypes.indexOf(row.getAttribute('data-acttype')) >= 0;
-    row.setAttribute('aria-checked', on ? 'true' : 'false');
-    row.classList.toggle('is-on', on);
+  $$('#actTypeMenu [data-acttype]').forEach(function(box){
+    var on = actTypes.indexOf(box.getAttribute('data-acttype')) >= 0;
+    box.checked = on;
+    var row = box.closest('.dropcheck');
+    if(row) row.classList.toggle('is-on', on);
   });
   /* ⚠️ THE WAY BACK APPEARS ONLY WHEN THERE IS SOMEWHERE TO GO BACK TO. It used to be
      `Select all`, standing there permanently — which under the old model was the way out
@@ -104,10 +105,23 @@ function renderActTypes(){
 }
 (function(){
   var menu = $('#actTypeMenu'); if(!menu) return;
+  /* ⚠️⚠️ A REAL CHECKBOX, BECAUSE THIS MENU IS MULTI-SELECT (2026-10-01, by request:
+     "if only one can be chosen the tick goes on the right; if it is multi-select, rework
+     the component so the rows carry a checkbox"). It was a `<button
+     role="menuitemcheckbox">` with a tick that appeared on the right of nothing — the same
+     row shape the SINGLE-select menus use, so two different arities looked identical and
+     the reader could not tell which one shut on a click.
+     ⚠️ A `<label>` WRAPPING AN `<input>`, not a button with an input inside it: an
+     interactive control inside a button is invalid, and the label is what makes the whole
+     row a hit target for the box. The native control brings the checked state, the space
+     key and the accessible role with it.
+     ⚠️ THE EVENT MOVED FROM `click` TO `change` with the control. A click handler on the
+     row would fire twice — once for the label, once for the input it forwards to — and
+     toggle the type back off again. */
   menu.innerHTML = ACT_TYPES.map(function(t){
-    return '<button role="menuitemcheckbox" class="dropcheck" data-acttype="' + t.v + '" aria-checked="false">'
-      + '<svg class="ic cc-check" aria-hidden="true"><use href="assets/icons.svg#ti-check"></use></svg>'
-      + '<span>' + t.t + '</span></button>';
+    return '<label class="dropcheck dropcheck--multi">'
+      + '<input type="checkbox" class="dropbox" data-acttype="' + t.v + '">'
+      + '<span>' + t.t + '</span></label>';
   }).join('')
     + '<div class="dropfoot" id="actTypeFoot" hidden><button class="link" id="actTypeAll">Clear</button></div>';
   menu.addEventListener('click', function(e){
@@ -118,9 +132,13 @@ function renderActTypes(){
       renderActTypes(); renderActFeed();
       return;
     }
-    var row = e.target.closest('[data-acttype]'); if(!row) return;
     /* ⚠️ The menu does NOT close on a tick. Choosing two kinds is two clicks, and a menu
-       that shuts after the first turns one decision into two round trips. */
+       that shuts after the first turns one decision into two round trips — so every click
+       inside it is stopped, whether it hit a row or the gap between them. */
+    e.stopPropagation();
+  });
+  menu.addEventListener('change', function(e){
+    var row = e.target.closest('[data-acttype]'); if(!row) return;
     e.stopPropagation();
     var v = row.getAttribute('data-acttype'), i = actTypes.indexOf(v);
     if(i >= 0) actTypes.splice(i, 1); else actTypes.push(v);

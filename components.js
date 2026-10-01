@@ -300,8 +300,13 @@ function filterMenuHTML(kind, opts, current, allLabel, total, countOf){
     return (sep ? '<div class="dropsep" role="separator"></div>' : '')
       + '<button type="button" role="menuitemradio" class="dropcheck' + (on ? ' is-on' : '') + '"'
       + ' data-' + kind + '="' + esc(v || '') + '" aria-checked="' + (on ? 'true' : 'false') + '">'
-      + '<svg class="ic cc-check" aria-hidden="true"><use href="assets/icons.svg#ti-check"></use></svg>'
-      + '<span>' + esc(text) + '</span><span class="dropcount">' + count + '</span></button>';
+      /* ⚠️ THE TICK IS LAST (2026-10-01, by request: "if only one can be chosen, the tick
+         goes on the right"). A tick on the left of a single-select row is the shape a
+         multi-select row has, and this menu is one answer — the mark belongs at the end of
+         the row it confirms, after the count. The count keeps its own column: `.dropcount`
+         still takes the slack, so the figures stay aligned and only the tick follows. */
+      + '<span>' + esc(text) + '</span><span class="dropcount">' + count + '</span>'
+      + '<svg class="ic cc-check" aria-hidden="true"><use href="assets/icons.svg#ti-check"></use></svg></button>';
   }
   return row('', allLabel, total, false)
     + opts.map(function(o){ return row(o.v, o.t, countOf(o.v), o.sep); }).join('');
@@ -1203,9 +1208,14 @@ function activityLicLink(licId, text){
    separately; here that would be a palette invented to distinguish categories, which is
    exactly what the monochrome rule still forbids outside the named exceptions. The
    GLYPH distinguishes them and costs nothing. */
+/* ⚠️ THE ALERT MARK IS THE STROKE TRIANGLE, NOT THE FILLED ONE (2026-10-01, by request).
+   The disc behind it is already a solid red field; a filled glyph on a filled disc is one
+   shape inside another of the same weight, and the outline is what reads as a symbol on
+   it. The filled variant stays where it has no disc under it — the status column and the
+   licence banner, which draw the glyph straight onto the surface. */
 var ACT_MARK_TYPE = {
-  'license.payment_failed':   ['alert-triangle-filled', 'alert'],
-  'instance.check_failed':    ['alert-triangle-filled', 'alert'],
+  'license.payment_failed':   ['alert-triangle', 'alert'],
+  'instance.check_failed':    ['alert-triangle', 'alert'],
   'license.updates_expiring': ['clock', ''],
   'license.payment_recovered':['circle-check', ''],
   'instance.check_ok':        ['refresh', ''],
@@ -3003,8 +3013,14 @@ function bannerTone(state){ return BANNER_TONE[state] || 'black'; }
    trouble keeps the triangle and news keeps the circle in both forms — which is what
    stops the ink form from making colour the only carrier. */
 var TONE_MARK = { red:'red', black:'warn', quiet:'quiet' };
+/* ⚠️⚠️ THE GROUND IS NAMED, NOT INFERRED (2026-10-01). `on-ink` is what every rule about a
+   dark banner keys on — the inverted primary, the outlined secondary, the white todo line.
+   It used to be inferred as "`tone-black`, or no tone at all", written
+   `:not(.tone-red):not(.tone-quiet)` across nine rules — and that stopped being true the
+   moment the TINTED form put its own `tone-black` on a white ground. Two grounds, one
+   class each, and the nine rules ask the question directly. */
 function toneClass(tone){
-  return alertGround() === 'ink' ? 'tone-black mark-' + (TONE_MARK[tone] || 'warn')
+  return alertGround() === 'ink' ? 'tone-black on-ink mark-' + (TONE_MARK[tone] || 'warn')
                                  : 'tone-' + tone;
 }
 /* ⚠️⚠️ THE MARK FOLLOWS THE TONE, NOT A SEPARATE FLAG (2026-09-30, by request). It read

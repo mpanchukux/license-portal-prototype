@@ -19,6 +19,12 @@ function renderPayCard(){
   /* ⚠️ THE STATE IS NAMED ON THE ROW (2026-09-30), so the stylesheet can dress the empty
      one without testing for the spelling of a child. See `.paycard.is-empty`. */
   card.classList.toggle('is-empty', !billingSaved());
+  /* ⚠️ THE TINT COMES WITH A SURFACE, AND THE SURFACE IS DECLARED (2026-10-01, by
+     request: the Add button must be white). `.is-empty` paints the row `--c-blue-50`, and
+     a button standing on a tint is exactly what `.on-tint` is for — so the row says what
+     ground it is rather than the stylesheet re-deriving it from the state class. Toggled
+     with `is-empty`, never set alone: a filled card is white and its button is grey. */
+  card.classList.toggle('on-tint', !billingSaved());
   if(billingSaved()){
     card.insertAdjacentHTML('afterbegin', paymentMethodHTML());
     if(btn){ btn.className = 'btn btn--secondary btn--md btn--icon'; btn.innerHTML = PENCIL_SVG;
@@ -26,7 +32,11 @@ function renderPayCard(){
              btn.setAttribute('title', 'Update payment method'); }
   } else {
     card.insertAdjacentHTML('afterbegin',
-      '<span class="paycard-none">No payment method yet — charges cannot be taken until one is added.</span>');
+      /* ⚠️ COPY, 2026-10-01, by request. The old sentence said the state twice — the
+         card is visibly empty and the button says `Add payment method`, so "No payment
+         method yet" was the heading of a card that is its own heading. What is left is
+         the only thing the reader cannot see for themselves: the consequence. */
+      '<span class="paycard-none">Charges cannot be taken until payment method is added.</span>');
     if(btn){ btn.className = 'btn btn--secondary btn--md'; btn.textContent = 'Add payment method';
              btn.setAttribute('aria-label', 'Add payment method');
              btn.removeAttribute('title'); }

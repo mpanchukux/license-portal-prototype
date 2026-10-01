@@ -154,9 +154,12 @@ var NL = (function(){
   // anchored to the $1,999 Add-capacity invoice; the rest are inferred.
   var UNITS = { sub:{prod:29,dev:15,ai:5}, perpTB:{prod:1999,ai:500}, perpMQ:{prod:999,ai:0} };
   var ADD = { edge:7, trendz:12 };
-  /* Copy that belongs to a capacity row rather than to a tooltip: the wizard has room
-     for the sentence, so it reads as the row's description. */
-  var DEVICES_DESC = 'Total number of IoT devices that will connect to your ThingsBoard platform.';
+  /* ⚠️ `DEVICES_DESC` IS GONE (2026-10-01) WITH ITS LAST READER. It opened both the
+     locked and the editable Devices rows, and both requests that shortened them took it
+     off the front — a row titled `Devices`, with a device count in the field beside it,
+     does not need a sentence that says "the number of devices". A constant with no
+     readers is the `.keynote` failure this file already records twice: an obvious name
+     somebody re-uses by accident. */
   var OFFLINE_DESC = 'Full functionality without internet.';
   /* ⚠️ Offline Mode has no price yet — TODO: confirm with product whether it is a
      one-time amount on top of the perpetual licence. Until it does, the toggle carries
@@ -793,8 +796,15 @@ var NL = (function(){
    the step looks like it has two kinds of device.
    ⚠️ A label with no entry simply gets no glyph, which is the right failure: a new
    entitlement appears without an icon rather than with a wrong one. */
+  /* ⚠️ TBMQ'S TWO ROWS JOINED THE MAP (2026-10-01, by request). `Sessions` and
+     `Messages / sec` are the product's entitlements, they go through `lockedCell` like
+     any other, and they were the only block titles in the flow standing without a glyph —
+     so on TBMQ the step looked like a different step. Both symbols are new to the sprite
+     and named in the pass that added them (58 icons now). */
   var CAP_IC = {
     'Devices': 'devices',
+    'Sessions': 'plug-connected',
+    'Messages / sec': 'message',
     'Production instances': 'server-2',
     'Development instances': 'server-2',
     'AI credits': 'sparkles'
@@ -901,10 +911,16 @@ var NL = (function(){
     return '<div class="am-celltop' + (ic ? ' has-ic' : '') + '">'
       + (ic ? icon(ic, { size:20 }) : '') + '<span>' + label + '</span></div>';
   }
+  /* ⚠️ ONE SENTENCE FOR EVERY LOCKED ROW (2026-10-01, by request). Devices used to carry
+     two — what the number counts, then why it cannot move — joined into a paragraph that
+     said in twenty-three words what the padlock beside it says in a glyph. The replacement
+     is the only part the reader cannot see: what to do about it.
+     ⚠️ AND IT IS THE SAME SENTENCE ON SESSIONS AND MESSAGES / SEC, which had their own
+     near-copy ("Set by this plan. To change it, change the plan."). Two spellings of one
+     fact in one stack is how a stack stops reading as a stack. Reported rather than
+     assumed: the brief quoted the Devices string only. */
   function lockedCell(lbl, val, desc){
-    var why = lbl === 'Devices'
-      ? 'The device limit is set by this plan. To change it, change the plan.'
-      : 'Set by this plan. To change it, change the plan.';
+    var why = 'Set by your plan \u2014 change the plan to raise it.';
     var full = desc ? desc + ' ' + why : why;
     return '<div class="am-cell am-locked"><div class="fs-cellhead"><div class="fs-celltext">'
       + cellTop(lbl, CAP_IC[lbl])
@@ -978,7 +994,7 @@ var NL = (function(){
      shipped datasets only the plan path occurs, so today this reads `Included`
      everywhere; the licence flag exists and is settable (window.setFeature), so the
      other word is reachable rather than decorative. */
-  var WL_DESC = 'Your own logo, colours and product name in place of ThingsBoard branding.'; // inferred
+  var WL_DESC = 'Your logo, colours and product name instead of ours.'; // inferred
   function whitelabelState(t){
     var lic = isMod() ? st.changeLic : null;
     if(lic && lic.whitelabel != null) return lic.whitelabel ? 'Enabled' : null;
@@ -1038,8 +1054,12 @@ var NL = (function(){
      minimum can never describe different things. */
   function devicesDesc(){
     if(!isPerpTB()){
-      return DEVICES_DESC + ' ' + devicesIncluded().toLocaleString('en-US')
-        + ' included with this plan \u2014 enter the total you need.';
+      /* ⚠️ `DEVICES_DESC` DROPPED OFF THE FRONT (2026-10-01, by request). It named what
+         the number counts — and the row is titled `Devices`, with a device count in the
+         field beside it, so the sentence opened by saying the title again. What is left
+         is the part the field cannot show: how many come free and what to type. */
+      return devicesIncluded().toLocaleString('en-US')
+        + ' included with your plan \u2014 enter the total you need.';
     }
     var fromInst = PERP_DEV_PER_INSTANCE * Math.max(0, (cust.prod || 1) - 1);
     var parts = [PERP_DEV_PER_INSTANCE.toLocaleString('en-US') + ' included'];
@@ -1073,6 +1093,7 @@ var NL = (function(){
   function capacityCellsHTML(){
     var t = tier(), i = INCL[t] || { prod:1, ai:0 }, u = units(), spec = TIER_SPECS[t] || { ent:[] };
     var prodCell = '';
+    var soloProdCell = '';
     var per = isPerp() ? ' one-time' : ' / mo';
     var variantA = custVariant() === 'a';
     var cells = '';
@@ -1087,10 +1108,10 @@ var NL = (function(){
            is the fact the buyer needs before pressing +. The subscription sentence is
            unchanged; only the perpetual one names the linkage. */
         var prodDesc = isPerpTB()
-          ? i.prod + ' included. Each purchased instance includes '
+          ? i.prod + ' included. Each instance includes '
             + PERP_DEV_PER_INSTANCE.toLocaleString('en-US')
-            + ' devices. Add more at any time to horizontally scale your solution.'
-          : 'Production compute — ' + i.prod + ' included. Enables clustering and HA.';
+            + ' devices \u2014 add more any time.'
+          : i.prod + ' included. Enables clustering and HA.';
         /* ⚠️⚠️ HELD BACK, NOT EMITTED HERE (2026-09-29, by request). Production and
            Development are one block titled `Instances` now, and Development is not in
            `spec.ent` at all — it is appended after this loop. So the production row is
@@ -1099,12 +1120,20 @@ var NL = (function(){
         prodCell = stepCell('prod', 'Production', prodDesc,
           '+' + money(u.prod) + per + ' each', cust.prod, i.prod, null, null,
           'Production instances');
+        /* the same row as a block in its own right: full title, its own glyph, no indent.
+           Built here beside its sibling so the two forms cannot drift in anything but
+           their title — same field, same description, same price note, same aria name. */
+        soloProdCell = stepCell('prod', 'Production instances', prodDesc,
+          '+' + money(u.prod) + per + ' each', cust.prod, i.prod, null,
+          CAP_IC['Production instances'], 'Production instances');
         cells += INSTANCES_SLOT;
       } else if(lbl === 'AI credits'){
-        cells += stepCell('ai', 'AI credits', 'Monthly allowance, in blocks of 1M credits. Minimum matches your plan — increase to buy more.', '+' + money(u.ai) + per + ' per 1M AI credits', cust.ai, i.ai, null, CAP_IC['AI credits']);
+        cells += stepCell('ai', 'AI credits', 'Monthly, in blocks of 1M. Your plan sets the minimum.', '+' + money(u.ai) + per + ' per 1M AI credits', cust.ai, i.ai, null, CAP_IC['AI credits']);
       } else if(!variantA){
         // variant A shows these in the plan card instead
-        cells += lockedCell(lbl, val, lbl === 'Devices' ? DEVICES_DESC : '');
+        /* ⚠️ No description prefix — see `lockedCell`, which carries the one sentence a
+           locked row has. */
+        cells += lockedCell(lbl, val, '');
       }
     });
     /* ⚠️⚠️ ONE `Instances` BLOCK (2026-09-29, by request): one heading, both rows under
@@ -1121,13 +1150,23 @@ var NL = (function(){
        group in place would have meant knowing, mid-loop, whether a Development row is
        coming, which is decided by `hasDev()` after the loop ends. */
     var devCell = hasDev()
-      ? stepCell('dev', 'Development', 'Dedicated instances for dev, test, and CI/CD — keeps production data clean.', '+' + money(u.dev) + per + ' each', cust.dev, 0, null, null, 'Development instances')
+      ? stepCell('dev', 'Development', 'Dev, test and CI/CD — keeps production data clean.', '+' + money(u.dev) + per + ' each', cust.dev, 0, null, null, 'Development instances')
       : '';
+    /* ⚠️⚠️ A GROUP OF ONE IS NOT A GROUP (2026-10-01, by request). `hasDev()` is false on
+       every perpetual and on all of TBMQ, so there the block was a heading `Instances`
+       with a single row titled `Production` under it — two titles for one thing, and an
+       indent that promised a sibling that never comes. With one row the heading says the
+       whole name, `Production instances`, and the row's own title goes.
+       ⚠️ `soloInstances` REBUILDS THE CELL rather than hiding the title: `stepCell`'s last
+       argument is the stepper's `aria-label`, which must stay `Production instances`
+       whichever shape is drawn — so the accessible name is the one thing that does NOT
+       change between the two forms. */
     if(cells.indexOf(INSTANCES_SLOT) >= 0){
-      cells = cells.replace(INSTANCES_SLOT,
-        '<div class="am-group"><div class="am-grouphead">'
-        + icon(CAP_IC['Production instances'], { size:20 }) + '<span>Instances</span></div>'
-        + '<div class="am-groupbody">' + prodCell + devCell + '</div></div>');
+      cells = cells.replace(INSTANCES_SLOT, devCell
+        ? '<div class="am-group"><div class="am-grouphead">'
+          + icon(CAP_IC['Production instances'], { size:20 }) + '<span>Instances</span></div>'
+          + '<div class="am-groupbody">' + prodCell + devCell + '</div></div>'
+        : soloProdCell);
     } else if(devCell){
       /* a plan with a Development row and no Production one: the heading still belongs,
          because the block is about instances either way */
@@ -1170,8 +1209,15 @@ var NL = (function(){
    know which step they are — the helper answers that once. */
   function backRowHTML(){
     if(stepIdx() < 1) return '';
+    /* ⚠️ `sm`, NOT `md` (2026-10-01, by request: "make it a text button so it does not
+       take so much room above and below"). The size ladder is 26 · 40 · 48, and 40 is the
+       CONTROL BAND — the height every control in a toolbar shares so they line up. This
+       button is not in a toolbar: it stands alone on a row above the content, with
+       nothing to line up with, and the band was costing 14px of vertical space on every
+       step of the flow. `sm` is the rung below, and it is the one a service control
+       outside a control row takes. */
     return '<div class="nl-backrow">'
-      + button({ variant:'text', size:'md', icon:'chevron-left', label:'Back',
+      + button({ variant:'text', size:'sm', icon:'chevron-left', label:'Back',
                  cls:'nl-back', attrs:'data-nlback' })
       + '</div>';
   }

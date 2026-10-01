@@ -2138,6 +2138,13 @@ function homeBannerLayout(){ return Store.get('bannerLayout') === 'separate' ? '
    untouched, and the only new CSS in the pass is three colours. The alternative was
    re-scoping nine button rules, which is nine chances to miss one. */
 function alertGround(){ return Store.get('alertGround') === 'ink' ? 'ink' : 'tinted'; }
+/* ⚠️ HOW THE LICENCE PANEL'S PLAN BLOCK IS ARRANGED (2026-10-01, by request). `stacked`
+   is the default and is what the panel has always done — the plan table, then Add-ons
+   underneath it. `side` puts the two next to each other: the table in a left column, the
+   add-on chips in a right one, both headings on one line.
+   ⚠️ It changes the ARRANGEMENT, not the content — same table, same chips, same builders,
+   and the `Manage` button is the same control moved rather than a second one. */
+function licPlanLayout(){ return Store.get('licPlan') === 'side' ? 'side' : 'stacked'; }
 var WIZARD_PRESENTS = [['c', 'C \u2014 White header band (default)'],
                        ['d', 'D \u2014 Header on the gradient']];
 /* The wizard is the only surface carrying the attribute; it is set where the node is

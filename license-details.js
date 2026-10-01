@@ -33,7 +33,9 @@ var DETAILS_HTML = ''
 + '        <!-- License created is the one banner that lives up here: it is shown once'
 + '             per licence, above the title, so a new licence WITH a problem can show'
 + '             it and the state banner without the two colliding. -->'
-+ '        <div class="gbanner licnew" id="licNewBanner" role="status" hidden>'
+/* ⚠️ `on-ink`: this banner keeps `.gbanner`'s ink fill, and the class is now how the
+   button rules below find a dark ground (see `toneClass`). Untoned used to imply it. */
++ '        <div class="gbanner licnew on-ink" id="licNewBanner" role="status" hidden>'
 + '          <svg class="ic gb-ic" aria-hidden="true"><use href="assets/icons.svg#ti-circle-check"></use></svg>'
 + '          <span class="gb-txt">License created &mdash; your license key is ready.</span>'
 + '          <span class="sp"></span>'
@@ -421,7 +423,7 @@ var DETAILS_HTML = ''
 + '              <div class="billgrid" data-page="sub">'
 + '                <!-- One full-width row, left to right: what is charged and when,'
 + '                     the card it goes to, then the way to change it. -->'
-+ '                <div class="billcard nextcharge">'
++ '                <div class="billcard nextcharge on-tint">'
 + '                  <div class="nc-main">'
 + '                    <div class="nc-left">'
 + '                      <div class="nc-row">'
@@ -442,6 +444,8 @@ var DETAILS_HTML = ''
 + '                    <!-- the payment method is account-level, so the edit action routes'
 + '                         to Billing rather than pretending to be an inline edit. Same'
 + '                         pencil, same icon-button, as Payment method there. -->'
+/* ⚠️ The card is `--c-blue-50`, so the button on it is WHITE — the `surface` axis, taken
+   by the card declaring `.on-tint` rather than by this caller naming a colour. */
 + '                    <a class="btn btn--secondary btn--md btn--icon tip" id="ncEditPay" href="billing.html" aria-label="Payment and Billing" data-tip="Payment &amp; Billing">'
 + '                      <svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-pencil"></use></svg>'
 + '                    </a>'
@@ -537,7 +541,11 @@ function renderLabelSlot(lic){
        what the four axes exist to stop. The size axis already has a 26px step, and the
        label line is a 14px row: `sm` is the answer the model gives. */
     slot.innerHTML = '<span class="labeltext">' + esc(lic.label) + '</span>'
-      + '<button class="btn btn--secondary btn--sm btn--icon labeledit" data-editlabel aria-label="Edit label" title="Edit label">' + PENCIL + '</button>';
+      /* ⚠️ `ghost`, NOT `secondary` (2026-10-01, by request: "no background by default").
+         It sits in a line of text beside the label, not in a control row — a resting fill
+         there draws a box around a pencil in the middle of a sentence. Ghost keeps the
+         hover and pressed washes, so it still answers the pointer; only the rest goes. */
+      + '<button class="btn btn--ghost btn--sm btn--icon labeledit" data-editlabel aria-label="Edit label" title="Edit label">' + PENCIL + '</button>';
   } else {
     slot.innerHTML = '<button class="chip ghost" data-editlabel>+ Add label</button>';
   }
@@ -733,8 +741,21 @@ function renderLicenseFeatures(lic, spec){
   // bought on a perpetual licence in the wizard's add-ons block (see hasOffline)
   if(lic.offline) active.push('Offline Mode');
   var chips = $('#featureChips'); if(!chips) return;
-  chips.innerHTML = active.map(function(n){ return '<span class="fchip">'+FCHECK+n+'</span>'; }).join('');
-  $('#featureBlock').hidden = active.length === 0;
+  /* ⚠️⚠️ THE BLOCK STAYS ON SCREEN WHEN IT IS EMPTY — BUT ONLY SIDE BY SIDE (2026-10-01,
+     by request: "a small empty state, so the block reads as a block"). In the stacked
+     arrangement an empty Add-ons block is a heading with nothing under it in the middle of
+     a column, and hiding it is right — that is what it has always done. In the side
+     arrangement the block IS a column: hide it and the grid's second track collapses, the
+     table stretches to the full width, and the licence looks like it has a different
+     layout rather than no add-ons. The empty line holds the column open and says why.
+     ⚠️ Read through `licPlanLayout()`, not through a measurement of the DOM: the
+     arrangement is a stored setting, and asking it is one call that cannot disagree with
+     what `applyLicPlan` drew. */
+  var side = licPlanLayout() === 'side';
+  chips.innerHTML = active.length
+    ? active.map(function(n){ return '<span class="fchip">'+FCHECK+n+'</span>'; }).join('')
+    : '<span class="fchip-none">No add-ons on this license.</span>';
+  $('#featureBlock').hidden = !active.length && !side;
 }
 /* One helper for every banner action, because the phone and the desktop want
    different words for the same button. The band on the phone is one row —
@@ -748,8 +769,15 @@ function renderLicenseFeatures(lic, spec){
    link on the desktop and a band button on the phone. That banner now has ONE action on
    both breakpoints like every other, so nothing passed the flag any more — and a
    parameter no call site uses is a branch that looks alive in a grep and is not. */
+/* ⚠️⚠️ `secondary`, NOT `text` (2026-10-01, by request). The banner's ground is white in
+   the modal, and a text button on white is a word with nothing around it — the one control
+   the banner offers was the least visible thing in it. `secondary` is the fill a button
+   takes on a light ground; where the banner is ink (the full page's `tone-black`) the
+   surface rules repaint it, which is what that axis is for.
+   ⚠️ The class `aact` stays: the phone block and the alert's own row rules key on it, and
+   it says WHERE the button is, not what it looks like. */
 function alertAction(short, long, attrs){
-  return '<button class="btn btn--text btn--md aact" ' + attrs + '>'
+  return '<button class="btn btn--secondary btn--md aact" ' + attrs + '>'
     + '<span class="aact-long">' + long + '</span>'
     + '<span class="aact-short">' + short + '</span>'
     + '</button>';
@@ -1155,6 +1183,7 @@ function renderLicenseDetails(lic){
   renderLicenseVersion(lic);
   renderLicenseActions(lic);
   applyLicZone(lic);
+  applyLicPlan();
   renderLicFeed(lic);
 }
 /* ---------- the header zone's layout (2026-09-29, by request) ---------------------
@@ -1175,6 +1204,38 @@ function renderLicenseDetails(lic){
    next variant that needs a per-licence decision will want it back. */
 function applyLicZone(lic){
   $$('#appView .head-rest').forEach(function(el){ el.setAttribute('data-zone', licZone()); });
+}
+/* ⚠️⚠️ THE PLAN BLOCK'S ARRANGEMENT, AND THE ONE NODE CSS CANNOT MOVE (2026-10-01, by
+   request). `side` puts the plan table and the add-on chips in two columns with their
+   headings on one line — that part is a grid and lives in the stylesheet. What cannot be
+   done there is `Manage`: in the stacked form it belongs to the `Plan` heading row, and
+   in the reference for the side form it sits at the far right of the card, on the
+   `Add-ons` line. No `order` carries a child across a parent, so the button is MOVED.
+   ⚠️ IT IS THE SAME BUTTON, NOT A SECOND ONE. Rendering a copy per arrangement would give
+   the panel two `#planManageBtn`s the moment both were on screen, and the delegated
+   `data-modal` handler would fire for whichever the query found first.
+   ⚠️ IDEMPOTENT AND REVERSIBLE, the same contract `syncTitleRow` keeps: it runs on every
+   render in both directions, so switching back puts the button exactly where the markup
+   has it. The spacer in the Add-ons row is created once and left — it is inert when the
+   row holds only its heading.
+   ⚠️ Runs from `renderLicenseDetails`, i.e. on every open in BOTH hosts — the modal
+   re-mounts its markup each time, so anything set once at boot would be lost. */
+function applyLicPlan(){
+  $$('#appView .planblock').forEach(function(block){
+    var mode = licPlanLayout();
+    block.setAttribute('data-licplan', mode);
+    var btn = $('#planManageBtn', block);
+    var planSh = $('.sh', block), featSh = $('#featureBlock .sh', block);
+    if(!btn || !planSh || !featSh) return;
+    var target = mode === 'side' ? featSh : planSh;
+    if(btn.parentNode === target) return;
+    if(!$('.spacer', target)){
+      var sp = document.createElement('span');
+      sp.className = 'spacer';
+      target.appendChild(sp);
+    }
+    target.appendChild(btn);
+  });
 }
 
 /* Is there a scheduled charge ahead? One reading, so the block's visibility and any
@@ -1293,10 +1354,30 @@ function renderInstances(lic){
       + checkinStaleAfterH() + ' hours is shown as stale.';
     note.hidden = !(prod.length || dev.length);
   }
+  /* ⚠️⚠️ THE PRODUCTION EMPTY STATE TOOK THE DEVELOPMENT ONE'S SHAPE (2026-10-01, by
+     request): `emptyStateRow` — a title and a sentence on the grey frame — instead of the
+     bare `.emptybox` one-liner it carried.
+     ⚠️ THIS REVERSES THE NOTE THAT USED TO STAND HERE, and the note is quoted rather than
+     deleted: "the production tab keeps its one-liner on purpose: production instances
+     need no explanation, and a reader with none is simply waiting for a deployment to
+     check in." The argument was about the WORDS, and it still holds — the sentence is
+     unchanged. What was wrong was the FORM: two tabs of one control answered the same
+     empty condition with two different objects, so switching between them changed the
+     shape of the panel rather than its content.
+     ⚠️ THE DOCS LINK COMES WITH THE SHAPE, and it is the one thing a reader with zero
+     instances actually needs — "how do I start one". It also puts a route to the
+     documentation back on a healthy licence, which NOTES records as lost when the key's
+     explanatory line was removed. Reported, not slipped in. */
   var pb = $('#instBodyProd');
   if(pb) pb.innerHTML = prod.length
     ? pageSlice(prod, licInstPage.prod).map(instRow).join('')
-    : '<tr><td colspan="6" class="emptybox">Instances appear here automatically when a deployment is activated with this license.</td></tr>';
+    : emptyStateRow(6, {
+        title:'No production instances',
+        line:'Instances appear here automatically when a deployment is activated with '
+           + 'this license. '
+           + '<a class="link" href="' + EXT.install + '" target="_blank" rel="noopener">'
+           + 'How to activate an instance' + EXTSVG + '</a>'
+      });
   var db = $('#instBodyDev');
   /* ⚠️⚠️ THE DEVELOPMENT EMPTY STATE EXPLAINS ITSELF (2026-09-29, by request). It said
      "No development instances are running with this license." — true, and useless to
@@ -1304,9 +1385,9 @@ function renderInstances(lic){
      would want one. This is the only place in the product where the distinction is
      ever explained, and the tab is where somebody meets it.
      ⚠️ IT USES THE SHARED BUILDER, `emptyStateRow` — the same title / sentence / action
-     shape the Licenses page and the empty account use. The production tab above keeps
-     its one-liner on purpose: production instances need no explanation, and a reader
-     with none is simply waiting for a deployment to check in.
+     shape the Licenses page and the empty account use — and since 2026-10-01 so does the
+     production tab above it, so the two halves of this control answer an empty list with
+     one object instead of two.
      ⚠️ TWO WAYS OUT, and they answer different questions. The docs link answers "how do
      I start one"; `Manage add-ons` answers "where do I get another", because on this
      prototype development instances are capacity, bought through the wizard — the same
@@ -2139,6 +2220,18 @@ var LicenseDetails = (function(){
          can open a licence", which is this spec's scope exactly — so it now sits beside
          the three tabs it belongs with instead of in a different surface under a
          condition nobody could see was the same one. */
+      /* ⚠️ A SECOND ARRANGEMENT AXIS, and it is deliberately separate from `Zone`: that one
+         is the block under the header, this one is the Plan block below it. One control
+         covering both would make two independent choices look like one. */
+      { id:'licPlan', group:'License', label:'Plan block',
+        get:licPlanLayout,
+        set:function(v){
+          Store.set('licPlan', v);
+          if(window.LicenseDetails) LicenseDetails.refresh();
+        },
+        options:[{ v:'stacked', t:'Current — Add-ons under the table' },
+                 { v:'side', t:'Side by side' }] },
+
       { id:'licZone', group:'License', label:'Zone',
         get:licZone,
         set:function(v){

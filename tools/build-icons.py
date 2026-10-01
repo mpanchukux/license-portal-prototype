@@ -57,6 +57,14 @@ ICONS = [
     # the pass after took the icons out of that column, and a closed set that keeps what
     # nothing draws is a pile. The column has icons again — one shape per state, so the
     # cell does not depend on colour alone — so the symbol has a reader again.
+    # ⚠️ ADDED 2026-10-01 for TBMQ's two capacity rows, which were the only block titles
+    # in the flow with no glyph beside them — the product's entitlements are Sessions and
+    # Messages / sec, and neither had a name in CAP_IC. `plug-connected` is a live
+    # connection, which is what an MQTT session is; `message` is what the broker moves.
+    # Neither reuses a symbol that already means something else here: `topology-star` is
+    # the ThingsBoard product mark in the picker, and `affiliate` is a block heading in
+    # the purchase modal.
+    'plug-connected', 'message',
     'alert-triangle', 'alert-circle', 'info-circle', 'circle-check', 'circle-x', 'clock',
     'lock', 'eye', 'eye-off', 'shield-check', 'point', 'file-text',
     # ⚠️ Nothing in the product uses `device-desktop` — it is here because the
