@@ -1556,8 +1556,35 @@ function activityMarkHTML(rec){
    them: the old value is struck through and quiet, the new one is a pill. That is what
    makes it readable at a glance — the eye lands on the pill, which is the value the row
    is now about, and the struck one is there to be checked rather than read. */
-function activityDetailHTML(rec){
+/* ⚠️⚠️ ONE LEGACY SHAPE IS REPAIRED ON READ (2026-10-02, from a report: "why is there no
+   Current label value in this block? I asked for it"). The label events were rebuilt on
+   10-01 — the sentence says what happened, the block says old -> new — and `setLabel`
+   has written that shape ever since. A store SAVED BEFORE that day still holds the old
+   one, `['Previous label', X]`: a single value, which renders as the one thing that did
+   not change and says nothing about what the label now is. The demo store is never
+   migrated (a deliberate decision — see NOTES), so without this the only cure is
+   `Reset demo data`, and the reader has no way to know that is what they are looking at.
+   ⚠️ IT IS A CONVERSION, NOT A GUESS. The new value is already on the record: `f.label`
+   is what the sentence was built from, and `cleared` has no new value by definition, so
+   it takes the em dash the writer uses today. A record with NO detail at all is left
+   alone — there is nothing to convert, and inventing a row would be the one thing worse
+   than an absent one.
+   ⚠️ SCOPED TO THE THREE LABEL TYPES by name. `['Previous label', …]` was only ever
+   written by them, and a blanket rule keyed on the string would catch any future event
+   that happens to use those words for a fact that really did not change. */
+function activityDetail(rec){
   var d = rec && rec.detail;
+  if(!d || !d.length) return d;
+  var t = rec.type;
+  if(t !== 'license.labeled' && t !== 'license.label_cleared' && t !== 'license.label_added') return d;
+  return d.map(function(row){
+    if(row.length !== 2 || row[0] !== 'Previous label') return row;
+    var now = t === 'license.label_cleared' ? '\u2014' : ((rec.f || {}).label || '');
+    return now ? ['Label', row[1], now] : ['Label', row[1]];
+  });
+}
+function activityDetailHTML(rec){
+  var d = activityDetail(rec);
   if(!d || !d.length) return '';
   return '<div class="fi-card">' + d.map(function(row){
     var val = row.length > 2
@@ -3845,6 +3872,13 @@ function invoicePaidWith(){
             : 'Visa \u2022\u20224242';
 }
 
+/* ⚠️⚠️ THIS DOCUMENT CANNOT SEE THE TOKEN SCALE (2026-10-02). It is a STANDALONE page
+   opened in its own window — `styles.css` is never loaded into it, so `:root` carries no
+   `--t-*`. Every size in the `<style>` below and in the one inline `style` attribute is a
+   literal on purpose: routed through `var()` they resolve to nothing, the declaration is
+   dropped, and the text falls back to whatever it inherits. Caught by doing it and reading
+   it back — `INVOICE` went from 18px to the body's 14. Left as literals, and excluded from
+   the font-size token ratio for the same reason. */
 function mockInvoiceUrl(d){
   var html = '<!doctype html><html><head><meta charset="utf-8"><title>Invoice ' + d.num + '</title>'
     + '<style>body{margin:0;background:#e9e9e7;font:14px/1.5 Ubuntu,system-ui,sans-serif;color:#1c1c1c}'

@@ -312,9 +312,18 @@ $$('.sgWizStep').forEach(function(box){
       'A licence is bought — the purchase wizard commits.'],
     'license.canceled':         [HUMAN, { entity:'Sandbox', until:'Sep 05, 2026' }, null,
       'Cancel, from the licence panel or the row menu.'],
+    /* ⚠️⚠️ THREE TYPES AND THE CHANGE SHAPE (2026-10-02). These specimens still carried
+       the pre-10-01 payload — a single `['Previous label', X]` row, which is the shape
+       this product uses for a fact that did NOT change — so the design system was showing
+       the old answer for a surface that had already been rebuilt, and `label_added` was
+       not shown at all although the type exists. All three now say what `setLabel` in
+       shared.js actually writes: added is one value, changed is old -> new, cleared is
+       old -> em dash. */
+    'license.label_added':      [HUMAN, { entity:'Business', label:'EU pilot' },
+      [['Label', 'EU pilot']], 'The label field on the licence panel, filled for the first time.'],
     'license.labeled':          [HUMAN, { entity:'Business', label:'Production EU' },
-      [['Previous label', 'EU pilot']], 'The label field on the licence panel.'],
-    'license.label_cleared':    [HUMAN, { entity:'Business' }, [['Previous label', 'Production EU']],
+      [['Label', 'EU pilot', 'Production EU']], 'The same field, changed to something else.'],
+    'license.label_cleared':    [HUMAN, { entity:'Business' }, [['Label', 'Production EU', '\u2014']],
       'The same field, emptied.'],
     'license.plan_changed':     [HUMAN, { entity:'Factory A', from:'Startup', to:'Business' },
       [['Devices', '500', '1,000'], ['Production instances', '2', '3']],

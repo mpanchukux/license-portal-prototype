@@ -260,7 +260,7 @@
      step below: still readable at arm's length, and short enough that a message costs
      the layout almost nothing. Nothing else uses it yet, and it should stay that way
      unless the thing being set genuinely sits UNDER something else. */
-  --t-caption-fs:13px; --t-caption-lh:1.35;  --t-caption-ls:0;        --t-caption-fw:400;
+  --t-caption-fs:14px; --t-caption-lh:1.35;  --t-caption-ls:0;        --t-caption-fw:400;
   /* ---- the COMPACT tier (≤600px) --------------------------------------------
      Three levels the phone uses in place of h1, h2 and body. They were rendered
      as literals in ~17 rules before being named here, which is why the styleguide
@@ -282,7 +282,16 @@
 html,body{height:100%}
 body{
   margin:0; background:var(--bg); color:var(--ink);
-  font:14px/1.45 Ubuntu,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  /* ⚠️⚠️ THE `font` SHORTHAND IS SPLIT (2026-10-02) so the base size reads from the scale
+     instead of restating it — this one declaration was the second place the base 14 was
+     written. All three parts are the tokens' own values: `--t-small-fs` is 14,
+     `--t-small-lh` is 1.45, and `--font-ui` is this exact stack (the shorthand spelled
+     `Ubuntu` unquoted and the token spells it `'Ubuntu'`, which resolves the same).
+     ⚠️ THE SHORTHAND ALSO RESET `font-weight` / `font-style` / `font-variant` / 
+     `font-stretch` to `normal`, and the longhands do not. On `body` those are already
+     their initial values and nothing above `body` can set them, so the reset was doing
+     nothing. Computed style checked before and after. */
+  font-family:var(--font-ui); font-size:var(--t-body-fs); line-height:var(--t-small-lh);
   display:flex; flex-direction:column;   /* persistent top bar + one scrolling content region */
 }
 /* the feed's one emphasis style: .em, and <b> inside feed text maps onto it */
@@ -319,7 +328,7 @@ body{
 /* centred, not left-aligned (2026-09-25): it is a row of four equal legal links with
    nothing to align to — the content column above it starts at a gutter this row does
    not share, so `left` was aligning it to an edge that is not there. */
-.shellfoot-in{max-width:var(--pageW);margin:0 auto;padding:0 var(--pageX);display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;font-size:14px;color:var(--faint)}
+.shellfoot-in{max-width:var(--pageW);margin:0 auto;padding:0 var(--pageX);display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;font-size:var(--t-body-fs);color:var(--faint)}
 .shellfoot-in .link{color:var(--faint)}
 .shellfoot-in .link:hover{color:var(--ink)}
 /* every page renders inside the same container: one max-width, centred, same
@@ -363,10 +372,10 @@ a{color:inherit}
 .sidebar{background:var(--chrome);border-right:1px solid var(--chromeLine);display:flex;flex-direction:column}
 .brand{display:flex;align-items:center;gap:9px;padding:16px 16px;border-bottom:1px solid var(--chromeLine)}
 .brand .mark{width:26px;height:26px;border:1px solid var(--line);border-radius:6px;display:flex;align-items:center;justify-content:center;background:#fff;color:var(--ink)}
-.brand .bt{font-size:14px;font-weight:700;line-height:1.1}
-.brand .bs{font-size:14px;color:var(--faint);letter-spacing:.04em;text-transform:uppercase}
+.brand .bt{font-size:var(--t-small-fs);font-weight:700;line-height:1.1}
+.brand .bs{font-size:var(--t-small-fs);color:var(--faint);letter-spacing:.04em;text-transform:uppercase}
 .nav{padding:10px 8px;display:flex;flex-direction:column;gap:2px}
-.nav a{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:6px;color:var(--mid);text-decoration:none;font-size:14px;border:1px solid transparent}
+.nav a{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:6px;color:var(--mid);text-decoration:none;font-size:var(--t-body-fs);border:1px solid transparent}
 .nav a:hover{background:var(--hover);color:var(--ink)}
 .nav a.on{background:var(--sel);color:var(--ink);font-weight:600;border-color:var(--chromeLine)}
 .nav a.on .ic{stroke-width:1.9}
@@ -375,19 +384,19 @@ a{color:inherit}
 .topbar{height:52px;flex:none;display:flex;align-items:center;gap:14px;padding:0 18px;background:var(--chrome);border-bottom:1px solid var(--chromeLine)}
 /* side + top navigation hidden for now so it doesn't distract */
 .sidebar,.topbar{display:none}
-.topbar .pt{font-size:14px;font-weight:600}
+.topbar .pt{font-size:var(--t-small-fs);font-weight:600}
 .topbar .sp{flex:1}
 .iconbutton{width:var(--ic-30);height:var(--ic-30);border:1px solid transparent;border-radius:6px;background:transparent;color:var(--mid);display:flex;align-items:center;justify-content:center}
 .iconbutton:hover{background:var(--hover);color:var(--ink);border-color:var(--chromeLine)}
 .user{display:flex;align-items:center;gap:8px;padding:3px 6px;border-radius:6px;border:1px solid transparent}
 .user:hover{background:var(--hover);border-color:var(--chromeLine)}
-.avatar{width:24px;height:24px;border-radius:50%;background:#fff;border:1px solid var(--line);color:var(--ink);font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center}
-.user .un{font-size:14px;color:var(--ink)}
-.kebab{font-size:18px;line-height:1;color:var(--mid)}
+.avatar{width:24px;height:24px;border-radius:50%;background:#fff;border:1px solid var(--line);color:var(--ink);font-size:var(--t-small-fs);font-weight:700;display:flex;align-items:center;justify-content:center}
+.user .un{font-size:var(--t-body-fs);color:var(--ink)}
+.kebab{font-size:var(--t-h2-sm-fs);line-height:1;color:var(--mid)}
 .menu{position:relative}
 .menu .pop{position:absolute;right:0;top:36px;background:#fff;border:1px solid var(--line);border-radius:6px;min-width:160px;padding:5px;box-shadow:0 6px 20px rgba(0,0,0,.08);z-index:40}
 .menu .pop[hidden]{display:none}
-.menu .pop button{display:block;width:100%;text-align:left;padding:7px 9px;border:0;background:transparent;border-radius:6px;font-size:14px;color:var(--ink)}
+.menu .pop button{display:block;width:100%;text-align:left;padding:7px 9px;border:0;background:transparent;border-radius:6px;font-size:var(--t-body-fs);color:var(--ink)}
 .menu .pop button:hover{background:var(--hover)}
 
 /* ⚠️ `overflow:visible`, and it was `auto`. In page mode that made THIS the nearest
@@ -485,10 +494,10 @@ a{color:inherit}
    word's ink band (cap top to descender bottom). */
 .titlerow .chip.status{margin-top:6px}
 .planname{margin:0;font-family:var(--font-ui);font-size:var(--t-h1-fs);line-height:var(--t-h1-lh);letter-spacing:var(--t-h1-ls);font-weight:var(--t-h1-fw)}
-.sub{color:var(--mid);font-size:14px;margin-top:2px}
+.sub{color:var(--mid);font-size:var(--t-body-fs);margin-top:2px}
 /* one-time price + updates term, sits under the licence name */
 /* muted qualifier under an entitlement name */
-.itemnote{font-size:14px;color:var(--faint);margin-top:3px;line-height:1.4}
+.itemnote{font-size:var(--t-body-fs);color:var(--faint);margin-top:3px;line-height:1.4}
 /* Features: boolean entitlements as chips — no columns, no dashes */
 /* ⚠️⚠️ `side` — THE PLAN TABLE AND THE ADD-ONS IN TWO COLUMNS (2026-10-01, by request,
    from a reference). The block is a grid only in this arrangement; `stacked` is the
@@ -503,10 +512,64 @@ a{color:inherit}
    together across a full-width section; inside a column that is already narrower than the
    section, holding it as well would be narrowing twice. The recorded debt about `.plantable`
    hanging short of the section's right edge is about the STACKED form and is untouched.
-   ⚠️ `minmax(0,…)` on the first track: a table in a grid column refuses to shrink below
-   its content without it, and the add-ons column then gets squeezed to nothing instead. */
-.planblock{display:grid;grid-template-columns:minmax(0,1fr) 260px;
-  column-gap:32px;align-items:start}
+   ⚠️⚠️ THE FIRST TRACK HUGS THE TABLE (2026-10-02, by request: "make the Plan table
+   narrower, and move the Add-ons block left by as much as the table narrows"). It was
+   `minmax(0,1fr)` — the whole width left over after 260 + 32 — and the table inside it
+   was `69%` of that, so the column ended 129px past the table's own right edge and
+   Add-ons stood 179px from the last figure it belongs beside. Measured: track 532.5,
+   table 403.4, Add-ons at x624.2.
+   ⚠️ `min-content`, AND THE TABLE FILLS IT — one number, and the two halves of the
+   request become the same number by construction: the column shrinks to what the figures
+   need and Add-ons, being the next track, moves left by exactly that. Measured after:
+   track 360.5, table 396.5, Add-ons at x452.3 — both moved 171.9.
+   ⚠️ THE FLOOR IS THE HEAD WORDS, not the data: `PURCHASED` (109px), `INCLUDED` (94) and
+   `LIMIT` (68) set the three numeric columns on every licence in the seed, so the track
+   is the same width whatever is in the rows. Rename a heading and this re-measures itself.
+   ⚠️⚠️ AND THEN THE TABLE WAS ASKED FOR HALF AGAIN (2026-10-02, second pass: "make the
+   table in the Plan block 50% wider, and Manage has to stand on the right"). Hugging the
+   figures made the column honest and left it SHORT — four numeric columns at their floor
+   read as a strip rather than as the licence's capacity. 559 is derived from the hug, not
+   chosen: the table was 396.5 there, and `+ var(--cellx) * 2` means the TRACK carries 36
+   less than the table does, so 595 / 1.5006 lands on 559. Measured after: table 595,
+   exactly 1.501x.
+   ⚠️⚠️ TRACK 2 IS `1fr` AND THAT IS WHAT PUTS `Manage` ON THE RIGHT. The button is moved
+   into the Add-ons heading row by `applyLicPlan` and pushed over by a `.spacer`, so it
+   stands at the right edge of ITS COLUMN — which, at a stated 260, was 171.9px short of
+   the block's own edge. A flexible second track ends where the block ends, and the button
+   with it: measured, Manage's right edge 884.2 = the block's inner right edge. **Nothing
+   positions the button itself** — it rides the column, which is why there is no second
+   rule here and why it cannot drift out of step with the one that sizes the column.
+   ⚠️ THE ADD-ONS COLUMN LOSES 26px FOR IT (260 -> 233.5) and that was checked, not
+   assumed: the chips are left-aligned in a single column and the widest in the product is
+   `Edge Computing` at 154.6; the empty state is 192.9. Both clear it.
+   ⚠️⚠️ `minmax(0, …)` STAYS, AND A BARE INTRINSIC TRACK WAS MEASURED WRONG ONCE ALREADY.
+   A rigid first track overflows between 601 and ~1150px, where the panel is narrower than
+   the two columns plus the gap — the Add-ons column was pushed 104px past the block's
+   right edge. `minmax(0, …)` is the stated width where there is room and gives way where
+   there is not.
+   ⚠️⚠️ AND TRACK 2 NEEDS A FLOOR, which `minmax(0,1fr)` does not give it — caught at 700px
+   on the same pass that introduced it. `1fr` has a minimum of 0, so the FLEXIBLE track
+   collapses before the stated one yields: measured at a 644px block, track 1 held all 559
+   and the Add-ons column was crushed to **9px**, with `Manage` 125.7px past the block's
+   edge. `min-content` as the floor makes the first track give way instead — 433.3 / 134.7
+   at the same width, Manage back on the edge — and it is read from the column's own
+   contents, so a wider chip raises it without a number here. */
+/* ⚠️ `column-gap` 32 -> **48** (2026-10-02, by request: "more room between the Plan and
+   Add-ons blocks"). 32 was set while the Plan column hugged four numeric columns at their
+   floor; at 595 the table is half again as wide and the two blocks read as one field with
+   a seam rather than as two. The gutter is the only thing separating them — there is no
+   rule and no fill between the columns, by the standing rule about hairlines.
+   ⚠️ IT COMES OUT OF THE ADD-ONS COLUMN, not out of the table: track 1 is stated and
+   track 2 is the flexible one, so 233.5 -> 217.5 and the table stays exactly 595 — the
+   width the previous pass was asked for and must not drift. Checked against what is in
+   that column: the widest chip is `Edge Computing` at 154.6, and the empty state measures
+   192.9 on ONE LINE — it wraps rather than overflows below that, which is already what
+   happens in the other host (the page keeps 86px for the back gutter, so its column runs
+   at 185 and the sentence takes two lines). 217.5 keeps the modal's on one.
+   ⚠️ `Manage` DOES NOT MOVE — it rides the column's right edge, which is the block's.
+   Measured at every step from 32 to 64: 884.2 each time. */
+.planblock{display:grid;grid-template-columns:minmax(0,559px) minmax(min-content,1fr);
+  column-gap:48px;align-items:start}
 /* ⚠️ BOTH HEADING ROWS TAKE THE CONTROL BAND, and that is what actually puts the two
    words on one line. `Manage` moved into the Add-ons row, so that row is 40px tall with
    its heading centred in it while `Plan` sat alone in a 17px box — measured 12px apart,
@@ -522,6 +585,17 @@ a{color:inherit}
    starting 16px below the chips beside it. Measured: table y358, chips y342.
    One gap, owned by `.sh`, and both columns begin on the row's own top edge. */
 .planblock > .plantable{grid-column:1;grid-row:2;width:100%;margin-top:0}
+/* ⚠️⚠️ AND IT HAS TO SAY SO INSIDE THE MODAL TOO (2026-10-02). The rule above has said
+   `width:100%` since the block became a grid — and it has never applied in the panel:
+   `.canvas .plantable{width:calc(69% + var(--cellx)*2)}` is the same (0,2,0) and stands
+   LATER in this file, so the frame's rule won on order and the table kept a share of a
+   track it was supposed to fill. The comment above ("THE TABLE GIVES UP ITS 69%") was
+   describing an intent, not the cascade. (0,3,0) is what makes it true.
+   ⚠️ `calc(100% + var(--cellx) * 2)`, not a bare `100%`: `.canvas .gridtbl` pulls the
+   table 18px left so the first column's text lands on the block's own gutter, and the
+   width has to grow by both insets or the last column stops 18px short of the track.
+   Measured: last figure ends at 420.3, which is the track's right edge exactly. */
+.canvas .planblock > .plantable{width:calc(100% + var(--cellx) * 2)}
 .planblock > .featureblock{grid-column:2;grid-row:1 / span 2;
   margin-top:0;display:grid;grid-template-rows:subgrid}
 /* ⚠️ `subgrid` IS PROGRESSIVE ENHANCEMENT, not the mechanism. Where it lands, the Add-ons
@@ -546,7 +620,7 @@ a{color:inherit}
    on, so the column keeps its shape when a licence has bought nothing. Not `.emptybox`:
    that is the full-width "this list has no rows" block, and this is one line inside a
    narrow column beside a table. */
-.fchip-none{font-size:14px;color:var(--mid);background:var(--surface-quiet);
+.fchip-none{font-size:var(--t-body-fs);color:var(--mid);background:var(--surface-quiet);
   border-radius:6px;padding:8px 12px}
 /* ⚠️⚠️ AN ADDED ADD-ON IS FILLED, NOT OUTLINED (2026-09-29, by request). It was a
    white pill with a `--line` border and ink text — the same treatment `.chip.ghost`
@@ -561,7 +635,7 @@ a{color:inherit}
    one this family settled on (see `.nextcharge`, `.nl-paycard`).
    ⚠️ The tick takes `currentColor` like every icon here, so the glyph and the word
    darken together and nothing paints the mark separately. */
-.fchip{display:inline-flex;align-items:center;gap:7px;font-size:14px;padding:5px 12px;
+.fchip{display:inline-flex;align-items:center;gap:7px;font-size:var(--t-small-fs);padding:5px 12px;
   border:0;border-radius:999px;background:var(--c-blue-50);color:var(--accent);font-weight:500}
 .fchip .fmark{width:var(--ic-16);height:var(--ic-16);flex:none}
 /* row 2: the label affordance on its own */
@@ -583,7 +657,7 @@ a{color:inherit}
 .hd-ic{align-self:center}
 .hd-ic.lp-ic{width:59px;height:59px;border-radius:12px}
 .metarow #labelSlot{display:inline-flex;align-items:center;gap:8px}
-.labeltext{font-size:var(--t-small-fs);line-height:var(--t-small-lh);letter-spacing:var(--t-small-ls);color:var(--mid)}
+.labeltext{font-size:var(--t-body-fs);line-height:var(--t-small-lh);letter-spacing:var(--t-small-ls);color:var(--mid)}
 /* the label sits with a pencil beside it; the button stays quiet until hovered */
 /* ⚠️ POSITION AND NOTHING ELSE (2026-09-28) — the same correction `.back` already
    carries above. This restated the box (24×24, no padding, a transparent border and a
@@ -593,8 +667,8 @@ a{color:inherit}
 .labeledit{flex:none}
 /* editing state: the input and its Save read as one control pair */
 .labeledit-row{display:inline-flex;align-items:center;gap:8px}
-.labelsave{height:26px;padding:0 10px;font-size:14px}
-.period{font-size:14px;color:var(--ink);font-variant-numeric:tabular-nums}
+.labelsave{height:26px;padding:0 10px;font-size:var(--t-body-fs)}
+.period{font-size:var(--t-small-fs);color:var(--ink);font-variant-numeric:tabular-nums}
 /* ⚠️⚠️ THE STATUS IS THE ONE VALUE IN THAT ROW WORTH READING FIRST (2026-10-01, by
    request: "make the status bigger"). The key row carries four columns — key, status,
    period, version — and the key's own value is already 16px mono while the other three
@@ -605,7 +679,7 @@ a{color:inherit}
    ⚠️ The glyph is NOT re-sized with it — `.head-rest .statmark-ic` already lifted it to
    20 to match the version mark, and 20 against 16 is the ratio the feed's own mark uses
    (30/20). Measured rather than assumed: the word grew, the circle did not move. */
-#statusSlot .statmark{font-size:16px}
+#statusSlot .statmark{font-size:var(--t-body-fs)}
 /* thin divider between the meta row and the license key row */
 /* ⚠️⚠️ `.hairline` IS GONE FROM THE LICENCE HEADER (2026-09-29, by request), node and
    rule both. The note above `.head` used to say "the hairline stays — with the fill gone
@@ -712,7 +786,7 @@ a{color:inherit}
 .minihead{margin:0 0 8px;font-family:var(--font-ui);font-size:var(--t-label-fs);line-height:var(--t-label-lh);letter-spacing:var(--t-label-ls);font-weight:var(--t-label-fw);text-transform:uppercase;color:var(--ink)}
 /* the subscription-period label matches the "Subscription plan" subhead */
 .periodhead{margin:0 0 6px;font-family:var(--font-ui);font-size:var(--t-label-fs);line-height:var(--t-label-lh);letter-spacing:var(--t-label-ls);font-weight:var(--t-label-fw);text-transform:uppercase;color:var(--ink)}
-.chip{font-size:14px;padding:2px 9px;border:1px solid var(--line);border-radius:999px;color:var(--mid);background:#fafafa;display:inline-flex;align-items:center;gap:6px}
+.chip{font-size:var(--t-small-fs);padding:2px 9px;border:1px solid var(--line);border-radius:999px;color:var(--mid);background:#fafafa;display:inline-flex;align-items:center;gap:6px}
 .chip.status{border-color:var(--ink);color:var(--ink);font-weight:600;background:#fff}
 /* blocked is the one status that is not "alive" — ink fill, the same weight every
    other attention mark in the product carries (see .pill.attn) */
@@ -721,13 +795,13 @@ a{color:inherit}
 .chip.ghost{border-style:dashed;color:var(--faint);background:transparent}
 .chip.ghost:hover{color:var(--ink);border-color:var(--mid)}
 .chip.label{border-color:var(--line);color:var(--ink);background:#fff}
-.chip .x{margin-left:2px;color:var(--faint);border:0;background:transparent;padding:0 2px;font-size:14px}
+.chip .x{margin-left:2px;color:var(--faint);border:0;background:transparent;padding:0 2px;font-size:var(--t-small-fs)}
 .chip .x:hover{color:var(--ink)}
 /* editing takes the width the row has: a label is a sentence, and the field has
    to show all of it rather than clip at a fixed size */
 .metarow #labelSlot:has(.labeledit-row){flex:1;min-width:0}
 .labeledit-row{display:flex;flex:1;align-items:center;gap:8px;min-width:0}
-.labelinput{font:inherit;font-size:14px;padding:3px 12px;border:1px solid var(--ink);border-radius:999px;flex:1;min-width:0;max-width:640px;outline:none}
+.labelinput{font:inherit;font-size:var(--t-body-fs);padding:3px 12px;border:1px solid var(--ink);border-radius:999px;flex:1;min-width:0;max-width:640px;outline:none}
 
 .muted{color:var(--faint)}
 
@@ -772,7 +846,7 @@ a{color:inherit}
    ⚠️ NO BASE GROUND ON PURPOSE. A branch that forgot its tone would render transparent,
    which is visible in a second; inheriting red would have made a missing tone look like
    a deliberate one. */
-.alert{margin-top:12px;display:flex;align-items:flex-start;gap:12px;font-size:14px;
+.alert{margin-top:12px;display:flex;align-items:flex-start;gap:12px;font-size:var(--t-body-fs);
   color:var(--ink);border:0;border-radius:10px;padding:14px 16px}
 .alert.tone-red{background:var(--surface-danger)}
 /* the ink band, the same one Home's black tone wears — a deadline, not a fault */
@@ -912,7 +986,7 @@ a{color:inherit}
    black under the cursor, and there was no global `.btn[disabled]` rule at all — the
    fade was written separately inside four containers and nowhere else. */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;
-  font-family:inherit;font-size:14px;line-height:1;text-decoration:none;
+  font-family:inherit;font-size:var(--t-body-fs);line-height:1;text-decoration:none;
   height:var(--btnH);padding:0 13px;border-radius:var(--btn-r);border:1px solid transparent;
   background:transparent;color:var(--ink);cursor:pointer;position:relative;
   white-space:nowrap}
@@ -930,7 +1004,7 @@ a{color:inherit}
    40px toolbar is a jump; 48 is a 1.2 step and reads as bigger without shouting. */
 .btn--sm{height:26px;padding:0 10px}
 .btn--md{height:var(--btnH);padding:0 13px}
-.btn--lg{height:48px;font-size:16px;padding:0 22px}
+.btn--lg{height:48px;font-size:var(--t-body-fs);padding:0 22px}
 
 /* ---- CONTENT: icon-only is a WIDE rounded rectangle ----------------------------
    ⚠️⚠️ NOT A SQUARE (2026-09-25, from the shape reference). It was `width = height`,
@@ -1227,13 +1301,13 @@ a{color:inherit}
 /* the payment method: same parts and same classes as the Payment method block on
    Billing & payment, laid out inline — no frame of its own inside this card */
 .nc-method{display:flex;align-items:center;gap:10px}
-.nc-when{font-size:14px;color:var(--mid);font-variant-numeric:tabular-nums}
+.nc-when{font-size:var(--t-small-fs);color:var(--mid);font-variant-numeric:tabular-nums}
 .nc-amount{margin:0}
 /* on one line the amount is no longer a block hero — it sits inline with the label
    and the date, still the largest thing in the row */
 .nextcharge .big{display:inline-block;font-size:var(--t-h2-fs);line-height:1.15;letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw);font-variant-numeric:tabular-nums}
 .sh{display:flex;align-items:center;gap:8px;margin-bottom:12px}
-.sh .n{width:20px;height:20px;border-radius:50%;background:var(--ink);color:#fff;font-size:14px;display:flex;align-items:center;justify-content:center;flex:none}
+.sh .n{width:20px;height:20px;border-radius:50%;background:var(--ink);color:#fff;font-size:var(--t-small-fs);display:flex;align-items:center;justify-content:center;flex:none}
 .sh h3{margin:0;font-family:var(--font-ui);font-size:var(--t-label-fs);line-height:var(--t-label-lh);letter-spacing:var(--t-label-ls);font-weight:var(--t-label-fw);text-transform:uppercase;color:var(--ink)}
 .sh .spacer{flex:1}
 
@@ -1244,10 +1318,10 @@ a{color:inherit}
 /* ⚠️ `.iconbtn.spinning` IS GONE: the 600ms refresh spin is the BUSY state at a short
    duration (`runButtonBusy(btn, 600)`), not a second mechanism. */
 /* ghost icon button: no fill, no stroke — hover only darkens the glyph */
-.link{color:var(--ink);text-decoration:underline;text-underline-offset:2px;font-size:14px;background:transparent;border:0;padding:0}
+.link{color:var(--ink);text-decoration:underline;text-underline-offset:2px;font-size:var(--t-body-fs);background:transparent;border:0;padding:0}
 .link:hover{color:#000}
 
-table{width:100%;border-collapse:collapse;font-size:14px}
+table{width:100%;border-collapse:collapse;font-size:var(--t-body-fs)}
 /* ⚠️ `--mid`, not `--faint`, and a shorter band (2026-09-28, by request). The column
    row is a label, not a whisper: at `--faint` on `--surface-quiet` it was the palest
    text in the table sitting on the one row that has to be scannable. The height comes
@@ -1285,7 +1359,7 @@ th.inv-amt,td.inv-amt{padding-right:48px}
 /* fixed text column so every meter starts at the same x and is the same width;
    wide enough for the largest plan's "0 / 1,000" without wrapping */
 .usecell{display:grid;grid-template-columns:58px 120px;align-items:center;gap:8px;position:relative}
-.usetxt{font-variant-numeric:tabular-nums;color:var(--mid);font-size:14px;text-align:left;white-space:nowrap}
+.usetxt{font-variant-numeric:tabular-nums;color:var(--mid);font-size:var(--t-body-fs);text-align:left;white-space:nowrap}
 .tip{position:relative}
 /* ⚠️ THE HOVER TOOLTIP IS GATED BEHIND `(hover:hover)`, and that gate is the fix for
    a real bug: on a touch device a tap leaves the element in `:hover` until you tap
@@ -1298,12 +1372,12 @@ th.inv-amt,td.inv-amt{padding-right:48px}
    confirmation the copy handler sets and clears itself, not a label that sticks. */
 .tip.show::after{
   content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);right:0;
-  background:var(--ink);color:#fff;font-size:14px;white-space:nowrap;
+  background:var(--ink);color:#fff;font-size:var(--t-body-fs);white-space:nowrap;
   padding:5px 9px;border-radius:6px;pointer-events:none;z-index:20}
 @media (hover:hover){
   .tip:hover::after,.tip:focus-visible::after{
     content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);right:0;
-    background:var(--ink);color:#fff;font-size:14px;white-space:nowrap;
+    background:var(--ink);color:#fff;font-size:var(--t-body-fs);white-space:nowrap;
     padding:5px 9px;border-radius:6px;pointer-events:none;z-index:20}
 }
 /* .wide: the base tooltip is a nowrap one-liner, which a sentence would stretch
@@ -1408,7 +1482,7 @@ th.inv-amt,td.inv-amt{padding-right:48px}
    always wanted. A rule whose premise has gone is not kept "in case"; it is the reason
    the tooltip would now open into the sheet's edge instead of away from it. */
 /* the check-in cadence, stated once above the Instances table */
-.inst-note{margin:0 0 14px;font-size:14px;line-height:1.5;color:var(--faint)}
+.inst-note{margin:0 0 14px;font-size:var(--t-body-fs);line-height:1.5;color:var(--faint)}
 .inst-note[hidden]{display:none}
 /* the id column keeps its width; the full value is in `title` and on the clipboard */
 .inst-id{display:inline-block;max-width:22ch;overflow:hidden;text-overflow:ellipsis;
@@ -1462,7 +1536,7 @@ th.inv-amt,td.inv-amt{padding-right:48px}
 /* ⚠️ `.ver-latest` and the LIST's `.ver-mixed` are both gone. `.ver-mixed` survives as a
    rule because the licence DETAILS header still prints it — it is the only place left
    that says a licence's figure is the lowest of its instances. */
-.ver-mixed{font-size:13px;color:var(--faint);font-variant-numeric:tabular-nums}
+.ver-mixed{font-size:var(--t-caption-fs);color:var(--faint);font-variant-numeric:tabular-nums}
 
 /* ---------- the status mark: the word, in its own colour ------------------------
    ⚠️⚠️ THE COLOUR IS ON THE TEXT NOW, and the icon is gone (2026-09-25, second pass).
@@ -1483,7 +1557,7 @@ th.inv-amt,td.inv-amt{padding-right:48px}
    value did not; and the glyph coming BACK on 09-27 did not fix it either, because the
    mark and the word are measured by different rules and only the mark was ever in
    question. Fixed in the primitive, so nothing here names a colour. */
-.statmark{display:inline-flex;align-items:center;gap:6px;font-size:14px;white-space:nowrap;
+.statmark{display:inline-flex;align-items:center;gap:6px;font-size:var(--t-small-fs);white-space:nowrap;
   color:var(--status-off)}
 /* ⚠️ `currentColor` and nothing else — the glyph takes the tone from `.statmark`, so the
    three state rules below stay the only place a status colour is written. 16px, the
@@ -1569,10 +1643,10 @@ th.inv-amt,td.inv-amt{padding-right:48px}
    same shape it was. */
 .titlecount{display:inline-block;padding:3px 10px;line-height:20px;
   border-radius:999px;background:var(--surface-quiet);color:var(--mid);
-  font-size:14px;font-variant-numeric:tabular-nums}
-.inst-hint{margin:4px 0 0;font-size:14px;line-height:1.5;color:var(--mid)}
+  font-size:var(--t-small-fs);font-variant-numeric:tabular-nums}
+.inst-hint{margin:4px 0 0;font-size:var(--t-body-fs);line-height:1.5;color:var(--mid)}
 .inst-filter{margin:0;padding:12px 18px;border-bottom:1px solid var(--line2);
-  font-size:14px;line-height:1.5;color:var(--ink)}
+  font-size:var(--t-body-fs);line-height:1.5;color:var(--ink)}
 
 /* ---------- activity: the type chips and the folded check row --------------------
    The chips are INDEPENDENT on/off, not a mutually-exclusive group — a reader
@@ -1599,13 +1673,13 @@ th.inv-amt,td.inv-amt{padding-right:48px}
 /* ⚠️ The multi row is a LABEL, so it has to be given the padding and the hover that
    `.dropmenu button:not(.btn)` gives the single one — that selector cannot reach it. */
 .dropcheck--multi{width:100%;padding:8px 12px;border-radius:7px;cursor:pointer;
-  font-size:14px;color:var(--ink)}
+  font-size:var(--t-body-fs);color:var(--ink)}
 .dropcheck--multi:hover{background:var(--hover)}
 .dropcheck--multi:focus-within{background:var(--hover)}
 /* the same box the wizard's add-on rows use — one checkbox in the product, not two */
 .dropbox{width:17px;height:17px;flex:none;accent-color:var(--ink);margin:0;cursor:pointer}
 .dropfoot{border-top:1px solid var(--line2);margin-top:5px;padding:7px 10px 2px}
-.dropfoot .link{font-size:14px}
+.dropfoot .link{font-size:var(--t-body-fs)}
 /* ---------- a menu row that states how many it would leave --------------------
    ⚠️ `margin-left:auto`, so the number sits on the menu's right edge however long the
    label is — the column of figures is what makes the menu scannable, and a count that
@@ -1627,7 +1701,7 @@ th.inv-amt,td.inv-amt{padding-right:48px}
    believes it. */
 /* the tax line inside the Calculation summary: it qualifies the total directly above
    it, so it sits in the same card rather than under it */
-.am-taxline{margin:10px 0 0;font-size:13px;line-height:1.4}
+.am-taxline{margin:10px 0 0;font-size:var(--t-caption-fs);line-height:1.4}
 /* "(optional)" inside a label: the same faint weight as help text, so the label still
    reads as one line rather than two words fighting */
 .help-inline{font-weight:400;color:var(--faint)}
@@ -1643,10 +1717,10 @@ th.inv-amt,td.inv-amt{padding-right:48px}
    hidden below a positive balance now, so nothing emits that class — and a live rule on a
    dead, obvious class name is exactly how `.keynote` restyled a paragraph six hundred
    rules later. Removed with its only writer, in the same pass. */
-.credit-note{font-size:14px;line-height:1.5;color:var(--mid)}
+.credit-note{font-size:var(--t-body-fs);line-height:1.5;color:var(--mid)}
 /* the wizard's own three-line summary: what came off, what the card takes, what is left */
 .nl-creditsum{margin:12px 0 4px;border-top:1px solid var(--line2);padding-top:10px}
-.nl-crow{display:flex;justify-content:space-between;gap:12px;font-size:14px;padding:2px 0}
+.nl-crow{display:flex;justify-content:space-between;gap:12px;font-size:var(--t-body-fs);padding:2px 0}
 .nl-crow.muted span{color:var(--faint)}
 .nl-creditrow div:last-child{white-space:nowrap}
 /* the statement on the Review of a downgrade — inside the effect box, set apart from
@@ -1661,8 +1735,8 @@ th.inv-amt,td.inv-amt{padding-right:48px}
 /* the licence cell's two lines, beside its 24px mark — see instLicCell */
 .ia-lictxt{display:flex;flex-direction:column;min-width:0}
 .ia-lic .lp-cell{align-items:center}
-.ia-id{font-size:13px;color:var(--faint);max-width:30ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.ia-licsub{display:block;font-size:13px;color:var(--faint)}
+.ia-id{font-size:var(--t-caption-fs);color:var(--faint);max-width:30ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ia-licsub{display:block;font-size:var(--t-caption-fs);color:var(--faint)}
 /* the one destructive entry in a row menu */
 /* ⚠️ A DESTRUCTIVE MENU ITEM READS AS DESTRUCTIVE (2026-09-25). This set `--ink`, i.e.
    exactly the colour of every other item — the class existed and said nothing. A menu
@@ -1693,17 +1767,17 @@ th.inv-amt,td.inv-amt{padding-right:48px}
 .row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px dashed var(--line2)}
 .row:first-child{padding-top:0}
 .row:last-child{border-bottom:0;padding-bottom:0}
-.row .l{color:var(--mid);font-size:14px}
+.row .l{color:var(--mid);font-size:var(--t-small-fs)}
 .row .r{text-align:right;display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
 .big{font-size:var(--t-h2-fs);font-weight:var(--t-h2-fw);font-variant-numeric:tabular-nums}
-.pill{font-size:14px;padding:1px 8px;border:1px solid var(--ink);color:var(--ink);background:#fff;border-radius:999px}
+.pill{font-size:var(--t-small-fs);padding:1px 8px;border:1px solid var(--ink);color:var(--ink);background:#fff;border-radius:999px}
 .pill.soft{border-color:var(--line);color:var(--mid)}
 
 .inline{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .inline[hidden]{display:none}
-.inline input{font:inherit;font-size:14px;padding:6px 14px;border:1px solid var(--ink);border-radius:var(--btn-r);width:180px;outline:none}
+.inline input{font:inherit;font-size:var(--t-body-fs);padding:6px 14px;border:1px solid var(--ink);border-radius:var(--btn-r);width:180px;outline:none}
 
-.stub{color:var(--faint);font-size:14px;padding:18px;text-align:center;border:1px dashed var(--line);border-radius:6px;background:#fafafa}
+.stub{color:var(--faint);font-size:var(--t-body-fs);padding:18px;text-align:center;border:1px dashed var(--line);border-radius:6px;background:#fafafa}
 
 /* license key in header */
 /* The key is what this block is for, so the value stays prominent — one step below
@@ -1720,7 +1794,13 @@ th.inv-amt,td.inv-amt{padding-right:48px}
    key already takes on the phone, so the mono ladder stays THREE numbers (16 / 16 / 15)
    instead of gaining a fourth. ⚠️ `MONOROWS` in styleguide.js states these by hand, as
    measured values — it has to be updated with this or the type table starts lying. */
-.keyline .mono{font-size:16px;line-height:1.35;letter-spacing:0}
+/* ⚠️ `nowrap` ARRIVES WITH THE SPACE SEPARATOR (2026-10-02). A hyphen is a break
+   opportunity a browser takes only when it must; a SPACE is one it takes gladly, and
+   `.keyline` is `flex-wrap:wrap` — so the moment the groups were spaced, a narrow panel
+   could fold the key across two lines and leave four hex characters sitting alone under
+   it. The key is one value; it wraps as one or not at all. The phone rule already said
+   this for its own reasons. */
+.keyline .mono{font-size:var(--t-body-fs);line-height:1.35;letter-spacing:0;white-space:nowrap}
 
 /* ============================================================================
    THE LICENCE PANEL'S FIRST ZONE — one layout (2026-10-01)
@@ -1972,7 +2052,7 @@ th .arrow .ic{width:var(--ic-16);height:var(--ic-16);display:block}
 th[aria-sort="ascending"] .arrow{transform:rotate(180deg)}
 th.chk,td.chk{width:34px;text-align:center;padding-left:8px;padding-right:0}
 input[type=checkbox]{accent-color:var(--ink);width:14px;height:14px;margin:0}
-.emptybox{padding:34px 0;text-align:center;color:var(--faint);font-size:14px}
+.emptybox{padding:34px 0;text-align:center;color:var(--faint);font-size:var(--t-body-fs)}
 /* Instances tab: type switcher toolbar + generous air before pagination */
 .insttoolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px}
 .insttoolbar[hidden]{display:none}   /* display:flex above would defeat a plain [hidden] */
@@ -2003,11 +2083,11 @@ th[aria-label$="ctions"],th.cellact,td.cellact{width:1%;white-space:nowrap;text-
 .invtable th:nth-child(3),.invtable td:nth-child(3){width:20%}
 .invtable th:nth-child(4),.invtable td:nth-child(4){width:14%}
 .invtable th:nth-child(5),.invtable td:nth-child(5){width:32%;text-align:right}
-.pager{display:flex;align-items:center;gap:14px;margin-top:22px;padding-bottom:4px;flex-wrap:wrap;font-size:14px;color:var(--mid)}
+.pager{display:flex;align-items:center;gap:14px;margin-top:22px;padding-bottom:4px;flex-wrap:wrap;font-size:var(--t-small-fs);color:var(--mid)}
 .pager .spacer{flex:1}
 /* the footer's own select is a control in a control row, so it reads the row's radius
    and gives its chevron the same gutter every other select now has */
-.pager select{font:inherit;font-size:14px;height:var(--btnH);border:1px solid var(--line);border-radius:var(--btn-r);padding:0 34px 0 14px;background:#fff;color:var(--ink);margin-left:6px}
+.pager select{font:inherit;font-size:var(--t-body-fs);height:var(--btnH);border:1px solid var(--line);border-radius:var(--btn-r);padding:0 34px 0 14px;background:#fff;color:var(--ink);margin-left:6px}
 /* ⚠️ Disabled while the list is showing everything at once — a search, or the grouped
    Instances view. It keeps its number (see the note on `syncPager`); what it gives up
    is looking pressable while it controls nothing. The label beside it dims with it,
@@ -2327,8 +2407,8 @@ body[data-tableframe] #dashView .dblock > table{margin-left:-18px;margin-right:-
 .modal.wide .mf{display:none}
 /* block 1: the licence, stated the way every other surface states it */
 .ru-lic{padding:16px 18px}
-.ru-liclead{font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:var(--mid)}
-.ru-licname{margin-top:2px;font-size:18px;font-weight:500;color:var(--ink)}
+.ru-liclead{font-size:var(--t-caption-fs);letter-spacing:.04em;text-transform:uppercase;color:var(--mid)}
+.ru-licname{margin-top:2px;font-size:var(--t-h2-sm-fs);font-weight:500;color:var(--ink)}
 @media (max-width:600px){
   /* one column, like the wizard's own Review at this width */
   .modal.wide{max-width:none}
@@ -2339,7 +2419,7 @@ body[data-tableframe] #dashView .dblock > table{margin-left:-18px;margin-right:-
 .modal .mh{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:0}
 .modal .mh h3{margin:0;font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw)}
 .modal .mh .spacer{flex:1}
-.modal .mb{padding:16px;font-size:14px;color:var(--mid);line-height:1.5}
+.modal .mb{padding:16px;font-size:var(--t-body-fs);color:var(--mid);line-height:1.5}
 .modal .mf{padding:12px 16px;border-top:1px solid var(--line2);display:flex;justify-content:flex-end;gap:8px}
 /* ---------- a block title that carries its subject's glyph (2026-09-29) ----------
    ⚠️ `has-ic` RATHER THAN A BARE DESCENDANT RULE. `.am-celltop` is a plain title on
@@ -2372,7 +2452,7 @@ body[data-tableframe] #dashView .dblock > table{margin-left:-18px;margin-right:-
    the note below still holds; it only ever needed something above it to be a step DOWN
    from. */
 .am-grouphead{display:flex;align-items:center;gap:8px;
-  font-size:16px;font-weight:600;color:var(--ink)}
+  font-size:var(--t-body-fs);font-weight:600;color:var(--ink)}
 .am-grouphead .ic{flex:none;color:var(--ink)}
 /* ⚠️ 400/`--mid` -> 500/`--ink` (2026-09-29, by request: "give the subheadings more
    weight"). They were dropped a step below the group's heading to say "these are rows
@@ -2395,13 +2475,13 @@ body[data-tableframe] #dashView .dblock > table{margin-left:-18px;margin-right:-
    in `--mid`, i.e. half the rule applied. At (0,3,0) both land. The same over-reach the
    licence panel's info icon hit; see the note there. */
 .fs-screen .am-groupbody .am-celltop,
-.am-groupbody .am-celltop{font-size:var(--t-small-fs);font-weight:500;color:var(--mid)}
+.am-groupbody .am-celltop{font-size:var(--t-body-fs);font-weight:500;color:var(--mid)}
 
 .am-sec{margin-bottom:22px}
 .am-sec:last-child{margin-bottom:0}
 .am-sechead{display:flex;align-items:baseline;gap:10px;margin-bottom:12px}
 .am-sechead h4{margin:0;font-family:var(--font-ui);font-size:var(--t-label-fs);line-height:var(--t-label-lh);letter-spacing:var(--t-label-ls);font-weight:var(--t-label-fw);text-transform:uppercase}
-.am-cap{font-size:14px;color:var(--faint)}
+.am-cap{font-size:var(--t-small-fs);color:var(--faint)}
 .am-capgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
 .am-cell{border:1px solid var(--line2);border-radius:6px;padding:12px;display:flex;flex-direction:column}
 /* ⚠️⚠️ 14.5 → `--t-body-fs` (16px), ONE STEP UP (2026-09-29, by request). These are the
@@ -2420,17 +2500,17 @@ body[data-tableframe] #dashView .dblock > table{margin-left:-18px;margin-right:-
 .am-cardtop{display:flex;align-items:flex-start;gap:10px}
 .am-cardtop>div{flex:1}
 .am-cardtop .am-addcheck{margin-top:1px}
-.am-cardprice{margin-top:10px;font-size:14px;color:var(--mid);font-variant-numeric:tabular-nums;display:flex;align-items:center;gap:6px}
+.am-cardprice{margin-top:10px;font-size:var(--t-body-fs);color:var(--mid);font-variant-numeric:tabular-nums;display:flex;align-items:center;gap:6px}
 .am-cardprice::before{content:"";width:14px;height:14px;flex:none;background:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b6b6b' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='9'/><path d='M14.5 9.3c-.6-.7-1.5-1.1-2.5-1.1-1.5 0-2.7.8-2.7 2s1.2 1.8 2.7 2 2.7.8 2.7 2-1.2 2-2.7 2c-1 0-1.9-.4-2.5-1.1M12 6.4v11.2'/></svg>") center/contain no-repeat}
 .am-cardprice.locked::before{background-image:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b6b6b' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'><rect x='5' y='11' width='14' height='9' rx='2'/><path d='M8 11V8a4 4 0 0 1 8 0v3'/></svg>")}
 
 /* the stepper is three controls in one box, so the box takes the control radius like
    the rest of them; `overflow:hidden` is what rounds the two buttons inside it */
 .stepper{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:var(--btn-r);overflow:hidden;width:max-content}
-.stepper button{width:var(--btnH);height:var(--btnH);border:0;background:#fff;color:var(--ink);font-size:16px;line-height:1;display:inline-flex;align-items:center;justify-content:center}
+.stepper button{width:var(--btnH);height:var(--btnH);border:0;background:#fff;color:var(--ink);font-size:var(--t-body-fs);line-height:1;display:inline-flex;align-items:center;justify-content:center}
 .stepper button:hover{background:var(--hover)}
 .stepper button[disabled]{color:var(--line);cursor:not-allowed;background:#fff}
-.stepper .val{min-width:46px;height:var(--btnH);display:inline-flex;align-items:center;justify-content:center;border-left:1px solid var(--line);border-right:1px solid var(--line);font-variant-numeric:tabular-nums;font-size:14px}
+.stepper .val{min-width:46px;height:var(--btnH);display:inline-flex;align-items:center;justify-content:center;border-left:1px solid var(--line);border-right:1px solid var(--line);font-variant-numeric:tabular-nums;font-size:var(--t-body-fs)}
 
 .switch{position:relative;display:inline-flex;width:40px;height:22px;flex:none}
 .switch input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer;z-index:1}
@@ -2453,7 +2533,7 @@ body[data-tableframe] #dashView .dblock > table{margin-left:-18px;margin-right:-
 .switch.lg input:checked + .track::after{transform:translateX(26px)}
 
 .am-order{border:1px solid var(--line2);border-radius:6px;padding:2px 14px;margin-bottom:16px}
-.am-orow{display:flex;justify-content:space-between;gap:16px;padding:10px 0;border-bottom:1px dashed var(--line2);font-size:14px}
+.am-orow{display:flex;justify-content:space-between;gap:16px;padding:10px 0;border-bottom:1px dashed var(--line2);font-size:var(--t-body-fs)}
 .am-orow:last-child{border-bottom:0}
 /* ⚠️⚠️ THE ORDER'S MAIN LINES ARE BLOCK TITLES, AND THEY WERE SET AT 14 (2026-10-01, by
    request: "the Review text is too small, the headings are not consistent with the
@@ -2470,7 +2550,7 @@ body[data-tableframe] #dashView .dblock > table{margin-left:-18px;margin-right:-
    job the size now does. */
 .am-newmonthly{font-weight:600;font-size:var(--t-body-fs)}
 /* billing terms: their own quiet card, not a subtitle */
-.nl-terms{border:1px solid var(--line2);border-radius:6px;padding:11px 14px;font-size:14px;color:var(--mid);background:var(--card)}
+.nl-terms{border:1px solid var(--line2);border-radius:6px;padding:11px 14px;font-size:var(--t-body-fs);color:var(--mid);background:var(--card)}
 /* ⚠️ ONE TREATMENT FOR EVERY SENTENCE ABOUT MONEY (2026-09-28, by request). The tax line
    used to arrive wearing `.taxnote` — `--faint`, its own margin — inside a block already
    set in `--mid`, and the discount sentence arrived as an order row above the block
@@ -2521,14 +2601,14 @@ body[data-tableframe] #dashView .dblock > table{margin-left:-18px;margin-right:-
    keeps it beside the value it is paired with rather than loose on a class name. */
 .nl-duerow .am-duelabel{font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);
   letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw)}
-.am-duelabel{font-size:14px}
+.am-duelabel{font-size:var(--t-small-fs)}
 .am-dueval{font-size:var(--t-h2-fs);font-weight:var(--t-h2-fw);font-variant-numeric:tabular-nums;flex:none}
-.am-figures{margin-top:8px;border:1px solid var(--line2);border-radius:6px;padding:10px 12px;font-size:14px;font-variant-numeric:tabular-nums}
+.am-figures{margin-top:8px;border:1px solid var(--line2);border-radius:6px;padding:10px 12px;font-size:var(--t-body-fs);font-variant-numeric:tabular-nums}
 .am-sumlist{display:flex;flex-direction:column;gap:7px;padding-bottom:8px;margin-bottom:8px;border-bottom:1px dashed var(--line2)}
 .am-sumlist[hidden]{display:none}
 .am-sumrow{display:flex;justify-content:space-between;gap:16px}
 .am-sumrow.cur{color:var(--mid)}
-.am-total-row{font-weight:700;font-size:14px}
+.am-total-row{font-weight:700;font-size:var(--t-body-fs)}
 .am-total-row span:last-child{white-space:nowrap}   /* the amount never breaks across lines */
 .am-total-row .am-chgcount{font-weight:400}
 
@@ -2562,15 +2642,15 @@ body[data-tableframe] #dashView .dblock > table{margin-left:-18px;margin-right:-
    ⚠️ HIDDEN ≤600px, and that now means the phone has NO settings surface. Named in
    shared.js and in NOTES as the price of the consolidation. */
 .statebar{position:fixed;left:0;right:0;bottom:0;z-index:880;
-  background:var(--ink);color:#fff;font-size:14px;
+  background:var(--ink);color:#fff;font-size:var(--t-small-fs);
   box-shadow:0 -6px 24px rgba(0,0,0,.24)}
 .statebar[hidden]{display:none}
 .sb-toggle{display:flex;align-items:center;gap:10px;width:100%;padding:7px 18px;
-  border:0;background:transparent;color:#fff;font:inherit;font-size:14px;text-align:left;cursor:pointer}
+  border:0;background:transparent;color:#fff;font:inherit;font-size:var(--t-small-fs);text-align:left;cursor:pointer}
 .sb-toggle:hover{background:rgba(255,255,255,.08)}
 .sb-toggle:focus-visible{outline:2px solid #fff;outline-offset:-3px}
 .sb-chev{width:var(--ic-16);height:var(--ic-16);flex:none;opacity:.75}
-.sb-title{font-weight:600;letter-spacing:.06em;text-transform:uppercase;font-size:14px}
+.sb-title{font-weight:600;letter-spacing:.06em;text-transform:uppercase;font-size:var(--t-small-fs)}
 /* which surface the bar is describing — the bar is one node and several pages use it */
 .sb-where{margin-left:auto;opacity:.7}
 .sb-body{padding:0 18px 12px}
@@ -2582,13 +2662,13 @@ body[data-tableframe] #dashView .dblock > table{margin-left:-18px;margin-right:-
    the window; a label leading each run says the same thing and costs one inline element.
    ⚠️ It is a LABEL, not a control: no box, no hover, not tabbable. The `:first-child`
    rule kills the leading gap so the first group starts on the row's own left edge. */
-.sb-group{flex:none;align-self:center;font-size:14px;font-weight:600;letter-spacing:.06em;
+.sb-group{flex:none;align-self:center;font-size:var(--t-small-fs);font-weight:600;letter-spacing:.06em;
   text-transform:uppercase;color:rgba(255,255,255,.45);margin-left:12px;pointer-events:none}
 .sb-group:first-child{margin-left:0}
 .sb-tabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px;
   border-bottom:1px solid rgba(255,255,255,.16);padding-bottom:8px}
 .sb-tab{padding:4px 11px;border:0;border-radius:999px;background:transparent;
-  color:rgba(255,255,255,.66);font:inherit;font-size:14px;cursor:pointer}
+  color:rgba(255,255,255,.66);font:inherit;font-size:var(--t-small-fs);cursor:pointer}
 .sb-tab:hover{background:rgba(255,255,255,.10);color:#fff}
 .sb-tab.is-on{background:#fff;color:var(--ink);font-weight:500}
 .sb-tab:focus-visible{outline:2px solid #fff;outline-offset:2px}
@@ -2629,7 +2709,7 @@ body[data-tableframe] #dashView .dblock > table{margin-left:-18px;margin-right:-
    row to say one word. */
 .sb-sub{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;
   margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.14)}
-.sb-sublabel{flex:none;color:rgba(255,255,255,.62);font-size:14px}
+.sb-sublabel{flex:none;color:rgba(255,255,255,.62);font-size:var(--t-small-fs)}
 .sb-subopts{flex:1 1 auto}
 /* ⚠️ `.sb-hint` / `.sb-subhint` ARE GONE (2026-09-30, by request) with the nineteen
    paragraphs they drew. What survives is `.sb-opt-n` — the count or the reason beside an
@@ -2679,7 +2759,7 @@ body.has-statebar .fs-box{height:min(90vh, calc(100vh - var(--sbH,0px) - 32px))}
 .seg{display:flex;border:1px solid var(--line);border-radius:var(--btn-r);overflow:hidden}
 .seg label{flex:1;position:relative;margin:0}
 .seg input{position:absolute;opacity:0;pointer-events:none}
-.seg span{display:block;text-align:center;padding:7px 6px;font-size:14px;color:var(--mid);cursor:pointer;background:#fff}
+.seg span{display:block;text-align:center;padding:7px 6px;font-size:var(--t-body-fs);color:var(--mid);cursor:pointer;background:#fff}
 .seg label:first-child span{border-right:1px solid var(--line)}
 .seg input:checked + span{background:var(--ink);color:#fff}
 .seg input:focus-visible + span{outline:2px solid var(--ink);outline-offset:-2px}
@@ -2749,7 +2829,7 @@ body.has-statebar .fs-box{height:min(90vh, calc(100vh - var(--sbH,0px) - 32px))}
   .licmodal .fs-box{position:relative;overflow:visible}
   .licmodal .fs-headactions{display:block;position:absolute;top:-18px;right:-18px;z-index:12}
   .licmodal .fs-close{width:36px;height:36px;border-radius:50%;
-    border:1px solid var(--line);background:#fff;color:var(--ink);font-size:16px;
+    border:1px solid var(--line);background:#fff;color:var(--ink);font-size:var(--t-body-fs);
     box-shadow:0 4px 14px rgba(0,0,0,.16)}
   .licmodal .fs-close:hover{background:var(--hover)}
   /* the body starts at the sheet's own top now that no band precedes it */
@@ -2948,7 +3028,7 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
 .nl-plansum-ic .ic{width:var(--ic-24);height:var(--ic-24)}
 .nl-plansum-tx{display:flex;flex-direction:column;gap:6px;min-width:0}
 .nl-plansum-t{display:block;font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw);color:var(--ink)}
-.nl-plansum-f{display:block;font-size:var(--t-small-fs);line-height:1.55;color:var(--mid)}
+.nl-plansum-f{display:block;font-size:var(--t-body-fs);line-height:1.55;color:var(--mid)}
 /* variant B — the lock rides inside the disabled input, no helper line below */
 .fs-lockfield{position:relative;display:inline-flex;align-items:center;flex:none}
 .fs-lockic{position:absolute;left:9px;width:var(--ic-16);height:var(--ic-16);color:var(--faint);pointer-events:none}
@@ -2962,7 +3042,7 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
 .fs-devinput.numfield:focus{border-color:var(--ink);outline:none}
 /* the error colour, like every other field since 09-28 */
 .fs-devinput.numfield.is-bad{border-color:var(--status-alert);box-shadow:inset 0 0 0 1px var(--status-alert)}
-.numerr{width:100%;margin-top:6px;font-size:14px;color:var(--ink);font-weight:500}
+.numerr{width:100%;margin-top:6px;font-size:var(--t-body-fs);color:var(--ink);font-weight:500}
 .numerr[hidden]{display:none}
 /* add-on rows: the toggle is their right-hand control, level with the steppers */
 .am-addon .am-cardprice{margin-top:6px}
@@ -3109,12 +3189,12 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
    `.stepper` is two 40px buttons either side of a 46px value plus its two 1px borders.
    Production instances and Devices are the same question asked two ways on one step;
    they now answer at the same width. Change `.stepper .val` and this moves with it. */
-.fs-devinput{height:var(--btnH);width:128px;border:1px solid var(--line);border-radius:var(--btn-r);background:var(--track);color:var(--ink);-webkit-text-fill-color:var(--ink);opacity:1;font:inherit;font-size:14px;text-align:center;font-variant-numeric:tabular-nums;padding:0 8px;cursor:not-allowed}
+.fs-devinput{height:var(--btnH);width:128px;border:1px solid var(--line);border-radius:var(--btn-r);background:var(--track);color:var(--ink);-webkit-text-fill-color:var(--ink);opacity:1;font:inherit;font-size:var(--t-body-fs);text-align:center;font-variant-numeric:tabular-nums;padding:0 8px;cursor:not-allowed}
 /* title + description as one text block, control to its right on the top line */
 .fs-cellhead{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
 .fs-celltext{flex:1;min-width:0}
 .fs-cellhead .am-celltop{margin-bottom:0}
-.fs-celldesc{margin-top:4px;font-size:14px;color:var(--faint);line-height:1.55}
+.fs-celldesc{margin-top:4px;font-size:var(--t-body-fs);color:var(--faint);line-height:1.55}
 /* pins right under the sticky header row (57px tall) */
 /* top:0 — the sticky inset resolves against the scrollport's padding box, so any
    positive value pushes the panel below the left panel's top line even at rest */
@@ -3357,13 +3437,15 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
    rest are <div>s, so font, background, border and alignment have to be reset back to
    the div it stands beside. Anything added here that is not in that reset makes the
    done steps look different from their neighbours. */
-/* ⚠️ `gap` IS THE SPACE BETWEEN STEPS **AND** INSIDE ONE (2026-10-01, by request: "a
-   little room between the steps, 4–8px"). `.nl-step` is itself a flex row with the same
-   10px between its number and its name, so raising this alone would have pushed the
+/* ⚠️ `gap` IS THE SPACE BETWEEN STEPS **AND** INSIDE ONE. `.nl-step` is itself a flex row
+   with 10px between its number and its name, so raising this alone would have pushed the
    steps apart and left each one as loose inside as the gap between them. The step's own
-   gap is pinned at 10 below; this one goes to 16, which is +6 — inside the asked range
-   and the only number in the pair that moves. */
-.nl-steps{display:flex;align-items:center;gap:16px}
+   gap is pinned at 10 below; only this one moves.
+   ⚠️ 10 -> 16 (2026-10-01, "a little room between the steps, 4–8px") -> **20**
+   (2026-10-02, "another 4px between the steps"). Stated as one number with its history
+   rather than as a chain of nudges, because the pair above is what has to stay true:
+   20 outside, 10 inside, so a step reads as one object with air around it. */
+.nl-steps{display:flex;align-items:center;gap:20px}
 .nl-step{flex:none;display:flex;align-items:center;gap:10px;text-align:left;
   font:inherit;background:none;border:0;padding:0;color:var(--faint)}
 button.nl-step{cursor:pointer}
@@ -3374,7 +3456,7 @@ button.nl-step:focus-visible{outline:2px solid var(--ink);outline-offset:3px;bor
    means "we suggest this". A filled step suggests nothing — it says "you are here". */
 .nl-smark{flex:none;display:inline-flex;align-items:center;justify-content:center;
   width:28px;height:28px;border-radius:50%;border:1.5px solid var(--line);
-  font-size:14px;font-variant-numeric:tabular-nums;color:var(--faint)}
+  font-size:var(--t-small-fs);font-variant-numeric:tabular-nums;color:var(--faint)}
 .nl-step.is-done .nl-smark{border-color:var(--ink);color:var(--ink)}
 .nl-step.is-cur .nl-smark{border-color:var(--ink);background:var(--ink);color:#fff}
 .nl-stxt{display:flex;flex-direction:column;min-width:0}
@@ -3406,18 +3488,18 @@ button.nl-step:focus-visible{outline:2px solid var(--ink);outline-offset:3px;bor
    switcher, because a dead padding rule on the class being tuned is the one that eats an
    afternoon. Same family as `.keynote` and `.invite-chip`. */
 .nl-vline{margin-top:10px;font-size:var(--t-body-fs);font-weight:600;color:var(--ink)}
-.nl-sline{margin-top:8px;font-size:var(--t-small-fs);line-height:1.55;color:var(--mid)}
+.nl-sline{margin-top:8px;font-size:var(--t-body-fs);line-height:1.55;color:var(--mid)}
 .nl-unl{margin-top:16px;padding-top:14px;border-top:1px dashed var(--line2)}
 .nl-unl-k{font-family:var(--font-ui);font-size:var(--t-label-fs);line-height:var(--t-label-lh);letter-spacing:var(--t-label-ls);font-weight:var(--t-label-fw);text-transform:uppercase;color:var(--faint)}
-.nl-unl-v{margin-top:6px;font-size:14px;line-height:1.6;color:var(--ink)}
+.nl-unl-v{margin-top:6px;font-size:var(--t-body-fs);line-height:1.6;color:var(--ink)}
 /* step 2 — the shared PE card under the plan grid: the title is the card's
    header, the "All plans include…" line its muted intro; the card spans the
    plan grid width and nothing floats between the grid and the card */
 .nl-pe{margin:20px 0 0;border:1px solid var(--line2);border-radius:10px;background:var(--card);padding:16px 18px}
 .nl-pe-h{font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw);color:var(--ink)}
-.nl-pe-intro{margin:6px 0 0;font-size:14px;color:var(--faint)}
+.nl-pe-intro{margin:6px 0 0;font-size:var(--t-body-fs);color:var(--faint)}
 .nl-pe-body{margin-top:6px}
-.nl-pe-item{padding:8px 0;border-bottom:1px dashed var(--line2);font-size:14px;line-height:1.5;color:var(--mid)}
+.nl-pe-item{padding:8px 0;border-bottom:1px dashed var(--line2);font-size:var(--t-body-fs);line-height:1.5;color:var(--mid)}
 .nl-pe-item:last-child{border-bottom:0}
 .nl-pe-item b{color:var(--ink);font-weight:600}
 /* step 4 — bold main line, regular entitlement line beneath */
@@ -3429,9 +3511,9 @@ button.nl-step:focus-visible{outline:2px solid var(--ink);outline-offset:3px;bor
 .nl-success{width:min(560px,96vw);text-align:center}
 .nl-success-b{padding:38px 40px 32px;display:flex;flex-direction:column;align-items:center}
 .nl-success-h{margin:16px 0 0;font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw)}
-.nl-success-p{margin:10px 0 0;font-size:var(--t-small-fs);line-height:1.5;color:var(--mid)}
+.nl-success-p{margin:10px 0 0;font-size:var(--t-body-fs);line-height:1.5;color:var(--mid)}
 .nl-keybox{display:flex;align-items:center;gap:10px;margin-top:14px;border:1px solid var(--line2);border-radius:6px;background:#fafafa;padding:9px 10px 9px 14px}
-.nl-keybox code{font-family:var(--font-mono);font-size:15px;letter-spacing:.02em;color:var(--ink)}
+.nl-keybox code{font-family:var(--font-mono);font-size:var(--t-body-fs);letter-spacing:.02em;color:var(--ink)}
 .nl-success-f{margin-top:24px;width:100%}
 .nl-success-f .btn{width:100%}
 /* selectable cards: choices stay visible, selection = ink ring (no dropdowns) */
@@ -3637,8 +3719,8 @@ button.nl-step:focus-visible{outline:2px solid var(--ink);outline-offset:3px;bor
 .nl-prodic{flex:none;display:inline-flex;color:var(--mid);width:42px;height:42px;align-items:center}
 .nl-prodcard .ic{width:var(--ic-24);height:var(--ic-24)}
 .nl-prodtxt{display:flex;flex-direction:column;gap:4px;min-width:0}
-.nl-prodname{font-size:16px;font-weight:500;line-height:1.2}
-.nl-proddesc{font-size:14px;font-weight:400;line-height:1.35;color:var(--mid)}
+.nl-prodname{font-size:var(--t-body-fs);font-weight:500;line-height:1.2}
+.nl-proddesc{font-size:var(--t-body-fs);font-weight:400;line-height:1.35;color:var(--mid)}
 .nl-prodcard.on .nl-prodic{color:var(--ink)}
 /* ⚠️ THE NAME GOES QUIET WITH THE MARK (2026-09-30, by request). The unchosen card was
    a desaturated logo beside a full-ink name — two halves of one object answering the
@@ -3677,7 +3759,7 @@ button.nl-step:focus-visible{outline:2px solid var(--ink);outline-offset:3px;bor
    content column they head. Zeroed so the first label starts on the same edge as
    the product cards above and the plan grid below. */
 .nl-billtabs{gap:22px;padding-left:0;padding-right:0}
-.nl-billtab{font-size:16px}
+.nl-billtab{font-size:var(--t-body-fs)}
 /* ⚠️ THE SAME STRIP, THE OTHER BREAKPOINT. Above 600px the two billing models are named
    by `.plangroup-h` and the rule under them is `--accent`; below 600px they are TABS and
    the rule is the tab's own underline. Same two words, same line, same colour — scoped
@@ -3687,7 +3769,7 @@ button.nl-step:focus-visible{outline:2px solid var(--ink);outline-offset:3px;bor
 .nl-billtab[disabled].on{color:var(--ink)}
 /* one line, and it is allowed to be long — it is the only place this step explains
    the difference between the two ways of paying */
-.nl-billdesc{max-width:74ch;font-size:var(--t-small-fs);line-height:1.55;color:var(--mid)}
+.nl-billdesc{max-width:74ch;font-size:var(--t-body-fs);line-height:1.55;color:var(--mid)}
 .switch input[disabled] + .track{opacity:.45;cursor:default}
 /* the count on its own row under the heading — the heading row's right end is the
    toggle's, so the two would collide up there */
@@ -3721,6 +3803,20 @@ button.nl-step:focus-visible{outline:2px solid var(--ink);outline-offset:3px;bor
    narrows it and lets the content set the height. The max-height keeps a long
    screen scrollable rather than taller than the viewport. */
 .authbox{width:min(440px,92vw);height:auto;max-height:90vh}
+/* ⚠️⚠️ AND THE ID, BECAUSE `height:auto` ABOVE HAS NEVER REACHED IT (2026-10-02, by
+   request: "the sign in / sign up modal should hug its content, not fill the screen").
+   `body.has-statebar .fs-box{height:min(90vh, …)}` is (0,3,0) against this rule's (0,1,0)
+   and wins, so the card was given the whole window: measured, a 954px form in a 1016px
+   box with the bar up. That rule is right for the wizard and the licence panel — a sheet
+   must not grow past the window — and wrong for a card whose height IS its content.
+   ⚠️ SIXTH CASE OF "A RULE WINS BY SPECIFICITY A LATER DECISION DID NOT ACCOUNT FOR",
+   and the ANSWER IS ALREADY IN THIS FILE: `#usersModal .fs-box` restates exactly this
+   pair for exactly this reason. The auth card was simply never given it.
+   ⚠️ THE CAP KEEPS THE BAR'S ARITHMETIC. `max-height` takes over the job `height` was
+   doing wrongly — a long form still scrolls inside the card rather than running under
+   the state bar — so nothing the 09-29 pass measured is given back. */
+#authModal .authbox{height:auto;
+  max-height:min(90vh, calc(100vh - var(--sbH,0px) - 32px))}
 /* ---------- the Users modal ----------
    The whole Users surface, which was a page until 2026-09-23. Wider than the auth card
    because it carries a four-column table, narrower than the wizard because it carries
@@ -3856,7 +3952,7 @@ body[data-page="signin"] #shellMain{display:flex;align-items:center;justify-cont
    heading (see signupHeading) and the PRICE no longer rides anywhere on this screen —
    it is a term of the purchase, and the review step states the terms. */
 
-.auth-or{display:flex;align-items:center;gap:12px;margin:18px 0;color:var(--faint);font-size:14px}
+.auth-or{display:flex;align-items:center;gap:12px;margin:18px 0;color:var(--faint);font-size:var(--t-small-fs)}
 .auth-or::before,.auth-or::after{content:"";flex:1;height:1px;background:var(--line2)}
 /* fields are the prototype's own .field component; only the alignment is local —
    the card is centred, its labels are not */
@@ -3869,12 +3965,12 @@ body[data-page="signin"] #shellMain{display:flex;align-items:center;justify-cont
 .authpw-eye{position:absolute;right:0;bottom:0}
 /* consent: quiet, left-aligned with the fields it follows, and its links are prose
    links (.link underlines on purpose — these are documents, not controls) */
-.auth-legal{margin:14px 0 0;text-align:left;font-size:var(--t-small-fs);
+.auth-legal{margin:14px 0 0;text-align:left;font-size:var(--t-body-fs);
   line-height:1.55;color:var(--mid)}
 .auth-primary{width:100%;margin-top:22px}
 /* the door to the other screen: a question, then the way to answer it */
 .auth-foot{margin-top:22px;display:flex;flex-direction:column;align-items:center;gap:10px}
-.auth-footq{font-size:var(--t-small-fs);color:var(--mid)}
+.auth-footq{font-size:var(--t-body-fs);color:var(--mid)}
 .auth-alt{width:100%}
 .auth-forgot{margin-top:16px}
 
@@ -3945,12 +4041,12 @@ body[data-page="signin"] #shellMain{display:flex;align-items:center;justify-cont
    ⚠️ The middot is typography, not a drawn glyph (the icon checker exempts `·` by name
    along with the em dash and the ellipsis), and it is in ::before so the separator
    cannot be selected, copied, or read out as part of the product name. */
-.bportal{font-size:var(--t-body-sm-fs);line-height:1;color:var(--mid);white-space:nowrap}
+.bportal{font-size:var(--t-small-fs);line-height:1;color:var(--mid);white-space:nowrap}
 .bportal::before{content:'·';margin-right:8px;color:var(--faint)}
 /* the logo doubles as a Home link — reset it to look identical as a <button> */
 button.dbrand{background:none;border:0;padding:0;color:inherit;font:inherit;cursor:pointer}
 .dbrand .mark{width:26px;height:26px;border:1px solid var(--line);border-radius:6px;display:flex;align-items:center;justify-content:center;background:#fff;color:var(--ink)}
-.dbrand .bt{font-size:14px;font-weight:700;line-height:1.1}
+.dbrand .bt{font-size:var(--t-small-fs);font-weight:700;line-height:1.1}
 .dbrand .bt .bsep{color:var(--faint);font-weight:400;margin:0 6px}
 /* top-bar nav — same treatment as the old sidebar items, laid out horizontally */
 /* ⚠️ CENTRED ON THE BAR, not between the things beside it. The logo cell and the
@@ -4265,9 +4361,9 @@ body[data-mesh] .dtopbar:not(.docked) .tnav-item:not(.on):hover{background:var(-
 .ig-kind{color:var(--mid)}
 /* the label, as a description rather than as the heading it used to be — so it takes
    the treatment a description takes here and gives up the room when there is not any */
-.ig-desc{min-width:0;color:var(--faint);font-size:14px;
+.ig-desc{min-width:0;color:var(--faint);font-size:var(--t-body-fs);
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.ig-sub{color:var(--faint);font-size:14px;white-space:nowrap}
+.ig-sub{color:var(--faint);font-size:var(--t-small-fs);white-space:nowrap}
 /* ---------- the heading's two children -----------------------------------------
    ⚠️ A ROW INSIDE THE CELL, not on it: a <td> that becomes a flex container stops being
    a table cell and takes the column widths with it — the same rule `.lp-cell` follows.
@@ -4283,7 +4379,7 @@ body[data-mesh] .dtopbar:not(.docked) .tnav-item:not(.on):hover{background:var(-
 .ig-open{flex:none;margin-left:10px;margin-right:12px}
 /* pushed to the far edge: it is the answer to "how big is this group", read against the
    rows below rather than against the name beside it */
-.ig-count{margin-left:auto;font-size:14px;color:var(--faint);font-variant-numeric:tabular-nums}
+.ig-count{margin-left:auto;font-size:var(--t-small-fs);color:var(--faint);font-variant-numeric:tabular-nums}
 .instgroup[hidden]{display:none}
 
 /* ---------- VARIANT B of the licence table (2026-09-25, a proposal) --------------
@@ -4306,7 +4402,7 @@ body[data-mesh] .dtopbar:not(.docked) .tnav-item:not(.on):hover{background:var(-
 .licb-head{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
   font-weight:500;color:var(--ink)}
 .licb-sub{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-  font-size:14px;color:var(--mid)}
+  font-size:var(--t-body-fs);color:var(--mid)}
 /* the only figure in this table, so the only right-aligned column */
 .licb-row .lic-ver{text-align:right;font-variant-numeric:tabular-nums}
 .licb-row .lic-ver .verline{align-items:flex-end}
@@ -4322,7 +4418,7 @@ body[data-mesh] .dtopbar:not(.docked) .tnav-item:not(.on):hover{background:var(-
    ⚠️ The plan line is NOT clamped and the label line is. The plan is a short controlled
    value from `TIER_SPECS` (`Startup`, `PE subscription`, `Community Grant`); the label
    is free text with 61-character examples in the seed. */
-.licc-plan{font-size:14px;color:var(--mid);margin-top:1px}
+.licc-plan{font-size:var(--t-body-fs);color:var(--mid);margin-top:1px}
 .licc-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
 /* ⚠️ `.lp-txt` caps at 230px for variant A, where the plan has its own column and this
    cell holds two short lines. C puts a third line in here and gives the column the
@@ -4332,18 +4428,21 @@ body[data-mesh] .dtopbar:not(.docked) .tnav-item:not(.on):hover{background:var(-
 /* ⚠️ The rows are taller than A's, so the cells stop being centred on a single line.
    `vertical-align:top` is already on `.lic-row > td`; this keeps the mark on the first
    line rather than letting it drift to the middle of three. */
-/* ⚠️⚠️ 40 -> 64px, AND 64 IS MEASURED (2026-09-29, by request: "make the mark taller
-   so it matches the three lines beside it"). The stack is three 20px lines plus the
-   1px and 2px margins between them — `.lp-txt` measures 64 exactly, on every row,
-   because all three lines are clamped to one line each. If any of those three changes
-   size or gains a second line, this number is wrong and has to be re-measured from it.
+/* ⚠️⚠️ 64 -> 42px (2026-10-02, by request: "the mark should cover the first TWO lines,
+   in height and in width"). 64 was measured against all THREE lines of the cell — the
+   label line included — and the mark read as a plate the text was sitting beside rather
+   than as a mark on the name. Two lines is the product's own answer everywhere else:
+   `.lp-ic` is 40 and its comment has said "two text lines tall" since it was written.
+   ⚠️ 42 IS MEASURED, not 40 reused. The two lines here are 20.3 each with a 1px margin
+   between them — 41.6 — because `.licc-plan` adds that margin and variant A's two lines
+   do not. Re-measure from the cell if either line changes size.
    ⚠️ NOT `align-self:stretch`, which would have been the self-maintaining answer: the
    mark is artwork with its own aspect, and a box stretched by its neighbour's height
    would letterbox differently on a row with a label and a row without one. A stated
    square keeps every mark in the column identical.
-   ⚠️ THE RADIUS SCALES WITH IT. The family is 24/4, 40/6, 64/10 — the same ratio at
-   all three sizes, so the corner reads the same however big the square is. */
-.licc-cell .lp-ic{width:64px;height:64px;border-radius:10px}
+   ⚠️ THE RADIUS SCALES WITH IT. The family is 24/4, 40/6, 64/10 — 42 takes the 40 step,
+   6, because it is that size and not a fourth one. */
+.licc-cell .lp-ic{width:42px;height:42px;border-radius:6px}
 .licc-row .lp-ic{align-self:flex-start}
 
 /* ---------- HOME BLOCKS, VARIANT B: the fourth row fades under See all ----------
@@ -4426,7 +4525,7 @@ body[data-mesh] .dtopbar:not(.docked) .tnav-item:not(.on):hover{background:var(-
              inset 0 0 0 .5px var(--line)}
 
 /* the label editor's counter — quiet until it is the thing you need to see */
-.labelcount{font-size:14px;color:var(--faint);font-variant-numeric:tabular-nums;
+.labelcount{font-size:var(--t-small-fs);color:var(--faint);font-variant-numeric:tabular-nums;
   white-space:nowrap}
 .labelcount.over{color:var(--ink);font-weight:500}
 
@@ -4438,7 +4537,7 @@ body[data-mesh] .dtopbar:not(.docked) .tnav-item:not(.on):hover{background:var(-
      underneath. See the report for what would be cut if it stopped fitting. */
   .licb-row .licb-name{white-space:normal}
   .licb-txt{max-width:none}
-  .licb-head{white-space:normal;font-size:var(--t-body-sm-fs)}
+  .licb-head{white-space:normal;font-size:var(--t-small-fs)}
   .licb-row .lic-ver{text-align:left}
   .licb-row .lic-ver .verline{align-items:flex-start}
 }
@@ -4456,10 +4555,10 @@ body[data-mesh] .dtopbar:not(.docked) .tnav-item:not(.on):hover{background:var(-
 .sg-sidehead{margin-bottom:16px}
 .sg-sidetitle{margin:0 0 6px;font-family:var(--font-ui);font-size:var(--t-h2-fs);
   line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw)}
-.sg-back{display:inline-flex;align-items:center;gap:4px;font-size:14px;color:var(--mid)}
+.sg-back{display:inline-flex;align-items:center;gap:4px;font-size:var(--t-small-fs);color:var(--mid)}
 .sg-back:hover{color:var(--ink)}
 .sg-nav{display:flex;flex-direction:column;gap:1px}
-.sg-nav a{display:block;padding:7px 10px;border-radius:6px;font-size:14px;color:var(--mid)}
+.sg-nav a{display:block;padding:7px 10px;border-radius:6px;font-size:var(--t-small-fs);color:var(--mid)}
 .sg-nav a:hover{background:var(--hover);color:var(--ink)}
 /* the current page takes the fill the nav strip's current destination takes — one idea,
    one treatment, even though this rail is scaffolding rather than product */
@@ -4499,7 +4598,7 @@ body[data-mesh] .dtopbar:not(.docked) .tnav-item:not(.on):hover{background:var(-
    block is what turns it on. */
 .entdelta{align-items:center;height:20px;padding:0 7px;margin-left:8px;
   border:1px solid var(--line);border-radius:999px;background:#fff;
-  font-size:14px;font-variant-numeric:tabular-nums;color:var(--ink)}
+  font-size:var(--t-small-fs);font-variant-numeric:tabular-nums;color:var(--ink)}
 /* ⚠️ THE GLYPH IS NO LONGER PHONE-ONLY (2026-09-25). It used to be hidden here and
    turned on in the ≤600px block, where it stands IN PLACE of the name; now it sits
    beside the name on the desktop too, so there is nothing to hide. The phone rules
@@ -4530,7 +4629,7 @@ body[data-mesh] .dtopbar:not(.docked) .tnav-item:not(.on):hover{background:var(-
    that say this opens something. The focus ring is stated explicitly for the same
    reason: `:focus-visible` was inheriting a ring drawn against a border that is gone. */
 .dprofbtn{display:inline-flex;align-items:center;gap:9px;padding:4px 2px;border:0;
-  border-radius:6px;background:transparent;color:var(--ink);font:inherit;font-size:14px}
+  border-radius:6px;background:transparent;color:var(--ink);font:inherit;font-size:var(--t-small-fs)}
 /* ⚠️ INK AT REST, NOT --mid, and this is a measurement not a preference: on a bar that
    is glass at rest the name sits directly on the mesh, and --mid measured 3.92:1 against
    the lavender pool — under AA for 14px. Ink is ~12:1 on the same ground. It is also the
@@ -4580,15 +4679,15 @@ body[data-mesh] .dtopbar:not(.docked) .dprofbtn[aria-expanded="true"]{background
    other way round. */
 .dprofmenu{position:absolute;right:0;top:calc(100% + 6px);min-width:232px;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 12px 32px rgba(0,0,0,.16);padding:6px;z-index:60}
 .dprofmenu[hidden]{display:none}
-.dprofmenu button,.dprofmenu a{display:flex;align-items:baseline;gap:8px;width:100%;text-align:left;padding:8px 10px;border:0;background:transparent;border-radius:7px;font:inherit;font-size:14px;color:var(--ink)}
+.dprofmenu button,.dprofmenu a{display:flex;align-items:baseline;gap:8px;width:100%;text-align:left;padding:8px 10px;border:0;background:transparent;border-radius:7px;font:inherit;font-size:var(--t-body-fs);color:var(--ink)}
 .dprofmenu button:hover,.dprofmenu a:hover{background:var(--hover)}
-.dprofmenu button .who{font-size:14px;color:var(--faint)}
+.dprofmenu button .who{font-size:var(--t-small-fs);color:var(--faint)}
 .dprofmenu .sep{height:1px;background:var(--line2);margin:6px 4px}
 
 /* impersonation banner: black band directly under the top-bar band, same width */
 .imp-wrap{flex:none;padding:0 24px;background:var(--bg)}
 .imp-wrap[hidden]{display:none}
-.imp-banner{display:flex;align-items:center;gap:12px;width:100%;max-width:var(--pageW);margin:0 auto;padding:9px var(--pageX);background:var(--ink);color:#fff;border-radius:0 0 10px 10px;font-size:14px}
+.imp-banner{display:flex;align-items:center;gap:12px;width:100%;max-width:var(--pageW);margin:0 auto;padding:9px var(--pageX);background:var(--ink);color:#fff;border-radius:0 0 10px 10px;font-size:var(--t-body-fs)}
 .imp-banner b{font-weight:600}
 .imp-banner .sp{flex:1}
 .imp-return{flex:none}
@@ -5055,7 +5154,7 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
 .dwelcome > .btn{align-self:center}
 .dwelcome .dw-txt{flex:1;min-width:0}
 .dwelcome h1{margin:0;font-family:var(--font-ui);font-size:var(--t-h1-fs);line-height:var(--t-h1-lh);letter-spacing:var(--t-h1-ls);font-weight:var(--t-h1-fw)}
-.dwelcome p{margin:5px 0 0;font-family:var(--font-ui);font-size:var(--t-small-fs);line-height:var(--t-small-lh);letter-spacing:var(--t-small-ls);font-weight:var(--t-small-fw);color:var(--mid)}
+.dwelcome p{margin:5px 0 0;font-family:var(--font-ui);font-size:var(--t-body-fs);line-height:var(--t-small-lh);letter-spacing:var(--t-small-ls);font-weight:var(--t-small-fw);color:var(--mid)}
 
 /* ---- the landing page's head: one heading and one line ----
    ⚠️ `.lp-hello` is GONE with the `Welcome` it styled. It was the only user of the
@@ -5363,7 +5462,7 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
    request) — see `licCardHTML` for why. It starts on the product square's line, so no
    indent of its own; the top margin is the gap to the product row above it. */
 .lcard-state{display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-width:0;
-  margin-top:8px;font-size:14px;color:var(--mid)}
+  margin-top:8px;font-size:var(--t-small-fs);color:var(--mid)}
 .lcard-dot{color:var(--faint)}
 .lcard-term{min-width:0}
 .lcard .lic-actions{flex:none}
@@ -5391,8 +5490,8 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
   min-height:var(--btnH)}
 /* the cell's 230px cap is a TABLE COLUMN's measure; here the card is the measure */
 .lcard-prod .lp-txt{max-width:none;flex:1}
-.lcard-kind{font-size:14px;color:var(--mid);line-height:1.2}
-.lcard-name{font-size:15px;font-weight:500;color:var(--ink);line-height:1.3;margin-top:1px}
+.lcard-kind{font-size:var(--t-small-fs);color:var(--mid);line-height:1.2}
+.lcard-name{font-size:var(--t-body-fs);font-weight:500;color:var(--ink);line-height:1.3;margin-top:1px}
 /* ⚠️ ROW 3 — THE KEY FIELD — IS GONE (2026-09-30, by request), and both its rules with
    it. `.lcard-key` was an inset tinted field holding the masked key and a copy button;
    the whole row left the card, so the rules left with it rather than waiting to be
@@ -5439,14 +5538,14 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
 .hcinv{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto auto;
   align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--line2)}
 .hcinv:last-child{border-bottom:0}
-.hcinv-date{font-size:14px;font-weight:500;color:var(--ink)}
-.hcinv-num{font-size:14px;color:var(--faint);margin-top:2px}
+.hcinv-date{font-size:var(--t-small-fs);font-weight:500;color:var(--ink)}
+.hcinv-num{font-size:var(--t-small-fs);color:var(--faint);margin-top:2px}
 .hcinv-lic{display:block;text-decoration:none;min-width:0}
-.hcinv-licname{display:block;font-size:14px;font-weight:500;color:var(--ink);
+.hcinv-licname{display:block;font-size:var(--t-body-fs);font-weight:500;color:var(--ink);
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .hcinv-lic:hover .hcinv-licname{text-decoration:underline}
-.hcinv-licmodel{display:block;font-size:14px;color:var(--faint);margin-top:2px}
-.hcinv-amt{font-size:14px;font-weight:500;color:var(--ink);font-variant-numeric:tabular-nums;
+.hcinv-licmodel{display:block;font-size:var(--t-small-fs);color:var(--faint);margin-top:2px}
+.hcinv-amt{font-size:var(--t-body-fs);font-weight:500;color:var(--ink);font-variant-numeric:tabular-nums;
   white-space:nowrap}
 .hcinv-status{white-space:nowrap}
 
@@ -5484,7 +5583,7 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
   /* the product line carries the divider, exactly as it does on the table's card */
   .hcinv-prod{grid-column:1/-1;padding-top:12px;border-top:1px solid var(--line2)}
   .hcinv-licname{white-space:normal}
-  .hcinv-amt{grid-column:1;font-size:var(--t-body-sm-fs)}
+  .hcinv-amt{grid-column:1;font-size:var(--t-body-fs)}
   .hcinv-status{grid-column:2;justify-self:end}
   /* ⚠️ THE LABEL ZONE KEEPS ITS FIXED HEIGHT HERE TOO. This block used to release it
      (`min-height:0`) on the argument that a full-width card has no neighbour to line up
@@ -5507,14 +5606,14 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
 .gstatus[hidden]{display:none}
 .gstatus .gs-ic{width:var(--ic-24);height:var(--ic-24);margin-top:2px;color:var(--mid)}
 .gs-h{font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw);color:var(--ink)}
-.gs-b{margin:6px 0 0;max-width:720px;font-size:14px;line-height:1.6;color:var(--mid)}
+.gs-b{margin:6px 0 0;max-width:720px;font-size:var(--t-body-fs);line-height:1.6;color:var(--mid)}
 .gs-f{margin-top:10px}
 /* The approved banner wears the impersonation banner's clothes (.imp-banner):
    ink band, white text, white pill action — a statement across the top of the
    dashboard rather than another card in the stack. It sits inside the content
    column, so it keeps all four corners and clears the content below it.
    One-time: dismissing removes it for the session. */
-.gbanner{display:flex;align-items:center;gap:12px;margin:0 0 26px;border-radius:10px;background:var(--ink);color:#fff;padding:10px 10px 10px 16px;font-size:14px}
+.gbanner{display:flex;align-items:center;gap:12px;margin:0 0 26px;border-radius:10px;background:var(--ink);color:#fff;padding:10px 10px 10px 16px;font-size:var(--t-body-fs)}
 /* ---------- the Home banner slot ----------------------------------------------
    One band, whatever the condition, and two shapes inside it: a single problem gets a
    FACT line and a TODO line, several get one line each. It keeps `.gbanner`'s ink fill —
@@ -5732,7 +5831,7 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
    white-on-ink text is set by `.gbanner.on-ink`, which this does not touch. */
 .gbanner.tone-red .hb-fact b,
 .gbanner.tone-red .hb-fact b .gb-lic{color:var(--status-alert)}
-.gb-txt{font-size:14px;color:#fff}
+.gb-txt{font-size:var(--t-body-fs);color:#fff}
 
 /* same box as every other ✕ (above); on an ink banner only the colour changes */
 /* ⚠️ `.gb-x` keeps no colour of its own — the `.gbanner` inversion above paints it. */
@@ -5758,24 +5857,45 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
    ⚠️ Measured: three subscription cards 289 → 231 and the lone perpetual 560 → 448, both
    −20%. The arithmetic is not exactly 0.8 per card (the gaps do not shrink), so it was
    checked rather than assumed. */
-/* ⚠️⚠️ ON THE CARD, NOT ON THE GRID, AND THE FIRST BUILD HAD IT WRONG. Capping the grid
-   (`max-width:80%`) is the tidier idea and it was INERT here: measured with the rule on
-   and off, the cards were 210.1px both times. The grid is not stretched to its parent —
-   `.plangroup` is a column flex and the grid sizes to its CONTENT, so the tracks are
-   already the cards' own max-content width and a cap above that does nothing. The only
-   thing that can make a content-sized card narrower is the card.
-   ⚠️ `justify-items:center` IS WHAT STOPS IT LOOKING BROKEN: the tracks keep the width
-   they had, so a narrower card would otherwise sit against the left of its own track and
-   the row would read as misaligned rather than as narrower. Centred, the 20% comes off
-   both sides and the extra space becomes gutter.
-   ⚠️ THE COST, NAMED: the visible gap between cards grows by 20% of a track. That is the
-   geometry of the request, not a side effect to tune away — three narrower cards in the
-   same row have to be further apart. */
-#nlPlanCards .plangrid{justify-items:center}
-#nlPlanCards .plancard{width:80%}
+/* ⚠️⚠️ THE 20% MOVED FROM THE CARD TO THE GRID (2026-10-02, by request: "close the gap
+   between the cards on Choose your plan — the content frame getting narrower with it is
+   fine"), and the note this replaces was measured wrong. It said capping the grid was
+   INERT because "`.plangroup` is a column flex and the grid sizes to its CONTENT" — it
+   does not: a column flex stretches its children across, so `.plangrid` was the full
+   896px of the step and its three `1fr` tracks were 289.3 each. Narrowing the CARD inside
+   a track that wide is what opened the gap: cards 231.5 with 71.9px between them, against
+   the 14px the component declares.
+   ⚠️ ONE DECLARATION DOES BOTH HALVES. Capping the grid takes the 20% off the TRACKS, so
+   the cards keep the width they were given (229.6, within 2px of 231.5) and the gap goes
+   back to being the gap. Measured after: tracks 229.6, gap 14, grid 716.8.
+   ⚠️ NOT CENTRED. `justify-items:center` went with the card width — it existed to stop a
+   narrow card sitting against the left of a wide track, and there is no wide track now.
+   The row starts on the group heading's own left edge, which is where it should have been.
+   ⚠️ `.one` NEEDS ITS OWN NUMBER because its track is STATED (560px), not `1fr`, so a cap
+   above it does nothing. 448 is that 560 less the same fifth — the lone perpetual card
+   keeps the width it has today. */
+/* ⚠️⚠️ AND THEN THE CAP WENT UP ONE MORE LEVEL (2026-10-02, by request: "narrow the
+   Pay-as-you-go block to the width its cards take now, keep the gap between the two
+   blocks, and centre the content"). On the GRID it narrowed the cards and left the
+   group's own heading, lead and hairline running the full 896 — so every block announced
+   itself across a width its contents stopped 180px short of. `#nlPlanCards` IS
+   `.plangroups`, i.e. the thing that holds both groups and the 34px between them, so one
+   cap there narrows the headings, the rules and the cards together and `margin-inline`
+   centres the lot. The 34px gap is `row-gap` on this same element and is untouched.
+   ⚠️ THE GRID GIVES THE CAP BACK, or the 20% would be taken twice — 80% of an already
+   80% column is 573px cards. The grid is 100% of the column again, which is what makes
+   the cards exactly as wide as they were: measured, tracks 229.6 and gap 14, unchanged.
+   ⚠️ 80% IS THE SAME FIFTH AS BEFORE, read against the same 896 — the column lands on
+   716.8, which is what the three cards and their two gaps already measured. */
+#nlPlanCards{max-width:80%;margin-inline:auto}
+#nlPlanCards .plangrid{max-width:none}
+#nlPlanCards .plangrid.one{max-width:none;grid-template-columns:minmax(0,448px)}
 /* below 760 the grid is one card per row, and 80% of the screen with 10% of air on each
    side is a card that has been pushed into a channel rather than made smaller */
-@media(max-width:760px){#nlPlanCards .plancard{width:100%}}
+@media(max-width:760px){
+  #nlPlanCards{max-width:none;margin-inline:0}
+  #nlPlanCards .plangrid,#nlPlanCards .plangrid.one{max-width:none;grid-template-columns:1fr}
+}
 /* ============================================================================
    BOTH BILLING MODELS ON ONE SURFACE — the groups
    ============================================================================
@@ -5858,7 +5978,7 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
   .plangroups > .plangroup > .plangroup-h{border-bottom:1px solid var(--accent);
     padding-bottom:10px;min-height:4.5em;display:flex;flex-direction:column}
   .plangroups > .plangroup > .plangroup-h .pg-d{margin:4px 0 0;max-width:46ch;
-    font-size:var(--t-small-fs);line-height:var(--t-small-lh);color:var(--mid)}
+    font-size:var(--t-body-fs);line-height:var(--t-small-lh);color:var(--mid)}
   .plangroups > .plangroup .plancard{background:var(--card)}
   /* ⚠️ COLUMN FLEX, so the grid can take the height the frame was given. The frames are
      stretched to the same height by the row below, but a `block` child does not grow
@@ -5980,17 +6100,17 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
 .pc-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-height:22px}
 .pc-head h2{margin:0;font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw)}
 .pc-price{margin-top:9px;font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw);font-variant-numeric:tabular-nums}
-.pc-per{font-size:14px;font-weight:400;color:var(--faint);letter-spacing:0}
+.pc-per{font-size:var(--t-small-fs);font-weight:400;color:var(--faint);letter-spacing:0}
 /* the badge keeps the price line's box, so the rows below it stay level across the row
    of cards; only its own type drops to badge size */
 .pc-price.is-free{display:flex;align-items:center}
-.pc-freebadge{font-size:14px;letter-spacing:0}
-.pc-term{margin-top:5px;font-size:14px;color:var(--mid)}
+.pc-freebadge{font-size:var(--t-small-fs);letter-spacing:0}
+.pc-term{margin-top:5px;font-size:var(--t-small-fs);color:var(--mid)}
 .pc-feats{margin-top:13px;flex:1}
 /* ⚠️ THE DASHED RULE IS GONE and the 7px padding STAYS: the rhythm of the list was
    never the rules, it was the spacing, and removing both would have closed the list up.
    The tick takes the rule's job of giving each line a left edge to start from. */
-.pc-feat{display:flex;gap:8px;font-size:14px;color:var(--mid);padding:7px 0}
+.pc-feat{display:flex;gap:8px;font-size:var(--t-body-fs);color:var(--mid);padding:7px 0}
 /* 2px lifts the 16px glyph onto the cap height of a 14px line rather than its box */
 .pc-tick{flex:none;margin-top:2px;color:var(--tick)}
 .pc-feattxt{min-width:0}
@@ -6021,9 +6141,9 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
 .am-featgrid{margin-top:12px}
 .nl-taxline{display:block;margin-top:6px}
 
-.taxnote{margin:12px 0 0;font-size:14px;line-height:1.45;color:var(--faint)}
+.taxnote{margin:12px 0 0;font-size:var(--t-body-fs);line-height:1.45;color:var(--faint)}
 
-.pc-note{margin-top:12px;font-size:14px;color:var(--faint)}
+.pc-note{margin-top:12px;font-size:var(--t-body-fs);color:var(--faint)}
 .pc-note.center{text-align:center}
 .pc-note:empty{display:none}
 
@@ -6077,7 +6197,7 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
 .fi-card{margin-top:8px;padding:10px 14px;max-width:50%;background:var(--card);
   border:1px solid var(--line2);border-radius:8px}
 .fd-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;
-  padding:2px 0;font-size:14px;line-height:1.5}
+  padding:2px 0;font-size:var(--t-body-fs);line-height:1.5}
 .fd-k{color:var(--faint)}
 .fd-v{color:var(--ink);font-variant-numeric:tabular-nums}
 /* ⚠️⚠️ THE CHANGE IS DRAWN AS A CHANGE. It used to be `old <arrow> **new**` — two words
@@ -6100,7 +6220,7 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
    ⚠️ The border is kept and made TRANSPARENT rather than removed: the pill has to stay
    exactly the height it was, or the struck-through old value beside it stops sharing a
    baseline with it. ⚠️ 12.1:1 — the same measurement as the chip. */
-.fd-now{font-size:14px;background:var(--c-blue-50);border-color:transparent;color:var(--accent)}
+.fd-now{font-size:var(--t-small-fs);background:var(--c-blue-50);border-color:transparent;color:var(--accent)}
 @media (max-width:600px){
   /* the row already wraps; what it needs at this width is to start each change on its
      own line rather than squeezing a struck value, an arrow and a pill into one */
@@ -6115,9 +6235,9 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
 .sg-actrow{padding:14px 0;border-bottom:1px dashed var(--line2)}
 .sg-actrow:last-child{border-bottom:0}
 .sg-actkey{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 12px;margin-bottom:2px}
-.sg-actwhere{font-size:13px;color:var(--faint)}
+.sg-actwhere{font-size:var(--t-caption-fs);color:var(--faint)}
 .sg-actscope{margin-top:2px;padding-left:14px;border-left:2px solid var(--line2)}
-.sg-actlabel{display:block;font-size:13px;color:var(--faint);padding-left:2px}
+.sg-actlabel{display:block;font-size:var(--t-caption-fs);color:var(--faint);padding-left:2px}
 
 /* ============================================================================
    THE STICKY LIST BLOCK — one frame, two things that stay
@@ -6323,7 +6443,18 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
    ⚠️ `#dashFeedMore` takes the same box or "Load more" would sit under the left edge
    of a column that is no longer there. */
 #dashFeed,#dashFeedMore,#actFeed{max-width:var(--feed-col);margin-inline:auto}
-.fsep,.fitem{position:relative;display:grid;grid-template-columns:24px minmax(0,1fr);
+/* ⚠️⚠️ THE FIRST TRACK IS THE MARK'S OWN WIDTH (2026-10-02, by request: "the dot on the
+   date is no longer centred on the line, it slides left"). It was a literal `24px`,
+   written when the mark was 24 — and it was left behind when the mark went 24 -> 30, the
+   same miss the rail itself made. Two things came out of it, and the report named both:
+     · the DATE DOT is `justify-self:center` IN THIS TRACK, so its centre sat at 12 while
+       the rail runs at `--fmark/2 - .5` = 14.5. Measured: dot centre 142.0, rail 145.0.
+       The glyphs looked right only because `.fi-mark` has a fixed width and overflowed
+       the short track from its left edge, which put ITS centre at 15 by accident.
+     · the GAP was not the 14 it declares: a 30px mark in a 24px track eats 6 of it, so
+       every sentence stood 8px from its mark. Measured: mark right 160, text left 168.
+   One track, derived from the mark, and both are right without a second number. */
+.fsep,.fitem{position:relative;display:grid;grid-template-columns:var(--fmark,30px) minmax(0,1fr);
   column-gap:14px}
 /* ⚠️⚠️ A `display` DECLARATION BEATS THE UA'S `[hidden]{display:none}`, and search
    hides feed rows with the attribute. The old entry was a plain block and got away
@@ -6472,7 +6603,7 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
    thing as the row it hangs off.
    ⚠️ One step below the parent sentence (`small` against `body`) and `--mid` against
    `--ink`: these are the evidence for the row above, not rows of their own. */
-.fi-sub{padding:5px 0;font-size:var(--t-small-fs);line-height:var(--t-small-lh);color:var(--mid)}
+.fi-sub{padding:5px 0;font-size:var(--t-body-fs);line-height:var(--t-small-lh);color:var(--mid)}
 
 .lic-h1{margin:0 0 4px;font-family:var(--font-ui);font-size:var(--t-h1-fs);line-height:var(--t-h1-lh);letter-spacing:var(--t-h1-ls);font-weight:var(--t-h1-fw)}
 .lic-sub{margin:0 0 20px;font-size:var(--t-small-fs);line-height:var(--t-small-lh);letter-spacing:var(--t-small-ls);font-weight:var(--t-small-fw);color:var(--mid)}
@@ -6487,7 +6618,7 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
 .setcard > *:not(.setcard-h){max-width:800px}
 .setcard-h{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:14px}
 .setcard-h h2{margin:0;font-family:var(--font-ui);font-size:var(--t-label-fs);line-height:var(--t-label-lh);letter-spacing:var(--t-label-ls);font-weight:var(--t-label-fw);text-transform:uppercase}
-.setcard-hint{font-size:var(--t-small-fs);line-height:var(--t-small-lh);letter-spacing:var(--t-small-ls);font-weight:var(--t-small-fw);color:var(--faint)}
+.setcard-hint{font-size:var(--t-body-fs);line-height:var(--t-small-lh);letter-spacing:var(--t-small-ls);font-weight:var(--t-small-fw);color:var(--faint)}
 /* ⚠️ The Add user screen's styles (.au-*) are gone with the screen, and so is
    `.au-keybox` — the wrapping monospace block that showed the invite link. The link
    is not shown any more: one click copies it and the snackbar says so. `.authlocked`
@@ -6549,7 +6680,7 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
 .invite-go{flex:none}
 /* the link is the quiet third option, at the END of the row — a second button here
    would make two equal ways in, which is exactly what it must not be */
-.invite-link{flex:none;margin-left:4px;font-size:14px}
+.invite-link{flex:none;margin-left:4px;font-size:var(--t-body-fs)}
 
 /* ⚠️ Reserved, always. One line of 14/1.45 plus its gap, held whether or not anything
    is in it — this is what keeps the card's height constant through an error. It
@@ -6563,12 +6694,12 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
    It collapses now and takes its margin with it. The jump it buys back is one line,
    on a message that is transient anyway — and the note reads as belonging to the
    control again, which is what it is for. */
-.invite-msg{margin:0;height:0;overflow:hidden;font-size:14px;line-height:1.45;
+.invite-msg{margin:0;height:0;overflow:hidden;font-size:var(--t-body-fs);line-height:1.45;
   color:var(--mid);visibility:hidden}
 .invite-msg.on{visibility:visible;height:auto;margin:10px 0 0}
 .invite-msg b{color:var(--ink);font-weight:var(--t-em-fw)}
 /* always visible, in both states — a standing fact about the control, not a receipt */
-.invite-note{margin:10px 0 0;font-size:14px;line-height:1.45;color:var(--faint)}
+.invite-note{margin:10px 0 0;font-size:var(--t-body-fs);line-height:1.45;color:var(--faint)}
 
 /* SOLO — one person, so no table, no toolbar, no pager: there is nothing to search,
    sort or page, and a one-row table of yourself is a control panel for a decision
@@ -6639,7 +6770,7 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
 /* the summary that appears next to a rejected primary, naming how many and why */
 /* the form-level summary stays at body weight — it is a sentence beside a button, not a
    line under a field — but it takes the same red, because it is the same fault */
-.formerr{margin:0 0 10px;font-size:14px;line-height:1.45;color:var(--status-alert);font-weight:var(--t-em-fw)}
+.formerr{margin:0 0 10px;font-size:var(--t-body-fs);line-height:1.45;color:var(--status-alert);font-weight:var(--t-em-fw)}
 .formerr[hidden]{display:none}
 
 /* the billing card block with nothing on file: a sentence where the card would be,
@@ -6659,7 +6790,7 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
    because the job did — this is still the one block on the step that has to be read
    before the numbers under it. */
 .nl-effect{border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin-bottom:12px;
-  font-size:14px;line-height:1.5;color:var(--ink);background:var(--bg)}
+  font-size:var(--t-body-fs);line-height:1.5;color:var(--ink);background:var(--bg)}
 .nl-effectwhat{margin-top:6px;color:var(--mid)}
 /* ⚠️ `.alert.sched` and `.sched-cancel` ARE GONE with the banner they dressed — the
    Plan block no longer states a pending change, because there is no longer such a
@@ -6682,12 +6813,12 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
    said "put me underneath", the other said "there is no underneath". */
 .nl-couponrow .nl-couponfield{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .nl-couponrow .field{margin:0;flex:1 1 90px;min-width:0}
-.nl-couponrow .field input{height:32px;font-size:14px}
+.nl-couponrow .field input{height:32px;font-size:var(--t-body-fs)}
 /* ⚠️ `.nl-couponrow .btn.sec{height:32px}` REMOVED: a fifth height for one button.
    It is `btn--secondary btn--md` like every other Apply in the product. */
 .nl-couponrow .btn{flex:none}
 .nl-couponrow [data-couponcancel]{flex:none;margin-left:0}
-.nl-couponedit{margin-left:10px;font-size:14px;color:var(--mid)}
+.nl-couponedit{margin-left:10px;font-size:var(--t-body-fs);color:var(--mid)}
 .nl-couponedit:hover{color:var(--ink)}
 /* the error sits under the field, on the row, and takes the whole line so a long
    message never squeezes the input */
@@ -6707,7 +6838,7 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
 .am-newmonthly .now{font-size:var(--t-body-fs)}
 /* A free plan replaces the whole Due-today block rather than printing $0.00 into it:
    there is no transaction, so there is no figure. */
-.nl-free{font-size:14px;line-height:1.5;color:var(--ink)}
+.nl-free{font-size:var(--t-body-fs);line-height:1.5;color:var(--ink)}
 
 /* ---------- the legal confirmation ----------------------------------------------
    Directly above the primary, because it is the last thing agreed to before it is
@@ -6716,7 +6847,7 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
    one with nothing to mark. */
 .nl-legal{display:flex;align-items:flex-start;gap:10px;margin:14px 0 10px;cursor:pointer}
 .nl-legal input{flex:none;width:16px;height:16px;margin:2px 0 0;accent-color:var(--ink)}
-.nl-legaltxt{font-size:14px;line-height:1.45;color:var(--mid)}
+.nl-legaltxt{font-size:var(--t-body-fs);line-height:1.45;color:var(--mid)}
 .nl-legal .link{color:var(--ink)}
 /* the same error treatment as a field: the mark thickens to ink, the message is ink and
    bold against the faint sentence above it */
@@ -6731,12 +6862,12 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
    live rule on an obvious class name is how `.keynote` restyled somebody else's
    paragraph. Removed with its only writer, in the same pass. */
 
-.cancel-help{flex:1;font-size:14px;color:var(--mid);text-align:left}
+.cancel-help{flex:1;font-size:var(--t-body-fs);color:var(--mid);text-align:left}
 
 .noresults{border:1px dashed var(--line);border-radius:8px;background:transparent;
   padding:22px 18px;text-align:center}
 .nr-t{font-size:var(--t-body-fs);line-height:var(--t-body-lh);color:var(--ink)}
-.nr-clear{margin-top:6px;font-size:14px}
+.nr-clear{margin-top:6px;font-size:var(--t-body-fs)}
 /* inside a table the block is a cell, so it must not also draw the cell's borders */
 td.noresults-cell{padding:0;border:0}
 td.noresults-cell .noresults{margin:14px}
@@ -6773,7 +6904,7 @@ td.noresults-cell .noresults{margin:14px}
 .emptybox.eb{padding:34px 20px;text-align:center;
   border:0;border-radius:10px;background:var(--surface-quiet)}
 .eb-t{font-size:var(--t-body-fs);line-height:var(--t-body-lh);color:var(--ink)}
-.eb-p{margin:6px auto 0;max-width:46ch;font-size:14px;line-height:1.5;color:var(--mid)}
+.eb-p{margin:6px auto 0;max-width:46ch;font-size:var(--t-body-fs);line-height:1.5;color:var(--mid)}
 /* ⚠️ WIDER INSIDE THE LICENCE PANEL'S INSTANCE TABS (2026-09-29, by request). 46ch is
    the measure for the account-level empty states, which are one short sentence under a
    heading in the middle of a page. The Development one is four clauses explaining what
@@ -6864,7 +6995,7 @@ body.list-empty #pageTitleRow [id^="licNewBtn"]{display:none !important}
   opacity:0;transition:opacity .16s ease,transform .16s ease;pointer-events:none}
 .snack.on{opacity:1;transform:translate(-50%,0);pointer-events:auto}
 .snack[hidden]{display:none}
-.snack-t{font-size:14px;line-height:1.45}
+.snack-t{font-size:var(--t-body-fs);line-height:1.45}
 /* the dismiss is quiet: the message leaves by itself, this is for the impatient */
 .snack-x{flex:none;color:#fff;opacity:.7}
 .snack-x:hover{opacity:1;background:rgba(255,255,255,.14)}
@@ -6875,15 +7006,15 @@ body.list-empty #pageTitleRow [id^="licNewBtn"]{display:none !important}
 .user-pending td{color:var(--mid)}
 .user-invited{margin-left:8px;vertical-align:1px}
 
-.savednote{margin-left:12px;font-size:14px;color:var(--mid);white-space:nowrap}
+.savednote{margin-left:12px;font-size:var(--t-body-fs);color:var(--mid);white-space:nowrap}
 .savednote[hidden]{display:none}
-.seclast{margin:0 0 14px;font-size:14px;color:var(--mid)}
+.seclast{margin:0 0 14px;font-size:var(--t-small-fs);color:var(--mid)}
 
-.paycard-none{flex:1;min-width:0;font-size:14px;line-height:1.45;color:var(--mid)}
+.paycard-none{flex:1;min-width:0;font-size:var(--t-body-fs);line-height:1.45;color:var(--mid)}
 
 .field{margin-bottom:18px}
 .field:last-child{margin-bottom:0}
-.field > label{display:block;font-size:var(--t-small-fs);line-height:var(--t-small-lh);letter-spacing:var(--t-small-ls);font-weight:var(--t-small-fw);color:var(--mid);margin-bottom:6px}
+.field > label{display:block;font-size:var(--t-body-fs);line-height:var(--t-small-lh);letter-spacing:var(--t-small-ls);font-weight:var(--t-small-fw);color:var(--mid);margin-bottom:6px}
 /* ⚠️⚠️ FIELDS READ `--btn-r` AS OF 2026-09-28 (by request). They were the last 40px
    controls in the product still on 6px: a search box, a view switcher, a period control
    and every button in the toolbar had gone to the shared radius on 09-27 and the FORM
@@ -6941,7 +7072,7 @@ body.list-empty #pageTitleRow [id^="licNewBtn"]{display:none !important}
 .field input::placeholder,.field textarea::placeholder,
 .paystripe input::placeholder{color:var(--faint);opacity:1}
 .field.ro input{background:var(--bg);color:var(--mid);cursor:default}
-.field .help{font-size:var(--t-small-fs);line-height:var(--t-small-lh);letter-spacing:var(--t-small-ls);color:var(--faint);margin-top:5px}
+.field .help{font-size:var(--t-body-fs);line-height:var(--t-small-lh);letter-spacing:var(--t-small-ls);color:var(--faint);margin-top:5px}
 .field2{display:grid;grid-template-columns:1fr 1fr;gap:12px 14px}
 .field2 .field{margin-bottom:0}   /* the grid gap spaces rows — no double margin */
 /* ⚠️ THE ROW GAP IS THE ONLY SPACING INSIDE A GRID, and 12px was not it (2026-09-28,
@@ -6959,7 +7090,7 @@ body.list-empty #pageTitleRow [id^="licNewBtn"]{display:none !important}
    at a gap of exactly 0: Company/Billing email ended at y=260 and Phone began at 260.
    The row gap was the visible symptom and this was the larger half of the cause. */
 @media(max-width:640px){.field2{grid-template-columns:1fr}}
-.cardhelp{font-size:var(--t-small-fs);line-height:var(--t-small-lh);letter-spacing:var(--t-small-ls);color:var(--faint);margin-top:12px}
+.cardhelp{font-size:var(--t-body-fs);line-height:var(--t-small-lh);letter-spacing:var(--t-small-ls);color:var(--faint);margin-top:12px}
 .paycard{display:flex;align-items:center;gap:14px;flex-wrap:wrap;border:1px solid var(--line2);border-radius:8px;padding:12px 14px}
 /* ⚠️⚠️ THE EMPTY STATE IS TINTED AND UNBORDERED (2026-09-30, by request). An account with
    no card on file has one job on this page, and a grey hairline round a grey sentence is
@@ -6985,7 +7116,7 @@ body.list-empty #pageTitleRow [id^="licNewBtn"]{display:none !important}
 .paycard-none{flex:0 1 auto;white-space:nowrap}
 .paycard .sp{flex:1}
 .pc-expw{display:inline}
-.brandbadge{font-size:14px;font-weight:800;letter-spacing:.08em;border:1px solid var(--line);border-radius:4px;padding:3px 7px;background:#fff;color:var(--ink)}
+.brandbadge{font-size:var(--t-small-fs);font-weight:800;letter-spacing:.08em;border:1px solid var(--line);border-radius:4px;padding:3px 7px;background:#fff;color:var(--ink)}
 /* the symbol badge keeps the wordmark badge's box so the two never change the row's
    height or the gap after them — only what is inside the box differs */
 .brandbadge-mark{display:inline-flex;align-items:center;padding:2px 6px;line-height:0}
@@ -6995,8 +7126,8 @@ body.list-empty #pageTitleRow [id^="licNewBtn"]{display:none !important}
    grouping, not word boundaries. Caught in the purchase modal's new pay card, where
    the row is narrower than on the two surfaces this shipped on before: measured at
    41px tall in a 20.3px line, i.e. wrapped, with 60px of unused room beside it. */
-.pc-num{font-variant-numeric:tabular-nums;font-size:14px;letter-spacing:.06em;white-space:nowrap}
-.pc-exp{font-size:14px;color:var(--mid)}
+.pc-num{font-variant-numeric:tabular-nums;font-size:var(--t-body-fs);letter-spacing:.06em;white-space:nowrap}
+.pc-exp{font-size:var(--t-small-fs);color:var(--mid)}
 /* readonly billing address: half the card width; billing email on top, then a divider,
    then the address; the "edit in company profile" affordance is an icon top-right */
 /* quiet delete action + disabled confirm button in the delete dialog (reuses the savebar's opacity treatment) */
@@ -7006,10 +7137,10 @@ body.list-empty #pageTitleRow [id^="licNewBtn"]{display:none !important}
 /* Pending email change: one compact status line under the input — pending icon,
    the value that is waiting, then the inline actions. It replaces the helper text
    while a change is in flight, so the field never carries two explanations. */
-.emailpend{margin-top:6px;display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;font-size:14px;color:var(--faint)}
+.emailpend{margin-top:6px;display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;font-size:var(--t-body-fs);color:var(--faint)}
 .emailpend[hidden]{display:none}
 .emailpend-ic{width:var(--ic-16);height:var(--ic-16);color:var(--faint)}
-.emailpend-v{font:inherit;font-size:14px;text-align:left;color:var(--mid);background:none;border:0;padding:0;cursor:pointer}
+.emailpend-v{font:inherit;font-size:var(--t-body-fs);text-align:left;color:var(--mid);background:none;border:0;padding:0;cursor:pointer}
 .emailpend-v:hover{color:var(--ink)}
 .emailpend-sep{color:var(--line)}
 /* Security page: back button in its own gutter, aligned with the H1 row */
@@ -7086,7 +7217,7 @@ body.list-empty #pageTitleRow [id^="licNewBtn"]{display:none !important}
 .paymodal-f{display:flex;align-items:center;gap:12px;padding:16px 24px;border-top:1px solid var(--line2)}
 .paymodal-f .sp{flex:1}
 .paymodal-f .btn[disabled]{opacity:.45;cursor:not-allowed}
-.paystripe-note{font-size:14px;color:var(--faint)}
+.paystripe-note{font-size:var(--t-small-fs);color:var(--faint)}
 .paystripe-note b{color:var(--mid);font-weight:700}
 /* composed card field (Stripe Elements style): glyph + number + expiry + CVC in one box */
 /* ⚠️⚠️ EXPIRY AND CVC ARE BLOCKS INSIDE THE FIELD, NOT COLUMNS OF IT (2026-09-28, by
@@ -7104,7 +7235,7 @@ body.list-empty #pageTitleRow [id^="licNewBtn"]{display:none !important}
 .paystripe{display:flex;align-items:center;gap:8px;height:var(--btnH);border:1px solid var(--line);border-radius:var(--btn-r);padding:0 6px 0 16px;background:#fff}
 .paystripe:focus-within{border-color:var(--ink)}
 .paystripe-glyph{color:var(--faint);flex:none;width:var(--ic-16);height:var(--ic-16)}
-.paystripe input{border:0;outline:0;background:transparent;font:inherit;font-size:14px;color:var(--ink);padding:0;height:100%;font-variant-numeric:tabular-nums}
+.paystripe input{border:0;outline:0;background:transparent;font:inherit;font-size:var(--t-body-fs);color:var(--ink);padding:0;height:100%;font-variant-numeric:tabular-nums}
 .paystripe .ps-num{flex:1;min-width:0}
 .paystripe .ps-exp,.paystripe .ps-cvc{flex:none;height:28px;border-radius:999px;
   background:var(--surface-quiet);text-align:center;padding:0 10px}
@@ -7149,7 +7280,7 @@ body.list-empty #pageTitleRow [id^="licNewBtn"]{display:none !important}
    clamps to a pill, so the left edge at mid-height is the widest point of the curve and
    a glyph at 10px sat on it. 14px clears the curve; the text follows at 38. */
 .searchbox .searchglyph{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:var(--ic-16);height:var(--ic-16);color:var(--faint);pointer-events:none}
-.searchbox input{font:inherit;font-size:14px;width:100%;height:var(--btnH);border:1px solid var(--line);border-radius:var(--btn-r);padding:0 10px 0 38px;background:#fff;color:var(--ink);outline:none}
+.searchbox input{font:inherit;font-size:var(--t-body-fs);width:100%;height:var(--btnH);border:1px solid var(--line);border-radius:var(--btn-r);padding:0 10px 0 38px;background:#fff;color:var(--ink);outline:none}
 .searchbox input:focus{border-color:var(--ink)}
 /* the clear control — inside the field, trailing edge, only when there is text */
 /* ⚠️ Position only: the box is `btn--ghost btn--md btn--icon`. 40px inside a 40px
@@ -7161,7 +7292,7 @@ body.list-empty #pageTitleRow [id^="licNewBtn"]{display:none !important}
 .searchclear .ic{width:var(--ic-16);height:var(--ic-16)}
 .searchbox input{padding-right:40px}
 .searchbox input::placeholder{color:var(--faint)}
-.lic-toggle{display:inline-flex;align-items:center;height:var(--btnH);gap:9px;font-size:14px;color:var(--mid);cursor:pointer;margin-left:12px}
+.lic-toggle{display:inline-flex;align-items:center;height:var(--btnH);gap:9px;font-size:var(--t-body-fs);color:var(--mid);cursor:pointer;margin-left:12px}
 /* Type filter: segmented chips, mutually exclusive */
 .lic-typeseg{display:inline-flex;align-items:center;gap:8px}
 /* ⚠️⚠️ `display:contents` IS WHAT MAKES THE PHONE'S ROW FREE (2026-10-01). Toolbar C's
@@ -7252,8 +7383,8 @@ body.list-empty #pageTitleRow [id^="licNewBtn"]{display:none !important}
 .fsheet-extra .perrow{display:flex;align-items:center;gap:10px}
 .fsheet-extra input[type="date"]{flex:1;min-width:0;height:var(--btnH);
   border:1px solid var(--line);border-radius:var(--btn-r);padding:0 12px;
-  font:inherit;font-size:14px;color:var(--ink);background:var(--card)}
-.fsheet-extra .permid{color:var(--mid);font-size:14px}
+  font:inherit;font-size:var(--t-body-fs);color:var(--ink);background:var(--card)}
+.fsheet-extra .permid{color:var(--mid);font-size:var(--t-small-fs)}
 .fsheet-foot{padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));
   border-top:1px solid var(--line2)}
 .fsheet-apply{width:100%}
@@ -7261,7 +7392,7 @@ body.list-empty #pageTitleRow [id^="licNewBtn"]{display:none !important}
    box on every page in this prototype, so locking `body` alone locks nothing. */
 body.fsheet-open{overflow:hidden}
 body.fsheet-open #shellMain{overflow:hidden}
-.typechip{height:var(--btnH);display:inline-flex;align-items:center;font-size:14px;padding:0 13px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--mid)}
+.typechip{height:var(--btnH);display:inline-flex;align-items:center;font-size:var(--t-small-fs);padding:0 13px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--mid)}
 .typechip:hover{border-color:var(--mid);color:var(--ink)}
 .typechip.is-on{background:var(--ink);border-color:var(--ink);color:#fff}
 /* locked (change-plan mode): the choice is fixed, so drop the affordance */
@@ -7285,7 +7416,7 @@ body.fsheet-open #shellMain{overflow:hidden}
 .chipdiv{flex:none;align-self:center;width:1px;height:22px;margin:0 6px;background:var(--line)}
 .filterchip{height:var(--btnH);align-items:center;gap:6px;padding:0 14px;
   border:1px solid var(--line);border-radius:999px;background:#fff;
-  color:var(--mid);font:inherit;font-size:14px;white-space:nowrap;cursor:pointer}
+  color:var(--mid);font:inherit;font-size:var(--t-small-fs);white-space:nowrap;cursor:pointer}
 .attnchip{display:inline-flex}
 .filterchip:hover{border-color:var(--mid);color:var(--ink)}
 /* the check occupies no width until it means something, so the chip does not jump */
@@ -7344,7 +7475,7 @@ a.lp-cell:hover .lp-name{text-decoration:underline;text-underline-offset:2px}
 /* the type used to be a chip in a column of its own; folded into this line it
    steps back so the product name still leads */
 .lp-type{color:var(--mid)}
-.lic-prodlabel{font-size:14px;color:var(--faint);margin-top:2px;white-space:normal}
+.lic-prodlabel{font-size:var(--t-body-fs);color:var(--faint);margin-top:2px;white-space:normal}
 .lic-num{font-variant-numeric:tabular-nums;white-space:nowrap}   /* dates stay on one line now that Product takes the width */
 /* ⚠️ THE HEADING HAS TO MOVE WITH THE CELLS. Variant B right-aligns the Version cells
    (see `.licb-row .lic-ver`) and `headHtmlB` already said in a comment that the heading
@@ -7383,7 +7514,7 @@ th.lic-num{text-align:right}
    corner — and `.dropmenu button` (0,1,1) outranks `.btn--secondary` (0,1,0), so the one
    real button inside a menu had its fill and its radius taken away by the rule meant
    for the things around it. A component inside a menu is still the component. */
-.dropmenu button:not(.btn){display:block;width:100%;text-align:left;padding:8px 12px;border:0;background:transparent;border-radius:7px;font-size:14px;color:var(--ink)}
+.dropmenu button:not(.btn){display:block;width:100%;text-align:left;padding:8px 12px;border:0;background:transparent;border-radius:7px;font-size:var(--t-body-fs);color:var(--ink)}
 .dropmenu button:not(.btn):hover{background:var(--hover)}
 /* status chip plus, when there is one, the auto-charge mark beside it */
 /* ⚠️⚠️ TABLE ROW CONTROLS HAVE NO RESTING FILL (2026-10-01, by request: "in the default
@@ -7416,7 +7547,7 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
 /* ⚠️ The alert icon lives INSIDE this line, not as a third item in the column above it.
    As a sibling of the chip it became its own flex row and stacked over the words it
    qualifies; the mark and the four words it marks are one statement. */
-.licstat-txt{font-size:14px;color:var(--mid);font-variant-numeric:tabular-nums;white-space:nowrap;
+.licstat-txt{font-size:var(--t-small-fs);color:var(--mid);font-variant-numeric:tabular-nums;white-space:nowrap;
   display:inline-flex;align-items:center;gap:4px}
 .licstat-txt .alertic{margin:0}
 .lic-row.off .lp-name{color:var(--faint)}
@@ -7442,7 +7573,7 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
    a menu it is the only button on the panel, so it spans it; that is the one thing the
    variant cannot know. */
 .percustom .perapply{width:100%;justify-content:center}
-.percustom input[type=date]{height:var(--btnH);border:1px solid var(--line);border-radius:var(--btn-r);padding:0 14px;font:inherit;font-size:var(--t-small-fs);color:var(--ink);background:#fff}
+.percustom input[type=date]{height:var(--btnH);border:1px solid var(--line);border-radius:var(--btn-r);padding:0 14px;font:inherit;font-size:var(--t-body-fs);color:var(--ink);background:#fff}
 .percustom input[type=date]:focus{border-color:var(--ink);outline:none}
 .permid{color:var(--mid);font-size:var(--t-small-fs)}
 
@@ -7454,11 +7585,11 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
 .sg-head{padding:22px 0 6px}
 .sg-lead{font-size:var(--t-body-fs);line-height:var(--t-body-lh);color:var(--mid);max-width:70ch;margin:8px 0 0}
 .sg-toc{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 0}
-.sg-toc a{font-size:14px;color:var(--ink);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:4px 12px;background:#fff}
+.sg-toc a{font-size:var(--t-small-fs);color:var(--ink);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:4px 12px;background:#fff}
 .sg-toc a:hover{border-color:var(--ink)}
 .sg-sec{margin-top:34px}
 .sg-sec > h2{font-family:var(--font-ui);font-size:var(--t-h1-fs);line-height:var(--t-h1-lh);letter-spacing:var(--t-h1-ls);font-weight:var(--t-h1-fw);margin:0 0 4px}
-.sg-sec > p{font-size:14px;color:var(--mid);margin:0 0 16px;max-width:70ch}
+.sg-sec > p{font-size:var(--t-body-fs);color:var(--mid);margin:0 0 16px;max-width:70ch}
 /* one specimen: a label naming the class, then the live component */
 .sg-item{background:var(--card);border:1px solid var(--line2);border-radius:10px;padding:16px 18px;margin-top:12px}
 .sg-item > h3{font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);font-weight:var(--t-h2-fw);margin:0 0 2px}
@@ -7474,16 +7605,16 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
 .sg-sub{margin:18px 0 8px;font-family:var(--font-ui);font-size:var(--t-small-fs);
   font-weight:500;color:var(--mid)}
 .sg-sub .sg-cls{margin-left:8px;font-weight:400}
-.sg-note{font-size:14px;color:var(--faint);margin:0 0 14px}
+.sg-note{font-size:var(--t-body-fs);color:var(--faint);margin:0 0 14px}
 .sg-row{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end}
 .sg-cell{display:flex;flex-direction:column;gap:7px;min-width:0}
-.sg-cls{font-family:var(--font-mono);font-size:13px;color:var(--mid);white-space:nowrap}
+.sg-cls{font-family:var(--font-mono);font-size:var(--t-caption-fs);color:var(--mid);white-space:nowrap}
 .sg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px}
 .sg-swatch{border:1px solid var(--line2);border-radius:8px;overflow:hidden;background:#fff}
 .sg-swatch .chip-fill{height:56px;border-bottom:1px solid var(--line2)}
 .sg-swatch .sg-meta{padding:8px 10px}
-.sg-swatch .sg-meta b{display:block;font-family:var(--font-mono);font-size:13px;font-weight:400;color:var(--ink)}
-.sg-swatch .sg-meta span{font-size:13px;color:var(--faint)}
+.sg-swatch .sg-meta b{display:block;font-family:var(--font-mono);font-size:var(--t-caption-fs);font-weight:400;color:var(--ink)}
+.sg-swatch .sg-meta span{font-size:var(--t-caption-fs);color:var(--faint)}
 .sg-type td:first-child{white-space:nowrap;vertical-align:middle}
 /* a tier heading inside the type table: not a level, so it wears the label
    treatment instead of the row treatment and cannot be mistaken for a token */
@@ -7495,11 +7626,11 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
 .sg-exc .sg-cls{display:inline;white-space:nowrap}
 .sg-space{display:flex;align-items:center;gap:12px;margin-bottom:8px}
 .sg-space i{display:block;height:14px;background:var(--track);border:1px solid var(--line2)}
-.sg-space span{font-family:var(--font-mono);font-size:13px;color:var(--mid)}
+.sg-space span{font-family:var(--font-mono);font-size:var(--t-caption-fs);color:var(--mid)}
 .sg-radii{display:flex;gap:14px;flex-wrap:wrap}
-.sg-radii div{width:92px;height:60px;background:#fff;border:1px solid var(--line);display:flex;align-items:flex-end;justify-content:center;font-family:var(--font-mono);font-size:12px;color:var(--mid);padding-bottom:5px}
+.sg-radii div{width:92px;height:60px;background:#fff;border:1px solid var(--line);display:flex;align-items:flex-end;justify-content:center;font-family:var(--font-mono);font-size:var(--t-small-fs);color:var(--mid);padding-bottom:5px}
 .sg-shadow{display:flex;gap:20px;flex-wrap:wrap}
-.sg-shadow div{width:150px;height:74px;background:#fff;border:1px solid var(--line2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:12px;color:var(--mid)}
+.sg-shadow div{width:150px;height:74px;background:#fff;border:1px solid var(--line2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:var(--t-small-fs);color:var(--mid)}
 .sg-static{position:relative;min-height:120px;border:1px dashed var(--line);border-radius:8px;padding:14px;background:var(--bg)}
 .sg-static .overlay,.sg-static .payoverlay,.sg-static .fs-screen{position:static;background:none;backdrop-filter:none;-webkit-backdrop-filter:none;padding:0;display:block}
 .sg-static .fs-box{width:100%;height:auto;max-height:none}
@@ -7521,10 +7652,10 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
 .sg-presframe.a .sg-preswork{width:100%;border:0}
 .sg-presframe.b .sg-preswork{width:63%}
 .sg-presframe.c .sg-preswork{width:58%}
-.sg-presk{margin-top:10px;font-size:14px;font-weight:600;color:var(--ink)}
-.sg-presd{margin-top:3px;font-size:14px;line-height:1.5;color:var(--mid)}
+.sg-presk{margin-top:10px;font-size:var(--t-small-fs);font-weight:600;color:var(--ink)}
+.sg-presd{margin-top:3px;font-size:var(--t-body-fs);line-height:1.5;color:var(--mid)}
 @media(max-width:600px){.sg-presrow{grid-template-columns:1fr}}
-.sg-flag{border-left:3px solid var(--ink);background:#fff;padding:10px 14px;font-size:14px;color:var(--mid);margin-top:12px}
+.sg-flag{border-left:3px solid var(--ink);background:#fff;padding:10px 14px;font-size:var(--t-body-fs);color:var(--mid);margin-top:12px}
 
 /* ============================================================================
    MOBILE — one breakpoint, ≤600px (phone)
@@ -7554,7 +7685,7 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
      with no frame there are two, and the card takes the top one. */
   .plancard{background:var(--card)}
   .pc-feat .infoic{display:none}
-  .pc-featnote{display:block;margin-top:3px;font-size:14px;line-height:1.4;color:var(--faint)}
+  .pc-featnote{display:block;margin-top:3px;font-size:var(--t-body-fs);line-height:1.4;color:var(--faint)}
 
   /* ---------- info icon: the bubble anchors to the HEADING, not the glyph ----------
      ⚠️ Measured, not guessed: at 375px the desktop bubble (300px wide, hung off the
@@ -7590,9 +7721,18 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
      a breakpoint. Reported rather than taken.
      ⚠️ Rules that already name a `-sm-` token are unaffected: those resolve to the same
      18 or 15 they always did, so this cannot double-reduce anything. */
+  /* ⚠️⚠️ `--t-body-fs` NO LONGER STEPS DOWN HERE (2026-10-02, by request: "text is the same
+     size on a phone as on a desktop"). It was 16 -> 15, and 16 is now the FLOOR for anything
+     read in flow, so the phone cannot be the one surface that sits under it. The two HEADINGS
+     keep their step — 36 -> 28 and 20 -> 18 are both far above the floor, and a heading is
+     the one thing a narrow screen may shrink.
+     ⚠️ `--t-body-lh` KEEPS ITS OVERRIDE (1.50 -> 1.40), because the request said to leave the
+     line-height tokens alone. Phone body text is therefore 16/1.40 where it was 15/1.40: the
+     line box grows with the size, and the leading stays proportionally tighter than the
+     desktop's 16/1.50. Named rather than adjusted. */
   :root{--t-h1-fs:var(--t-h1-sm-fs);   --t-h1-lh:var(--t-h1-sm-lh);   --t-h1-ls:var(--t-h1-sm-ls);
         --t-h2-fs:var(--t-h2-sm-fs);   --t-h2-lh:var(--t-h2-sm-lh);   --t-h2-ls:var(--t-h2-sm-ls);
-        --t-body-fs:var(--t-body-sm-fs); --t-body-lh:var(--t-body-sm-lh)}
+        --t-body-lh:var(--t-body-sm-lh)}
 
   /* ---------- Home, layout B on the phone ----------------------------------------
      ⚠️⚠️ THE CARDS BECOME TABLE ROWS (2026-09-30, by request). On the desktop they are
@@ -7706,7 +7846,7 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
   #homeCards .hc-head > .btn{flex:none;margin-left:auto}
   /* ⚠️ The hero size is a desktop measure: beside a 28px heading a 48px button is the
      loudest thing on the screen. It takes the band every other control here takes. */
-  #homeCards .hc-head > .btn.btn--lg{height:var(--btnH);font-size:14px;padding:0 14px}
+  #homeCards .hc-head > .btn.btn--lg{height:var(--btnH);font-size:var(--t-body-fs);padding:0 14px}
   /* the two lower blocks are one column here, and the fixed 600px height the desktop
      gives them is a desktop measure — on a phone the page scrolls instead */
   #homeCards .hc-cols{grid-template-columns:1fr;gap:0}
@@ -7731,6 +7871,11 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
      explicit about ("full-screen page on mobile"). Restated here so the modifier
      does not outrank the breakpoint. */
   .fs-box.authbox{width:100vw;height:100vh;max-height:none;border:0;border-radius:0}
+  /* ⚠️ AND THE ID FORM WITH IT (2026-10-02): the hug-height rule added for the desktop
+     card is `#authModal .authbox` (1,1,0) and would outrank the line above (0,2,0) —
+     the phone would stop going full-screen, which is the one thing the reference is
+     explicit about. The breakpoint restates it at the same weight. */
+  #authModal .authbox{width:100vw;height:100vh;max-height:none}
   /* ⚠️ THE PAGE FORM GOES FULL-BLEED TOO, and it takes two rules because it is PAGE
      content rather than a fixed overlay: the scroll box drops the gutter it gives every
      other page, and the card drops the 100vh (a page scrolls, so a card taller than the
@@ -7863,7 +8008,7 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
     content:"";display:block;width:36px;height:4px;border-radius:999px;
     background:var(--line);margin:10px auto 8px}
   .dprofmenu{z-index:120}
-  .dprofmenu button,.dprofmenu a{min-height:44px;align-items:center;font-size:var(--t-body-sm-fs)}
+  .dprofmenu button,.dprofmenu a{min-height:44px;align-items:center;font-size:var(--t-body-fs)}
   .dprofmenu .sep{margin:8px 4px}
 
   /* ---------- impersonation banner keeps the same contained band ---------- */
@@ -7958,12 +8103,12 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
      three facts that answer "is it healthy". */
   tr.inst-row > td:nth-child(1){order:1;flex:0 0 100%}          /* name + id */
   tr.inst-row > td:nth-child(5){order:2;flex:0 0 100%;margin-top:6px}   /* licence */
-  tr.inst-row > td:nth-child(4){order:3;color:var(--faint);font-size:14px;margin-top:6px}
+  tr.inst-row > td:nth-child(4){order:3;color:var(--faint);font-size:var(--t-small-fs);margin-top:6px}
   tr.inst-row > td:nth-child(3){order:4;margin-top:6px}          /* version */
   tr.inst-row > td:nth-child(2){order:5;margin-top:6px}          /* status */
   /* the id is a 36-character uuid: it must wrap or ellipsize, never widen the card */
   .inst-row .ia-id{max-width:100%}
-  .inst-row .ia-lic{font-size:14px}
+  .inst-row .ia-lic{font-size:var(--t-body-fs)}
   .inst-row .ia-licsub{color:var(--faint)}
   .inst-row .verline{flex-direction:row;align-items:baseline;gap:8px;flex-wrap:wrap}
   tr.inst-row > td.cellact{position:absolute;top:8px;right:8px;
@@ -7977,7 +8122,7 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
   tr.instg-row > td:nth-child(1){order:1;flex:0 0 100%}          /* name + id */
   tr.instg-row > td:nth-child(2){order:4;margin-top:6px}         /* status pill */
   tr.instg-row > td:nth-child(3){order:3;margin-top:6px}         /* version */
-  tr.instg-row > td:nth-child(4){order:2;color:var(--faint);font-size:14px;margin-top:6px}
+  tr.instg-row > td:nth-child(4){order:2;color:var(--faint);font-size:var(--t-small-fs);margin-top:6px}
   /* the group heading is a full-width band between cards, not a card itself */
   tr.instgroup{display:block;margin-bottom:10px}
   tr.instgroup > td{display:block;width:auto;padding:0;border:0}
@@ -8023,7 +8168,7 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
   tr.user-row > td:nth-child(1){order:1;flex:0 0 100%;font-weight:600;color:var(--ink)}
   tr.user-row > td:nth-child(2){order:2;flex:0 0 100%;color:var(--mid);
     overflow-wrap:anywhere}                 /* a long address wraps rather than pushes */
-  tr.user-row > td:nth-child(3){order:3;color:var(--faint);font-size:14px}
+  tr.user-row > td:nth-child(3){order:3;color:var(--faint);font-size:var(--t-small-fs)}
   tr.user-row > td.cellact{order:4;flex:0 0 100%;margin-top:8px}
   .user-row .rowactions{gap:18px}
   /* the invited row has no actions, so its empty cell must not add a line */
@@ -8047,7 +8192,7 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
      that edits this one and not that one changes nothing on screen, which is exactly
      what happened on 2026-09-30 before the cascade was read. */
   tr.inv-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
-  tr.inv-row > td.mono{order:1;flex:0 0 100%;font-size:var(--t-body-sm-fs)}
+  tr.inv-row > td.mono{order:1;flex:0 0 100%;font-size:var(--t-small-fs)}
   tr.inv-row > td.lic-prodcell{order:2;flex:0 0 100%}
   tr.inv-row > td.num{order:3}
   tr.inv-row > td:nth-child(4){order:4}
@@ -8060,7 +8205,7 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
   .lic-row .lp-ic{width:28px;height:28px}
   .lic-row .lp-cell{gap:8px}
   /* quiet meta: the Updated date on a licence card, the date on an invoice card */
-  tr.lic-row > td.lic-num,tr.inv-row > td:nth-child(2){color:var(--faint);font-size:14px}
+  tr.lic-row > td.lic-num,tr.inv-row > td:nth-child(2){color:var(--faint);font-size:var(--t-small-fs)}
   .lic-row .licstat{flex-direction:row;align-items:center;gap:10px;flex-wrap:wrap}
   tr.inv-row > td.num{text-align:left;font-weight:500}
   /* the pager under a card list says the count and nothing else */
@@ -8202,7 +8347,7 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
      match the row glyphs below, so all three columns of text start on one edge. */
   #subAlert > .ic{flex:none;align-self:center;width:var(--ic-20);height:var(--ic-20)}
   #subAlert .atxt{display:contents}
-  #subAlert .amsg{flex:1 1 60%;min-width:0;line-height:1.45;font-size:14px}
+  #subAlert .amsg{flex:1 1 60%;min-width:0;line-height:1.45;font-size:var(--t-body-fs)}
   /* ⚠️ THE LEAD GOES BACK TO THE BAND'S OWN LEADING. On the desktop it carries the
      glyph's 24px line box so the mark lands on the title by construction; the glyph
      here is 20px and centred against the whole band, so that number buys nothing and
@@ -8238,7 +8383,7 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
      mark in the list and on its own screen. `.idline` stays a flex row for it. */
   .idline{order:3;display:flex;align-items:flex-start;gap:14px}
   .hd-ic{display:block;align-self:flex-start;margin-top:2px}
-  .head .titlekicker:not([hidden]){font-size:14px;line-height:1.2;letter-spacing:0;
+  .head .titlekicker:not([hidden]){font-size:var(--t-small-fs);line-height:1.2;letter-spacing:0;
     text-transform:none;font-weight:400;color:var(--mid)}
   /* ⚠️ `flex:1` is what puts the status chip on the RIGHT EDGE of its line. The
      chip already had `margin-left:auto`, but `.titleblock` was sized by its content
@@ -8256,7 +8401,7 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
      renderers toggle without guarding it. */
   .head .titlekicker:not([hidden]){display:flex;align-items:center;gap:8px;margin:0 0 2px}
   .kickchip{display:block;margin-left:auto;flex:none}
-  .kickchip .chip{font-size:14px}
+  .kickchip .chip{font-size:var(--t-small-fs)}
   /* line 2 — the headline, alone: the desktop chip beside it steps aside */
   .titlerow{flex-wrap:wrap;gap:8px}
   #statusSlot{display:none}
@@ -8266,7 +8411,7 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
      to it. Match the same shape or the chip and the pencil stay on screen. */
   .metarow #labelSlot{display:none}
   .supportline:not([hidden]){display:block;margin-top:2px;
-    font-size:var(--t-body-sm-fs);line-height:var(--t-body-sm-lh);color:var(--mid)}
+    font-size:var(--t-body-fs);line-height:var(--t-body-sm-lh);color:var(--mid)}
 
   /* ---------- zone 3: two single-line value rows ----------
      Glyph + text inline, no caps label above and no filled icon tile — the glyph is
@@ -8291,7 +8436,7 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
      the other licence kind (belt to the .keycol braces above). */
   .rowvalue:not([hidden]){order:6;display:flex;align-items:center;gap:12px;
     margin-top:16px;padding:0;
-    font-size:16px;line-height:1.4;color:var(--ink);font-variant-numeric:tabular-nums}
+    font-size:var(--t-body-fs);line-height:1.4;color:var(--ink);font-variant-numeric:tabular-nums}
   /* ⚠️ `.keycol.right{text-align:right}` still reaches these: text-align is inherited,
      and display:contents does not stop inheritance — only box generation. So the row
      has to set its own edge or the period lands right-aligned while the key is left. */
@@ -8317,7 +8462,7 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
      it the key ellipsised to "•••••3…" — the masked key's only informative part is
      its last four characters, so truncating it destroys the whole point of showing
      it. `flex:1 0 auto` with a floor forces the buttons to wrap under it instead. */
-  .keyline .mono{font-size:16px;flex:1 0 auto;min-width:150px;white-space:nowrap}
+  .keyline .mono{font-size:var(--t-body-fs);flex:1 0 auto;min-width:150px;white-space:nowrap}
   /* ⚠️ Reveal key and Installation instructions are BACK beside the key as icon-
      buttons, same as desktop — reversing the pass that moved them into the ⋮ (see
      the overflow's own list, which no longer carries them on the phone either).
@@ -8400,7 +8545,7 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
      Everything about being a sheet comes from the shared rule above; this is only
      what is its own. */
   #headKebabPop{z-index:140}
-  #headKebabPop button{min-height:48px;align-items:center;font-size:16px}
+  #headKebabPop button{min-height:48px;align-items:center;font-size:var(--t-body-fs)}
 
   /* the three tabs scroll sideways rather than squeezing */
   .tabs{overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none}
@@ -8479,7 +8624,7 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
   /* ⚠️ The terms line STAYS in the bar. Hiding it looked tidier, but on step 4 that
      line lives only inside .fs-right — so hiding it deleted the billing terms from
      the phone entirely. That is content, not chrome. It costs ~20px of bar height. */
-  .fs-right.pinned .nl-terms-tight{margin-top:8px;font-size:14px}
+  .fs-right.pinned .nl-terms-tight{margin-top:8px;font-size:var(--t-body-fs)}
 
   /* ---------- step 1: ownership rhythm ----------
      ⚠️ The gaps were arbitrary. One scale now, and it encodes ownership: 28px
@@ -8764,14 +8909,14 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
   .inviterow .invite-in{flex:none;height:var(--btnH)}
   .inviterow .invite-go{width:100%;height:var(--btnH)}
   .inviterow .invite-link{align-self:flex-start;margin-left:0}
-  .invite-in{font-size:16px}          /* 16px or iOS zooms the page on focus */
+  .invite-in{font-size:var(--t-body-fs)}          /* 16px or iOS zooms the page on focus */
   .solo{padding:0}
 
   /* ================= Activity: the period filter is a bottom sheet =================
      An anchored dropdown next to a chip has nowhere to go at 390px — and this menu
      carries a custom date range, so it is the tallest one in the prototype. */
   .permenu{z-index:140}
-  .permenu > button{min-height:48px;align-items:center;font-size:16px}
+  .permenu > button{min-height:48px;align-items:center;font-size:var(--t-body-fs)}
   .percustom{padding:8px 10px 4px}
   .percustom .perrow{flex-wrap:wrap;gap:8px}
   .percustom .perrow input{flex:1 0 100%}
@@ -9021,7 +9166,7 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
   .bn-ic{display:inline-flex;align-items:center;justify-content:center;
     width:44px;height:26px;border-radius:999px;transition:background .12s}
   .bn-ic .ic{width:var(--ic-24);height:var(--ic-24)}
-  .bn-lb{font-size:14px;line-height:1.15;max-width:100%;
+  .bn-lb{font-size:var(--t-small-fs);line-height:1.15;max-width:100%;
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .bnav-item.on{color:var(--ink)}
   .bnav-item.on .bn-ic{background:var(--sel)}      /* the indicator */
@@ -9101,7 +9246,7 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
     aspect-ratio:auto;margin-top:2px}
   tr.lic-row .lp-name{display:none}                  /* the desktop one-liner */
   tr.lic-row .lp-eyebrow{grid-area:type;display:block;
-    font-size:var(--t-body-sm-fs);line-height:1.3;color:var(--mid)}
+    font-size:var(--t-small-fs);line-height:1.3;color:var(--mid)}
   tr.lic-row .lp-head{grid-area:name;display:block;
     font-size:17px;line-height:1.3;font-weight:500;color:var(--ink)}
   /* long labels wrap instead of being clipped — a licence label is a sentence */
@@ -9113,7 +9258,7 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
      No label, no row: the renderer omits the node entirely, and a grid area with
      no item in it collapses to zero height. */
   tr.lic-row .lic-prodlabel{grid-area:label;max-width:none;margin:4px 0 0;
-    font-size:var(--t-body-sm-fs);line-height:1.35;color:var(--mid);
+    font-size:var(--t-body-fs);line-height:1.35;color:var(--mid);
     white-space:normal;overflow:visible;text-overflow:clip}
   tr.lic-row > td:nth-child(2){display:none}         /* the plan's desktop column */
   tr.lic-row > td.lic-num{display:none}              /* Updated has no place in the card */
@@ -9132,7 +9277,7 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
      between the card's own sections, so the bottom row read as a separate block.
      The row-gap alone now carries it, which lands at ~12px of visual space. */
   tr.lic-row .licstat-mob{grid-area:st;display:flex;align-items:center;gap:8px;
-    margin-top:2px;font-size:var(--t-body-sm-fs);color:var(--mid);font-variant-numeric:tabular-nums}
+    margin-top:2px;font-size:var(--t-small-fs);color:var(--mid);font-variant-numeric:tabular-nums}
   tr.lic-row .licstat-mob .ic{width:var(--ic-20);height:var(--ic-20);flex:none;color:var(--faint)}
   tr.lic-row > td.cellact{display:contents}
   tr.lic-row > td.cellact .lic-actions{display:contents}
@@ -9218,7 +9363,7 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
      with the same change — it was doing the job the outer rule does now, and keeping
      both would put a line in the middle of a gap. */
   tr.inv-row > td.mono{grid-area:num;
-    margin:0 var(--pageX);padding:var(--cardpad) 110px 0 0;font-size:var(--t-body-sm-fs);
+    margin:0 var(--pageX);padding:var(--cardpad) 110px 0 0;font-size:var(--t-small-fs);
     border-top:1px solid var(--line2)}
   /* the action pair closes on the same edge as everything else in the card — 6px
      left a 7px right inset against the 13px on every other row */
@@ -9270,7 +9415,7 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
   tr.inv-row .lp-link{text-decoration:none;color:inherit;display:block}
 
   /* row 3 — amount and date joined by a middot on the left, how-and-state on the right */
-  tr.inv-row > td.num{grid-area:amt;padding:0 0 0 var(--pageX);font-weight:600;font-size:var(--t-body-sm-fs);color:var(--ink)}
+  tr.inv-row > td.num{grid-area:amt;padding:0 0 0 var(--pageX);font-weight:600;font-size:var(--t-body-fs);color:var(--ink)}
   /* ⚠️ The separator carries only its LEADING space. A trailing one inside `content`
      sits at the end of the amount's line box and gets collapsed away, which is what
      printed "$499.00 ·Aug 18, 2026" — the gap on the right of the middot has to come
@@ -9278,7 +9423,7 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
      "\00b7" escape trap: never trust whitespace inside `content`.) */
   tr.inv-row > td.num::after{content:" ·";font-weight:400;color:var(--faint)}
   tr.inv-row > td:nth-child(2){grid-area:date;justify-self:start;
-    padding:0 0 0 5px;color:var(--mid);font-size:var(--t-body-sm-fs)}
+    padding:0 0 0 5px;color:var(--mid);font-size:var(--t-small-fs)}
   tr.inv-row > td:nth-child(4){grid-area:stat;justify-self:end;padding:0 var(--pageX) 0 0}
   /* the auto-charge mark comes before the chip here, so the pair reads
      "charged automatically · Paid" from the left (the chip is first in the DOM) */
@@ -9354,7 +9499,7 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
   .insttable tbody td.chk,.insttable tbody td:nth-child(3){display:none}
   /* line 1 — the id, with its copy action on the right edge */
   .insttable tbody td.mono{flex:0 0 100%;display:flex;align-items:center;gap:10px;
-    min-width:0;font-size:14px}
+    min-width:0;font-size:var(--t-small-fs)}
   /* .mob-only is display:none by default, so each phone-only control has to be let
      back in by a selector that outranks it */
   .insttable .mob-only{display:inline-flex}
@@ -9365,7 +9510,7 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
   /* line 2 — one muted meta line; the labels are spelled out through ::before, which
      is also why the two dates stay separate cells (the desktop columns need them) */
   .insttable tbody td:nth-child(4),.insttable tbody td:nth-child(5){
-    margin-top:2px;font-size:14px;color:var(--faint)}
+    margin-top:2px;font-size:var(--t-small-fs);color:var(--faint)}
   .insttable tbody td:nth-child(4)::before{content:"Last activity "}
   /* a literal middot, not \00b7: a hex escape eats the space that follows it, so
      the label came out as "·created" */
@@ -9424,10 +9569,10 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
 .sg-sprite{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:4px;margin-top:12px}
 .sg-ic{margin:0;padding:14px 6px 10px;display:flex;flex-direction:column;align-items:center;gap:8px;
   border:1px solid var(--line2);border-radius:8px;background:var(--card);min-width:0}
-.sg-ic figcaption{font-size:14px;color:var(--mid);text-align:center;word-break:break-word;line-height:1.3}
+.sg-ic figcaption{font-size:var(--t-small-fs);color:var(--mid);text-align:center;word-break:break-word;line-height:1.3}
 .sg-ic:hover{border-color:var(--ink)}
 .sg-code{margin:10px 0 0;padding:12px 14px;border:1px solid var(--line2);border-radius:8px;
-  background:var(--card);font-family:var(--font-mono);font-size:14px;line-height:1.55;
+  background:var(--card);font-family:var(--font-mono);font-size:var(--t-small-fs);line-height:1.55;
   color:var(--ink);overflow-x:auto;white-space:pre}
 
 /* ---------- the pricing page's FAQ block (faq.js) -----------------------------
@@ -9535,7 +9680,7 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
   .faq-cat{width:auto;flex:none;white-space:nowrap;border-left:0;border-radius:999px;
     border:1px solid var(--line2);padding:8px 14px}
   .faq-cat.on{border-color:var(--ink);background:var(--sel)}
-  .faq-q{font-size:var(--t-body-sm-fs);padding:12px 14px;gap:10px}
+  .faq-q{font-size:var(--t-body-fs);padding:12px 14px;gap:10px}
   .faq-a{padding:0 14px 12px}
   .faqsect{margin-top:32px}
 }

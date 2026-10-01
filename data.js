@@ -97,6 +97,19 @@ function shiftDemoDates(node, delta){
    ⚠️ Deterministic on purpose. A random key would change under the reader between one
    render and the next, which is exactly the kind of thing that makes a demo look
    broken when it is only being careless. */
+/* ⚠️⚠️ THE GROUPS ARE SEPARATED BY A SPACE, NOT A HYPHEN (2026-10-02, by request). One
+   constant, read by the builder AND by the mask, because the mask splits on whatever the
+   builder joined with — written as two literals they would drift the first time either
+   was edited, and the mask would then bullet the whole string as one group.
+   ⚠️ A HYPHEN READS AS PART OF THE VALUE and a space reads as grouping: the key is six
+   four-character groups, and the brief's own example (`•••• - •••• - •••• - 7301`) used
+   spaces for exactly that reason. The last pass kept hyphens because the example also
+   had three groups, which was the half of it that could not be taken; this is the half
+   that could.
+   ⚠️ THE COPIED VALUE CHANGES WITH IT, on purpose: `copyValue` sends `dataset.full`, so
+   what is pasted is what is read on screen. A key that copies differently from how it
+   displays is the kind of thing a reader only finds out about after it has failed. */
+var KEY_SEP = ' ';
 function licenseKeyFor(lic){
   var id = String((lic && lic.id) || 'x');
   var h = 2166136261;                                   // FNV-1a, enough for a mock
@@ -106,29 +119,29 @@ function licenseKeyFor(lic){
     n = (n * 1664525 + 1013904223) >>> 0;               // LCG, so the groups differ
     g.push(('000' + (n & 0xffff).toString(16)).slice(-4));
   }
-  return g.join('-');
+  return g.join(KEY_SEP);
 }
+
 /* ⚠️⚠️ THE MASK KEEPS THE KEY'S OWN GROUPING (2026-10-01, by request), and that is what
    makes the two states the same width. It used to be twelve bullets and the last four
    characters — a clump that was both unreadable AND 29 characters narrower than the key
    it stands for, so revealing one jumped the row and everything after it.
-   Masked:   ••••-••••-••••-••••-••••-37ed
-   Revealed: 67f2-a6a9-bff4-eac3-9146-37ed
+   Masked:   •••• •••• •••• •••• •••• 37ed
+   Revealed: 67f2 a6a9 bff4 eac3 9146 37ed
    Same count, same separators, same mono width, in every licence — because the mask is
    built FROM the key rather than written as a constant.
-   ⚠️ THE BRIEF'S EXAMPLE HAD THREE GROUPS AND SPACES (`•••• - •••• - •••• - 7301`) and
-   was given as a direction, not a format. Three groups cannot be the same width as a
-   six-group key, and the spaces would have to be added to the revealed form too — which
-   is a change to what the key IS, not to how it is hidden. The key's own shape does the
-   job the example was asking for.
+   ⚠️ THE BRIEF'S EXAMPLE WAS `•••• - •••• - •••• - 7301`, and it asked for two things.
+   The SPACES are now the key's own separator (see `KEY_SEP`) — that half is taken. The
+   THREE GROUPS still are not: three cannot be the same width as a six-group key, and
+   the mask's whole job here is that the two states measure the same.
    ⚠️ The LAST group stays readable on purpose: it is what someone reads aloud to confirm
    they are looking at the right licence. */
 function licenseKeyMask(key){
-  var parts = String(key).split('-');
+  var parts = String(key).split(KEY_SEP);
   if(parts.length < 2) return String(key).replace(/./g, '\u2022');
   return parts.map(function(g, i){
     return i === parts.length - 1 ? g : g.replace(/./g, '\u2022');
-  }).join('-');
+  }).join(KEY_SEP);
 }
 
 /* ---------- instance check-ins as ACTIVITY --------------------------------------
