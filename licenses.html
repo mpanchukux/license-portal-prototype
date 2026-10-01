@@ -51,91 +51,22 @@
     <span class="titlecount" id="licTotal"></span>
   </div>
 
-  <!-- ⚠️ ONE TOOLBAR ROW, and it was two. Row one held refresh and + New license with an
-       empty left half where the view tablist used to be; row two held search and the
-       filters. Two rows is two things to stick, and the split had no meaning left once
-       the tablist went — a toolbar is search, filters and the page's actions. -->
-  <div class="lic-controls lic-viewrow lic-filterrow stickybar" id="licBarA">
-    <div class="searchbox"><svg class="ic searchglyph" aria-hidden="true"><use href="assets/icons.svg#ti-search"></use></svg><input type="text" placeholder="Search licenses" aria-label="Search licenses"></div>
-    <div class="lic-typeseg" role="group" aria-label="Filter by product type">
-      <button class="typechip" data-type="Subscription" aria-pressed="false">Subscription<span class="chipcount" data-count="Subscription"></span></button>
-      <button class="typechip" data-type="Perpetual" aria-pressed="false">Perpetual<span class="chipcount" data-count="Perpetual"></span></button>
-      <!-- Phone: the canceled switch becomes a filter chip in this same row, so all
-           three filters read as one set of chips instead of two kinds of control.
-           NOT .typechip — that class is the mutually-exclusive product group, and
-           this one is an independent on/off. It mirrors #licCanceled either way, so
-           the stored state and the desktop switch stay the single source. -->
-      <span class="chipdiv mob-only" aria-hidden="true"></span>
-      <button class="filterchip cancelchip mob-only" id="licCanceledChip" aria-pressed="true">
-        <svg class="ic cc-check" aria-hidden="true"><use href="assets/icons.svg#ti-check"></use></svg>
-        <span>Active only</span><span class="chipcount" data-count="active"></span></button>
-      <!-- ⚠️⚠️ THE BANNER'S LANDING STATE, MADE VISIBLE (2026-09-28, by request). Home's
-           banner has always linked here with `?attention=1`, and the list narrowed — but
-           NOTHING ON SCREEN SAID SO and there was no control to undo it. A reader
-           arriving from the banner saw five licences where the title said seventeen and
-           had only the browser's Back to explain it. This chip IS that state: the link
-           presses it, and pressing it again is the way out.
-           ⚠️ NOT a `.typechip`. The type chips are a mutually exclusive group answering
-           "which kind"; this is an independent on/off answering "is anything wrong", and
-           the divider before it is the same one the phone already draws between the two
-           kinds of filter in this row. Toolbar B asks the same question inside its Status
-           dropdown, where there is room for all four answers. -->
-      <span class="chipdiv" aria-hidden="true"></span>
-      <button class="filterchip attnchip" id="licAttnChip" aria-pressed="false">
-        <svg class="ic cc-check" aria-hidden="true"><use href="assets/icons.svg#ti-check"></use></svg>
-        <span>Needs attention</span><span class="chipcount" data-count="attention"></span></button>
-    </div>
-    <!-- ⚠️ THE SWITCH SAYS THE OPPOSITE OF WHAT IT USED TO, and the default flipped with
-         it: `Active only`, ON. The stored key is still `showCanceled` and still means
-         what it always meant — the LABEL is inverted, not the state, so nobody's stored
-         choice changed meaning underneath them. A switch that is off by default asks the
-         reader to turn something on before the list is useful; this one starts useful. -->
-    <label class="lic-toggle"><span class="switch"><input type="checkbox" id="licCanceled" checked><span class="track"></span></span> Active only</label>
-    <span class="spacer"></span>
-    <!-- ⚠️ On the phone these two are MOVED into the page title row by syncTitleRow, and
-         that is why they must stay inside a `.lic-controls`: it is the host the mover
-         looks for, and where it puts them back above the breakpoint. -->
-    <button class="btn btn--secondary btn--md btn--icon" data-refresh aria-label="Refresh" title="Refresh"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-refresh"></use></svg></button>
-    <!-- ⚠️ THE MARK IS AN ICON, not a "+" character (the icon rule), and it is hidden
-         above 600px: on the desktop the words are the button. On the phone the title
-         row shows the mark alone — so removing the character without putting a mark in
-         its place would have left an empty black square there. -->
-    <button class="btn btn--primary btn--md" id="licNewBtn"><svg class="ic lnb-ic" aria-hidden="true"><use href="assets/icons.svg#ti-plus"></use></svg><span class="lnb-txt">Buy a license</span></button>
-  </div>
-
-  <!-- ==========================================================================
-       TOOLBAR B — a proposal, live beside the current one (2026-09-28, by request)
+    <!-- ==========================================================================
+       THE TOOLBAR (2026-10-01) — one, after the comparison closed
        ==========================================================================
-       ⚠️ BOTH TOOLBARS ARE IN THE MARKUP and one of them is hidden, rather than one
-       toolbar rebuilt by script. Two reasons. The swap is then an attribute and a
-       repaint, so the filters already set survive it and the two can be compared
-       without starting over; and each toolbar's markup can be READ against the other,
-       which is the thing under review.
-       ⚠️ THE DROPDOWN IS THE ACTIVITY PAGE'S, NOT A SECOND ONE: `.dropwrap.perctl` +
-       `.btn--secondary.perbtn` trigger + `.dropmenu`, the same three classes the period
-       and event-type controls wear. Nothing here declares a new menu style, and the
-       styleguide says so beside both.
-       ⚠️ NO `Active only` SWITCH, and its absence is the proposal. Everything is shown
-       until the reader narrows it — a cancelled-but-still-running licence vanishing from
-       the default view is the fault this replaces. -->
-  <div class="lic-controls lic-barb stickybar" id="licBarB" hidden>
-    <div class="searchbox"><svg class="ic searchglyph" aria-hidden="true"><use href="assets/icons.svg#ti-search"></use></svg><input type="text" placeholder="Search licenses" aria-label="Search licenses"></div>
-    <!-- the trigger states the current answer, which is what makes a narrowed list
-         readable without opening the menu -->
-    <div class="dropwrap perctl" id="licTypeCtl">
-      <button class="btn btn--secondary btn--md perbtn" aria-haspopup="true" aria-expanded="false" aria-label="License type"><b id="licTypeLabel">All types</b> <svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-down"></use></svg></button>
-      <div class="dropmenu licfiltermenu" id="licTypeMenu" role="menu" hidden></div>
-    </div>
-    <div class="dropwrap perctl" id="licStatusCtl">
-      <button class="btn btn--secondary btn--md perbtn" aria-haspopup="true" aria-expanded="false" aria-label="License status"><b id="licStatusLabel">All statuses</b> <svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-down"></use></svg></button>
-      <div class="dropmenu licfiltermenu" id="licStatusMenu" role="menu" hidden></div>
-    </div>
-    <span class="spacer"></span>
-    <button class="btn btn--secondary btn--md btn--icon" data-refresh aria-label="Refresh" title="Refresh"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-refresh"></use></svg></button>
-    <button class="btn btn--primary btn--md" id="licNewBtnB"><svg class="ic lnb-ic" aria-hidden="true"><use href="assets/icons.svg#ti-plus"></use></svg><span class="lnb-txt">Buy a license</span></button>
-  </div>
-
-  <!-- ==========================================================================
+       ⚠️⚠️ TOOLBARS A AND B ARE GONE with the `Licenses › Toolbar` axis, which retired on
+       this one. For the record, because the arguments are what a fourth proposal would
+       have to answer again:
+         A · search, two type chips, an `Active only` switch and a `Needs attention` chip.
+             Everything was a chip, which made two different KINDS of filter — a mutually
+             exclusive group and two independent toggles — look identical.
+         B · search and two dropdowns (Type, Status), no attention control at all: its
+             Status menu offered `Needs attention` as a fourth state, so it could not be
+             combined with one. That is the fault C exists to fix.
+       ⚠️ `hidden` is gone from this one, and `id="licBarC"` is kept: the id is what
+       `syncLicChipCounts`, the sheets and the phone layout all scope to, and renaming it
+       would be a rename across four files for no gain. -->
+<!-- ==========================================================================
        TOOLBAR C — B's dropdowns, attention on its own switch (2026-09-29, by request)
        ==========================================================================
        ⚠️ A THIRD TOOLBAR IN THE MARKUP, hidden like B, for the reasons stated above B:
@@ -156,25 +87,49 @@
        for. The chip is the same component toolbar A uses, so the two bars now answer the
        same question with the same object; only the count's facet differs, because here
        attention combines with a status instead of replacing one. -->
-  <div class="lic-controls lic-barb lic-barc stickybar" id="licBarC" hidden>
-    <div class="searchbox"><svg class="ic searchglyph" aria-hidden="true"><use href="assets/icons.svg#ti-search"></use></svg><input type="text" placeholder="Search licenses" aria-label="Search licenses"></div>
+  <div class="lic-controls lic-barb lic-barc stickybar" id="licBarC">
+    <div class="searchbox"><svg class="ic searchglyph" aria-hidden="true"><use href="assets/icons.svg#ti-search"></use></svg><input type="search" enterkeyhint="search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" placeholder="Search licenses" aria-label="Search licenses"></div>
+    <!-- ⚠️⚠️ ONE GROUP AROUND THE THREE FILTERS (2026-10-01, by request), and on the
+         desktop it is `display:contents` — so the flex row above is laid out from exactly
+         the same children it always was, byte for byte. At phone width the group becomes
+         the brief's SECOND ROW: one line that scrolls sideways, holding the filters in
+         the order they stand in here. A wrapper is the only way to make three siblings
+         one scroll container, and `display:contents` is what keeps that free. -->
+    <div class="barfilters">
     <div class="dropwrap perctl" id="licTypeCtlC">
-      <button class="btn btn--secondary btn--md perbtn" aria-haspopup="true" aria-expanded="false" aria-label="License type"><b id="licTypeLabelC">All types</b> <svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-down"></use></svg></button>
+      <button class="btn btn--secondary btn--md perbtn" aria-haspopup="true" aria-expanded="false" aria-label="License type"><b id="licTypeLabelC">All types</b><span class="perbtn-n" id="licTypeCountC" aria-hidden="true"></span> <svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-down"></use></svg></button>
       <div class="dropmenu licfiltermenu" id="licTypeMenuC" role="menu" hidden></div>
     </div>
     <div class="dropwrap perctl" id="licStatusCtlC">
-      <button class="btn btn--secondary btn--md perbtn" aria-haspopup="true" aria-expanded="false" aria-label="License status"><b id="licStatusLabelC">Active</b> <svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-down"></use></svg></button>
+      <button class="btn btn--secondary btn--md perbtn" aria-haspopup="true" aria-expanded="false" aria-label="License status"><b id="licStatusLabelC">Active</b><span class="perbtn-n" id="licStatusCountC" aria-hidden="true"></span> <svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-down"></use></svg></button>
       <div class="dropmenu licfiltermenu" id="licStatusMenuC" role="menu" hidden></div>
     </div>
     <button class="filterchip attnchip" id="licAttnChipC" aria-pressed="false">
       <svg class="ic cc-check" aria-hidden="true"><use href="assets/icons.svg#ti-check"></use></svg>
       <span>Needs attention</span><span class="chipcount" data-count="attention"></span></button>
+    </div>
+    <!-- ⚠️ THE THIRD ROW, and it exists only when something is applied (2026-10-01, by
+         request). Filled by `syncLicApplied`; `hidden` is set there, not here, so an
+         empty row never costs a line of the screen. Phone only — on the desktop the
+         controls above state their own answers in their own labels, and a second place
+         saying the same thing would be two things to undo. -->
+    <div class="barapplied" id="licAppliedC" hidden></div>
     <span class="spacer"></span>
     <button class="btn btn--secondary btn--md btn--icon" data-refresh aria-label="Refresh" title="Refresh"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-refresh"></use></svg></button>
     <button class="btn btn--primary btn--md" id="licNewBtnC"><svg class="ic lnb-ic" aria-hidden="true"><use href="assets/icons.svg#ti-plus"></use></svg><span class="lnb-txt">Buy a license</span></button>
   </div>
 
   <div id="licensesList">
+  <!-- ⚠️⚠️ THE PHONE'S LIST IS CARDS, NOT A RE-POURED TABLE (2026-10-01, by request:
+       "use the same cards as on Home"). Until now this page turned every `<tr>` into a
+       card with CSS — a third shape for "a licence in a list", and the only one nobody
+       had designed. The host is a sibling of the table rather than a replacement for it
+       because `<div>`s cannot live in a `<tbody>`, and because the table has to stay
+       whole for the desktop: `renderProducts` fills exactly one of the two and hides the
+       other, so there is never a second copy of the list in the DOM.
+       ⚠️ `.hc-cards` IS HOME'S OWN GRID CLASS, so the phone rules Home already carries
+       (one surface, rules between the rows, no gaps) apply here without being restated. -->
+  <div class="hc-cards liccards" id="prodCards" hidden></div>
   <div class="tablescroll">
     <table id="prodTable">
       <thead id="prodHead" class="stickyhead"></thead>

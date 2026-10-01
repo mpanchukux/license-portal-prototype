@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Sign in — ThingsBoard License Portal</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<!-- ============================================================================
+     THE SECOND ARRIVAL AT THE AUTH SURFACE (2026-10-01, by request)
+     ============================================================================
+     The first is the modal over the landing page, and it is unchanged. This is the
+     one a LINK can land on: an invitation, a password reset, a bookmark — places
+     where the visitor has no interest in the pricing page and should not be made to
+     pass through it.
+
+     ⚠️⚠️ IT IS THE SAME SURFACE, NOT A COPY. `auth.js` builds both; this page calls
+     `Auth.mountPage()`, which sets one flag. Everything the two screens know — the
+     fields, the swap between sign-up and sign-in, the social buttons, the reveal eye,
+     the legal line — is one body of code, so the two arrivals cannot drift into two
+     designs. The only differences are the two things a PAGE must do that a modal must
+     not: carry the product's identity (there is no bar above it to do that) and refuse
+     to be closed (there is nothing behind it to go back to).
+
+     ⚠️ `data-bare` — no top bar, no footer. A header offering `Sign in` above a sign-in
+     form is the page arguing with itself. See `injectChrome`.
+     ⚠️ `data-signedout` — unreachable once you are signed in, exactly as the landing is,
+     and for the same reason. See `guardSession`.
+     ⚠️ `data-public` — readable signed out, which is the whole point of it.
+     ⚠️ `data-mesh` — our own gradient, the same layer and the same switch the landing
+     carries. The reference for this page shows a coloured ground; this is ours, not a
+     second one invented here.
+     ============================================================================ -->
+<body data-page="signin" data-public data-bare data-signedout data-mesh>
+
+<!-- the page-level gradient, outside #shellMain for the reason the landing states:
+     #shellMain is the scroll box and clips to its own edges -->
+<div class="meshbg" aria-hidden="true">
+  <span class="mb-lav"></span><span class="mb-cream2"></span><span class="mb-cream"></span><span class="mb-lav2"></span>
+</div>
+
+<div class="shell">
+<div id="shellMain">
+  <!-- The card is `#authModal`, appended to <body> by auth.js — this page holds only
+       the ground it stands on. Nothing else belongs here: anything added would be
+       content behind a surface that cannot be closed. -->
+</div><!-- /#shellMain -->
+</div>
+
+<script src="data.js"></script>
+<script src="shared.js"></script>
+<script src="components.js"></script>
+<script src="auth.js"></script>
+<script src="page-signin.js"></script>
+</body>
+</html>

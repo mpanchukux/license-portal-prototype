@@ -764,34 +764,28 @@
 
   <!-- ==================== LICENCE TABLE: A vs B ==================== -->
   <section class="sg-sec" id="lictable">
-    <h2>Licence table &mdash; A and B</h2>
-    <p><b>Two layouts are live at once</b> while the choice is open. The <svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-settings"></use></svg> panel switches
-      between them (<code class="sg-cls">licTable</code>), <b>A is the default</b>, and both render
-      from the same row component &mdash; nothing below is retyped.
-      <span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <b>B is a proposal, not a decision.</b> It ships alongside A so the two
-      can be read against each other; until somebody chooses, A is what the product is.</p>
+    <h2>Licence table</h2>
+    <p><b>One layout, since 2026-10-01.</b> The <code class="sg-cls">licTable</code> comparison
+      closed on what was proposal C: four columns, with the licence&rsquo;s own name folded into
+      the product cell rather than given a column of its own.
+      <span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <b>A and B are gone</b> &mdash; A was five columns
+      (Product &middot; License &middot; Status &middot; Version &middot; Updated), B was four with
+      an attention-first sort of its own. Both are described here because the reasons they lost
+      are what a fourth proposal would have to answer again.</p>
 
     <div class="sg-item">
-      <h3>A &mdash; current <span class="sg-cls">headHtml / rowHtml</span></h3>
-      <p class="sg-note">Five content columns: Product &middot; License &middot; Status &middot;
-        Version &middot; Updated. Sorted newest first.</p>
-      <div class="tablescroll"><table><thead id="sgLicHeadA"></thead><tbody id="sgLicBodyA"></tbody></table></div>
-    </div>
-
-    <div class="sg-item">
-      <h3>B &mdash; proposal <span class="sg-cls">headHtmlB / rowHtmlB</span></h3>
-      <p class="sg-note">Four columns. <b>The duplication is what goes:</b> the product moved onto
+      <h3>The table <span class="sg-cls">licHeadHTML / licRowHTML</span></h3>
+      <p class="sg-note">Four columns. <b>The duplication is what went:</b> the product moved onto
         the licence cell&rsquo;s second line (and the mark already carries it), the plan moved there
         with it, and <b>Updated</b> left entirely &mdash; it had one reader and nothing sorted or
         filtered by it.</p>
       <p class="sg-note"><b>Two lines, never empty, never blank-first.</b> Line one is the label;
         line two is <b>product &middot; billing model &middot; plan</b>. With no label the plan moves
         up to line one and line two drops to product &middot; billing model.</p>
-      <p class="sg-note"><b>Attention first</b>, then the nearest dated event, then the label.
-        The first screen answers &ldquo;is anything wrong&rdquo; without reading every row.
-        <span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> Version is the only figure, so it is the only
-        right-aligned column, with tabular numerals.</p>
-      <div class="tablescroll"><table><thead id="sgLicHeadB"></thead><tbody id="sgLicBodyB"></tbody></table></div>
+      <p class="sg-note"><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> Version is the only figure, so it is the only
+        right-aligned column, with tabular numerals. <b>Newest first</b> &mdash; the page&rsquo;s own
+        order; B&rsquo;s attention-first sort went with B.</p>
+      <div class="tablescroll"><table><thead id="sgLicHeadA"></thead><tbody id="sgLicBodyA"></tbody></table></div>
     </div>
 
     <div class="sg-item">
@@ -806,43 +800,36 @@
     </div>
   </section>
 
-  <!-- ================= LICENCES TOOLBAR: A vs B ================= -->
+  <!-- ================= LICENCES TOOLBAR ================= -->
   <section class="sg-sec" id="lictoolbar">
-    <h2>Licences toolbar &mdash; A and B</h2>
-    <p><b>A second open decision, and it is not the same one as the table above.</b> That
-      switch is about the ROWS; this one is about the controls over them
-      (<code class="sg-cls">licBar</code> in the <svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-settings"></use></svg> panel, <b>A is the default</b>).
-      They are deliberately two settings: the proposals arrived separately and can be
-      judged separately, and one switch would force a reader comparing toolbars to accept
-      a different table with it.</p>
-    <p><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <b>B&rsquo;s dropdown is Activity&rsquo;s dropdown.</b> Same trigger
+    <h2>Licences toolbar</h2>
+    <p><b>One toolbar, since 2026-10-01.</b> The <code class="sg-cls">licBar</code> comparison
+      closed on what was proposal C: search, a <b>Type</b> dropdown, a <b>Status</b> dropdown,
+      and an independent <b>Needs attention</b> chip beside them.</p>
+    <p><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <b>Why the other two lost, because it is the useful part.</b>
+      <b>A</b> made everything a chip &mdash; so a mutually exclusive GROUP (Subscription /
+      Perpetual) and two independent TOGGLES looked identical, and nothing on screen said which
+      would replace the other. <b>B</b> offered <b>Needs attention</b> as a fourth value of the
+      Status menu, where it could only ever be chosen INSTEAD of a state &mdash; but a licence
+      can be Blocked AND need attention. Lifting it onto its own control is what lets the two
+      combine.</p>
+    <p><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <b>The dropdown is Activity&rsquo;s dropdown.</b> Same trigger
       (<code class="sg-cls">.dropwrap.perctl</code> + <code class="sg-cls">.btn--secondary.perbtn</code>),
       same panel (<code class="sg-cls">.dropmenu</code>), same rows
       (<code class="sg-cls">.dropcheck</code>). Nothing here declares a second dropdown style.
-      The one difference is arity, and arity is what decides it: Activity&rsquo;s event types
-      are multi-select and the menu stays open while two are ticked; these are
-      single-select, so the menu closes on a pick.</p>
+      The one difference is arity, and arity is what decides the shape: Activity&rsquo;s event
+      types are multi-select and lead with a checkbox; these are single-select and end with a
+      tick.</p>
 
     <div class="sg-item">
-      <h3>A &mdash; current <span class="sg-cls">.typechip + .lic-toggle</span></h3>
-      <p class="sg-note">Two mutually exclusive type chips, an <b>Active only</b> switch, and
-        &mdash; new &mdash; an independent <b>Needs attention</b> chip. The chip exists because
-        Home&rsquo;s banner links here with <code class="sg-cls">?attention=1</code>: before it, the
-        list narrowed with nothing on screen saying so and no way back.</p>
+      <h3>The toolbar <span class="sg-cls">.dropwrap.perctl &times; 2 + .attnchip</span></h3>
+      <p class="sg-note"><b>Everything is shown until the reader narrows it.</b> Type starts at
+        <b>All</b>; Status opens on <b>Active</b>, which is the one default the toolbar sets,
+        and <b>Canceled</b> is one of its four answers rather than a switch that pre-hides those
+        rows.</p>
       <div class="sg-toolbarspec" id="sgBarA"></div>
-      <p class="sg-note"><b>Two kinds of filter, and they must not look alike.</b> The group
-        states its choice by FILL; the independents carry a CHECK. A hairline divider
-        separates the kinds &mdash; the same one the phone has always drawn.</p>
-    </div>
-
-    <div class="sg-item">
-      <h3>B &mdash; proposal <span class="sg-cls">.dropwrap.perctl &times; 2</span></h3>
-      <p class="sg-note"><b>Everything is shown by default.</b> Both filters start at
-        <b>All</b>, and there is no <b>Active only</b> switch: a cancelled-but-still-running
-        licence disappearing from a view nobody narrowed is the fault this replaces.</p>
-      <div class="sg-toolbarspec" id="sgBarB"></div>
       <p class="sg-note"><b>The trigger states the answer</b>, so a narrowed list is readable
-        without opening the menu.</p>
+        without opening the menu. The chip states its own count for the same reason.</p>
     </div>
 
     <div class="sg-item">
@@ -1023,7 +1010,7 @@
       <div class="sg-static">
         <div class="fs-screen"><div class="fs-box">
           <div class="fs-header"><h2 class="fs-maintitle">New subscription</h2><span class="spacer"></span><div class="fs-headactions"><button class="btn btn--ghost btn--md btn--icon fs-close" aria-label="Close"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-x"></use></svg></button></div></div>
-          <div class="nl-stepbar"><div id="sgWizStep"></div></div>
+          <div class="nl-stepbar"><div class="sgWizStep"></div></div>
           <div class="fs-body"><p class="sg-note" style="margin:0">Step content renders here.</p></div>
           <div class="nl-foot"><button class="btn btn--secondary btn--md">Back</button><span class="spacer"></span><button class="btn btn--primary btn--md">Continue</button></div>
         </div></div>
@@ -1110,7 +1097,7 @@
         the stepper, which is a map of the flow BELOW it: at 1280 the first step sat 104px left of the
         content it names.</p>
       <div class="sg-static" style="padding:0">
-        <div class="nl-stepbar"><div id="sgWizStep"></div></div>
+        <div class="nl-stepbar"><div class="sgWizStep"></div></div>
       </div>
       <p class="sg-note"><b>Done steps are clickable</b>, and the worry that kept them inert was measured
         away: jumping back decides nothing about what was entered after the target, because

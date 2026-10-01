@@ -748,14 +748,14 @@ function renderLicenseFeatures(lic, spec){
      arrangement the block IS a column: hide it and the grid's second track collapses, the
      table stretches to the full width, and the licence looks like it has a different
      layout rather than no add-ons. The empty line holds the column open and says why.
-     ⚠️ Read through `licPlanLayout()`, not through a measurement of the DOM: the
-     arrangement is a stored setting, and asking it is one call that cannot disagree with
-     what `applyLicPlan` drew. */
-  var side = licPlanLayout() === 'side';
+     ⚠️⚠️ THE BLOCK NEVER HIDES NOW (2026-10-01): the `Plan block` axis retired with
+     `Side by side` as the answer, and in that arrangement the block IS a column — hide it
+     and the grid's second track collapses, the table stretches full width, and the licence
+     looks like it has a different layout rather than no add-ons. The empty line holds the
+     column open and says why. (Stacked hid it, and that was right for stacked.) */
   chips.innerHTML = active.length
     ? active.map(function(n){ return '<span class="fchip">'+FCHECK+n+'</span>'; }).join('')
     : '<span class="fchip-none">No add-ons on this license.</span>';
-  $('#featureBlock').hidden = !active.length && !side;
 }
 /* One helper for every banner action, because the phone and the desktop want
    different words for the same button. The band on the phone is one row —
@@ -962,9 +962,19 @@ function renderLicenseAlert(lic){
     /* ⚠️ THE COUNT LEADS AND THE DATE QUALIFIES IT (2026-09-30, by request). It was
        "end on Oct 12, 2026, in 12 days" — a date first, with the number of days as an
        afterthought behind a second comma. What makes this banner urgent is the twelve
-       days; the date is what you check afterwards, so it goes in brackets. */
+       days; the date is what you check afterwards.
+       ⚠️⚠️ THE BRACKETS ARE GONE AND THE DATE IS A QUIET TRAILER (2026-10-01, by request:
+       "drop the parentheses, put the date after a middot, in grey"). Brackets are a
+       whisper inside a sentence — they say "this is an aside" with punctuation the reader
+       has to parse; a middot and a grey step say the same thing with rank, which is what
+       this product already uses everywhere a secondary fact follows a primary one
+       (`ThingsBoard · Subscription`, `Blocked · Over instance limit`).
+       ⚠️ THE DATE LEAVES THE `<b>`, because that is what makes it quiet: the bold lead is
+       the tone-coloured headline (see `.alert .atxt b`), and a date inside it was being
+       painted the fault colour as loudly as the count. */
     t.innerHTML = '<span class="amsg"><b>Software updates end in ' + daysUntil(lic.event)
-      + ' days (on ' + fmtDate(lic.event) + ').</b> ' + UPDATES_LOSS + '</span>'
+      + ' days<span class="amsg-when"> \u00b7 ' + fmtDate(lic.event) + '</span></b> '
+      + UPDATES_LOSS + '</span>'
       + alertAction('Renew updates', 'Renew software updates', 'data-renewupdates="' + esc(lic.id) + '"');
     setAlertTone(al, 'updates_expiring');
     al.hidden=false;
@@ -1182,29 +1192,11 @@ function renderLicenseDetails(lic){
   renderLicenseAlert(lic);
   renderLicenseVersion(lic);
   renderLicenseActions(lic);
-  applyLicZone(lic);
   applyLicPlan();
   renderLicFeed(lic);
 }
-/* ---------- the header zone's layout (2026-09-29, by request) ---------------------
-   Three arrangements of the SAME nodes: `current`, `a · facts first`, `b · two columns`.
-   ⚠️⚠️ NOTHING IS MOVED AND NOTHING IS REBUILT. The status is still `statusChipHTML`
-   into `#statusSlot`, the term is still whatever `renderLicenseDetails` and
-   `renderPeriodRow` wrote into the per-kind `.period` / `.rowvalue`, the version is
-   still `renderLicenseVersion`, and every `[data-page]` and `[hidden]` guard is the one
-   that was already there. One attribute on `.head-rest` and the stylesheet re-lays them
-   out — so a variant cannot drift from what the panel actually says, and switching costs
-   a repaint rather than a second renderer.
-   ⚠️ IT RUNS FROM `renderLicenseDetails`, i.e. on every open in either host. The ⚙ only
-   has to write the store and ask for a refresh.
-   ⚠️ IT IS NOW ONE LINE, and that is the shape it should have had all along: every node
-   in the zone is shown by the same rules in all three layouts, so nothing here has to
-   decide visibility. It briefly did — variant B had a `Next charge` fact of its own, gone
-   2026-09-30 — and `lic` is kept in the signature because the caller passes it and the
-   next variant that needs a per-licence decision will want it back. */
-function applyLicZone(lic){
-  $$('#appView .head-rest').forEach(function(el){ el.setAttribute('data-zone', licZone()); });
-}
+/* ⚠️ `applyLicZone` IS GONE (2026-10-01) with the `Zone` axis — it wrote `data-zone` on
+   `.head-rest` and nothing else; `current` never had rules of its own. */
 /* ⚠️⚠️ THE PLAN BLOCK'S ARRANGEMENT, AND THE ONE NODE CSS CANNOT MOVE (2026-10-01, by
    request). `side` puts the plan table and the add-on chips in two columns with their
    headings on one line — that part is a grid and lives in the stylesheet. What cannot be
@@ -1222,12 +1214,14 @@ function applyLicZone(lic){
    re-mounts its markup each time, so anything set once at boot would be lost. */
 function applyLicPlan(){
   $$('#appView .planblock').forEach(function(block){
-    var mode = licPlanLayout();
-    block.setAttribute('data-licplan', mode);
     var btn = $('#planManageBtn', block);
     var planSh = $('.sh', block), featSh = $('#featureBlock .sh', block);
     if(!btn || !planSh || !featSh) return;
-    var target = mode === 'side' ? featSh : planSh;
+    /* ⚠️ ALWAYS THE ADD-ONS HEADING (2026-10-01): `Plan block` retired on `Side by side`,
+       where `Manage` sits at the far right of the card rather than on the `Plan` row. The
+       attribute is gone with the axis — the arrangement is the stylesheet's default now —
+       and this function survives for the one thing CSS cannot do: move a node. */
+    var target = featSh;
     if(btn.parentNode === target) return;
     if(!$('.spacer', target)){
       var sp = document.createElement('span');
@@ -2223,24 +2217,15 @@ var LicenseDetails = (function(){
       /* ⚠️ A SECOND ARRANGEMENT AXIS, and it is deliberately separate from `Zone`: that one
          is the block under the header, this one is the Plan block below it. One control
          covering both would make two independent choices look like one. */
-      { id:'licPlan', group:'License', label:'Plan block',
-        get:licPlanLayout,
-        set:function(v){
-          Store.set('licPlan', v);
-          if(window.LicenseDetails) LicenseDetails.refresh();
-        },
-        options:[{ v:'stacked', t:'Current — Add-ons under the table' },
-                 { v:'side', t:'Side by side' }] },
+      /* ⚠️ `Plan block` IS RETIRED (2026-10-01, by request) with `Side by side` as the
+         answer. What `stacked` was: the add-on chips under the plan table in one column,
+         with `Manage` on the `Plan` heading row. The grid is the stylesheet's default now
+         and `applyLicPlan` keeps only the node move CSS cannot make. */,
 
-      { id:'licZone', group:'License', label:'Zone',
-        get:licZone,
-        set:function(v){
-          Store.set('licZone', v);
-          if(window.LicenseDetails) LicenseDetails.refresh();
-        },
-        options:[{ v:'current', t:'Current — key left, facts right' },
-                 { v:'a', t:'A — facts first' },
-                 { v:'b', t:'B — two columns' }] }
+      /* ⚠️ `Zone` IS RETIRED (2026-10-01, by request) with `Current — key left, facts
+         right` as the answer. A put the facts first; B made the zone two columns. Both
+         were a stylesheet over one set of nodes, so retiring them was 42 rules and an
+         attribute — see the zone block in styles.css. */
     ]
   });
   PageStates.sync();

@@ -250,6 +250,7 @@ function renderInstancesPage(){
      toolbar and the pager, and doing that because a chip matched nothing would take
      away the control the reader needs to undo it. */
   syncListEmpty(!all.length);
+  syncAppliedRow('#instApplied', instApplied);
   /* ⚠️ THE ACCOUNT'S TOTAL, NOT THE FILTERED COUNT — the same reading the Licenses chip
      takes. It sits with the TITLE, and the title names the page rather than the current
      filter; a number beside it that fell to 2 when `Stale` was switched on would be
@@ -295,11 +296,31 @@ var renderInstancesView = renderInstancesPage;   // one repaint entry point per 
    `is-on`, so the filter worked and never looked pressed). The class is set in ONE place,
    `renderInstancesPage`, which every path already goes through; the click handler flips
    the variable and repaints rather than touching the class itself. */
+/* ---------- the phone's filter pattern, ported from Licenses (2026-10-01, by request)
+   ⚠️ THIS PAGE HAS NO DROPDOWN, so it gets no bottom sheet — the pattern's three rows are
+   the field, a filter row that scrolls, and what is applied, and this toolbar's only
+   filter is one chip. Nothing is invented to fill the sheet's place. */
+function instQ(){ var i = $('#instancesView .searchbox input'); return i ? i.value.trim() : ''; }
+function instApplied(){
+  return instStatus === 'Stale'
+    ? [{ k:'stale', t:'Stale', clear:function(){ instStatus = null; } }] : [];
+}
+/* the same reason Licenses and Invoices route through the search's own run: a filter
+   change redraws the rows, and the query filters by hiding rows already drawn */
+var instRun = null;
+function instApply(){ instPage.page = 1; if(instRun) instRun(); else renderInstancesPage(); }
 var instStaleChip = $('#instStaleChip');
 if(instStaleChip) instStaleChip.addEventListener('click', function(){
   instStatus = instStatus === 'Stale' ? null : 'Stale';
-  instPage.page = 1;
-  renderInstancesPage();
+  instApply();
+});
+wireAppliedRow('#instApplied', instApplied, instApply);
+document.addEventListener('click', function(e){
+  if(e.target.closest('#instancesView [data-clearfilters]')){ instStatus = null; instApply(); return; }
+  if(e.target.closest('#instancesView [data-clearall]')){
+    var f = $('#instancesView .searchbox input'); if(f) f.value = '';
+    instStatus = null; instApply();
+  }
 });
 
 /* ⚠️ The view is still a STORED setting (`instView`), so it survives a reload and resets
@@ -317,18 +338,19 @@ if(instGroupSwitch){
 }
 
 wirePager('#instancesView .pager', instPage, renderInstancesPage);
-(function(){   // before wireSearch, so the rows exist by the time it filters them
-  var i = $('#instancesView .searchbox input');
-  if(i) i.addEventListener('input', renderInstancesPage);
-})();
 
 /* ---------- search: the deployment name, its id, and the licence it belongs to ---- */
-wireSearch('#instancesView .searchbox input', {
+/* ⚠️ The redraw is the `before` hook rather than a listener bound ahead of this one — the
+   debounce would otherwise be two timers racing for the order the pair depends on. */
+instRun = wireSearch('#instancesView .searchbox input', {
+  before: renderInstancesPage,
+  debounce: 160,
   items: function(){ return $$('#instancesView #instAllBody tr.inst-row'); },
   text:  function(tr){ return stripText(tr.innerHTML); },
   host:  function(){ return $('#instancesView #instAllBody'); },
   empty: function(q){ return '<tr><td colspan="' + instColSpanFor(instView() === 'grouped')
-                            + '" class="noresults-cell">' + noResultsHTML(q) + '</td></tr>'; },
+                            + '" class="noresults-cell">'
+                            + constraintEmptyHTML(q, instApplied().length > 0, 'instances') + '</td></tr>'; },
   /* ⚠️ A GROUP HEADING IS NOT A SEARCHABLE ROW, and it must not outlive its rows. It is
      excluded from `items` above (it has no `.inst-row`), so nothing hides it; this hides
      the ones whose every instance was filtered out, and leaves the rest. */

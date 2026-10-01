@@ -75,7 +75,16 @@
         <div class="dblock-head" id="dashLicHead"></div>
         <div class="tablescroll">
           <table id="dashLicTable">
-            <thead id="dashLicHead"></thead>
+            <!-- ⚠️⚠️ `dashLicCols`, AND IT WAS `dashLicHead` — THE SAME ID AS THE BLOCK
+                 HEADING SIX LINES UP (fixed 2026-10-01). `$()` returns the FIRST match,
+                 so `renderDashLicenses` wrote the column row into the `<div>` above and
+                 `renderBlockFooters` then overwrote it with the `Licenses →` heading:
+                 this `<thead>` was never filled by anything, and the block has been
+                 running without a column row ever since. Nothing threw — the id was
+                 valid markup to everything except the one lookup that mattered.
+                 ⚠️ The invoices block is not affected: its `<thead>` carries its row in
+                 markup and has no id at all. -->
+            <thead id="dashLicCols"></thead>
             <tbody id="dashLicBody"></tbody>
           </table>
         </div>

@@ -62,7 +62,8 @@ function renderInvoicesPage(){
     /* ⚠️ A FILTER THAT MATCHES NOTHING IS NOT AN EMPTY ACCOUNT — it keeps the toolbar,
        because the way out is to undo what the reader set. Same split the Licenses page
        makes, through the same builder. */
-    b.innerHTML = '<tr><td colspan="6" class="noresults-cell">' + noMatchHTML() + '</td></tr>';
+    b.innerHTML = '<tr><td colspan="6" class="noresults-cell">'
+      + constraintEmptyHTML(invQ(), invApplied().length > 0, 'invoices') + '</td></tr>';
     invPage.total = 0;
   } else if(DATA().noInvoicesNote){
     /* ⚠️ A dataset can say WHY it has no invoices — the grant is free, and that is a
@@ -90,33 +91,67 @@ function renderInvoicesPage(){
      toolbar, and doing that because a status matched nothing would take away the
      control the reader needs to undo it. */
   syncListEmpty(!all.length);
+  /* ⚠️ THE ACCOUNT'S TOTAL, not the filtered count — the same reading the chip has on
+     Licenses and Instances. The chip sits with the TITLE, and the title names the page
+     rather than the current filter; the status control below carries its own facet
+     counts and is what describes the filter. */
+  var invTotal = $('#invTotal');
+  if(invTotal) invTotal.textContent = all.length;
+  syncAppliedRow('#invApplied', invApplied);
   if(searching || !inv.length) syncPagerUnpaged('#invoicesView .pager', inv.length);
   else syncPager('#invoicesView .pager', invPage);
   renderInvStatusMenu();
 }
 renderInvoicesPage();
-wireFilterDrop('#invStatusCtl', 'invstatus', function(v){
-  invStatus = v; invPage.page = 1; renderInvoicesPage();
+function invQ(){ var i = $('#invoicesView .searchbox input'); return i ? i.value.trim() : ''; }
+function invApplied(){
+  return invStatus ? [{ k:'status', t:invStatus, clear:function(){ invStatus = null; } }] : [];
+}
+/* ⚠️ THE SAME `licApply` LESSON, and it is the reason this is not a bare render: changing
+   a filter redraws the rows, and `wireSearch` filters by HIDING rows already in the DOM —
+   so a redraw hands back every row the filter allows and the query silently stops
+   applying. Every filter change goes through the search's own run. */
+var invRun = null;
+function invApply(){ invPage.page = 1; if(invRun) invRun(); else renderInvoicesPage(); }
+wireFilterDrop('#invStatusCtl', 'invstatus', function(v){ invStatus = v; invApply(); });
+/* the phone opens the same filter as a bottom sheet — see wireSheetTrigger */
+wireSheetTrigger('#invStatusCtl', function(){
+  /* ⚠️ `invStatusOpts` ALREADY RETURNS `{v,t}` — it was mapped again here and every row
+     printed `[object Object]`. Caught by walking the sheet, not by reading it. */
+  var opts = invStatusOpts();
+  return {
+    title:'Invoice status', opts:opts, current:invStatus, allLabel:'All',
+    total:(DATA().invoices || []).length, countOf:invStatusCount,
+    countWith:function(v){ var was = invStatus; invStatus = v;
+      var n = invoicesSorted().filter(invMatches).length; invStatus = was; return n; },
+    noun:'invoice', nounPlural:'invoices',
+    onApply:function(v){ invStatus = v; invApply(); }
+  };
 });
+wireAppliedRow('#invApplied', invApplied, invApply);
 wirePager('#invoicesView .pager', invPage, renderInvoicesPage);
 /* the way out of a filter that matches nothing — it clears the status and nothing else */
 document.addEventListener('click', function(e){
-  if(!e.target.closest('#invoicesView [data-clearfilters]')) return;
-  invStatus = null; invPage.page = 1; renderInvoicesPage();
+  if(e.target.closest('#invoicesView [data-clearfilters]')){
+    invStatus = null; invApply(); return;
+  }
+  /* the one control that clears BOTH, offered only when both are responsible */
+  if(e.target.closest('#invoicesView [data-clearall]')){
+    var f = $('#invoicesView .searchbox input'); if(f) f.value = '';
+    invStatus = null; invApply();
+  }
 });
-/* ⚠️ Bound BEFORE wireSearch, and the order is the whole trick: this re-renders the
-   table (everything while there is a query, one page when there is not) and the listener
-   wireSearch adds next then hides the non-matches in what was just drawn. */
-(function(){
-  var i = $('#invoicesView .searchbox input');
-  if(i) i.addEventListener('input', renderInvoicesPage);
-})();
 
 /* ---------- search: invoice number, the licence it is for, and the amount ---- */
-wireSearch('#invoicesView .searchbox input', {
+/* ⚠️ THE RE-RENDER IS THE `before` HOOK, not a second listener bound ahead of this one:
+   the brief's debounce would otherwise be two timers racing for the order the pair
+   depends on. One timer, and the redraw happens inside it. */
+invRun = wireSearch('#invoicesView .searchbox input', {
+  before: renderInvoicesPage,
+  debounce: 160,
   items: function(){ return $$('#invoicesView tbody tr').filter(function(tr){ return !tr.querySelector('.emptybox'); }); },
   text:  function(tr){ return stripText(tr.innerHTML); },
   host:  function(){ return $('#invoicesView tbody'); },
   empty: function(q){ return '<tr><td colspan="6" class="noresults-cell">'
-                            + noResultsHTML(q) + '</td></tr>'; }
+                            + constraintEmptyHTML(q, invApplied().length > 0, 'invoices') + '</td></tr>'; }
 });

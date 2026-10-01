@@ -33,13 +33,32 @@
        title, toolbar, column row, rows. The title still SCROLLS AWAY — it is in the
        frame, not in the sticky part of it. -->
   <div class="listcard listframe">
-  <h1 class="lic-h1">Activity</h1>
+  <!-- ⚠️ THE COUNT CHIP, the same one Licenses and Instances carry (2026-10-01, by
+       request). Same class, same place, same reading: it states how many the ACCOUNT
+       has, and the controls below narrow what is shown without changing it. A chip
+       rather than Home's button, because there is nowhere further to go from here.
+       Filled by renderActFeed. -->
+  <div class="lic-titlerow">
+    <h1 class="lic-h1">Activity</h1>
+    <span class="titlecount" id="actTotal"></span>
+  </div>
   <!-- ⚠️ ONE ROW AGAIN. The type filter was four chips and needed a row of its own; as a
        single dropdown it sits beside the period control, where it belongs — the two ask
        the same kind of question about the same list. -->
   <div class="insttoolbar stickybar">
-    <div class="searchbox"><svg class="ic searchglyph" aria-hidden="true"><use href="assets/icons.svg#ti-search"></use></svg><input type="text" placeholder="Search activity" aria-label="Search activity"></div>
-    <div class="dropwrap perctl">
+    <div class="searchbox"><svg class="ic searchglyph" aria-hidden="true"><use href="assets/icons.svg#ti-search"></use></svg><input type="search" enterkeyhint="search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" placeholder="Search activity" aria-label="Search activity"></div>
+    <!-- ⚠️ ONE GROUP AROUND THE FILTERS, `display:contents` above the breakpoint — so the
+         desktop row is laid out from exactly the same children it always was — and the
+         phone's SECOND ROW below it: one line that scrolls sideways. Three siblings
+         cannot become a scroll container without a box around them, and that is all this
+         box is. Same pattern the Licenses toolbar carries (2026-10-01, by request:
+         "move the Licenses filter and search pattern to the other inner pages"). -->
+    <div class="barfilters">
+    <!-- ⚠️ `id="actPeriod"` IS WHAT `wirePeriod` HAS ALWAYS BEEN PASSED and never had:
+         the call named it, the markup did not, and the function quietly fell back to
+         `$('.perctl')` — the first such box on the page, which happened to be this one.
+         The phone's sheet needs a selector that cannot depend on document order. -->
+    <div class="dropwrap perctl" id="actPeriod">
       <button class="btn btn--secondary btn--md perbtn" aria-haspopup="true" aria-expanded="false" aria-label="Period"><b class="perlabel">All time</b> <svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-down"></use></svg></button>
       <div class="dropmenu permenu" hidden>
                     <button type="button" role="menuitemradio" data-period="all">All time</button>
@@ -63,6 +82,11 @@
       <button class="btn btn--secondary btn--md perbtn" aria-haspopup="true" aria-expanded="false" aria-label="Event types"><b id="actTypeLabel">All event types</b> <svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-down"></use></svg></button>
       <div class="dropmenu acttypemenu" id="actTypeMenu" role="menu" hidden></div>
     </div>
+    </div>
+    <!-- the phone's THIRD ROW: what is applied, as chips you can take off, with a
+         `Clear all` at the end. Filled by the page; `hidden` is set there, so an empty
+         row never costs a line of the screen. -->
+    <div class="barapplied" id="actApplied" hidden></div>
     <span class="spacer"></span>
     <button class="btn btn--secondary btn--md btn--icon" data-refresh aria-label="Refresh" title="Refresh"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-refresh"></use></svg></button>
   </div>

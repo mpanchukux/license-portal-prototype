@@ -25,7 +25,8 @@ var licStatus = null;
    ⚠️ TOOLBAR A ONLY. Toolbar B does not read it at all, and that IS the proposal: its
    Status menu offers `Canceled` as one of four answers, so a switch that pre-hides those
    rows would both contradict the menu and make its `Canceled 1` count unreachable. */
-var licShowCanceled = !!Store.get('showCanceled');
+/* ⚠️ `licShowCanceled` IS GONE (2026-10-01) with toolbar A's `Active only` switch — see
+   the note where its controls stood. */
 /* ⚠️⚠️ TOOLBAR C NEEDS A SECOND STATUS VARIABLE, and that is the whole reason it is a
    third toolbar rather than a tweak to B. `licStatus` holds ONE value, so in A and B
    "Needs attention" is chosen INSTEAD of a state — you cannot ask for blocked licences
@@ -85,9 +86,9 @@ var licOpenId = licParams.get('open');
 
 function currentProducts(){
   var all = DATA().licenses.slice();
-  /* ⚠️ THE SORT TRAVELS WITH THE VARIANT — see licSortB. A stays newest-first. */
-  return licTable() === 'b' ? licSortB(all)
-    : all.sort(function(a, b){ return dateKey(b.created) - dateKey(a.created); });
+  /* ⚠️ NEWEST FIRST, and it is the page's own order now (2026-10-01): B carried an
+     attention-first sort of its own and went with the `Table` axis. */
+  return all.sort(function(a, b){ return dateKey(b.created) - dateKey(a.created); });
 }
 /* ---------- one predicate, both toolbars --------------------------------------
    ⚠️ THE THIRD LINE IS THE ONLY DIFFERENCE BETWEEN THE TWO, and writing it as a
@@ -97,13 +98,60 @@ function currentProducts(){
 function licPasses(p){
   if(licType && p.type !== licType) return false;
   if(!licStatusMatch(p, licStatus)) return false;
-  if(licBar() === 'a' && !licShowCanceled && p.status === 'canceled') return false;
-  /* ⚠️ C's switch is an AND, not another value of the line above — see licAttnOnly.
-     Guarded on the toolbar so the variable cannot narrow a list whose toolbar has no
-     control showing it, which is the fault the 09-28 pass was opened to remove. */
-  if(licBar() === 'c' && licAttnOnly && !licNeedsAttention(p)) return false;
+  /* ⚠️ THE ATTENTION SWITCH IS AN AND, not another value of the status above it: a licence
+     can be Blocked AND need attention, and asking both is what this toolbar is for. */
+  if(licAttnOnly && !licNeedsAttention(p)) return false;
   return true;
 }
+/* ⚠️⚠️ THE PHONE IS A DIFFERENT PRESENTATION OF THE SAME LIST (2026-10-01, by request).
+   `onLicPhone()` is the one question, asked in two places — which host gets filled, and
+   which nodes search reads back — and a `matchMedia` LISTENER re-renders on the crossing,
+   because nothing else repaints this page when the window changes. Same pattern Home
+   already uses for its own layout switch (`PHONE_MQ` in page-home.js), deliberately: two
+   pages answering "am I on a phone" two different ways is how they drift apart. */
+var LIC_PHONE_MQ = window.matchMedia('(max-width:600px)');
+function onLicPhone(){ return LIC_PHONE_MQ.matches; }
+LIC_PHONE_MQ.addEventListener('change', function(){ licApply(); });
+
+/* ⚠️⚠️ THE SEARCH SCOPE IS NOW STATED, NOT SCRAPED, AND THAT IS WHAT KEEPS IT THE SAME
+   (2026-10-01). It used to be `stripText(tr.innerHTML)` — "whatever the row happens to
+   print" — which was fine while there was one presentation. The phone's card prints five
+   of those eight facts, so leaving the scrape in place would have SILENTLY NARROWED the
+   search at 600px: the same query, fewer hits, no error, nothing on screen to say why.
+   The eight fields below are exactly what variant A's row prints today; nothing is added
+   and nothing is dropped, and both presentations now read the same list.
+   ⚠️ IT IS THE RECORD, NOT THE NODE, so it also cannot be changed by a styling pass that
+   moves a fact out of a cell. The cost is that it must be edited when a COLUMN gains a
+   fact — which is the right place for that cost, because that is a decision someone makes
+   on purpose.
+   ⚠️ Variants B and C print fewer columns and used to search fewer; they share this scope
+   now. Noted rather than hidden: it widens their search to what A has always had. */
+function licSearchText(p){
+  return [p.product, p.type, p.label, p.name,
+          stripText(statusMark(p)), stripText(stateText(p)),
+          licenseVersion(p), fmtDate(p.updated || p.created)]
+    .filter(Boolean).join(' ').toLowerCase();
+}
+/* ⚠️⚠️ EVERY FILTER CHANGE GOES THROUGH THE SEARCH, NOT ROUND IT (2026-10-01). Changing
+   a filter calls `renderProducts`, which redraws the rows — and `wireSearch` filters by
+   HIDING rows already in the DOM, so a redraw hands back every row the filter allows,
+   query or no query. The query simply stopped applying the moment any filter was touched:
+   no error, a longer list, nothing on screen to say why. The brief's "search and the
+   filters compose with AND" is what made it worth fixing rather than noting.
+   ⚠️ THE VISIBLE TOOLBAR'S RUN, and only it. Each of the three fields has its own `run`
+   over the same rows, and a hidden toolbar's field is empty — so running all three would
+   end with an empty query un-hiding everything the visible one had just hidden. Which
+   bar is on screen is the same question `licQuery` already asks.
+   ⚠️ `run` CALLS `renderProducts` ITSELF (it is the `before` hook), so this replaces that
+   call rather than preceding it. Before the fields are wired it falls back to the plain
+   render — `applyLicBar` runs at boot, ahead of them. */
+var licSearchRuns = [];
+function licApply(){
+  var hit = licSearchRuns.filter(function(r){ return r.bar && !r.bar.hidden; })[0];
+  if(hit) hit.run(); else renderProducts();
+}
+/* what is on screen, in render order — the index `wireSearch` hands back indexes into */
+var licRendered = [];
 function renderProducts(){
   $('#prodHead').innerHTML = licHeadHTML();
   var matched = currentProducts().filter(licPasses);
@@ -113,29 +161,41 @@ function renderProducts(){
   var searching = !!licQuery();
   var shown = searching ? matched : pageSlice(matched, licPage);
   if(searching) licPage.total = matched.length;
-  var vis = matched.length, html = shown.map(function(p){ return licRowHTML(p); }).join('');
+  var vis = matched.length;
+  var phone = onLicPhone();
+  var cards = $('#prodCards'), wrap = $('#licensesList .tablescroll');
+  if(cards) cards.hidden = !phone;
+  if(wrap) wrap.hidden = phone;
+  licRendered = shown;
   /* ⚠️ "Empty" here means the ACCOUNT owns nothing — not that a filter hid everything.
      A type chip that leaves no rows is the reader's own doing and keeps its toolbar,
      because the way out is to unset the filter they set. The empty state is for the
      account that has never bought anything. */
   var accountEmpty = currentProducts().length === 0;
-  if(accountEmpty){
-    $('#prodBody').innerHTML = emptyStateRow(licColSpan(), {   // the variant decides the span
-      title:'No licenses yet.',
+  var EMPTY = { title:'No licenses yet.',
       line:'Buy a license to get a key for your ThingsBoard or TBMQ instance.',
       /* the ONE primary a new account gets, and it opens the same wizard the
          toolbar's "+ New license" does — one action, not a second way in */
-      action:'<button class="btn btn--primary btn--md" id="licEmptyBuy">Buy a license</button>'
-    });
-  } else if(!vis){
-    /* ⚠️ A FILTER THAT MATCHES NOTHING IS NOT AN EMPTY ACCOUNT — see the two empties
-       named above. This one keeps the toolbar (the way out is to undo what you set) and
-       says which kind of nothing it is. `licColSpan()` because the two table variants
-       are four columns and five. */
-    $('#prodBody').innerHTML = '<tr><td colspan="' + licColSpan() + '" class="noresults-cell">'
-      + noMatchHTML() + '</td></tr>';
+      action:'<button class="btn btn--primary btn--md" id="licEmptyBuy">Buy a license</button>' };
+  if(phone){
+    /* ⚠️ THE SAME THREE STATES, in the shapes a div host can hold: `emptyStateHTML` and
+       `noMatchHTML` are the builders the table wraps in a `<td colspan>`, so the words and
+       the exits are identical and only the container differs. */
+    cards.innerHTML = accountEmpty ? emptyStateHTML(EMPTY)
+      : !vis ? licNoResultsHTML(licQuery())
+      : shown.map(function(p){ return licCardHTML(p); }).join('');
   } else {
-    $('#prodBody').innerHTML = html;
+    if(accountEmpty){
+      $('#prodBody').innerHTML = emptyStateRow(licColSpan(), EMPTY);   // the variant decides the span
+    } else if(!vis){
+      /* ⚠️ A FILTER THAT MATCHES NOTHING IS NOT AN EMPTY ACCOUNT — see the two empties
+         named above. This one keeps the toolbar (the way out is to undo what you set) and
+         says which kind of nothing it is. */
+      $('#prodBody').innerHTML = '<tr><td colspan="' + licColSpan() + '" class="noresults-cell">'
+        + licNoResultsHTML(licQuery()) + '</td></tr>';
+    } else {
+      $('#prodBody').innerHTML = shown.map(function(p){ return licRowHTML(p); }).join('');
+    }
   }
   syncListEmpty(accountEmpty);
   /* ⚠️ THE ACCOUNT'S TOTAL, not the filtered count. The chip sits with the TITLE, and the
@@ -147,6 +207,7 @@ function renderProducts(){
   if(searching || !vis) syncPagerUnpaged('#licensesView .pager', vis);
   else syncPager('#licensesView .pager', licPage);
   syncLicChipCounts();
+  syncLicApplied();
   renderLicMenus();
 }
 /* ---------- what each chip would show ------------------------------------------
@@ -159,36 +220,28 @@ function renderProducts(){
    always print 0 and the row of chips would read as an empty list. */
 function syncLicChipCounts(){
   var base = currentProducts().filter(function(p){
-    if(!licStatusMatch(p, licStatus)) return false;
-    if(!licShowCanceled && p.status === 'canceled') return false;
-    return true;
+    return licStatusMatch(p, licStatus);
   });
-  /* ⚠️ C'S COUNT IS A DIFFERENT FACET, and it has to be. In A, `Needs attention` IS the
-     status, so its count excludes the status filter — counting through itself would print
-     the number already on screen. In C it stands BESIDE a status dropdown, so the honest
-     answer is "how many of what the dropdown is showing need attention": type and status
-     both applied, only its own on/off excluded. One component, two readings, because the
-     two bars ask two different questions with it. */
+  /* ⚠️ THE COUNT IS A FACET, not a total: the chip stands BESIDE a status dropdown, so the
+     honest answer is "how many of what the dropdown is showing need attention" — type and
+     status both applied, only its own on/off excluded. Counting through itself would print
+     the number already on screen, which is a count of the view rather than of the offer.
+     ⚠️ Toolbar A read this chip the other way round (there `Needs attention` WAS the
+     status, so the count had to exclude the status filter). A retired 2026-10-01 and the
+     second reading went with it. */
   var attnC = $('#licBarC .chipcount');
   if(attnC) attnC.textContent = base.filter(licNeedsAttention).length;
-  $$('#licBarA .chipcount').forEach(function(el){
-    var k = el.getAttribute('data-count'), n;
-    if(k === 'active') n = currentProducts().filter(function(p){ return p.status !== 'canceled'; }).length;
-    /* ⚠️ The attention chip's own facet, on the same rule as the type chips: how many
-       would be left if IT were the pressed one, with the type filter still applied and
-       its OWN state excluded — counting through itself would always print the number
-       already on screen, which is a count of the view rather than of the offer. */
-    else if(k === 'attention') n = currentProducts().filter(function(p){
-      return (!licType || p.type === licType)
-        && (licShowCanceled || p.status !== 'canceled')
-        && licNeedsAttention(p);
-    }).length;
-    else n = base.filter(function(p){ return p.type === k; }).length;
-    el.textContent = n;
-  });
 }
 renderProducts();
 wireLicenseRows('#licensesView', { from:'licenses', rerender: renderProducts });
+/* ⚠️ THE CARD HOST IS WIRED SEPARATELY, and it has to be: `wireLicenseRows` finds the
+   licence through `closest(rowSel)`, and the card is `.lcard` while the table's row is
+   `.lic-row`. Same call Home makes for its grid, with this page's `from` and rerender.
+   ⚠️ TWO LISTENERS, NESTED, AND THEY DO NOT COLLIDE: `#prodCards` is inside
+   `#licensesView`, so a click inside a card runs this one first. Every menu branch calls
+   `stopPropagation`, and the one that does not — opening the licence — leaves the outer
+   listener looking for a `.lic-row` that is not there, which is a no-op. */
+wireLicenseRows('#prodCards', { from:'licenses', rerender: renderProducts, rowSel:'.lcard' });
 // modal mode: a change made inside the details modal restates this page too
 if(window.LicenseDetails) LicenseDetails.setRerender(renderProducts);
 
@@ -231,9 +284,11 @@ function renderLicMenus(){
   var tmc = $('#licTypeMenuC'), smc = $('#licStatusMenuC');
   if(tmc) tmc.innerHTML = filterMenuHTML('lictypec', LIC_TYPE_OPTS, licType, 'All types', total, licTypeCount);
   if(smc) smc.innerHTML = filterMenuHTML('licstatusc', LIC_STATUS_OPTS_C, licStatus, 'All statuses', total, licStatusCount);
-  var tlc = $('#licTypeLabelC'), slc = $('#licStatusLabelC');
-  if(tlc) tlc.textContent = filterOptLabel(LIC_TYPE_OPTS, licType, 'All types');
-  if(slc) slc.textContent = filterOptLabel(LIC_STATUS_OPTS_C, licStatus, 'All statuses');
+  /* ⚠️ C's TWO LABELS ARE WRITTEN BY `syncLicTriggersC`, not here: at phone width they
+     say the answer and its size rather than the question, so they are the one pair in
+     this function whose text depends on the WIDTH. One writer, so the two cannot
+     disagree about what the trigger says. */
+  syncLicTriggersC();
   syncAttnChipC();
 }
 /* ⚠️ C'S ATTENTION CONTROL IS A CHIP (2026-09-30, by request) — it was a `.switch`, and
@@ -247,15 +302,126 @@ function syncAttnChipC(){
   chip.classList.toggle('is-on', licAttnOnly);
   chip.setAttribute('aria-pressed', licAttnOnly ? 'true' : 'false');
 }
-wireFilterDrop('#licTypeCtl', 'lictype', function(v){ licType = v; licPage.page = 1; syncTypeChips(); renderProducts(); });
-wireFilterDrop('#licStatusCtl', 'licstatus', function(v){ licStatus = v; licStatusTouched = true; licPage.page = 1; syncAttnChip(); renderProducts(); });
-wireFilterDrop('#licTypeCtlC', 'lictypec', function(v){ licType = v; licPage.page = 1; syncTypeChips(); renderProducts(); });
-wireFilterDrop('#licStatusCtlC', 'licstatusc', function(v){ licStatus = v; licStatusTouched = true; licPage.page = 1; syncAttnChip(); renderProducts(); });
+/* ============================================================================
+   TOOLBAR C AT PHONE WIDTH (2026-10-01, by request)
+   ============================================================================
+   Three rows: the field, a sideways-scrolling row of filters, and the applied ones as
+   chips. The layout half is in the stylesheet; what lives here is the three things CSS
+   cannot do — what a trigger SAYS, what "applied" means, and what a bottom sheet counts.
+   ⚠️⚠️ SCOPED TO C, by decision. The brief describes a row holding "the chip filter and
+   the two dropdowns", which is C's composition and only C's: A is four chips and no
+   dropdown, B is two dropdowns and no chip. A and B keep the phone treatment they have.
+   ⚠️ THE DESKTOP IS UNTOUCHED. Every rule below either runs only while `onLicPhone()` or
+   writes into a node the desktop hides. */
+
+/* ⚠️⚠️ WHAT A TRIGGER SAYS AT THIS WIDTH: the ANSWER and its size, not the question.
+   `Subscription 11`, and at rest `All 17` — by request. The desktop keeps `All types` /
+   `All statuses`, which name the question, because there the two triggers sit side by
+   side with room for both words.
+   ⚠️ THE COST, NAMED: at rest the two triggers both read `All 17`, so the face no longer
+   says which filter is which. What still does is the order (type, then status, as on the
+   desktop) and `aria-label`, which keeps naming the filter for a screen reader. If the
+   pair turns out to be unreadable, the fix is one word back in each default label.
+   ⚠️ THE COUNT IS OF THE ACCOUNT, not of the current view — the reading B and C already
+   use for these two controls, and the one that makes the numbers add up to the page
+   title. See the note over `licTypeCount`. */
+function syncLicTriggersC(){
+  var phone = onLicPhone(), total = DATA().licenses.length;
+  [['#licTypeLabelC', '#licTypeCountC', LIC_TYPE_OPTS, licType, 'All types', licTypeCount],
+   ['#licStatusLabelC', '#licStatusCountC', LIC_STATUS_OPTS_C, licStatus, 'All statuses', licStatusCount]]
+    .forEach(function(spec){
+      var lab = $(spec[0]), cnt = $(spec[1]);
+      if(!lab || !cnt) return;
+      var v = spec[3];
+      lab.textContent = phone ? (v ? filterOptLabel(spec[2], v, 'All') : 'All')
+                              : filterOptLabel(spec[2], v, spec[4]);
+      cnt.textContent = phone ? (v ? spec[5](v) : total) : '';
+    });
+}
+
+/* ---------- what is applied, and how to take one off ----------------------------
+   ⚠️ ONE LIST, READ BY BOTH THE CHIP ROW AND THE EMPTY STATE. "Is anything applied" is
+   asked in two places and must not be two predicates — an empty state offering
+   `Clear filters` while the chip row shows none is the pair disagreeing about the same
+   fact. `clear` is carried with each entry so removing one chip cannot drift from what
+   that chip claims to be.
+   ⚠️ THE TOOLBAR'S THREE CONTROLS, and only those. */
+function licAppliedList(){
+  var out = [];
+  if(licType) out.push({ k:'type', t:filterOptLabel(LIC_TYPE_OPTS, licType, ''),
+    clear:function(){ licType = null; } });
+  if(licStatus) out.push({ k:'status', t:filterOptLabel(LIC_STATUS_OPTS_C, licStatus, ''),
+    clear:function(){ licStatus = null; licStatusTouched = true; } });
+  if(licAttnOnly) out.push({ k:'attn', t:'Needs attention',
+    clear:function(){ licAttnOnly = false; } });
+  return out;
+}
+function licHasFilters(){ return licAppliedList().length > 0; }
+/* ⚠️ THE ROW ITSELF IS `syncAppliedRow` / `wireAppliedRow` in components.js now
+   (2026-10-01): four pages draw this row and only the LIST differs. What stays here is
+   `licAppliedList` above — the licence page's own answer to "what is applied, and how do
+   I take one off". The per-page `data-licunset` attribute went with the move; the shared
+   row uses `data-unset`, scoped to its own host rather than to the document. */
+function syncLicApplied(){ syncAppliedRow('#licAppliedC', licAppliedList); }
+wireAppliedRow('#licAppliedC', licAppliedList, function(){
+  licPage.page = 1;
+  syncTypeChips(); syncAttnChip(); syncAttnChipC(); licApply();
+});
+
+/* ---------- the bottom sheets ---------------------------------------------------
+   ⚠️⚠️ CAPTURE PHASE, and that is the whole trick. `wireFilterDrop` has already bound a
+   click on this same trigger to open the inline menu, and it cannot be unbound. Catching
+   the press on the way DOWN lets the phone take it and stop it before the menu handler
+   ever runs; above 600 this listener declines and the desktop menu opens exactly as it
+   always has. One control, two presentations, no second wiring to keep in step.
+   ⚠️ `countWith` IS THE WHOLE PREDICATE with the pending answer swapped in — not a count
+   of that answer on its own. `Show 11 licenses` has to mean what the list will actually
+   hold, which is this filter AND the other two AND the query. Built by cloning the
+   current state, moving one field and running `licPasses` over it. */
+function licCountWith(field, v){
+  var t = licType, st = licStatus;
+  if(field === 'type') licType = v; else licStatus = v;
+  var n = currentProducts().filter(licPasses).length;
+  licType = t; licStatus = st;
+  return n;
+}
+/* ⚠️ `wireLicSheet` IS GONE — it became `wireSheetTrigger` in components.js when three
+   more pages wanted the same capture-phase trick (2026-10-01). The spec is handed over as
+   a FUNCTION there rather than an object, so the counts are read at open time instead of
+   at wiring time; that is the only call-site difference. */
+function wireLicSheet(ctlSel, spec){
+  wireSheetTrigger(ctlSel, function(){
+    return {
+      title: spec.title, opts: spec.opts, current: spec.get(), allLabel:'All',
+      total: DATA().licenses.length, countOf: spec.countOf,
+      countWith: function(v){ return licCountWith(spec.field, v); },
+      noun:'license', nounPlural:'licenses',
+      onApply: function(v){ spec.set(v); }
+    };
+  });
+}
+wireLicSheet('#licTypeCtlC', { title:'License type', field:'type', opts:LIC_TYPE_OPTS,
+  get:function(){ return licType; }, countOf:licTypeCount,
+  set:function(v){ licType = v; licPage.page = 1; syncTypeChips(); licApply(); } });
+wireLicSheet('#licStatusCtlC', { title:'Status', field:'status', opts:LIC_STATUS_OPTS_C,
+  get:function(){ return licStatus; }, countOf:licStatusCount,
+  set:function(v){ licStatus = v; licStatusTouched = true; licPage.page = 1; syncAttnChip(); licApply(); } });
+
+/* ⚠️ THE EMPTY STATE MOVED TO `components.js` as `constraintEmptyHTML` (2026-10-01):
+   three more pages wanted the same three sentences and the same three exits, and the only
+   thing that differed was the noun. What stays here is the licence page's own answer to
+   "is anything applied" — see `licHasFilters`. */
+function licNoResultsHTML(q){ return constraintEmptyHTML(q, licHasFilters(), 'licenses'); }
+
+wireFilterDrop('#licTypeCtl', 'lictype', function(v){ licType = v; licPage.page = 1; syncTypeChips(); licApply(); });
+wireFilterDrop('#licStatusCtl', 'licstatus', function(v){ licStatus = v; licStatusTouched = true; licPage.page = 1; syncAttnChip(); licApply(); });
+wireFilterDrop('#licTypeCtlC', 'lictypec', function(v){ licType = v; licPage.page = 1; syncTypeChips(); licApply(); });
+wireFilterDrop('#licStatusCtlC', 'licstatusc', function(v){ licStatus = v; licStatusTouched = true; licPage.page = 1; syncAttnChip(); licApply(); });
 var licAttnChipC = $('#licAttnChipC');
 if(licAttnChipC) licAttnChipC.addEventListener('click', function(){
   licAttnOnly = !licAttnOnly;
   licPage.page = 1;
-  syncAttnChipC(); renderProducts();
+  syncAttnChipC(); licApply();
 });
 
 /* ---------- the switch ------------------------------------------------------------
@@ -265,44 +431,28 @@ if(licAttnChipC) licAttnChipC.addEventListener('click', function(){
    `--barH` — the offset the column row sticks at — and the two toolbars are not the same
    height. Without this the column row would stick at the height of whichever toolbar
    happened to be visible when the page loaded. */
+/* ⚠️ ONE TOOLBAR SINCE 2026-10-01, so this no longer SWITCHES anything — what is left is
+   the one decision that was never about the switch: the toolbar opens on `Active`.
+   ⚠️ `attention` ARRIVES FROM OUTSIDE, so the translation stays: Home's banner links with
+   `?attention=1`, which sets `licStatus`, and this toolbar asks that question with a chip
+   of its own rather than as a fourth status. Without the line the trigger would read
+   `All statuses` over a list of five. */
 function applyLicBar(){
-  var v = licBar();
-  var A = $('#licBarA'), B = $('#licBarB'), C = $('#licBarC');
-  if(A) A.hidden = v !== 'a';
-  if(B) B.hidden = v !== 'b';
-  if(C) C.hidden = v !== 'c';
-  /* ⚠️ A CANNOT SHOW A STATE IT HAS NO CONTROL FOR. Its only status control is the
-     attention chip, so any other value is dropped on the way back rather than left
-     narrowing the list invisibly — the fault this whole pass exists to remove. */
-  if(v === 'a' && licStatus && licStatus !== 'attention') licStatus = null;
-  /* ⚠️ AND NEITHER CAN C, for the mirror-image reason: `attention` is not one of the
-     answers its Status menu offers, so arriving with it set would leave the trigger
-     reading `All statuses` over a list of five. It becomes the switch instead — the
-     same question, asked by the control C actually has. */
-  if(v === 'c' && licStatus === 'attention'){ licStatus = null; licAttnOnly = true; }
-  /* ⚠️⚠️ C OPENS ON `Active`, and this is the one place that decision lives. It is
-     applied only when the reader has not chosen a status — an explicit `All statuses`
-     picked in C, or anything carried in from B, is theirs and is left alone. Without
-     the guard the menu would silently snap back to Active every time the toolbar was
-     re-applied, and `All statuses` would be unselectable. */
-  if(v === 'c' && licStatus === null && !licStatusTouched) licStatus = 'active';
-  /* the switch belongs to C: leaving it set behind A or B would narrow their lists
-     from a control neither of them draws */
-  if(v !== 'c') licAttnOnly = false;
-  syncTypeChips(); syncAttnChip(); renderProducts();
+  if(licStatus === 'attention'){ licStatus = null; licAttnOnly = true; }
+  if(licStatus === null && !licStatusTouched) licStatus = 'active';
+  syncAttnChip(); licApply();
+  /* the column row sticks under the toolbar, and `wireStickyFrame` measures that height
+     into `--barH` — the measurement has to be re-taken after the bar is settled */
   window.dispatchEvent(new Event('resize'));
 }
 window.applyLicBar = applyLicBar;
 
-/* Type chips are mutually exclusive: pick one, switch to the other, or click the
-   active one again to clear the filter and see everything. */
-function syncTypeChips(){
-  $$('#licBarA .typechip').forEach(function(c){
-    var on = c.getAttribute('data-type') === licType;
-    c.classList.toggle('is-on', on);
-    c.setAttribute('aria-pressed', on ? 'true' : 'false');
-  });
-}
+/* ⚠️ `syncTypeChips` IS A NO-OP AND IS KEPT AS ONE (2026-10-01). The type CHIPS were
+   toolbar A's; this toolbar asks the same question with a dropdown, which states its own
+   answer. Every caller that sets `licType` still calls it, so the day a chip comes back
+   there is one place to put it — and emptying the body is cheaper than deleting nine call
+   sites and the `licType` contract with them. */
+function syncTypeChips(){}
 /* the chip IS the `?attention=1` state — see the note on licParams */
 function syncAttnChip(){
   var chip = $('#licAttnChip'); if(!chip) return;
@@ -327,7 +477,7 @@ if(licAttnChip) licAttnChip.addEventListener('click', function(){
   licStatus = (licStatus === 'attention') ? null : 'attention';
   licStatusTouched = true;
   licPage.page = 1;
-  syncAttnChip(); renderProducts();
+  syncAttnChip(); licApply();
 });
 $$('#licensesView .typechip').forEach(function(chip){
   chip.addEventListener('click', function(){
@@ -335,35 +485,18 @@ $$('#licensesView .typechip').forEach(function(chip){
     licType = (licType === t) ? null : t;
     licPage.page = 1;
     syncTypeChips();
-    renderProducts();
+    licApply();
   });
 });
-/* Two controls, one state: the desktop switch and the phone's Canceled chip. Both
-   write through the same setter so whichever the viewer used, the other agrees the
-   moment the breakpoint changes. */
-/* ⚠️ THE CONTROL IS INVERTED, THE STATE IS NOT. The switch reads `Active only`, so it is
-   CHECKED when canceled licences are hidden — `checked === !licShowCanceled`. The stored
-   key keeps its old name and its old meaning on purpose: renaming it would have silently
-   flipped what every existing stored value means, and the store is shared with nothing
-   that could have told us. One inversion, in one place, at the edge. */
-var licCanceledBox = $('#licCanceled'), licCanceledChip = $('#licCanceledChip');
-function syncCanceledControls(){
-  licCanceledBox.checked = !licShowCanceled;
-  if(licCanceledChip){
-    licCanceledChip.classList.toggle('is-on', !licShowCanceled);
-    licCanceledChip.setAttribute('aria-pressed', !licShowCanceled ? 'true' : 'false');
-  }
-}
-function setShowCanceled(v){
-  licShowCanceled = !!v;
-  licPage.page = 1;                                  // the list just changed length
-  Store.set('showCanceled', licShowCanceled);
-  syncCanceledControls();
-  renderProducts();
-}
-syncCanceledControls();                            // reflect the stored choice on load
-licCanceledBox.addEventListener('change', function(){ setShowCanceled(!this.checked); });
-if(licCanceledChip) licCanceledChip.addEventListener('click', function(){ setShowCanceled(!licShowCanceled); });
+/* ⚠️⚠️ `Active only` IS GONE (2026-10-01) — the switch, its phone chip, `licShowCanceled`,
+   `syncCanceledControls` and `setShowCanceled`. It was toolbar A's, and the toolbar that
+   won does not read it: its Status dropdown offers `Canceled` as one of four answers, and
+   a switch that pre-hid those rows would both contradict the menu and make its own
+   `Canceled 1` count unreachable. That was B's proposal and it is now the page.
+   ⚠️ THE STORE KEY `showCanceled` IS LEFT, not migrated — the store is a demo, and an
+   unread key costs nothing. `Reset demo data` drops it with everything else.
+   ⚠️ CAUGHT BY THE PAGE FAILING TO LOAD, not by reading: `$('#licCanceled')` returned null
+   the moment A's markup went, and `syncCanceledControls()` runs at boot. */
 
 // + New license → the wizard; product and billing type are chosen on its step 1
 /* ⚠️ EVERY toolbar carries one, and they are separate nodes rather than one moved
@@ -380,8 +513,21 @@ document.addEventListener('click', function(e){
   /* the way out of a filter that matches nothing — it clears what the reader set and
      nothing else, so a search query they also typed is left alone */
   if(e.target.closest('[data-clearfilters]')){
-    licType = null; licStatus = null; licPage.page = 1;
-    syncTypeChips(); syncAttnChip(); renderProducts();
+    licType = null; licStatus = null; licAttnOnly = false; licStatusTouched = true;
+    licPage.page = 1;
+    syncTypeChips(); syncAttnChip(); syncAttnChipC(); licApply();
+  }
+  /* ⚠️ THE ONLY CONTROL THAT CLEARS BOTH, and it exists because the empty state has to
+     be able to offer it: with a query AND filters on, undoing one of them can still
+     leave nothing, and a reader who has pressed `Clear search` to no effect has learnt
+     only that the page is not listening. Clearing the field by hand rather than through
+     `wireSearch` keeps this one branch — the re-render below covers both halves. */
+  if(e.target.closest('[data-clearall]')){
+    var f = $('.lic-controls:not([hidden]) .searchbox input');
+    if(f) f.value = '';
+    licType = null; licStatus = null; licAttnOnly = false; licStatusTouched = true;
+    licPage.page = 1;
+    syncTypeChips(); syncAttnChip(); syncAttnChipC(); licApply();
   }
 });
 
@@ -394,25 +540,41 @@ document.addEventListener('click', function(e){
    ⚠️ THE QUERY DOES NOT SURVIVE THE SWITCH, and that is left as it is: the field is part
    of the toolbar being compared, and carrying text from one into the other would be this
    code deciding that the two search boxes are one control. Noted in the report. */
-/* ⚠️ Bound BEFORE wireSearch, and the order is the whole trick: this re-renders the
-   table (everything while there is a query, one page when there is not) and the listener
-   wireSearch adds next then hides the non-matches in what was just drawn. */
-$$('.lic-controls .searchbox input').forEach(function(i){
-  i.addEventListener('input', renderProducts);
-});
+/* ⚠️⚠️ THE RE-RENDER IS NOW `wireSearch`'s `before` HOOK, NOT A SECOND LISTENER
+   (2026-10-01). It was bound here, ahead of `wireSearch`, and the ORDER was the trick:
+   this redraws the table and the hiding pass then runs over what was just drawn. The
+   brief asks for a debounce, and two debounced listeners would be two timers racing for
+   that order — so there is one timer now, and the redraw is a hook inside it. The order
+   is a property of the function instead of a property of the binding order.
+   ⚠️ 160ms: long enough that a word typed at speed redraws a list of seventeen once or
+   twice rather than per letter, short enough that it does not read as lag. */
+var LIC_SEARCH_DEBOUNCE = 160;
 /* ⚠️ `wireSearch` takes a SELECTOR, not a node, and resolves it with `$` — so it has to
    be given one selector per field rather than one that matches them all. The ids are
    derived from the toolbars present in the markup instead of retyped. */
 $$('.lic-controls').map(function(bar){ return '#' + bar.id + ' .searchbox input'; })
   .forEach(function(sel){
-  wireSearch(sel, {
-    items: function(){ return $$('#licensesView tbody tr.lic-row'); },
-    // the row already carries every one of those as text, so the row IS the query
-    text:  function(tr){ return stripText(tr.innerHTML); },
-    host:  function(){ return $('#licensesView tbody'); },
-    empty: function(q){ return '<tr><td class="noresults-cell" colspan="' + licColSpan() + '">'
-                              + noResultsHTML(q) + '</td></tr>'; }
+  var runFor = wireSearch(sel, {
+    before: renderProducts,
+    debounce: LIC_SEARCH_DEBOUNCE,
+    /* ⚠️ THE HOST IS ASKED EACH RUN, not captured: the phone and the desktop keep their
+       lists in two different boxes, and which one is live changes with the window. */
+    items: function(){ return onLicPhone() ? $$('#prodCards > .lcard')
+                                           : $$('#licensesView tbody tr.lic-row'); },
+    /* ⚠️ THE RECORD, NOT THE NODE — see `licSearchText` for why, and for the eight fields
+       it reads. `idx` is the position in `licRendered`, which `renderProducts` writes in
+       the same order it draws, so the two cannot fall out of step. */
+    text:  function(el, idx){ var p = licRendered[idx]; return p ? licSearchText(p) : ''; },
+    host:  function(){ return onLicPhone() ? $('#prodCards') : $('#licensesView tbody'); },
+    empty: function(q){
+      return onLicPhone() ? licNoResultsHTML(q)
+        : '<tr><td class="noresults-cell" colspan="' + licColSpan() + '">'
+          + licNoResultsHTML(q) + '</td></tr>';
+    }
   });
+  /* the bar this field belongs to — `licApply` needs to know which run is the live one */
+  var field = $(sel);
+  licSearchRuns.push({ bar: field && field.closest('.lic-controls'), run: runFor });
 });
 
 /* ⚠️ LAST, and it is what puts the stored variant and `?attention=1` on screen. It

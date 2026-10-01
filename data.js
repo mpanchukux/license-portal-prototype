@@ -581,9 +581,11 @@ var DATASETS = {
         f:{ entity:'On-prem', until:'Aug 28, 2026' } },
       // a large account keeps producing events — enough of them that the Home feed
       // has a second and third batch to load
-      /* first label on this licence, so there is no previous one and no detail at all */
-      { type:'license.labeled', ts:'Aug 04 2026, 16:48', actor:'o.kravets@thingsboard.io',
-        f:{ entity:'Business', label:'Production — Central Europe manufacturing cluster, building 4' } },
+      /* ⚠️ `label_added`, not `labeled`: this is the FIRST label on this licence, so there
+         is nothing it replaced — and the detail is the one value rather than a change. */
+      { type:'license.label_added', ts:'Aug 04 2026, 16:48', actor:'o.kravets@thingsboard.io',
+        f:{ entity:'Business', label:'Production — Central Europe manufacturing cluster, building 4' },
+        detail:[['Label', 'Production — Central Europe manufacturing cluster, building 4']] },
       { type:'user.invited', ts:'Aug 02 2026, 11:05', actor:'mpanchuk@thingsboard.io',
         f:{ entity:'dev@thingsboard.io' } },
       { type:'billing.invoice_autopaid', ts:'Aug 02 2026, 00:05',
@@ -872,7 +874,19 @@ var ACTIVITY_TEXT = {
   /* ---- licences ---------------------------------------------------------- */
   'license.created':          { t:'{kind}[ {entity}] created{by}.', entity:'entity' },
   'license.canceled':         { t:'Subscription[ {entity}] canceled{by} — active until {until}.', entity:'entity' },
-  'license.labeled':          { t:'Label set to {label}[ on {entity}]{by}.', entity:'entity' },
+/* ⚠️⚠️ THE SENTENCE SAYS WHAT HAPPENED; THE VALUES GO IN THE BLOCK (2026-10-01, by
+   request: "the label note departs from the general logic"). It did, and in both
+   directions at once: the sentence carried the NEW VALUE (`Label set to X`) — which is
+   the detail's job — and the detail carried `['Previous label', X]`, a single value,
+   which is the shape this product uses for a fact that did NOT change. Every other
+   change event in the map is the other way round: `Plan changed from…`, with
+   `['Devices','100','500']` under it rendering as struck-old → pill-new.
+   ⚠️ THREE TYPES, NOT TWO, because `changed` is a lie about a first label. `added` is
+   its own wording with its own detail shape (one value, because nothing was replaced),
+   exactly as `billing.invoice_autopaid` is its own type rather than `invoice_paid` with
+   an empty actor. */
+  'license.label_added':      { t:'Label added[ on {entity}]{by}.', entity:'entity' },
+  'license.labeled':          { t:'Label changed[ on {entity}]{by}.', entity:'entity' },
   'license.label_cleared':    { t:'Label cleared[ on {entity}]{by}.', entity:'entity' },
   'license.plan_changed':     { t:'Plan changed from {from} to {to}[ on {entity}]{by}.', entity:'entity' },
   'license.capacity_changed': { t:'Capacity changed[ on {entity}]{by}.', entity:'entity' },

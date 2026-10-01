@@ -60,15 +60,27 @@ function renderActFeed(){
       title:'Nothing has happened yet.',
       line:'Purchases, plan changes, and user activity are recorded here.'
     });
-  } else if(!all.length){
-    el.innerHTML = '<div class="emptybox">No events of the selected types.</div>';
-  } else if(!list.length){
-    el.innerHTML = '<div class="emptybox">No events in the selected period.</div>';
+  } else if(!all.length || !list.length){
+    /* ⚠️ THE TWO SENTENCES BECAME ONE BUILDER (2026-10-01, by request). They already said
+       WHICH filter was responsible — "of the selected types", "in the selected period" —
+       and that was the better half of what the pattern asks for; what they did not do is
+       offer the way out. `constraintEmptyHTML` names the constraint AND carries its exit,
+       and it is the same block the other three list pages draw. */
+    el.innerHTML = constraintEmptyHTML(actQ(), actApplied().length > 0, 'events');
   } else {
     actRendered = list;
     el.innerHTML = activityList(list, 'global', '');
   }
   syncListEmpty(!everything.length);
+  /* ⚠️ THE ACCOUNT'S TOTAL, not what the period and the type filter leave — the same
+     reading the chip has on Licenses and Instances, and `everything` is already the
+     unfiltered feed this function measures its empty state against.
+     ⚠️ IT COUNTS FOLDED RUNS AS ONE, because that is what a row is here: a run of
+     successful checks is one entry in this list, and a number that said 1,400 beside a
+     list of 315 rows would be counting something the page never shows. */
+  var actTotal = $('#actTotal');
+  if(actTotal) actTotal.textContent = everything.length;
+  syncAppliedRow('#actApplied', actApplied);
   /* the feed's own chrome: a separator with nothing under it, and where the rail ends */
   syncFeedChrome($('#actFeed'));
 }
@@ -152,13 +164,127 @@ function renderActTypes(){
 
 renderActFeed();
 wirePeriod('#actPeriod', actPeriod, renderActFeed);
-/* ⚠️ Bound BEFORE wireSearch, and the order is the whole trick: this re-renders the
-   feed (everything while there is a query, one page when there is not) and the
-   listener wireSearch adds next then hides the non-matches in what was just drawn. */
-(function(){
-  var i = $('#activityView .searchbox input');
-  if(i) i.addEventListener('input', renderActFeed);
-})();
+
+/* ---------- the phone's filter pattern, ported from Licenses (2026-10-01, by request)
+   ⚠️ BOTH DROPDOWNS GET A SHEET, including the multi-select one and the one that carries
+   a FORM. Leaving either on the inline menu would put two kinds of control side by side
+   in the same row, which is worse than either on its own. */
+var actRun = null;
+function actApply(){ if(actRun) actRun(); else renderActFeed(); }
+function actQ(){ var i = $('#activityView .searchbox input'); return i ? i.value.trim() : ''; }
+/* ⚠️⚠️ THE TRIGGER'S LABEL IS THE SINGLE SOURCE, and reading it back is deliberate rather
+   than lazy. `actPeriod.from` / `.to` hold EPOCH DAY NUMBERS (see `isoDay`), not the ISO
+   strings the label is written from — `wirePeriod` builds its text from the date inputs'
+   own values and keeps nothing. So a second formatter here would have to re-derive a
+   calendar date from a day count to say what the control already says, and the two could
+   disagree. Whichever path set the label — the desktop menu or the phone sheet — this
+   reads what is on screen. */
+function perLabelNow(){
+  var lab = $('#actPeriod .perlabel');
+  return lab ? lab.textContent.trim() : (PER_LABEL[actPeriod.mode] || 'All time');
+}
+function setPerLabel(txt){
+  var lab = $('#actPeriod .perlabel');
+  if(lab) lab.textContent = txt;
+}
+function rangeLabel(fromISO, toISO){
+  function dm(iso){ var q = String(iso).split('-'); return q[2] + '.' + q[1]; }
+  if(fromISO && toISO) return dm(fromISO) + ' \u2013 ' + dm(toISO);
+  if(fromISO) return 'from ' + dm(fromISO);
+  if(toISO) return 'until ' + dm(toISO);
+  return 'Custom range';
+}
+/* ⚠️ THE APPLIED ROW READS THE SAME TWO CONTROLS the toolbar does, and `All time` is not
+   applied — it is the absence of a period, the way an empty type list is the absence of a
+   type filter. A chip for "no filter" would be a control that undoes nothing. */
+function actApplied(){
+  var out = [];
+  if(actPeriod.mode && actPeriod.mode !== 'all')
+    out.push({ k:'period', t:perLabelNow(),
+      clear:function(){ actPeriod.mode = 'all'; actPeriod.from = null; actPeriod.to = null;
+                        setPerLabel(PER_LABEL.all); } });
+  actTypes.forEach(function(v){
+    var hit = ACT_TYPES.filter(function(t){ return t.v === v; })[0];
+    out.push({ k:'type:' + v, t:(hit ? hit.t : v),
+      clear:function(){ var i = actTypes.indexOf(v); if(i >= 0) actTypes.splice(i, 1); renderActTypes(); } });
+  });
+  return out;
+}
+function actCountFor(st, types){
+  var all = activityFeed({ types: types && types.length ? types : null });
+  return filterFeedByPeriod(all, st).length;
+}
+/* ⚠️⚠️ THE CUSTOM RANGE LIVES IN THE SHEET, revealed by its own row — the period is the
+   one filter in this product that is not a plain list, and the pattern's answer to "a
+   sheet is a list of options" cannot simply drop it. The two inputs are rendered only
+   while `custom` is the pending answer, and read off the panel on apply (see
+   `FilterSheet`'s `extra`). */
+wireSheetTrigger('#actPeriod', function(){
+  var opts = ['all','24h','7d','30d','custom'].slice(1).map(function(m){
+    return { v:m, t:PER_LABEL[m] };
+  });
+  return {
+    title:'Period', opts:opts, current:(actPeriod.mode === 'all' ? null : actPeriod.mode),
+    allLabel:PER_LABEL.all, total:actCountFor({ mode:'all' }, actTypes),
+    countOf:function(m){ return m === 'custom' ? null : actCountFor({ mode:m }, actTypes); },
+    countWith:function(m){ return m === 'custom' ? actCountFor(actPeriod, actTypes)
+                                                 : actCountFor({ mode:(m || 'all') }, actTypes); },
+    noun:'event', nounPlural:'events',
+    extra:{ when:'custom',
+      html:'<div class="fsheet-extra"><div class="perrow">'
+        /* ⚠️ THE FIELDS OPEN EMPTY rather than pre-filled, and the reason is the one
+           above: what is stored is a day COUNT, and a `<input type=date>` wants a
+           calendar string. Reconstructing one to show it back is a second formatter for
+           a value the reader is about to retype anyway. The desktop menu's own fields
+           behave the same way. */
+        + '<input type="date" class="perfrom" aria-label="From date">'
+        + '<span class="permid">to</span>'
+        + '<input type="date" class="perto" aria-label="To date">'
+        + '</div></div>',
+      /* ⚠️ BOTH FORMS COME BACK: the day NUMBERS the filter compares against, and the
+         ISO strings the label is written from. `isoDay` is one-way. */
+      read:function(panel){
+        var f = $('.perfrom', panel), t = $('.perto', panel);
+        return { from:(f && f.value) ? isoDay(f.value) : null, fromISO:(f ? f.value : ''),
+                 to:(t && t.value) ? isoDay(t.value) : null,   toISO:(t ? t.value : '') };
+      } },
+    onApply:function(m, extra){
+      actPeriod.mode = m || 'all';
+      actPeriod.from = (m === 'custom' && extra) ? extra.from : null;
+      actPeriod.to   = (m === 'custom' && extra) ? extra.to   : null;
+      setPerLabel(m === 'custom' ? rangeLabel(extra && extra.fromISO, extra && extra.toISO)
+                                 : (PER_LABEL[actPeriod.mode] || 'All time'));
+      actApply();
+    }
+  };
+});
+wireSheetTrigger('.acttypectl', function(){
+  return {
+    title:'Event types', multi:true, opts:ACT_TYPES.slice(),
+    current:actTypes, allLabel:'All event types',
+    total:actCountFor(actPeriod, []),
+    countOf:function(v){ return actCountFor(actPeriod, [v]); },
+    countWith:function(sel){ return actCountFor(actPeriod, sel); },
+    noun:'event', nounPlural:'events',
+    onApply:function(sel){
+      /* every type ticked IS the default, exactly as the menu stores it */
+      actTypes = (sel.length === ACT_TYPES.length) ? [] : sel;
+      renderActTypes(); actApply();
+    }
+  };
+});
+wireAppliedRow('#actApplied', actApplied, actApply);
+document.addEventListener('click', function(e){
+  if(e.target.closest('#activityView [data-clearfilters]')){
+    actPeriod.mode = 'all'; actPeriod.from = null; actPeriod.to = null;
+    actTypes = []; setPerLabel(PER_LABEL.all); renderActTypes(); actApply(); return;
+  }
+  if(e.target.closest('#activityView [data-clearall]')){
+    var f = $('#activityView .searchbox input'); if(f) f.value = '';
+    actPeriod.mode = 'all'; actPeriod.from = null; actPeriod.to = null;
+    actTypes = []; setPerLabel(PER_LABEL.all); renderActTypes(); actApply();
+  }
+});
 
 /* ---------- search: event text, entity name and actor, as ONE query ----------
    All three at once, against the stripped text of the entry — the feed stores HTML,
@@ -168,7 +294,9 @@ wirePeriod('#actPeriod', actPeriod, renderActFeed);
    the sentence was not. Measured before the change: `784f394c`, a uuid that appears
    only inside that dump, matched all 298 rows, as did `actionType` and `createdTime`.
    The rows render in the same order as the list they came from, so index lines them up. */
-wireSearch('#activityView .searchbox input', {
+actRun = wireSearch('#activityView .searchbox input', {
+  before: renderActFeed,
+  debounce: 160,
   /* ⚠️ `.fitem` ONLY, and it matters twice (2026-09-28). The feed's children are no
      longer all entries — a date separator sits between the runs — so `> *` would both
      hide separators as if they were non-matching rows AND shift every index by however
@@ -177,5 +305,5 @@ wireSearch('#activityView .searchbox input', {
   text:  function(n, idx){ var r = actRendered[idx]; return r ? activityHaystack(r, 'global') : ''; },
   host:  function(){ return $('#actFeed'); },
   after: function(){ syncFeedChrome($('#actFeed')); },
-  empty: function(q){ return noResultsHTML(q); }
+  empty: function(q){ return constraintEmptyHTML(q, actApplied().length > 0, 'events'); }
 });

@@ -146,11 +146,15 @@ $('#sgSpace').innerHTML = SPACE.map(function(s){
 /* ---------- the licence table, from the product's own builders ---------- */
 (function(){
   var sample = Store.get('datasets').B.licenses.slice(0, 2);
-  $('#sgTableHead').innerHTML = headHtml().replace('<th>Updated</th>',
-    '<th class="sortable" aria-sort="descending" tabindex="0">Updated</th>');
-  // explicit callback: rowHtml takes options as its second argument, and .map
+  /* ⚠️ `licHeadHTML` / `licRowHTML`, NOT `headHtml` / `rowHtml` (2026-10-01): variant A's
+     pair went with the `Table` axis, and these two are what every surface in the product
+     calls. The `Updated` column went with A, so the sortable-header demonstration moved to
+     `Status` — it is a demonstration of the SORTABLE AFFORDANCE, not of that column. */
+  $('#sgTableHead').innerHTML = licHeadHTML().replace('<th>Status</th>',
+    '<th class="sortable" aria-sort="descending" tabindex="0">Status</th>');
+  // explicit callback: licRowHTML takes options as its second argument, and .map
   // would hand it the index instead
-  $('#sgTableBody').innerHTML = sample.map(function(p){ return rowHtml(p); }).join('');
+  $('#sgTableBody').innerHTML = sample.map(function(p){ return licRowHTML(p); }).join('');
 })();
 
 /* ---------- plan cards: all three states in one row ----------
@@ -187,7 +191,11 @@ $('#sgProducts').innerHTML = nlProductStatedHTML({});
    `renderSteps` lives inside the wizard's IIFE and reads the open flow's own state, so
    there is nothing to call from here — a specimen would have to open a purchase to draw
    one. The markup below is copied from it; if the classes change, this changes. */
-$$('#sgWizStep').forEach(function(box){
+/* ⚠️ A CLASS, NOT AN ID (2026-10-01). Two specimens carried `id="sgWizStep"` and it
+   WORKED — this reads them with `$$`, which is `querySelectorAll` — but it is the same
+   fault that cost Home its column row the same day, two pages away. Changed so the new
+   duplicate-id guard can be green rather than carrying an exception. */
+$$('.sgWizStep').forEach(function(box){
   /* second field = the optional note, not a description: the stepper stopped printing
      descriptions in 2026-09-27 and prints "(Optional)" under the one step that can be
      passed without answering it (see stepOptional in wizard.js) */
@@ -220,15 +228,14 @@ $$('#sgWizStep').forEach(function(box){
 (function(){
   var rows = (DATASETS.B && DATASETS.B.licenses ? DATASETS.B.licenses : []).slice(0, 5);
   if(!rows.length) return;
-  var ha = $('#sgLicHeadA'), ba = $('#sgLicBodyA'), hb = $('#sgLicHeadB'), bb = $('#sgLicBodyB');
-  if(ha) ha.innerHTML = headHtml();
-  if(ba) ba.innerHTML = rows.map(function(p){ return rowHtml(p, { noLabelEdit:true }); }).join('');
-  if(hb) hb.innerHTML = headHtmlB();
-  /* B's own sort is part of B, so the specimen shows the order it actually produces */
-  if(bb) bb.innerHTML = licSortB(rows).map(function(p){ return rowHtmlB(p, { noLabelEdit:true }); }).join('');
+  /* ⚠️ ONE SPECIMEN SINCE 2026-10-01: the `Table` axis retired on what was proposal C, so
+     the page documents one table. The `B` slot went from the markup with it. */
+  var ha = $('#sgLicHeadA'), ba = $('#sgLicBodyA');
+  if(ha) ha.innerHTML = licHeadHTML();
+  if(ba) ba.innerHTML = rows.map(function(p){ return licRowHTML(p, { noLabelEdit:true }); }).join('');
 })();
 
-/* ---------- LICENCES TOOLBAR: A and B, and the two menus ------------------------
+/* ---------- LICENCES TOOLBAR: the one that won, and its two menus ----------------
    ⚠️ THE MENUS ARE BUILT FROM `LIC_TYPE_OPTS` / `LIC_STATUS_OPTS`, the same two lists
    page-licenses.js reads. That is the whole reason this specimen is rendered rather
    than typed: this file has twice described a component it no longer had, and a filter
@@ -264,38 +271,27 @@ $$('#sgWizStep').forEach(function(box){
      `tools/check-icons.py` reads the markup a file EMITS, and `class="' + cls + '"` is a
      class it cannot read — so a builder that assembles the attribute hides every button
      it makes from the guard. Two three-line functions cost less than a blind spot. */
-  function typeChip(t, n){
-    return '<button class="typechip" tabindex="-1"><span>' + t + '</span>'
-      + '<span class="chipcount">' + n + '</span></button>';
-  }
+  /* ⚠️ `typeChip` IS GONE 2026-10-01 — the type CHIPS were toolbar A's; the toolbar that
+     won asks that question with a dropdown. */
   function attnChip(t, n){
     return '<button class="filterchip attnchip" tabindex="-1">'
       + '<svg class="ic cc-check" aria-hidden="true"><use href="assets/icons.svg#ti-check"></use></svg>'
       + '<span>' + t + '</span><span class="chipcount">' + n + '</span></button>';
   }
+  /* ⚠️ ONE SPECIMEN SINCE 2026-10-01: the `licBar` comparison closed on what was proposal
+     C — two dropdowns plus an independent `Needs attention` chip. A (four chips and an
+     `Active only` switch) and B (two dropdowns and no attention control) left the product
+     with the axis; the slot that showed A now shows the toolbar that won. */
   var a = $('#sgBarA');
   if(a) a.innerHTML = '<div class="lic-controls">'
-    + '<div class="searchbox"><svg class="ic searchglyph" aria-hidden="true"><use href="assets/icons.svg#ti-search"></use></svg><input type="text" placeholder="Search licenses" aria-label="Search licenses (specimen)" tabindex="-1"></div>'
-    + '<div class="lic-typeseg">'
-    +   typeChip('Subscription', typeCount('Subscription'))
-    +   typeChip('Perpetual', typeCount('Perpetual'))
-    +   '<span class="chipdiv" aria-hidden="true"></span>'
-    +   attnChip('Needs attention', statusCount('attention'))
-    + '</div>'
-    + '<label class="lic-toggle"><span class="switch"><input type="checkbox" checked tabindex="-1"><span class="track"></span></span> Active only</label>'
+    + '<div class="searchbox"><svg class="ic searchglyph" aria-hidden="true"><use href="assets/icons.svg#ti-search"></use></svg><input type="search" placeholder="Search licenses" aria-label="Search licenses (specimen)" tabindex="-1"></div>'
+    + '<div class="dropwrap perctl"><button class="btn btn--secondary btn--md perbtn" tabindex="-1" aria-haspopup="true" aria-expanded="false"><b>All types</b> <svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-down"></use></svg></button></div>'
+    + '<div class="dropwrap perctl"><button class="btn btn--secondary btn--md perbtn" tabindex="-1" aria-haspopup="true" aria-expanded="false"><b>Active</b> <svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-down"></use></svg></button></div>'
+    + attnChip('Needs attention', statusCount('attention'))
     + '<span class="spacer"></span>'
     + button({ variant:'secondary', icon:'refresh', ariaLabel:'Refresh', title:'Refresh' })
     /* no leading mark: `.lnb-ic` is display:none above 600px, so on the desktop the
        words ARE the button — the specimen shows what the product shows */
-    + button({ variant:'primary', label:'Buy a license' })
-    + '</div>';
-  var b = $('#sgBarB');
-  if(b) b.innerHTML = '<div class="lic-controls">'
-    + '<div class="searchbox"><svg class="ic searchglyph" aria-hidden="true"><use href="assets/icons.svg#ti-search"></use></svg><input type="text" placeholder="Search licenses" aria-label="Search licenses (specimen)" tabindex="-1"></div>'
-    + '<div class="dropwrap perctl"><button class="btn btn--secondary btn--md perbtn" tabindex="-1" aria-haspopup="true" aria-expanded="false"><b>All types</b> <svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-down"></use></svg></button></div>'
-    + '<div class="dropwrap perctl"><button class="btn btn--secondary btn--md perbtn" tabindex="-1" aria-haspopup="true" aria-expanded="false"><b>All statuses</b> <svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-down"></use></svg></button></div>'
-    + '<span class="spacer"></span>'
-    + button({ variant:'secondary', icon:'refresh', ariaLabel:'Refresh', title:'Refresh' })
     + button({ variant:'primary', label:'Buy a license' })
     + '</div>';
 })();

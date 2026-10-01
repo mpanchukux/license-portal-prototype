@@ -401,7 +401,7 @@ function instView(){
 /* ⚠️ THREE VALUES SINCE 2026-09-29. Written as a membership test rather than a chain
    of ternaries so a fourth costs one character — the two-value form was already
    duplicated across three accessors and each one grew differently. */
-function licTable(){ var v = Store.get('licTable'); return (v === 'b' || v === 'c') ? v : 'a'; }
+/* ⚠️ `licTable()` IS GONE (2026-10-01) with the `Licenses › Table` axis. */
 /* ⚠️ A SECOND, INDEPENDENT VARIANT AXIS (2026-09-28, by request). `licTable` is about
    the ROWS (five columns or four); this is about the TOOLBAR above them (chips plus an
    `Active only` switch, or two dropdowns). They are deliberately not one setting: the
@@ -419,7 +419,7 @@ function licTable(){ var v = Store.get('licTable'); return (v === 'b' || v === '
    CONTROL THAT STATES IT: the Status trigger reads `Active`, so the list is filtered and
    says so, which is the part A's silent switch and B's absent one both got wrong in
    different directions. */
-function licBar(){ var v = Store.get('licBar'); return (v === 'b' || v === 'c') ? v : 'a'; }
+/* ⚠️ `licBar()` IS GONE (2026-10-01) with the `Licenses › Toolbar` axis. */
 /* ⚠️ A THIRD AXIS, and it is about the table's EDGES (2026-09-28, by request) — not its
    rows (`licTable`) and not the controls above them (`licBar`). B takes the frame off
    every table on the page: no outline, no rounded head, no side padding, so the table
@@ -429,7 +429,7 @@ function licBar(){ var v = Store.get('licBar'); return (v === 'b' || v === 'c') 
 /* ⚠️ THREE VALUES SINCE 2026-09-29. C is B with one more thing removed — the column
    head's grey fill — so it is a third point on one line rather than a second idea.
    'a' is still the default and still the shape of the test. */
-function tableFrame(){ var v = Store.get('tableFrame'); return (v === 'b' || v === 'c') ? v : 'a'; }
+/* ⚠️ `tableFrame()` IS GONE (2026-10-01) with the `Everywhere › Table frame` axis. */
 /* ⚠️ HOW MUCH OF A BLOCK HOME SHOWS (2026-09-29, by request). A is what exists: five
    licence rows, three invoice rows, and a button in the heading carrying the count.
    B shows THREE rows and a fourth fading out under a `See all N` button laid over it.
@@ -439,7 +439,7 @@ function tableFrame(){ var v = Store.get('tableFrame'); return (v === 'b' || v =
    ⚠️ The heading's button LOSES ITS COUNT in B and keeps only the arrow — the number
    moved into `See all N`, and printing it twice in one block would make two controls
    look like two different destinations. Named here because it is the same decision. */
-function homeBlocks(){ return Store.get('homeBlocks') === 'b' ? 'b' : 'a'; }
+/* ⚠️ `homeBlocks()` IS GONE (2026-10-01) with the `Home › Blocks` axis it served. */
 /* ⚠️ WHAT SHAPE HOME'S BLOCKS ARE (2026-09-29, by request) — a different question from
    `homeBlocks`, which is how MUCH of one it shows. `table` is what exists: three framed
    tables down the page. `cards` lays the licences out as a row of cards and puts the
@@ -452,17 +452,7 @@ function homeBlocks(){ return Store.get('homeBlocks') === 'b' ? 'b' : 'a'; }
    product. The cards layout reads the plain selection (`dashLicList`, three invoices).
    ⚠️ `licTable` is likewise inert here: it picks between three sets of table COLUMNS. */
 function homeLayout(){ return Store.get('homeLayout') === 'cards' ? 'cards' : 'table'; }
-/* ⚠️ HOW THE LICENCE PANEL'S FIRST ZONE IS ARRANGED (2026-09-29, by request) — the block
-   under the header holding the key, the status and the period. `current` is what exists;
-   `a` leads with the facts and compresses the key into an inset field; `b` puts the key
-   on the left and a 300px column of facts on the right.
-   ⚠️ 'current' IS THE DEFAULT and the word is deliberate: the other axes here call their
-   baseline `a`, and this one has two proposals rather than one, so naming the baseline
-   `a` would have made `A` mean "the current one" here and "the proposal" everywhere else.
-   ⚠️ All three read the SAME nodes — the variants are a stylesheet, not a second
-   renderer (see `applyLicZone` in license-details.js). Same store key as the rest, so
-   `Reset demo data` drops it too. */
-function licZone(){ var v = Store.get('licZone'); return (v === 'a' || v === 'b') ? v : 'current'; }
+/* ⚠️ `licZone()` IS GONE (2026-10-01) with the `Zone` axis it served. */
 /* ⚠️ THE LANDING'S BACKGROUND, AND ONLY THE LANDING'S (2026-09-28, by request). Same
    shape as the three axes above — a stored key, an explicit opt-out, 'current' as the
    default — because a proposal ships beside what exists rather than replacing it.
@@ -477,11 +467,23 @@ function licZone(){ var v = Store.get('licZone'); return (v === 'a' || v === 'b'
    unrecognised, so an old store cannot land on a variant that did not exist when it was
    written. */
 function landingBg(){ var v = Store.get('landingBg'); return (v === 'mesh' || v === 'lifted') ? v : 'current'; }
+/* ⚠️ WHICH ARRIVAL THE LANDING'S OWN BUTTONS MAKE. `over` is the default and is what the
+   page has always done; `page` navigates instead. Read by the delegated handler in
+   auth.js, which is where the two buttons are already answered. */
+function authArrival(){ return Store.get('authArrival') === 'page' ? 'page' : 'over'; }
 function applyLandingBg(){
   if(document.body.getAttribute('data-page') === 'landing')
     document.body.setAttribute('data-lbg', landingBg());
 }
-function applyTableFrame(){ document.body.setAttribute('data-tableframe', tableFrame()); }
+/* ⚠️⚠️ THE ATTRIBUTE IS A CONSTANT NOW, AND IT STAYS (2026-10-01). `Table frame` retired
+   on `C — no frame, no head fill`, so there is nothing left to choose — but 36 rules are
+   scoped through `body[data-tableframe]`, and stripping that prefix would drop each of
+   them by one attribute of specificity against the base rules they exist to override.
+   Keeping a constant attribute costs one line and changes no cascade; removing it is a
+   pass of its own, with every one of those 36 re-checked.
+   ⚠️ What A was: every list table in a bordered, rounded frame with a filled column row.
+   B took the frame off and kept the fill; C took both. */
+function applyTableFrame(){ document.body.setAttribute('data-tableframe', 'c'); }
 function dashVariant(){ return dashState().variant; }
 /* ⚠️ DERIVED, not stored. `empty:true` used to be a flag on the state above, set once
    by setSession('new') and cleared by nobody — so buying a licence left Home on its
@@ -714,15 +716,24 @@ function setLicenseLabel(lic, val){
   lic.label = String(val || '').trim();
   Store.save();                        // the object came out of the store, so this persists it
   if(lic.label !== was){
-    /* two types, not one string with a fork in it — the copy map holds both wordings */
-    /* ⚠️ The detail says only what the sentence does not. "Label set to X" already
-       names the new value, so the row that adds something is the one it replaced — and
-       when there was nothing to replace, there is no row at all. */
-    logActivity(lic.label
-      ? { type:'license.labeled', licId:lic.id, f:{ entity:lic.name, label:lic.label },
-          detail: was ? [['Previous label', was]] : null }
-      : { type:'license.label_cleared', licId:lic.id, f:{ entity:lic.name },
-          detail:[['Previous label', was]] });
+    /* ⚠️⚠️ THREE TYPES, AND THE DETAIL CARRIES THE VALUES (2026-10-01, by request). The
+       sentence says what happened to the label; the block under it says what it was and
+       what it is, in the `[field, from, to]` shape every other change event here uses —
+       so the renderer draws the old struck through and the new as a pill without this
+       code knowing how that looks.
+       ⚠️ ADDED vs CHANGED is decided by whether there WAS one, not by a flag: a first
+       label replaced nothing, so it gets the one-value row and a sentence that does not
+       claim a change. Cleared is a change TO nothing, and the em dash is what the rest
+       of the product already prints where a value is absent. */
+    logActivity(
+      lic.label
+        ? (was
+            ? { type:'license.labeled', licId:lic.id, f:{ entity:lic.name, label:lic.label },
+                detail:[['Label', was, lic.label]] }
+            : { type:'license.label_added', licId:lic.id, f:{ entity:lic.name, label:lic.label },
+                detail:[['Label', lic.label]] })
+        : { type:'license.label_cleared', licId:lic.id, f:{ entity:lic.name },
+            detail:[['Label', was, '\u2014']] });
   }
   repaintLabelSurfaces();
   /* an action result, so it leaves on its own rather than sitting in the panel */
@@ -775,7 +786,11 @@ function isPublicPage(){ return document.body.hasAttribute('data-public'); }
    The landing page is the signed-out home AND unreachable once signed in — both
    directions are the same rule, so both live here. */
 function guardSession(){
-  var landing = document.body.getAttribute('data-page') === 'landing';
+  /* ⚠️ THE SIGN-IN PAGE IS THE LANDING'S TWIN FOR THIS RULE (2026-10-01): both are a way
+     IN, so both are unreachable once you are already in. Named by `data-signedout` rather
+     than by a second page name, so the next surface of this kind declares itself. */
+  var landing = document.body.getAttribute('data-page') === 'landing'
+             || document.body.hasAttribute('data-signedout');
   if(landing && isSignedIn()){ location.replace('index.html'); return false; }
   if(!landing && !isPublicPage() && !isSignedIn()){ location.replace('landing.html'); return false; }
   return true;
@@ -1566,63 +1581,37 @@ var PageStates = (function(){
       /* ---- Licenses: the list page's own two variants. `Toolbar` is the page's alone;
          `Table` is offered on Home too, because Home's block renders THE SAME row
          component and a setting that changed one and not the other would fork it. ---- */
-      { id:'licBar', group:'Licenses', label:'Toolbar',
-        when:function(){ return ctx().licenses; },
-        get:licBar,
-        set:function(v){
-          Store.set('licBar', v);
-          if(typeof applyLicBar === 'function') applyLicBar();
-        },
-        options:[{ v:'a', t:'A — chips + Active only' },
-                 { v:'b', t:'B — two dropdowns' },
-                 { v:'c', t:'C — dropdowns + attention switch' }] },
+      /* ⚠️ `Toolbar` IS RETIRED (2026-10-01, by request) with `C — dropdowns + attention
+         switch` as the answer. A and B's markup left `licenses.html` with it; the
+         arguments each was built to make are recorded there. */
 
-      { id:'licTable', group:'Licenses', label:'Table',
-        when:function(){ var c = ctx(); return c.licenses || (c.home && homeLayout() === 'table'); },
-        get:licTable,
-        set:function(v){
-          Store.set('licTable', v);
-          if(typeof renderProducts === 'function') renderProducts();
-          if(typeof renderDashLicenses === 'function') renderDashLicenses();
-        },
-        options:[{ v:'a', t:'A — 5 columns' },
-                 { v:'b', t:'B — 4 columns' },
-                 { v:'c', t:'C — three-line name' }] },
+      /* ⚠️ `Table` IS RETIRED (2026-10-01, by request) with `C — three-line name` as the
+         answer. A was five columns, the shape the page shipped with; B was four with its
+         own attention-first sort. See the note where their builders stood. */
 
       /* ---- Purchase: the flow's frame and its Back placement are set BEFORE a flow is
          open; `Customize` needs one open, because it re-renders a step. ---- */
-      { id:'nlPresent', group:'Purchase', label:'Frame',
-        when:function(){ return ctx().wizardPage; },
-        get:wizardPresent,
-        set:function(v){ Store.set('wizardPresent', v); applyWizardPresent(); },
-        options:function(){ return WIZARD_PRESENTS.map(function(o){ return { v:o[0], t:o[1] }; }); } },
+      /* ⚠️ `Frame` IS RETIRED (2026-10-01, by request) with `D — header on the gradient`
+         as the answer. What C was: the same full-screen frame with white bands, each
+         carrying its own hairline at rest. D hands that line to the scroll — see
+         `#nlModal .fs-header` and `wireHeaderDock`. */
 
-      { id:'nlBack', group:'Purchase', label:'Back',
-        when:function(){ return ctx().wizardPage; },
-        get:nlBackPlace,
-        set:function(v){
-          Store.set('nlBack', v);
-          if(window.NL && NL.refreshOpen) NL.refreshOpen();
-        },
-        options:[{ v:'b', t:'Current — above both columns' },
-                 { v:'card', t:'Card — inside the plan card' },
-                 { v:'a', t:'Bar — in the step bar' }] },
+      /* ⚠️⚠️ THE `Back` AXIS IS GONE (2026-10-01, by request: "drop the other Back
+         variants, keep only Current"). It offered three placements — above both columns
+         (the default since 09-30), inside the plan card, and in the step bar — and the
+         one that won is the one that lets the Calculation summary line up with the plan
+         card instead of starting a row higher. `nlBackPlace`, `.nl-barback` and the
+         `[data-nlbackplace="a"]` phone rule went with it; `backRowHTML` is unchanged and
+         still answers "is there a step behind this one", which is the question the
+         placement never asked. A stored `nlBack` in anyone's localStorage is now read by
+         nothing — the key is left rather than migrated, because the store is a demo. */
 
       /* ⚠️ Rendered on every wizard page and DISABLED until a flow is open, rather than
          hidden: it sits beside two controls that are usable there, and a row that
          appears and disappears as you open a modal is a layout moving under the reader. */
-      { id:'custVariant', group:'Purchase', label:'Customize',
-        when:function(){ return ctx().wizardPage; },
-        get:custVariant,
-        set:function(v){
-          Store.set('custVariant', v);
-          if(window.NL && NL.refreshCustomize) NL.refreshCustomize();
-        },
-        options:function(){
-          var on = ctx().wizard;
-          return [{ v:'a', t:'A — plan card', note:on ? '' : 'open a flow', disabled:!on },
-                  { v:'b', t:'B — locked inputs', note:on ? 'default' : 'open a flow', disabled:!on }];
-        } },
+      /* ⚠️ `Customize` IS RETIRED (2026-10-01, by request) with `B — locked inputs` as the
+         answer. What A was: the fixed entitlements shown inside the plan card instead of
+         as locked rows, and the capacity rows in a grid rather than a card stack. */
 
       { id:'landingBg', group:'Landing', label:'Gradient',
         when:function(){ return ctx().landing; },
@@ -1631,6 +1620,20 @@ var PageStates = (function(){
         options:[{ v:'current', t:'1 — current' },
                  { v:'mesh', t:'2 — mesh', note:'follows the product' },
                  { v:'lifted', t:'3 — 1’s pools, 2’s arrangement' }] },
+
+      /* ⚠️⚠️ TWO ARRIVALS AT THE AUTH SURFACE (2026-10-01, by request), and this axis is
+         how they are compared rather than how they differ: the SURFACE is one, built by
+         `auth.js`. `over` is the modal the landing's two buttons open; `page` sends those
+         buttons to `signin.html` instead, which is the arrival a LINK makes — an
+         invitation, a reset, a bookmark — where there is no landing to pass through.
+         ⚠️ The page is reachable by its address whatever this says. The axis exists so the
+         landing's own buttons can demonstrate it; it is not a gate. */
+      { id:'authArrival', group:'Landing', label:'Sign in',
+        when:function(){ return ctx().landing; },
+        get:authArrival,
+        set:function(v){ Store.set('authArrival', v); },
+        options:[{ v:'over', t:'Over the landing' },
+                 { v:'page', t:'Its own page', note:'signin.html' }] },
 
       /* ---- Everywhere: true of every table on the page at once.
          ⚠️ SCOPED NOW (2026-09-30). It was the one group with no scope at all and it
@@ -1652,13 +1655,9 @@ var PageStates = (function(){
         options:[{ v:'tinted', t:'Tinted — the ground carries it' },
                  { v:'ink', t:'Ink — the mark carries it' }] },
 
-      { id:'tableFrame', group:'Everywhere', label:'Table frame',
-        when:hasTable,
-        get:tableFrame,
-        set:function(v){ Store.set('tableFrame', v); applyTableFrame(); },
-        options:[{ v:'a', t:'A — framed' },
-                 { v:'b', t:'B — no frame' },
-                 { v:'c', t:'C — no frame, no head fill' }] },
+      /* ⚠️ `Table frame` IS RETIRED (2026-10-01, by request) with `C — no frame, no head
+         fill` as the answer. A framed every list table and filled its column row; B kept
+         the fill. See `applyTableFrame` for why the attribute survives the axis. */
 
       /* ---- Dev: things that HAPPEN, so buttons and not answers. Each carries its own
          `when`, so `Confirm email change` exists only while a change is pending and the
@@ -1713,8 +1712,18 @@ function injectChrome(){
      without. It is a no-op on a page with no table. */
   applyTableFrame();
   applyLandingBg();
-  document.body.insertAdjacentHTML('afterbegin', chromeHTML());
-  if(main) main.insertAdjacentHTML('beforeend', footerHTML());
+  /* ⚠️⚠️ `data-bare` SKIPS THE BAR AND THE FOOTER, NOT THE REST (2026-10-01). The sign-in
+     page is one card on a gradient and nothing else — a header offering `Sign in` above a
+     sign-in form is the page arguing with itself, and a footer of legal links below a
+     surface with no page to belong to is furniture.
+     ⚠️ The MODALS and the prototype's own state bar are still mounted: the first because
+     the surface uses them (the stub dialog behind `Forgot password`), the second because
+     it is the review tool and every page carries it. */
+  var bare = document.body.hasAttribute('data-bare');
+  if(!bare){
+    document.body.insertAdjacentHTML('afterbegin', chromeHTML());
+    if(main) main.insertAdjacentHTML('beforeend', footerHTML());
+  }
   document.body.insertAdjacentHTML('beforeend', modalsHTML());
   PageStates.mount();
 }
@@ -2081,7 +2090,8 @@ function wireTabs(){
    only an explicit 'a' opts out, so a browser that has never touched the panel gets B
    and one that chose A keeps it. The key is not in the seed, so nothing about the
    stored state changes and the store key does not need a bump. */
-function custVariant(){ return Store.get('custVariant') === 'a' ? 'a' : 'b'; }
+/* ⚠️ `custVariant` IS GONE (2026-10-01) with the axis it served — see wizard.js, where
+   the two shapes were. The store key is left rather than migrated; the store is a demo. */
 /* ---------- the purchase modal's PRESENTATION: A dialog · B inset · C full screen --
    One shell, three frames. The steps, the content and the controller are identical in
    all three; only .fs-box's size and the backdrop change (see the CSS block of the
@@ -2103,23 +2113,20 @@ function custVariant(){ return Store.get('custVariant') === 'a' ? 'a' : 'b'; }
    stepper sit on a white band or straight on the gradient. A stored `a` or `b` from an
    earlier session falls through to `c`, so nobody opens the wizard into a variant the
    panel can no longer show. */
-function wizardPresent(){ return Store.get('wizardPresent') === 'd' ? 'd' : 'c'; }
-/* ⚠️ WHERE THE PURCHASE FLOW'S `Back` SITS — three placements, `current` the default.
-   ⚠️ IT DOES NOT TOUCH THE STEP RAIL. A completed step is still a button that jumps
-   back (see renderSteps); this setting is only about the service control, and the two
-   ways back have coexisted since 09-29 on purpose. */
-/* ⚠️ THE DEFAULT MOVED TO `b` (2026-09-30, by request) and `current` was renamed `card`:
-   Back is a plain text row above the grid, so the Calculation summary lines up with the
-   plan card instead of starting a row higher. A stored `current` from earlier in the day
-   falls through to the default, which is where it should land anyway. */
-function nlBackPlace(){ var v = Store.get('nlBack'); return (v === 'a' || v === 'card') ? v : 'b'; }
+
+/* ⚠️ `nlBackPlace` IS GONE (2026-10-01, by request) with the axis it served — see the
+   note where the `Back` row stood in `PS_GROUPS`. Back is a plain text row above the
+   grid and is the only placement; the three call sites in wizard.js no longer branch.
+   ⚠️ IT NEVER TOUCHED THE STEP RAIL and still does not: a completed step is a button
+   that jumps back (see renderSteps), and the two ways back coexist as they have since
+   09-29. */
 /* ⚠️ WHICH FORM HOME'S BANNER TAKES when more than one condition is true. `stacked` is
    the default and is what the slot has done since 2026-09-24: one band, the seniormost
    condition, everything else folded into a count. `separate` gives each condition its
    own card, side by side in the same slot.
    ⚠️ It changes the FORM, not the data: both read `homeBannerVisible()`, in the same
    seniority order, with the same dismissal rules. */
-function homeBannerLayout(){ return Store.get('bannerLayout') === 'separate' ? 'separate' : 'stacked'; }
+/* ⚠️ `homeBannerLayout()` IS GONE (2026-10-01) with the `Banner › Layout` axis. */
 /* ⚠️⚠️ WHAT THE THREE TONES ARE MADE OF (2026-09-30, by request) — a second answer to a
    question the tones already answer, not a second set of tones. The conditions and their
    seniority are untouched in both:
@@ -2144,17 +2151,10 @@ function alertGround(){ return Store.get('alertGround') === 'ink' ? 'ink' : 'tin
    add-on chips in a right one, both headings on one line.
    ⚠️ It changes the ARRANGEMENT, not the content — same table, same chips, same builders,
    and the `Manage` button is the same control moved rather than a second one. */
-function licPlanLayout(){ return Store.get('licPlan') === 'side' ? 'side' : 'stacked'; }
-var WIZARD_PRESENTS = [['c', 'C \u2014 White header band (default)'],
-                       ['d', 'D \u2014 Header on the gradient']];
-/* The wizard is the only surface carrying the attribute; it is set where the node is
-   born (wizard.js, right after the markup is injected), on every open, and whenever
-   the panel writes a new value. Pages that never load wizard.js have no node and this
-   is a no-op on them. */
-function applyWizardPresent(){
-  var nl = $('#nlModal');
-  if(nl) nl.setAttribute('data-present', wizardPresent());
-}
+/* ⚠️ `licPlanLayout()` IS GONE (2026-10-01) with the `Plan block` axis it served. */
+/* ⚠️ `WIZARD_PRESENTS`, `wizardPresent()` and `applyWizardPresent()` ARE GONE
+   (2026-10-01) with the `Frame` axis they served. The frame is one shape now and it is
+   stated in the stylesheet, scoped to `#nlModal`; nothing writes `data-present` any more. */
 /* the product every selling surface opens on — see the `arrived` note in the seed */
 function arrivedProduct(){ return Store.get('arrived') === 'tbmq' ? 'tbmq' : 'thingsboard'; }
 // How a licence row presents its details: its own page (A) or a modal over the
@@ -2976,8 +2976,14 @@ function homeToolbarControls(row){
     var home = document.querySelector(el.getAttribute('data-homed'));
     if(home && home.hasAttribute('hidden')){ home.appendChild(el); el.removeAttribute('data-homed'); }
   });
+  /* ⚠️⚠️ `[id^="licNewBtn"]`, NOT A LIST OF IDS (2026-10-01). It read `#licNewBtn,
+     #licNewBtnB` and toolbar C — added 09-29 — was simply missing, so C's primary stayed
+     behind in the toolbar where nothing had given it an order: it drew ABOVE the search
+     field, at the top of the bar, which reads as a layout fault rather than as a button
+     in the wrong place. Same lesson as `licQuery` and the period heads: a selector that
+     names its members falls behind the next member. */
   [['[data-refresh]', '.lic-controls:not([hidden]), .insttoolbar'],
-   ['#licNewBtn, #licNewBtnB', '.lic-controls:not([hidden])']]
+   ['[id^="licNewBtn"]', '.lic-controls:not([hidden])']]
     .forEach(function(pair){
       var host = $('#shellMain ' + pair[1].split(',')[0]) || $('#shellMain ' + (pair[1].split(',')[1] || '').trim());
       var el = host ? $(pair[0], host) : null;
@@ -2989,33 +2995,17 @@ function homeToolbarControls(row){
 }
 window.addEventListener('resize', syncTitleRow);
 
-/* ---------- the phone's collapsed search -------------------------------------
-   ⚠️ ONE DELEGATED PAIR FOR EVERY LIST TOOLBAR. Licenses, Invoices, Activity and
-   Instances all carry the same `.searchbox`, and the collapse is a property of the
-   WIDTH, not of the page — so a per-page wiring would be four copies of one rule and
-   the fifth surface added later would be the one that forgot.
-   ⚠️ IT CLOSES ON BLUR ONLY WHEN THE FIELD IS EMPTY. A query that is still filtering
-   the list has to keep its field on screen: collapsing it would leave the reader
-   looking at a short list with no visible reason and no way to clear it. Typed and
-   blurred, the field stays; cleared and blurred, it folds back to the button.
-   ⚠️ `matches` is read at click time rather than cached — the breakpoint can be
-   crossed by a resize between one tap and the next. */
-document.addEventListener('click', function(e){
-  if(!window.matchMedia('(max-width:600px)').matches) return;
-  var box = e.target.closest('.searchbox');
-  if(!box) return;
-  var bar = box.closest('.lic-controls, .insttoolbar');
-  if(!bar || bar.classList.contains('is-searching')) return;
-  bar.classList.add('is-searching');
-  var input = $('input', box);
-  if(input) input.focus();
-});
-document.addEventListener('focusout', function(e){
-  var input = e.target.closest && e.target.closest('.searchbox input');
-  if(!input || input.value.trim()) return;
-  var bar = input.closest('.lic-controls, .insttoolbar');
-  if(bar) bar.classList.remove('is-searching');
-});
+/* ---------- the phone's collapsed search is GONE (2026-10-01, by request) ----------
+   ⚠️⚠️ WHAT STOOD HERE: at ≤600 a tap on `.searchbox` added `is-searching` to the
+   toolbar, which gave the field the row and stood the filters down until it was
+   dismissed. Added 09-30 by request, because a 280px field took the whole first line of
+   a 375px toolbar and pushed the filters off the edge.
+   It is removed by the request that ported the Licenses toolbar's pattern to every list
+   page. That pattern answers the SAME problem differently and better: the field keeps
+   the first line, and the filters get a line of their own under it that scrolls
+   sideways — so nothing has to be dismissed to reach anything.
+   ⚠️ The class, both listeners and every rule that read them are gone together. A
+   mechanism with no readers is worse than no mechanism: it reads as live. */
 
 /* ============================================================================
    THE STICKY LIST BLOCK — the measuring half of the pattern in styles.css

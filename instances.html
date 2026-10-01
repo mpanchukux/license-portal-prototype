@@ -50,11 +50,20 @@
   <div class="lic-titlerow">
     <h1 class="lic-h1">Instances</h1>
     <span class="titlecount" id="instTotal"></span>
-    <p class="inst-hint">Moved a deployment to a new server? Deactivate the old instance and
-      activate the new one with the same key.</p>
   </div>
+  <!-- ⚠️⚠️ THE SENTENCE IS UNDER THE HEADING NOW (2026-10-01, by request), not a third
+       item in its row. It had been placed beside the title deliberately — "a subtitle of
+       the heading rather than a line that happens to be near it" — and the half of that
+       argument which survives is the RELATIONSHIP, not the row: under the heading it is
+       still the page's standing advice and is still read as its subtitle, and it stops
+       competing with the count for the same line. It also stops the row from wrapping
+       into two lines at narrow widths, which is where the three-item version broke.
+       ⚠️ A SIBLING OF THE ROW, not a child of it: `.lic-titlerow:has(> .titlecount)` is a
+       flex line, so left inside it the sentence would simply re-join that line. -->
+  <p class="inst-hint">Moved a deployment to a new server? Deactivate the old instance and
+    activate the new one with the same key.</p>
   <div class="insttoolbar stickybar">
-    <div class="searchbox"><svg class="ic searchglyph" aria-hidden="true"><use href="assets/icons.svg#ti-search"></use></svg><input type="text" placeholder="Search instances" aria-label="Search instances"></div>
+    <div class="searchbox"><svg class="ic searchglyph" aria-hidden="true"><use href="assets/icons.svg#ti-search"></use></svg><input type="search" enterkeyhint="search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" placeholder="Search instances" aria-label="Search instances"></div>
     <!-- ⚠️⚠️ ONE SWITCH, NOT A CHIP PAIR (2026-09-29, by request), and this REVERSES
          "STATUS IS THE ONE HONEST PARTITION HERE" — the argument that put a
          mutually-exclusive `Healthy`/`Stale` group here in the first place. That
@@ -73,9 +82,21 @@
          both are one independent on/off that narrows a list and states its own size.
          ⚠️ Version is still NOT a filter: "behind latest" is a fact about a release,
          not a state of the deployment. -->
+    <!-- ⚠️ ONE GROUP AROUND THE FILTERS, `display:contents` above the breakpoint — so the
+         desktop row is laid out from exactly the same children it always was — and the
+         phone's SECOND ROW below it: one line that scrolls sideways. Three siblings
+         cannot become a scroll container without a box around them, and that is all this
+         box is. Same pattern the Licenses toolbar carries (2026-10-01, by request:
+         "move the Licenses filter and search pattern to the other inner pages"). -->
+    <div class="barfilters">
     <button class="filterchip attnchip" id="instStaleChip" aria-pressed="false">
       <svg class="ic cc-check" aria-hidden="true"><use href="assets/icons.svg#ti-check"></use></svg>
       <span>Stale</span><span class="chipcount" id="instStaleCount"></span></button>
+    </div>
+    <!-- the phone's THIRD ROW: what is applied, as chips you can take off, with a
+         `Clear all` at the end. Filled by the page; `hidden` is set there, so an empty
+         row never costs a line of the screen. -->
+    <div class="barapplied" id="instApplied" hidden></div>
     <span class="spacer"></span>
     <!-- ⚠️⚠️ A SWITCH, NOT A SEGMENTED PAIR (2026-09-29, by request). The `.seg` radios
          said "All instances / By license" — two names for two views, which reads as two

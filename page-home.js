@@ -70,10 +70,16 @@ function dashLicList(){
    contains three things. */
 var DASH_FADE_ROWS = 4;
 function renderDashLicenses(){
-  var head=$('#dashLicHead'), body=$('#dashLicBody'); if(!head||!body) return;
+  /* ⚠️ `#dashLicCols` IS THE `<thead>`; `#dashLicHead` is the block's own `Licenses →`
+     heading and belongs to `renderBlockFooters`. They carried the SAME id until
+     2026-10-01, so this line filled the heading div and the footer renderer then wrote
+     over it — the column row simply never appeared. See the note in index.html. */
+  var head=$('#dashLicCols'), body=$('#dashLicBody'); if(!head||!body) return;
   head.innerHTML = licHeadHTML();
   var list = dashLicList();
-  if(homeBlocks() === 'b') list = list.slice(0, DASH_FADE_ROWS);
+  /* ⚠️ ALWAYS FOUR (2026-10-01): `Home › Blocks` retired on `B — 3 rows, 4th fading`,
+     so the block renders the fourth row in full and fades it. */
+  list = list.slice(0, DASH_FADE_ROWS);
   // no Edit label in the row menu here: this block is a summary, and renaming a
   // licence belongs on the Licenses page and its details, where it is the subject.
   // Explicit callback — rowHtml takes options second, and .map would pass the index.
@@ -87,9 +93,9 @@ function renderDashInvoices(){
   // bareProduct: in a three-row preview the licence only has to be named — the mark
   // and the label line belong to the Invoices page, where the table is the subject
   var opts = { bareProduct:true };
-  /* ⚠️ Three in A, four in B — and the block that shows three anyway still changes,
-     because in B the third is no longer the last thing but the one before the fade. */
-  var take = homeBlocks() === 'b' ? DASH_FADE_ROWS : 3;
+  /* ⚠️ Four, and the fourth is the one that fades — see `markFadeRow`. A showed three
+     and stopped cleanly; that variant retired 2026-10-01. */
+  var take = DASH_FADE_ROWS;
   b.innerHTML = inv.length
     ? inv.slice(0, take).map(function(v){ return invRow(v, opts); }).join('')
     : invEmptyRow(opts);
@@ -102,7 +108,6 @@ function renderDashInvoices(){
    — a block with three rows in total has nothing more behind it and must not pretend. */
 function markFadeRow(body){
   $$('tr.is-fading', body).forEach(function(tr){ tr.classList.remove('is-fading'); });
-  if(homeBlocks() !== 'b') return;
   var rows = $$('tr', body);
   if(rows.length < DASH_FADE_ROWS) return;
   rows[DASH_FADE_ROWS - 1].classList.add('is-fading');
@@ -148,16 +153,16 @@ function blockHeadHTML(n, title, href, aria){
 }
 function renderBlockFooters(){
   var lic = $('#dashLicHead'), inv = $('#dashInvHead'), act = $('#dashActHead');
-  /* ⚠️ IN B THE HEADING CARRIES NO COUNT. It moved into `See all N` over the fade, and a
-     block stating the same number twice reads as two destinations. */
-  var bare = homeBlocks() === 'b';
+  /* ⚠️ THE HEADING CARRIES NO COUNT. It moved into `See all N` over the fade, and a
+     block stating the same number twice reads as two destinations. (A kept the count in
+     the heading because it had no `See all`; A retired 2026-10-01.) */
   var nL = DATA().licenses.length;
-  if(lic) lic.innerHTML = blockHeadHTML(bare ? null : nL, 'Licenses', 'licenses.html',
+  if(lic) lic.innerHTML = blockHeadHTML(null, 'Licenses', 'licenses.html',
     'Open all ' + nL + ' licenses');
   if(inv){
     var n = DATA().invoices.length;
     /* an account with no invoices has nothing to open — the link goes, the heading stays */
-    inv.innerHTML = n ? blockHeadHTML(bare ? null : n, 'Recent invoices', 'invoices.html',
+    inv.innerHTML = n ? blockHeadHTML(null, 'Recent invoices', 'invoices.html',
       'Open all ' + n + ' invoices') : '<h2>Recent invoices</h2>';
   }
   /* ⚠️ NO NUMBER HERE, and the absence is the honest part — the feed is mostly derived
@@ -178,7 +183,6 @@ function renderBlockFooters(){
 function renderBlockFades(){
   $$('#dashView .blockmore').forEach(function(n){ n.remove(); });
   $$('#dashView .dblock').forEach(function(b){ b.classList.remove('has-fade'); });
-  if(homeBlocks() !== 'b') return;
   [['#dashLicBody', 'licenses.html', DATA().licenses.length],
    ['#dashInvBody', 'invoices.html', DATA().invoices.length]].forEach(function(spec){
     var body = $(spec[0]); if(!body) return;
@@ -252,87 +256,12 @@ function dashFeedLoadMore(){
 function hcHeadHTML(title, count, href, aria){
   return blockHeadHTML(count === undefined ? null : count, title, href, aria);
 }
-/* ⚠️ THE SAME RULE AS THE TABLE ROW: a grant carries no overflow menu, because it cannot
-   be changed, cancelled or topped up. `actionsCell` decides that for layout A; repeating
-   the decision rather than the markup is the point — the card splits the row's two
-   actions across two zones (the kebab in the status row, copy in the key row), so there
-   is no cell to reuse, only a rule. */
-function lcardMenuHTML(p){
-  if(p && p.grant) return '';
-  return '<div class="lic-actions"><div class="menu">'
-    + button({ variant:'menu', size:'md', icon:'dots-vertical', ariaLabel:'More actions',
-               attrs:'aria-haspopup="true" aria-expanded="false"' })
-    /* ⚠️ `noLabelEdit`, exactly as layout A's block passes it: renaming a licence belongs
-       where the licence is the subject. The card's own label zone is a different thing —
-       it NAMES an unnamed licence, which is what the brief asks the zone to offer. */
-    + '<div class="pop" role="menu" hidden>' + menuItems(p, { noLabelEdit:true }) + '</div>'
-    + '</div></div>';
-}
-/* Product, with status and term under its name, then the label zone under a divider.
-   ⚠️⚠️ THE KEY IS GONE FROM THE CARD, AND THE STATUS MOVED UNDER THE NAME (2026-09-30,
-   by request). Two changes, one rearrangement: the card was `status · term` on its own
-   top line, then the product, then the key on an inset field, then the label. What it
-   says now is what the card is ABOUT first — the product and plan — with its state
-   directly under the name it qualifies, which is the order the table's own product cell
-   already reads in. The masked key was the one fact on the card nobody can act on from a
-   preview: it is twelve dots and four characters, it cannot be read, and the copy button
-   beside it duplicated the row action the panel behind the card carries anyway.
-   ⚠️ `.lcard-top` WENT WITH THE STATUS. The kebab was sharing that row and is now the
-   last child of the product row; there is no line left for a wrapper to hold.
-   ⚠️ WHAT THIS COSTS, and it is measured rather than assumed: the divider's y no longer
-   comes from three fixed rows. It comes from one row whose height is `--btnH` or three
-   text lines, whichever is taller — still independent of the DATA, which is the property
-   that keeps a row of cards level. Verified across five licences, one of them menuless.
-   ⚠️ EVERY PART IS STILL THE COMPONENT LAYOUT A USES — `statusMark` and `stateText` (so
-   `Blocked · Over instance limit` reads the same here as in the table), `licenseMark` for
-   the square, and the details surface's own `+ Add label` chip. What the card owns is the
-   arrangement.
-   ⚠️ `data-licid` IS THE CONTRACT with `wireLicenseRows` — the element may be anything,
-   as long as it carries the id (see `opts.rowSel` there). */
-function licCardHTML(p){
-  var label = (p.label || '').trim();
-  var alive = p.status === 'canceled' ? 'Canceled' : 'Active';
-  return '<div class="lcard' + (p.status === 'canceled' ? ' off' : '') + '"'
-    + ' data-licid="' + esc(p.id || '') + '"'
-    + ' data-goto="' + esc(p.goto || '') + '"'
-    + ' data-product="' + esc(p.product || '') + '"'
-    + ' tabindex="0" aria-label="' + esc((p.product ? p.product + ' ' : '') + p.name
-        + ', status: ' + alive + '. Open details') + '">'
-    + '<div class="lcard-prod">'
-    +   '<span class="lp-ic" aria-hidden="true">' + licenseMark(p) + '</span>'
-    +   '<div class="lp-txt">'
-    +     '<div class="lcard-kind">' + esc(p.type || '') + '</div>'
-    +     '<div class="lcard-name">' + esc(p.product || '') + ' &middot; ' + esc(p.name || '') + '</div>'
-    +   '</div>'
-    +   lcardMenuHTML(p)
-    + '</div>'
-    /* ⚠️⚠️ THE STATE ROW LEFT `.lp-txt` (2026-10-01, by request: it must start on the
-       MARK's line, not the name's). Inside the text column it began at the card's 40px
-       product square plus its 10px gap — measured x90 against the square's x40 — so the
-       card had two left edges: the square and the label zone on one, the three text rows
-       on another. Out here it is a child of the card, so it starts where the square does
-       and the card reads down one line.
-       ⚠️ IT IS NOT A THIRD TEXT LINE ANY MORE, and that is the point: the kind and the
-       name qualify each other and belong in the column beside the mark; the state
-       qualifies the LICENCE, which is the whole card. The divider zone below already
-       takes the card's full width for the same reason.
-       ⚠️ THE INVARIANT STILL HOLDS and was re-measured, not assumed: everything above the
-       divider has to be a fixed height or a row of cards goes ragged. The row that moved
-       is one line of text whatever the data says, exactly as it was inside the column. */
-    + '<div class="lcard-state">' + statusMark(p)
-    +   '<span class="lcard-dot" aria-hidden="true">&middot;</span>'
-    +   '<span class="lcard-term">' + stateText(p) + '</span></div>'
-    /* ⚠️ THE ZONE IS ALWAYS THERE, LABEL OR NOT, and that is what keeps a row of cards
-       level: an unnamed licence shows the chip in the same band a name would occupy. The
-       two-line label is absorbed by the zone's own min-height, not by the card growing
-       past its neighbours — see `.lcard-label` in the stylesheet. */
-    + '<div class="lcard-label">' + (label
-        ? '<span class="lic-prodlabel lcard-labeltxt">' + esc(label) + '</span>'
-        : '<button class="chip ghost lcard-add" data-editlabel>'
-          + icon('pencil', { cls:'lcard-addic' }) + 'Add label</button>')
-    + '</div>'
-  + '</div>';
-}
+/* ⚠️⚠️ `lcardMenuHTML` AND `licCardHTML` MOVED TO `components.js` (2026-10-01, by
+   request: "the Licenses page should use the same cards as Home"). They are now rendered
+   by two surfaces — Home's card layout and the Licenses page's phone list — and the rule
+   this file has always followed is that a renderer with a second reader lives in
+   `components.js`. Nothing about them changed in the move; Home calls them exactly as it
+   did, and the two surfaces cannot drift because there is one builder. */
 /* One invoice, as a row of the card that holds them. ⚠️ A DIFFERENT SHAPE FROM `invRow`,
    not a restyling of it: the brief reorders the facts (when · what · how much · did it
    go through · act) and stacks two of them, and a `<td>` cannot be repoured into that.
@@ -348,17 +277,23 @@ function invCardRowHTML(v){
     +   '<div class="hcinv-date">' + fmtDate(v.date) + '</div>'
     +   '<div class="hcinv-num mono">' + esc(v.num) + '</div>'
     + '</div>'
+    /* ⚠️⚠️ ONE LINE, THREE FACTS, MIDDOTS BETWEEN THEM (2026-10-01, by request): product ·
+       purchase type · plan. It was the product and plan on one line with the TYPE on a
+       second, quieter one — two lines saying one thing about one licence, and the second
+       line was the shortest and least useful of the three. The middot is the separator
+       this product already uses for exactly this (`ThingsBoard · Subscription` in every
+       licence row), so nothing new is introduced.
+       ⚠️ `title` CARRIES THE WHOLE RUN, because one line of three facts is the thing most
+       likely to ellipse in a card. */
     + '<div class="hcinv-prod">' + (lic
         ? '<a class="hcinv-lic" data-invlic="' + esc(lic.id) + '" href="' + licenseHref(lic, 'invoices') + '">'
-          /* the longest product name does not fit a half-width column beside two pill
-             buttons; it ellipses and keeps its full text where a reader can get it */
-          + '<span class="hcinv-licname" title="' + esc((lic.product || '') + ' \u00b7 ' + (lic.name || '')) + '">'
-          + esc(lic.product || '') + ' &middot; ' + esc(lic.name || '') + '</span>'
-          + '<span class="hcinv-licmodel">' + esc(lic.type || '') + '</span></a>'
+          + '<span class="hcinv-licname" title="' + esc([lic.product, lic.type, lic.name].filter(Boolean).join(' \u00b7 ')) + '">'
+          + [lic.product, lic.type, lic.name].filter(Boolean).map(esc).join(' &middot; ')
+          + '</span></a>'
         : '<span class="muted">&mdash;</span>') + '</div>'
     + '<div class="hcinv-amt">' + esc(v.amount) + '</div>'
     + '<div class="hcinv-status"><span class="statwrap">' + invStatusMark(v) + autoChargeIcon(v) + '</span></div>'
-    + '<div class="hcinv-act"><span class="rowactions">' + invActionsHTML() + '</span></div>'
+    + '<div class="hcinv-act"><span class="rowactions">' + invActionsHTML({ ghost:true }) + '</span></div>'
   + '</div>';
 }
 /* ⚠️ THE FEED IS MOVED, NOT COPIED. Both layouts live in the markup at once, so a second
@@ -503,6 +438,23 @@ function renderHomeCards(){
     ? button({ variant:'secondary', size:'md', href:'licenses.html',
                label:'See all ' + nL, cls:'blockmore-go' })
     : '';
+  syncHomeBuy();
+}
+/* ⚠️⚠️ `Buy a license` MOVES INTO THE LICENCES HEADING ON THE PHONE (2026-10-01, by
+   request). On the desktop it stands beside the greeting, which is the page's own h1 and
+   the right place for the page's primary. At 375 that puts a 48px full-width black button
+   between the greeting and the banner carousel — two screens above the thing it buys —
+   so it goes where its subject is: the right end of the `Licenses` heading row.
+   ⚠️ THE NODE IS MOVED, NOT COPIED, and that is what keeps `installStickyAction` working:
+   it captured this element at boot and measures its rect to hand the action to the top
+   bar. A second button would leave the bar watching a hidden one.
+   ⚠️ CALLED FROM `renderHomeCards`, AFTER the heading's `innerHTML` is written — the
+   heading is rebuilt on every render, and anything appended before that is thrown away. */
+function syncHomeBuy(){
+  var buy = $('#dashNewBtn'), head = $('#hcLicHead'), home = $('.dwelcome');
+  if(!buy || !head || !home) return;
+  var host = onPhone() ? head : home;
+  if(buy.parentNode !== host) host.appendChild(buy);
 }
 function renderHome(){
   syncDashSurface();                 // surface first: the blocks below fill #dashView
@@ -765,17 +717,9 @@ if(dashEmptyV && !dashEmptyV.hidden){
          layout chosen directly above it, so it belongs beside the control it depends on
          and says why it cannot be used — a tab that vanished would look like a bug in
          the row rather than a consequence of the answer above. */
-      { id:'homeBlocks', group:'Home', label:'Blocks',
-        get:homeBlocks,
-        set:function(v){
-          Store.set('homeBlocks', v);
-          if(window.renderHome) renderHome();
-        },
-        options:function(){
-          var t = homeLayout() === 'table';
-          return [{ v:'a', t:'A — 5 rows', note:t ? '' : 'tables only', disabled:!t },
-                  { v:'b', t:'B — 3 rows, 4th fading', note:t ? '' : 'tables only', disabled:!t }];
-        } },
+      /* ⚠️ `Blocks` IS RETIRED (2026-10-01, by request) with `B — 3 rows, 4th fading` as
+         the answer. What A was: five licence rows and three invoice rows, stopping
+         cleanly, with the count in the heading instead of in a `See all N` over a fade. */
 
 /* ⚠️⚠️ `No banner` IS FIRST AND IS THE DEFAULT (2026-09-29, by request). It is the
    state every other page in the portal is in, and until now the bar could not express
@@ -810,31 +754,21 @@ if(dashEmptyV && !dashEmptyV.hidden){
           label:'Shape',
           get:bannerShape,
           set:function(v){ Store.set('bannerShape', v); renderHomeBanner(); PageStates.sync(); },
+          /* ⚠️ The `stacked only` guard went with the `Layout` axis (2026-10-01): there is
+             one layout now, and it is the one Shape describes. */
           options:function(){
             var n = homeBannerVisible().length;
-            var sep = homeBannerLayout() === 'separate';
             return [
-              { v:'auto', t:'Auto', note:sep ? 'stacked only' : (n ? n + ' live' : 'no banner'), disabled:sep || !n },
-              { v:'one',  t:'Alone — full', note:sep ? 'stacked only' : '', disabled:sep || !n },
-              { v:'many', t:'With others — count', note:sep ? 'stacked only' : (n > 1 ? 'and ' + (n-1) + ' more' : 'needs 2+'), disabled:sep || n < 2 }
+              { v:'auto', t:'Auto', note:n ? n + ' live' : 'no banner', disabled:!n },
+              { v:'one',  t:'Alone — full', note:'', disabled:!n },
+              { v:'many', t:'With others — count', note:n > 1 ? 'and ' + (n-1) + ' more' : 'needs 2+', disabled:n < 2 }
             ];
           }
         } },
 
-      /* ⚠️⚠️ THE BANNER'S FOUR SETTINGS ARE ONE GROUP NOW (2026-09-30). Two of them —
-         this and the tone — were in the ⚙ panel while the condition and its shape were
-         in this bar, so seeing a chosen condition drawn in a chosen layout meant walking
-         between two surfaces to set one banner. The tone is the one that did NOT come
-         here: it is read by the licence panel as well, so it stands in `Everywhere`. */
-      { id:'bannerLayout', group:'Banner', label:'Layout',
-        get:homeBannerLayout,
-        set:function(v){
-          Store.set('bannerLayout', v);
-          renderHomeBanner();
-          PageStates.sync();
-        },
-        options:[{ v:'stacked', t:'Stacked — one band' },
-                 { v:'separate', t:'Separate — a card each' }] }
+      /* ⚠️ `Layout` IS RETIRED (2026-10-01, by request) with `Stacked — one band` as the
+         answer. What `separate` was: one card per live condition, side by side with a
+         pager — see the note where its builders stood in components.js. */
     ]
   });
   PageStates.sync();

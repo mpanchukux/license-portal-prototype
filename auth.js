@@ -75,6 +75,15 @@ var Auth = (function(){
   document.body.insertAdjacentHTML('beforeend', MARKUP);
   var scr = $('#authModal'), body = $('#authBody');
   var mode = 'signup', lastFocus = null;
+  /* ⚠️⚠️ TWO ARRIVALS, ONE SURFACE (2026-10-01, by request). The modal over the landing
+     is unchanged; the second variant is a PAGE a link can land on with no landing behind
+     it — `signin.html`. What differs is only what a page is allowed to do that a modal is
+     not: it cannot be closed (there is nothing behind it to go back to), and it carries
+     the product's identity itself, because on the landing that identity is in the bar
+     above it. Everything else — the two screens, their fields, the swap between them, the
+     social buttons, the reveal eye — is the same code, which is the whole reason this is a
+     flag and not a second file. */
+  var standalone = false;
   /* the invitation this sign-up is redeeming, or null for an ordinary one */
   var invited = null;
 
@@ -104,9 +113,15 @@ var Auth = (function(){
       + '<input id="' + f.id + '" type="' + f.type + '" autocomplete="' + f.ac + '"'
       + (lock ? ' value="' + esc(invited.email) + '" readonly aria-readonly="true"' : '') + '>'
       + (lock ? '<svg class="ic authlock-ic" aria-hidden="true"><use href="assets/icons.svg#ti-lock"></use></svg>' : '')
+      /* ⚠️⚠️ `.eyeoff` SHIPS HIDDEN, AND IT DID NOT (found 2026-10-01). Both glyphs were
+         emitted bare, so every password field in this surface drew an eye AND a struck
+         eye side by side from the first paint — in the modal as well as on the page.
+         `.ic[hidden]{display:none}` is the rule that makes the attribute work on an
+         `<svg>`; the licence key's own reveal control has carried this note since the
+         trap was first hit there. */
       + (pw ? '<button class="btn btn--ghost btn--md btn--icon authpw-eye" data-auth-reveal aria-label="Show password">'
           + '<svg class="ic eye" aria-hidden="true"><use href="assets/icons.svg#ti-eye"></use></svg>'
-          + '<svg class="ic eyeoff" aria-hidden="true"><use href="assets/icons.svg#ti-eye-off"></use></svg>'
+          + '<svg class="ic eyeoff" aria-hidden="true" hidden><use href="assets/icons.svg#ti-eye-off"></use></svg>'
           + '</button>' : '')
       + '</div>';
   }
@@ -156,6 +171,15 @@ var Auth = (function(){
        behind the modal and in the browser tab — and at h2 weight it out-shouted the
        heading that says what the screen is actually for. */
     body.innerHTML = ''
+      /* ⚠️ THE LOCK-UP IS THE PAGE FORM'S ONLY ADDITION, and the note below says why the
+         modal has none: over the landing it would repeat the identity already in the bar
+         behind it. Arriving by link there IS no bar, so the card has to say whose it is.
+         `tb-logo` is the lock-up that carries `License Portal` inside the artwork — the
+         one symbol built for standing alone (see tools/build-logo.py). */
+      + (standalone
+          ? '<div class="auth-brand"><svg class="auth-brandmark" role="img" aria-label="ThingsBoard License Portal">'
+            + '<use href="assets/logo.svg#tb-logo"></use></svg></div>'
+          : '')
       /* ⚠️ What you just chose is IN the heading, not under it — clicking Select on a
          plan used to open a dialog that said nothing about the plan, the product or
          the price, and the participant stopped to check they had not clicked the wrong
@@ -234,7 +258,27 @@ var Auth = (function(){
     scr.hidden = false;
     $('#authClose').focus();
   }
+  /* ⚠️ THE PAGE FORM HAS NO WAY OUT, and that is not an omission: a ✕ on a surface with
+     nothing behind it would either do nothing or drop the visitor on a page they did not
+     ask for. The close control is hidden rather than removed so `render` and the key
+     handler keep one node to reason about, and `close()` refuses while it is up. */
+  function mountPage(which){
+    standalone = true;
+    scr.classList.add('authstandalone');
+    $('#authClose').hidden = true;
+    /* ⚠️⚠️ THE CARD MOVES INTO `#shellMain`, AND IT HAS TO. `auth.js` appends its markup
+       to `<body>` because a modal belongs above the page, not in it — which is right for
+       the overlay and wrong here: as a child of body the screen is a flex item of the
+       shell layout and gets STRETCHED by it (measured: a 1016px card holding 400px of
+       form). In the page form the card IS the page's content, so it goes where content
+       goes and is centred by the scroll box like anything else. */
+    var host = $('#shellMain');
+    if(host) host.appendChild(scr);
+    open(which);
+    var first = $('input', body); if(first) first.focus();
+  }
   function close(){
+    if(standalone) return;
     scr.hidden = true;
     /* a pending plan must not outlive the sign-up it was waiting for: leave it in
        the store and the NEXT sign-up, from anywhere, would open a wizard on a plan
@@ -257,8 +301,12 @@ var Auth = (function(){
       var inp = $('input', eye.closest('.field'));
       var on = inp.type === 'password';
       inp.type = on ? 'text' : 'password';
-      $('.eye', eye).hidden = on;
-      $('.eyeoff', eye).hidden = !on;
+      /* ⚠️ THE ATTRIBUTE, NOT THE PROPERTY: `el.hidden = true` is a no-op on an SVG
+         element, so this toggle has been silently doing nothing. Same correction, and
+         the same comment, as `setKeyRevealed` in license-details.js. */
+      var gEye = $('.eye', eye), gOff = $('.eyeoff', eye);
+      if(on){ gEye.setAttribute('hidden',''); gOff.removeAttribute('hidden'); }
+      else  { gOff.setAttribute('hidden',''); gEye.removeAttribute('hidden'); }
       eye.setAttribute('aria-label', on ? 'Hide password' : 'Show password');
     }
   });
@@ -272,8 +320,17 @@ var Auth = (function(){
      document — the same reason every other chrome action is. */
   document.addEventListener('click', function(e){
     var b = e.target.closest('.pubacts [data-auth]');
-    if(b) open(b.getAttribute('data-auth'));
+    if(!b) return;
+    var which = b.getAttribute('data-auth');
+    /* ⚠️ THE AXIS DECIDES THE ARRIVAL, NOT THE SURFACE (2026-10-01). `page` navigates to
+       the same two screens on their own page; the mode travels in the URL so the button
+       pressed is the screen that opens. Nothing about the surface changes. */
+    if(typeof authArrival === 'function' && authArrival() === 'page'){
+      location.href = 'signin.html' + (which === 'signup' ? '?mode=signup' : '');
+      return;
+    }
+    open(which);
   });
 
-  return { open: open, close: close };
+  return { open: open, close: close, mountPage: mountPage };
 })();

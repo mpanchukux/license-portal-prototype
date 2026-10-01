@@ -88,12 +88,9 @@ var WIZARD_HTML = ''
 /* one modal per page — Manage add-ons is a mode of this same wizard, not a
    second surface, so there is nothing else to inject */
 document.body.insertAdjacentHTML('beforeend', WIZARD_HTML);
-/* The frame this shell wears (A dialog / B inset / C full screen) is a stored setting,
-   so it has to be on the node from the first paint rather than from the first open —
-   otherwise the styleguide-style flash of A before B is the first thing a reviewer
-   comparing the three sees. `applyWizardPresent` lives in shared.js, which loads
-   before this file. */
-applyWizardPresent();
+/* ⚠️ `applyWizardPresent()` IS GONE (2026-10-01) with the `Frame` axis. The shell wore a
+   stored attribute so a reviewer would not see one frame flash before another; there is
+   one frame now, and it is in the stylesheet under `#nlModal`. */
 
 /* ---------- Manage add-ons ---------- */
 /* Manage add-ons runs the purchase wizard in add-ons mode: same shell, header,
@@ -695,19 +692,12 @@ var NL = (function(){
    optically centred at every step, present or not — and `.nl-stepbar` is centred by
    `left:50%` plus a translate, so ANY in-flow sibling would widen the centred box and
    slide the rail right by half its own width on the step-1 → step-2 move. Absolutely
-   positioned at `right:100%` of `.nl-steps`, it hangs off the rail's left edge and
-   contributes nothing to its width.
-   ⚠️ INSIDE `.nl-steps`, NOT inside `.nl-stepbar`: the bar carries 40px+ of padding in
-   presentations C and D, so `right:100%` there would have parked it outside the padding
-   box, a gutter away from the rail rather than beside it.
-   ⚠️ `text`, not `secondary`: it must read quieter than `2 Capacity` — a service
-   control, not a peer of the steps. `md` because the ✕ in this same bar is `md`, so the
-   header band already carries that height. */
-    var barBack = (nlBackPlace() === 'a' && stepIdx() >= 1)
-      ? button({ variant:'text', size:'md', icon:'chevron-left', label:'Back',
-                 cls:'nl-barback', attrs:'data-nlback' })
-      : '';
-    $('#nlSteps').innerHTML = '<div class="nl-steps">' + barBack + out + '</div>';
+   ⚠️⚠️ THE STEP-BAR BACK IS GONE (2026-10-01, by request) with the `Back` axis it was
+   the `a` value of — see shared.js. What it was: a `text` button hung off the rail's
+   left edge at `right:100%` of `.nl-steps`, inside the rail rather than the bar so the
+   padding of presentations C and D could not push it a gutter away. The rail itself is
+   untouched: a completed step is still a button that jumps back. */
+    $('#nlSteps').innerHTML = '<div class="nl-steps">' + out + '</div>';
     /* ⚠️⚠️ THE STEPPER PUBLISHES ITS OWN WIDTH, and step 1's product switcher is sized
        from it (`--nl-stepw`, see styles.css). The brief asked for "the switcher as wide
        as the stepper", and the stepper is CONTENT-sized: a five-step purchase is wider
@@ -802,7 +792,11 @@ var NL = (function(){
      so on TBMQ the step looked like a different step. Both symbols are new to the sprite
      and named in the pass that added them (58 icons now). */
   var CAP_IC = {
-    'Devices': 'devices',
+    /* ⚠️ `cpu`, NOT `devices` (2026-10-01, by request). `devices` is a monitor, a laptop
+       and a phone — the picture of a DEPLOYMENT, which is what the licence row and the
+       Instances page use it for. This step is counting the things CONNECTED to one, and
+       a chip is what those are. Both stay in the sprite; neither replaces the other. */
+    'Devices': 'cpu',
     'Sessions': 'plug-connected',
     'Messages / sec': 'message',
     'Production instances': 'server-2',
@@ -847,16 +841,11 @@ var NL = (function(){
        step should sit on the thing the step is about — and moved back out that evening,
        to a plain text row above the grid, because inside the card it pushed only the
        left column down and left the Calculation summary starting a row higher.
-       The in-card form is kept as the `card` option; this branch is what draws it.
-       ⚠️ THE VALUE WAS RENAMED `current` -> `card`. It stopped being current, and a
-       setting whose value says "current" while a different option is the default is a
-       trap for the next reader. Unknown stored values fall through to the default, so
-       anyone carrying the old string simply gets the new default.
+       ⚠️⚠️ AND THE IN-CARD FORM IS GONE (2026-10-01, by request) with the axis that kept
+       it as the `card` option — `backAboveHTML` is now the only thing that draws Back.
        ⚠️ `backRowHTML()` still answers "is there a step behind this one" — Manage add-ons
-       opens on Capacity, so this card is the FIRST screen there and returns no Back.
-       One reader of `nlBackPlace()` per host, so exactly one of the three ever draws it. */
+       opens on Capacity, so this card is the FIRST screen there and returns no Back. */
     return '<div class="fs-panel nl-plansum">'
-      + (nlBackPlace() === 'card' ? backRowHTML() : '')
       /* ⚠️ THE MARK AND THE TEXT ARE A ROW INSIDE THE CARD NOW, not the card itself:
          Back is a third child and a flex row would have stood it beside them. */
       + '<div class="nl-plansum-main">'
@@ -1095,7 +1084,6 @@ var NL = (function(){
     var prodCell = '';
     var soloProdCell = '';
     var per = isPerp() ? ' one-time' : ' / mo';
-    var variantA = custVariant() === 'a';
     var cells = '';
     spec.ent.forEach(function(e){
       var lbl = e[0], val = e[1];
@@ -1129,9 +1117,10 @@ var NL = (function(){
         cells += INSTANCES_SLOT;
       } else if(lbl === 'AI credits'){
         cells += stepCell('ai', 'AI credits', 'Monthly, in blocks of 1M. Your plan sets the minimum.', '+' + money(u.ai) + per + ' per 1M AI credits', cust.ai, i.ai, null, CAP_IC['AI credits']);
-      } else if(!variantA){
-        // variant A shows these in the plan card instead
-        /* ⚠️ No description prefix — see `lockedCell`, which carries the one sentence a
+      } else {
+        /* ⚠️ ALWAYS A LOCKED ROW NOW (2026-10-01): variant A put these in the plan card
+           instead and variant A is retired — `Customize` kept `B — locked inputs`.
+           ⚠️ No description prefix — see `lockedCell`, which carries the one sentence a
            locked row has. */
         cells += lockedCell(lbl, val, '');
       }
@@ -1232,9 +1221,11 @@ var NL = (function(){
      has to be kept in step with a control's size, and it would be wrong on every step
      where Back is absent (Manage add-ons opens on Capacity and has no step behind it).
      A sibling row costs nothing and is right by construction.
-     ⚠️ `backRowHTML()` still answers "is there a step behind this one", so the three
-     call sites do not each have to know either the setting or the step. */
-  function backAboveHTML(){ return nlBackPlace() === 'b' ? backRowHTML() : ''; }
+     ⚠️ `backRowHTML()` still answers "is there a step behind this one", so the call site
+     does not have to know the step.
+     ⚠️ IT NO LONGER ASKS WHERE BACK GOES (2026-10-01): the other two placements were
+     removed with their axis, so this is the one host that draws it. */
+  function backAboveHTML(){ return backRowHTML(); }
   function customizeShell(leftHTML, cta){
     return backAboveHTML()
       + '<div class="fs-grid">'
@@ -1284,18 +1275,16 @@ var NL = (function(){
   function renderCapacity(){
     seedCust();
     var t = tier(), spec = TIER_SPECS[t] || { ent:[] };
-    var variantA = custVariant() === 'a';
     var cells = capacityCellsHTML();
     /* when a tier has no toggles at all there is no add-ons step, so the stated
        feature row has nowhere else to go and stays here */
     var tail = hasAddonStep() ? '' : featureCellsHTML();
-    var left = variantA
-      ? planSummaryHTML(t, spec)
-        + '<div class="am-sec fs-panel"><div class="am-capgrid">' + cells + '</div>'
-        + (tail ? '<div class="am-capgrid am-featgrid">' + tail + '</div>' : '')
-        + '</div>'
-      : planSummaryHTML(t, spec)
-        + '<div class="am-sec nl-cardstack">' + cells + tail + '</div>';
+    /* ⚠️ ONE SHAPE (2026-10-01): `Customize` retired with `B — locked inputs` as the
+       answer, so the capacity rows are a card stack. What A was: the same rows in a
+       `.am-capgrid` inside an `.fs-panel`, with the stated features in a second grid
+       below — see `.am-capgrid` in the stylesheet, which the Add-ons step still uses. */
+    var left = planSummaryHTML(t, spec)
+      + '<div class="am-sec nl-cardstack">' + cells + tail + '</div>';
     $('#nlStepCap').innerHTML = customizeShell(left, hasAddonStep() ? 'Continue' : 'Review order');
   }
   /* ---- CUSTOMIZE, STEP TWO OF TWO: add-ons -------------------------------------
@@ -1306,7 +1295,6 @@ var NL = (function(){
   function renderAddons(){
     seedCust();
     var t = tier(), spec = TIER_SPECS[t] || { ent:[] };
-    var variantA = custVariant() === 'a';
     var cells = addonCellsHTML() + featureCellsHTML();
 /* ⚠️⚠️ THE PLAN BLOCK IS BACK ON THIS STEP (2026-09-29, by request). It was dropped
    here deliberately — "NO PLAN CARD HERE, it is on the step before this one" — and the
@@ -1317,9 +1305,7 @@ var NL = (function(){
    ⚠️ Same builder, same card, same position as every other step — so this is one
    omission corrected, not a new element. */
     var left = planSummaryHTML(t, spec)
-      + (variantA
-        ? '<div class="am-sec fs-panel"><div class="am-capgrid">' + cells + '</div></div>'
-        : '<div class="am-sec nl-cardstack">' + cells + '</div>');
+      + '<div class="am-sec nl-cardstack">' + cells + '</div>';
     $('#nlStepAdd').innerHTML = customizeShell(left, 'Review order');
   }
 
@@ -2022,8 +2008,11 @@ var NL = (function(){
        that `closest` walks up to the screen and matches for ANY click inside the flow,
        so `Continue` on Capacity went BACK to step 1. Measured, not spotted: the step
        attribute said `pick` after pressing a button labelled Continue. A state attribute
-       must never reuse the name of a control attribute a delegate reads. */
-    if(scr) scr.setAttribute('data-nlbackplace', nlBackPlace());
+       must never reuse the name of a control attribute a delegate reads.
+       ⚠️⚠️ AND IT IS NO LONGER WRITTEN (2026-10-01): the attribute existed so the phone
+       rules for variant A could find it, and variant A went with the axis. The warning
+       stays because the collision it describes is about NAMING, not about this line —
+       the next state attribute someone adds here has the same trap waiting. */
     /* ⚠️ The Back control is built by `backRowHTML()` inside each step's own markup —
        see there for why it is not injected here any more. */
     if(body) body.scrollTop = 0;
@@ -2333,10 +2322,6 @@ var NL = (function(){
       // a preselected plan (picked on the landing page) skips the picker it already answered
       gotoStep(opts.startStep && st.plan ? (steps()[0] === 'pick' ? steps()[1] : steps()[0]) : 'pick');
     }
-    /* cheap, and it closes the one gap the inject-time call leaves: the setting can be
-       changed from the panel on a page that never opened a wizard, and the attribute
-       is the only thing carrying it */
-    applyWizardPresent();
     scr.hidden = false;
     syncHeaderDock();
     /* now that it has a layout, the stepper can be measured — see syncStepWidth */
@@ -2344,16 +2329,15 @@ var NL = (function(){
     $('#nlClose').focus();
   }
 
-  /* ⚠️⚠️ THE HEADER DOCKS ON SCROLL, AND ONLY IN PRESENTATION D (2026-09-30, by
-     request). D's bands are transparent so the gradient runs from the top edge — which
+  /* ⚠️⚠️ THE HEADER DOCKS ON SCROLL (2026-09-30, by request; the one frame since
+     2026-10-01). The bands are transparent so the gradient runs from the top edge — which
      means that at rest there is nothing for a hairline to separate, and under scroll
      there is: content passes beneath the band. This is the portal top bar's own
      behaviour, one mechanism copied deliberately (`wireMeshHeader` in shared.js, and
      `body[data-mesh] .dtopbar.docked` in the stylesheet), so the two headers in this
      product do not answer the same question two ways.
-     ⚠️ `.docked` goes on `#nlModal`, not on the header, because that is the node that
-     already carries `data-present` — the CSS then reads the two facts off one element
-     rather than pairing a state on the child with a mode on the parent.
+     ⚠️ `.docked` goes on `#nlModal`, not on the header: the state belongs to the surface
+     that scrolls, and the CSS reads it off the same node it scopes the frame to.
      ⚠️ THE THRESHOLD IS 4px, the top bar's number, not zero: a hairline that flickers on
      the first pixel of an overscroll bounce is worse than one that arrives a moment late.
      ⚠️ ONE LISTENER FOR THE LIFE OF THE PAGE. `#nlBody` is injected once with the rest of
@@ -2587,7 +2571,6 @@ var NL = (function(){
      way out of this modal. */
   scr.addEventListener('click', function(e){
     if(e.target !== scr) return;              // the backdrop itself, not the box on it
-    if(wizardPresent() === 'c') return;       // C has no backdrop to click
     attemptClose();
   });
 

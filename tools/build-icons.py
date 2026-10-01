@@ -87,6 +87,13 @@ ICONS = [
     # `server-2` already covers the merged Instances block; it is the nav's Instances
     # glyph and means the same thing here.
     'devices', 'sparkles', 'affiliate', 'chart-line', 'cloud-off', 'palette',
+    # ⚠️ ADDED 2026-10-01 for the Capacity step's `Devices` block (by request: "give the
+    #    Devices block a different icon — a computer chip"). `cpu` is Tabler's own name
+    #    for it. `devices` — a monitor, a laptop and a phone — stays in the set: it is
+    #    what the licence ROW and the Instances page draw for a deployment, which is a
+    #    machine you run, while the Capacity step is counting the THINGS connected to it.
+    #    Two subjects, two icons; neither replaces the other.
+    'cpu',
     # products and brands
     'topology-star', 'rss', 'credit-card',
     'brand-google', 'brand-github', 'brand-mastercard',

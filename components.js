@@ -348,6 +348,284 @@ function wireFilterDrop(ctlSel, attr, set){
     menu.hidden = true; btn.setAttribute('aria-expanded', 'false');
   });
 }
+/* ---------- the phone's filter sheet (2026-10-01, by request) ---------------------
+   ⚠️⚠️ A BOTTOM SHEET, NOT THE INLINE MENU MADE BIGGER. The brief's reason is the one
+   that matters: `.dropmenu` is a panel hung off a 40px trigger, and at 375 it is a
+   cramped list of 32px rows under the reader's own thumb. A sheet owns the bottom of the
+   screen, so every row can be a real target and the list can scroll without taking the
+   page with it.
+   ⚠️⚠️ IT APPLIES EXPLICITLY, AND THAT IS THE WHOLE DIFFERENCE FROM THE MENU. The menu
+   sets the filter on the press and closes; this holds a PENDING value and commits it on
+   `Show N licenses`, with N counted against the pending pick plus every other filter
+   still set. So the reader can see what an answer would leave them before they take it —
+   and the list behind is not allowed to repaint while they look, because a list changing
+   under a sheet is the thing that makes a reader lose their place.
+   ⚠️ A ZERO OPTION STAYS AND IS DISABLED, by request. A filter that silently drops its
+   own answers teaches the reader that the menu is different every time; one that shows
+   `Canceled 0`, greyed, answers the question they opened it to ask.
+   ⚠️ SINGLE-SELECT, like the menu it stands in for — `pending` is one value, so picking a
+   second answer replaces the first. The tick is last in the row for the same reason it is
+   last in `filterMenuHTML`: a leading tick is the shape of a multi-select.
+   ⚠️ ONE SHEET NODE, built on first use and reused. Two sheets open at once is not a
+   state this has, and a node per control would be three dead panels in the DOM. */
+var FilterSheet = (function(){
+  var el = null, state = null;
+  function build(){
+    el = document.createElement('div');
+    el.className = 'fsheet';
+    el.id = 'filterSheet';
+    el.hidden = true;
+    el.innerHTML = '<div class="fsheet-scrim" data-sheetclose></div>'
+      + '<div class="fsheet-panel" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">'
+      +   '<div class="fsheet-head">'
+      +     '<h2 class="fsheet-title" id="sheetTitle"></h2>'
+      +     button({ variant:'ghost', size:'md', icon:'x', ariaLabel:'Close',
+                     cls:'fsheet-x', attrs:'data-sheetclose' })
+      +   '</div>'
+      +   '<div class="fsheet-list" id="sheetList" role="group"></div>'
+      +   '<div class="fsheet-foot">'
+      /* ⚠️ `lg` (48px) because it is the sheet's one action and sits under the thumb —
+         the same size the phone gives every full-width primary in this product. Built
+         through `button()` like everything else: a hand-written class list here is
+         exactly what `check-icons.py`'s button guard exists to refuse. */
+      +     button({ variant:'primary', size:'lg', label:'Show', cls:'fsheet-apply',
+                     attrs:'id="sheetApply"' })
+      +   '</div>'
+      + '</div>';
+    document.body.appendChild(el);
+    el.addEventListener('click', function(e){
+      if(e.target.closest('[data-sheetclose]')) return close();
+      var row = e.target.closest('[data-sheetopt]');
+      if(row && !row.disabled){
+        var v = row.getAttribute('data-sheetopt') || null;
+        /* ⚠️ THE ARITY DECIDES WHAT A PRESS MEANS, and it is the only branch in here:
+           single-select REPLACES the pending answer, multi-select TOGGLES one of a set,
+           and `All` in a multi is the empty set rather than a value of its own — the
+           same reading the Activity menu already has (see `actTypes`). */
+        if(!state.multi) state.pending = v;
+        else if(!v) state.pending = [];
+        else {
+          var at = state.pending.indexOf(v);
+          if(at >= 0) state.pending.splice(at, 1); else state.pending.push(v);
+        }
+        paint();
+      }
+      if(e.target.closest('#sheetApply')){
+        var v = state.pending;
+        /* ⚠️ READ BEFORE CLOSING. `close()` empties `state` and puts the panel away, and
+           the revealed block's inputs go with it — so anything typed into it has to be
+           taken off the DOM while the DOM still has it. */
+        var extra = state.extra && state.extra.read ? state.extra.read(el) : null;
+        close();
+        state0.onApply(v, extra);
+      }
+    });
+    /* the multi rows are real checkboxes, so their event is `change` — a click handler
+       would fire twice (label, then the input it forwards to) and untick what was ticked */
+    el.addEventListener('change', function(e){
+      var box = e.target.closest('input[data-sheetopt]');
+      if(!box || !state || !state.multi) return;
+      var v = box.getAttribute('data-sheetopt'), at = state.pending.indexOf(v);
+      if(at >= 0) state.pending.splice(at, 1); else state.pending.push(v);
+      paint();
+    });
+    document.addEventListener('keydown', function(e){
+      if(e.key === 'Escape' && el && !el.hidden) close();
+    });
+  }
+  /* ⚠️ `state0` is read by the apply branch AFTER `close()` has cleared `state` — the
+     commit has to outlive the sheet, because closing is what returns focus and repaints. */
+  var state0 = null;
+  function rowHTML(v, text, count){
+    var on = state.multi
+      ? (v ? state.pending.indexOf(v) >= 0 : state.pending.length === 0)
+      : (state.pending || null) === (v || null);
+    /* ⚠️⚠️ THE ARITY HAS A SHAPE, and it is the product's own (settled 2026-10-01 in the
+       dropdown menus): single-select ends in a TICK, multi-select LEADS with a real
+       checkbox in a `<label>`. The sheet drew a trailing tick for both for one pass —
+       which is the exact fault that pass was opened to remove, moved to a bigger surface.
+       ⚠️ A `<label>` WRAPPING AN `<input>`, not a button with an input inside it: an
+       interactive control inside a `<button>` is invalid, and the label is what makes the
+       whole 52px row a hit target for the box. State, the space key and the role come
+       from the platform.
+       ⚠️ `All` STAYS A BUTTON even in a multi sheet: it is not one of the set, it is the
+       empty set — a checkbox for "none of the above are ticked" is a control that cannot
+       be unticked. */
+    if(state.multi && v){
+      return '<label class="dropcheck fsheet-opt fsheet-opt--multi' + (on ? ' is-on' : '') + '"'
+        + (count === 0 ? ' data-off="1"' : '') + '>'
+        + '<input type="checkbox" class="dropbox" data-sheetopt="' + esc(v) + '"'
+        +   (on ? ' checked' : '') + (count === 0 ? ' disabled' : '') + '>'
+        + '<span class="fsheet-opt-t">' + esc(text) + '</span>'
+        + (count == null ? '' : '<span class="fsheet-opt-n">' + count + '</span>')
+        + '</label>';
+    }
+    /* ⚠️ `dropcheck` IS THE BASE CLASS, and reusing it is the decision rather than a
+       shortcut past the button guard: this row IS the dropdown's row at phone size — the
+       same single-select answer, the same count column, the same trailing tick — so it is
+       the same component wearing a second arrangement, not a new kind of control. */
+    return '<button type="button" class="dropcheck fsheet-opt' + (on ? ' is-on' : '') + '"'
+      + ' data-sheetopt="' + esc(v || '') + '" role="checkbox" aria-checked="' + (on ? 'true' : 'false') + '"'
+      /* ⚠️ Disabled, NOT removed — see the note above. `aria-disabled` as well as the
+         property, so the row is still announced and still carries its zero. */
+      + (count === 0 && v ? ' disabled aria-disabled="true"' : '') + '>'
+      + '<span class="fsheet-opt-t">' + esc(text) + '</span>'
+      /* ⚠️ A COUNT IS OPTIONAL, and an absent one draws nothing rather than a 0 — the
+         period rows on Activity can state how many events they would leave, the custom
+         range cannot state anything until a range exists. */
+      + (count == null ? '' : '<span class="fsheet-opt-n">' + count + '</span>')
+      + '<svg class="ic cc-check" aria-hidden="true"><use href="assets/icons.svg#ti-check"></use></svg>'
+      + '</button>';
+  }
+  function paint(){
+    var s = state;
+    $('#sheetList', el).innerHTML = rowHTML('', s.allLabel, s.total)
+      + s.opts.map(function(o){
+          return rowHTML(o.v, o.t, s.countOf ? s.countOf(o.v) : null);
+        }).join('')
+      /* ⚠️ THE REVEALED BLOCK IS PART OF THE LIST, not a second panel: Activity's period
+         has a `Custom range` answer that needs two date fields, and they belong under
+         the row that asked for them. It is rendered only while that row is the pending
+         answer, so the sheet is a plain list until someone chooses otherwise. */
+      + (s.extra && s.extra.when === s.pending ? s.extra.html : '');
+    var n = s.countWith(s.pending);
+    /* ⚠️ THE NOUN AGREES WITH THE NUMBER, and `0` takes the plural like English does. */
+    $('#sheetApply', el).textContent = 'Show ' + n + ' ' + (n === 1 ? s.noun : s.nounPlural);
+  }
+  function close(){
+    if(!el || el.hidden) return;
+    el.hidden = true;
+    document.body.classList.remove('fsheet-open');
+    if(state && state.opener) state.opener.focus();
+    state = null;
+  }
+  return {
+    open: function(spec){
+      if(!el) build();
+      state = state0 = {
+        multi: !!spec.multi,
+        /* a multi sheet's pending is a COPY: the list behind must not change while the
+           sheet is open, and an array handed in by reference would be edited in place */
+        pending: spec.multi ? (spec.current || []).slice() : (spec.current || null),
+        extra: spec.extra || null,
+        opts: spec.opts, allLabel: spec.allLabel, total: spec.total,
+        countOf: spec.countOf, countWith: spec.countWith,
+        noun: spec.noun || 'result', nounPlural: spec.nounPlural || (spec.noun || 'result') + 's',
+        onApply: spec.onApply, opener: spec.opener || null
+      };
+      $('#sheetTitle', el).textContent = spec.title;
+      paint();
+      el.hidden = false;
+      /* the sheet owns the screen while it is up — the page behind must not scroll
+         under it, which on a phone is what makes a sheet feel like a sheet */
+      document.body.classList.add('fsheet-open');
+      var first = $('.fsheet-opt', el); if(first) first.focus();
+    },
+    close: close,
+    isOpen: function(){ return !!el && !el.hidden; }
+  };
+})();
+
+/* ---------- an empty state that names the constraint (2026-10-01) ----------------
+   ⚠️⚠️ "NOTHING FOUND" IS NOT ENOUGH, and the reason is that the reader cannot see which
+   of the two things they did is responsible. Three sentences and three exits, chosen by
+   the two facts every list page already holds: is there a query, and is anything applied.
+   The block is `.noresults` either way — this is the SAME thing these pages have always
+   drawn, with its sentence and its buttons picked rather than fixed.
+   ⚠️ `Clear all` MEANS BOTH HERE, and only here. In the applied-filter row the row IS the
+   filters, so its `Clear all` ends that row; this one is offered only when a query AND a
+   filter are both narrowing, which is exactly when undoing one of them can still leave
+   nothing — and a reader who presses `Clear search` to no effect has learnt only that the
+   page is not listening.
+   ⚠️ ONE BUILDER, FOUR PAGES. It was written on Licenses and wanted by three more the
+   same day; the only thing that differs is the noun. */
+function constraintEmptyHTML(q, hasFilters, nounPlural){
+  var hasQ = !!q;
+  var what = nounPlural || 'results';
+  var t = hasQ && hasFilters
+        ? 'No ' + what + ' match &ldquo;' + esc(q) + '&rdquo; with these filters'
+        : hasQ ? 'No matches for &ldquo;' + esc(q) + '&rdquo;'
+        : 'No ' + what + ' match these filters';
+  var acts = '';
+  if(hasQ) acts += '<button type="button" class="link nr-clear" data-clearsearch>Clear search</button>';
+  if(hasFilters) acts += '<button type="button" class="link nr-clear" data-clearfilters>Clear filters</button>';
+  if(hasQ && hasFilters) acts += '<button type="button" class="link nr-clear" data-clearall>Clear all</button>';
+  return '<div class="noresults"><div class="nr-t">' + t + '</div>'
+    + '<div class="nr-acts">' + acts + '</div></div>';
+}
+
+/* ---------- the phone's applied-filter row (2026-10-01) --------------------------
+   ⚠️ ONE BUILDER FOR FOUR PAGES. Each page knows WHAT it has applied and how to take one
+   off; none of them needs to know what the row looks like or when it is allowed to exist.
+   `getList` returns `[{k, t, clear}]` — a key, the words on the chip, and the undo — and
+   it is read on every sync rather than cached, so a chip cannot claim a filter the page
+   has already dropped.
+   ⚠️ THE ROW GOES WHEN IT IS EMPTY, not just its contents: a 40px band of nothing above
+   a list is the cost this row would otherwise charge on every screen.
+   ⚠️ PHONE ONLY. On the desktop every control states its own answer in its own label, and
+   a second place saying the same thing is a second place to undo it. */
+function syncAppliedRow(hostSel, getList){
+  var host = $(hostSel); if(!host) return;
+  var list = getList();
+  host.hidden = !window.matchMedia('(max-width:600px)').matches || !list.length;
+  if(host.hidden){ host.innerHTML = ''; return; }
+  host.innerHTML = list.map(function(f){
+    return '<span class="chip label applied-chip">'
+      + '<span class="applied-chip-t">' + esc(f.t) + '</span>'
+      + '<button class="chip-x" type="button" data-unset="' + esc(f.k) + '"'
+      +   ' aria-label="Remove filter ' + esc(f.t) + '">' + icon('x') + '</button>'
+      + '</span>';
+  }).join('')
+  /* ⚠️ `Clear all` HERE MEANS THE FILTERS, not the query: it ends the row it belongs to,
+     and the query has its own clear inside the field. The empty state's `Clear all` is a
+     different control with a wider scope, and the two are told apart by what is beside
+     them. */
+  + '<button type="button" class="link applied-clear" data-unsetall>Clear all</button>';
+}
+/* the row is rebuilt on every render, so nothing may be bound to its children */
+function wireAppliedRow(hostSel, getList, apply){
+  var host = $(hostSel); if(!host || host.__applied) return;
+  host.__applied = true;
+  host.addEventListener('click', function(e){
+    var one = e.target.closest('[data-unset]');
+    if(one){
+      var k = one.getAttribute('data-unset');
+      getList().forEach(function(f){ if(f.k === k) f.clear(); });
+      apply(); return;
+    }
+    if(e.target.closest('[data-unsetall]')){
+      getList().forEach(function(f){ f.clear(); });
+      apply();
+    }
+  });
+}
+
+/* ⚠️⚠️ ONE WIRING FOR EVERY DROPDOWN THAT GETS A SHEET (2026-10-01). It was written
+   inline on the Licenses page and then wanted by three more, which is the point at which
+   a trick becomes a component.
+   ⚠️ CAPTURE PHASE, and that is the whole trick: `wireFilterDrop` / `wirePeriod` have
+   already bound a click on this same trigger to open the inline menu, and they cannot be
+   unbound. Catching the press on the way DOWN lets the phone take it and stop it before
+   the menu handler runs; above 600 this listener declines and the desktop menu opens
+   exactly as it always has. One control, two presentations, no second wiring to keep in
+   step — and no page has to know that `useCapture` is why it works.
+   ⚠️ `spec` is passed through to `FilterSheet.open` untouched apart from the pieces that
+   are the same on every page (the opener, and the phone test). */
+function wireSheetTrigger(ctlSel, spec){
+  var ctl = $(ctlSel); if(!ctl || ctl.__sheet) return;
+  ctl.__sheet = true;
+  var btn = $('.perbtn', ctl); if(!btn) return;
+  btn.addEventListener('click', function(e){
+    if(!window.matchMedia('(max-width:600px)').matches) return;
+    e.preventDefault();
+    e.stopPropagation();
+    if(typeof closeAllMenus === 'function') closeAllMenus();
+    var s = spec();
+    s.opener = btn;
+    FilterSheet.open(s);
+  }, true);
+}
+
 /* ---------- what statuses the invoices actually have ----------------------------
    ⚠️⚠️ DERIVED FROM THE DATA, NOT A LIST WRITTEN HERE. `invStatusMark` already refuses
    to keep a list of known strings — its test is "did it go through", so that anything
@@ -522,11 +800,18 @@ function invStatusMark(v){
    row of a different shape and a different column order. The row decides what it LOOKS
    like; it does not get to decide what an invoice can DO — two hand-written pairs is how
    one surface quietly ends up with an action the other lost. */
-function invActionsHTML(){
-  return button({ variant:'secondary', size:'md', icon:'download', cls:'tip ra-act',
+/* ⚠️ `ghost` IS A CALLER'S CHOICE, NOT A SURFACE (2026-10-01, by request: the Home
+   invoice card's actions give up their fill). The `surface` axis is a class on the
+   CONTAINER because "what am I standing on" is a fact about the place; which VARIANT a
+   button is is a decision the call site makes, so it travels as an argument. The invoice
+   TABLE keeps its secondary: there the two actions sit in a cell at the end of a row of
+   data and the fill is what finds them; on a card they are the only controls there. */
+function invActionsHTML(opts){
+  var variant = (opts && opts.ghost) ? 'ghost' : 'secondary';
+  return button({ variant:variant, size:'md', icon:'download', cls:'tip ra-act',
                   ariaLabel:'Download PDF',
                   attrs:'data-dlinv data-tip="Download PDF"' })
-    + button({ variant:'secondary', size:'md', icon:'external-link', cls:'tip ra-act',
+    + button({ variant:variant, size:'md', icon:'external-link', cls:'tip ra-act',
                ariaLabel:'View invoice (opens in a new tab)', href:'#',
                attrs:'data-viewinv target="_blank" rel="noopener" data-tip="View invoice"' });
 }
@@ -599,6 +884,93 @@ function userRow(u){
   return '<tr class="user-row"><td>'+u.email+'</td><td>'+u.name+'</td><td>'+fmtDate(u.created)+'</td>'
     + '<td class="cellact"><span class="rowactions">' + loginBtn + delBtn + '</span></td></tr>';
 }
+/* ---------- the licence CARD — the phone's answer, and Home's -------------------
+   ⚠️⚠️ ONE BUILDER, TWO SURFACES (moved here 2026-10-01). Home's card layout draws
+   three of these; the Licenses page draws the whole list out of them at phone width,
+   where a five-column table has nowhere to go. They are the same object on purpose —
+   a licence in a list must not be two different things depending on which page you
+   reached it from, which is the fault the phone's re-poured table row already was. */
+/* ⚠️ THE SAME RULE AS THE TABLE ROW: a grant carries no overflow menu, because it cannot
+   be changed, cancelled or topped up. `actionsCell` decides that for layout A; repeating
+   the decision rather than the markup is the point — the card splits the row's two
+   actions across two zones (the kebab in the status row, copy in the key row), so there
+   is no cell to reuse, only a rule. */
+function lcardMenuHTML(p){
+  if(p && p.grant) return '';
+  return '<div class="lic-actions"><div class="menu">'
+    + button({ variant:'menu', size:'md', icon:'dots-vertical', ariaLabel:'More actions',
+               attrs:'aria-haspopup="true" aria-expanded="false"' })
+    /* ⚠️ `noLabelEdit`, exactly as layout A's block passes it: renaming a licence belongs
+       where the licence is the subject. The card's own label zone is a different thing —
+       it NAMES an unnamed licence, which is what the brief asks the zone to offer. */
+    + '<div class="pop" role="menu" hidden>' + menuItems(p, { noLabelEdit:true }) + '</div>'
+    + '</div></div>';
+}
+/* Product, with status and term under its name, then the label zone under a divider.
+   ⚠️⚠️ THE KEY IS GONE FROM THE CARD, AND THE STATUS MOVED UNDER THE NAME (2026-09-30,
+   by request). Two changes, one rearrangement: the card was `status · term` on its own
+   top line, then the product, then the key on an inset field, then the label. What it
+   says now is what the card is ABOUT first — the product and plan — with its state
+   directly under the name it qualifies, which is the order the table's own product cell
+   already reads in. The masked key was the one fact on the card nobody can act on from a
+   preview: it is twelve dots and four characters, it cannot be read, and the copy button
+   beside it duplicated the row action the panel behind the card carries anyway.
+   ⚠️ `.lcard-top` WENT WITH THE STATUS. The kebab was sharing that row and is now the
+   last child of the product row; there is no line left for a wrapper to hold.
+   ⚠️ WHAT THIS COSTS, and it is measured rather than assumed: the divider's y no longer
+   comes from three fixed rows. It comes from one row whose height is `--btnH` or three
+   text lines, whichever is taller — still independent of the DATA, which is the property
+   that keeps a row of cards level. Verified across five licences, one of them menuless.
+   ⚠️ EVERY PART IS STILL THE COMPONENT LAYOUT A USES — `statusMark` and `stateText` (so
+   `Blocked · Over instance limit` reads the same here as in the table), `licenseMark` for
+   the square, and the details surface's own `+ Add label` chip. What the card owns is the
+   arrangement.
+   ⚠️ `data-licid` IS THE CONTRACT with `wireLicenseRows` — the element may be anything,
+   as long as it carries the id (see `opts.rowSel` there). */
+function licCardHTML(p){
+  var label = (p.label || '').trim();
+  var alive = p.status === 'canceled' ? 'Canceled' : 'Active';
+  return '<div class="lcard' + (p.status === 'canceled' ? ' off' : '') + '"'
+    + ' data-licid="' + esc(p.id || '') + '"'
+    + ' data-goto="' + esc(p.goto || '') + '"'
+    + ' data-product="' + esc(p.product || '') + '"'
+    + ' tabindex="0" aria-label="' + esc((p.product ? p.product + ' ' : '') + p.name
+        + ', status: ' + alive + '. Open details') + '">'
+    + '<div class="lcard-prod">'
+    +   '<span class="lp-ic" aria-hidden="true">' + licenseMark(p) + '</span>'
+    +   '<div class="lp-txt">'
+    +     '<div class="lcard-kind">' + esc(p.type || '') + '</div>'
+    +     '<div class="lcard-name">' + esc(p.product || '') + ' &middot; ' + esc(p.name || '') + '</div>'
+    +   '</div>'
+    +   lcardMenuHTML(p)
+    + '</div>'
+    /* ⚠️⚠️ THE STATE ROW LEFT `.lp-txt` (2026-10-01, by request: it must start on the
+       MARK's line, not the name's). Inside the text column it began at the card's 40px
+       product square plus its 10px gap — measured x90 against the square's x40 — so the
+       card had two left edges: the square and the label zone on one, the three text rows
+       on another. Out here it is a child of the card, so it starts where the square does
+       and the card reads down one line.
+       ⚠️ IT IS NOT A THIRD TEXT LINE ANY MORE, and that is the point: the kind and the
+       name qualify each other and belong in the column beside the mark; the state
+       qualifies the LICENCE, which is the whole card. The divider zone below already
+       takes the card's full width for the same reason.
+       ⚠️ THE INVARIANT STILL HOLDS and was re-measured, not assumed: everything above the
+       divider has to be a fixed height or a row of cards goes ragged. The row that moved
+       is one line of text whatever the data says, exactly as it was inside the column. */
+    + '<div class="lcard-state">' + statusMark(p)
+    +   '<span class="lcard-dot" aria-hidden="true">&middot;</span>'
+    +   '<span class="lcard-term">' + stateText(p) + '</span></div>'
+    /* ⚠️ THE ZONE IS ALWAYS THERE, LABEL OR NOT, and that is what keeps a row of cards
+       level: an unnamed licence shows the chip in the same band a name would occupy. The
+       two-line label is absorbed by the zone's own min-height, not by the card growing
+       past its neighbours — see `.lcard-label` in the stylesheet. */
+    + '<div class="lcard-label">' + (label
+        ? '<span class="lic-prodlabel lcard-labeltxt">' + esc(label) + '</span>'
+        : '<button class="chip ghost lcard-add" data-editlabel>'
+          + icon('pencil', { cls:'lcard-addic' }) + 'Add label</button>')
+    + '</div>'
+  + '</div>';
+}
 function menuItems(p, opts){
   var type = p && typeof p === 'object' ? p.type : p;
   // naming a licence is the one thing every type allows, so it leads every menu —
@@ -665,14 +1037,7 @@ function rowOpen(p){
 /* Product-first, product-neutral: no product-specific columns. Type and the label
    both live inside Product (see productCell); the next date has its own State
    column, which is what lets the Status column carry only Active / Canceled. */
-function headHtml(){
-  return '<tr><th class="lic-prodhead">Product</th><th>License</th><th>Status</th>'
-    /* next to Status on purpose: "am I current" and "is anything wrong" are read
-       together, and the version gap is what argues for renewing */
-    + '<th>Version</th>'
-    + '<th>Updated</th>'
-    + '<th aria-label="Actions"></th></tr>';
-}
+/* ⚠️ `headHtml` (variant A's five-column head) IS GONE 2026-10-01 — see the note above headHtmlC. */
 /* The Product cell — one builder for every table that carries it: licence rows and
    both invoice tables. Three parts, in reading order:
      · a placeholder square for the product mark;
@@ -730,24 +1095,7 @@ function productCell(p, opts){
         : '<div class="lp-cell">' + inner + '</div>')
     + '</td>';
 }
-function rowHtml(p, opts){
-  /* The licence column is the plan or package — nothing else.
-     ⚠️ A grant used to add a second line here ("Free · 6,050 devices · 2 production
-     servers"). Removed: the price is already implied by the Grant type in the
-     Product column, and the limits are the entitlement table on the details page —
-     no other row explains its allowances in the list, so this one should not
-     either. `p.limits` is still used by the details surface. */
-  /* ⚠️ THE `Scheduled` PILL IS GONE from beside the licence name — and now so is the
-     thing it pointed at. It was a third badge competing with the status chip and the
-     plan name for the same glance, and it said the least of the three: "something
-     changes, at some point". The banner it deferred to has since gone too, because
-     downgrades take effect immediately and there is no pending change to announce
-     anywhere (see the note in shared.js where scheduleChange used to be). */
-  var lic = '<td><div class="lp-name">' + p.name + '</div></td>';
-  // when the licence last changed — plan, add-ons, label or payment state
-  var updatedCell = '<td class="lic-num">' + fmtDate(p.updated || p.created) + '</td>';
-  return rowOpen(p) + productCell(p) + lic + statusCell(p) + versionCell(p) + updatedCell + actionsCell(p, opts) + '</tr>';
-}
+/* ⚠️ `rowHtml` (variant A's row) IS GONE 2026-10-01 — see the note above headHtmlC. */
 
 /* ============================================================================
    VARIANT B — the licence table with the duplication taken out
@@ -774,28 +1122,9 @@ function rowHtml(p, opts){
    tall. The clamp is a SAFETY NET for data that predates the cap, not the answer to it.
    ⚠️ Variant A is deliberately NOT given the clamp: it is the thing being compared
    against and it has to stay as it is. Its labels still wrap. */
-function licenseCellB(p){
-  var label = (p.label || '').trim();
-  var plan  = p.name || '';
-  var quiet = [p.product || '', p.type || '', label ? plan : ''].filter(Boolean).join(' · ');
-  var head  = label || plan;
-  return '<td class="licb-name">'
-    + '<span class="lp-ic" aria-hidden="true">' + licenseMark(p) + '</span>'
-    + '<span class="licb-txt">'
-    +   '<span class="licb-head" title="' + esc(head) + '">' + esc(head) + '</span>'
-    +   '<span class="licb-sub">' + esc(quiet) + '</span>'
-    + '</span></td>';
-}
-function headHtmlB(){
-  /* ⚠️ Version is the only figure in this table, and it is the only right-aligned
-     column — the heading has to move with the cells or the column reads as broken. */
-  return '<tr><th class="licb-head-name">License</th><th>Status</th><th class="lic-num">Version</th>'
-    + '<th aria-label="Actions"></th></tr>';
-}
-function rowHtmlB(p, opts){
-  return rowOpen(p).replace('class="lic-row', 'class="lic-row licb-row')
-    + licenseCellB(p) + statusCell(p) + versionCell(p) + actionsCell(p, opts) + '</tr>';
-}
+/* ⚠️ `licenseCellB` IS GONE 2026-10-01 with variant B. */
+/* ⚠️ `headHtmlB` IS GONE 2026-10-01 with variant B. */
+/* ⚠️ `rowHtmlB` IS GONE 2026-10-01 with variant B. */
 
 /* ============================================================================
    VARIANT C — variant A's columns, with the licence folded into the name cell
@@ -855,36 +1184,21 @@ function rowHtmlC(p, opts){
     + actionsCell(p, opts) + '</tr>';
 }
 
-/* ---------- which table, and the sort that comes with it -----------------------
-   ⚠️ THE SORT BELONGS TO THE VARIANT, not to the page. B's first screen has to answer
-   "is anything wrong" without reading every row, so it leads with the licences that
-   need attention; A keeps newest-first, which is what it has always done and what it
-   is being compared as. Changing A's order would make the two differ by two things at
-   once and the comparison would prove nothing. */
-function licRowHTML(p, opts){
-  var v = licTable();
-  return v === 'b' ? rowHtmlB(p, opts) : v === 'c' ? rowHtmlC(p, opts) : rowHtml(p, opts);
-}
-function licHeadHTML(){
-  var v = licTable();
-  return v === 'b' ? headHtmlB() : v === 'c' ? headHtmlC() : headHtml();
-}
-/* ⚠️ THE SPAN IS PER VARIANT AND IT IS READ BY THE EMPTY STATES. A wrong number here
-   does not throw — it draws an empty-state cell that stops short of the table's width,
-   which reads as a broken table rather than as a message. Four · five · six. */
-function licColSpan(){ var v = licTable(); return v === 'b' ? 4 : v === 'c' ? 4 : 6; }
+/* ---------- the table's two builders, named once -------------------------------- */
+/* ⚠️ ONE TABLE SINCE 2026-10-01. These two survive the axis because every caller speaks
+   through them — the Licenses page, Home's block and the styleguide — and a page that
+   called `rowHtmlC` directly would be a page to edit the day the shape changes again. */
+function licRowHTML(p, opts){ return rowHtmlC(p, opts); }
+function licHeadHTML(){ return headHtmlC(); }
+/* ⚠️ THE SPAN IS READ BY THE EMPTY STATES, and a wrong number here does not throw — it
+   draws an empty-state cell that stops short of the table's width, which reads as a broken
+   table rather than as a message. One table, one number. */
+function licColSpan(){ return 4; }
 /* attention first · then the nearest dated event · then the label, A to Z.
    ⚠️ `dateKey('')` is NaN — a licence with no event (a grant, a free plan) must not
    land wherever an unstable comparison drops it, so it is pushed to the end explicitly. */
-function licSortB(list){
-  return list.slice().sort(function(a, b){
-    var ra = attnRank(a), rb = attnRank(b);
-    if(ra !== rb) return ra - rb;
-    var da = a.event ? dateKey(a.event) : Infinity, db = b.event ? dateKey(b.event) : Infinity;
-    if(da !== db) return da - db;
-    return String(a.label || a.name || '').localeCompare(String(b.label || b.name || ''));
-  });
-}
+/* ⚠️ `licSortB` — B's attention-first order — IS GONE 2026-10-01 with B. C keeps the
+   page's own newest-first sort. */
 
 /* ---------- navigation ---------- */
 /* A licence row is a real link target: details live at license.html?id=…, and
@@ -1302,8 +1616,18 @@ function activityEntry(rec, scope, i){
    one number these rows share where the eye looks for the sentence. Same order and
    the same `.fi-time` treatment as the row the fold hangs off: sentence, then middot,
    then the time. */
+/* ⚠️⚠️ THE MEMBERS ARE READ IN THE GROUP'S SCOPE, NOT THE PAGE'S (2026-10-01, by
+   request). `'license'` is what drops the bracketed `[ on {license}]` clause, and the
+   group header one line above has already named the licence — so the open fold used to
+   print it twelve more times, once per check, for a licence that does not change inside
+   a run (`foldChecks` groups by instance, and an instance belongs to one licence).
+   The row reads `Instance CE building 4 checked in · 10:26`, which is the whole of what
+   it adds to the summary it hangs under.
+   ⚠️ THE ARGUMENT IS THE SAME ONE THE SCOPE ALREADY ENCODES — "drop what the surface has
+   already said" — and a group is a surface for its own members. The group's OWN sentence
+   keeps `scope`, so on the Activity page it still names the licence and links it. */
       +   mem.map(function(m){
-            var t = activitySentenceHTML(m, scope);
+            var t = activitySentenceHTML(m, 'license');
             return t == null ? '' : '<div class="fi-sub"><span>' + t + '</span>'
               + '<span class="fi-time">' + esc(activityTime(m.ts)) + '</span></div>';
           }).join('')
@@ -1745,8 +2069,10 @@ function licenseActivity(lic){
   var acts = [];
   acts.push({ type:'license.created', ts: tsFrom(lic.created,'09:14'), actor:who,
     f:{ kind:noun, entity:nm } });
-  if(lic.label) acts.push({ type:'license.labeled', ts: tsFrom(lic.created,'09:22'), actor:who,
-    f:{ entity:lic.name, label:lic.label } });
+  /* ⚠️ `label_added` — this is derived for a licence that HAS a label, i.e. the first one
+     it was given, so there is nothing it replaced (2026-10-01). */
+  if(lic.label) acts.push({ type:'license.label_added', ts: tsFrom(lic.created,'09:22'), actor:who,
+    f:{ entity:lic.name, label:lic.label }, detail:[['Label', lic.label]] });
   /* ⚠️ THE CARD IS READ, NOT TYPED. This said `Visa ••4242` in the string — a literal,
      so a licence whose account is on another card described the wrong one. */
   if(lic.status==='payment_failed') acts.unshift({ type:'license.payment_failed', ts:'Aug 18 2026, 07:12',
@@ -2030,7 +2356,24 @@ function wireSearch(inputSel, opts){
     });
   }
   function syncClear(){ if(clearBtn) clearBtn.hidden = !input.value; }
+  /* ⚠️⚠️ `before` AND `debounce` ARE ONE MECHANISM, NOT TWO CONVENIENCES (2026-10-01, by
+     request: "filters as the person types, debounced"). The Licenses page re-renders its
+     list on every keystroke — it has to, because search and paging cannot both be on —
+     and that render MUST happen before the hiding pass below runs over the nodes it just
+     drew. Two separately debounced listeners would be two timers racing for that order.
+     One timer, and the page's work is a hook inside it.
+     ⚠️ The clear control and the delegated `Clear search` call `run` DIRECTLY, with no
+     delay: a press is not typing, and a list that lags a tap reads as a dropped press. */
+  var before = opts.before || function(){};
+  var tid = null;
+  function runSoon(){
+    if(!opts.debounce) return run();
+    clearTimeout(tid);
+    tid = setTimeout(run, opts.debounce);
+  }
   function run(){
+    clearTimeout(tid);
+    before();
     var q = input.value.trim().toLowerCase();
     var items = opts.items(), shown = 0;
     /* ⚠️ The INDEX is passed too, and it is what lets a surface match a record instead
@@ -2062,7 +2405,7 @@ function wireSearch(inputSel, opts){
        wants to read the final state sees it. */
     if(opts.after) opts.after(q, shown);
   }
-  input.addEventListener('input', run);
+  input.addEventListener('input', runSoon);
   /* delegated on the document: the block is created and destroyed as you type, so
      nothing can be bound to it directly */
   document.addEventListener('click', function(e){
@@ -3032,142 +3375,21 @@ function toneClass(tone){
 function bannerIcon(tone){
   return icon(tone === 'quiet' ? 'alert-circle' : 'alert-triangle', { cls:'gb-ic' });
 }
-/* ⚠️⚠️ THE SEPARATE LAYOUT (2026-09-30, by request) — one card per condition, side by
-   side in the slot the single band occupies. It is a SECOND FORM of the same data:
-   `homeBannerVisible()`, the same seniority order, the same dismissal rules.
-
-   ⚠️⚠️ AND IT ANSWERS THE TWO DECISIONS IT LOOKS LIKE IT REVERSES, rather than
-   overriding them. Both are from 2026-09-24 and both are about STACKING:
-     · "three stacked BANNERS would push the licence list off the screen" — these are
-       not stacked. The slot stays one banner tall and the axis is horizontal, so the
-       cost the old rule was protecting against is not paid.
-     · "the several-alerts shape is deliberately poorer, because an action button beside
-       a list acts on ONE of them while looking like it settles the banner" — the
-       objection was to an action DETACHED from the question it answers. Here every card
-       carries its own fact, its own fix and its own buttons, so the action is beside its
-       question. That is the whole point of the layout, and it is the condition the old
-       argument set for having actions at all.
-   Neither note is deleted: the stacked form is still the default and both still hold
-   for it.
-
-   ⚠️ NO SENIORMOST-WINS RULE HERE. The stacked band takes one tone because it is one
-   statement; these are several statements, so each card takes its own — a red condition
-   and a black one side by side is the layout working, not a bug.
-   ⚠️ NO `IntersectionObserver` for the position readout: it does not fire AT ALL in the
-   embedded panel (measured 2026-09-29), so the pager reads `scrollLeft` arithmetic on a
-   scroll listener instead. That is also the cheaper answer — one number, no observer. */
-function bannerCardHTML(c){
-  var copy = homeBannerCopy(c);
-  if(!copy) return '';
-  var tone = bannerTone(c.state);
-  /* the dismissal rule is the condition's own, unchanged: a blocking condition is not
-     something a reader gets to file away, so it carries no ✕ in either layout */
-  var x = BANNER_BLOCKING[c.state] ? ''
-    : '<button class="btn btn--ghost btn--md btn--icon gb-x" data-bannerx="' + esc(bannerKey(c))
-      + '" aria-label="Dismiss"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-x"></use></svg></button>';
-  return '<div class="gbanner homebanner hbcard ' + toneClass(tone) + '">'
-    + bannerIcon(tone)
-    + '<div class="hb-body">'
-    +   '<p class="hb-fact">' + copy.fact + '</p>'
-    +   '<p class="hb-todo">' + copy.todo + '</p>'
-    +   '<div class="hb-acts">' + copy.act + '</div>'
-    + '</div>'
-    + x
-    + '</div>';
-}
-function renderHomeBannerSeparate(slot, items){
-  slot.className = 'hbcar';
-  /* ⚠️ The pager is rendered even for a single card, and disabled — the same honest
-     state the page-state bar uses. A control that appears only sometimes is a layout
-     that moves under the reader as conditions clear. */
-  var many = items.length > 1;
-  /* ⚠️⚠️ THE COUNT SITS BETWEEN THE TWO CHEVRONS (2026-09-30, by request), and the
-     whole group moved to the LEFT edge. Two things follow from that and neither is
-     cosmetic: the readout is now the thing the two arrows act ON rather than a label
-     trailing them, so it reads as one control instead of a control and a caption; and on
-     the left it starts where the cards under it start, which is the edge a reader is
-     already tracking down the page. */
-  slot.innerHTML =
-    '<div class="hbcar-ctl">'
-    /* ⚠️ ICON-ONLY IS DERIVED FROM AN EMPTY LABEL in `button()`, and the name comes from
-       `ariaLabel` — passing a label here would have printed the words `Previous alert`
-       on a 26px chevron. `disabled` is the option, not a string in `attrs`: the builder
-       writes `aria-disabled` alongside it, which a hand-written attribute would not. */
-    +   button({ variant:'secondary', size:'sm', icon:'chevron-left',
-                 ariaLabel:'Previous alert', cls:'hbcar-prev',
-                 disabled:!many, attrs:'data-hbcar="prev"' })
-    +   '<span class="hbcar-pos" aria-live="polite">1 / ' + items.length + '</span>'
-    +   button({ variant:'secondary', size:'sm', icon:'chevron-right',
-                 ariaLabel:'Next alert', cls:'hbcar-next',
-                 disabled:!many, attrs:'data-hbcar="next"' })
-    + '</div>'
-    + '<div class="hbcar-track" id="hbcarTrack" tabindex="0" role="group" aria-label="Alerts">'
-    +   items.map(bannerCardHTML).join('')
-    + '</div>';
-  slot.hidden = false;
-  wireBannerCarousel(slot, items.length);
-}
-/* one listener per render, on a node the render just created — nothing to unbind
-   ⚠️⚠️ THE PAGER JUMPS, IT DOES NOT ANIMATE, AND THAT IS MEASURED. On a track with
-   `scroll-snap-type: x mandatory`, EVERY smooth scroll in this engine is cancelled and
-   the track returns to where it started: `scrollBy({left:step, behavior:'smooth'})`
-   ended at 0, and so did CSS `scroll-behavior:smooth` with `scrollLeft` assigned, twice
-   in a row. The same call with `behavior:'auto'` landed exactly on 856. So the button
-   sets `scrollLeft` to a snap point and the snapping agrees with it instead of fighting
-   it. Not a workaround that breaks elsewhere — an instant jump is correct in any
-   engine; what it gives up is the animation, and only here.
-   ⚠️ The INDEX is the unit, not a delta. `scrollBy` accumulates rounding across taps
-   and drifts off the snap points; `i * step` is absolute, so tap five and tap-back four
-   returns to exactly card two. */
-/* ⚠️⚠️ HOW MANY CARDS ARE ON SCREEN IS MEASURED, NOT ASSUMED (2026-09-30). The track
-   shows two above 900px and one below it, and every number the pager works with depends
-   on which: the last reachable card is `total - visible`, not `total - 1`, and a readout
-   saying `1 / 6` while two cards are visible names one of the two things the reader is
-   looking at. Derived from the track's own box over the scroll step, so the CSS stays the
-   single place the count is decided and this function cannot disagree with it.
-   ⚠️ `Math.round`, and it is exact at both counts rather than approximately right:
-   one-up gives W/(W-slice) ≈ 1.04 and two-up (2c+g+slice)/(c+g) ≈ 2.05, so the rounding
-   has half a card of clearance either side of both answers.
-   ⚠️ THE OVERSHOOT ON THE LAST PAGE IS HARMLESS AND IS LEFT ALONE. `i * step` for the
-   last index lands `slice` px past the end, the browser clamps it, and `index()` reads the
-   clamped value back as the same index because `slice / step` is 0.08 — far under the
-   half-step that would round it down. Measured rather than reasoned about after the fact:
-   the `next` button has to actually go dead on the last page, and it does. */
-function wireBannerCarousel(slot, total){
-  var track = $('#hbcarTrack', slot), pos = $('.hbcar-pos', slot);
-  if(!track) return;
-  function step(){ var card = track.firstElementChild; return card ? card.offsetWidth + 12 : track.clientWidth; }
-  function visible(){ return Math.max(1, Math.min(total, Math.round(track.clientWidth / step()))); }
-  function maxIndex(){ return Math.max(0, total - visible()); }
-  function index(){ return Math.min(maxIndex(), Math.max(0, Math.round(track.scrollLeft / step()))); }
-  function sync(){
-    var i = index(), v = visible(), last = Math.min(total, i + v);
-    /* a range when more than one card is showing, a single number when one is — the
-       readout says which alerts are in front of the reader, and with two on screen
-       `1 / 6` would be naming half of what they can see */
-    if(pos) pos.textContent = (v > 1 ? (i + 1) + '\u2013' + last : String(i + 1)) + ' / ' + total;
-    var prev = $('[data-hbcar="prev"]', slot), next = $('[data-hbcar="next"]', slot);
-    if(prev) prev.disabled = i <= 0;
-    if(next) next.disabled = i >= maxIndex();
-  }
-  /* the swipe and the pager are one mechanism: both move `scrollLeft`, and the readout
-     is driven by the scroll itself rather than by whichever of them caused it */
-  track.addEventListener('scroll', sync);
-  slot.addEventListener('click', function(e){
-    var b = e.target.closest('[data-hbcar]');
-    if(!b) return;
-    var i = Math.min(maxIndex(), Math.max(0, index() + (b.getAttribute('data-hbcar') === 'next' ? 1 : -1)));
-    track.scrollLeft = i * step();
-    sync();
-  });
-  sync();
-}
+/* ⚠️⚠️ THE SEPARATE LAYOUT IS GONE (2026-10-01, by request) with the `Banner › Layout`
+   axis, which retired on `Stacked — one band`. What it was: one card per live condition,
+   side by side in the slot the band occupies, with a pager between two chevrons —
+   `bannerCardHTML`, `renderHomeBannerSeparate` and `wireBannerCarousel`, plus the
+   `.hbcar*` block in the stylesheet.
+   ⚠️ The two arguments it answered are back to standing as they were written in 2026-09-24
+   and are worth keeping here, because they are what a second attempt would have to answer
+   again: three stacked banners push the licence list off the screen, and an action beside
+   a LIST of alerts acts on one of them while looking like it settles the banner. The
+   stacked band's own answer to both is `and N more`. */
 function renderHomeBanner(){
   var slot = $('#homeBanner');
   if(!slot) return;
   var items = homeBannerVisible();
   if(!items.length){ slot.hidden = true; slot.innerHTML = ''; slot.className = ''; return; }
-  if(homeBannerLayout() === 'separate'){ renderHomeBannerSeparate(slot, items); return; }
   var blocking = items.some(function(c){ return BANNER_BLOCKING[c.state]; });
   /* ⚠️ The ✕ dismisses THE ONE ON SCREEN, and only it. While the banner listed three,
      one ✕ closing all three was the honest reading of "I have seen these"; with a single
