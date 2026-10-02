@@ -614,7 +614,30 @@ a{color:inherit}
    and inherits that style, so this rule only has to stop fighting it. The 14px
    muted treatment it used to carry made the block read as a footnote of the table
    above rather than a section of its own. */
-.fhead{margin:0}
+/* ⚠️⚠️ THE HEADING KEEPS ITS OWN WIDTH (2026-10-02). `Add-ons` wrapped at 760, 700 and
+   601 — a two-word heading breaking at its hyphen, because `.sh` is a flex row and an
+   `h3` in one may shrink to min-content. What is beside it is `Manage`, moved into this
+   row by `applyLicPlan`, and in a narrow Add-ons column the two were competing for the
+   same few pixels. `flex:none` stops the heading being the one that gives way.
+   Neither is truncated and nothing is tightened.
+   ⚠⚠ AND IT DOES **NOT** WRAP (2026-10-02, second pass). `flex-wrap:wrap` was the first
+   answer and it was wrong in a way the heading alone did not show. This row sits in
+   `.planblock`'s second track, `minmax(min-content,1fr)` — and a WRAPPING flex container's
+   min-content is its widest single item, not the sum of a line. So the track's floor fell
+   from the whole row to the `Manage` button, and the entire Add-ons column went 142 → 99px
+   at 760, 700 and 601: the chips narrowed with it and the plan table took the 43px.
+   `Manage` was then 13px from the right edge of a 99px box — floating mid-card, not right.
+   Without the wrap the row's min-content is the sum again, the track holds the width the
+   row needs, and `.spacer{flex:1}` puts `Manage` hard against the right edge where the
+   09-29 decision put it.
+   ⚠ `white-space:nowrap` IS WHAT MAKES `flex:none` BITE. `flex:none` forbids SHRINKING,
+   but the track is sized from min-content — and the min-content of `Add-ons` is `Add-`,
+   because CSS breaks at a hyphen. So the track stayed at the old 142px and the button
+   overflowed it by 33px instead: on one line, past the edge. Measured. Forbidding the
+   hyphen break makes the heading's min-content its real 73px, the track resolves to the
+   175px the row needs, and the button lands flush. This is not truncation — nothing is
+   hidden and no ellipsis is added; a two-word heading is simply not split mid-word. */
+.fhead{margin:0;flex:none;white-space:nowrap}
 .features{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 /* ⚠️ The empty Add-ons line — a quiet sentence on the same inset ground the chips stand
    on, so the column keeps its shape when a licence has bought nothing. Not `.emptybox`:
@@ -2420,7 +2443,7 @@ body[data-tableframe] #dashView .dblock > table{margin-left:-18px;margin-right:-
 .modal .mh h3{margin:0;font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw)}
 .modal .mh .spacer{flex:1}
 .modal .mb{padding:16px;font-size:var(--t-body-fs);color:var(--mid);line-height:1.5}
-.modal .mf{padding:12px 16px;border-top:1px solid var(--line2);display:flex;justify-content:flex-end;gap:8px}
+.modal .mf{padding:12px 16px;border-top:1px solid var(--line2);display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px}
 /* ---------- a block title that carries its subject's glyph (2026-09-29) ----------
    ⚠️ `has-ic` RATHER THAN A BARE DESCENDANT RULE. `.am-celltop` is a plain title on
    surfaces that pass no icon (Change plan's rows, the locked entitlements of a plan
@@ -6373,6 +6396,16 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
    cannot both happen, and this picks whichever the width actually calls for. */
 .tablescroll{overflow:visible}
 .tablescroll.is-scrollable{overflow-x:auto}
+/* ⚠️⚠️ THE LICENCE PANEL'S INSTANCE TABLES SCROLL WITHOUT THE SCRIPT (2026-10-02). The
+   note above explains why `is-scrollable` is toggled rather than declared: a scroller
+   computes `overflow-y:auto` too, and a sticky `thead` then sticks to a box with no
+   height limit. The panel's theads are NOT sticky — there is no `.stickyhead` anywhere in
+   `license-details.js` — so the reason does not apply here and the plain rule is correct.
+   ⚠️ WITHOUT IT THE COLUMNS WERE CUT OFF, not merely hidden: `.canvas` is `overflow:hidden`
+   and the table ran 223px past it at 601, 124 at 700, 64 at 760. Pre-existing — the type
+   pass made it 26–34px worse, it did not create it. */
+.licmodal .insttype > .tablescroll,
+#licDetailsHost .insttype > .tablescroll{overflow-x:auto}
 /* ⚠️⚠️ AND THE COLUMN ROW MUST GIVE UP `--barH` IN THAT BOX, OR IT DISAPPEARS INTO THE
    TABLE (2026-10-01, by request: "the header is gone from the licences table"). The note
    above says a thead inside a scroller "never sticks to anything the reader can see",
@@ -6862,7 +6895,13 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
    live rule on an obvious class name is how `.keynote` restyled somebody else's
    paragraph. Removed with its only writer, in the same pass. */
 
-.cancel-help{flex:1;font-size:var(--t-body-fs);color:var(--mid);text-align:left}
+/* ⚠️⚠️ ITS OWN ROW AT EVERY WIDTH (2026-10-02). `.mf` is a right-aligned flex row of
+   buttons and this sentence was `flex:1` in it — so six words got whatever the two
+   buttons left over, which measured THREE lines at every width above the phone and five
+   after the type pass. The phone already solved it (`flex:1 1 100%; order:-1` below) and
+   the fix was simply never lifted above 600. The footer wraps, the sentence takes the
+   full width and sits above the buttons — nothing is shrunk, tightened or truncated. */
+.cancel-help{flex:1 1 100%;order:-1;font-size:var(--t-body-fs);color:var(--mid);text-align:left}
 
 .noresults{border:1px dashed var(--line);border-radius:8px;background:transparent;
   padding:22px 18px;text-align:center}
@@ -7217,7 +7256,9 @@ body.list-empty #pageTitleRow [id^="licNewBtn"]{display:none !important}
 .paymodal-f{display:flex;align-items:center;gap:12px;padding:16px 24px;border-top:1px solid var(--line2)}
 .paymodal-f .sp{flex:1}
 .paymodal-f .btn[disabled]{opacity:.45;cursor:not-allowed}
-.paystripe-note{font-size:var(--t-small-fs);color:var(--faint)}
+/* ⚠️ ONE LINE, ALWAYS (2026-10-02). `.paystripe` wraps at ≤600 and this three-word
+   credit was being broken across lines at 390. It is a single attribution, not prose. */
+.paystripe-note{font-size:var(--t-small-fs);color:var(--faint);white-space:nowrap}
 .paystripe-note b{color:var(--mid);font-weight:700}
 /* composed card field (Stripe Elements style): glyph + number + expiry + CVC in one box */
 /* ⚠️⚠️ EXPIRY AND CVC ARE BLOCKS INSIDE THE FIELD, NOT COLUMNS OF IT (2026-09-28, by
@@ -9059,7 +9100,7 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
      readers left is a trap for whoever finds the class name next.
      ⚠️ Written as an override rather than by editing the rules above, so what the page
      gives up is visible beside what everything else still does. */
-     ⚠️ IT IS DONE BY TAKING `.lic-controls` OUT OF THE COLLAPSE RULES, not by writing an
+  /* ⚠️ IT IS DONE BY TAKING `.lic-controls` OUT OF THE COLLAPSE RULES, not by writing an
      override under them — an override would leave two statements about one field, and the
      next reader would have to diff them to find out which wins. The rules below this
      block now name `.insttoolbar` alone, and `wireSearchCollapse` in shared.js was scoped

@@ -1098,7 +1098,7 @@ var NL = (function(){
         var prodDesc = isPerpTB()
           ? i.prod + ' included. Each instance includes '
             + PERP_DEV_PER_INSTANCE.toLocaleString('en-US')
-            + ' devices \u2014 add more any time.'
+            + ' devices \u2014 add more any time to scale out.'
           : i.prod + ' included. Enables clustering and HA.';
         /* ⚠️⚠️ HELD BACK, NOT EMITTED HERE (2026-09-29, by request). Production and
            Development are one block titled `Instances` now, and Development is not in

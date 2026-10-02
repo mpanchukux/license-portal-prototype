@@ -378,6 +378,17 @@ var DETAILS_HTML = ''
 + '                   renderInstances() from the licence\'s own `instances`. -->'
 + '              <p class="inst-note" id="instNote"></p>'
 + '              <div class="insttype" data-insttype="prod">'
+/* ⚠️⚠️ THE SCROLLER THE STYLESHEET ALREADY EXPECTED (2026-10-02). This table was a bare
+   `<table>` inside `.insttype`, and `.canvas` around it is `overflow:hidden` — so at 601,
+   700 and 760 the right-hand columns were simply cut off with nothing to scroll them.
+   Measured: 223px of the table past its container at 601. The frame rules have named
+   `.insttype > .tablescroll` since they were written; the markup never gave them one.
+   ⚠️ ONLY THE TABLE IS WRAPPED. The pager is a sibling inside `.insttype` and must stay
+   outside the scroller, or it would slide sideways with the columns.
+   ⚠️ The panel's `thead` is NOT sticky (no `.stickyhead` here), so this can be a plain
+   rule rather than the script-toggled `is-scrollable` the list pages need — that class
+   exists because `overflow-x:auto` computes `overflow-y:auto` and breaks a sticky head. */
++ '                <div class="tablescroll">'
 + '                <table class="insttable gridtbl">'
 + '                  <thead>'
 + '                    <tr>'
@@ -391,10 +402,12 @@ var DETAILS_HTML = ''
 + '                  </thead>'
 + '                  <tbody id="instBodyProd"></tbody>'
 + '                </table>'
++ '                </div>'
 + pagerHTML('instPagerProd')
 + '              </div>'
 + ''
 + '              <div class="insttype" data-insttype="dev" hidden>'
++ '                <div class="tablescroll">'
 + '                <table class="insttable gridtbl" id="instTableDev">'
 + '                  <thead>'
 + '                    <tr>'
@@ -404,6 +417,7 @@ var DETAILS_HTML = ''
 + '                  </thead>'
 + '                  <tbody id="instBodyDev"></tbody>'
 + '                </table>'
++ '                </div>'
 /* ⚠️ THE DEV TABLE HAD NO PAGER AT ALL. Prod had one (markup only, and inert); dev had
    nothing, so the two halves of the same tab disagreed about whether a long list was
    possible. Same builder as every other pager here now. */

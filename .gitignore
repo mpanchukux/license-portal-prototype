@@ -20,3 +20,9 @@ dist-ssr
 *.sln
 *.sw?
 .icon-cache/
+
+# regenerable measurement artefacts — `python3 tools/selector-census.py`
+# rebuilds the first, `python3 tools/classify-dead.py` the second.
+# tools/unmatched.json is NOT here: it is the browser run's own result.
+tools/selectors.json
+tools/dead-report.json
