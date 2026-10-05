@@ -1359,24 +1359,87 @@ td{padding:13px 8px;border-bottom:1px solid var(--line2);vertical-align:middle}
 .section > table{margin-top:16px}
 tr:last-child td{border-bottom:0}
 th.num,td.num{text-align:right}
-/* ⚠️ THE ONE PAIR OF COLUMNS THAT COLLIDE (2026-09-28, by request). Amount is
-   right-aligned and Status is left-aligned, so the gap between them is the only one in
-   any table made of two cells' padding facing each other — 8 + 8 at the default, which
-   put a figure and a status word almost touching while every other column pair had a
-   whole column's slack. The space goes on AMOUNT's right rather than on Status's left:
-   the number then moves away from the word instead of the word moving toward Product,
-   and the columns after it do not shift.
-   ⚠️ Named on the cell (`.inv-amt`) rather than scoped to a page, because the same row
-   renders on Home, on the Invoices page and inside the licence panel — a rule for one
-   of the three would be the same table with two spacings. Phone cards re-lay the row
-   entirely (see the ≤600px block) and reset their own padding, so this never reaches
-   them. */
-/* ⚠️ 30 → 48 (2026-10-01, by request: more air between Amount and Status). The pair is
-   still the tightest in the row — a right-aligned figure ends exactly where its column
-   ends, so whatever gap exists is the only thing between a number and a word. Same side
-   as before, for the reason above: the number moves away from the word and the columns
-   after it stay put. */
-th.inv-amt,td.inv-amt{padding-right:48px}
+/* ---------- the Invoices PAGE: air between its Amount and its Status ----------------
+   ⚠️⚠️ THIS IS A RULE ABOUT ONE PAGE, AND IT IS WRITTEN THAT WAY SINCE 2026-10-05.
+   It spent two passes written as a ROW-level decision (`th.inv-amt,td.inv-amt`) and the
+   note above it said so explicitly: "named on the cell rather than scoped to a page,
+   because the same row renders on Home, on the Invoices page and inside the licence
+   panel — a rule for one of the three would be the same table with two spacings."
+   ⚠️ THAT SENTENCE WAS NEVER TRUE OF THE PRODUCT. Measured 2026-10-05:
+   `.dblock table td,.gridtbl td{padding:11px 8px}` carries the SAME specificity (0,1,1)
+   and sits later in the file, so it wins — Home's block is `.dblock table`, the panel's
+   tab is `.gridtbl`, and both compute `padding-right:8px`. The air has only ever existed
+   on the Invoices page, whose table is a bare `<table>` in `.tablescroll` and matches
+   neither. Two of three hosts never had it and nobody noticed for a week; that is the
+   evidence that the intent was narrower than the selector claimed.
+   ⚠️ SO THE SELECTOR NOW SAYS WHAT IT MEANS. `#invoicesList` is the page's own wrapper,
+   so the rule cannot reach the other two hosts even by accident — and it is not given
+   weight for the sake of weight: the id raises specificity, but only inside a container
+   that exists on exactly one page. Nothing about Home or the panel changes, because
+   nothing about them was ever affected.
+   ⚠️ `.inv-amt` STAYS ON THE CELL in all three hosts. It names what the cell IS — the
+   amount — and that is true everywhere `invRow` renders. What was wrong was hanging a
+   page's spacing decision on it, not the class.
+
+   WHY THE AIR EXISTS AT ALL (2026-09-28, by request; 30 → 48 on 2026-10-01): Amount is
+   right-aligned and Status is left-aligned, so this is the only column pair in the table
+   whose gap is just two cells' padding facing each other — 8 + 8 by default, a figure and
+   a status word almost touching while every other pair has a whole column of slack. The
+   space goes on AMOUNT's right rather than Status's left so the number moves away from
+   the word instead of the word moving toward Product, and the columns after it stay put.
+   ⚠️ Phone cards re-lay the row entirely (see the ≤600px block) and zero this padding
+   themselves, so it never reaches them. */
+#invoicesList th.inv-amt,
+#invoicesList td.inv-amt{padding-right:48px}
+/* ⚠️⚠️ 48 → 37 IN THE BAND WHERE THE ROW DOES NOT FIT (2026-10-05, by request), and
+   nowhere else. The 48px still earns its place at 1280, where the table has room to
+   spare; what it cannot do is hold that width open while the row is already 11px too wide
+   for its container.
+   ⚠️ THE BAND IS MEASURED, NOT PICKED. The container is `width - 48` (capped at 1132), and
+   the row's minimum is 905 with the full air — so 953 is the first width at which it fits
+   and 952 is the last at which it does not. Below 601 the row stops being a row: the card
+   layout re-lays it and zeroes this padding itself, so that edge is the card breakpoint
+   rather than a number of mine.
+   ⚠️ WHAT 11px BUYS, exactly: the minimum drops 905 → 894, which clears 944 (container 896)
+   and every width from 942 up. It does NOT clear the rest of the band — at 900 the
+   container is 852 and 42px still scroll, at 601 it is 553 and 341 do. That remainder is
+   reported rather than chased; see NOTES for how much of it predates this pass, and for
+   why raising the card breakpoint to 760 was examined and rejected.
+   ⚠️ The gap between the figure and the status word is 37 + 8 = 45px inside the band —
+   still the widest column pair in the row, which is what the 10-01 decision was about. */
+@media (min-width:601px) and (max-width:952px){
+  #invoicesList th.inv-amt,
+  #invoicesList td.inv-amt{padding-right:37px}
+}
+/* ⚠️⚠️ THE INVOICE NUMBER IS ONE OBJECT, SO IT STAYS ON ONE LINE (2026-10-05, by request).
+   It is an identifier — it gets searched for, read out and copied — and `NAWE49WG-0023`
+   split after the hyphen stops being one thing on the page. CSS breaks after a hyphen by
+   default, which is right for prose and wrong for a serial number.
+   ⚠️⚠️ THE DATE TAKES IT TOO, AND NOT AS A TIDY-UP. Row height is set by the TALLEST cell,
+   so pinning only the number would have left `Oct 14,` / `2026` wrapping beside it and the
+   row exactly as tall — the reported fault is "six rows fit where seven did", and that is
+   a height, not a number. Fixing one of the two would have fixed neither.
+   ⚠️ NAMED ON THE ROW, NOT ON THE PAGE, for the same reason `.inv-amt` above is: the same
+   `invRow` renders on Home, on the Invoices page and inside the licence panel's tab. A
+   rule for one of the three would be the same table with two behaviours.
+   ⚠️ IT IS NOT A WIDTH, and that is deliberate: `table-layout` here is auto, so `nowrap`
+   raises these two columns' MIN-CONTENT and the algorithm places them. Hard-coding widths
+   would freeze a distribution that is only correct at one window size — at 1280 these
+   columns are 201 and 141 and nothing was ever wrong with them.
+   ⚠️⚠️ AND AT 944 THE PIXELS DO NOT COME FROM ANYWHERE — THE TABLE GETS 9px WIDER.
+   Measured after the change, every one of the six columns sits exactly on its own content:
+   Invoice# 155/155, Date 108/109, Amount 127/128, Status 117/117, Product 250/250 (its own
+   `min-width` floor), actions 148/148. The sum of what the row needs is 907 in a 896
+   container. There is NO slack at that width to take 11px from, so the table overflows
+   `.tablescroll` by 9px and scrolls. Nothing is clipped — the scroller is already there —
+   but this is a horizontal scroll that did not exist before, and it is a REPORTED cost,
+   not a solved problem. The candidates for the 11px are named in NOTES; the cheapest is
+   the 48px of deliberate air on Amount's right, which is whitespace rather than content,
+   and it is a by-request number so it is not mine to spend.
+   ⚠️ The phone never sees this: ≤600 re-lays the row as a card, where the number already
+   has a full-width area of its own (measured one line at 390 before and after). */
+tr.inv-row > td.mono,
+tr.inv-row > td:nth-child(2){white-space:nowrap}
 .meter{height:8px;background:var(--track);border-radius:999px;overflow:hidden;min-width:120px;border:1px solid var(--line2)}
 .meter>span{display:block;height:100%;background:var(--fill)}
 /* fixed text column so every meter starts at the same x and is the same width;
@@ -6394,7 +6457,67 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
    overflows it (narrow desktop windows); when the table fits, the wrapper is inert
    and the column row sticks to the page. Sideways scrolling and a stuck column row
    cannot both happen, and this picks whichever the width actually calls for. */
-.tablescroll{overflow:visible}
+
+/* ---------- the edge cue: there are columns that way (2026-10-05, by request) -------
+   ⚠️⚠️ A HORIZONTAL SCROLL WITH NO AFFORDANCE IS A HIDDEN COLUMN. At 700 the Invoices
+   table runs 242px past its box and nothing on screen says so — the reader sees a table
+   that happens to end at the frame. This paints a shade at whichever edge still has
+   something behind it.
+   ⚠️⚠️ NO SCRIPT, AND THAT IS THE POINT. Four background layers do the whole job:
+   two SHADOWS pinned to the box (`scroll`) and two COVERS that ride with the content
+   (`local`). At rest the left cover sits on the left shadow and hides it; scroll right
+   and the cover slides away, uncovering it, while the right cover arrives and puts the
+   right shadow out. "Appears only when there is overflow" and "disappears at the end of
+   the scroll" are not two conditions anyone has to maintain — they are what the two
+   attachments already mean. A JS version would need scroll, resize and mutation
+   listeners on every table in the product to say the same thing.
+   ⚠️ IT SELF-GATES ON A TABLE THAT FITS. With no overflow the content box and the
+   scrollport are the same width, so both covers land exactly on both shadows and nothing
+   is drawn. That is why this is on `.tablescroll` and not on `.is-scrollable`: the class
+   answers "should this box scroll", which is a different question, and the panel's
+   instance tables scroll without ever carrying it.
+   ⚠️ I HAD THE TWO ATTACHMENTS THE WRONG WAY ROUND in the first build, and it is worth
+   stating which way is right: with the shadows `local` they sit at the ENDS OF THE
+   CONTENT, so the right-hand one is only visible once you have already scrolled to it —
+   a cue that appears after you no longer need it.
+   ⚠️ NOT ONE HARD-CODED COLOUR IN IT. The covers are `--card`, so they follow the
+   surface rather than assuming a white one, and the shade is `--scrollCue`, a token of
+   its own on `:root`. Both gradients end in `transparent` rather than in a zero-alpha
+   white or a zero-alpha ink, so neither end carries an assumption about the theme
+   either. (Chromium interpolates gradients premultiplied, so `transparent` fades
+   cleanly instead of greying out, which is the reason the keyword is usable here.)
+   ⚠️⚠️ AND THERE IS NO SECOND THEME TO CHECK IT IN. Grepped: zero occurrences of
+   `prefers-color-scheme`, `data-theme` or `color-scheme` in the whole stylesheet — the
+   open note about the missing dark theme is still accurate. So "reads correctly in both
+   themes" could not be verified; what was done instead is to leave nothing in the rule
+   that would have to be found and changed. When a dark theme arrives the covers follow
+   `--card` on their own; `--scrollCue` is the ONE value that will need a light variant,
+   because a dark shade on a dark surface says nothing.
+   ⚠️ `background-clip:padding-box` keeps the shade off the frame's own border, and the
+   cue sits UNDER the column row, which paints its own `--card` fill — on the 40px of
+   header the shade is hidden. Accepted: the cue is for the rows, and the header is the
+   one line whose right edge is already a hard stop. */
+:root{
+  --scrollCueSize:26px;
+  --scrollCue:rgba(28,28,28,.13);
+}
+/* ⚠️ MERGED INTO ONE DECLARATION, not added beside the `overflow` rule above — which is
+   what the first build did, and `tools/check-collisions.py` failed it: `.tablescroll`
+   became the 25th name declared twice at top level against a baseline of 24. The guard
+   was right and the ratchet was not raised: one component, one block. */
+.tablescroll{
+  overflow:visible;
+  background-image:
+    linear-gradient(to right, var(--card), transparent),
+    linear-gradient(to left,  var(--card), transparent),
+    linear-gradient(to right, var(--scrollCue), transparent),
+    linear-gradient(to left,  var(--scrollCue), transparent);
+  background-position:left center, right center, left center, right center;
+  background-size:var(--scrollCueSize) 100%;
+  background-repeat:no-repeat;
+  background-attachment:local, local, scroll, scroll;
+  background-clip:padding-box;
+}
 .tablescroll.is-scrollable{overflow-x:auto}
 /* ⚠️⚠️ THE LICENCE PANEL'S INSTANCE TABLES SCROLL WITHOUT THE SCRIPT (2026-10-02). The
    note above explains why `is-scrollable` is toggled rather than declared: a scroller
