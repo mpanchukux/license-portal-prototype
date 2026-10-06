@@ -259,6 +259,16 @@ NOT_A_BUTTON = (
     'tb-refresh', 'emailpend-v', 'nr-clear', 'dblock-link', 'lp-link', 'sdot',
     'plancard', 'nl-prodcard', 'switch', 'pc-', 'am-', 'ec-', 'inlineact',
     'stepbtn', 'menurow', 'searchclear',
+    # ⚠️⚠️ THREE OF THE NAMES ON THIS LIST ARE THE SAME BAR, AND THAT IS ONE FACT ABOUT
+    # THE TOP BAR RATHER THAN THREE SEPARATE EXCEPTIONS: `tnav-item`, `dprofbtn` and
+    # `navpick-btn` are its strip items, its account control and its nav trigger. The bar
+    # speaks its own control language — pills in a row, a glyph for the account — and
+    # these are that language, not product buttons dropped into chrome.
+    # ⚠️ DO NOT ADD A FOURTH WITHOUT THE COMPONENT DECISION. Whether the bar's family
+    # folds into the button component or stays its own thing belongs to the pass that
+    # specifies components; until that is decided, a fourth name here would be the list
+    # quietly absorbing a question instead of the question being answered.
+    'navpick-btn',
     # ⚠️ `sb-` is the PAGE-STATE BAR, and it is exempt for the same reason `sg-` is:
     # prototype scaffolding, not product chrome. Its tabs and its collapse toggle are
     # its own controls in ink chrome along the bottom of the window; dressing them in

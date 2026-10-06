@@ -7,10 +7,13 @@ a proposal wearing a spec's title.
 
 ## Status
 
-**Spacing is APPLIED (2026-10-06).** §1 is done: the ladder is declared, every literal reads
-a token, the values have moved and the sweep is reported below. **Every other axis still
-waits its own pass** — radius, elevation, overlays, z-index, motion, border width,
-breakpoints, in that order unless something argues otherwise.
+**Spacing (§1) and border radius (§2) are APPLIED (2026-10-06).** Both are done end to end:
+the tokens are declared, every literal reads one, the values have moved and both passes are
+reported below.
+
+**The remaining axes, in order:** **overlays (§4) next, then elevation (§3)** — elevation
+takes its alpha from the ink ladder and that ladder is built by the overlay pass, so the
+numbered order is the wrong order here. Then z-index, motion, border width, breakpoints.
 
 ### What the spacing pass cost, measured
 
@@ -403,9 +406,16 @@ reason beside it, and it is the example of what the rest of the sweep is looking
 
 ---
 
-# 2 · Border radius
+# 2 · Border radius — APPLIED 2026-10-06
 
-14 distinct values, 248 occurrences.
+14 distinct values, **250** occurrences (248 when this was written; the two added since are
+`.navpick-item` and `.navpick-btn` from the top-bar band).
+
+**Both stages are done.** Stage 1 declared the seven tokens and converted 149 literals with
+zero change; stage 2 moved 88. Nothing is left as a literal on this axis.
+⚠️ **What proved it was the computed-value walk, not the sweep** — 3,259 rounded elements
+compared across ten surfaces at stage 1 (0 changed, 0 lost, 0 gained) and the same walk at
+stage 2, where every change matched this table exactly. See implementation rule 8.
 
 ## The scale
 
@@ -425,13 +435,13 @@ rendered radius depends on the box's height, not on the scale. Putting them on a
 invites someone to "step down" a pill to 12px, which changes what the component is. Same for
 `50%`.
 
-## `10px` → 12 — decided, and it is the decision, not a side effect
+## `10px` → 12 — decided, and it is the decision, not a side effect — **applied**
 
 39 occurrences, the single most common rounded surface in the product: **cards, menus and
 the grouped instances table all get slightly rounder.** The alternative was `10px` → 8, which
 merges it with the control radius and leaves a card as round as an input. Rejected.
 
-## The plan card keeps a radius of its own — the scale gains a step at 24
+## The plan card keeps a radius of its own — the scale gains a step at 24 — **applied**
 
 `.plancard` (`styles.css:6142`) is `border-radius:20px`, one occurrence, the only value in
 the 16–20 band, on the largest object on the selling surface. It does not join
@@ -1024,6 +1034,21 @@ The same is true of **`952`**, which stays off the scale for the same reason: it
 from the invoices row's own 905px minimum against a `width − 48` container, so 953 is the
 first width that fits. If the table's columns change, the number has to change with them.
 
+⚠️ **And of `1301`, added 2026-10-06** — the ceiling of the top bar's collapsed band.
+**Two numbers come out of the bar and they mean different things:** `1262` is where it stops
+overflowing the **window**, `1302` is where it stops intruding on its own **40px gutter**.
+The ceiling is the second, because at 1262 the bar clears the screen edge by half a pixel
+having eaten 39.5 of its 40px inset — and the gutter is a decision, not slack, so a threshold
+that consumes it is a rounding rather than a threshold.
+Measured on Home, the only page carrying `Buy a license` in the bar: over the window by 61px
+at 1200, 11 at 1250, zero from 1262; into the gutter by 39.5px at 1262, 21.5 at 1280, 1.5 at
+1300, zero from 1302.
+**It tracks the bar's contents, not the device scale** — `--bp-wide` stays at 1200, because
+moving it would take the plan grid's column count with it.
+⚠️ **Named cost:** at 1280, the commonest desktop width, the nav is collapsed although the
+strip would nearly fit — with twenty pixels of gutter instead of forty. The collapsed nav was
+accepted; a bar pressed against the window edge was not.
+
 ## ⚠️ `900` is kept rather than folded
 
 Twelve blocks use it and they are genuinely a middle tier: the wizard's two-column grid, the
@@ -1135,6 +1160,24 @@ hundredths of a pixel. They were the whole of that phantom diff. They are
 `position:absolute`, `z-index:-1`, `pointer-events:none` and carry no layout, so dropping
 them costs a sweep nothing and is the difference between a signal and a page of false
 positives.
+
+**8 · ⚠️⚠️ THE GEOMETRY SWEEP IS BLIND TO ANY AXIS THAT DOES NOT MOVE LAYOUT, and on those
+axes it is the SECONDARY check, never the proof.** A broken `var()` in a `border-radius`
+renders square corners with **identical geometry** — same x, y, width, height, same scroll
+height, same everything the sweep hashes. It would report a clean sweep and a wrong screen.
+
+**Five axes behave this way: radius, elevation, overlays, motion and border width.** On each
+of them the primary check is a **per-element comparison of the computed value** across
+paired mirrors: walk every element, read the property that axis owns, diff the two maps.
+Three numbers come out and all three matter — values that **changed**, elements that had the
+property and no longer do (**lost**), and elements that **gained** it. The second is the one
+a broken token produces, and it is invisible to everything else.
+
+⚠️ **Radius is the worked example, and the comparison is what actually proved its stage 1**:
+3,259 rounded elements across ten surfaces — 0 changed, 0 lost, 0 gained. The 175 identical
+geometry cells proved only that nothing moved, which on this axis was never in question.
+Whoever runs elevation, overlays, motion or border width writes the equivalent walk **before**
+touching a value, and reports it first.
 
 ---
 

@@ -253,6 +253,77 @@
   --space-inset:var(--sp-10);     /* the widest routine inset */
   --space-divide:var(--sp-11);    /* separation doing the work of a divider */
 
+  /* ================= RADIUS: five steps and two shapes (2026-10-06) =================
+     ⚠️ ONE LAYER, not two. Spacing needed a private ladder because 12px is three
+     different jobs; on this axis the role and the step genuinely coincide — a card is
+     `surface`, an input is `control` — so naming them once is the whole system.
+     ⚠️⚠️ PILL AND CIRCLE ARE SHAPES, NOT SIZES, and that is why they are tokens of their
+     own rather than two more steps. `999px` does not mean "very round", it means "as
+     round as this box can be", and what it renders depends on the box's height, not on
+     the scale. On a ladder somebody would eventually "step a pill down" to 12 and change
+     what the component IS. Same for `50%`.
+     ⚠️⚠️ `--btn-r` (24px) STAYS ITS OWN TOKEN AND IS NOT MERGED WITH `--radius-feature`,
+     although both are 24. They answer different questions — how round a CONTROL is, and
+     how round the plan card is — and the equality is a coincidence of value between two
+     independent decisions. The test, for whoever finds them later: if the control radius
+     changes, does the plan card change with it? No. If the plan card changes, do the
+     buttons? No. Two answers of "no" mean two tokens, whatever the numbers say. */
+  --radius-sharp:0;         /* a surface that meets another surface flush */
+  --radius-tight:4px;       /* the smallest rounding that reads as intentional */
+  --radius-control:8px;     /* inputs, cells, inset fields */
+  --radius-surface:12px;    /* cards, menus, dialogs */
+  --radius-feature:24px;    /* the plan card — see the note above about --btn-r */
+  --radius-pill:999px;      /* a shape, not a size */
+  --radius-circle:50%;      /* a shape, not a size */
+
+  /* ================= OVERLAYS: a private alpha ladder and its roles (2026-10-06) ======
+     ⚠️⚠️ TWO LAYERS, like spacing and for the same reason: one alpha does more than one
+     job. Ink at .08 is a pointer resting on a row AND the darkness a menu's shadow is
+     drawn at — naming the step `--overlay-hover` and then handing it to `box-shadow`
+     would make the stylesheet say something untrue about itself. So: a private ladder by
+     RANK, and role tokens that point into it. Elevation (§3) points at the RANKS, not at
+     the roles: a shadow is not a hover and is not a scrim, it shares their darkness
+     without sharing their job.
+     ⚠️⚠️ AND THE FILE WRITES "INK AT AN ALPHA" TWO WAYS. `rgba(0,0,0,…)` 27 times (every
+     drop shadow, the row fade) and `rgba(28,28,28,…)` 5 times (the three scrims, the
+     scroll cue, the sticky shadow) — and 28,28,28 IS `--ink`, so the second set is the
+     honest one. The ROLE tokens below are therefore built on ink; the shadows keep their
+     own `rgba(0,0,0, …)` and take only the ALPHA from the ladder, because changing their
+     colour is not what this pass is for. Which of the two the product should use is a
+     question for the elevation pass, and it is now written down rather than assumed. */
+  --ink-a1:.04; --ink-a2:.08; --ink-a3:.14; --ink-a4:.18; --ink-a5:.32; --ink-a6:.50;
+
+  --overlay-wash:rgba(28,28,28,var(--ink-a1));         /* the faintest tint still visible */
+  --overlay-hover:rgba(28,28,28,var(--ink-a2));        /* a pointer resting on something */
+  --overlay-edge:rgba(28,28,28,var(--ink-a3));         /* an edge cue; shade under a sticky element */
+  --overlay-shadow:rgba(28,28,28,var(--ink-a4));       /* a wash standing in for depth */
+  --overlay-scrim:rgba(28,28,28,var(--ink-a5));        /* the dimming behind a modal */
+  --overlay-scrim-sheet:rgba(28,28,28,var(--ink-a6));  /* behind the phone's bottom sheet */
+
+  /* ⚠️ THE LIGHT SIDE IS THREE VALUES, NOT SEVENTEEN, and that is what excluding the
+     settings bar does to it. Thirteen of the white alphas belong to `.sb-*`, which is a
+     reviewing instrument rather than product chrome: they are not mapped, not folded and
+     not given tokens, and they go when the bar goes. What the PRODUCT uses is these
+     three, each a single consistent value — so nothing on this side moves at all. */
+  --overlay-light-press:rgba(255,255,255,.14);   /* pressing/hovering a control on ink */
+  --overlay-light-track:rgba(255,255,255,.35);   /* the unfilled part of a ring on ink */
+  --overlay-light-border:rgba(255,255,255,.55);  /* the edge of an outlined control on ink */
+
+  /* ⚠️ FOREGROUND, NOT OVERLAY. White at .78 on an ink ground is "primary text on a dark
+     surface"; it only looked like an overlay because it is written as an alpha. These
+     leave this axis for the type/colour system.
+     ⚠️ There is no `--on-ink-muted`: every muted-on-ink value in the file belongs to the
+     settings bar, which is excluded — declaring the third role would create an orphan on
+     day one, which is the `--s-sechead` mistake. Named here instead. */
+  --on-ink-primary:rgba(255,255,255,.78);
+  --on-ink-secondary:rgba(255,255,255,.72);
+
+  /* ⚠️⚠️ SIX STOPS OF ONE FADE, NOT SIX OVERLAY LEVELS. They have to hold their relative
+     proportions or the fade stops being a fade, so they are one token and they are off
+     the alpha scale entirely. It is a MASK, not a wash: the alphas are opacity, and the
+     colour in them is only there because a mask gradient needs one. */
+  --fade-rows:linear-gradient(to bottom, rgba(0,0,0,.78) 0%, rgba(0,0,0,.50) 18%, rgba(0,0,0,.28) 36%, rgba(0,0,0,.12) 56%, rgba(0,0,0,.04) 76%, rgba(0,0,0,0) 100%);
+
   /* ⚠️ 40 -> 52 (2026-09-25): the back button is an icon-only button, and icon-only
      stopped being square when the shape reference arrived — it is the icon plus its
      padding, which comes out 52 wide. The gutter is that number, and `--contentX`
@@ -338,7 +409,7 @@ body{
    pair the feed's own marks now use, so the chip and the disc on the rail read as one
    family: the blue in this feed means "a named thing", in both places it appears.
    ⚠️ 12.1:1 — the darkest text in the product on its palest ground. */
-.fi-chip{display:inline;padding:var(--space-glyph) var(--space-inline);margin:0 var(--space-glyph);border-radius:999px;
+.fi-chip{display:inline;padding:var(--space-glyph) var(--space-inline);margin:0 var(--space-glyph);border-radius:var(--radius-pill);
   background:var(--c-blue-50);color:var(--accent);white-space:nowrap;
   box-decoration-break:clone;-webkit-box-decoration-break:clone}
 /* the shared shell: the top bar (.dtopbar) stays put; every page's view scrolls here */
@@ -370,7 +441,7 @@ a{color:inherit}
    without this they pick up the browser's underline. Prose links keep .link,
    which underlines on purpose. */
 .dtopbar a,.dprofmenu a{text-decoration:none;font-style:normal}
-:focus-visible{outline:2px solid var(--ink);outline-offset:2px;border-radius:3px}
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px;border-radius:var(--radius-tight)}
 /* ============================================================================
    ICONS — one source, one placement, three sizes
    ============================================================================
@@ -399,11 +470,11 @@ a{color:inherit}
 
 .sidebar{background:var(--chrome);border-right:1px solid var(--chromeLine);display:flex;flex-direction:column}
 .brand{display:flex;align-items:center;gap:var(--space-inline);padding:var(--space-stack) var(--space-stack);border-bottom:1px solid var(--chromeLine)}
-.brand .mark{width:26px;height:26px;border:1px solid var(--line);border-radius:6px;display:flex;align-items:center;justify-content:center;background:#fff;color:var(--ink)}
+.brand .mark{width:26px;height:26px;border:1px solid var(--line);border-radius:var(--radius-control);display:flex;align-items:center;justify-content:center;background:#fff;color:var(--ink)}
 .brand .bt{font-size:var(--t-small-fs);font-weight:700;line-height:1.1}
 .brand .bs{font-size:var(--t-small-fs);color:var(--faint);letter-spacing:.04em;text-transform:uppercase}
 .nav{padding:var(--space-control) var(--space-inline);display:flex;flex-direction:column;gap:var(--space-glyph)}
-.nav a{display:flex;align-items:center;gap:var(--space-control);padding:var(--space-inline) var(--space-control);border-radius:6px;color:var(--mid);text-decoration:none;font-size:var(--t-body-fs);border:1px solid transparent}
+.nav a{display:flex;align-items:center;gap:var(--space-control);padding:var(--space-inline) var(--space-control);border-radius:var(--radius-control);color:var(--mid);text-decoration:none;font-size:var(--t-body-fs);border:1px solid transparent}
 .nav a:hover{background:var(--hover);color:var(--ink)}
 .nav a.on{background:var(--sel);color:var(--ink);font-weight:600;border-color:var(--chromeLine)}
 .nav a.on .ic{stroke-width:1.9}
@@ -414,17 +485,17 @@ a{color:inherit}
 .sidebar,.topbar{display:none}
 .topbar .pt{font-size:var(--t-small-fs);font-weight:600}
 .topbar .sp{flex:1}
-.iconbutton{width:var(--ic-30);height:var(--ic-30);border:1px solid transparent;border-radius:6px;background:transparent;color:var(--mid);display:flex;align-items:center;justify-content:center}
+.iconbutton{width:var(--ic-30);height:var(--ic-30);border:1px solid transparent;border-radius:var(--radius-control);background:transparent;color:var(--mid);display:flex;align-items:center;justify-content:center}
 .iconbutton:hover{background:var(--hover);color:var(--ink);border-color:var(--chromeLine)}
-.user{display:flex;align-items:center;gap:var(--space-inline);padding:var(--space-tight) var(--space-inline);border-radius:6px;border:1px solid transparent}
+.user{display:flex;align-items:center;gap:var(--space-inline);padding:var(--space-tight) var(--space-inline);border-radius:var(--radius-control);border:1px solid transparent}
 .user:hover{background:var(--hover);border-color:var(--chromeLine)}
-.avatar{width:24px;height:24px;border-radius:50%;background:#fff;border:1px solid var(--line);color:var(--ink);font-size:var(--t-small-fs);font-weight:700;display:flex;align-items:center;justify-content:center}
+.avatar{width:24px;height:24px;border-radius:var(--radius-circle);background:#fff;border:1px solid var(--line);color:var(--ink);font-size:var(--t-small-fs);font-weight:700;display:flex;align-items:center;justify-content:center}
 .user .un{font-size:var(--t-body-fs);color:var(--ink)}
 .kebab{font-size:var(--t-h2-sm-fs);line-height:1;color:var(--mid)}
 .menu{position:relative}
-.menu .pop{position:absolute;right:0;top:36px;background:#fff;border:1px solid var(--line);border-radius:6px;min-width:160px;padding:var(--space-tight);box-shadow:0 6px 20px rgba(0,0,0,.08);z-index:40}
+.menu .pop{position:absolute;right:0;top:36px;background:#fff;border:1px solid var(--line);border-radius:var(--radius-control);min-width:160px;padding:var(--space-tight);box-shadow:0 6px 20px rgba(0,0,0,var(--ink-a2));z-index:40}
 .menu .pop[hidden]{display:none}
-.menu .pop button{display:block;width:100%;text-align:left;padding:var(--space-inline) var(--space-inline);border:0;background:transparent;border-radius:6px;font-size:var(--t-body-fs);color:var(--ink)}
+.menu .pop button{display:block;width:100%;text-align:left;padding:var(--space-inline) var(--space-inline);border:0;background:transparent;border-radius:var(--radius-control);font-size:var(--t-body-fs);color:var(--ink)}
 .menu .pop button:hover{background:var(--hover)}
 
 /* ⚠️ `overflow:visible`, and it was `auto`. In page mode that made THIS the nearest
@@ -444,7 +515,7 @@ a{color:inherit}
    already draws, and it was the only 1px `--line` box left on a page whose every other
    frame is either `--line2` or nothing. The modal and the phone already dropped it —
    this was the one presentation still carrying it. */
-.canvas{background:var(--card);border:0;border-radius:6px;overflow:hidden}
+.canvas{background:var(--card);border:0;border-radius:var(--radius-control);overflow:hidden}
 /* ⚠️ THE BLUE HOME FADES INTO, not a grey of its own (2026-09-27). `#fafafa` was a
    one-off literal — a near-white that belonged to no scale and sat a shade off every
    other quiet ground in the file. `--c-blue-50` is the colour the Home gradient resolves
@@ -672,7 +743,7 @@ a{color:inherit}
    that is the full-width "this list has no rows" block, and this is one line inside a
    narrow column beside a table. */
 .fchip-none{font-size:var(--t-body-fs);color:var(--mid);background:var(--surface-quiet);
-  border-radius:6px;padding:var(--space-inline) var(--space-control)}
+  border-radius:var(--radius-control);padding:var(--space-inline) var(--space-control)}
 /* ⚠️⚠️ AN ADDED ADD-ON IS FILLED, NOT OUTLINED (2026-09-29, by request). It was a
    white pill with a `--line` border and ink text — the same treatment `.chip.ghost`
    and every neutral marker in the product wears, so the one block on the panel that
@@ -687,7 +758,7 @@ a{color:inherit}
    ⚠️ The tick takes `currentColor` like every icon here, so the glyph and the word
    darken together and nothing paints the mark separately. */
 .fchip{display:inline-flex;align-items:center;gap:var(--space-inline);font-size:var(--t-small-fs);padding:var(--space-tight) var(--space-control);
-  border:0;border-radius:999px;background:var(--c-blue-50);color:var(--accent);font-weight:500}
+  border:0;border-radius:var(--radius-pill);background:var(--c-blue-50);color:var(--accent);font-weight:500}
 .fchip .fmark{width:var(--ic-16);height:var(--ic-16);flex:none}
 /* row 2: the label affordance on its own */
 .metarow{display:flex;gap:var(--space-control);margin-top:var(--space-stack);flex-wrap:wrap;align-items:center}
@@ -706,7 +777,7 @@ a{color:inherit}
    file at the same weight — the node carries both, so only the longer selector wins.
    Measured against the real node: `.titleblock` computes to exactly 59. */
 .hd-ic{align-self:center}
-.hd-ic.lp-ic{width:59px;height:59px;border-radius:12px}
+.hd-ic.lp-ic{width:59px;height:59px;border-radius:var(--radius-surface)}
 .metarow #labelSlot{display:inline-flex;align-items:center;gap:var(--space-inline)}
 .labeltext{font-size:var(--t-body-fs);line-height:var(--t-small-lh);letter-spacing:var(--t-small-ls);color:var(--mid)}
 /* the label sits with a pencil beside it; the button stays quiet until hovered */
@@ -837,12 +908,12 @@ a{color:inherit}
 .minihead{margin:0 0 var(--space-inline);font-family:var(--font-ui);font-size:var(--t-label-fs);line-height:var(--t-label-lh);letter-spacing:var(--t-label-ls);font-weight:var(--t-label-fw);text-transform:uppercase;color:var(--ink)}
 /* the subscription-period label matches the "Subscription plan" subhead */
 .periodhead{margin:0 0 var(--space-inline);font-family:var(--font-ui);font-size:var(--t-label-fs);line-height:var(--t-label-lh);letter-spacing:var(--t-label-ls);font-weight:var(--t-label-fw);text-transform:uppercase;color:var(--ink)}
-.chip{font-size:var(--t-small-fs);padding:var(--space-glyph) var(--space-inline);border:1px solid var(--line);border-radius:999px;color:var(--mid);background:#fafafa;display:inline-flex;align-items:center;gap:var(--space-inline)}
+.chip{font-size:var(--t-small-fs);padding:var(--space-glyph) var(--space-inline);border:1px solid var(--line);border-radius:var(--radius-pill);color:var(--mid);background:#fafafa;display:inline-flex;align-items:center;gap:var(--space-inline)}
 .chip.status{border-color:var(--ink);color:var(--ink);font-weight:600;background:#fff}
 /* blocked is the one status that is not "alive" — ink fill, the same weight every
    other attention mark in the product carries (see .pill.attn) */
 .chip.status.blocked{background:var(--ink);color:#fff;border-color:var(--ink)}
-.chip .sdot{width:7px;height:7px;border-radius:50%;background:var(--ink);flex:none}
+.chip .sdot{width:7px;height:7px;border-radius:var(--radius-circle);background:var(--ink);flex:none}
 .chip.ghost{border-style:dashed;color:var(--faint);background:transparent}
 .chip.ghost:hover{color:var(--ink);border-color:var(--mid)}
 .chip.label{border-color:var(--line);color:var(--ink);background:#fff}
@@ -852,7 +923,7 @@ a{color:inherit}
    to show all of it rather than clip at a fixed size */
 .metarow #labelSlot:has(.labeledit-row){flex:1;min-width:0}
 .labeledit-row{display:flex;flex:1;align-items:center;gap:var(--space-inline);min-width:0}
-.labelinput{font:inherit;font-size:var(--t-body-fs);padding:var(--space-tight) var(--space-control);border:1px solid var(--ink);border-radius:999px;flex:1;min-width:0;max-width:640px;outline:none}
+.labelinput{font:inherit;font-size:var(--t-body-fs);padding:var(--space-tight) var(--space-control);border:1px solid var(--ink);border-radius:var(--radius-pill);flex:1;min-width:0;max-width:640px;outline:none}
 
 .muted{color:var(--faint)}
 
@@ -898,7 +969,7 @@ a{color:inherit}
    which is visible in a second; inheriting red would have made a missing tone look like
    a deliberate one. */
 .alert{margin-top:var(--space-control);display:flex;align-items:flex-start;gap:var(--space-control);font-size:var(--t-body-fs);
-  color:var(--ink);border:0;border-radius:10px;padding:var(--space-stack) var(--space-stack)}
+  color:var(--ink);border:0;border-radius:var(--radius-surface);padding:var(--space-stack) var(--space-stack)}
 .alert.tone-red{background:var(--surface-danger)}
 /* the ink band, the same one Home's black tone wears — a deadline, not a fault */
 .alert.tone-black{background:var(--ink);color:#fff}
@@ -939,13 +1010,13 @@ a{color:inherit}
    two properties: the tone colour and the weight. Grey and regular, after a middot — the
    same rank this product gives every secondary fact that follows a primary one. */
 .alert .atxt b .amsg-when{color:var(--mid);font-weight:400}
-.alert.tone-black .atxt b .amsg-when{color:rgba(255,255,255,.72)}
+.alert.tone-black .atxt b .amsg-when{color:var(--on-ink-secondary)}
 .licmodal .alert.tone-black .atxt b .amsg-when{color:var(--mid)}
 .alert.tone-black .atxt b{color:#fff}
 /* the action is a text button, and its palette is the ground's, not the page's */
 .alert.tone-black .aact{color:#fff}
 .alert.tone-black .aact:not([disabled]):hover,
-.alert.tone-black .aact:not([disabled]):active{color:#fff;background:rgba(255,255,255,.14)}
+.alert.tone-black .aact:not([disabled]):active{color:#fff;background:var(--overlay-light-press)}
 .alert.tone-black .link{color:#fff}
 .alert.tone-black .btn:focus-visible{outline-color:#fff}
 /* ⚠️⚠️ THE ACTIONS LIVE INSIDE `.atxt`, NOT BESIDE IT — and the first version of this
@@ -1068,7 +1139,7 @@ a{color:inherit}
    ⚠️ `999px` is a STADIUM, not a guess at a radius: the browser clamps it to half the
    shorter side, so the ends are true semicircles at every height without any size
    restating what its own rounding should be. */
-.btn--icon{border-radius:999px}
+.btn--icon{border-radius:var(--radius-pill)}
 .btn--icon.btn--sm{padding:0 var(--space-inline)}
 .btn--icon.btn--md{padding:0 var(--space-heading)}
 .btn--icon.btn--lg{padding:0 var(--space-block)}
@@ -1263,7 +1334,7 @@ a{color:inherit}
    it has to track width/height — a step would break the centring. ⚠️ The box is 15px and
    the offsets are 8/6, so the two have already drifted apart by half a pixel. */
 .btn-spin{position:absolute;left:50%;top:50%;width:15px;height:15px;margin:-8px 0 0 -8px;
-  border:2px solid currentColor;border-top-color:transparent;border-radius:50%;opacity:.85;
+  border:2px solid currentColor;border-top-color:transparent;border-radius:var(--radius-circle);opacity:.85;
   animation:refspin .7s linear infinite}
 .btn--sm .btn-spin{width:12px;height:12px;margin:-6px 0 0 -6px}
 
@@ -1306,7 +1377,7 @@ a{color:inherit}
 .plantable{width:69%}
 @media(max-width:900px){.plantable{width:100%}}
 /* light-grey sub-cards (Billing / Invoices / Production instances) */
-.billcard{background:#f6f6f4;border:1px solid var(--line2);border-radius:8px;padding:var(--space-stack) var(--space-stack);margin-top:var(--space-control)}
+.billcard{background:#f6f6f4;border:1px solid var(--line2);border-radius:var(--radius-control);padding:var(--space-stack) var(--space-stack);margin-top:var(--space-control)}
 .billcard-h{margin:0 0 var(--space-control);font-family:var(--font-ui);font-size:var(--t-label-fs);line-height:var(--t-label-lh);letter-spacing:var(--t-label-ls);font-weight:var(--t-label-fw);text-transform:uppercase;color:var(--ink)}
 /* This grid once held two cards side by side; only Next charge is left, so it is a
    single full-width column.
@@ -1365,7 +1436,7 @@ a{color:inherit}
    and the date, still the largest thing in the row */
 .nextcharge .big{display:inline-block;font-size:var(--t-h2-fs);line-height:1.15;letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw);font-variant-numeric:tabular-nums}
 .sh{display:flex;align-items:center;gap:var(--space-inline);margin-bottom:var(--space-control)}
-.sh .n{width:20px;height:20px;border-radius:50%;background:var(--ink);color:#fff;font-size:var(--t-small-fs);display:flex;align-items:center;justify-content:center;flex:none}
+.sh .n{width:20px;height:20px;border-radius:var(--radius-circle);background:var(--ink);color:#fff;font-size:var(--t-small-fs);display:flex;align-items:center;justify-content:center;flex:none}
 .sh h3{margin:0;font-family:var(--font-ui);font-size:var(--t-label-fs);line-height:var(--t-label-lh);letter-spacing:var(--t-label-ls);font-weight:var(--t-label-fw);text-transform:uppercase;color:var(--ink)}
 .sh .spacer{flex:1}
 
@@ -1475,7 +1546,7 @@ th.num,td.num{text-align:right}
    has a full-width area of its own (measured one line at 390 before and after). */
 tr.inv-row > td.mono,
 tr.inv-row > td:nth-child(2){white-space:nowrap}
-.meter{height:8px;background:var(--track);border-radius:999px;overflow:hidden;min-width:120px;border:1px solid var(--line2)}
+.meter{height:8px;background:var(--track);border-radius:var(--radius-pill);overflow:hidden;min-width:120px;border:1px solid var(--line2)}
 .meter>span{display:block;height:100%;background:var(--fill)}
 /* fixed text column so every meter starts at the same x and is the same width;
    wide enough for the largest plan's "0 / 1,000" without wrapping */
@@ -1494,12 +1565,12 @@ tr.inv-row > td:nth-child(2){white-space:nowrap}
 .tip.show::after{
   content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);right:0;
   background:var(--ink);color:#fff;font-size:var(--t-body-fs);white-space:nowrap;
-  padding:var(--space-tight) var(--space-inline);border-radius:6px;pointer-events:none;z-index:20}
+  padding:var(--space-tight) var(--space-inline);border-radius:var(--radius-control);pointer-events:none;z-index:20}
 @media (hover:hover){
   .tip:hover::after,.tip:focus-visible::after{
     content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);right:0;
     background:var(--ink);color:#fff;font-size:var(--t-body-fs);white-space:nowrap;
-    padding:var(--space-tight) var(--space-inline);border-radius:6px;pointer-events:none;z-index:20}
+    padding:var(--space-tight) var(--space-inline);border-radius:var(--radius-control);pointer-events:none;z-index:20}
 }
 /* .wide: the base tooltip is a nowrap one-liner, which a sentence would stretch
    to ~900px. Wraps at a readable measure instead; still right-anchored, so an
@@ -1637,7 +1708,7 @@ tr.inv-row > td:nth-child(2){white-space:nowrap}
    that punched the mark back out, are gone with the geometry they were painting. */
 .alertic .ic{width:var(--ic-16);height:var(--ic-16)}
 .alertic:hover,.alertic.show{opacity:.78}
-.alertic:focus-visible{outline:2px solid var(--ink);outline-offset:2px;border-radius:4px}
+.alertic:focus-visible{outline:2px solid var(--ink);outline-offset:2px;border-radius:var(--radius-tight)}
 
 /* ---------- product version: the running one against the latest ----------------
    The two numbers are one fact, so they are one cell: the gap between them is the
@@ -1650,7 +1721,7 @@ tr.inv-row > td:nth-child(2){white-space:nowrap}
    always a `<button>` now — the only time it renders, it carries the tooltip — so the
    button reset is the whole rule. */
 .verm{display:inline-flex;flex:none;align-items:center;padding:0;border:0;background:none;
-  color:var(--status-alert);cursor:pointer;border-radius:6px}
+  color:var(--status-alert);cursor:pointer;border-radius:var(--radius-control)}
 .verm:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 /* ⚠️ THE NUMBER IS ONE STYLE IN BOTH STATES (2026-09-25, by request). `.verline.is-behind
    .ver-run{font-weight:500}` set the behind number heavier, so the column had two type
@@ -1767,7 +1838,7 @@ tr.inv-row > td:nth-child(2){white-space:nowrap}
    ⚠️ 3px + 20px line + 3px = the 26px the fixed height used to give, so the pill is the
    same shape it was. */
 .titlecount{display:inline-block;padding:var(--space-tight) var(--space-control);line-height:20px;
-  border-radius:999px;background:var(--surface-quiet);color:var(--mid);
+  border-radius:var(--radius-pill);background:var(--surface-quiet);color:var(--mid);
   font-size:var(--t-small-fs);font-variant-numeric:tabular-nums}
 .inst-hint{margin:var(--space-tight) 0 0;font-size:var(--t-body-fs);line-height:1.5;color:var(--mid)}
 .inst-filter{margin:0;padding:var(--space-control) var(--space-heading);border-bottom:1px solid var(--line2);
@@ -1797,7 +1868,7 @@ tr.inv-row > td:nth-child(2){white-space:nowrap}
 .dropcheck.is-on{font-weight:500}
 /* ⚠️ The multi row is a LABEL, so it has to be given the padding and the hover that
    `.dropmenu button:not(.btn)` gives the single one — that selector cannot reach it. */
-.dropcheck--multi{width:100%;padding:var(--space-inline) var(--space-control);border-radius:7px;cursor:pointer;
+.dropcheck--multi{width:100%;padding:var(--space-inline) var(--space-control);border-radius:var(--radius-control);cursor:pointer;
   font-size:var(--t-body-fs);color:var(--ink)}
 .dropcheck--multi:hover{background:var(--hover)}
 .dropcheck--multi:focus-within{background:var(--hover)}
@@ -1836,7 +1907,7 @@ tr.inv-row > td:nth-child(2){white-space:nowrap}
    weight a figure needs; everything around it stays quiet, because a balance is a fact
    and not an action. */
 .creditcard{display:flex;align-items:baseline;gap:var(--space-control);flex-wrap:wrap;
-  border:1px solid var(--line);border-radius:6px;padding:var(--space-stack) var(--space-stack);background:var(--card)}
+  border:1px solid var(--line);border-radius:var(--radius-control);padding:var(--space-stack) var(--space-stack);background:var(--card)}
 .credit-amt{font-size:22px;font-weight:500;font-variant-numeric:tabular-nums;color:var(--ink)}
 /* ⚠️ `.credit-none` GOES WITH THE EMPTY STATE IT DRESSED (2026-09-29). The section is
    hidden below a positive balance now, so nothing emits that class — and a live rule on a
@@ -1886,7 +1957,7 @@ tr.inv-row > td:nth-child(2){white-space:nowrap}
 /* the name's last word and its icon break as one — see cellTopWithInfo */
 .nobreak{white-space:nowrap}
 .infoic:hover,.infoic.show{color:var(--ink)}
-.infoic:focus-visible{outline:2px solid var(--ink);outline-offset:2px;border-radius:50%}
+.infoic:focus-visible{outline:2px solid var(--ink);outline-offset:2px;border-radius:var(--radius-circle)}
 /* the bubble hangs left of the glyph, which sits mid-line rather than at a card edge */
 .infoic.tip.wide::after{right:auto;left:-8px}
 .infoic.tip::before{right:auto;left:6px}
@@ -1897,14 +1968,14 @@ tr.inv-row > td:nth-child(2){white-space:nowrap}
 .row .l{color:var(--mid);font-size:var(--t-small-fs)}
 .row .r{text-align:right;display:flex;align-items:center;gap:var(--space-inline);flex-wrap:wrap;justify-content:flex-end}
 .big{font-size:var(--t-h2-fs);font-weight:var(--t-h2-fw);font-variant-numeric:tabular-nums}
-.pill{font-size:var(--t-small-fs);padding:var(--space-glyph) var(--space-inline);border:1px solid var(--ink);color:var(--ink);background:#fff;border-radius:999px}
+.pill{font-size:var(--t-small-fs);padding:var(--space-glyph) var(--space-inline);border:1px solid var(--ink);color:var(--ink);background:#fff;border-radius:var(--radius-pill)}
 .pill.soft{border-color:var(--line);color:var(--mid)}
 
 .inline{display:flex;gap:var(--space-inline);align-items:center;flex-wrap:wrap}
 .inline[hidden]{display:none}
 .inline input{font:inherit;font-size:var(--t-body-fs);padding:var(--space-inline) var(--space-stack);border:1px solid var(--ink);border-radius:var(--btn-r);width:180px;outline:none}
 
-.stub{color:var(--faint);font-size:var(--t-body-fs);padding:var(--space-heading);text-align:center;border:1px dashed var(--line);border-radius:6px;background:#fafafa}
+.stub{color:var(--faint);font-size:var(--t-body-fs);padding:var(--space-heading);text-align:center;border:1px dashed var(--line);border-radius:var(--radius-control);background:#fafafa}
 
 /* license key in header */
 /* The key is what this block is for, so the value stays prominent — one step below
@@ -2299,7 +2370,7 @@ th[aria-label$="ctions"],th.cellact,td.cellact{width:1%;white-space:nowrap;text-
    an 11px white square over the head's left and right ends. */
 body[data-tableframe] .dblock table,
 body[data-tableframe] .gridtbl,
-body[data-tableframe] .listframe table{border:0;border-radius:0}
+body[data-tableframe] .listframe table{border:0;border-radius:var(--radius-sharp)}
 body[data-tableframe] .listframe table:not(.is-grouped) thead th,
 body[data-tableframe] .listframe table:not(.is-grouped) thead th:first-child,
 body[data-tableframe] .listframe table:not(.is-grouped) thead th:last-child,
@@ -2317,15 +2388,15 @@ body[data-tableframe] .listframe table:not(.is-grouped) tbody td:last-child{
    radius only, and the four that zeroed padding are gone. */
 body[data-tableframe] .dblock thead th:first-child,
 body[data-tableframe] .listframe thead th:first-child,
-body[data-tableframe] .gridtbl thead th:first-child{border-top-left-radius:0}
+body[data-tableframe] .gridtbl thead th:first-child{border-top-left-radius:var(--radius-sharp)}
 body[data-tableframe] .dblock thead th:last-child,
 body[data-tableframe] .listframe thead th:last-child,
-body[data-tableframe] .gridtbl thead th:last-child{border-top-right-radius:0}
+body[data-tableframe] .gridtbl thead th:last-child{border-top-right-radius:var(--radius-sharp)}
 body[data-tableframe] .listframe table:not(.is-grouped) thead th::before{display:none}
 body[data-tableframe] .dblock table tbody tr:last-child > td,
 body[data-tableframe] .listframe table tbody tr:last-child > td,
-body[data-tableframe] .gridtbl tbody tr:last-child > td{border-bottom:0;border-radius:0}
-body[data-tableframe] #instTable.is-grouped{border:0;border-radius:0}
+body[data-tableframe] .gridtbl tbody tr:last-child > td{border-bottom:0;border-radius:var(--radius-sharp)}
+body[data-tableframe] #instTable.is-grouped{border:0;border-radius:var(--radius-sharp)}
 /* ⚠️⚠️ THE "GIVE THE BOTTOM EDGE BACK" RULES REACH INTO THIS VARIANT AND MUST NOT
    (fixed 2026-09-29, reported as "a stroke still shows here and there, for example the
    instances table in the licence modal"). Two rules further down this file put a
@@ -2339,7 +2410,7 @@ body[data-tableframe] #instTable.is-grouped{border:0;border-radius:0}
 body[data-tableframe] .gridtbl:has(+ .pager[hidden]),
 body[data-tableframe] .listframe:has(.pager[hidden]) #instTable.is-grouped,
 body[data-tableframe].list-empty #instTable.is-grouped{
-  border-bottom:0;border-bottom-left-radius:0;border-bottom-right-radius:0}
+  border-bottom:0;border-bottom-left-radius:var(--radius-sharp);border-bottom-right-radius:var(--radius-sharp)}
 /* ---------- and in the modal the LIST tables fill it (2026-09-29, by request) -------
    ⚠️ `.section` insets by 22px, which is right for prose and headings and wrong for a
    table in a variant whose whole statement is "the table owns its block edge to edge".
@@ -2503,15 +2574,15 @@ body[data-tableframe] #dashView .dblock > table{margin-left:calc(-1 * var(--spac
    outside it keeps its own bottom edge, like every other table. */
 /* ⚠️ The feed's pager keeps a rule and the surface and takes no sides: there is no
    frame beside it for sides to continue. See the report. */
-.listcard.listframe .feed + .pager,.listframe .feed + .pager{border:0;border-radius:0;
+.listcard.listframe .feed + .pager,.listframe .feed + .pager{border:0;border-radius:var(--radius-sharp);
   border-top:1px solid var(--line2);margin-top:var(--space-stack);padding-left:0;padding-right:0}
 /* ⚠️ The pager's four buttons are `btn--secondary btn--md btn--icon`; this block used to
    restate the whole box and its own disabled rule. Nothing left to say. */
 
 /* ---------- modal ---------- */
-.overlay{position:fixed;inset:0;background:rgba(28,28,28,.32);display:flex;align-items:center;justify-content:center;padding:var(--space-heading);z-index:100}
+.overlay{position:fixed;inset:0;background:var(--overlay-scrim);display:flex;align-items:center;justify-content:center;padding:var(--space-heading);z-index:100}
 .overlay[hidden]{display:none}
-.modal{background:#fff;border:1px solid var(--line);border-radius:8px;max-width:460px;width:100%;box-shadow:0 14px 44px rgba(0,0,0,.18)}
+.modal{background:#fff;border:1px solid var(--line);border-radius:var(--radius-control);max-width:460px;width:100%;box-shadow:0 14px 44px rgba(0,0,0,var(--ink-a4))}
 /* ---------- a dialog that carries the Review layout ------------------------------
    The renewal dialog is not a question with two buttons — it is an order, and it is
    laid out like the wizard's last step. That needs the wizard's width, not a 460px
@@ -2610,7 +2681,7 @@ body[data-tableframe] #dashView .dblock > table{margin-left:calc(-1 * var(--spac
 .am-sechead h4{margin:0;font-family:var(--font-ui);font-size:var(--t-label-fs);line-height:var(--t-label-lh);letter-spacing:var(--t-label-ls);font-weight:var(--t-label-fw);text-transform:uppercase}
 .am-cap{font-size:var(--t-small-fs);color:var(--faint)}
 .am-capgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:var(--space-control)}
-.am-cell{border:1px solid var(--line2);border-radius:6px;padding:var(--space-control);display:flex;flex-direction:column}
+.am-cell{border:1px solid var(--line2);border-radius:var(--radius-control);padding:var(--space-control);display:flex;flex-direction:column}
 /* ⚠️⚠️ 14.5 → `--t-body-fs` (16px), ONE STEP UP (2026-09-29, by request). These are the
    block titles on Capacity and Add-ons — `Devices`, `Production instances`, `AI credits`
    — and they were set BELOW the scale's floor: 14.5px, a half-pixel nudge taken years'
@@ -2646,8 +2717,8 @@ body[data-tableframe] #dashView .dblock > table{margin-left:calc(-1 * var(--spac
    (see .pill.attn), so a dark disc says "active" whatever side of the track it sits
    on. Off is now the quiet one: a light knob with an outline on a light track, and
    the ink fill belongs to on, which is the only state that has earned it. */
-.switch .track{width:40px;height:22px;border-radius:999px;background:var(--hover);border:1px solid var(--line);position:relative;transition:.15s}
-.switch .track::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;
+.switch .track{width:40px;height:22px;border-radius:var(--radius-pill);background:var(--hover);border:1px solid var(--line);position:relative;transition:.15s}
+.switch .track::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:var(--radius-circle);
   background:#fff;border:1px solid var(--line);box-sizing:border-box;transition:.15s}
 .switch input:checked + .track{background:var(--ink);border-color:var(--ink)}
 .switch input:checked + .track::after{transform:translateX(18px);background:#fff;border-color:#fff}
@@ -2659,7 +2730,7 @@ body[data-tableframe] #dashView .dblock > table{margin-left:calc(-1 * var(--spac
 .switch.lg .track::after{width:24px;height:24px}
 .switch.lg input:checked + .track::after{transform:translateX(26px)}
 
-.am-order{border:1px solid var(--line2);border-radius:6px;padding:var(--space-glyph) var(--space-stack);margin-bottom:var(--space-stack)}
+.am-order{border:1px solid var(--line2);border-radius:var(--radius-control);padding:var(--space-glyph) var(--space-stack);margin-bottom:var(--space-stack)}
 .am-orow{display:flex;justify-content:space-between;gap:var(--space-stack);padding:var(--space-control) 0;border-bottom:1px dashed var(--line2);font-size:var(--t-body-fs)}
 .am-orow:last-child{border-bottom:0}
 /* ⚠️⚠️ THE ORDER'S MAIN LINES ARE BLOCK TITLES, AND THEY WERE SET AT 14 (2026-10-01, by
@@ -2677,7 +2748,7 @@ body[data-tableframe] #dashView .dblock > table{margin-left:calc(-1 * var(--spac
    job the size now does. */
 .am-newmonthly{font-weight:600;font-size:var(--t-body-fs)}
 /* billing terms: their own quiet card, not a subtitle */
-.nl-terms{border:1px solid var(--line2);border-radius:6px;padding:var(--space-control) var(--space-stack);font-size:var(--t-body-fs);color:var(--mid);background:var(--card)}
+.nl-terms{border:1px solid var(--line2);border-radius:var(--radius-control);padding:var(--space-control) var(--space-stack);font-size:var(--t-body-fs);color:var(--mid);background:var(--card)}
 /* ⚠️ ONE TREATMENT FOR EVERY SENTENCE ABOUT MONEY (2026-09-28, by request). The tax line
    used to arrive wearing `.taxnote` — `--faint`, its own margin — inside a block already
    set in `--mid`, and the discount sentence arrived as an order row above the block
@@ -2691,11 +2762,11 @@ body[data-tableframe] #dashView .dblock > table{margin-left:calc(-1 * var(--spac
    where they meet, and the terms card pulled up 1px so the two 1px borders land
    on top of each other instead of drawing a 2px seam. */
 .nl-joined{min-width:0}
-.nl-joined > .am-order{border-radius:6px 6px 0 0;margin-bottom:0}
+.nl-joined > .am-order{border-radius:var(--radius-control) var(--radius-control) var(--radius-sharp) var(--radius-sharp);margin-bottom:0}
 /* ⚠️ NEGATIVE OFF THE SCALE (2026-10-06): this -1px overlaps TWO 1px BORDERS so they
    render as one line. It is the negation of a border width, not of an inset, and moving
    it to -2 would reopen the 2px seam it exists to close. */
-.nl-joined > .nl-terms{border-radius:0 0 6px 6px;margin-top:-1px}
+.nl-joined > .nl-terms{border-radius:var(--radius-sharp) var(--radius-sharp) var(--radius-control) var(--radius-control);margin-top:-1px}
 /* Review, right column: Due today, the payment context, then the commit — all
    inside .fs-right's own 16px padding, so the button is neither flush to the
    card edge nor full-bleed (same internal spacing as step 2's summary card).
@@ -2733,7 +2804,7 @@ body[data-tableframe] #dashView .dblock > table{margin-left:calc(-1 * var(--spac
   letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw)}
 .am-duelabel{font-size:var(--t-small-fs)}
 .am-dueval{font-size:var(--t-h2-fs);font-weight:var(--t-h2-fw);font-variant-numeric:tabular-nums;flex:none}
-.am-figures{margin-top:var(--space-inline);border:1px solid var(--line2);border-radius:6px;padding:var(--space-control) var(--space-control);font-size:var(--t-body-fs);font-variant-numeric:tabular-nums}
+.am-figures{margin-top:var(--space-inline);border:1px solid var(--line2);border-radius:var(--radius-control);padding:var(--space-control) var(--space-control);font-size:var(--t-body-fs);font-variant-numeric:tabular-nums}
 .am-sumlist{display:flex;flex-direction:column;gap:var(--space-inline);padding-bottom:var(--space-inline);margin-bottom:var(--space-inline);border-bottom:1px dashed var(--line2)}
 .am-sumlist[hidden]{display:none}
 .am-sumrow{display:flex;justify-content:space-between;gap:var(--space-stack)}
@@ -2797,7 +2868,7 @@ body[data-tableframe] #dashView .dblock > table{margin-left:calc(-1 * var(--spac
 .sb-group:first-child{margin-left:0}
 .sb-tabs{display:flex;gap:var(--space-tight);flex-wrap:wrap;margin-bottom:var(--space-control);
   border-bottom:1px solid rgba(255,255,255,.16);padding-bottom:var(--space-inline)}
-.sb-tab{padding:var(--space-tight) var(--space-control);border:0;border-radius:999px;background:transparent;
+.sb-tab{padding:var(--space-tight) var(--space-control);border:0;border-radius:var(--radius-pill);background:transparent;
   color:rgba(255,255,255,.66);font:inherit;font-size:var(--t-small-fs);cursor:pointer}
 .sb-tab:hover{background:rgba(255,255,255,.10);color:#fff}
 .sb-tab.is-on{background:#fff;color:var(--ink);font-weight:500}
@@ -2807,7 +2878,7 @@ body[data-tableframe] #dashView .dblock > table{margin-left:calc(-1 * var(--spac
    when it has to. */
 .sb-opts{display:flex;flex-wrap:wrap;gap:var(--space-inline)}
 .sb-opt{display:inline-flex;align-items:baseline;gap:var(--space-inline);padding:var(--space-tight) var(--space-control);
-  border:1px solid rgba(255,255,255,.22);border-radius:999px;cursor:pointer;
+  border:1px solid rgba(255,255,255,.22);border-radius:var(--radius-pill);cursor:pointer;
   color:rgba(255,255,255,.82);white-space:nowrap}
 .sb-opt:hover{border-color:rgba(255,255,255,.5);color:#fff}
 /* the radio is the mechanism, not the mark — the whole chip states the answer */
@@ -2838,7 +2909,7 @@ body[data-tableframe] #dashView .dblock > table{margin-left:calc(-1 * var(--spac
    rows tall at the foot of the window, and a heading of its own would cost a whole
    row to say one word. */
 .sb-sub{display:flex;align-items:baseline;gap:var(--space-control);flex-wrap:wrap;
-  margin-top:var(--space-control);padding-top:var(--space-control);border-top:1px solid rgba(255,255,255,.14)}
+  margin-top:var(--space-control);padding-top:var(--space-control);border-top:1px solid var(--overlay-light-press)}
 .sb-sublabel{flex:none;color:rgba(255,255,255,.62);font-size:var(--t-small-fs)}
 .sb-subopts{flex:1 1 auto}
 /* ⚠️ `.sb-hint` / `.sb-subhint` ARE GONE (2026-09-30, by request) with the nineteen
@@ -2910,7 +2981,7 @@ body.has-statebar .fs-box{height:min(90vh, calc(100vh - var(--sbH,0px) - 32px))}
    ⚠️ The note further up this file that says "it is also NOT blurred: `.fs-screen`
    carries a backdrop-filter" is about a DIFFERENT element and is now stale in its
    reason; left for its own subject. */
-.fs-screen{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;color:var(--ink);background:rgba(28,28,28,.32)}
+.fs-screen{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;color:var(--ink);background:var(--overlay-scrim)}
 /* Licence details in modal mode: the same container, backdrop and blur as the
    wizard, but one layer below — Change plan, Manage add-ons, Apply coupon and
    the confirm dialogs all open ABOVE it and return to it when they close. */
@@ -2958,7 +3029,7 @@ body.has-statebar .fs-box{height:min(90vh, calc(100vh - var(--sbH,0px) - 32px))}
      makes it read as "close this surface" rather than a control inside the content */
   .licmodal .fs-box{position:relative;overflow:visible}
   .licmodal .fs-headactions{display:block;position:absolute;top:-18px;right:-18px;z-index:12}
-  .licmodal .fs-close{width:36px;height:36px;border-radius:50%;
+  .licmodal .fs-close{width:36px;height:36px;border-radius:var(--radius-circle);
     border:1px solid var(--line);background:#fff;color:var(--ink);font-size:var(--t-body-fs);
     box-shadow:0 4px 14px rgba(0,0,0,.16)}
   .licmodal .fs-close:hover{background:var(--hover)}
@@ -2995,7 +3066,7 @@ body.has-statebar .fs-box{height:min(90vh, calc(100vh - var(--sbH,0px) - 32px))}
    exactly the content. */
   .licmodal .fs-body{border-radius:inherit}
 }
-.licmodal .canvas{background:transparent;border:0;border-radius:0;overflow:visible}
+.licmodal .canvas{background:transparent;border:0;border-radius:var(--radius-sharp);overflow:visible}
 /* the content spans the modal rather than the page container (--pageW capped it
    60px narrower than the box): normal side padding, modest offset under the header */
 /* The grey summary block spans the modal edge to edge — one surface, no card
@@ -3019,7 +3090,7 @@ body.has-statebar .fs-box{height:min(90vh, calc(100vh - var(--sbH,0px) - 32px))}
    ⚠️ SCOPED TO `.licmodal`. In page mode the same banner sits on a page with margins
    and a gradient behind it; a full-bleed black strip there would be a page-width bar,
    which is a different component. The card shape stays on the page. */
-.licmodal .gbanner.licnew{margin:0;border-radius:0}
+.licmodal .gbanner.licnew{margin:0;border-radius:var(--radius-sharp)}
 body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its place */
 .back[hidden]{display:none}   /* .back sets display:flex, so [hidden] needs help */
 /* no back button in modal mode, so its gutter column goes too — otherwise the
@@ -3049,7 +3120,7 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
    `body[data-mesh]` carries, for the same reason.
    ⚠️ `position:relative` is the other half: the mesh is absolutely positioned and would
    otherwise measure itself against the viewport rather than the box. */
-.fs-box{position:relative;isolation:isolate;display:flex;flex-direction:column;width:min(1040px,92vw);height:90vh;background:var(--page-bg);border:1px solid var(--line);border-radius:12px;box-shadow:0 24px 64px rgba(0,0,0,.28);overflow:hidden}
+.fs-box{position:relative;isolation:isolate;display:flex;flex-direction:column;width:min(1040px,92vw);height:90vh;background:var(--page-bg);border:1px solid var(--line);border-radius:var(--radius-surface);box-shadow:0 24px 64px rgba(0,0,0,.28);overflow:hidden}
 /* ⚠️ The details and Users modals keep the flat ground they were built on: only the
    purchase wizard was asked for the gradient, and it is the only one that carries the
    node. This restores their own ground rather than letting them inherit the new one. */
@@ -3111,8 +3182,8 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
    grey. The radius is the container's MINUS its 1px border, which is where the inside of
    the curve actually is. (Adding `overflow:hidden` to the containers would do it too and
    would clip anything that ever needs to escape them — this does not.) */
-.modal .mh{border-radius:7px 7px 0 0}
-.paymodal-h{border-radius:9px 9px 0 0}
+.modal .mh{border-radius:var(--radius-control) var(--radius-control) var(--radius-sharp) var(--radius-sharp)}
+.paymodal-h{border-radius:var(--radius-control) var(--radius-control) var(--radius-sharp) var(--radius-sharp)}
 .fs-maintitle{margin:0;font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw);flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}   /* a long licence label must not push ✕ onto a second row */
 .fs-headactions{display:flex;align-items:center;gap:var(--space-stack);flex:none}
 /* ONE close control, for every surface that has one. The licence-details modal set
@@ -3237,13 +3308,13 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
    so the hover has to cover the whole thing and say so. Inside variant A's panel it
    reads by its hover alone — a border here would be a card inside a card — and the
    negative inset lets the hover span the panel's content width. */
-.fs-screen .am-addon{cursor:pointer;padding:var(--space-control) var(--space-stack);margin:0 calc(-1 * var(--space-stack));border-radius:8px}
+.fs-screen .am-addon{cursor:pointer;padding:var(--space-control) var(--space-stack);margin:0 calc(-1 * var(--space-stack));border-radius:var(--radius-control)}
 .fs-screen .am-addon:hover{background:var(--hover)}
 /* Variant B: no section headers — every item is its own white card in one vertical
    stack (capacity rows and add-ons alike), so each piece separates on its own edge.
    The stack rule beats .fs-screen .am-cell, which strips box and padding for A. */
 .nl-cardstack{display:flex;flex-direction:column;gap:var(--space-control)}
-.fs-screen .nl-cardstack .am-cell{background:#fff;border:1px solid var(--line2);border-radius:8px;padding:var(--space-stack);margin:0}
+.fs-screen .nl-cardstack .am-cell{background:#fff;border:1px solid var(--line2);border-radius:var(--radius-control);padding:var(--space-stack);margin:0}
 /* ---------- the Instances group IS a card (2026-09-29, by request) ----------
    ⚠️ THE TITLE WAS OUTSIDE THE FRAME because the group was not a frame. Every other
    block on this step is one `.am-cell` = one white card, so a heading sitting between
@@ -3267,18 +3338,18 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
    model and the group's content keeps the exact left edge the bordered cards above and
    below it have. Removing the width would shift this block 1px out of line with them. */
 .fs-screen .nl-cardstack .am-group{background:#fff;border:1px solid transparent;
-  border-radius:8px;padding:var(--space-stack)}
+  border-radius:var(--radius-control);padding:var(--space-stack)}
 .fs-screen .nl-cardstack .am-group .am-grouphead{padding:0 0 var(--space-stack)}
 .fs-screen .nl-cardstack .am-group .am-cell{background:transparent;border:0;
-  border-radius:0;padding:0}
+  border-radius:var(--radius-sharp);padding:0}
 .fs-screen .nl-cardstack .am-group .am-cell + .am-cell{
   margin-top:var(--space-stack);padding-top:var(--space-stack);border-top:1px solid var(--line2)}
 /* variant A lays the cells out in a grid inside one panel, so the group is a band
    within it rather than a card of its own — same idea, one level shallower */
 .fs-screen .am-capgrid .am-group{grid-column:1/-1;border:1px solid var(--line2);
-  border-radius:6px;padding:var(--space-control)}
+  border-radius:var(--radius-control);padding:var(--space-control)}
 .fs-screen .am-capgrid .am-group .am-grouphead{padding:0 0 var(--space-control)}
-.fs-screen .am-capgrid .am-group .am-cell{border:0;border-radius:0;padding:0}
+.fs-screen .am-capgrid .am-group .am-cell{border:0;border-radius:var(--radius-sharp);padding:0}
 .fs-screen .am-capgrid .am-group .am-cell + .am-cell{
   margin-top:var(--space-control);padding-top:var(--space-control);border-top:1px solid var(--line2)}
 /* Variant B, Devices and Assets: **the same layout as every other card in the stack**
@@ -3308,7 +3379,7 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
 .fs-screen .nl-cardstack .am-addon.on:hover{background:var(--c-blue-50)}
 .fs-screen .am-cardprice{margin-top:var(--space-tight)}
 /* add-on price lines up with the title and description, past the checkbox */
-.fs-panel{background:#fff;border:1px solid var(--line2);border-radius:8px;padding:var(--space-stack)}
+.fs-panel{background:#fff;border:1px solid var(--line2);border-radius:var(--radius-control);padding:var(--space-stack)}
 /* ⚠️⚠️ THE BASE CLASS WAS THE LOCKED ONE (2026-09-28, by request). `.fs-devinput` is
    worn by two controls — the read-only figure a plan fixes, and the Devices field you
    type in — and every declaration here was written for the first: `--track` fill,
@@ -3328,7 +3399,7 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
 /* pins right under the sticky header row (57px tall) */
 /* top:0 — the sticky inset resolves against the scrollport's padding box, so any
    positive value pushes the panel below the left panel's top line even at rest */
-.fs-right{position:sticky;top:0;background:#fff;border:1px solid var(--line2);border-radius:8px;padding:var(--space-stack)}
+.fs-right{position:sticky;top:0;background:#fff;border:1px solid var(--line2);border-radius:var(--radius-control);padding:var(--space-stack)}
 /* ---------- the Calculation summary's type (2026-09-29, by request) ----------
    ⚠️ IT MOVES UP THE DECLARED LADDER AND INVENTS NOTHING. The scale is display · h1 ·
    h2 20 · body 16 · small 14 · label 14 · caption 13 — there is NO h3 in it (the one
@@ -3441,7 +3512,7 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
   /* the box is the viewport, so there is no backdrop left to dim or blur */
   #nlModal{background:none;-webkit-backdrop-filter:none;backdrop-filter:none}
   #nlModal .fs-box{
-    width:100%;height:100%;max-width:none;border:0;border-radius:0;box-shadow:none}
+    width:100%;height:100%;max-width:none;border:0;border-radius:var(--radius-sharp);box-shadow:none}
   /* ⚠️ THE BANDS DO NOT TAKE THE WORKING COLUMN. The frame IS the window here, and a
      title indented to a centred 1040px column inside a full-screen surface reads as a
      dialog that failed to grow. 40px is the number the portal's own top bar takes (see
@@ -3583,12 +3654,12 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
   font:inherit;background:none;border:0;padding:0;color:var(--faint)}
 button.nl-step{cursor:pointer}
 button.nl-step:hover .nl-sname{text-decoration:underline;text-underline-offset:3px}
-button.nl-step:focus-visible{outline:2px solid var(--ink);outline-offset:3px;border-radius:6px}
+button.nl-step:focus-visible{outline:2px solid var(--ink);outline-offset:3px;border-radius:var(--radius-control)}
 /* ⚠️ ONLY THE CIRCLE FILLS. The reference fills it in the product's accent; here it is
    ink, because this is chrome and `--accent` is spent on the Popular card, where it
    means "we suggest this". A filled step suggests nothing — it says "you are here". */
 .nl-smark{flex:none;display:inline-flex;align-items:center;justify-content:center;
-  width:28px;height:28px;border-radius:50%;border:1.5px solid var(--line);
+  width:28px;height:28px;border-radius:var(--radius-circle);border:1.5px solid var(--line);
   font-size:var(--t-small-fs);font-variant-numeric:tabular-nums;color:var(--faint)}
 .nl-step.is-done .nl-smark{border-color:var(--ink);color:var(--ink)}
 .nl-step.is-cur .nl-smark{border-color:var(--ink);background:var(--ink);color:#fff}
@@ -3628,7 +3699,7 @@ button.nl-step:focus-visible{outline:2px solid var(--ink);outline-offset:3px;bor
 /* step 2 — the shared PE card under the plan grid: the title is the card's
    header, the "All plans include…" line its muted intro; the card spans the
    plan grid width and nothing floats between the grid and the card */
-.nl-pe{margin:var(--space-heading) 0 0;border:1px solid var(--line2);border-radius:10px;background:var(--card);padding:var(--space-stack) var(--space-heading)}
+.nl-pe{margin:var(--space-heading) 0 0;border:1px solid var(--line2);border-radius:var(--radius-surface);background:var(--card);padding:var(--space-stack) var(--space-heading)}
 .nl-pe-h{font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw);color:var(--ink)}
 .nl-pe-intro{margin:var(--space-inline) 0 0;font-size:var(--t-body-fs);color:var(--faint)}
 .nl-pe-body{margin-top:var(--space-inline)}
@@ -3639,13 +3710,13 @@ button.nl-step:focus-visible{outline:2px solid var(--ink);outline-offset:3px;bor
 .nl-mainline{border-bottom:0;padding-bottom:var(--space-glyph)}
 .nl-entline{padding-top:0;color:var(--mid)}
 /* purchase loading spinner (button keeps its width via JS) */
-.nl-spin{display:inline-block;width:15px;height:15px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:refspin .7s linear infinite}
+.nl-spin{display:inline-block;width:15px;height:15px;border:2px solid var(--overlay-light-track);border-top-color:#fff;border-radius:var(--radius-circle);animation:refspin .7s linear infinite}
 /* success modal — fresh monochrome design */
 .nl-success{width:min(560px,96vw);text-align:center}
 .nl-success-b{padding:var(--space-gutter) var(--space-gutter) var(--space-band);display:flex;flex-direction:column;align-items:center}
 .nl-success-h{margin:var(--space-stack) 0 0;font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw)}
 .nl-success-p{margin:var(--space-control) 0 0;font-size:var(--t-body-fs);line-height:1.5;color:var(--mid)}
-.nl-keybox{display:flex;align-items:center;gap:var(--space-control);margin-top:var(--space-stack);border:1px solid var(--line2);border-radius:6px;background:#fafafa;padding:var(--space-inline) var(--space-control) var(--space-inline) var(--space-stack)}
+.nl-keybox{display:flex;align-items:center;gap:var(--space-control);margin-top:var(--space-stack);border:1px solid var(--line2);border-radius:var(--radius-control);background:#fafafa;padding:var(--space-inline) var(--space-control) var(--space-inline) var(--space-stack)}
 .nl-keybox code{font-family:var(--font-mono);font-size:var(--t-body-fs);letter-spacing:.02em;color:var(--ink)}
 .nl-success-f{margin-top:var(--space-block);width:100%}
 .nl-success-f .btn{width:100%}
@@ -3747,7 +3818,7 @@ button.nl-step:focus-visible{outline:2px solid var(--ink);outline-offset:3px;bor
    same value and the frame would disappear; white is what makes it an object there. The
    same local-palette exception the ink banner takes, and for the same reason — the
    variant does not know what it is standing on. */
-.lp-swapbox{height:100%;gap:var(--space-control);padding:0 var(--space-heading);border-radius:10px;
+.lp-swapbox{height:100%;gap:var(--space-control);padding:0 var(--space-heading);border-radius:var(--radius-surface);
   background:var(--card);text-decoration:none}
 .lp-swapbox:not([disabled]):hover{background:var(--hover)}
 .lp-swapbox:not([disabled]):active{background:var(--sel)}
@@ -3838,7 +3909,7 @@ button.nl-step:focus-visible{outline:2px solid var(--ink);outline-offset:3px;bor
    different marks rather than one mark in two states. */
 .nl-prodcard .nl-prodic{width:26px;height:26px;
   filter:grayscale(1);opacity:.55;transition:opacity .12s,filter .12s}
-.nl-prodcard.on .nl-prodic{width:42px;height:42px;padding:var(--space-inline);border-radius:10px;
+.nl-prodcard.on .nl-prodic{width:42px;height:42px;padding:var(--space-inline);border-radius:var(--radius-surface);
   background:var(--accent);filter:none;opacity:1}
 .nl-prodcard.on .nl-prodic .prodmark{filter:brightness(0) invert(1)}
 /* hovering an unchosen product brings its mark most of the way back — the card is
@@ -4058,7 +4129,7 @@ body[data-page="signin"] #shellMain{display:flex;align-items:center;justify-cont
    window with the state bar up, which is right for a modal and wrong for a card that IS
    the page. Measured before: a 400px form in a 1016px box. */
 #authModal.authstandalone .authbox{height:auto;max-height:none;margin:auto;
-  box-shadow:0 1px 2px rgba(0,0,0,.04),0 12px 40px rgba(0,0,0,.08)}
+  box-shadow:0 1px 2px rgba(0,0,0,var(--ink-a1)),0 12px 40px rgba(0,0,0,var(--ink-a2))}
 #authModal.authstandalone .authbody{flex:none;overflow:visible}
 .authstandalone .authbody{padding-top:var(--space-band)}
 /* ⚠️ THE LOCK-UP IS THE ONE THING THE PAGE FORM ADDS. `tb-logo` carries `License Portal`
@@ -4140,7 +4211,7 @@ body[data-page="signin"] #shellMain{display:flex;align-items:center;justify-cont
    rather than a literal typed twice. */
 .dtopbar-inner{position:relative;display:flex;align-items:center;gap:var(--space-stack);--tbarH:56px;height:var(--tbarH);
   width:100%;margin:0;padding:0 var(--space-gutter);
-  background:transparent;border:0;border-radius:0}
+  background:transparent;border:0;border-radius:var(--radius-sharp)}
 .dtopbar .sp{flex:1}
 .dbrand{display:flex;align-items:center;gap:var(--space-control)}
 /* ---------- the wordmark ----------
@@ -4178,7 +4249,7 @@ body[data-page="signin"] #shellMain{display:flex;align-items:center;justify-cont
 .bportal::before{content:'·';margin-right:var(--space-inline);color:var(--faint)}
 /* the logo doubles as a Home link — reset it to look identical as a <button> */
 button.dbrand{background:none;border:0;padding:0;color:inherit;font:inherit;cursor:pointer}
-.dbrand .mark{width:26px;height:26px;border:1px solid var(--line);border-radius:6px;display:flex;align-items:center;justify-content:center;background:#fff;color:var(--ink)}
+.dbrand .mark{width:26px;height:26px;border:1px solid var(--line);border-radius:var(--radius-control);display:flex;align-items:center;justify-content:center;background:#fff;color:var(--ink)}
 .dbrand .bt{font-size:var(--t-small-fs);font-weight:700;line-height:1.1}
 .dbrand .bt .bsep{color:var(--faint);font-weight:400;margin:0 var(--space-inline)}
 /* top-bar nav — same treatment as the old sidebar items, laid out horizontally */
@@ -4214,7 +4285,7 @@ button.dbrand{background:none;border:0;padding:0;color:inherit;font:inherit;curs
    "розміри шрифта не змінюємо" from the pass that added the icons — that was a constraint
    on that pass, not a rule. */
 .tnav-item{display:inline-flex;align-items:center;gap:var(--space-inline);padding:var(--space-inline) var(--space-stack);border:0;
-  border-radius:999px;background:transparent;color:var(--mid);font:inherit;font-size:var(--t-body-fs)}
+  border-radius:var(--radius-pill);background:transparent;color:var(--mid);font:inherit;font-size:var(--t-body-fs)}
 /* the icon takes the item's colour like every other icon in the product — currentColor,
    so the pill's white and the strip's grey both arrive without a rule painting a glyph */
 .tnav-item .ic{flex:none}
@@ -4264,7 +4335,7 @@ body[data-mesh] .dtopbar:not(.docked) .tnav-item:not(.on):hover{background:var(-
    `-10px` would be right until the next time the tab's padding or type size moved. */
 .tnav .tnav-item.on::after{content:"";position:absolute;left:10px;right:10px;
   bottom:calc((100% - var(--tbarH, 56px)) / 2);
-  height:4px;border-radius:4px 4px 0 0;background:var(--ink)}
+  height:4px;border-radius:var(--radius-tight) var(--radius-tight) var(--radius-sharp) var(--radius-sharp);background:var(--ink)}
 /* the current tab does not answer the pointer — "you are already here" is the whole
    state, and a hover fill on it would read as a second, different destination */
 .tnav-item.on:hover{background:transparent;color:var(--ink)}
@@ -4324,12 +4395,12 @@ body[data-mesh] .dtopbar:not(.docked) .tnav-item:not(.on):hover{background:var(-
    group's lower edge would otherwise sit on the frame. The top needs nothing — the
    first spacer row is already there. */
 #instTable.is-grouped{border-collapse:separate;border-spacing:0;
-  border:1px solid var(--line2);border-radius:10px;padding:0 var(--space-control) var(--space-control)}
+  border:1px solid var(--line2);border-radius:var(--radius-surface);padding:0 var(--space-control) var(--space-control)}
 /* ⚠️ THE BOTTOM EDGE BELONGS TO THE PAGINATION FOOTER (2026-09-28) — see the footer
    block earlier in this file. Stated here rather than there because this rule is the one
    being overridden and they carry the same specificity: whichever comes last wins, and
    "last" is a property of the file, not of the intent. */
-#instTable.is-grouped{border-bottom:0;border-bottom-left-radius:0;border-bottom-right-radius:0}
+#instTable.is-grouped{border-bottom:0;border-bottom-left-radius:var(--radius-sharp);border-bottom-right-radius:var(--radius-sharp)}
 /* ⚠️⚠️ THE COLUMN HEAD SPANS THE FRAME, THE GROUPS DO NOT (2026-09-28, by request).
    The 12px that insets the groups is padding on the TABLE, so it insets the `thead`
    with everything else — and a head band floating 12px inside its own frame reads as a
@@ -4349,8 +4420,8 @@ body[data-mesh] .dtopbar:not(.docked) .tnav-item:not(.on):hover{background:var(-
    `relative` written "to be safe" OUTRANKS the sticky and unpins the whole column head.
    Caught on screen: the band stopped travelling and the strip drew itself across the
    rows. The head is positioned because it sticks; the strip rides on that. */
-#instTable.is-grouped thead th:first-child{border-top-left-radius:0}
-#instTable.is-grouped thead th:last-child{border-top-right-radius:0}
+#instTable.is-grouped thead th:first-child{border-top-left-radius:var(--radius-sharp)}
+#instTable.is-grouped thead th:last-child{border-top-right-radius:var(--radius-sharp)}
 /* ⚠️⚠️ `::before`, AND IT WAS `::after` — WHICH WAS ALREADY TAKEN (fixed 2026-09-28).
    The sticky pattern draws its stuck LINE AND SHADOW on `.listframe .stickyhead th::after`
    (one element carrying both, see that block). Writing the corner patch onto the same
@@ -4386,8 +4457,8 @@ body[data-mesh] .dtopbar:not(.docked) .tnav-item:not(.on):hover{background:var(-
 #instTable.is-grouped thead th:last-child::before{content:"";position:absolute;
   top:0;bottom:-1px;width:12px;background:var(--surface-quiet);
   border-bottom:1px solid var(--line2)}
-#instTable.is-grouped thead th:first-child::before{left:-12px;border-top-left-radius:10px}
-#instTable.is-grouped thead th:last-child::before{right:-12px;border-top-right-radius:10px}
+#instTable.is-grouped thead th:first-child::before{left:-12px;border-top-left-radius:var(--radius-surface)}
+#instTable.is-grouped thead th:last-child::before{right:-12px;border-top-right-radius:var(--radius-surface)}
 /* ⚠️ AND THE STUCK LINE HAS TO REACH ACROSS THE PATCHES, or the band would end its
    underline 12px short at each end — the same 18px step the note further down this file
    describes, at a different scale. The `::after` is the line-and-shadow element; on
@@ -4411,9 +4482,9 @@ body[data-mesh] .dtopbar:not(.docked) .tnav-item:not(.on):hover{background:var(-
    stack of empty containers. The outline is what says "these rows belong to this
    heading" — with nothing showing there is nothing to enclose, so the heading is just a
    band. It appears the moment the group opens, and closes under the last row. */
-#instTable.is-grouped .instgroup > td{padding:0;border:0;border-radius:8px}
+#instTable.is-grouped .instgroup > td{padding:0;border:0;border-radius:var(--radius-control)}
 #instTable.is-grouped .instgroup.is-open > td{border:1px solid var(--line);
-  border-bottom:0;border-radius:8px 8px 0 0}
+  border-bottom:0;border-radius:var(--radius-control) var(--radius-control) var(--radius-sharp) var(--radius-sharp)}
 /* the rows inside: the sides continue down them, the dashed hairline stays as the
    separator BETWEEN them, and the last one closes the box */
 #instTable.is-grouped .instg-row > td{border-top:0}
@@ -4423,8 +4494,8 @@ body[data-mesh] .dtopbar:not(.docked) .tnav-item:not(.on):hover{background:var(-
    child of the table in the final group, and search hides rows without removing them —
    either way the bottom of the box would land on the wrong row or on none. */
 #instTable.is-grouped .instg-row.is-last > td{border-bottom:1px solid var(--line)}
-#instTable.is-grouped .instg-row.is-last > td:first-child{border-bottom-left-radius:8px}
-#instTable.is-grouped .instg-row.is-last > td:last-child{border-bottom-right-radius:8px}
+#instTable.is-grouped .instg-row.is-last > td:first-child{border-bottom-left-radius:var(--radius-control)}
+#instTable.is-grouped .instg-row.is-last > td:last-child{border-bottom-right-radius:var(--radius-control)}
 /* the space between two groups — see instGroupedHTML for why it is a row */
 #instTable.is-grouped .instgap > td{height:10px;padding:0;border:0}
 /* ⚠️ `min-width:0` ON BOTH THE ROW AND THE NAME, and it is load-bearing. A flex item
@@ -4575,7 +4646,7 @@ body[data-mesh] .dtopbar:not(.docked) .tnav-item:not(.on):hover{background:var(-
    square keeps every mark in the column identical.
    ⚠️ THE RADIUS SCALES WITH IT. The family is 24/4, 40/6, 64/10 — 42 takes the 40 step,
    6, because it is that size and not a fourth one. */
-.licc-cell .lp-ic{width:42px;height:42px;border-radius:6px}
+.licc-cell .lp-ic{width:42px;height:42px;border-radius:var(--radius-control)}
 .licc-row .lp-ic{align-self:flex-start}
 
 /* ---------- HOME BLOCKS, VARIANT B: the fourth row fades under See all ----------
@@ -4616,8 +4687,8 @@ body[data-mesh] .dtopbar:not(.docked) .tnav-item:not(.on):hover{background:var(-
    .12 by 56% means the row is a hint by its own midpoint. Smooth and small are not the
    same axis — the earlier pass moved how MUCH is visible, this one moves how it goes. */
 .dblock.has-fade tbody tr.is-fading > td{
-  -webkit-mask-image:linear-gradient(to bottom, rgba(0,0,0,.78) 0%, rgba(0,0,0,.50) 18%, rgba(0,0,0,.28) 36%, rgba(0,0,0,.12) 56%, rgba(0,0,0,.04) 76%, rgba(0,0,0,0) 100%);
-  mask-image:linear-gradient(to bottom, rgba(0,0,0,.78) 0%, rgba(0,0,0,.50) 18%, rgba(0,0,0,.28) 36%, rgba(0,0,0,.12) 56%, rgba(0,0,0,.04) 76%, rgba(0,0,0,0) 100%);
+  -webkit-mask-image:var(--fade-rows);
+  mask-image:var(--fade-rows);
   pointer-events:none}
 .dblock.has-fade tbody tr.is-fading{cursor:default}
 /* the block becomes the positioning context — see renderBlockFades for why not the
@@ -4654,7 +4725,7 @@ body[data-mesh] .dtopbar:not(.docked) .tnav-item:not(.on):hover{background:var(-
    ⚠️ `:active` inherits this, which is right — pressed moves the fill, not the height. */
 .blockmore-go{box-shadow:0 2px 5px rgba(0,0,0,.05),0 12px 40px rgba(0,0,0,.10),0 0 0 4px var(--card)}
 .btn--secondary.blockmore-go:not([disabled]):not([aria-disabled="true"]):hover{
-  box-shadow:0 2px 6px rgba(0,0,0,.07),0 16px 48px rgba(0,0,0,.14),0 0 0 4px var(--card),
+  box-shadow:0 2px 6px rgba(0,0,0,.07),0 16px 48px rgba(0,0,0,var(--ink-a3)),0 0 0 4px var(--card),
              inset 0 0 0 .5px var(--line)}
 
 /* the label editor's counter — quiet until it is the thing you need to see */
@@ -4691,7 +4762,7 @@ body[data-mesh] .dtopbar:not(.docked) .tnav-item:not(.on):hover{background:var(-
 .sg-back{display:inline-flex;align-items:center;gap:var(--space-tight);font-size:var(--t-small-fs);color:var(--mid)}
 .sg-back:hover{color:var(--ink)}
 .sg-nav{display:flex;flex-direction:column;gap:var(--space-glyph)}
-.sg-nav a{display:block;padding:var(--space-inline) var(--space-control);border-radius:6px;font-size:var(--t-small-fs);color:var(--mid)}
+.sg-nav a{display:block;padding:var(--space-inline) var(--space-control);border-radius:var(--radius-control);font-size:var(--t-small-fs);color:var(--mid)}
 .sg-nav a:hover{background:var(--hover);color:var(--ink)}
 /* the current page takes the fill the nav strip's current destination takes — one idea,
    one treatment, even though this rail is scaffolding rather than product */
@@ -4715,11 +4786,118 @@ body[data-mesh] .dtopbar:not(.docked) .tnav-item:not(.on):hover{background:var(-
    Measured at 1024 with the hero docked: logo 118 + strip 575 + actions 300 = 993 in
    864 of usable bar. Padding back to the page gutter and a tighter strip bring the
    strip to 519 and the total to 937 in 976 — it fits, with the type untouched. */
+/* ⚠️⚠️ THE BAR'S GUTTER STEP MOVED OUT OF HERE (2026-10-06) and into the band block
+   below, so that it happens at the same width the nav collapses. It used to fire at
+   1199/1200, where — once the band took the nav over — it was the ONLY event left: the
+   brand and the trail jumped 16px with nothing on screen explaining why. One boundary,
+   one visible thing.
+   ⚠️ What is left here is unreachable for the strip it was written for: `.tnav` never
+   renders at or below 1301 any more (the band hides it, the phone block hides it). It
+   still MATCHES `.navpick-item` and `.bnav-item`, which carry `tnav-item` too, so it is
+   not dead code and is not removed in a layout pass — both of those declare their own
+   padding later in the file and win. Noted for the dead-rule pass. */
 @media (max-width:1199px){
-  .dtopbar-inner{padding:0 var(--pageX)}
   .tnav{gap:var(--space-glyph)}
   .tnav-item{padding:var(--space-inline) var(--space-control);gap:var(--space-inline)}
 }
+
+/* ⚠️⚠️ THE COMPONENT IS DECLARED BEFORE THE BAND BLOCK, NOT AFTER IT, and the first
+   build had it the other way round: `.navpick{display:none}` sat later in the file
+   than `.navpick{display:block}` inside the media query, and a media query adds no
+   specificity — so the default won, the strip was hidden and NOTHING replaced it.
+   The bar measured zero overflow in the band because it had no nav at all.
+   This is the seventh recorded case of a later rule of equal weight quietly beating
+   the one that meant it; the cure here is order, not weight. */
+/* ---------- the collapsed nav, hidden everywhere but the band ----------
+   ⚠️ `display:none` by default rather than shown-and-hidden-twice: the strip owns
+   >=1200 and the bottom bar owns <=600, so this control has exactly one home and
+   declaring it off is the honest default. */
+.navpick{display:none;position:relative}
+.navpick-btn{display:inline-flex;align-items:center;gap:var(--space-inline);
+  height:var(--btnH);padding:var(--space-inline) var(--space-control);
+  border:0;border-radius:var(--btn-r);background:transparent;color:var(--ink);
+  font:inherit;font-size:var(--t-body-fs);cursor:pointer}
+.navpick-btn:hover{background:var(--hover)}
+.navpick-btn[aria-expanded="true"]{background:var(--hover)}
+.navpick-btn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.navpick-caret{flex:none}
+/* the menu hangs from the trigger's left edge; the component's own rule positions it */
+.navpick-menu{min-width:200px}
+/* ⚠️ The rows are `.tnav-item` so `syncTopNav` marks them, but a strip item is a pill
+   in a row and a menu item is a line in a list — so the pill shape is undone here
+   rather than the class being dropped, which would cost the marking. */
+.navpick-item{display:flex;align-items:center;gap:var(--space-control);
+  width:100%;padding:var(--space-inline) var(--space-control);border-radius:var(--radius-control);
+  color:var(--mid);font-size:var(--t-body-fs)}
+.navpick-item:hover{background:var(--hover);color:var(--ink)}
+.navpick-item.on{background:var(--sel);color:var(--ink);font-weight:600}
+.navpick-item .ic{flex:none}
+
+/* ================= the bar between 601 and 1301 (2026-10-06) =================
+   ⚠️⚠️ THE BAR'S MINIMUM IS A CONSTANT, AND THAT IS WHY NOTHING SMALLER WORKED.
+   `.dbrand` and `.tb-trail` are `min-width:max-content` and `.tnav` is `flex:0 0 auto`,
+   so none of the three can be compressed: the row needs 1205px whatever the window is,
+   and the overflow is simply `1205 − window` — 31px at 1150, 281 at 900, 580 at 601.
+   The whole chrome of the bar (two paddings, two gaps, the strip's internal gaps) is
+   **88px**. Padding was never the lever and no padding or gap is touched here; the
+   spacing scale stays exactly as it is.
+   ⚠️ What is removed instead is CONTENT, three pieces of it, each the cheapest thing
+   that still says what it said:
+     · the five-item strip  → one control that names the current section (−~500)
+     · `License Portal`     → the wordmark alone identifies the app (−~100)
+     · the account name     → it is in the menu the button opens (−~120)
+   `Buy a license` stays whole: it is the only action in the bar and the most expensive
+   thing to remove.
+   ⚠️⚠️ **1301 IS A CONTENT MEASUREMENT, NOT A BREAKPOINT, and it is deliberately NOT
+   `--bp-wide`.** TWO numbers come out of the bar and they mean different things:
+     · **1262** is where the bar stops overflowing the WINDOW — the trail's right edge is
+       pinned at 1261.5 whatever the window does;
+     · **1302** is where it stops intruding on its OWN 40px gutter, which is 1301.5 + the
+       inset it is supposed to keep.
+   The ceiling is the second. At 1262 the bar clears the screen edge by half a pixel,
+   having eaten 39.5 of its 40px gutter — and the gutter is a decision, not slack, so a
+   threshold that consumes it is a rounding rather than a threshold.
+   Measured on Home, the only page carrying the CTA in the bar: 61px over the window at
+   1200, 11 at 1250, zero from 1262; and 39.5px into the gutter at 1262, 21.5 at 1280,
+   1.5 at 1300, zero from 1302.
+   It belongs to the same family as `760` (where three plan cards stop fitting) and `952`
+   (the invoices row's own minimum) — numbers derived from content, kept off the
+   breakpoint scale on purpose. **It has to move when the BAR's contents move, not when
+   the device scale does**, and `--bp-wide` stays at 1200: dragging it here would take the
+   plan grid's column count with it, which nobody decided.
+   ⚠️ **NAMED COST: at 1280 — the commonest desktop width — the nav is collapsed although
+   the strip would very nearly fit.** It would fit with twenty pixels of gutter instead of
+   forty. The collapsed nav is a presentation that was accepted; a bar pressed against the
+   window edge is not.
+   ⚠️ ABOVE 1301 NOTHING HERE APPLIES and the bar is untouched; below 601 the phone
+   layout already owns it (`.tnav` off, `.bnav` on). This block is the middle only. */
+@media (min-width:601px) and (max-width:1301px){
+  /* the gutter steps HERE, with the nav, so the boundary does one visible thing */
+  .dtopbar-inner{padding:0 var(--pageX)}
+  .tnav{display:none}
+  .navpick{display:block}
+  /* ⚠️ `flex:0 0 auto`, like the strip it replaces: the trigger must not absorb the
+     free space the two flex:1 cells are sharing, or the bar stops being centred on
+     itself the moment the window is wide enough to have slack. */
+  .dtopbar-inner > .navpick{flex:0 0 auto}
+
+  /* ⚠️ The same hook the phone uses, for the same stated reason — the mark alone
+     identifies the app, and the subtitle belongs on the way in rather than in the
+     chrome of every page. Extended here rather than copied. */
+  .bportal{display:none}
+
+  /* ⚠️ The phone's treatment of the profile, reused whole: the glyph stays, the caret
+     goes, and the NAME IS CLIPPED RATHER THAN `display:none` so the button keeps its
+     accessible name. There is no avatar in this bar — the `MP` circle was removed on
+     2026-09-24 and `.dprof-ic` is a user glyph. */
+  .dprofbtn{position:relative;width:44px;padding:0;justify-content:center}
+  .dprof-ic{display:block;width:var(--ic-20);height:var(--ic-20)}
+  .dprof-caret{display:none}
+  .dprofbtn .dprof-name{position:absolute;width:1px;height:1px;overflow:hidden;
+    clip-path:inset(50%);white-space:nowrap}
+}
+
+
 /* Mobile-only pieces, hidden by default. ⚠️ The menu selector needs three classes:
    `.menu .pop button` sets display:block at (0,2,1), so a plainer `.mob-only` rule
    would lose to it and the item would show on desktop. */
@@ -4730,7 +4908,7 @@ body[data-mesh] .dtopbar:not(.docked) .tnav-item:not(.on):hover{background:var(-
    pill onto desktop, where the Purchased column already says the same thing. The phone
    block is what turns it on. */
 .entdelta{align-items:center;height:20px;padding:0 var(--space-inline);margin-left:var(--space-inline);
-  border:1px solid var(--line);border-radius:999px;background:#fff;
+  border:1px solid var(--line);border-radius:var(--radius-pill);background:#fff;
   font-size:var(--t-small-fs);font-variant-numeric:tabular-nums;color:var(--ink)}
 /* ⚠️ THE GLYPH IS NO LONGER PHONE-ONLY (2026-09-25). It used to be hidden here and
    turned on in the ≤600px block, where it stands IN PLACE of the name; now it sits
@@ -4762,7 +4940,7 @@ body[data-mesh] .dtopbar:not(.docked) .tnav-item:not(.on):hover{background:var(-
    that say this opens something. The focus ring is stated explicitly for the same
    reason: `:focus-visible` was inheriting a ring drawn against a border that is gone. */
 .dprofbtn{display:inline-flex;align-items:center;gap:var(--space-inline);padding:var(--space-tight) var(--space-glyph);border:0;
-  border-radius:6px;background:transparent;color:var(--ink);font:inherit;font-size:var(--t-small-fs)}
+  border-radius:var(--radius-control);background:transparent;color:var(--ink);font:inherit;font-size:var(--t-small-fs)}
 /* ⚠️ INK AT REST, NOT --mid, and this is a measurement not a preference: on a bar that
    is glass at rest the name sits directly on the mesh, and --mid measured 3.92:1 against
    the lavender pool — under AA for 14px. Ink is ~12:1 on the same ground. It is also the
@@ -4777,7 +4955,7 @@ body[data-mesh] .dtopbar:not(.docked) .tnav-item:not(.on):hover{background:var(-
    fill arrived on 09-28 and landed as a hard-cornered rectangle beside five pill nav
    items — the only square hit area in a bar made of pills. `999px` is not a number
    chosen here: it is `.tnav-item`'s, and this control sits in the same row. */
-.dprofbtn{padding:var(--space-inline) var(--space-control);border-radius:999px}
+.dprofbtn{padding:var(--space-inline) var(--space-control);border-radius:var(--radius-pill)}
 /* ⚠️ ONE RULE WITH THE NAV ITEMS NOW (2026-09-28, second pass). This was white
    UNCONDITIONALLY for a day — right on the gradient, wrong once the bar docks and is
    itself white, where a white fill is invisible. It takes the same base as every other
@@ -4810,9 +4988,9 @@ body[data-mesh] .dtopbar:not(.docked) .dprofbtn[aria-expanded="true"]{background
    the product; this was the only one at 8/6, which is not a smaller menu, it is the same
    menu drawn slightly wrong. The numbers move to the ones with four readers, not the
    other way round. */
-.dprofmenu{position:absolute;right:0;top:calc(100% + 6px);min-width:232px;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 12px 32px rgba(0,0,0,.16);padding:var(--space-inline);z-index:60}
+.dprofmenu{position:absolute;right:0;top:calc(100% + 6px);min-width:232px;background:#fff;border:1px solid var(--line);border-radius:var(--radius-surface);box-shadow:0 12px 32px rgba(0,0,0,.16);padding:var(--space-inline);z-index:60}
 .dprofmenu[hidden]{display:none}
-.dprofmenu button,.dprofmenu a{display:flex;align-items:baseline;gap:var(--space-inline);width:100%;text-align:left;padding:var(--space-inline) var(--space-control);border:0;background:transparent;border-radius:7px;font:inherit;font-size:var(--t-body-fs);color:var(--ink)}
+.dprofmenu button,.dprofmenu a{display:flex;align-items:baseline;gap:var(--space-inline);width:100%;text-align:left;padding:var(--space-inline) var(--space-control);border:0;background:transparent;border-radius:var(--radius-control);font:inherit;font-size:var(--t-body-fs);color:var(--ink)}
 .dprofmenu button:hover,.dprofmenu a:hover{background:var(--hover)}
 .dprofmenu button .who{font-size:var(--t-small-fs);color:var(--faint)}
 .dprofmenu .sep{height:1px;background:var(--line2);margin:var(--space-inline) var(--space-tight)}
@@ -4820,7 +4998,7 @@ body[data-mesh] .dtopbar:not(.docked) .dprofbtn[aria-expanded="true"]{background
 /* impersonation banner: black band directly under the top-bar band, same width */
 .imp-wrap{flex:none;padding:0 var(--space-block);background:var(--bg)}
 .imp-wrap[hidden]{display:none}
-.imp-banner{display:flex;align-items:center;gap:var(--space-control);width:100%;max-width:var(--pageW);margin:0 auto;padding:var(--space-inline) var(--pageX);background:var(--ink);color:#fff;border-radius:0 0 10px 10px;font-size:var(--t-body-fs)}
+.imp-banner{display:flex;align-items:center;gap:var(--space-control);width:100%;max-width:var(--pageW);margin:0 auto;padding:var(--space-inline) var(--pageX);background:var(--ink);color:#fff;border-radius:var(--radius-sharp) var(--radius-sharp) var(--radius-surface) var(--radius-surface);font-size:var(--t-body-fs)}
 .imp-banner b{font-weight:600}
 .imp-banner .sp{flex:1}
 .imp-return{flex:none}
@@ -4920,7 +5098,7 @@ body[data-page="home"] .dwrap,body[data-page="landing"] .dwrap{padding-top:var(-
    base transform AND in every keyframe, because an animation replaces the whole
    property — drop it from a keyframe and the pool jumps a radius sideways. */
 .meshbg span{
-  position:absolute; display:block; width:var(--blob); aspect-ratio:1; border-radius:50%;
+  position:absolute; display:block; width:var(--blob); aspect-ratio:1; border-radius:var(--radius-circle);
   transform:translate(-50%,-50%);
   will-change:transform;
   animation:34s ease-in-out infinite alternate;
@@ -5163,7 +5341,7 @@ body[data-page="landing"][data-lbg="lifted"] > .meshbg .mb-cream{display:none}
    -50%/-50% moves the box onto it, the same mechanic variant 1 uses */
 .lm-trio span{
   position:absolute; display:block; width:var(--lm-size); aspect-ratio:1;
-  border-radius:50%; transform:translate(-50%,-50%);
+  border-radius:var(--radius-circle); transform:translate(-50%,-50%);
 }
 /* the reference's arrangement: a high pair either side of centre, one below between
    them. `lm-1` and `lm-2` are the pair, `lm-3` hangs under the gap they leave. */
@@ -5313,13 +5491,13 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
    border, fill and radius go, the rule above it does the separating, and the text
    lines up with the cards below instead of being inset from a frame. */
 .planpicker .nl-pe.baseline{margin:var(--space-heading) 0 0;padding:var(--space-stack) 0 0;
-  border:0;border-top:1px solid var(--line2);border-radius:0;background:none}
+  border:0;border-top:1px solid var(--line2);border-radius:var(--radius-sharp);background:none}
 .nl-pe.baseline .nl-pe-h{margin-bottom:var(--space-tight)}
 /* the marked gap: copy that does not exist yet, saying so */
 .nl-pe.is-gap{border-top-style:dashed}
 .nl-pe.is-gap .nl-pe-intro{color:var(--mid)}
 
-.dblock{background:var(--card);border:1px solid var(--line2);border-radius:10px;padding:var(--space-stack) var(--space-heading);margin-top:var(--space-heading)}
+.dblock{background:var(--card);border:1px solid var(--line2);border-radius:var(--radius-surface);padding:var(--space-stack) var(--space-heading);margin-top:var(--space-heading)}
 /* ⚠️ NO STROKE ON HOME — white fill alone (2026-09-25, by request).
    ⚠️ SCOPED TO `#dashView`, and that is not caution, it is necessary: `.dblock` is also
    the wizard's product cards and every plan card (`.nl-prodcard`, `.plancard`), where
@@ -5361,7 +5539,7 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
 .dbh-link h2{margin:0}
 .dbh-link:hover h2{text-decoration:underline;text-underline-offset:3px}
 .dbh-link:hover .dbh-arrow{transform:translateX(3px)}
-.dbh-link:focus-visible{outline:2px solid var(--ink);outline-offset:4px;border-radius:4px}
+.dbh-link:focus-visible{outline:2px solid var(--ink);outline-offset:4px;border-radius:var(--radius-tight)}
 /* the count is a FACT, not a control: the quiet treatment the list pages already give
    the same number beside their own titles, with tabular figures so it cannot jitter */
 .dbh-count{color:var(--faint);font-size:var(--t-body-fs);font-weight:400;
@@ -5383,7 +5561,7 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
    type floor, so what comes down is the tracking and the height of the row. */
 .dblock th{letter-spacing:0.04em;padding-top:var(--space-tight);padding-bottom:var(--space-inline)}
 
-.dprodrow{cursor:pointer;border-radius:6px}
+.dprodrow{cursor:pointer;border-radius:var(--radius-control)}
 .dprodrow:hover{background:var(--hover)}
 /* Recent invoices preview: spread the columns across the full row width */
 /* Recent activity preview: muted timestamp on the right (replaces the status chip) */
@@ -5417,7 +5595,7 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
    same x, same colour, 1px on 1px — which is invisible, and cheaper than teaching the
    table where its header is. */
 .dblock table,.gridtbl{border-collapse:separate;border-spacing:0;
-  border:1px solid var(--line2);border-radius:10px}
+  border:1px solid var(--line2);border-radius:var(--radius-surface)}
 /* ⚠️⚠️ THE FRAME IS DRAWN ENTIRELY BY THE CELLS (2026-09-25). The table carried the sides
    and the bottom while the header carried the top — and the two were never on the same
    line: with `border-collapse:separate` a cell's box starts INSIDE the table's border, so
@@ -5430,7 +5608,7 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
    header's share still travels with it when it sticks.
    ⚠️ `:not(.is-grouped)` — the grouped Instances view has no outer frame at all (the
    GROUPS are the framed objects there), so it must not pick up side borders per row. */
-.listframe table{border-collapse:separate;border-spacing:0;border:0;border-radius:0}
+.listframe table{border-collapse:separate;border-spacing:0;border:0;border-radius:var(--radius-sharp)}
 .listframe table:not(.is-grouped) thead th{border-top:1px solid var(--line2)}
 .listframe table:not(.is-grouped) thead th:first-child{border-left:1px solid var(--line2)}
 .listframe table:not(.is-grouped) thead th:last-child{border-right:1px solid var(--line2)}
@@ -5488,8 +5666,8 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
 .dblock thead th,.listframe thead th,.gridtbl thead th{background:var(--surface-quiet);
   border-bottom:1px solid var(--line2)}
 .dblock thead th,.gridtbl thead th{padding:var(--space-inline)}
-.dblock thead th:first-child,.listframe thead th:first-child,.gridtbl thead th:first-child{border-top-left-radius:10px;padding-left:var(--space-heading)}
-.dblock thead th:last-child,.listframe thead th:last-child,.gridtbl thead th:last-child{border-top-right-radius:10px;padding-right:var(--space-heading)}
+.dblock thead th:first-child,.listframe thead th:first-child,.gridtbl thead th:first-child{border-top-left-radius:var(--radius-surface);padding-left:var(--space-heading)}
+.dblock thead th:last-child,.listframe thead th:last-child,.gridtbl thead th:last-child{border-top-right-radius:var(--radius-surface);padding-right:var(--space-heading)}
 .dblock table tbody td:first-child,.listframe table tbody td:first-child,.gridtbl tbody td:first-child{padding-left:var(--space-heading)}
 .dblock table tbody td:last-child,.listframe table tbody td:last-child,.gridtbl tbody td:last-child{padding-right:var(--space-heading)}
 /* the last row closes the frame — on Home the table's own border does it, so the row
@@ -5498,10 +5676,10 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
 .listframe table:not(.is-grouped) tbody tr:last-child > td{border-bottom:1px solid var(--line2)}
 .dblock table tbody tr:last-child > td:first-child,
 .listframe table tbody tr:last-child > td:first-child,
-.gridtbl tbody tr:last-child > td:first-child{border-bottom-left-radius:10px}
+.gridtbl tbody tr:last-child > td:first-child{border-bottom-left-radius:var(--radius-surface)}
 .dblock table tbody tr:last-child > td:last-child,
 .listframe table tbody tr:last-child > td:last-child,
-.gridtbl tbody tr:last-child > td:last-child{border-bottom-right-radius:10px}
+.gridtbl tbody tr:last-child > td:last-child{border-bottom-right-radius:var(--radius-surface)}
 .dblock .tablescroll{overflow:visible}
 
 /* ============================================================================
@@ -5545,7 +5723,7 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
 .hc-cols .hcsect{margin-top:var(--space-band)}
 /* the frame both lower blocks wear — the same white card `.dblock` is on Home, said
    once so the two cannot drift apart */
-.hc-card{background:var(--card);border-radius:10px;padding:var(--space-inline) var(--space-heading)}
+.hc-card{background:var(--card);border-radius:var(--radius-surface);padding:var(--space-inline) var(--space-heading)}
 /* ⚠️⚠️ THE TWO LOWER FRAMES ARE ONE HEIGHT (2026-09-29, by request). They hold different
    things — three invoice rows against a feed that runs to seventeen entries — so left to
    themselves one was a third of the other, and two cards side by side at wildly different
@@ -5581,7 +5759,7 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
    and a card that answers nothing to the cursor is the thing that pass was fixing.
    ⚠️ `box-shadow`, not `border`, on both: a border at rest would make the card 2px
    bigger the moment it gained one, and shove its neighbours in the grid. */
-.lcard{background:var(--card);border-radius:10px;padding:var(--space-stack) var(--space-stack) 0;
+.lcard{background:var(--card);border-radius:var(--radius-surface);padding:var(--space-stack) var(--space-stack) 0;
   display:flex;flex-direction:column;cursor:pointer}
 .lcard:hover{box-shadow:0 0 0 1px var(--line)}
 .lcard:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
@@ -5735,7 +5913,7 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
    blocks nothing: the switchers and plan cards below stay fully live. "Grant
    approved" is a populated dashboard whose single licence is the grant, plus a
    one-time banner. Quiet monochrome — neither surface is an alert. */
-.gstatus{display:flex;align-items:flex-start;gap:var(--space-stack);margin-top:var(--space-heading);border:1px solid var(--line2);border-radius:10px;background:var(--card);padding:var(--space-stack) var(--space-heading)}
+.gstatus{display:flex;align-items:flex-start;gap:var(--space-stack);margin-top:var(--space-heading);border:1px solid var(--line2);border-radius:var(--radius-surface);background:var(--card);padding:var(--space-stack) var(--space-heading)}
 .gstatus[hidden]{display:none}
 .gstatus .gs-ic{width:var(--ic-24);height:var(--ic-24);margin-top:var(--space-glyph);color:var(--mid)}
 .gs-h{font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw);color:var(--ink)}
@@ -5746,7 +5924,7 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
    dashboard rather than another card in the stack. It sits inside the content
    column, so it keeps all four corners and clears the content below it.
    One-time: dismissing removes it for the session. */
-.gbanner{display:flex;align-items:center;gap:var(--space-control);margin:0 0 var(--space-block);border-radius:10px;background:var(--ink);color:#fff;padding:var(--space-control) var(--space-control) var(--space-control) var(--space-stack);font-size:var(--t-body-fs)}
+.gbanner{display:flex;align-items:center;gap:var(--space-control);margin:0 0 var(--space-block);border-radius:var(--radius-surface);background:var(--ink);color:#fff;padding:var(--space-control) var(--space-control) var(--space-control) var(--space-stack);font-size:var(--t-body-fs)}
 /* ---------- the Home banner slot ----------------------------------------------
    One band, whatever the condition, and two shapes inside it: a single problem gets a
    FACT line and a TODO line, several get one line each. It keeps `.gbanner`'s ink fill —
@@ -5832,7 +6010,7 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
 .hb-fact,.hb-todo{margin:0}
 /* the second line is the instruction, so it is quieter than the fact above it —
    the same relationship a field's help text has to its label */
-.hb-todo{color:rgba(255,255,255,.78)}
+.hb-todo{color:var(--on-ink-primary)}
 /* the same relationship on a light ground, in the grey the product already uses for it */
 .gbanner:not(.on-ink) .hb-todo{color:var(--mid)}
 .hb-acts{display:flex;flex-wrap:wrap;gap:var(--space-inline);margin-top:var(--space-tight)}
@@ -5884,16 +6062,16 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
    every one of these nine rules would have painted a white button on it. `.on-ink` is
    written by `toneClass` and carried by the two untoned banners as well, so the question is
    asked directly instead of inferred from what it is not. */
-.gbanner.on-ink .btn--secondary{background:transparent;color:#fff;border-color:rgba(255,255,255,.55);
+.gbanner.on-ink .btn--secondary{background:transparent;color:#fff;border-color:var(--overlay-light-border);
   display:inline-flex;align-items:center;text-decoration:none}
 .gbanner.on-ink .btn--secondary:not([disabled]):hover,
-.gbanner.on-ink .btn--secondary:not([disabled]):active{background:rgba(255,255,255,.14);border-color:#fff;color:#fff}
+.gbanner.on-ink .btn--secondary:not([disabled]):active{background:var(--overlay-light-press);border-color:#fff;color:#fff}
 .gbanner.on-ink .btn--primary{background:#fff;border-color:#fff;color:var(--ink)}
 .gbanner.on-ink .btn--primary:not([disabled]):hover{background:var(--hover);border-color:var(--hover)}
 .gbanner.on-ink .btn--primary:not([disabled]):active{background:var(--sel);border-color:var(--sel);box-shadow:none}
-.gbanner.on-ink .btn--ghost{color:rgba(255,255,255,.72)}
+.gbanner.on-ink .btn--ghost{color:var(--on-ink-secondary)}
 .gbanner.on-ink .btn--ghost:not([disabled]):hover,
-.gbanner.on-ink .btn--ghost:not([disabled]):active{color:#fff;background:rgba(255,255,255,.14)}
+.gbanner.on-ink .btn--ghost:not([disabled]):active{color:#fff;background:var(--overlay-light-press)}
 .gbanner.on-ink .btn:focus-visible{outline-color:#fff}
 .impbar .btn--secondary{background:#fff;border-color:#fff;color:var(--ink)}
 .impbar .btn--secondary:not([disabled]):hover{background:var(--hover)}
@@ -6098,7 +6276,7 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
      rather than in a white box, and --page-bg on --page-bg would be invisible — which
      is why `.plancard` is given the card fill back here. Three levels became two, so
      the card takes the upper one, exactly as it already does on the phone. */
-  .plangroups > .plangroup{background:transparent;border:0;border-radius:0;padding:0}
+  .plangroups > .plangroup{background:transparent;border:0;border-radius:var(--radius-sharp);padding:0}
   /* --line2 -> --line (2026-09-25, by request): with the frames gone this rule is the
      only thing separating the two billing models, so it carries more than a hairline
      between rows of text and is drawn at the weight of a real divider.
@@ -6186,7 +6364,7 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
    restated below as INSET RINGS. A ring is not a border: it costs no layout, which is
    why a selected card no longer has to be 1px smaller than an unselected one. */
 .plancard{position:relative;display:flex;flex-direction:column;margin-top:0;padding:var(--space-stack) var(--space-stack);
-  background:var(--page-bg);border:0;border-radius:20px;corner-shape:squircle}
+  background:var(--page-bg);border:0;border-radius:var(--radius-feature);corner-shape:squircle}
 .plangrid .nl-select:hover{box-shadow:inset 0 0 0 1px var(--line)}
 .plangrid .nl-select.on{box-shadow:inset 0 0 0 2px var(--ink)}
 /* ---------- the Popular card (2026-09-25, from a reference) ----------------------
@@ -6232,7 +6410,7 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
    and the plan names stay on one horizontal line */
 .plangrid.withcur{--stripH:24px}
 .plangrid.withcur .plancard{margin-top:var(--stripH)}
-.pc-strip{position:absolute;bottom:calc(100% - 1px);left:12px;display:inline-flex;align-items:center;height:calc(var(--stripH) + 1px);padding:0 var(--space-control);background:var(--page-bg);border:0;border-radius:10px 10px 0 0;font-family:var(--font-ui);font-size:var(--t-label-fs);letter-spacing:var(--t-label-ls);font-weight:var(--t-label-fw);text-transform:uppercase;color:var(--mid);white-space:nowrap}
+.pc-strip{position:absolute;bottom:calc(100% - 1px);left:12px;display:inline-flex;align-items:center;height:calc(var(--stripH) + 1px);padding:0 var(--space-control);background:var(--page-bg);border:0;border-radius:var(--radius-surface) var(--radius-surface) var(--radius-sharp) var(--radius-sharp);font-family:var(--font-ui);font-size:var(--t-label-fs);letter-spacing:var(--t-label-ls);font-weight:var(--t-label-fw);text-transform:uppercase;color:var(--mid);white-space:nowrap}
 .pc-head{display:flex;align-items:center;gap:var(--space-inline);flex-wrap:wrap;min-height:22px}
 .pc-head h2{margin:0;font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw)}
 .pc-price{margin-top:var(--space-inline);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw);font-variant-numeric:tabular-nums}
@@ -6292,7 +6470,7 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
 /* ---------- Licenses (unified list): inner content only, no chrome ---------- */
 
 /* list pages framed like the dashboard blocks: white card, gray border, rounded */
-.listcard{background:var(--card);border:1px solid var(--line2);border-radius:10px;padding:var(--space-stack) var(--space-heading);margin-top:var(--space-stack)}
+.listcard{background:var(--card);border:1px solid var(--line2);border-radius:var(--radius-surface);padding:var(--space-stack) var(--space-heading);margin-top:var(--space-stack)}
 
 /* ---------- the activity entry's detail -------------------------------------------
    ⚠️ INLINE, NOT BEHIND A BUTTON (2026-09-24). While it was a JSON dump it had to be
@@ -6331,7 +6509,7 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
    ⚠️ `max-width`, not `width`: the box may be NARROWER than half when its content is,
    and a fixed half would leave white space inside a frame that is itself the content. */
 .fi-card{margin-top:var(--space-inline);padding:var(--space-control) var(--space-stack);max-width:50%;background:var(--card);
-  border:1px solid var(--line2);border-radius:8px}
+  border:1px solid var(--line2);border-radius:var(--radius-control)}
 .fd-row{display:flex;align-items:center;gap:var(--space-inline);flex-wrap:wrap;
   padding:var(--space-glyph) 0;font-size:var(--t-body-fs);line-height:1.5}
 .fd-k{color:var(--faint)}
@@ -6724,7 +6902,7 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
    one ratio, and the ratio is what does the reading. */
 .fsep{align-items:center;margin:var(--space-divide) 0 var(--space-band)}
 .feed > .fsep:first-child{margin-top:var(--space-tight)}
-.fsep-dot{justify-self:center;width:7px;height:7px;border-radius:50%;
+.fsep-dot{justify-self:center;width:7px;height:7px;border-radius:var(--radius-circle);
   background:var(--card);box-shadow:0 0 0 1px var(--line)}
 .fsep-d{margin:0;font-family:var(--font-ui);font-size:var(--t-label-fs);
   line-height:var(--t-label-lh);letter-spacing:var(--t-label-ls);
@@ -6760,7 +6938,7 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
    that is nothing but these rows, and the mark was the smallest thing on it. */
 /* ⚠️ THE SIZE IS THE TOKEN THE RAIL READS. The fallback is for the styleguide specimen,
    which draws a mark with no `.feed` around it. */
-.fi-mark{width:var(--fmark,30px);height:var(--fmark,30px);flex:none;border-radius:50%;display:flex;
+.fi-mark{width:var(--fmark,30px);height:var(--fmark,30px);flex:none;border-radius:var(--radius-circle);display:flex;
   align-items:center;justify-content:center;background:var(--accent);color:#fff}
 .fi-mark .ic{width:var(--ic-20);height:var(--ic-20)}
 .fi-mark.is-alert{background:var(--status-alert);color:#fff}
@@ -6820,7 +6998,7 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
    other page — only the form cards keep their own comfortable max-width */
 .setgrid{width:100%}
 /* cards span the shared container; the form grid inside stays comfortable */
-.setcard{background:var(--card);border:1px solid var(--line2);border-radius:8px;padding:var(--space-heading) var(--space-heading);margin-top:var(--space-stack)}
+.setcard{background:var(--card);border:1px solid var(--line2);border-radius:var(--radius-control);padding:var(--space-heading) var(--space-heading);margin-top:var(--space-stack)}
 .setcard > *:not(.setcard-h){max-width:800px}
 .setcard-h{display:flex;align-items:baseline;gap:var(--space-control);flex-wrap:wrap;margin-bottom:var(--space-stack)}
 .setcard-h h2{margin:0;font-family:var(--font-ui);font-size:var(--t-label-fs);line-height:var(--t-label-lh);letter-spacing:var(--t-label-ls);font-weight:var(--t-label-fw);text-transform:uppercase}
@@ -6874,13 +7052,13 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
 /* the chip's own delete. Not the shared ✕ (30px, its own box): that one closes a
    surface, this one removes a token inside a control and has to fit the chip's line. */
 .chip-x{display:inline-flex;align-items:center;justify-content:center;flex:none;
-  width:20px;height:20px;padding:0;border:0;border-radius:50%;
+  width:20px;height:20px;padding:0;border:0;border-radius:var(--radius-circle);
   background:transparent;color:var(--faint);cursor:pointer}
 .chip-x:hover{color:var(--ink);background:var(--hover)}
 .chip-x:focus-visible{outline:2px solid var(--ink);outline-offset:1px}
 .invite-in{flex:1 1 140px;min-width:100px;height:26px;
   font-family:var(--font-ui);font-size:var(--t-body-fs);letter-spacing:var(--t-body-ls);
-  border:0;border-radius:0;padding:0;background:transparent;
+  border:0;border-radius:var(--radius-sharp);padding:0;background:transparent;
   color:var(--ink);outline:none}
 .invite-in::placeholder{color:var(--faint)}
 .invite-go{flex:none}
@@ -6995,7 +7173,7 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
    ⚠️ Renamed from `.nl-sched`: it no longer describes a schedule. The shape stayed
    because the job did — this is still the one block on the step that has to be read
    before the numbers under it. */
-.nl-effect{border:1px solid var(--line);border-radius:8px;padding:var(--space-control) var(--space-stack);margin-bottom:var(--space-control);
+.nl-effect{border:1px solid var(--line);border-radius:var(--radius-control);padding:var(--space-control) var(--space-stack);margin-bottom:var(--space-control);
   font-size:var(--t-body-fs);line-height:1.5;color:var(--ink);background:var(--bg)}
 .nl-effectwhat{margin-top:var(--space-inline);color:var(--mid)}
 /* ⚠️ `.alert.sched` and `.sched-cancel` ARE GONE with the banner they dressed — the
@@ -7076,7 +7254,7 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
    full width and sits above the buttons — nothing is shrunk, tightened or truncated. */
 .cancel-help{flex:1 1 100%;order:-1;font-size:var(--t-body-fs);color:var(--mid);text-align:left}
 
-.noresults{border:1px dashed var(--line);border-radius:8px;background:transparent;
+.noresults{border:1px dashed var(--line);border-radius:var(--radius-control);background:transparent;
   padding:var(--space-block) var(--space-heading);text-align:center}
 .nr-t{font-size:var(--t-body-fs);line-height:var(--t-body-lh);color:var(--ink)}
 .nr-clear{margin-top:var(--space-inline);font-size:var(--t-body-fs)}
@@ -7114,7 +7292,7 @@ td.noresults-cell .noresults{margin:var(--space-stack)}
    did: this one says "the account has nothing", that one says "your filter hid it all".
    Same argument as before, better served. */
 .emptybox.eb{padding:var(--space-band) var(--space-heading);text-align:center;
-  border:0;border-radius:10px;background:var(--surface-quiet)}
+  border:0;border-radius:var(--radius-surface);background:var(--surface-quiet)}
 .eb-t{font-size:var(--t-body-fs);line-height:var(--t-body-lh);color:var(--ink)}
 .eb-p{margin:var(--space-inline) auto 0;max-width:46ch;font-size:var(--t-body-fs);line-height:1.5;color:var(--mid)}
 /* ⚠️ WIDER INSIDE THE LICENCE PANEL'S INSTANCE TABS (2026-09-29, by request). 46ch is
@@ -7146,7 +7324,7 @@ td.eb-cell .emptybox{margin:var(--space-stack)}
    rule was in the file. `:not(.is-grouped)` is carried here for the count, and it is
    also true — a grouped table has no empty state of this kind. */
 body.list-empty .listframe table:not(.is-grouped) tbody td,
-body.list-empty .listframe table:not(.is-grouped){border:0;border-radius:0}
+body.list-empty .listframe table:not(.is-grouped){border:0;border-radius:var(--radius-sharp)}
 
 /* ⚠️ An empty page shows no chrome that operates on rows. There is nothing to search,
    filter, sort, page through or refresh, and a toolbar over nothing is a set of
@@ -7176,16 +7354,16 @@ body.list-empty thead{display:none}
    An empty account still renders a table — the empty state is a row inside it — and
    without this the frame would end in nothing at all. */
 body.list-empty .listframe table:not(.is-grouped) tbody tr:last-child > td:first-child,
-.listframe:has(.pager[hidden]) table:not(.is-grouped) tbody tr:last-child > td:first-child{border-bottom-left-radius:10px}
+.listframe:has(.pager[hidden]) table:not(.is-grouped) tbody tr:last-child > td:first-child{border-bottom-left-radius:var(--radius-surface)}
 body.list-empty .listframe table:not(.is-grouped) tbody tr:last-child > td:last-child,
-.listframe:has(.pager[hidden]) table:not(.is-grouped) tbody tr:last-child > td:last-child{border-bottom-right-radius:10px}
+.listframe:has(.pager[hidden]) table:not(.is-grouped) tbody tr:last-child > td:last-child{border-bottom-right-radius:var(--radius-surface)}
 body.list-empty #instTable.is-grouped,
 .listframe:has(.pager[hidden]) #instTable.is-grouped{border-bottom:1px solid var(--line2);
-  border-bottom-left-radius:10px;border-bottom-right-radius:10px}
+  border-bottom-left-radius:var(--radius-surface);border-bottom-right-radius:var(--radius-surface)}
 /* the panel's own tables, same rule from the other side: the footer gave them their
    bottom edge, so an absent footer gives it back */
 .gridtbl:has(+ .pager[hidden]){border-bottom:1px solid var(--line2);
-  border-bottom-left-radius:10px;border-bottom-right-radius:10px}
+  border-bottom-left-radius:var(--radius-surface);border-bottom-right-radius:var(--radius-surface)}
 .gridtbl:has(+ .pager[hidden]) tbody tr:last-child > td{border-bottom:0}
 body.list-empty #pageTitleRow [data-refresh],
 /* ⚠️ `[id^=…]` RATHER THAN THE TWO IDS (2026-10-01) — toolbar C's primary was missing
@@ -7202,7 +7380,7 @@ body.list-empty #pageTitleRow [id^="licNewBtn"]{display:none !important}
 .snack{position:fixed;left:50%;bottom:24px;transform:translate(-50%,12px);
   z-index:400;display:flex;align-items:center;gap:var(--space-stack);
   max-width:min(520px,calc(100vw - 32px));
-  padding:var(--space-control) var(--space-control) var(--space-control) var(--space-stack);border-radius:8px;
+  padding:var(--space-control) var(--space-control) var(--space-control) var(--space-stack);border-radius:var(--radius-control);
   background:var(--ink);color:#fff;box-shadow:0 10px 30px rgba(0,0,0,.28);
   opacity:0;transition:opacity .16s ease,transform .16s ease;pointer-events:none}
 .snack.on{opacity:1;transform:translate(-50%,0);pointer-events:auto}
@@ -7210,7 +7388,7 @@ body.list-empty #pageTitleRow [id^="licNewBtn"]{display:none !important}
 .snack-t{font-size:var(--t-body-fs);line-height:1.45}
 /* the dismiss is quiet: the message leaves by itself, this is for the impatient */
 .snack-x{flex:none;color:#fff;opacity:.7}
-.snack-x:hover{opacity:1;background:rgba(255,255,255,.14)}
+.snack-x:hover{opacity:1;background:var(--overlay-light-press)}
 
 /* an invited user: present in the list, not yet a person in it */
 /* an invited user keeps the grid: only the tone says the row is not complete yet.
@@ -7263,7 +7441,7 @@ body.list-empty #pageTitleRow [id^="licNewBtn"]{display:none !important}
 /* the footer's select sits in a row of text, not in a field, so it keeps its own
    gutter and its wrapper stays inline */
 .pager .selwrap{display:inline-block;vertical-align:middle;--sel-gutter:14px}
-.field textarea{height:auto;min-height:62px;padding:var(--space-control) var(--space-stack);border-radius:12px;resize:vertical;line-height:1.5}
+.field textarea{height:auto;min-height:62px;padding:var(--space-control) var(--space-stack);border-radius:var(--radius-surface);resize:vertical;line-height:1.5}
 /* ⚠️⚠️ ~90 CHARACTERS, AND `ch` IS NOT 90 OF THEM (2026-10-01, by request). `1ch` is the
    width of the digit ZERO — 9.02px in this face at 16px — while an average character of
    English prose measures 7.39px here, taken from an 85-character sample in the field's own
@@ -7312,7 +7490,7 @@ body.list-empty #pageTitleRow [id^="licNewBtn"]{display:none !important}
    other cell keeps its half — a phone number does not want a full row either. */
 .field2 > .fullrow{grid-column:1 / -1}
 .cardhelp{font-size:var(--t-body-fs);line-height:var(--t-small-lh);letter-spacing:var(--t-small-ls);color:var(--faint);margin-top:var(--space-control)}
-.paycard{display:flex;align-items:center;gap:var(--space-stack);flex-wrap:wrap;border:1px solid var(--line2);border-radius:8px;padding:var(--space-control) var(--space-stack)}
+.paycard{display:flex;align-items:center;gap:var(--space-stack);flex-wrap:wrap;border:1px solid var(--line2);border-radius:var(--radius-control);padding:var(--space-control) var(--space-stack)}
 /* ⚠️⚠️ THE EMPTY STATE IS TINTED AND UNBORDERED (2026-09-30, by request). An account with
    no card on file has one job on this page, and a grey hairline round a grey sentence is
    the shape of a FILLED field waiting to be read — it looked like something already set.
@@ -7337,7 +7515,7 @@ body.list-empty #pageTitleRow [id^="licNewBtn"]{display:none !important}
 .paycard-none{flex:0 1 auto;white-space:nowrap}
 .paycard .sp{flex:1}
 .pc-expw{display:inline}
-.brandbadge{font-size:var(--t-small-fs);font-weight:800;letter-spacing:.08em;border:1px solid var(--line);border-radius:4px;padding:var(--space-tight) var(--space-inline);background:#fff;color:var(--ink)}
+.brandbadge{font-size:var(--t-small-fs);font-weight:800;letter-spacing:.08em;border:1px solid var(--line);border-radius:var(--radius-tight);padding:var(--space-tight) var(--space-inline);background:#fff;color:var(--ink)}
 /* the symbol badge keeps the wordmark badge's box so the two never change the row's
    height or the gap after them — only what is inside the box differs */
 .brandbadge-mark{display:inline-flex;align-items:center;padding:var(--space-glyph) var(--space-inline);line-height:0}
@@ -7395,7 +7573,7 @@ body.list-empty #pageTitleRow [id^="licNewBtn"]{display:none !important}
    `overflow:hidden` on the card would also clip the sticky positioning. */
 .setcard-h-page{position:sticky;top:0;z-index:5;align-items:center;gap:var(--space-control);
   background:var(--card);margin:0 calc(-1 * var(--space-block)) var(--space-heading);padding:var(--space-heading) var(--space-block) var(--space-stack);
-  border-radius:8px 8px 0 0;border-bottom:1px solid var(--line2)}
+  border-radius:var(--radius-control) var(--radius-control) var(--radius-sharp) var(--radius-sharp);border-bottom:1px solid var(--line2)}
 .setcard-h-page .lic-h1{margin:0}
 .setcard-h-page .sp{flex:1}
 .setcard-h-page .btn[disabled]{opacity:.45;cursor:not-allowed}
@@ -7417,7 +7595,7 @@ body.list-empty #pageTitleRow [id^="licNewBtn"]{display:none !important}
 .pagehead .btn[disabled]{opacity:.45;cursor:not-allowed}
 /* muted caption under a section title (e.g. billing address prefill note) */
 /* ---------- Update payment method: bespoke monochrome modal (NOT the generic .modal) ---------- */
-.payoverlay{position:fixed;inset:0;z-index:100;background:rgba(28,28,28,.32);display:flex;align-items:center;justify-content:center;padding:var(--space-heading)}
+.payoverlay{position:fixed;inset:0;z-index:100;background:var(--overlay-scrim);display:flex;align-items:center;justify-content:center;padding:var(--space-heading)}
 .payoverlay[hidden]{display:none}
 /* modal widths: the two narrower dialogs that ride the payment-modal chrome */
 /* ⚠️ `.paymodal.narrow` removed: Add user was its only caller. */
@@ -7429,7 +7607,7 @@ body.list-empty #pageTitleRow [id^="licNewBtn"]{display:none !important}
    column back; nothing else has to change. */
 .plantable .usecol{display:none}
 /* ⚠️ moved to the sticky block above: it is now conditional (`.is-scrollable`) */
-.paymodal{background:#fff;border:1px solid var(--line);border-radius:10px;width:min(560px,96vw);box-shadow:0 18px 48px rgba(0,0,0,.20);display:flex;flex-direction:column}
+.paymodal{background:#fff;border:1px solid var(--line);border-radius:var(--radius-surface);width:min(560px,96vw);box-shadow:0 18px 48px rgba(0,0,0,.20);display:flex;flex-direction:column}
 .paymodal-h{display:flex;align-items:center;gap:var(--space-control);padding:var(--space-heading) var(--space-block);border-bottom:0}
 .paymodal-h h3{margin:0;font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw)}
 .paymodal-h .sp{flex:1}
@@ -7460,7 +7638,7 @@ body.list-empty #pageTitleRow [id^="licNewBtn"]{display:none !important}
 .paystripe-glyph{color:var(--faint);flex:none;width:var(--ic-16);height:var(--ic-16)}
 .paystripe input{border:0;outline:0;background:transparent;font:inherit;font-size:var(--t-body-fs);color:var(--ink);padding:0;height:100%;font-variant-numeric:tabular-nums}
 .paystripe .ps-num{flex:1;min-width:0}
-.paystripe .ps-exp,.paystripe .ps-cvc{flex:none;height:28px;border-radius:999px;
+.paystripe .ps-exp,.paystripe .ps-cvc{flex:none;height:28px;border-radius:var(--radius-pill);
   background:var(--surface-quiet);text-align:center;padding:0 var(--space-control)}
 .paystripe .ps-exp{width:78px}
 .paystripe .ps-cvc{width:64px}
@@ -7560,7 +7738,7 @@ body.list-empty #pageTitleRow [id^="licNewBtn"]{display:none !important}
 .fsheet-scrim{position:absolute;inset:0;background:rgba(0,0,0,.35)}
 .fsheet-panel{position:relative;width:100%;max-height:min(80vh,560px);
   display:flex;flex-direction:column;background:var(--card);
-  border-radius:14px 14px 0 0;box-shadow:0 -8px 40px rgba(0,0,0,.18)}
+  border-radius:var(--radius-surface) var(--radius-surface) var(--radius-sharp) var(--radius-sharp);box-shadow:0 -8px 40px rgba(0,0,0,var(--ink-a4))}
 .fsheet-head{display:flex;align-items:center;gap:var(--space-control);padding:var(--space-stack) var(--space-stack) var(--space-control)}
 .fsheet-title{flex:1;min-width:0;margin:0;font-family:var(--font-ui);
   font-size:var(--t-h2-sm-fs);line-height:var(--t-h2-sm-lh);
@@ -7579,7 +7757,7 @@ body.list-empty #pageTitleRow [id^="licNewBtn"]{display:none !important}
    `.dropcheck` is still the right base class; it is just not a complete one on its own. */
 .fsheet-opt{width:100%;min-height:52px;padding:0 var(--space-control);border:0;background:none;
   font:inherit;font-size:var(--t-body-fs);color:var(--ink);text-align:left;cursor:pointer;
-  border-radius:8px}
+  border-radius:var(--radius-control)}
 .fsheet-opt:not([disabled]):hover{background:var(--hover)}
 /* the multi row leads with the box the product's menus already use — one checkbox in
    this prototype, not two that look alike */
@@ -7615,7 +7793,7 @@ body.list-empty #pageTitleRow [id^="licNewBtn"]{display:none !important}
    box on every page in this prototype, so locking `body` alone locks nothing. */
 body.fsheet-open{overflow:hidden}
 body.fsheet-open #shellMain{overflow:hidden}
-.typechip{height:var(--btnH);display:inline-flex;align-items:center;font-size:var(--t-small-fs);padding:0 var(--space-control);border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--mid)}
+.typechip{height:var(--btnH);display:inline-flex;align-items:center;font-size:var(--t-small-fs);padding:0 var(--space-control);border:1px solid var(--line);border-radius:var(--radius-pill);background:#fff;color:var(--mid)}
 .typechip:hover{border-color:var(--mid);color:var(--ink)}
 .typechip.is-on{background:var(--ink);border-color:var(--ink);color:#fff}
 /* locked (change-plan mode): the choice is fixed, so drop the affordance */
@@ -7638,7 +7816,7 @@ body.fsheet-open #shellMain{overflow:hidden}
    copying them — which is this file's own definition of forking a component. */
 .chipdiv{flex:none;align-self:center;width:1px;height:22px;margin:0 var(--space-inline);background:var(--line)}
 .filterchip{height:var(--btnH);align-items:center;gap:var(--space-inline);padding:0 var(--space-stack);
-  border:1px solid var(--line);border-radius:999px;background:#fff;
+  border:1px solid var(--line);border-radius:var(--radius-pill);background:#fff;
   color:var(--mid);font:inherit;font-size:var(--t-small-fs);white-space:nowrap;cursor:pointer}
 .attnchip{display:inline-flex}
 .filterchip:hover{border-color:var(--mid);color:var(--ink)}
@@ -7683,11 +7861,11 @@ a.lp-cell:hover .lp-name{text-decoration:underline;text-underline-offset:2px}
 /* ⚠️ The box keeps its size and the ground goes: it was a filled placeholder square
    while the artwork was missing, and a grey plate behind a logo would read as a second
    shape. The mark sits inside it, so every alignment the square was holding is kept. */
-.lp-ic{width:40px;height:40px;flex:none;border-radius:6px;display:flex;
+.lp-ic{width:40px;height:40px;flex:none;border-radius:var(--radius-control);display:flex;
   align-items:center;justify-content:center;overflow:hidden}
 /* the compact cell (invoices, Home's preview blocks): same mark, smaller box — the
    invoice row is one line tall and a 40px square would set its height */
-.lp-ic--sm{width:24px;height:24px;border-radius:4px}
+.lp-ic--sm{width:24px;height:24px;border-radius:var(--radius-tight)}
 /* one rule for the product artwork wherever it appears — row, picker, wizard summary */
 .prodmark{display:block;width:100%;height:100%;object-fit:contain}
 /* The cell has a floor (min-width above) and the text a ceiling: auto table layout
@@ -7714,7 +7892,7 @@ th.lic-num{text-align:right}
    open (see elevateOpenPops) so no ancestor overflow can clip them */
 /* a menu is a CONTAINER, not a control: 10px, the radius every card and popover in the
    product takes, rather than the 24 its trigger wears */
-.dropmenu{position:absolute;left:0;top:calc(100% + 4px);background:#fff;border:1px solid var(--line);border-radius:10px;min-width:180px;padding:var(--space-tight);box-shadow:0 6px 20px rgba(0,0,0,.10);z-index:40;overflow:visible;max-height:none}
+.dropmenu{position:absolute;left:0;top:calc(100% + 4px);background:#fff;border:1px solid var(--line);border-radius:var(--radius-surface);min-width:180px;padding:var(--space-tight);box-shadow:0 6px 20px rgba(0,0,0,.10);z-index:40;overflow:visible;max-height:none}
 .dropmenu.right{left:auto;right:0}
 .dropmenu[hidden]{display:none}
 /* ---------- styleguide only: a menu shown flat, and a toolbar shown as a specimen ----
@@ -7730,14 +7908,14 @@ th.lic-num{text-align:right}
 .sg-staticmenu{position:static;box-shadow:none;width:248px;flex:none}
 .sg-menuspecs{align-items:flex-start;gap:var(--space-heading);flex-wrap:wrap}
 /* the toolbar specimens sit on the card ground they sit on in the product */
-.sg-toolbarspec{background:var(--card);border:1px solid var(--line2);border-radius:10px;padding:var(--space-stack) var(--space-stack) 0}
+.sg-toolbarspec{background:var(--card);border:1px solid var(--line2);border-radius:var(--radius-surface);padding:var(--space-stack) var(--space-stack) 0}
 .sg-toolbarspec .lic-controls{margin-bottom:var(--space-stack)}
 /* ⚠️ `:not(.btn)`, and its absence is why Apply looked like a menu ITEM (fixed
    2026-09-28). This rule dresses the menu's own rows — transparent, left-aligned, a 7px
    corner — and `.dropmenu button` (0,1,1) outranks `.btn--secondary` (0,1,0), so the one
    real button inside a menu had its fill and its radius taken away by the rule meant
    for the things around it. A component inside a menu is still the component. */
-.dropmenu button:not(.btn){display:block;width:100%;text-align:left;padding:var(--space-inline) var(--space-control);border:0;background:transparent;border-radius:7px;font-size:var(--t-body-fs);color:var(--ink)}
+.dropmenu button:not(.btn){display:block;width:100%;text-align:left;padding:var(--space-inline) var(--space-control);border:0;background:transparent;border-radius:var(--radius-control);font-size:var(--t-body-fs);color:var(--ink)}
 .dropmenu button:not(.btn):hover{background:var(--hover)}
 /* status chip plus, when there is one, the auto-charge mark beside it */
 /* ⚠️⚠️ TABLE ROW CONTROLS HAVE NO RESTING FILL (2026-10-01, by request: "in the default
@@ -7808,13 +7986,13 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
 .sg-head{padding:var(--space-block) 0 var(--space-inline)}
 .sg-lead{font-size:var(--t-body-fs);line-height:var(--t-body-lh);color:var(--mid);max-width:70ch;margin:var(--space-inline) 0 0}
 .sg-toc{display:flex;flex-wrap:wrap;gap:var(--space-inline);margin:var(--space-heading) 0 0}
-.sg-toc a{font-size:var(--t-small-fs);color:var(--ink);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:var(--space-tight) var(--space-control);background:#fff}
+.sg-toc a{font-size:var(--t-small-fs);color:var(--ink);text-decoration:none;border:1px solid var(--line);border-radius:var(--radius-pill);padding:var(--space-tight) var(--space-control);background:#fff}
 .sg-toc a:hover{border-color:var(--ink)}
 .sg-sec{margin-top:var(--space-band)}
 .sg-sec > h2{font-family:var(--font-ui);font-size:var(--t-h1-fs);line-height:var(--t-h1-lh);letter-spacing:var(--t-h1-ls);font-weight:var(--t-h1-fw);margin:0 0 var(--space-tight)}
 .sg-sec > p{font-size:var(--t-body-fs);color:var(--mid);margin:0 0 var(--space-stack);max-width:70ch}
 /* one specimen: a label naming the class, then the live component */
-.sg-item{background:var(--card);border:1px solid var(--line2);border-radius:10px;padding:var(--space-stack) var(--space-heading);margin-top:var(--space-control)}
+.sg-item{background:var(--card);border:1px solid var(--line2);border-radius:var(--radius-surface);padding:var(--space-stack) var(--space-heading);margin-top:var(--space-control)}
 .sg-item > h3{font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);font-weight:var(--t-h2-fw);margin:0 0 var(--space-glyph)}
 /* a step below `.sg-item > h3` — for a specimen block holding more than one group,
    like the three colour layers under Tokens */
@@ -7833,7 +8011,7 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
 .sg-cell{display:flex;flex-direction:column;gap:var(--space-inline);min-width:0}
 .sg-cls{font-family:var(--font-mono);font-size:var(--t-caption-fs);color:var(--mid);white-space:nowrap}
 .sg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:var(--space-stack)}
-.sg-swatch{border:1px solid var(--line2);border-radius:8px;overflow:hidden;background:#fff}
+.sg-swatch{border:1px solid var(--line2);border-radius:var(--radius-control);overflow:hidden;background:#fff}
 .sg-swatch .chip-fill{height:56px;border-bottom:1px solid var(--line2)}
 .sg-swatch .sg-meta{padding:var(--space-inline) var(--space-control)}
 .sg-swatch .sg-meta b{display:block;font-family:var(--font-mono);font-size:var(--t-caption-fs);font-weight:400;color:var(--ink)}
@@ -7853,8 +8031,8 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
 .sg-radii{display:flex;gap:var(--space-stack);flex-wrap:wrap}
 .sg-radii div{width:92px;height:60px;background:#fff;border:1px solid var(--line);display:flex;align-items:flex-end;justify-content:center;font-family:var(--font-mono);font-size:var(--t-small-fs);color:var(--mid);padding-bottom:var(--space-tight)}
 .sg-shadow{display:flex;gap:var(--space-heading);flex-wrap:wrap}
-.sg-shadow div{width:150px;height:74px;background:#fff;border:1px solid var(--line2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:var(--t-small-fs);color:var(--mid)}
-.sg-static{position:relative;min-height:120px;border:1px dashed var(--line);border-radius:8px;padding:var(--space-stack);background:var(--bg)}
+.sg-shadow div{width:150px;height:74px;background:#fff;border:1px solid var(--line2);border-radius:var(--radius-control);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:var(--t-small-fs);color:var(--mid)}
+.sg-static{position:relative;min-height:120px;border:1px dashed var(--line);border-radius:var(--radius-control);padding:var(--space-stack);background:var(--bg)}
 .sg-static .overlay,.sg-static .payoverlay,.sg-static .fs-screen{position:static;background:none;backdrop-filter:none;-webkit-backdrop-filter:none;padding:0;display:block}
 .sg-static .fs-box{width:100%;height:auto;max-height:none}
 .sg-static .fs-body{max-height:230px}
@@ -7864,13 +8042,13 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
    the diagram says the one thing the pattern turns on: the frame grows, the column
    does not. Greys only — it is a diagram, not a picture. */
 .sg-presrow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--space-heading)}
-.sg-presvp{position:relative;aspect-ratio:16/10;border:1px dashed var(--line);border-radius:6px;
+.sg-presvp{position:relative;aspect-ratio:16/10;border:1px dashed var(--line);border-radius:var(--radius-control);
   background:var(--track);display:flex;align-items:center;justify-content:center;overflow:hidden}
-.sg-presframe{background:#fff;border:1px solid var(--ink);border-radius:4px;
+.sg-presframe{background:#fff;border:1px solid var(--ink);border-radius:var(--radius-tight);
   display:flex;align-items:stretch;justify-content:center;overflow:hidden}
 .sg-presframe.a{width:58%;height:78%}
 .sg-presframe.b{width:92%;height:88%}
-.sg-presframe.c{width:100%;height:100%;border-radius:0;border-width:0}
+.sg-presframe.c{width:100%;height:100%;border-radius:var(--radius-sharp);border-width:0}
 .sg-preswork{background:var(--card);border-left:1px dashed var(--line);border-right:1px dashed var(--line)}
 .sg-presframe.a .sg-preswork{width:100%;border:0}
 .sg-presframe.b .sg-preswork{width:63%}
@@ -7967,14 +8145,14 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
      ⚠️ THE DIVIDER IS A `border-top` ON THE CARD, not a rule on the frame: the card is
      the full width of the frame, so its own top edge spans exactly what a table row's
      would, and the card's padding insets the content without insetting the line. */
-  #homeCards .hc-cards{display:block;gap:0;background:var(--card);border-radius:10px}
+  #homeCards .hc-cards{display:block;gap:0;background:var(--card);border-radius:var(--radius-surface)}
   /* ⚠️ THE SEPARATOR GOES ON THE PHONE (2026-09-30). The state moved into the text
      column beside the product square, which is ~120px narrower than the full-width row
      it used to have, so `Blocked · Over instance limit` now wraps at 375 in every card —
      and a wrapping flex row leaves the middot stranded at the end of line one, pointing
      at nothing. Two lines need no separator; the line break is the separator. */
   .lcard-dot{display:none}
-  #homeCards .hc-cards > .lcard{box-shadow:none;border-radius:0}
+  #homeCards .hc-cards > .lcard{box-shadow:none;border-radius:var(--radius-sharp)}
   #homeCards .hc-cards > .lcard + .lcard{border-top:1px solid var(--line2)}
   /* the hover ring was the card's own edge lighting up; on a row it would draw a box
      around one row of a table */
@@ -8014,7 +8192,7 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
      page adds is its own frame — `.listframe` is already edge to edge at this width, so
      the host needs only the surface and the rules between its rows. */
   #licensesList .liccards{display:block;gap:0;background:var(--card)}
-  #licensesList .liccards > .lcard{box-shadow:none;border-radius:0}
+  #licensesList .liccards > .lcard{box-shadow:none;border-radius:var(--radius-sharp)}
   #licensesList .liccards > .lcard + .lcard{border-top:1px solid var(--line2)}
   #licensesList .liccards > .lcard:hover{box-shadow:none;background:var(--row-hover)}
   /* the two empty states stand on the page ground, not inside the list's surface —
@@ -8037,10 +8215,10 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
      ground above the frame, not on the frame. */
   #homeCards .hcsect{margin-left:calc(-1 * var(--pageX));margin-right:calc(-1 * var(--pageX))}
   #homeCards .hc-head{padding-left:var(--pageX);padding-right:var(--pageX)}
-  #homeCards .hc-cards,#licensesList .liccards{border-radius:0}
+  #homeCards .hc-cards,#licensesList .liccards{border-radius:var(--radius-sharp)}
   #homeCards .hc-cards > .lcard,#licensesList .liccards > .lcard{
     padding-left:var(--pageX);padding-right:var(--pageX)}
-  #homeCards .hc-cols .hc-card{border-radius:0;padding-left:var(--pageX);padding-right:var(--pageX)}
+  #homeCards .hc-cols .hc-card{border-radius:var(--radius-sharp);padding-left:var(--pageX);padding-right:var(--pageX)}
   /* ⚠️⚠️ `See all N` IS A ROW OF THE FRAME NOW (2026-10-01, by request: "it should be
      inside the frame, not outside it"). It sat under the white surface on the page
      ground, which read as a second object about the block rather than as the end of it.
@@ -8093,7 +8271,7 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
      would keep its 440px card centred on a phone — the one case the reference is
      explicit about ("full-screen page on mobile"). Restated here so the modifier
      does not outrank the breakpoint. */
-  .fs-box.authbox{width:100vw;height:100vh;max-height:none;border:0;border-radius:0}
+  .fs-box.authbox{width:100vw;height:100vh;max-height:none;border:0;border-radius:var(--radius-sharp)}
   /* ⚠️ AND THE ID FORM WITH IT (2026-10-02): the hug-height rule added for the desktop
      card is `#authModal .authbox` (1,1,0) and would outrank the line above (0,2,0) —
      the phone would stop going full-screen, which is the one thing the reference is
@@ -8107,11 +8285,11 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
      padded box overflowed the viewport and the footer button was cut off the right edge. */
   body[data-page="signin"] #shellMain{padding:0}
   #authModal.authstandalone .authbox{width:100%;height:auto;min-height:100%;
-    border:0;border-radius:0;box-shadow:none;margin:0}
+    border:0;border-radius:var(--radius-sharp);box-shadow:none;margin:0}
   /* ⚠️ Same reason as `.authbox` right above: `.fs-box` goes full-viewport at this
      width, but a two-class modifier outranks it even from a later media query, so the
      820px card would stay centred on a phone. Restated, not relied upon. */
-  .fs-box.usersbox{width:100vw;height:100vh;max-height:none;border:0;border-radius:0}
+  .fs-box.usersbox{width:100vw;height:100vh;max-height:none;border:0;border-radius:var(--radius-sharp)}
   .usersbody{padding:var(--space-stack) var(--pageX) var(--space-block)}
   .authbody{padding:0 var(--space-heading) var(--space-band);display:flex;flex-direction:column;justify-content:center;flex:1}
   .auth-h{font-size:var(--t-h2-sm-fs);line-height:var(--t-h2-sm-lh);letter-spacing:var(--t-h2-sm-ls)}
@@ -8131,7 +8309,7 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
     grid-template-areas:"back title act prof";
     align-items:center;height:56px;max-width:none;margin:0;
     column-gap:var(--space-inline);padding:0 var(--space-inline) 0 var(--space-control);
-    border:0;border-radius:0}
+    border:0;border-radius:var(--radius-sharp)}
   .dtopbar .sp{display:none}                 /* the grid does the spacing now */
   /* ⚠️ The desktop bar wraps its trailing items so the strip can be centred between
      two equal cells. Here `.dtopbar-inner` is a GRID and those same three children
@@ -8161,7 +8339,7 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
      the glyph sits on the content's left edge. It cancels an inset the button gives
      itself, not one its container gave it. */
   .tb-back{grid-area:back;display:inline-flex;align-items:center;justify-content:center;
-    width:44px;height:44px;margin-left:-6px;color:var(--mid);border-radius:6px}
+    width:44px;height:44px;margin-left:-6px;color:var(--mid);border-radius:var(--radius-control)}
   .tb-back[hidden]{display:none}             /* empty leading slot on a top-level page */
   .tb-back:hover{color:var(--ink);background:var(--hover)}
   .tb-back .ic{width:var(--ic-24);height:var(--ic-24)}
@@ -8177,7 +8355,7 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
   .dtopbar-inner{grid-template-columns:auto 1fr auto auto auto;
     grid-template-areas:"back title act refresh prof"}
   .tb-refresh{grid-area:refresh;width:44px;height:44px;padding:0;border:0;
-    background:transparent;color:var(--mid);border-radius:6px;
+    background:transparent;color:var(--mid);border-radius:var(--radius-control);
     align-items:center;justify-content:center;cursor:pointer}
   .tb-refresh .ic{width:var(--ic-24);height:var(--ic-24)}
   .tb-refresh:hover{color:var(--ink);background:var(--hover)}
@@ -8226,12 +8404,12 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
   .dprofmenu,#headKebabPop,.permenu{
     position:fixed;left:0;right:0;bottom:0;top:auto;width:100%;min-width:0;
     max-height:72vh;overflow-y:auto;-webkit-overflow-scrolling:touch;
-    border-radius:12px 12px 0 0;border-left:0;border-right:0;border-bottom:0;
+    border-radius:var(--radius-surface) var(--radius-surface) var(--radius-sharp) var(--radius-sharp);border-left:0;border-right:0;border-bottom:0;
     /* ⚠️ 22px under the last item, not 8: the gap is the signal that the list ended */
     padding:0 var(--space-inline) calc(22px + env(safe-area-inset-bottom));
     box-shadow:0 -12px 40px rgba(0,0,0,.22)}
   .dprofmenu::before,#headKebabPop::before,.permenu::before{
-    content:"";display:block;width:36px;height:4px;border-radius:999px;
+    content:"";display:block;width:36px;height:4px;border-radius:var(--radius-pill);
     background:var(--line);margin:var(--space-control) auto var(--space-inline)}
   .dprofmenu{z-index:120}
   .dprofmenu button,.dprofmenu a{min-height:44px;align-items:center;font-size:var(--t-body-fs)}
@@ -8298,12 +8476,12 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
      one of them. Splitting the rule is the honest way to say that — the alternative is
      one selector that silently means "and also the modal". */
   .lic-row,.inv-row,.inst-row{display:block;position:relative;
-    border:0;border-radius:0;padding:var(--space-control) var(--pageX);
+    border:0;border-radius:var(--radius-sharp);padding:var(--space-control) var(--pageX);
     margin:0;background:var(--card)}
   .lic-row + .lic-row,.inv-row + .inv-row,.inst-row + .inst-row{
     border-top:1px solid var(--line2)}
   .user-row{display:block;position:relative;
-    border:1px solid var(--line2);border-radius:10px;padding:var(--space-control);
+    border:1px solid var(--line2);border-radius:var(--radius-surface);padding:var(--space-control);
     margin-bottom:var(--space-control);background:var(--card)}
   .user-row:last-child{margin-bottom:0}
   /* ⚠️ `tr.` on the front is load-bearing: .dblock table td sets an 11px cell
@@ -8365,7 +8543,7 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
      a labelled band with a stack of cards under it. Nesting cards inside a card was the
      other option and it is worse. */
   #instTable.is-grouped .instgroup > td,
-  #instTable.is-grouped .instgroup.is-open > td{border:1px solid var(--line);border-radius:8px}
+  #instTable.is-grouped .instgroup.is-open > td{border:1px solid var(--line);border-radius:var(--radius-control)}
   #instTable.is-grouped .instg-row > td:first-child,
   #instTable.is-grouped .instg-row > td:last-child,
   #instTable.is-grouped .instg-row.is-last > td{border:0}
@@ -8443,7 +8621,7 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
      Instances box closes into a heading: every row is already its own card at this
      width, so an outer frame is a box around boxes. The head is hidden here anyway —
      there is nothing left for the frame to be the top of. */
-  .dblock table,.listframe table{border:0;border-radius:0}
+  .dblock table,.listframe table{border:0;border-radius:var(--radius-sharp)}
   .fi-txt{overflow-wrap:anywhere}
   /* ⚠️ THE OLD PHONE RULE WAS ABOUT A 190px GUTTER THAT NO LONGER EXISTS. The axis is
      24px wide at every width, so there is nothing to collapse — what the phone needs is
@@ -8454,7 +8632,7 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
 
   /* ---------- licence details modal: a full-screen sheet ---------- */
   .fs-screen{padding:0;align-items:stretch;justify-content:stretch}
-  .fs-box{width:100vw;height:100vh;max-height:none;border:0;border-radius:0;box-shadow:none}
+  .fs-box{width:100vw;height:100vh;max-height:none;border:0;border-radius:var(--radius-sharp);box-shadow:none}
   /* header sticks, content scrolls beneath it */
   .fs-header{position:sticky;top:0;z-index:5;padding:var(--space-control) var(--space-stack)}
   .fs-headactions{gap:var(--space-inline)}
@@ -8498,7 +8676,7 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
      rectangle around it) and stacked a second container inside the sheet. The modal
      already dissolves the canvas; the page does the same here, so both presentations
      are the same screen. */
-  .canvas{background:transparent;border:0;border-radius:0;overflow:visible}
+  .canvas{background:transparent;border:0;border-radius:var(--radius-sharp);overflow:visible}
   /* ⚠️ The identity block keeps the DESKTOP's gray ground (#fafafa) and its closing
      hairline. The previous pass flattened it to transparent along with the canvas —
      but the canvas was the wrong frame, not the tint: the tint is what separates
@@ -8557,7 +8735,7 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
      ink tone the edge is the band's own colour, so it needs none — a grey or red
      hairline under black would be a line the band did not ask for. */
   #subAlert:not([hidden]){order:1;display:flex;align-items:center;gap:var(--space-control);flex-wrap:wrap;
-    padding:var(--space-control) var(--headX);border-radius:0}
+    padding:var(--space-control) var(--headX);border-radius:var(--radius-sharp)}
   #subAlert.tone-red:not([hidden]){border-bottom:1px solid var(--border-danger);
     background:var(--surface-danger)}
   #subAlert.tone-black:not([hidden]){border-bottom:0;background:var(--ink)}
@@ -8713,7 +8891,7 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
   /* the same filled-tonal treatment the card icon-buttons carry, so an icon-button
      means the same thing on the list and on the detail */
   .keyline #revealBtn,.keyline #installBtn,.keyline #copyBtn{flex:none;align-self:center;
-    width:44px;height:44px;padding:0;border:0;border-radius:10px;
+    width:44px;height:44px;padding:0;border:0;border-radius:var(--radius-surface);
     background:var(--sel);color:var(--ink);justify-content:center}
   .keyline #revealBtn .ic,.keyline #installBtn .ic,.keyline #copyBtn .ic{width:var(--ic-20);height:var(--ic-20)}
   .keyline #revealBtn:hover,.keyline #installBtn:hover,.keyline #copyBtn:hover{color:var(--ink);background:var(--hover)}
@@ -8842,7 +9020,7 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
   .fs-grid{grid-template-columns:1fr;gap:var(--space-stack)}
   /* pinned: out of the flow, edge to edge, its own hairline instead of a card */
   .fs-right.pinned{position:fixed;left:0;right:0;bottom:0;top:auto;
-    border:0;border-top:1px solid var(--line2);border-radius:0;
+    border:0;border-top:1px solid var(--line2);border-radius:var(--radius-sharp);
     padding:var(--space-control) var(--space-stack) calc(12px + env(safe-area-inset-bottom));
     background:#fff;box-shadow:0 -8px 24px rgba(0,0,0,.10);z-index:130}
   /* ⚠️ The bar sits over the SHEET, whose own scroll container is .fs-body — so the
@@ -8994,7 +9172,7 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
      keep their gutter for everything that is NOT a surface (titles, toolbars). */
   .listcard,.setcard,.dwrap .dblock.band{
     margin-left:calc(-1 * var(--pageX));margin-right:calc(-1 * var(--pageX));
-    border-radius:0;border-left:0;border-right:0}
+    border-radius:var(--radius-sharp);border-left:0;border-right:0}
   .listcard,.setcard{padding-left:var(--pageX);padding-right:var(--pageX)}
   /* ⚠️⚠️ THE FRAME IS A SURFACE AGAIN, AND FULL-BLEED (2026-09-30, by request). It was
      explicitly NOT one, and the recorded reason was sound at the time: "on the phone the
@@ -9009,7 +9187,7 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
   .listcard:has(> .lic-controls),.listcard:has(> .insttoolbar){
     margin-left:calc(-1 * var(--pageX));margin-right:calc(-1 * var(--pageX));
     padding-left:0;padding-right:0;
-    background:var(--card);border-radius:0;border-left:0;border-right:0}
+    background:var(--card);border-radius:var(--radius-sharp);border-left:0;border-right:0}
   /* the children carry the gutter, so a divider can still run edge to edge while the
      text inside it lines up with the page */
   .listframe > .lic-controls,.listframe > .insttoolbar,
@@ -9056,7 +9234,7 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
   .pagetitlerow [data-refresh],.pagetitlerow [id^="licNewBtn"],.pagetitlerow #secBackBtn{
     flex:none;width:44px;height:44px;min-height:44px;padding:0;
     display:inline-flex;align-items:center;justify-content:center;
-    border:0;border-radius:6px;background:transparent;color:var(--mid)}
+    border:0;border-radius:var(--radius-control);background:transparent;color:var(--mid)}
   .pagetitlerow [data-refresh]:hover,.pagetitlerow #secBackBtn:hover{color:var(--ink);background:var(--hover)}
   .pagetitlerow [data-refresh] .ic,.pagetitlerow #secBackBtn{font-size:20px}
   .pagetitlerow [data-refresh] .ic{width:var(--ic-24);height:var(--ic-24)}
@@ -9088,7 +9266,7 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
      and nowhere else. */
   #couponOverlay{padding:0;align-items:stretch;justify-content:stretch}
   #couponOverlay .paymodal{width:100%;max-width:none;height:100%;max-height:none;
-    border:0;border-radius:0;box-shadow:none;display:flex;flex-direction:column}
+    border:0;border-radius:var(--radius-sharp);box-shadow:none;display:flex;flex-direction:column}
   /* the app bar: ✕ leading, title beside it — the same shape the licence sheet uses */
   #couponOverlay .paymodal-h{flex:none;gap:var(--space-inline);padding:var(--space-inline) var(--space-inline);
     border-bottom:1px solid var(--line2)}
@@ -9187,7 +9365,7 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
      toolbar band a shade off. */
   .listframe,
   .listcard:has(> .lic-controls),.listcard:has(> .insttoolbar){
-    border:0;border-radius:0;padding-top:0;padding-bottom:0;margin-bottom:var(--space-stack);
+    border:0;border-radius:var(--radius-sharp);padding-top:0;padding-bottom:0;margin-bottom:var(--space-stack);
     overflow:visible}
   .lic-controls,.insttoolbar{display:flex;flex-wrap:wrap;gap:var(--space-control);align-items:center}
   /* the grouped view is not offered at this width — see `instView` for why. The
@@ -9229,7 +9407,7 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
   .insttoolbar .perctl{flex:none}
   /* ⚠️ TOOLBAR B'S TRIGGERS TAKE THE SAME SHAPE, by joining this selector rather than
      copying it: they ARE Activity's control, and the phone treatment is part of it. */
-  .insttoolbar .perbtn,#licBarB .perbtn{min-height:40px;border-radius:999px;padding:0 var(--space-stack)}
+  .insttoolbar .perbtn,#licBarB .perbtn{min-height:40px;border-radius:var(--radius-pill);padding:0 var(--space-stack)}
   /* ---------- toolbar B at ≤600px --------------------------------------------------
      ⚠️ SEARCH FIRST, and it was not. `.searchbox` already carries `order:1` here, and
      the two dropdowns default to 0 — so the unstyled phone layout put the FILTERS above
@@ -9405,10 +9583,10 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
   .bnav-item{flex:1 1 0;min-width:0;display:flex;flex-direction:column;
     align-items:center;justify-content:center;gap:var(--space-tight);
     height:auto;min-height:44px;padding:var(--space-inline) var(--space-glyph) var(--space-inline);
-    color:var(--mid);text-decoration:none;border:0;border-radius:0}
+    color:var(--mid);text-decoration:none;border:0;border-radius:var(--radius-sharp)}
   .bnav-item.on{font-weight:400}             /* the label alone carries the weight */
   .bn-ic{display:inline-flex;align-items:center;justify-content:center;
-    width:44px;height:26px;border-radius:999px;transition:background .12s}
+    width:44px;height:26px;border-radius:var(--radius-pill);transition:background .12s}
   .bn-ic .ic{width:var(--ic-24);height:var(--ic-24)}
   .bn-lb{font-size:var(--t-small-fs);line-height:1.15;max-width:100%;
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -9431,7 +9609,7 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
      ⚠️ `:nth-of-type` is deliberately NOT used: `#dashActBlock` is hidden in some
      dash states, which would renumber the blocks and flip the colours. Each band is
      named. */
-  .dwrap .dblock{border-radius:0;border:0;margin-top:var(--space-block)}
+  .dwrap .dblock{border-radius:var(--radius-sharp);border:0;margin-top:var(--space-block)}
   .dwrap .dblock.band{background:var(--card);
     margin-left:calc(-1 * var(--pageX));margin-right:calc(-1 * var(--pageX));
     padding:var(--space-heading) var(--pageX)}
@@ -9542,7 +9720,7 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
      so the smaller one grows rather than the larger one shrinking. */
   tr.lic-row .lic-copy{grid-area:copy;justify-self:end;align-self:center;margin-top:var(--space-glyph);
     width:var(--ic-44);height:var(--ic-44);padding:0;justify-content:center;
-    border:0;border-radius:10px;background:var(--sel);color:var(--ink)}
+    border:0;border-radius:var(--radius-surface);background:var(--sel);color:var(--ink)}
   tr.lic-row .lic-copy:hover{background:var(--hover);color:var(--ink)}
   tr.lic-row .lic-copy .ic{width:var(--ic-20);height:var(--ic-20)}
   /* the invoice card's pair gets the same treatment, for the same reason */
@@ -9552,7 +9730,7 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
      touch, and the 22px glyph centred in a 44px target already carries 11px of empty
      box either side — so the gap goes back to 2, which reads as the ~24px the earlier
      note measured. The touch target is unchanged; only the paint is. */
-  tr.inv-row .ra-act{border-radius:10px;background:transparent;color:var(--ink)}
+  tr.inv-row .ra-act{border-radius:var(--radius-surface);background:transparent;color:var(--ink)}
   tr.inv-row .ra-act:hover{background:var(--hover)}
 
   /* ---------- invoice card ----------
@@ -9694,7 +9872,7 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
      what is the ceiling. So the row says name + limit, and when capacity was bought
      the delta rides beside it as a pill (see meterRow). No column labels at all. */
   .plantable{display:block;width:100%;background:#fff;border:1px solid var(--line2);
-    border-radius:8px;padding:0 var(--space-control)}
+    border-radius:var(--radius-control);padding:0 var(--space-control)}
   .plantable thead{display:none}
   .plantable tbody{display:block}
   .plantable tbody tr{display:flex;align-items:center;justify-content:space-between;
@@ -9732,7 +9910,7 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
   .lic-controls .lic-typeseg,.insttoolbar .dropwrap:first-of-type,
   .lic-controls .dropwrap:first-of-type{margin-left:auto}
   .insttable{display:block;width:100%;background:#fff;border:1px solid var(--line2);
-    border-radius:8px;padding:0 var(--space-control)}
+    border-radius:var(--radius-control);padding:0 var(--space-control)}
   .insttable thead{display:none}
   .insttable tbody{display:block}
   .insttable tbody tr{display:flex;flex-wrap:wrap;align-items:center;gap:0 var(--space-tight);
@@ -9797,7 +9975,7 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
   #shellMain{padding-bottom:calc(var(--bnavH) + 12px)}
   .totop{display:inline-flex;position:fixed;right:16px;bottom:calc(var(--bnavH) + 16px);z-index:88;
     width:48px;height:48px;align-items:center;justify-content:center;padding:0;
-    border:1px solid var(--line);border-radius:50%;background:#fff;color:var(--mid);
+    border:1px solid var(--line);border-radius:var(--radius-circle);background:#fff;color:var(--mid);
     box-shadow:0 3px 14px rgba(0,0,0,.16)}
   .totop[hidden]{display:none}
   .totop:hover{color:var(--ink);border-color:var(--mid)}
@@ -9812,10 +9990,10 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
 /* ---------- the styleguide's icon inventory ---------- */
 .sg-sprite{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:var(--space-tight);margin-top:var(--space-control)}
 .sg-ic{margin:0;padding:var(--space-stack) var(--space-inline) var(--space-control);display:flex;flex-direction:column;align-items:center;gap:var(--space-inline);
-  border:1px solid var(--line2);border-radius:8px;background:var(--card);min-width:0}
+  border:1px solid var(--line2);border-radius:var(--radius-control);background:var(--card);min-width:0}
 .sg-ic figcaption{font-size:var(--t-small-fs);color:var(--mid);text-align:center;word-break:break-word;line-height:1.3}
 .sg-ic:hover{border-color:var(--ink)}
-.sg-code{margin:var(--space-control) 0 0;padding:var(--space-control) var(--space-stack);border:1px solid var(--line2);border-radius:8px;
+.sg-code{margin:var(--space-control) 0 0;padding:var(--space-control) var(--space-stack);border:1px solid var(--line2);border-radius:var(--radius-control);
   background:var(--card);font-family:var(--font-mono);font-size:var(--t-small-fs);line-height:1.55;
   color:var(--ink);overflow-x:auto;white-space:pre}
 
@@ -9841,7 +10019,7 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
 .faq-rail{display:flex;flex-direction:column}
 .faq-cat{display:block;width:100%;text-align:left;border:0;border-left:3px solid transparent;
   background:transparent;padding:var(--space-control) var(--space-stack);font:var(--t-small-fw) var(--t-small-fs)/var(--t-small-lh) var(--font-ui);
-  color:var(--mid);cursor:pointer;border-radius:0 6px 6px 0}
+  color:var(--mid);cursor:pointer;border-radius:var(--radius-sharp) var(--radius-control) var(--radius-control) var(--radius-sharp)}
 /* ⚠️ WHITE, not the grey wash (2026-09-25, by request). The SELECTED item is white with
    a coloured strip, so a grey hover was the one state in this rail that used a different
    material — pointing at a row and landing on it now differ by the strip alone, which is
@@ -9862,7 +10040,7 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
    stack of outlined boxes, and the outline said nothing — every one of them had it. It
    appears on the one that is OPEN, in `--accent`, where it does say something: this is
    the question whose answer is on screen. */
-.faq-i{border:1px solid transparent;border-radius:8px;background:var(--card);margin-bottom:var(--space-inline)}
+.faq-i{border:1px solid transparent;border-radius:var(--radius-control);background:var(--card);margin-bottom:var(--space-inline)}
 .faq-qh{margin:0;font:inherit}
 .faq-q{display:flex;align-items:center;gap:var(--space-stack);width:100%;text-align:left;border:0;background:transparent;
   padding:var(--space-stack) var(--space-stack);cursor:pointer;
@@ -9876,8 +10054,8 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
 /* ⚠️ THE TEXT LIGHTS UP, THE FILL DOES NOT. It was a grey wash; the card is white and
    stays white, and what moves is the colour of the words — so hovering a question reads
    as pointing at it rather than as selecting it. */
-.faq-q:hover{color:var(--accent);border-radius:8px}
-.faq-q:focus-visible{outline:2px solid var(--ink);outline-offset:-2px;border-radius:8px}
+.faq-q:hover{color:var(--accent);border-radius:var(--radius-control)}
+.faq-q:focus-visible{outline:2px solid var(--ink);outline-offset:-2px;border-radius:var(--radius-control)}
 .faq-chev{flex:none;color:var(--mid);transition:transform .15s ease}
 .faq-q[aria-expanded="true"] .faq-chev{transform:rotate(180deg)}
 /* ⚠️ THE OPEN ITEM IS DIVIDED, not just taller (2026-09-24, from a reference). A
@@ -9905,7 +10083,7 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
    answers already open stay open. */
 .faq-list.capped .faq-i:nth-child(n+7){display:none}
 .faq-more{display:block;width:100%;height:var(--btnH);border:1px dashed var(--line);
-  border-radius:6px;background:transparent;color:var(--ink);cursor:pointer;
+  border-radius:var(--radius-control);background:transparent;color:var(--ink);cursor:pointer;
   font:500 var(--t-small-fs)/1 var(--font-ui);margin-top:var(--space-tight)}
 /* ⚠️ Three states, three surfaces, and none of them is the same one faded: at rest a
    dashed outline on the page ground, under the cursor a WHITE fill (the row lifts off
@@ -9921,7 +10099,7 @@ tr.inst-row .btn--secondary, tr.inst-row .btn--menu{background:transparent}
   .faq-rail{flex-direction:row;gap:var(--space-inline);overflow-x:auto;padding-bottom:var(--space-tight);
     scrollbar-width:none;-webkit-overflow-scrolling:touch}
   .faq-rail::-webkit-scrollbar{display:none}
-  .faq-cat{width:auto;flex:none;white-space:nowrap;border-left:0;border-radius:999px;
+  .faq-cat{width:auto;flex:none;white-space:nowrap;border-left:0;border-radius:var(--radius-pill);
     border:1px solid var(--line2);padding:var(--space-inline) var(--space-stack)}
   .faq-cat.on{border-color:var(--ink);background:var(--sel)}
   .faq-q{font-size:var(--t-body-fs);padding:var(--space-control) var(--space-stack);gap:var(--space-control)}

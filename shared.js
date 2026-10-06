@@ -907,6 +907,42 @@ function navItemsHTML(extraClass){
    `.tnav-item` class, so syncTopNav marks the current one here too and there is
    still one source of truth. Hidden above 600px by CSS; the desktop strip is
    hidden below it. */
+/* ⚠️⚠️ THE NAV COLLAPSED BEHIND ONE CONTROL — 601..1199 ONLY (2026-10-06).
+   The bar needs 1205px and the band gives it 601..1199, so between those widths the
+   five-item strip is replaced by a trigger that opens them as a menu. Three facts about
+   the shape, each of them a decision:
+     · THE TRIGGER SHOWS THE CURRENT SECTION, not the word "Menu". `Licenses ⌄` says
+       where you are and that there is more; `Menu` says neither, and where-you-are is
+       exactly what the strip's `.on` item was carrying.
+     · THE ITEMS KEEP THEIR LABELS. Icons alone do not separate Licenses, Invoices and
+       Activity, and people arrive wanting a specific one.
+     · IT IS `.dropwrap`/`.dropmenu`, the period control's component — a new arrangement
+       of an existing thing, not a new thing. Open, close, Escape, outside-click and the
+       re-anchoring in `elevateOpenPops` all come with it and none of it is restated.
+   ⚠️ NOT a second way to hide these five items beside the phone's `.bnav`: that is a
+   RELOCATION (a thumb cannot reach the top of a phone), not a collapse. This is the
+   product's first collapse. Three presentations across three widths is responsive
+   navigation; two presentations at ONE width would be the defect.
+   ⚠️ Same `NAV_ITEMS`, same `data-nav`, same `.tnav-item` class on the rows, so
+   `syncTopNav` marks the current one here exactly as it does in the strip and the
+   bottom bar — one source of truth, three surfaces. */
+function navPickHTML(){
+  return '<div class="dropwrap navpick">'
+    + '<button class="navpick-btn" id="navPickBtn" aria-haspopup="true" aria-expanded="false">'
+    +   '<span class="navpick-cur" id="navPickCur">Menu</span>'
+    +   icon('chevron-down', { cls:'navpick-caret' })
+    + '</button>'
+    /* ⚠️ `hidden` IN THE MARKUP, not added on first use. The delegated toggle reads
+       `pop.hidden` to decide which way it is going, so a menu that starts without the
+       attribute renders OPEN on every page load and the first click closes it. */
+    + '<div class="dropmenu navpick-menu" role="menu" hidden>'
+    +   NAV_ITEMS.map(function(n){
+          return '<a class="tnav-item navpick-item" role="menuitem" data-nav="' + n.key
+            + '" href="' + n.href + '">'
+            + icon(n.ic) + '<span class="navpick-lb">' + n.label + '</span></a>';
+        }).join('')
+    + '</div></div>';
+}
 function bottomNavHTML(){
   return '<nav class="bnav" id="bottomNav" aria-label="Primary">'
     + NAV_ITEMS.map(function(n){
@@ -1012,6 +1048,7 @@ function chromeHTML(){
      one implicit cell. The ≤600px block gives it `display:contents`, which takes the
      wrapper out of the box tree and hands them straight back to the grid. */
   +   '<nav class="tnav" aria-label="Primary">' + nav + '</nav>'
+  +   navPickHTML()
   +   '<div class="tb-trail">'
   +   '<div class="tb-act" id="topbarAction"></div>'
   /* Refresh, as a trailing app-bar action beside the avatar — phone only, and only
@@ -1781,11 +1818,21 @@ function syncAppBar(){
 
 function syncTopNav(){
   var active = document.body.getAttribute('data-nav') || '';
+  var label = '';
   $$('.tnav-item').forEach(function(a){
     var on = a.getAttribute('data-nav') === active;
     a.classList.toggle('on', on);
     if(on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
   });
+  /* ⚠️ The trigger's word comes from NAV_ITEMS, not from the marked element: a page
+     outside the five (Account, Security, the legal pages) marks nothing, and reading
+     the DOM would leave the trigger showing whatever it said last. */
+  NAV_ITEMS.forEach(function(n){ if(n.key === active) label = n.label; });
+  var cur = $('#navPickCur');
+  if(cur) cur.textContent = label || 'Menu';
+  var btn = $('#navPickBtn');
+  /* the button names itself for assistive tech whether or not it shows a section */
+  if(btn) btn.setAttribute('aria-label', label ? label + ' — open navigation' : 'Open navigation');
 }
 
 /* ============================================================================

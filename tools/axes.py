@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Spacing axis: census and literal -> token conversion (design-system session 3).
+"""Design-system axes: census and literal -> token conversion (session 3 onward).
+
+⚠️ IT WAS `spacing.py` AND WAS RENAMED when radius became the second axis (2026-10-06).
+The parse is identical for every axis — the only things that differ are which properties
+count and which values map — so a second file would have been a second copy of the one
+thing that can be wrong. Pass the axis as the first argument.
 
 ⚠️ IT LIVES HERE BECAUSE THE SCRATCHPAD EATS SCRIPTS. `roles.py` was lost exactly that way
 on 2026-10-02, and the debt entry had predicted it. Stage 3 of the spacing work needs this
@@ -29,6 +34,8 @@ SPACING = {'margin', 'margin-top', 'margin-right', 'margin-bottom', 'margin-left
            'margin-inline', 'margin-block', 'padding', 'padding-top', 'padding-right',
            'padding-bottom', 'padding-left', 'padding-inline', 'padding-block',
            'gap', 'row-gap', 'column-gap'}
+RADIUS = {'border-radius', 'border-top-left-radius', 'border-top-right-radius',
+          'border-bottom-left-radius', 'border-bottom-right-radius'}
 LEN = re.compile(r'^-?(?:\d+\.?\d*|\.\d+)(px|rem|em|%|vh|vw|ch|s|ms)?$', re.I)
 
 
@@ -100,6 +107,37 @@ MOVES = {
 # calc()/env() compositions never reach here at all: toks_of is depth-aware, so a literal
 # inside a composition is not a standalone token. `calc(24px - 1px)` is safe by that rule.
 OFFSCALE = {'37px', '110px', '80px'}
+
+
+# ---- radius ---------------------------------------------------------------------
+# ⚠️ `--btn-r` (24px) IS NOT IN THIS TABLE and must not be. It is the CONTROL radius and
+# it happens to equal `--radius-feature`; the two are allowed to be equal because they
+# answer different questions, and the test is in SCALES.md: if the control radius moves,
+# does the plan card move with it? No. If the plan card moves, do the buttons? No.
+RADIUS_STEPS = {
+    '0':     '--radius-sharp',
+    '4px':   '--radius-tight',
+    '8px':   '--radius-control',
+    '12px':  '--radius-surface',
+    '24px':  '--radius-feature',
+    '999px': '--radius-pill',
+    '50%':   '--radius-circle',
+}
+# stage 2: values that are NOT a step, and the step each one moves to
+RADIUS_MOVES = {
+    '10px': '--radius-surface',   # +2   39x  ⚠️ the decision: cards, menus, grouped table
+    '6px':  '--radius-control',   # +2   37x
+    '7px':  '--radius-control',   # +1    5x
+    '9px':  '--radius-control',   # -1    2x
+    '14px': '--radius-surface',   # -2    2x
+    '3px':  '--radius-tight',     # +1    1x
+    '20px': '--radius-feature',   # +4    1x  ⚠️ `.plancard`, the one visible move
+}
+
+AXES = {
+    'spacing': {'props': SPACING, 'steps': None, 'moves': None},   # filled below
+    'radius':  {'props': RADIUS,  'steps': RADIUS_STEPS, 'moves': RADIUS_MOVES},
+}
 
 
 def mask_comments(text):
@@ -184,10 +222,21 @@ def convert(path, text, table=None):
 
 
 if __name__ == '__main__':
-    cmd = sys.argv[1] if len(sys.argv) > 1 else 'census'
+    AXES['spacing']['steps'] = STEPS
+    AXES['spacing']['moves'] = MOVES
+    args = sys.argv[1:]
+    axis = 'spacing'
+    if args and args[0] in AXES:
+        axis = args.pop(0)
+    # the module-level names the functions read are rebound to the chosen axis
+    SPACING = AXES[axis]['props']
+    STEPS = AXES[axis]['steps']
+    MOVES = AXES[axis]['moves']
+    cmd = args[0] if args else 'census'
     root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    path = sys.argv[2] if len(sys.argv) > 2 else os.path.join(root, 'styles.css')
+    path = args[1] if len(args) > 1 else os.path.join(root, 'styles.css')
     text = open(path, encoding='utf-8').read()
+    print('axis: %s' % axis)
     if cmd == 'census':
         v = census(text)
         print('distinct: %d   occurrences: %d' % (len(v), sum(v.values())))
