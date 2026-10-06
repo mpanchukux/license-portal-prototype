@@ -99,6 +99,15 @@
              as a defect rather than as two components. Same argument as the dashed/solid
              divider. -->
         <div class="dblock-head" id="dashInvHead"></div>
+        <!-- ⚠️⚠️ WRAPPED 2026-10-06, AND IT WAS THE ONLY TABLE ON THE PAGE WITHOUT IT.
+             Measured: this block ran 28px past its own box at 900, 228 at 700 and 327 at
+             601 — more than any other table in the product — with `overflow-x:visible`
+             and no wrapper, so it neither scrolled nor drew the edge cue. Nothing on
+             screen said it was happening; the absence of a shadow here read as health and
+             was the opposite. The wrapper is the STOPGAP, not the fix: a preview of six
+             columns does not belong in 553px, and the real answer is fewer columns (see
+             the debt entry). -->
+        <div class="tablescroll">
         <table>
           <thead>
             <tr>
@@ -117,6 +126,7 @@
           <!-- rows come from the dataset — see renderDashInvoices -->
           <tbody id="dashInvBody"></tbody>
         </table>
+        </div>
 
       </div>
 

@@ -95,6 +95,37 @@ def css_findings(path):
     return repeats
 
 
+# ⚠️⚠️ WHY THIS SECOND COUNT EXISTS (2026-10-06). The spacing pass was told to merge its
+# tokens into the existing `:root` and never add a second one, with "check-collisions.py
+# fails on that" written beside the rule as its justification. It does not: the count above
+# matches a bare single CLASS, and `:root` is not a class. The file was already carrying
+# FOUR top-level `:root` blocks while that sentence was being relied on.
+#
+# A rule with a false justification beside it is worse than a rule with none — the next
+# person trusts the guard instead of reading, and the guard was never looking. So the rule
+# now has something enforcing it.
+#
+# ⚠️ IT IS A RATCHET, like the class count and for the same reason. Splitting `:root` is
+# ordinary CSS (the type scale and the icon sizes each keep their own block, and those are
+# readable), so failing on what exists is a guard nobody keeps green. The baseline is what
+# was there the day it was written; it fails when the count GROWS.
+# ⚠️ `@media` blocks are stripped first, so a `:root` restated for a breakpoint — which is
+# the normal way to write one — is not counted. Only top-level repeats are.
+ROOTLIKE = re.compile(r'^(:root|html|body|\*)$')
+ROOT_BASELINE = 4          # top-level `:root` blocks, 2026-10-06
+
+
+def rootlike_findings(path):
+    text = strip_media(strip_comments(open(path, encoding='utf-8').read()))
+    counts = Counter()
+    for sel in re.findall(r'([^{}]+)\{[^{}]*\}', text):
+        for part in sel.split(','):
+            part = part.strip()
+            if ROOTLIKE.match(part):
+                counts[part] += 1
+    return counts
+
+
 def id_findings():
     """⚠️ HTML COMMENTS ARE STRIPPED FIRST, and the guard reported a false duplicate on its
     first real run without it: this codebase annotates heavily and a comment routinely
@@ -138,6 +169,22 @@ def main():
     else:
         print('classes: %d repeated top-level name(s), baseline %d - no new collision'
               % (len(repeats), BASELINE))
+
+    roots = rootlike_findings(CSS)
+    nroot = roots.get(':root', 0)
+    if nroot > ROOT_BASELINE:
+        fail = True
+        print(':root: %d top-level blocks, baseline %d' % (nroot, ROOT_BASELINE))
+        print('    merge the new declarations into an existing :root rather than adding a')
+        print('    block - or raise ROOT_BASELINE and say in the commit what the new block')
+        print('    is for.')
+    else:
+        print(':root: %d top-level block(s), baseline %d - no new block'
+              % (nroot, ROOT_BASELINE))
+    others = {k: v for k, v in roots.items() if k != ':root' and v > 1}
+    if others:
+        print('    (also repeated at top level: %s)'
+              % ', '.join('%s x%d' % (k, v) for k, v in sorted(others.items())))
 
     sys.exit(1 if fail else 0)
 

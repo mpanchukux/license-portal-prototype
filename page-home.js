@@ -467,6 +467,12 @@ function renderHome(){
   renderBlockFooters();
   renderHomeCards();
   renderDashFeed();
+  /* ⚠️ LAST, AND IT HAS TO BE HERE RATHER THAN AT BOOT. `wireScrollables` runs when the
+     chrome is injected, which is BEFORE these renderers fill the two tbodies — so the
+     tables measured narrow and neither wrapper ever became a scroller except on the one
+     width where something else re-triggered it. The measurement belongs after the rows
+     exist, and after every re-render, because a dataset switch changes the widths. */
+  if(window.syncScrollables) window.syncScrollables();
 }
 renderHome();
 

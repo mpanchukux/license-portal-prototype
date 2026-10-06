@@ -2860,6 +2860,8 @@ if(guardSession()){
   wireMeshHeader();
   syncTitleRow();
   wireStickyFrames();
+  /* after the frames: a frame measures its own wrapper, this catches every other one */
+  window.syncScrollables = wireScrollables();
 }
 
 /* ---------- the page title row (phone) ----------------------------------------
@@ -3060,13 +3062,7 @@ function wireStickyFrame(frame, scroller){
   function measure(){
     var b = bar();
     if(b) frame.style.setProperty('--barH', Math.round(b.getBoundingClientRect().height) + 'px');
-    if(wrap && table){
-      /* compare against the wrapper's own content box, and do it with the scroller off,
-         or a wrapper that is already scrolling reports a clientWidth narrowed by its
-         own scrollbar and never switches back */
-      wrap.classList.remove('is-scrollable');
-      if(table.scrollWidth > wrap.clientWidth + 1) wrap.classList.add('is-scrollable');
-    }
+    markScrollable(wrap);
   }
   function syncShadow(){
     var b = bar();
@@ -3117,6 +3113,35 @@ function scrollParent(el){
     if(o === 'auto' || o === 'scroll') return p;
   }
   return $('#shellMain') || document.scrollingElement;
+}
+/* ⚠️⚠️ A `.tablescroll` IS NOT A SCROLLER UNTIL SOMETHING MEASURES IT. The class only
+   declares `overflow:visible`; `.is-scrollable` is what turns on `overflow-x:auto`, and
+   it is added here — see the note on the class for why it is toggled rather than
+   declared (a scroller computes `overflow-y:auto` too, and a sticky `thead` then sticks
+   to a box with no height limit).
+   ⚠️ Compare against the wrapper's own content box, and do it with the scroller OFF, or a
+   wrapper that is already scrolling reports a clientWidth narrowed by its own scrollbar
+   and never switches back. */
+function markScrollable(wrap){
+  if(!wrap) return;
+  var table = wrap.querySelector('table');
+  if(!table) return;
+  wrap.classList.remove('is-scrollable');
+  if(table.scrollWidth > wrap.clientWidth + 1) wrap.classList.add('is-scrollable');
+}
+/* ⚠️⚠️ AND IT HAD ONLY EVER BEEN MEASURED ON LIST PAGES (fixed 2026-10-06). The call
+   below walked `.listframe`, which Home's blocks are not — so BOTH Home tables carried a
+   `.tablescroll` that could never become one. The licences block has had the wrapper
+   since it was written and 106px of overflow at 601 with nothing to scroll it; the
+   invoices block had no wrapper at all. A wrapper nobody measures is a wrapper that does
+   nothing, and it looks identical in the markup to one that works. */
+function wireScrollables(){
+  var scroller = $('#shellMain');
+  if(!scroller) return;
+  function sync(){ $$('#shellMain .tablescroll').forEach(markScrollable); }
+  window.addEventListener('resize', sync);
+  sync();
+  return sync;
 }
 /* every list page has at most one frame, and the page scroll is always #shellMain */
 function wireStickyFrames(){
