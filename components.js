@@ -815,7 +815,7 @@ function invActionsHTML(opts){
 }
 function invRow(v, opts){
   opts = opts || {};
-  return '<tr class="inv-row"><td class="mono">'+v.num+'</td><td>'+fmtDate(v.date)+'</td><td class="num inv-amt">'+v.amount+'</td>'
+  return '<tr class="listrow inv-row"><td class="mono">'+v.num+'</td><td>'+fmtDate(v.date)+'</td><td class="num inv-amt">'+v.amount+'</td>'
     + '<td><span class="statwrap">'+invStatusMark(v)+autoChargeIcon(v)+'</span></td>'
     + (opts.noProduct ? '' : invProductCell(v, opts))
     + '<td class="cellact"><span class="rowactions">' + invActionsHTML() + '</span></td></tr>';
@@ -854,7 +854,7 @@ function userRow(u){
        a dash reads as "there is nothing here yet", which is the actual fact — the
        person has not signed in and so has neither a name nor an added date. Same mark
        the Label column uses for an unlabelled instance. */
-    return '<tr class="user-row user-pending">'
+    return '<tr class="listrow user-row user-pending">'
       + '<td>' + esc(u.email) + ' <span class="pill soft user-invited">Invited</span></td>'
       + '<td class="muted">&mdash;</td>'
       + '<td class="muted">&mdash;</td><td class="cellact"></td></tr>';
@@ -879,7 +879,7 @@ function userRow(u){
   var delBtn = button({ variant:'secondary', size:'md', icon:'trash', cls:'tip',
                         ariaLabel:'Delete ' + u.email,
                         attrs:'data-deluser="' + esce + '" data-tip="Delete"' });
-  return '<tr class="user-row"><td>'+u.email+'</td><td>'+u.name+'</td><td>'+fmtDate(u.created)+'</td>'
+  return '<tr class="listrow user-row"><td>'+u.email+'</td><td>'+u.name+'</td><td>'+fmtDate(u.created)+'</td>'
     + '<td class="cellact"><span class="rowactions">' + loginBtn + delBtn + '</span></td></tr>';
 }
 /* ---------- the licence CARD — the phone's answer, and Home's -------------------
@@ -1028,7 +1028,7 @@ function rowOpen(p){
      a hairline pattern — before this ships to anyone. The aria-label covers assistive
      tech; it does nothing for a sighted user who cannot separate the two tones. */
   var alive = p.status === 'canceled' ? 'Canceled' : 'Active';
-  return '<tr class="lic-row' + (p.status==='canceled' ? ' off' : '') + '" '
+  return '<tr class="listrow lic-row' + (p.status==='canceled' ? ' off' : '') + '" '
     + (p.id ? 'data-licid="' + p.id + '" ' : '')
     + 'data-goto="' + (p.goto || '') + '" data-product="' + (p.product || '') + '" data-type="' + p.type + '" data-status="' + (p.status || 'active') + '" tabindex="0" aria-label="' + (p.product ? p.product + ' ' : '') + p.name + ', status: ' + alive + '. Open details">';
 }
@@ -1177,7 +1177,11 @@ function headHtmlC(){
     + '<th>Version</th><th aria-label="Actions"></th></tr>';
 }
 function rowHtmlC(p, opts){
-  return rowOpen(p).replace('class="lic-row', 'class="lic-row licc-row')
+  /* ⚠️ The match string tracks `rowOpen` EXACTLY. `.listrow` was added in front of
+     `lic-row` there (pass 1), so a replace still looking for `class="lic-row` would
+     silently find nothing and the C table would lose `.licc-row` — a no-op that throws
+     no error and shows as the wrong column layout. */
+  return rowOpen(p).replace('class="listrow lic-row', 'class="listrow lic-row licc-row')
     + productCellC(p) + statusCell(p) + versionCell(p)
     + actionsCell(p, opts) + '</tr>';
 }
@@ -3395,11 +3399,35 @@ function toneClass(tone){ return 'tone-' + tone; }
 /* ⚠️⚠️ THE MARK FOLLOWS THE TONE, NOT A SEPARATE FLAG (2026-09-30, by request). It read
    `blocking ? triangle : circle`, which is the DISMISSAL question — so an ended updates
    term drew the calm circle while being the same kind of trouble as a failed payment,
-   and a card expiring in 30 days drew it while being a deadline. Triangle on red and on
-   black, circle on quiet: the shape now says "something is wrong or will be" versus
-   "this is just news", which is what the three tones say. */
+   and a card expiring in 30 days drew it while being a deadline.
+   ⚠️⚠️ THREE TONES, THREE OUTLINES (2026-10-07). The 09-30 version read
+   `tone === 'quiet' ? 'alert-circle' : 'alert-triangle'` — **triangle on red AND on
+   black** — which left two of the three tones telling themselves apart by hue alone, on
+   the same white ground, at the same size and weight. The constant this product states
+   about itself asks for "a different shape per kind, not one shape in three tints", and
+   this was the one place it did not deliver.
+   ⚠️ NOT AN ACCESSIBILITY FAILURE, and the record should not inflate it: both tones pass
+   contrast (5.091 and 17.042) and the banner's wording always differs, so a reader who
+   cannot separate the hues still has the sentence. It is the system failing its own
+   promise, which is reason enough on its own.
+   ⚠️ A CLOCK BECAUSE THAT IS WHAT THE TONE MEANS. `tone-black` is a deadline — updates
+   ending in 14 or 30 days — so time is the subject, not an illustration of it. And the
+   product already says so: `ACT_IC['license.updates_expiring']` has drawn a clock in the
+   activity feed all along, and the sprite's two other clock readers are both "pending".
+   Reusing it here makes two surfaces agree rather than giving one condition two marks.
+   ⚠️ Measured at the banner's real glyph size (20px) rather than chosen by eye, against
+   `calendar` and `calendar-month`: the clock is the only candidate whose narrowest
+   feature gap stays **above one device pixel** (1.63px against the calendar's 0.75px),
+   it carries the least ink (91 units against 121 and 137) and it has the fewest sub-2px
+   gaps (20 against 34 and 61). ⚠️ The expectation going in was that the calendar grid
+   would visibly muddy at 20px — **it does not**, and that is recorded rather than
+   quietly dropped: no narrow gap in the calendar merges, every enclosed hole survives,
+   and its RMS against an 8× reference is marginally BETTER than the clock's. The clock
+   wins on density and on already meaning this, not on the calendar collapsing.
+   ⚠️ Zero sprite additions: `ti-clock` was already in the closed set. */
+var BANNER_IC = { quiet:'alert-circle', black:'clock', red:'alert-triangle' };
 function bannerIcon(tone){
-  return icon(tone === 'quiet' ? 'alert-circle' : 'alert-triangle', { cls:'gb-ic' });
+  return icon(BANNER_IC[tone] || 'alert-triangle', { cls:'gb-ic' });
 }
 /* ⚠️⚠️ THE SEPARATE LAYOUT IS GONE (2026-10-01, by request) with the `Banner › Layout`
    axis, which retired on `Stacked — one band`. What it was: one card per live condition,
@@ -3628,7 +3656,7 @@ function instActCell(i){
    lines in a 100px column. It was survivable while this was a tab most people never
    opened; it is a destination now. */
 function instRowOpen(r, cls){
-  return '<tr class="inst-row' + (cls ? ' ' + cls : '') + '" data-instid="' + esc(r.inst.id)
+  return '<tr class="listrow inst-row' + (cls ? ' ' + cls : '') + '" data-instid="' + esc(r.inst.id)
     + '" data-licid="' + esc(r.lic.id) + '">';
 }
 function instAllRow(r){

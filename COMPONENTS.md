@@ -15,6 +15,8 @@ repeat it.
 **Group 2 — overlay: dropdown + sheet, modal shell, toolbar — BUILT 2026-10-07**, except
 the toolbar, where the measurement contradicted the decision — see §5 below.
 **Group 3 — surface: card, table row + frame, banner — BUILT 2026-10-07.**
+**Pass 1 — the component names, ADDED alongside the old ones — DONE 2026-10-07** (last
+section). `.listrow` and `.listbar` exist; nothing was renamed and nothing merged.
 
 ---
 
@@ -383,6 +385,11 @@ Two shells, internally consistent, one step apart. **Nothing moved.**
 
 ## ⚠️⚠️ §5 — THE MEASUREMENT CONTRADICTS THE DECISION, SO NOTHING WAS RENAMED
 
+> **Superseded in part by pass 1 (last section).** The census below still stands — one
+> component, two names, seven shared selectors. What changed is the answer: the shared rules
+> now live on `.listbar`, which was **added** to the elements, and the two old names stay as
+> per-surface hooks. The rename this section declines is still declined.
+
 The decision was "two toolbars, two components, names that cannot be folded back". **The
 measurement says they are ONE component with two names.** Compared at 1280 on all four list
 pages:
@@ -595,3 +602,111 @@ by context, re-measured.
 
 **Final: geometry identical on every cell, 0 lost, 0 gained, and the only paint change is
 `.modal`'s radius** — group 2's known move, which is all that should remain.
+
+---
+
+# Pass 1 — the name is ADDED, not swapped. Done 2026-10-07.
+
+**The revert above stands as the record of what a rename costs. This is the other move:
+`.listrow` and `.listbar` go on the elements ALONGSIDE the old names, and only the rules that
+are genuinely shared move onto the new name. Nothing is merged, so nothing can collapse.**
+
+| | markup now | what the new name owns | what the old names keep |
+|---|---|---|---|
+| row | `class="listrow lic-row"` (and `inv` / `inst` / `user`) | 4 selectors common to all four **in rule text** | per-table column targeting, and every one-sided rule |
+| toolbar | `class="listbar insttoolbar"` / `class="listbar lic-controls"` | the band itself + 7 shared selectors | 17 one-sided rules, now standing revealed |
+
+## ⚠️⚠️ THE SHARED ROW SET IS SMALLER THAN THE CENSUS LOOKED — SAID RATHER THAN ROUNDED UP
+
+Group 3 measured the four rows as **identical in rendered form**. That is true and it is not
+the same claim as "the four names select the same rules". **In rule text, exactly four
+selectors name all four rows:**
+
+| moved to | was |
+|---|---|
+| `.listrow:hover` | `.lic-row:hover,.inv-row:hover,.inst-row:hover,.user-row:hover` |
+| `tr.listrow` | `tr.lic-row,tr.inv-row,tr.inst-row,tr.user-row` (the ground token) |
+| `table:has(.listrow) thead` | the same `table:has(…) thead` written four times |
+| `tr.listrow > td` | `tr.lic-row > td,tr.inv-row > td,tr.user-row > td,tr.inst-row > td` |
+
+**Everything else stayed.** The one that is worth naming is `.lic-row,.inv-row,.inst-row` —
+**three of the four**, because `.user-row` is deliberately still a card at ≤600: it lives in
+the Users modal, which has no page frame to be a row of. Folding that into `.listrow` would
+have been the bigger win that needs the revert. **A smaller win that is true.**
+
+## The toolbar: the doubling is what went
+
+Three rules — the base, `[hidden]` and `.spacer` — existed **twice, byte for byte**, once
+under each name. They are now one trio under `.listbar`, and `check-css` counts the
+difference exactly: **2188 authored rules → 2185. Minus three, and nothing else.**
+
+Four more shared selectors were rewritten in place (`.listcard .listbar`,
+`.listcard:has(> .listbar)` ×2, `.listframe > .listbar`, `body.list-empty
+.listcard:has(> .listbar)`, `.listbar [data-refresh]`, `.listbar .spacer`).
+
+⚠️ **The base trio was kept at the `.insttoolbar` position, not the `.lic-controls` one**, and
+that is a cascade decision rather than a tidy-up: the surviving declaration moved ~5,300 lines
+EARLIER in the file. Checked before deleting — nothing between the two positions competes for
+those properties at equal specificity, so no winner changes. Measured after: `.listbar` on
+`#licBarC` computes `flex` / `gap:12px`, which is the licences bar still getting its band from
+a rule that now lives with the table rules.
+
+## Specificity: predicted unchanged, and it is
+
+Every moved selector swaps one class for one class. `(0,1,0)→(0,1,0)`, `(0,1,1)→(0,1,1)`,
+`(0,1,2)→(0,1,2)`, `(0,2,0)→(0,2,0)`, and the empty-list rule's `(0,4,1)` holds because
+`:has()` and `:not()` take their argument's specificity and the argument is still one class.
+**Position is unchanged too** — the selector text was rewritten where it stood, so equal-weight
+ties resolve the same way. That matters for `tr.listrow > td`, which ties with
+`.dblock table td` at `(0,1,2)` and wins only on order.
+
+## ⚠️⚠️ The 17 one-sided toolbar rules, which is the point of doing it this way
+
+They are no longer hidden inside a shared selector list, so the triage is now readable
+without a census. Roughly: **`.lic-controls` keeps 4** (the styleguide specimen scope, the
+WebKit search-cancel reset, `licNewBtn`, the type segment), **`.insttoolbar` keeps 6** (the
+group switch, `.perctl` / `.perbtn`, the `.barfilters` internals), and **7 pair one name with
+an ID** (`#licBarC .barfilters`, `#licBarB .perbtn`) — which is the phone filter row written
+as id-plus-name because only bar C has it.
+
+**Each needs one question answered: is this the component's, or that one surface's?** That is
+a decision per rule, and it can be taken later or never. Nothing about it blocks anything.
+
+## ⚠️ What the measurement needed before it could say anything
+
+**`path()` in `sweep.js` keys every element by its class list, so adding a class unpairs the
+element from itself.** Before the fix, every row and every toolbar would have come back as
+`unpaired` — skipped, not compared — and the run would have looked like a catastrophe while
+measuring nothing. Worse: a real regression on exactly those elements would have been
+invisible in the same run that cried wolf. `SWEEP.ignoreClasses(['listrow','listbar'])` now
+drops names from the key on both sides. It only ever removes names, so it cannot invent a
+pairing.
+
+## Verified
+
+| | |
+|---|---|
+| geometry, 15 pages × 8 widths | **120 cells, 119 identical** |
+| computed values, 15 pages × 3 widths, 19 properties | **35,700 elements: 0 changed, 0 lost\*, 0 gained, 0 unpaired** |
+| overlay surfaces (licence panel ×2, Users modal) | **6 cells, 4,167 elements: 0/0/0**, geometry 6/6 |
+| `check-css` | `ok:true`, **2185/2185**, 0 dropped (before: 2188/2188) |
+| 15 pages | no errors · `check-icons` 3/3 clean · collisions 23/24, `:root` 4/4 |
+
+⚠️ **The two non-zeros, and why neither is this pass.**
+
+1. **`invoices.html@768` gained 136px of overflow on `#shellMain`.** Re-run 6× per mirror:
+   it fires on **HEAD** too (1 in 6 there, 0 in 6 on the new tree) and `.tablescroll`
+   overflows by exactly 160px on **every** run of **both**. Not fonts — `document.fonts.status`
+   is `loaded` in every sample and waiting for `fonts.ready` made it *more* frequent.
+   **Pre-existing nondeterminism on that one cell.**
+2. **One lost and one gained `background-color`, both the bottom-nav active pill**
+   (`licenses.html@390` and `signin.html@390`). Probed directly 3× per mirror: the `.on` item
+   and its pill are **identical on both sides every time**, and the class is present from
+   t=0. **Does not reproduce.**
+
+⚠️⚠️ **And the hard rule caught my own probe again, for the third time in two sessions.** The
+surface sweep reported `0/0/0` on the Users modal — while `tr.user-row` was **0 in the DOM**,
+because `OPENERS.usersModal` never reached the modal. Calling `UsersModal.open()` directly
+measured it properly: `tr.user-row` carries `.listrow`, the ground token resolves to
+`transparent`, and both action buttons are `rgba(0,0,0,0)` on both mirrors at 1280 and 390.
+**A zero from a surface you did not open is not a zero.**

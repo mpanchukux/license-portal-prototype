@@ -1910,6 +1910,9 @@ moves, do the buttons? No.* **Two "no"s means two tokens, whatever the numbers s
 | **`.faq-cat` — seven rules, no markup, and not in `dead-report.json`** | A hole in the census, found by a pass about widths. `faq.js` ships and emits `faq-i`/`faq-qh`/`faq-q`/`faq-a`/`faq-h`, never `faq-cat` |
 | **`DEAD.md` group 2 is unreliable where a class is written only under a non-default setting** | Eight `mark-*` rules were listed as "never written" while a live branch wrote them. The scenarios set the *variant* and never the *condition* that produces the markup |
 | **`sweep.js` cannot see `.meshbg`** | Implementation rule 7, and correct — the pools drift and would make every run report false positives. **Consequence: any mesh change must be measured directly.** It reported a clean zero while twelve gradient stops had just been rewritten |
+| **`sweep.js` keys elements by their class list** | Implementation rule 9. A pass that ADDS a class unpairs every element it touched: `paintDiff()` skips them as `unpaired`, so the run is loud and blind at the same time. `SWEEP.ignoreClasses([...])` before the first cell |
+| **An opener that resolves without arriving** | Implementation rule 10. `OPENERS.usersModal` reported `0/0/0` on a surface it never opened, three times across two sessions. Every opener now ends in `must()`; `diff()`/`paintDiff()` carry `error` and `compared` so a dead cell cannot read as a pass |
+| **A scan keyed on literal token values** | Implementation rule 11. It reported "no failures" after the pass moved the three values it was written against, and had stopped matching anything at all. Resolve targets from `:root` at run time — this is how `--faint`'s 507 failures stayed invisible |
 | **The 601–952 table band** | See item 5 above |
 | **`mockInvoiceUrl` is a second typography system** | A separate document with its own rules; it was never part of these axes |
 | **`?from` is written and read by nothing** | Left in the URL deliberately — a link must work the same for whoever opens it |
@@ -1976,6 +1979,87 @@ a broken token produces, and it is invisible to everything else.
 geometry cells proved only that nothing moved, which on this axis was never in question.
 Whoever runs elevation, overlays, motion or border width writes the equivalent walk **before**
 touching a value, and reports it first.
+
+**9 · ⚠️⚠️ A PASS THAT ADDS A CLASS MUST CALL `SWEEP.ignoreClasses([...])` FIRST, OR THE
+RUN IS MEANINGLESS.** `path()` keys every element as `tag.class1.class2.class3:index`, so
+putting a second name on an element — `class="listrow lic-row"`, the shape every additive
+component rename takes — makes the before key and the after key **different strings for the
+same element**. `paintDiff()` then counts it `unpaired` and **skips** it; `diff()` reports
+"element count changed" on the whole page.
+
+**Two things go wrong at once, and the second is the dangerous one.** The run looks like a
+catastrophe — and it is simultaneously blind, because the elements it refuses to compare are
+exactly the ones the pass touched. A real regression there would be invisible in the same
+run that cried wolf.
+
+```js
+SWEEP.ignoreClasses(['listrow', 'listbar']);   // before the first page() or paint()
+```
+It only ever **removes** names from the key, so it cannot invent a pairing: two elements that
+differed only by an ignored class were the same element. The filter runs **before** the
+three-class slice, so an ignored name cannot occupy a slot and push a real one out. The same
+key is used by `overflowsIn()`, where without it `newOverflow()` reports a box that "never
+overflowed before".
+⚠️ Found the hard way on 2026-10-07, before the pass that added `.listrow` and `.listbar`.
+The whole of pass 1 would otherwise have reported ~1,500 unpaired elements and nothing else.
+
+**10 · ⚠️⚠️ EVERY OPENER ASSERTS THAT IT ARRIVED. A zero from a surface you did not open is
+not a zero.** `OPENERS.usersModal` drove the profile menu and then resolved regardless of
+what happened, so the walk ran on a page where the modal had never opened: every element it
+was meant to measure was absent, and the cell reported a clean `0 changed / 0 lost /
+0 gained`. **It did this three times across two sessions**, and each time a human caught it
+by checking `tr.user-row` by hand — never the tool.
+
+Three parts, all of them in `tools/sweep.js` since 2026-10-07:
+- `must(d, sel, label)` throws if the selector is absent **or** present-and-`display:none`.
+  Every opener ends in one. `page()` and `paint()` already turn a rejection into `{error}`.
+- An opener that can ask a controller **asks it** — `UsersModal.open()` — and keeps the click
+  path as a fallback, so a broken menu route still shows up instead of being routed around.
+- `diff()` returns `errors[]` and `paintDiff()` returns `error` and `compared`. **A summary
+  that sums changed/lost/gained without asserting `!error && compared > 0` can still read a
+  failed cell as a pass**, because a cell with no rows has nothing to disagree about.
+
+Verified both branches on a throwaway opener: an absent selector and a hidden surface each
+become `{error}` with zero rows.
+
+**11 · ⚠️⚠️ A SCAN READS ITS TARGETS FROM `:root` AT RUN TIME. A scan keyed on literal
+values goes blind the moment a token moves and reports "no failures" — which is the most
+dangerous output a checker can produce.**
+
+The contrast walk that found the two failing pairs was keyed on the hexes it was written
+against:
+
+```js
+var TARGET = { '#008846':'--status-ok', '#da1818':'--status-alert', '#6b6b6b':'--mid' };
+```
+
+The same pass then moved all three values. Re-run to confirm the fix, it matched **nothing**,
+found **zero failing groups**, and printed a clean pass. Nothing errored, nothing was skipped,
+no count looked wrong — the instrument had simply stopped being able to see its subject.
+
+```js
+var root = win.getComputedStyle(doc.documentElement);
+NAMES.forEach(function (n) { TARGET[CT.hex(CT.parse(root.getPropertyValue(n)))] = n; });
+```
+
+Read that way, the same walk found what the hard-coded version never could: **`--faint`, a
+fourth token, failing AA as text in 507 places** — worse than the three the pass had just
+closed, and absent from the debt list because no scan had ever been pointed at it.
+
+⚠️⚠️ **THIS IS THE THIRD INSTANCE OF ONE SHAPE IN TWO SESSIONS**, and the shape is what to
+watch for rather than the three cases:
+
+| | the instrument | what it reported | what was true |
+|---|---|---|---|
+| rule 10 | `OPENERS.usersModal` | `0 changed / 0 lost / 0 gained` | the modal never opened; `tr.user-row` was 0 in the DOM |
+| rule 9 | `path()` keyed by class list | "element count changed", 1,500 `unpaired` | an added class; the real elements were never compared |
+| rule 11 | a scan keyed on literal hexes | "no failing groups" | it could no longer match any of its three targets |
+
+**All three fail by going QUIET, not by going wrong.** A tool that throws gets fixed in a
+minute; a tool that returns a confident zero gets believed. So the question to ask of any
+check here is not "did it pass" but **"could this instrument still have seen a failure if one
+were there"** — and the cheap way to answer it is a control: break the thing on purpose and
+watch the check fail.
 
 ---
 

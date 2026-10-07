@@ -11,7 +11,7 @@ var CSSVAR = function(n){ return getComputedStyle(document.documentElement).getP
 var COLORS = [
   ['--ink',        'text, fills, focus'],
   ['--mid',        'secondary text'],
-  ['--faint',      'meta, placeholders'],
+  ['--c-grey-400', 'decorative glyphs and inactive text only \u2014 never live text'],
   ['--line',       'control borders'],
   ['--line2',      'hairlines, card borders'],
   ['--bg',         'page background'],
@@ -137,7 +137,7 @@ $('#sgSpace').innerHTML = SPACE.map(function(s){
   var v = CSSVAR(s[0]);
   var w = Math.min(parseInt(v, 10) || 0, 320);
   return '<div class="sg-space"><i style="width:' + w + 'px"></i>'
-    + '<span>' + s[0] + ' = ' + v + '</span><span style="color:var(--faint)">' + s[1] + '</span></div>';
+    + '<span>' + s[0] + ' = ' + v + '</span><span style="color:var(--mid)">' + s[1] + '</span></div>';
 }).join('');
 
 /* the payment method specimen renders from the same builder the product uses */
@@ -283,7 +283,7 @@ $$('.sgWizStep').forEach(function(box){
      `Active only` switch) and B (two dropdowns and no attention control) left the product
      with the axis; the slot that showed A now shows the toolbar that won. */
   var a = $('#sgBarA');
-  if(a) a.innerHTML = '<div class="lic-controls">'
+  if(a) a.innerHTML = '<div class="listbar lic-controls">'
     + '<div class="searchbox"><svg class="ic searchglyph" aria-hidden="true"><use href="assets/icons.svg#ti-search"></use></svg><input type="search" placeholder="Search licenses" aria-label="Search licenses (specimen)" tabindex="-1"></div>'
     + '<div class="dropwrap perctl"><button class="btn btn--secondary btn--md perbtn" tabindex="-1" aria-haspopup="true" aria-expanded="false"><b>All types</b> <svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-down"></use></svg></button></div>'
     + '<div class="dropwrap perctl"><button class="btn btn--secondary btn--md perbtn" tabindex="-1" aria-haspopup="true" aria-expanded="false"><b>Active</b> <svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-down"></use></svg></button></div>'
@@ -546,7 +546,7 @@ $$('.sgWizStep').forEach(function(box){
   }).join('');
 
   /* the same icon three times, inheriting three different text colours */
-  $('#sgIcColour').innerHTML = ['var(--ink)', 'var(--mid)', 'var(--faint)'].map(function(c){
+  $('#sgIcColour').innerHTML = ['var(--ink)', 'var(--mid)', 'var(--glyph-decorative)'].map(function(c){
     return '<div class="sg-cell" style="color:' + c + '">' + icon('alert-circle', { size:20 })
       + '<span class="sg-cls">' + c + '</span></div>';
   }).join('');

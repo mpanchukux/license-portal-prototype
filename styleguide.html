@@ -66,10 +66,41 @@
         there is room, the <b>word</b>. Remove the colour entirely and every one of them still reads.
         A tone-only carrier &mdash; the phone card&rsquo;s status stripe &mdash; is still an open debt,
         not a precedent.</p>
+      <p class="sg-note"><b>What that guarantees, stated exactly (2026-10-07):</b>
+        <b>a different outline per KIND of thing</b> &mdash; status is
+        <code class="sg-cls">circle-check</code> &middot; <code class="sg-cls">circle-x</code> &middot;
+        <code class="sg-cls">alert-triangle-filled</code>, and the Home banner is
+        <code class="sg-cls">alert-circle</code> &middot; <code class="sg-cls">clock</code> &middot;
+        <code class="sg-cls">alert-triangle</code> &mdash; <b>plus the word, in every case</b>.
+        <br><b>The third outline is what made it true.</b> Until this pass the banner drew the same
+        triangle on <code class="sg-cls">tone-red</code> and <code class="sg-cls">tone-black</code>,
+        so two of its three tones were told apart by hue alone. A clock, because
+        <code class="sg-cls">tone-black</code> is a <b>deadline</b> and the activity feed has drawn a
+        clock for that condition all along.
+        <span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <b>It was never an AA failure</b> &mdash; both tones pass
+        (5.091 and 17.042) and the wording always differs. It was the system not keeping its own
+        promise, which is reason enough.</p>
       <p class="sg-note"><b><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <code class="sg-cls">--accent</code>,
         <code class="sg-cls">--tick</code> and <code class="sg-cls">--page-bg</code> are still literals</b>
         and do not go through the primitive layer. They predate it and they sit on the selling surface,
         where a value change is a visible change; folding them in is a pass of its own.</p>
+      <p class="sg-note"><b><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> There are TWO text greys, not three (2026-10-07).</b>
+        <code class="sg-cls">--faint</code> (<code class="sg-cls">#9a9a9a</code>) was the third tier and
+        it failed AA as text everywhere it was used &mdash; <b>2.81:1</b> on white, <b>2.62:1</b> on
+        <code class="sg-cls">--page-bg</code>, against a 4.5 floor, across <b>453 product text elements</b>.
+        The lightest value that would have cleared both grounds is <code class="sg-cls">#717171</code>,
+        and that is <b>1.09:1 from <code class="sg-cls">--mid</code></b> &mdash; the same grey to any eye.
+        <b>So the third text tier does not survive contrast as a colour</b>, and every text reader now
+        takes <code class="sg-cls">--mid</code>.
+        <br><b>Where a stack genuinely needs three levels, the third is carried by SIZE.</b> The licence
+        row is the one component that did: product name <code class="sg-cls">--ink</code> 16px, plan
+        <code class="sg-cls">--mid</code> 16px, label <code class="sg-cls">--mid</code> <b>14px</b>.
+        <br><code class="sg-cls">#9a9a9a</code> survives under two roles named after an <b>exemption</b>,
+        never a lightness: <code class="sg-cls">--glyph-decorative</code> (116 glyphs, every one
+        <code class="sg-cls">aria-hidden</code> and none carrying meaning alone &mdash; measured) and
+        <code class="sg-cls">--text-inactive</code> (text inside a disabled control). <b>If a glyph
+        identifies a control or its state it is not decorative</b> &mdash; five such were found by this
+        pass, all at 2.81:1 against 1.4.11's 3:1, and moved to <code class="sg-cls">--mid</code>.</p>
       <h4 class="sg-sub">Greys &mdash; the system everything still defaults to</h4>
       <div class="sg-grid" id="sgColors"></div>
       <h4 class="sg-sub">Primitives <span class="sg-cls">nothing reads these directly</span></h4>
@@ -134,6 +165,247 @@
         <div style="box-shadow:var(--elevation-dialog)">dialog</div>
         <div style="box-shadow:var(--elevation-docked)">docked</div>
       </div>
+    </div>
+  </section>
+
+  <!-- ============================ COMPONENTS ============================
+       ⚠️ A SECTION BESIDE THE SCALES, NOT A RESHAPE OF THE PAGE. The sections that
+       follow are SPECIMENS — here is the button, this is the class you write. This one
+       is the SPEC: which components exist, which axes each one has, and which cells are
+       empty because nothing needs them rather than because nobody built them. The
+       specimen sections stay exactly where they were and this one links to them.
+       The written source is COMPONENTS.md; this page is where it is readable next to
+       the tokens the components read. -->
+  <section class="sg-sec" id="components">
+    <h2>Components</h2>
+    <p>Nine components, in three groups. Each one was arrived at the same way: <b>count
+      rendered forms, not selectors</b> &mdash; what the browser paints, not what the
+      stylesheet says. Two selectors painting the same thing are one form; one selector
+      painting two things is two.</p>
+
+    <div class="sg-item">
+      <h3>How a census becomes a component</h3>
+      <p class="sg-note"><b>Three things look alike and only one of them is a variant.</b>
+        A real variant; an <b>accident of one place</b> that should fold into its neighbour;
+        and <b>a place that is simply wrong</b> rather than a variant that is missing. The
+        third is reported, never built.</p>
+      <p class="sg-note"><b>Empty cells come in two kinds and a matrix cannot tell them
+        apart.</b> Empty because nothing needs them, and empty because nobody built them.
+        Both are named per component below.</p>
+      <p class="sg-note"><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <b>The hard rule, because it has cost twice in the
+        same shape.</b> Before calling a form an accident, or two names two components,
+        <b>enumerate every host where the class appears and read the winning rule on each.</b>
+        A census that samples one host measures that host, not the component. <b>A form tells
+        you THAT two things differ; only the rule tells you WHY.</b> Twice the census called a
+        systematic ground rule &ldquo;an accident of one place&rdquo;, and once it called one
+        component under two names two components &mdash; each time because it read the
+        rendered form on a single surface.</p>
+    </div>
+
+    <h3 class="sg-sub">Group 1 &mdash; interactive <span class="sg-cls">button &middot; field &middot; chip &middot; tag</span></h3>
+
+    <div class="sg-item">
+      <h3>Button <span class="sg-cls">button() in shared.js</span></h3>
+      <p class="sg-note"><b>Five variants, three sizes, two contents, one tone, three states</b>
+        &mdash; and every variant is justified by a count:
+        <code class="sg-cls">primary</code> 44, <code class="sg-cls">secondary</code> 219,
+        <code class="sg-cls">menu</code> 86, <code class="sg-cls">ghost</code> 24,
+        <code class="sg-cls">text</code> 4. Specimens are under <a href="#buttons">Buttons</a>.</p>
+      <p class="sg-note"><code class="sg-cls">text</code> has four instances and stays: all
+        four are the wizard&rsquo;s <b>Back</b>, the only label in the product with no box at
+        all. Folding it into <code class="sg-cls">ghost</code> would give <b>Back</b> a 40px
+        hit area it does not want in a step bar. <b>One place, but a real variant.</b></p>
+      <p class="sg-note"><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <b>The size axis FLOORS at 44 on the phone. It does
+        not flatten to it.</b> <code class="sg-cls">sm</code> 26&rarr;<b>44</b> and
+        <code class="sg-cls">md</code> 40&rarr;<b>44</b> rise, because 26 and 40 are below a
+        usable target; <code class="sg-cls">lg</code> stays <b>48</b>, because it is already
+        above it. <b>A touch target is a minimum, not a levelling</b> &mdash; collapsing all
+        three would make the product&rsquo;s most important button the same size as its
+        smallest on the smallest screen. <b>Do not add <code class="sg-cls">lg</code> to the
+        touch rule.</b></p>
+      <p class="sg-note"><b>Empty because nothing needs them.</b>
+        <code class="sg-cls">menu/*/label</code> &mdash; the builder refuses a label on
+        <code class="sg-cls">menu</code>. <code class="sg-cls">text/lg</code> and
+        <code class="sg-cls">ghost/lg</code> &mdash; a borderless label at 48px is a heading.
+        <code class="sg-cls">primary/*/icon&nbsp;only</code> &mdash; <b>the product names its
+        primary action</b>, which is a rule and not a gap.
+        <br><b>Empty because nobody built them, and left unbuilt:</b>
+        <code class="sg-cls">secondary/sm</code>, <code class="sg-cls">secondary/lg</code>,
+        <code class="sg-cls">text/md/label</code>, <code class="sg-cls">ghost/md/label</code>.
+        Each would be a cell a matrix fills and the product does not use.</p>
+      <h4 class="sg-sub">The ground is a role token, not a fourth axis</h4>
+      <p class="sg-note"><b>A button does not know what it stands on; a ground does.</b> The
+        ground redefines one token and the component reads it &mdash; no new axis, no argument
+        at any call site.</p>
+      <div class="tablescroll"><table class="sg-type"><thead>
+        <tr><th>Who declares it</th><th><code class="sg-cls">--btn-secondary-bg</code></th><th>Why</th></tr>
+      </thead><tbody>
+        <tr><td><code class="sg-cls">:root</code></td><td><code class="sg-cls">var(--surface-quiet)</code></td><td>the ordinary case</td></tr>
+        <tr><td><code class="sg-cls">.on-tint</code></td><td><code class="sg-cls">var(--card)</code></td><td>white reads as a control on a tinted ground</td></tr>
+        <tr><td><code class="sg-cls">tr.listrow</code></td><td><code class="sg-cls">transparent</code></td><td>a row&rsquo;s ground <b>moves</b> on hover</td></tr>
+      </tbody></table></div>
+      <p class="sg-note"><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <b>The last two do not collapse into one value, and
+        that is measured rather than assumed.</b> <code class="sg-cls">.lic-row:hover</code> is
+        <code class="sg-cls">--row-hover</code> (#F8FAFD) while <code class="sg-cls">--card</code>
+        is #ffffff: a <code class="sg-cls">--card</code>-filled button would sit as a white patch
+        on a hovered row, and a transparent one lets the hover through.</p>
+      <p class="sg-note"><b>The cost is accepted and real:</b> you cannot see at a call site
+        that a given button will be white. The explicitness belongs in the CSS, where the ground
+        states it once, rather than across thirty calls where one omission paints the wrong thing.</p>
+    </div>
+
+    <div class="sg-item">
+      <h3>Field <span class="sg-cls">field() in shared.js</span></h3>
+      <p class="sg-note"><b>One component. No variant axis, no size axis, and this was not the
+        pass to invent one.</b> 25 rendered instances, 7 signatures, <b>one form</b>: 40px
+        (44 on the phone, by the floor), <code class="sg-cls">--btn-r</code>, white, 1px
+        <code class="sg-cls">--line</code>, 16px text. Every one of the seven differences is
+        <b>content</b>: padding grows when a glyph is in the box, the fill swaps because
+        <code class="sg-cls">locked</code> is a <b>state</b>, and the 74px one is a textarea.
+        Specimens are under <a href="#inputs">Inputs</a>.</p>
+      <p class="sg-note"><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <b>It had no builder at all</b> &mdash; 28
+        hand-written spellings across five files, each free to drift. <b>That is exactly how a
+        one-form component becomes a seven-form one.</b></p>
+      <p class="sg-note"><b>The select keeps its wrapper.</b>
+        <code class="sg-cls">padding-right</code> does not move the native arrow, so the chevron
+        is drawn by us and <code class="sg-cls">.selwrap</code> is what positions it.</p>
+    </div>
+
+    <div class="sg-item">
+      <h3>Chip and Tag <span class="sg-cls">chip() / tag()</span> &mdash; two components, not one</h3>
+      <p class="sg-note">The census found <b>564 things the markup called chips. They are three
+        things, and only two of them are chips.</b></p>
+      <div class="tablescroll"><table class="sg-type"><thead>
+        <tr><th>What</th><th>n</th><th>What it actually is</th></tr>
+      </thead><tbody>
+        <tr><td><b>tag</b> <code class="sg-cls">.fi-chip</code></td><td>365</td><td><code class="sg-cls">display:inline</code> with <code class="sg-cls">box-decoration-break:clone</code> &mdash; it <b>wraps across lines like the prose it sits in</b>. No hit area, no state, nothing to select</td></tr>
+        <tr><td><b>chip</b> <code class="sg-cls">.filterchip .typechip</code></td><td>59</td><td>a control: <code class="sg-cls">height:var(--btnH)</code>, pill, bordered, selectable, countable, removable</td></tr>
+        <tr><td><b>status mark</b> <code class="sg-cls">.statmark</code></td><td>140</td><td><b>not a chip</b> &mdash; no box, no padding, no radius, no border. A coloured glyph and a word. It belongs to the <b>row</b></td></tr>
+      </tbody></table></div>
+      <p class="sg-note"><b>Making the tag a chip variant would put <i>selected</i> on something
+        nobody can select, and <code class="sg-cls">height</code> on something whose whole job is
+        to flow with a sentence.</b></p>
+      <p class="sg-note"><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <b>Still open: the chip has three heights.</b>
+        <code class="sg-cls">.chip.ghost</code> (<i>+ Add label</i>) is <b>26</b>,
+        <code class="sg-cls">.chip.label.applied-chip</code> is <b>32</b>, and
+        <code class="sg-cls">.filterchip</code>&thinsp;/&thinsp;<code class="sg-cls">.typechip</code>
+        are <b>40</b>. The last two are height-locked controls and <code class="sg-cls">.chip</code>
+        is content-sized. <b>Folding them to one height moves pixels on three surfaces and no
+        decision describes that</b>, so the builder emits today&rsquo;s classes exactly.
+        <code class="sg-cls">chip()</code> takes a <code class="sg-cls">kind</code> argument for
+        precisely this &mdash; the day the three fold into one, the argument goes and no call
+        site changes shape.</p>
+      <p class="sg-note"><code class="sg-cls">.fchip-none</code> (<i>No add-ons on this
+        license.</i>) is <b>an empty state wearing chip clothes</b> &mdash; reported, not built.
+        An empty state is a sentence.</p>
+    </div>
+
+    <h3 class="sg-sub">Group 2 &mdash; overlay <span class="sg-cls">dropdown + sheet &middot; modal shell &middot; toolbar</span></h3>
+
+    <div class="sg-item">
+      <h3>Modal shell</h3>
+      <p class="sg-note"><b>Four shells, one corner.</b>
+        <code class="sg-cls">.fs-box</code>, <code class="sg-cls">.paymodal</code>,
+        <code class="sg-cls">.fsheet-panel</code> and <code class="sg-cls">.dprofmenu</code> were
+        all 12px and <code class="sg-cls">.modal</code> was <b>8</b> &mdash; one shell on a
+        different radius at the same shadow and the same fill. It is <b>12</b> now, and that was
+        the pass&rsquo;s one deliberate repaint: <b>84 elements changed and every one of them is
+        this.</b> Specimens are under <a href="#modals">Modals</a>.</p>
+      <p class="sg-note"><b>The footer is a size axis on the shell, not a defect.</b>
+        <code class="sg-cls">.modal</code> runs 16 throughout; <code class="sg-cls">.paymodal</code>
+        runs 20&thinsp;/&thinsp;24. <b>Each footer matches its own shell</b>, so nothing was moved
+        to make the two agree with each other.</p>
+      <h4 class="sg-sub">The corner close belongs to the shell</h4>
+      <p class="sg-note"><code class="sg-cls">.fs-close</code> is folded <b>into the shell</b>
+        rather than kept as a button variant: <b>it is a disc the shell hangs on its own
+        corner</b>, not a size of button anyone would choose. The
+        <code class="sg-cls">btn btn--ghost</code> classes stay in the markup on purpose &mdash;
+        they are what give it a focus ring and a hit area.</p>
+    </div>
+
+    <div class="sg-item">
+      <h3>Toolbar <span class="sg-cls">.listbar</span></h3>
+      <p class="sg-note"><b>One component that had two names.</b>
+        <code class="sg-cls">.lic-controls</code> and <code class="sg-cls">.insttoolbar</code>
+        measured <b>byte-identical</b> in every property, on all four list pages &mdash; and the
+        stylesheet already knew, because it paired them in <b>seven shared selectors</b> and
+        declared the band itself <b>twice, byte for byte</b>. <code class="sg-cls">.listbar</code>
+        is the name now. Specimens are under <a href="#lictoolbar">Licences toolbar</a>.</p>
+      <p class="sg-note"><b><code class="sg-cls">.stickybar</code> is what turns a control row
+        into a band</b>, and that is why the same name measured as two different things:
+        <code class="sg-cls">.insttoolbar</code> on the licence panel does not carry the modifier,
+        so it is a bare row &mdash; transparent, zero padding, static. The earlier census read
+        it only there and concluded there were two components.</p>
+      <p class="sg-note"><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <b>Both old names stay on the element, and this
+        is not untidiness.</b> A straight rename was applied, measured and <b>reverted</b>: of
+        the two names&rsquo; 51 selectors only 7 are shared, so merging them made every one-sided
+        rule apply to both surfaces &mdash; <code class="sg-cls">#licBarC</code> lost
+        <code class="sg-cls">display:flex</code> and the filter controls changed radius. The
+        remaining 17 one-sided rules now stand on their own name, where each can be asked the
+        only question that matters: <b>is this the component&rsquo;s, or that one surface&rsquo;s?</b></p>
+    </div>
+
+    <h3 class="sg-sub">Group 3 &mdash; surface <span class="sg-cls">card &middot; table row + frame &middot; banner</span></h3>
+
+    <div class="sg-item">
+      <h3>Table row <span class="sg-cls">.listrow</span></h3>
+      <p class="sg-note"><b>One component under four names.</b>
+        <code class="sg-cls">tr.lic-row</code>, <code class="sg-cls">tr.inv-row</code>,
+        <code class="sg-cls">tr.inst-row</code> and <code class="sg-cls">tr.user-row</code> are
+        <b>identical byte for byte</b> in every painted property, on every host. <b>What differs
+        between the four tables is the column layout &mdash; content, not a variant.</b></p>
+      <p class="sg-note"><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <b>The four names cannot be merged, and the
+        reason is worth knowing before anyone tries.</b> Each one carries <b>per-table column
+        targeting</b> &mdash; <code class="sg-cls">tr.inst-row &gt; td:nth-child(1..5)</code>,
+        <code class="sg-cls">tr.user-row &gt; td:nth-child(1..3)</code> and typed cells. Collapse
+        the names and every column rule applies to every table. So
+        <code class="sg-cls">.listrow</code> was <b>added beside</b> them, and only what is common
+        to all four <b>in rule text</b> moved onto it: the hover, the ground token, the phone
+        <code class="sg-cls">thead</code> suppression and the phone cell reset. <b>Four
+        selectors.</b></p>
+      <p class="sg-note"><b>Rendered form and rule text are different claims</b>, and the gap
+        between them is the useful part: the four rows agree on what they paint, and
+        <code class="sg-cls">.lic-row,.inv-row,.inst-row</code> is still <b>three of the
+        four</b> &mdash; <code class="sg-cls">.user-row</code> is deliberately still a card at
+        &le;600 because it lives in a modal, which has no page frame to be a row of.</p>
+      <p class="sg-note"><b>Why a name that cannot be left out of a list matters here of all
+        places:</b> the ground token read as four names enumerated by hand, and
+        <code class="sg-cls">tr.user-row</code> was <b>missing from it</b> &mdash; the Users
+        table&rsquo;s buttons kept a quiet fill while the other three went transparent. Same
+        component, same ground, different treatment, purely because one name was left out.</p>
+    </div>
+
+    <div class="sg-item">
+      <h3>Card, banner, and the two arrangements of Home</h3>
+      <p class="sg-note"><b>The card already serves both Home layouts, and the product was
+        keeping the rule before it was written down.</b> <code class="sg-cls">.lcard</code> has
+        three forms and they divide by <b>WIDTH, not by host</b> &mdash; the Home card and the
+        Licenses card are the same form at every width. Specimens are under
+        <a href="#cards">Cards</a>.</p>
+      <p class="sg-note"><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <b>The table row and the card are two
+        ARRANGEMENTS of one component, not two components.</b> Same tokens, same states, same
+        content, same actions, same copy. <b>They do not multiply:</b> a change to the component
+        changes both arrangements, and anything true of one and not the other is a <b>defect,
+        not a variant</b>. At &le;600 the card loses its corners and becomes a row with a
+        hairline, which is that rule in the render.</p>
+      <p class="sg-note"><b>The banner is one form on four hosts</b> and the status mark is one
+        form on ten: <code class="sg-cls">.statmark</code> is 20px, radius 0, transparent, no
+        padding, no border. <b>There is no box at all</b> &mdash; which is why it belongs to the
+        row and not to the chip. Specimens are under <a href="#banners">Banners &amp; alerts</a>.</p>
+    </div>
+
+    <div class="sg-item">
+      <h3>What a new component has to answer</h3>
+      <p class="sg-note"><b>A form you cannot justify as a variant does not get built.</b> Before
+        adding one: count the rendered forms across <b>every</b> host; say for each difference
+        whether it is a variant, an accident or a mistake; and say which empty cells are empty
+        because nothing needs them. <b>If the answer is &ldquo;the matrix would fill it&rdquo;,
+        that is not a caller.</b></p>
+      <p class="sg-note"><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <b>And a component may not read the primitive
+        layer.</b> It reads meanings &mdash; the same two-layer rule the colour tokens state at
+        the top of this page. Four tokens are off limits to components and the written spec
+        (<code class="sg-cls">COMPONENTS.md</code>, and <code class="sg-cls">SCALES.md</code> for
+        the scales) names them.</p>
     </div>
   </section>
 
@@ -741,8 +1013,8 @@
           <b style="font-size:var(--t-body-fs)">Stuck block</b>
           <span style="position:absolute;left:0;right:0;bottom:-1px;height:8px;box-shadow:var(--stickyShadow)"></span>
         </div>
-        <div style="padding:12px 16px;color:var(--faint);font-size:var(--t-body-fs)">a row passing underneath</div>
-        <div style="padding:12px 16px;color:var(--faint);font-size:var(--t-body-fs)">another row</div>
+        <div style="padding:12px 16px;color:var(--mid);font-size:var(--t-body-fs)">a row passing underneath</div>
+        <div style="padding:12px 16px;color:var(--mid);font-size:var(--t-body-fs)">another row</div>
       </div>
       <p class="sg-note" style="margin-top:12px"><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <b>Drawn by whichever row is LAST in the stuck block</b>
         &mdash; under the column row where there is one, under the toolbar where there is not (Activity is a
@@ -1410,7 +1682,7 @@
         </div>
       </div>
       <p class="sg-note" style="margin-top:12px"><b>How they differ, and it is not only the shape.</b>
-        Info is a <b>hairline ring</b> in <code class="sg-cls">--faint</code>; alert is a <b>filled
+        Info is a <b>hairline ring</b> in <code class="sg-cls">--mid</code>; alert is a <b>filled
         triangle</b> in <code class="sg-cls">--ink</code>, with the exclamation knocked out of the fill.
         Fill is the strongest emphasis this system has, and it is what the attention chips already use.
         Same size, same tooltip mechanics — hover on a pointer device, <b>tap below 600px</b>, because

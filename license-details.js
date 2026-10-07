@@ -352,7 +352,7 @@ var DETAILS_HTML = ''
 + '          <div class="panel" id="panel-prod" role="tabpanel" aria-labelledby="tab-prod">'
 + '            <div class="section">'
 + '              <!-- type switcher (same segmented style as the Licenses "Type" filter) + toolbar -->'
-+ '              <div class="insttoolbar">'
++ '              <div class="listbar insttoolbar">'
 /* ⚠️ The Instances search was REMOVED, not wired. It would have filtered two
    hardcoded rows that are identical for every licence — theatre, and a control that
    survives to a demo either works or is not there. It comes back with real instance
@@ -498,7 +498,7 @@ var DETAILS_HTML = ''
 + '          <!-- Logs -->'
 + '          <div class="panel" id="panel-audit" role="tabpanel" aria-labelledby="tab-logs" hidden>'
 + '            <div class="section">'
-+ '              <div class="insttoolbar" data-feed="lic">'
++ '              <div class="listbar insttoolbar" data-feed="lic">'
 + '                <div class="searchbox"><svg class="ic searchglyph" aria-hidden="true"><use href="assets/icons.svg#ti-search"></use></svg><input type="text" placeholder="Search activity" aria-label="Search activity"></div>'
 + '                <div class="dropwrap perctl" id="licFeedPeriod">'
 + '                  <button class="btn btn--secondary btn--md perbtn" aria-haspopup="true" aria-expanded="false" aria-label="Period"><b class="perlabel">All time</b> <svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-down"></use></svg></button>'

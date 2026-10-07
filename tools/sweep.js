@@ -14,13 +14,30 @@
  * where media queries resolve honestly (verified: innerWidth === the width asked for).
  */
 (function (root) {
+  /* ⚠️⚠️ CLASS NAMES ARE PART OF THE PATH KEY, SO ADDING A CLASS UNPAIRS THE ELEMENT.
+     Every row below is keyed by `tag.class1.class2.class3:index`, so a pass that puts a
+     SECOND name on an element it did not rename — `class="listrow lic-row"` — makes the
+     before key and the after key different strings. `diff()` then reports the whole
+     table as "element count changed" and `paintDiff()` counts every row as `unpaired`
+     instead of comparing it. The run looks like a catastrophe and measures nothing.
+     ⚠️ Worse than noisy: `unpaired` rows are SKIPPED, so a real paint regression on
+     exactly those elements would be invisible in the same run that cried wolf.
+     `SWEEP.ignoreClasses(['listrow','listbar'])` drops those names from the key on both
+     sides, which is what makes "did the row move" askable across an additive rename.
+     It only ever REMOVES names, so it cannot invent a pairing: two elements that
+     differed only by an ignored class were the same element. */
+  var IGNORE = [];
   function path(el) {
     var out = [], n = el, guard = 0;
     while (n && n.nodeType === 1 && guard++ < 6) {
       var s = n.tagName.toLowerCase();
       if (n.id) { s += '#' + n.id; out.unshift(s); break; }
       if (n.className && typeof n.className === 'string') {
-        s += '.' + n.className.trim().split(/\s+/).slice(0, 3).join('.');
+        var cl = n.className.trim().split(/\s+/);
+        if (IGNORE.length) cl = cl.filter(function (c) { return IGNORE.indexOf(c) < 0; });
+        /* ⚠️ the slice stays AFTER the filter: slicing first would let an ignored name
+           occupy one of the three slots and push a real one out of the key. */
+        s += '.' + cl.slice(0, 3).join('.');
       }
       var i = 0, p = n.previousElementSibling;
       while (p) { i++; p = p.previousElementSibling; }
@@ -81,8 +98,12 @@
       var over = e.scrollWidth - e.clientWidth;
       if (over <= 0) continue;
       var id = e.id ? '#' + e.id : '';
-      var cls = (typeof e.className === 'string' && e.className)
-        ? '.' + e.className.trim().split(/\s+/).slice(0, 2).join('.') : '';
+      /* ⚠️ same key problem as path(): `newOverflow()` matches before/after by this
+         label, so an added class would read as a box that never overflowed before. */
+      var ecl = (typeof e.className === 'string' && e.className)
+        ? e.className.trim().split(/\s+/) : [];
+      if (IGNORE.length) ecl = ecl.filter(function (c) { return IGNORE.indexOf(c) < 0; });
+      var cls = ecl.length ? '.' + ecl.slice(0, 2).join('.') : '';
       out.push({ el: e.tagName.toLowerCase() + id + cls, over: over,
                  client: e.clientWidth, scroll: e.scrollWidth });
     }
@@ -136,39 +157,88 @@
 
   function wait(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
 
+  /* ⚠️⚠️ EVERY OPENER MUST ASSERT THAT IT ARRIVED. An opener that drives the UI and then
+     resolves regardless is the worst instrument in this harness: the walk runs on a page
+     where the surface never opened, every element it was supposed to measure is absent,
+     and the result is a clean `0 changed / 0 lost / 0 gained` — a PASS that measured
+     nothing. `OPENERS.usersModal` did exactly that three times across two sessions, and
+     each time it was caught by hand (`tr.user-row` was 0 in the DOM) rather than by the
+     tool. `must()` turns that silence into a rejection, which `page()` and `paint()`
+     already convert into `{error}` on the cell.
+     ⚠️ The caller still has to LOOK at `error`: a cell with an error carries no rows, and
+     a summary that only sums changed/lost/gained will read it as another quiet zero.
+     `diff()` and `paintDiff()` therefore pass `error` through — see the note on each. */
+  function must(d, sel, label) {
+    var el = d.querySelector(sel);
+    if (!el) throw new Error('opener never reached ' + label + ': `' + sel + '` absent');
+    /* ⚠️ `d.defaultView`, never the bare global: this runs in the panel's top window while
+       the element lives in the iframe, and the top window's getComputedStyle would be
+       asked about a node it does not own. */
+    if (el.hidden || d.defaultView.getComputedStyle(el).display === 'none') {
+      throw new Error('opener reached ' + label + ' but it is display:none / [hidden]');
+    }
+    return el;
+  }
+
   /* Surfaces that are not on the page until something opens them. Each returns a
-     promise that settles once the surface is on screen. */
+     promise that settles once the surface is on screen, and THROWS if it did not. */
   var OPENERS = {
     wizardPick: function (d) {
       var b = d.querySelector('#dashNewBtn') || d.querySelector('#topbarNewBtn');
-      b.click(); return wait(500);
+      if (!b) throw new Error('wizardPick: no trigger on this page');
+      b.click();
+      return wait(500).then(function () { must(d, '#nlStepPick', 'the wizard pick step'); });
     },
     wizardCapacity: function (d) {
       var b = d.querySelector('#dashNewBtn') || d.querySelector('#topbarNewBtn');
+      if (!b) throw new Error('wizardCapacity: no trigger on this page');
       b.click();
       return wait(500).then(function () {
-        d.querySelector('#nlStepPick [data-nl-pick]').click(); return wait(600);
+        must(d, '#nlStepPick [data-nl-pick]', 'the wizard pick step').click();
+        return wait(600).then(function () { must(d, '#nlStepCap', 'the wizard capacity step'); });
       });
     },
     /* ⚠️ AT <=600 THE LIST IS NOT A TABLE. `tr.lic-row` is the desktop row; the phone
        renders `.lcard`, and an opener that only knows the table throws on the one width
        the phone layout exists at. Both carry `data-licid`, so ask for that. */
     licensePanel: function (d) {
-      var row = d.querySelector('[data-licid]');
-      if (!row) return wait(0);
+      /* ⚠️ `return wait(0)` on a missing row used to make "this page has no licence to
+         open" indistinguishable from "the panel opened and nothing changed". */
+      var row = must(d, '[data-licid]', 'a licence row');
       row.click();
-      return wait(650);
+      return wait(650).then(function () { must(d, '#licModal', 'the licence panel'); });
     },
-    usersModal: function (d) {
-      var t = d.querySelector('[data-users], #dashProfBtn');
-      if (t && t.id === 'dashProfBtn') {
-        t.click();
-        return wait(200).then(function () {
-          var u = d.querySelector('[data-users]'); if (u) u.click(); return wait(500);
+
+    /* ⚠️⚠️ THE CONTROLLER FIRST, THE MENU SECOND, AND AN ASSERT EITHER WAY.
+       This opener reported a false zero three times across two sessions. It drove the
+       profile menu — `#dashProfBtn` → `[data-users]` — and on every surface measured in
+       2026-10-07 that path silently did nothing: `#usersModal` stayed hidden, `tr.user-row`
+       was 0 in the DOM, and the sweep reported `0/0/0` on a surface it had never opened.
+       The Users surface is a controller with a public `open()` (`UsersModal` in
+       `shared.js`), so ASK IT. The click path stays as a fallback, because an opener that
+       only works through the public API stops telling you when the menu route breaks —
+       but neither route is now allowed to finish quietly. */
+    usersModal: function (d, w) {
+      var viaApi = false;
+      try { if (w.UsersModal && typeof w.UsersModal.open === 'function') { w.UsersModal.open(); viaApi = true; } }
+      catch (e) { /* fall through to the UI path and let the assert speak */ }
+      if (viaApi) {
+        return wait(400).then(function () {
+          must(d, '#usersModal', 'the Users modal');
+          must(d, '#usersModal tr.user-row', 'a Users row');
         });
       }
-      if (t) { t.click(); return wait(500); }
-      return wait(0);
+      var t = d.querySelector('[data-users]') || d.querySelector('#dashProfBtn');
+      if (!t) throw new Error('usersModal: neither UsersModal.open() nor a trigger exists here');
+      t.click();
+      return wait(250).then(function () {
+        var u = d.querySelector('[data-users]');
+        if (u && u !== t) { u.click(); }
+        return wait(500).then(function () {
+          must(d, '#usersModal', 'the Users modal');
+          must(d, '#usersModal tr.user-row', 'a Users row');
+        });
+      });
     }
   };
 
@@ -199,9 +269,15 @@
     var B = {}, A = {};
     before.forEach(function (r) { B[key(r)] = r; });
     after.forEach(function (r) { A[key(r)] = r; });
-    var moved = [], same = 0;
+    var moved = [], same = 0, errors = [];
     Object.keys(A).forEach(function (k) {
       var b = B[k], a = A[k];
+      /* ⚠️⚠️ AN ERRORED CELL HAS NO ROWS, SO IT WOULD COUNT AS "identical". That is the
+         false-zero shape this harness has produced before (see OPENERS.must): report it
+         separately and loudly rather than folding it into the pass count. */
+      if ((a && a.error) || (b && b.error)) {
+        errors.push({ k: k, before: b && b.error, after: a && a.error }); return;
+      }
       if (!b) { moved.push({ k: k, why: 'new' }); return; }
       if (b.hash === a.hash && b.n === a.n) { same++; return; }
       moved.push({ k: k, why: b.n !== a.n ? 'element count ' + b.n + ' -> ' + a.n : 'geometry',
@@ -210,7 +286,7 @@
                    newOverflow: newOverflow(b.overflows, a.overflows),
                    scrollH: b.scrollH + ' -> ' + a.scrollH });
     });
-    return { identical: same, moved: moved };
+    return { identical: same, moved: moved, errors: errors };
   }
 
   /* row-level diff for one cell, when the hash says something moved */
@@ -364,7 +440,12 @@
         }
       }
     });
+    /* ⚠️⚠️ `error` AND `compared` ARE PART OF THE RESULT, NOT DEBUG. A cell whose opener
+       failed arrives with no rows: changed/lost/gained are all 0 and `compared` is 0,
+       which is indistinguishable from a clean pass unless the caller reads these two.
+       Any summary that sums the counts must also assert `!error && compared > 0`. */
     return { url: after.url, w: after.w, surface: after.surface,
+             error: after.error || before.error || null,
              elements: after.n, compared: compared, unpaired: onlyAfter,
              changed: changed, lost: lost, gained: gained,
              counts: { changed: changed.length, lost: lost.length, gained: gained.length } };
@@ -383,7 +464,8 @@
     })();
   }
 
-  root.SWEEP = { page: page, all: all, diff: diff, rowDiff: rowDiff,
+  root.SWEEP = { ignoreClasses: function (a) { IGNORE = a || []; return IGNORE; },
+                 page: page, all: all, diff: diff, rowDiff: rowDiff,
                  overflowsIn: overflowsIn, newOverflow: newOverflow, OPENERS: OPENERS,
                  paint: paint, paintAll: paintAll, paintDiff: paintDiff,
                  PAINT_PROPS: PAINT_PROPS };
