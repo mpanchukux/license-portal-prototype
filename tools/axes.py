@@ -108,6 +108,9 @@ MOVES = {
 # inside a composition is not a standalone token. `calc(24px - 1px)` is safe by that rule.
 OFFSCALE = {'37px', '110px', '80px'}
 
+# set per axis in __main__; `transition` and `animation` are comma-separated lists
+COMMA_SPLITS = False
+
 
 # ---- radius ---------------------------------------------------------------------
 # ⚠️ `--btn-r` (24px) IS NOT IN THIS TABLE and must not be. It is the CONTROL radius and
@@ -134,10 +137,96 @@ RADIUS_MOVES = {
     '20px': '--radius-feature',   # +4    1x  ⚠️ `.plancard`, the one visible move
 }
 
+# ---- z-index --------------------------------------------------------------------
+ZINDEX = {'z-index'}
+# ⚠️ `120` IS ABSENT ON PURPOSE. The `.dprofmenu` phone override is DELETED, not mapped:
+# measured, both 60 and 120 are clamped inside the top bar's own stacking context at 20,
+# so the override buys nothing. A deletion is not a conversion and does not belong here.
+# ⚠️ `130` MAPS DOWN TO THE STICKY LAYER, not across to a popover one. `.fs-right.pinned`
+# is a bar that stays while content scrolls past it, and it was measured to paint over the
+# step content with no z-index at all — see SCALES.md §5.
+ZINDEX_STEPS = {
+    '-1':  '--z-beneath',
+    '1':   '--z-raise',
+    '10':  '--z-sticky',
+    '20':  '--z-chrome',
+    '40':  '--z-popover',
+    '90':  '--z-docked',
+    '100': '--z-overlay',
+    '140': '--z-sheet',
+    '400': '--z-toast',
+    '880': '--z-instrument',
+}
+ZINDEX_MOVES = {
+    '5':   '--z-sticky',      # -5   3x
+    '11':  '--z-sticky',      # -1   2x
+    '12':  '--z-sticky',      # -2   3x
+    '60':  '--z-popover',     # -20  1x
+    '88':  '--z-docked',      # +2   1x
+    '95':  '--z-overlay',     # +5   2x
+    '130': '--z-sticky',      # leaves the global scale entirely; see above
+}
+
+
+# ---- motion ---------------------------------------------------------------------
+# ⚠️ THE SHORTHANDS ARE IN THE SET, so `transition:opacity .12s ease` is converted in
+# place. That needs comma-aware splitting as well as space-aware: `transition:opacity
+# .12s,filter .12s` tokenises as `opacity`, `.12s,filter`, `.12s` otherwise, and the
+# first duration is never seen. See SPLIT_COMMA below.
+MOTION = {'transition', 'transition-duration', 'transition-timing-function',
+          'animation', 'animation-duration', 'animation-timing-function'}
+MOTION_STEPS = {
+    '.12s':        '--motion-quick',
+    '.18s':        '--motion-settle',
+    '.7s':         '--motion-spin',
+    'ease':        '--motion-ease',
+    'linear':      '--motion-linear',
+    'ease-in-out': '--motion-drift',
+}
+MOTION_MOVES = {
+    '.15s': '--motion-quick',    # -.03  4x
+    '.16s': '--motion-settle',   # +.02  2x
+}
+# ⚠️ OFF THE SCALE AND UNTOUCHED: 31s · 34s · 37s · 39s · 48s, the mesh drift and the
+# crossfade. They are deliberately unequal and deliberately not round — four blobs on four
+# near-prime periods is what stops the background from visibly looping. A scale would
+# synchronise them and put the loop back. The comment beside them in styles.css is part of
+# the decision, not decoration.
+
+
+# ---- border width ---------------------------------------------------------------
+BORDERW = {'border', 'border-top', 'border-right', 'border-bottom', 'border-left',
+           'border-width', 'border-top-width', 'border-right-width',
+           'border-bottom-width', 'border-left-width', 'border-block', 'border-inline',
+           'outline', 'outline-width'}
+BORDERW_STEPS = {
+    '0':     '--border-none',
+    '1px':   '--border-hairline',
+    '2px':   '--border-emphasis',
+}
+BORDERW_MOVES = {
+    '3px': '--border-emphasis',   # -1  2x  (.faq-cat, .sg-flag accent bars)
+}
+# ⚠️ `1.5px` ON `.nl-smark` STAYS. It is the stepper's numbered circle: 1px read thin
+# against a 28px ring and 2px read heavy. That was a judgement, and a scale does not get to
+# overrule a judgement for being the only one of its kind.
+# ⚠️ `5px` ON THE TOOLTIP ARROW IS NOT A BORDER. `.tip.show::before` builds the arrow out
+# of border triangles; the number is the arrow's SIZE. It must not join a width ladder.
+# ⚠️ `--border-hairline-half` (.5px) HAS NO BORDER-PROPERTY READER and is declared anyway:
+# its readers are §3's ring tokens, which are `box-shadow` and therefore a different
+# property set. Declared here so the rings take their width from this scale instead of
+# keeping a second copy of it.
+
 AXES = {
     'spacing': {'props': SPACING, 'steps': None, 'moves': None},   # filled below
     'radius':  {'props': RADIUS,  'steps': RADIUS_STEPS, 'moves': RADIUS_MOVES},
+    'zindex':  {'props': ZINDEX,  'steps': ZINDEX_STEPS, 'moves': ZINDEX_MOVES},
+    'motion':  {'props': MOTION,  'steps': MOTION_STEPS, 'moves': MOTION_MOVES},
+    'borderw': {'props': BORDERW, 'steps': BORDERW_STEPS, 'moves': BORDERW_MOVES},
 }
+
+# axes whose values sit in comma-separated lists (`transition`, `animation`)
+SPLIT_COMMA = {'motion'}
 
 
 def mask_comments(text):
@@ -170,8 +259,7 @@ def census(text):
         if prop not in SPACING:
             continue
         for t in toks_of(value):
-            if LEN.match(t) or t.startswith('var('):
-                vals[t] += 1
+            vals[t] += 1
     return vals
 
 
@@ -198,7 +286,7 @@ def plan(text, table=None):
                 depth += 1
             elif c == ')':
                 depth -= 1
-            if depth == 0 and c in ' \t':
+            if depth == 0 and (c in ' \t' or (COMMA_SPLITS and c == ',')):
                 flush(pos)
             else:
                 if tok_start is None:
@@ -232,6 +320,7 @@ if __name__ == '__main__':
     SPACING = AXES[axis]['props']
     STEPS = AXES[axis]['steps']
     MOVES = AXES[axis]['moves']
+    COMMA_SPLITS = axis in SPLIT_COMMA
     cmd = args[0] if args else 'census'
     root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     path = args[1] if len(args) > 1 else os.path.join(root, 'styles.css')

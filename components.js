@@ -570,11 +570,9 @@ function syncAppliedRow(hostSel, getList){
   host.hidden = !window.matchMedia('(max-width:600px)').matches || !list.length;
   if(host.hidden){ host.innerHTML = ''; return; }
   host.innerHTML = list.map(function(f){
-    return '<span class="chip label applied-chip">'
-      + '<span class="applied-chip-t">' + esc(f.t) + '</span>'
-      + '<button class="chip-x" type="button" data-unset="' + esc(f.k) + '"'
-      +   ' aria-label="Remove filter ' + esc(f.t) + '">' + icon('x') + '</button>'
-      + '</span>';
+    return chip({ kind:'plain', label_:true, cls:'applied-chip', label:f.t, remove:true,
+                  removeAttrs:'data-unset="' + esc(f.k) + '"',
+                  removeLabel:'Remove filter ' + f.t });
   }).join('')
   /* ⚠️ `Clear all` HERE MEANS THE FILTERS, not the query: it ends the row it belongs to,
      and the query has its own clear inside the field. The empty state's `Clear all` is a
@@ -966,8 +964,8 @@ function licCardHTML(p){
        past its neighbours — see `.lcard-label` in the stylesheet. */
     + '<div class="lcard-label">' + (label
         ? '<span class="lic-prodlabel lcard-labeltxt">' + esc(label) + '</span>'
-        : '<button class="chip ghost lcard-add" data-editlabel>'
-          + icon('pencil', { cls:'lcard-addic' }) + 'Add label</button>')
+        : chip({ kind:'plain', ghost:true, cls:'lcard-add', label:'Add label',
+                 icon:'pencil', iconCls:'lcard-addic', attrs:'data-editlabel' }))
     + '</div>'
   + '</div>';
 }
@@ -997,9 +995,9 @@ function menuItems(p, opts){
    dialog of its own. Same writer as the details surface. */
 function openLabelModal(lic){
   if(!lic) return;
-  openModal('Edit label', '<div class="field"><label for="labelModalInput">Label</label>'
-    + '<input id="labelModalInput" type="text" autocomplete="off" placeholder="e.g. Production" value="' + esc(lic.label || '') + '">'
-    + '<div class="help">A label tells this licence apart from the others — usually the deployment it runs.</div></div>');
+  openModal('Edit label', field({ id:'labelModalInput', label:'Label', autocomplete:'off',
+    placeholder:'e.g. Production', value:lic.label || '',
+    help:'A label tells this licence apart from the others — usually the deployment it runs.' }));
   $('#modalCloseBtn').textContent = 'Cancel';
   var inp = $('#labelModalInput');
   var save = modalAction('Save', function(){
@@ -1479,8 +1477,7 @@ function activitySentenceHTML(rec, scope){
   marks.forEach(function(m){
     if(m.at < cur) return;                       // overlaps a mark already placed
     out += esc(plain.slice(cur, m.at));
-    out += m.kind === 'chip' ? '<span class="fi-chip">' + esc(m.text) + '</span>'
-                             : activityLicLink(rec.licId, m.text);
+    out += m.kind === 'chip' ? tag(m.text) : activityLicLink(rec.licId, m.text);
     cur = m.at + m.len;
   });
   return out + esc(plain.slice(cur));
@@ -3234,7 +3231,14 @@ function bannerForce(){
   var v = Store.get('bannerForce');
   return (v === undefined || v === null) ? 'none' : v;
 }
-function bannerShape(){ var v = Store.get('bannerShape'); return v === 'one' || v === 'many' ? v : 'auto'; }
+/* ⚠️⚠️ `many` WAS `auto` UNDER A SECOND NAME, AND IS GONE (2026-10-07, by request).
+   `many` could never fabricate a count — with fewer than two live conditions it fell
+   back to the full form, which is exactly what `auto` does — so the two options were
+   one state wearing two labels. `auto` is the survivor because it is also the stored
+   default: anyone carrying `many` in localStorage now reads as `auto` and sees the
+   behaviour they already had. Two options left, and they are the banner's two STATES:
+   alone and with others. */
+function bannerShape(){ return Store.get('bannerShape') === 'one' ? 'one' : 'auto'; }
 function homeBannerVisible(){
   var all = attentionConditions();
   /* one entry per licence, its most serious condition — a licence that is both blocked
@@ -3364,35 +3368,30 @@ var BANNER_TONE = {
   grant:'quiet'
 };
 function bannerTone(state){ return BANNER_TONE[state] || 'black'; }
-/* ⚠️⚠️ THE TONE AND THE CLASSES THAT CARRY IT ARE TWO DIFFERENT THINGS (2026-09-30, by
-   request) — `bannerTone` above answers WHICH tone, this answers WHAT WEARS IT, and the
-   `Alert tone` lever in the ⚙ picks between two answers to the second question only.
-     tinted — the ground states it: `tone-red` / `tone-black` / `tone-quiet`.
-     ink    — every banner is `tone-black` and a `mark-*` class colours the glyph.
-   ⚠️⚠️ `tone-black` IS REUSED IN THE INK FORM RATHER THAN A NEW GROUND CLASS BEING MINTED,
-   and that is what keeps this pass to three colours of CSS. The ink ground already has a
-   full palette written against it — an inverted primary, an outlined secondary, a white
-   todo line, an underlined licence link, a white focus ring — and every one of those
-   rules is keyed on being ink. Emitting the same class means they all keep working and
-   cannot be forgotten; the alternative was re-scoping nine button rules, which is nine
-   chances to miss one.
-   ⚠️ THE MARK CLASSES ARE NOT EMITTED IN THE TINTED FORM. There they would be inert on
-   two of the three tones and WRONG on the third — `mark-warn` would turn the black
-   band's glyph amber, which is this pass's proposal and not the current design.
-   ⚠️ THE SHAPE IS NOT IN THIS TABLE. `bannerIcon` still takes the semantic tone, so
-   trouble keeps the triangle and news keeps the circle in both forms — which is what
-   stops the ink form from making colour the only carrier. */
-var TONE_MARK = { red:'red', black:'warn', quiet:'quiet' };
-/* ⚠️⚠️ THE GROUND IS NAMED, NOT INFERRED (2026-10-01). `on-ink` is what every rule about a
-   dark banner keys on — the inverted primary, the outlined secondary, the white todo line.
-   It used to be inferred as "`tone-black`, or no tone at all", written
-   `:not(.tone-red):not(.tone-quiet)` across nine rules — and that stopped being true the
-   moment the TINTED form put its own `tone-black` on a white ground. Two grounds, one
-   class each, and the nine rules ask the question directly. */
-function toneClass(tone){
-  return alertGround() === 'ink' ? 'tone-black on-ink mark-' + (TONE_MARK[tone] || 'warn')
-                                 : 'tone-' + tone;
-}
+/* ⚠️⚠️ ONE TONE FORM, AND IT IS THE TINTED ONE (2026-10-07, by request: "collapse to
+   `Tinted — the ground carries it`"). The `Alert tone` axis is closed and the `ink` form
+   is deleted — switch, markup and CSS together.
+
+   What the surviving form does, which is NOT what its label literally says any more:
+     · Home's banner — ONE ground (`--surface-notice`) for all three tones, and the GLYPH
+       is red or ink. The grounds stopped carrying it on 2026-10-01; the option label was
+       never updated and is kept here only because it is the name the decision was taken
+       under.
+     · the licence panel's alert — `tone-red` on `--surface-danger`, `tone-black` on the
+       ink band. Two real grounds, because that surface has two conditions.
+
+   ⚠️⚠️ `TONE_MARK` AND THE `mark-*` CLASSES ARE GONE. They existed only to colour the
+   glyph on the ink form's single dark ground. The tinted form never emitted them — the
+   note that stood here said so — so nothing loses a class it was using.
+   ⚠️⚠️ BUT `on-ink` IS **NOT** GONE, AND THAT IS THE TRAP IN THIS DELETION. It has a
+   second emitter that has nothing to do with this axis: `#licNewBanner`, the `License
+   created` band in `license-details.js`, which is ink by design and permanent. Its ground
+   rule and its ghost-button palette stay. What went with the axis is the part only the
+   ink banner used — the inverted primary and the outlined secondary.
+   ⚠️ THE SHAPE WAS NEVER IN THIS TABLE, and still is not. `bannerIcon` takes the semantic
+   tone, so trouble keeps the triangle and news keeps the circle — which is what stops
+   colour being the only carrier. */
+function toneClass(tone){ return 'tone-' + tone; }
 /* ⚠️⚠️ THE MARK FOLLOWS THE TONE, NOT A SEPARATE FLAG (2026-09-30, by request). It read
    `blocking ? triangle : circle`, which is the DISMISSAL question — so an ended updates
    term drew the calm circle while being the same kind of trouble as a failed payment,
@@ -3440,11 +3439,10 @@ function renderHomeBanner(){
   if(!copy){ slot.hidden = true; return; }
   var rest = items.length - 1;
   /* the state bar's shape lever — `one` shows the full form even when others are
-     pending, `many` shows the compact form; neither can fabricate a count (see
-     bannerShape, and the `disabled` rule on the bar's own option) */
+     pending; `auto` lets the conditions decide and cannot fabricate a count (see
+     bannerShape, where the third option that did neither was removed) */
   var shape = bannerShape();
   if(shape === 'one') rest = 0;
-  else if(shape === 'many' && rest < 1) rest = 0;
   /* ⚠️⚠️ TWO SHAPES, AND THE SECOND ONE IS DELIBERATELY POORER (2026-09-24).
      ONE alert  — the whole thing: the fact, what fixes it, and its actions.
      SEVERAL    — the most urgent alert's FACT and one control, `and N more`. No todo

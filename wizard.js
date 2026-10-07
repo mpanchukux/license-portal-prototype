@@ -23,7 +23,7 @@ var WIZARD_HTML = ''
    z-index:-1 layer stays inside the box instead of escaping to `.fs-screen` and being
    painted over by the backdrop. */
 + '    <div class="meshbg" aria-hidden="true">'
-+ '      <span class="mb-lav"></span><span class="mb-cream2"></span><span class="mb-cream"></span><span class="mb-lav2"></span>'
++ '      <span class="mb-lav"></span><span class="mb-lav2"></span><span class="mb-cream2"></span>'
 + '    </div>'
 /* ⚠️⚠️ THE STEPPER IS IN THE HEADER (2026-09-29, by request), and the band it used to
    have below it is gone. Two reasons it works and one thing it cost:
@@ -1687,20 +1687,25 @@ var NL = (function(){
     return '<option value=""' + (sel ? '' : ' selected') + '>Select a country</option>'
       + COUNTRIES.map(function(c){ return '<option' + (c === sel ? ' selected' : '') + '>' + c + '</option>'; }).join('');
   }
+  /* ⚠️ THIS IS NOW A THIN WRAPPER OVER `field()` (component pass, 2026-10-07), not a
+     second field implementation. What it still owns is this step's own conventions — the
+     `nlb-` id prefix, the `data-nlb` hook the validator reads, and reading the value out
+     of `bill` — which are the wizard's, not the component's. */
   function fld(name, label, req, opts){
     opts = opts || {};
-    var val = String(bill[name] || '').replace(/"/g, '&quot;');
-    return '<div class="field"><label for="nlb-' + name + '">' + label
-      + (req ? ' <span class="req" aria-hidden="true">*</span>' : '') + '</label>'
-      + (opts.select
-        ? '<span class="selwrap"><select id="nlb-' + name + '" data-nlb="' + name + '">'
-          + countryOptions(bill[name]) + '</select>'
-          + icon('chevron-down', { cls:'selchev' }) + '</span>'
-        : '<input id="nlb-' + name + '" data-nlb="' + name + '" type="' + (opts.type || 'text') + '" value="' + val + '"'
-          + (opts.ph ? ' placeholder="' + opts.ph + '"' : '') + '>')
-      + (opts.help ? '<div class="help">' + opts.help + '</div>' : '')
-      + '<div class="fielderr" data-nlb-err="' + name + '" hidden></div>'
-      + '</div>';
+    return field({
+      id: 'nlb-' + name,
+      label: label,
+      required: req,
+      type: opts.type,
+      value: bill[name] || '',
+      placeholder: opts.ph,
+      options: opts.select ? countryOptions(bill[name]) : null,
+      attrs: 'data-nlb="' + name + '"',
+      help: opts.help,
+      errSlot: true,
+      errAttrs: 'data-nlb-err="' + name + '"'
+    });
   }
   /* ---- billing validation ------------------------------------------------------
      One rule per field, each returning the REASON it failed or null. The old

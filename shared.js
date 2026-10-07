@@ -82,6 +82,138 @@ var BTN_SIZE    = { sm:1, md:1, lg:1 };
    whose own children are still laid out inside it. */
 var BTN_SPIN = '<span class="btn-spin" aria-hidden="true"></span>';
 
+/* ============================================================================
+   CHIP and TAG — two components, and the split is the point (component pass, 2026-10-07)
+   ============================================================================
+   The census found 564 rendered things the markup called chips, and they are not one
+   component. They are three, and only two of them are chips at all.
+
+   ⚠⚠ **TAG** — `.fi-chip`, 365 of the 564. It is `display:inline` with
+   `box-decoration-break:clone`, which means it WRAPS ACROSS LINES like the prose it sits
+   in. It has no hit area, no state and nothing to select. Making it a variant of the chip
+   would put `selected` on something nobody can select, and `height` on something whose
+   whole job is to flow with a sentence.
+
+   ⚠⚠ **CHIP** — a control: a pill with a border that can be chosen, counted and
+   removed. `.filterchip` and `.typechip` are both `height:var(--btnH)` and paint the same;
+   `.chip` is content-sized and does not.
+
+   ⚠⚠ **`.statmark` IS NEITHER** and is not built here — no box, no padding, no radius,
+   just a coloured glyph and a word. It is read inside a table row and belongs to group 3.
+
+   ⚠️ THESE BUILDERS EMIT TODAY'S CLASSES EXACTLY. Nothing moves on screen. What they buy
+   is that the vocabulary now has ONE author: six hand-written chip spellings across four
+   files could each drift on their own, and after this they cannot. The remaining question
+   — whether the content-sized `.chip` family folds into the 40px control — is a VISIBLE
+   change nobody has decided, and it is reported rather than taken. See NOTES. */
+
+/* ============================================================================
+   FIELD — one component, and the census is why (component pass, 2026-10-07)
+   ============================================================================
+   25 rendered instances, **7 signatures, ONE form.** 40px tall (44 on the phone, by the
+   touch floor), `--btn-r`, white, a 1px `--line` border, 16px text. Every one of the seven
+   differences is CONTENT rather than variant:
+     · padding grows 16 → 36 or 40 when a glyph sits in the box (search, select chevron);
+     · the locked wizard input swaps the fill, because locked is a STATE;
+     · the textarea is 74px and `--radius-surface` because it is a textarea;
+     · ≤600 lifts 40 → 44, which is the floor, not a size.
+   **There is no size axis and no variant axis here, and this builder does not invent one.**
+
+   ⚠⚠ IT HAD NO BUILDER AT ALL. 28 hand-written spellings across five files, each free to
+   drift — which is exactly how a one-form component becomes a seven-form one. The markup
+   below is what those 28 already emit; nothing moves on screen.
+   ⚠️ THE SELECT KEEPS ITS WRAPPER. `.selwrap` exists because `padding-right` does not move
+   the native arrow — measured and recorded in the stylesheet — so the chevron is drawn by
+   us and the wrapper is what positions it. A select without it loses the glyph. */
+function field(o){
+  o = o || {};
+  var id = o.id || '';
+  var cls = ['field'];
+  if(o.err) cls.push('err');
+  if(o.cls) cls.push(o.cls);
+  var lbl = o.label == null ? '' : String(o.label);
+  var head = lbl
+    ? '<label for="' + esc(id) + '">' + lbl
+      + (o.required ? ' <span class="req" aria-hidden="true">*</span>' : '') + '</label>'
+    : '';
+  var attrs = (id ? ' id="' + esc(id) + '"' : '')
+            + (o.name ? ' name="' + esc(o.name) + '"' : '')
+            + (o.autocomplete ? ' autocomplete="' + esc(o.autocomplete) + '"' : '')
+            + (o.placeholder ? ' placeholder="' + esc(o.placeholder) + '"' : '')
+            + (o.disabled ? ' disabled' : '')
+            + (o.attrs ? ' ' + o.attrs : '');
+  var control;
+  if(o.options != null){
+    control = '<span class="selwrap"><select' + attrs + '>' + o.options + '</select>'
+            + icon('chevron-down', { cls:'selchev' }) + '</span>';
+  } else if(o.textarea){
+    control = '<textarea' + attrs + (o.rows ? ' rows="' + o.rows + '"' : '') + '>'
+            + esc(o.value == null ? '' : String(o.value)) + '</textarea>';
+  } else {
+    control = '<input type="' + esc(o.type || 'text') + '"' + attrs
+            + ' value="' + esc(o.value == null ? '' : String(o.value)) + '">';
+  }
+  /* ⚠️ THE ERROR SLOT IS ALWAYS EMITTED WHEN ASKED FOR, and `hidden` until it has
+     something to say. A slot created only on failure has to be inserted into a live DOM at
+     the moment the reader is already dealing with a problem, and that is the moment a
+     missing parent shows up. */
+  var errSlot = o.errSlot
+    ? '<div class="fielderr"' + (o.errAttrs ? ' ' + o.errAttrs : '')
+      + (o.err ? '' : ' hidden') + '>' + (o.err ? esc(o.err) : '') + '</div>'
+    : '';
+  /* ⚠️ `help` SITS AFTER THE CONTROL, NOT UNDER THE LABEL. It explains what to type, which
+     is a thing you want while your eye is in the box — above it, it reads as part of the
+     label and gets skipped. */
+  var help = o.help ? '<div class="help">' + o.help + '</div>' : '';
+  return '<div class="' + cls.join(' ') + '"' + (o.wrapAttrs ? ' ' + o.wrapAttrs : '') + '>'
+    + head + control + help + errSlot + '</div>';
+}
+
+/* ⚠️ A tag takes TEXT, not children: it is a word in a sentence, and anything richer is a
+   different thing wearing its background. */
+function tag(text){
+  return '<span class="fi-chip">' + esc(text == null ? '' : String(text)) + '</span>';
+}
+
+/* chip({ label, count, on, ghost, remove, icon, cls, attrs, kind })
+   ⚠️ `kind` NAMES THE SURFACE'S OWN SPELLING, and it exists only so this builder can emit
+   what the stylesheet already has. `filter` and `type` are the two 40px controls; `plain`
+   is the content-sized `.chip`. **It is not a variant axis** — the day the three fold into
+   one, this argument goes and nothing else has to change. */
+function chip(o){
+  o = o || {};
+  var kind = o.kind === 'type' ? 'typechip' : o.kind === 'plain' ? 'chip' : 'filterchip';
+  var cls = [kind];
+  if(kind === 'chip'){
+    if(o.ghost) cls.push('ghost');
+    if(o.label_) cls.push('label');
+  }
+  if(o.on) cls.push('is-on');
+  if(o.cls) cls.push(o.cls);
+  var inner = (o.icon ? icon(o.icon, { cls:o.iconCls || '' }) : '')
+            + esc(o.label == null ? '' : String(o.label))
+            + (o.count == null ? ''
+               : '<span class="chipcount"' + (o.countAttrs ? ' ' + o.countAttrs : '') + '>'
+                 + esc(o.count) + '</span>');
+  /* ⚠️ A REMOVABLE CHIP IS A SPAN WITH A BUTTON INSIDE, NOT A BUTTON WITH A BUTTON INSIDE.
+     Nesting an interactive element inside another is invalid and the remove control is the
+     only thing on it that can be pressed. */
+  if(o.remove){
+    return '<span class="' + cls.join(' ') + '"' + (o.attrs ? ' ' + o.attrs : '') + '>'
+      + '<span class="applied-chip-t">' + esc(o.label == null ? '' : String(o.label)) + '</span>'
+      + '<button class="chip-x" type="button"' + (o.removeAttrs ? ' ' + o.removeAttrs : '')
+      +   ' aria-label="' + esc(o.removeLabel || ('Remove ' + (o.label || ''))) + '">'
+      +   icon('x') + '</button>'
+      + '</span>';
+  }
+  if(o.static){
+    return '<span class="' + cls.join(' ') + '"' + (o.attrs ? ' ' + o.attrs : '') + '>' + inner + '</span>';
+  }
+  return '<button type="button" class="' + cls.join(' ') + '"'
+    + (o.pressed == null ? '' : ' aria-pressed="' + (o.pressed ? 'true' : 'false') + '"')
+    + (o.attrs ? ' ' + o.attrs : '') + '>' + inner + '</button>';
+}
+
 function button(o){
   o = o || {};
   var variant = BTN_VARIANT[o.variant] ? o.variant : 'primary';
@@ -459,22 +591,19 @@ function homeLayout(){ return Store.get('homeLayout') === 'cards' ? 'cards' : 't
    ⚠️ The PRODUCT trio is deliberately NOT a setting: it comes from what the visitor
    picks on the page, which is the one place a product is genuinely in context. The ⚙
    chooses the gradient, the page chooses the colours. */
-/* ⚠️ THREE VALUES SINCE 2026-09-30. `lifted` is variant 1's pools in variant 2's
-   arrangement, raised so the colour lands in the top of the page — so it is a placement
-   of the existing layer, not a third one (see the stylesheet). Written as a membership
-   test rather than a chain of ternaries, the same shape `licTable` took when it grew a
-   third value. 'current' is still the default and still the fallback for anything
-   unrecognised, so an old store cannot land on a variant that did not exist when it was
-   written. */
-function landingBg(){ var v = Store.get('landingBg'); return (v === 'mesh' || v === 'lifted') ? v : 'current'; }
+/* ⚠️⚠️ `landingBg()` AND THE `Gradient` AXIS ARE GONE (2026-10-07, by request:
+   variant 3 wins — "1's pools, 2's arrangement"). It was the LAST open design variant in
+   this prototype. Variant 3's numbers are now the only gradient, folded into `.meshbg`
+   itself, so there is nothing left to select; variant 2's layer, its twelve colour tokens
+   and this switch went together. A stored `landingBg` is read by nothing — the key is left
+   rather than migrated, because the store is a demo. */
 /* ⚠️ WHICH ARRIVAL THE LANDING'S OWN BUTTONS MAKE. `over` is the default and is what the
    page has always done; `page` navigates instead. Read by the delegated handler in
    auth.js, which is where the two buttons are already answered. */
 function authArrival(){ return Store.get('authArrival') === 'page' ? 'page' : 'over'; }
-function applyLandingBg(){
-  if(document.body.getAttribute('data-page') === 'landing')
-    document.body.setAttribute('data-lbg', landingBg());
-}
+/* ⚠️ `applyLandingBg()` went with it, and so did the `data-lbg` attribute it wrote.
+   Nothing in the stylesheet reads `data-lbg` any more — the three rules that did were the
+   two variants it switched between. */
 /* ⚠️⚠️ THE ATTRIBUTE IS A CONSTANT NOW, AND IT STAYS (2026-10-01). `Table frame` retired
    on `C — no frame, no head fill`, so there is nothing left to choose — but 36 rules are
    scoped through `body[data-tableframe]`, and stripping that prefix would drop each of
@@ -1309,6 +1438,37 @@ function payState(){
    landing at the end. */
 var PS_GROUPS = ['Data', 'Home', 'Banner', 'Licenses', 'License', 'Purchase',
                  'Landing', 'Everywhere', 'Dev'];
+
+/* ⚠️⚠️ THE BAR WAS MIXING TWO DIFFERENT KINDS OF THING, AND THIS IS THE SPLIT
+   (2026-10-07, by request). Every control in it looked alike and sorted alike, but half
+   of them were competing DESIGNS waiting for somebody to choose, and half were
+   CONDITIONS that have to exist permanently so they can be demonstrated. A reviewer had
+   no way to tell "this is a question for you" from "this is the product having a bad
+   day", and the only record of which was which was prose in NOTES.
+
+     · `Design variants` — competing designs waiting for a decision.
+       **This section is meant to EMPTY.** Something in it is unfinished business.
+     · `States` — conditions that must all exist so they can be shown.
+       **This section never empties.** Nothing in it is waiting for anything.
+
+   ⚠️⚠️ THE SECTION IS A PROPERTY OF THE TAB, NOT OF THE GROUP, and that is not
+   over-engineering — `Landing` genuinely holds one of each. `Gradient` is three
+   competing backgrounds; `Sign in` is two entry paths that both exist. A group names the
+   SURFACE a control acts on, which is a different question from what kind of control it
+   is, and collapsing the two would force one of those tabs into the wrong section.
+   ⚠️ THE DEFAULT IS `States`, deliberately. A tab that forgets to declare itself lands
+   in the section that never empties, where it is merely untidy — the other way round it
+   would read as an open decision nobody ever took, and the `Design variants` section
+   would stop meaning anything.
+   ⚠️ `Dev` IS A STATE, and it is the one placement worth arguing with. Its items are
+   actions rather than answers, but what they are FOR is reaching a state that cannot be
+   reached by sitting on the page — a pending email change, a filled billing form. They
+   make states demoable, so they stand with the states. */
+var PS_SECTIONS = ['Design variants', 'States'];
+var PS_SECTION_OF = { 'Design variants':0, 'States':1 };
+function psSection(tab){
+  return tab.section === 'Design variants' ? 'Design variants' : 'States';
+}
 var PageStates = (function(){
   var specs = [];        // every surface that has declared states, in declaration order
   var bar = null, picked = null;
@@ -1333,7 +1493,14 @@ var PageStates = (function(){
     });
     /* ⚠️ Sort is STABLE in every engine this runs on, and that is load-bearing: tabs
        inside one group must keep the order their file declares them in. */
-    out.sort(function(a, b){ return PS_GROUPS.indexOf(a.group) - PS_GROUPS.indexOf(b.group); });
+    /* ⚠️ SECTION FIRST, THEN GROUP. Both comparisons are needed and in this order: the
+       sections are the coarse split the reader is being shown, and the group order
+       inside each is still the reader's question order. */
+    out.sort(function(a, b){
+      var s = PS_SECTION_OF[psSection(a)] - PS_SECTION_OF[psSection(b)];
+      if(s) return s;
+      return PS_GROUPS.indexOf(a.group) - PS_GROUPS.indexOf(b.group);
+    });
     return out;
   }
   /* the right-hand label names the surface — the LAST matching spec that claims one,
@@ -1390,11 +1557,22 @@ var PageStates = (function(){
        the options — the bar is at the foot of the window and it has to stay short. As a
        label leading each run, the hierarchy is legible at a glance and the row still
        wraps as one list. */
-    var lastGroup = null;
+    /* ⚠️⚠️ TWO LEVELS OF RUN HEADER NOW, AND STILL ONE ROW. The section leads its run
+       exactly as the group leads its own — a second row of chrome would put four rows
+       above the options in a bar that lives at the foot of the window.
+       ⚠️ The section header is rendered even when its section holds ONE tab. An empty
+       `Design variants` section is the goal, and a reader cannot see a section emptying
+       if it only appears once it is full. */
+    var lastGroup = null, lastSection = null;
     var tablist = '<div class="sb-tabs" role="tablist" aria-label="Settings">'
       + tabs.map(function(t){
-          var lead = t.group !== lastGroup
-            ? '<span class="sb-group">' + esc(t.group) + '</span>' : '';
+          var sec = psSection(t);
+          var secLead = sec !== lastSection
+            ? '<span class="sb-section">' + esc(sec) + '</span>' : '';
+          if(sec !== lastSection) lastGroup = null;   // a group run cannot span sections
+          lastSection = sec;
+          var lead = secLead + (t.group !== lastGroup
+            ? '<span class="sb-group">' + esc(t.group) + '</span>' : '');
           lastGroup = t.group;
           var on = t.id === picked;
           return lead + '<button type="button" class="sb-tab' + (on ? ' is-on' : '') + '" role="tab"'
@@ -1650,13 +1828,18 @@ var PageStates = (function(){
          answer. What A was: the fixed entitlements shown inside the plan card instead of
          as locked rows, and the capacity rows in a grid rather than a card stack. */
 
-      { id:'landingBg', group:'Landing', label:'Gradient',
-        when:function(){ return ctx().landing; },
-        get:landingBg,
-        set:function(v){ Store.set('landingBg', v); applyLandingBg(); },
-        options:[{ v:'current', t:'1 — current' },
-                 { v:'mesh', t:'2 — mesh', note:'follows the product' },
-                 { v:'lifted', t:'3 — 1’s pools, 2’s arrangement' }] },
+      /* ⚠️⚠️ `Landing › Gradient` IS CLOSED (2026-10-07, by request) with
+         `3 — 1's pools, 2's arrangement` as the answer, and it was the LAST open design
+         variant in this prototype. What the other two were: `1 — current`, four loose
+         pools across the band, which was also Home's ground and the licence header's;
+         `2 — mesh`, a separate `.lmesh` layer of two three-blob trios crossfading into
+         each other on a 48s cycle.
+         ⚠️ Deleted the way `Alert tone` was: switch, markup, CSS and tokens together —
+         twelve colour tokens went, because variant 2 was their only reader.
+         ⚠️⚠️ AND THE WINNER REACHES THREE SURFACES, not just the landing. Variant 3
+         was scoped to `[data-lbg="lifted"]` precisely so it would not touch Home's ground
+         or the licence header; "one gradient, everywhere a gradient belongs" removes that
+         scope on purpose. See the head of the mesh section in styles.css. */
 
       /* ⚠️⚠️ TWO ARRIVALS AT THE AUTH SURFACE (2026-10-01, by request), and this axis is
          how they are compared rather than how they differ: the SURFACE is one, built by
@@ -1676,21 +1859,16 @@ var PageStates = (function(){
          ⚠️ SCOPED NOW (2026-09-30). It was the one group with no scope at all and it
          stood on Home with the cards layout up, where there is no table to frame — a
          recorded debt, closed by giving it the same `when` rule as everything else. ---- */
-      /* ⚠️⚠️ THE TONE AXIS STANDS HERE, NOT IN `Banner` (2026-09-30). It is read by TWO
-         surfaces — Home's banner and the licence panel's alert — and a group named for
-         one of them would be wrong on the other. `Everywhere` is the honest scope: it
-         says what the three tones are MADE of, wherever they are drawn. Its `when` still
-         keeps it off the pages that draw neither. */
-      { id:'alertTone', group:'Everywhere', label:'Alert tone',
-        when:function(){ var c = ctx(); return c.home || c.details; },
-        get:alertGround,
-        set:function(v){
-          Store.set('alertGround', v);
-          if(window.renderHomeBanner) renderHomeBanner();
-          if(window.LicenseDetails && LicenseDetails.refresh) LicenseDetails.refresh();
-        },
-        options:[{ v:'tinted', t:'Tinted — the ground carries it' },
-                 { v:'ink', t:'Ink — the mark carries it' }] },
+      /* ⚠️⚠️ `Alert tone` IS CLOSED (2026-10-07, by request) with `Tinted — the ground
+         carries it` as the answer, and it is the ONLY axis in this bar's history that was
+         closed by deleting the loser rather than by retiring it into a note. What `ink`
+         was: one dark ground for all three tones with the glyph coloured red / amber /
+         white. Its switch, its `mark-*` markup and its CSS went together — `TONE_MARK`
+         and `toneClass`'s branch in components.js, three `.alert.mark-*` rules, two
+         `.licmodal .alert.mark-*`, three `.gbanner.mark-*`, and the ink banner's inverted
+         primary and outlined secondary.
+         ⚠️ `.gbanner.on-ink` SURVIVED THE DELETION, and deliberately: `#licNewBanner` is
+         ink by design and is not part of this axis. */
 
       /* ⚠️ `Table frame` IS RETIRED (2026-10-01, by request) with `C — no frame, no head
          fill` as the answer. A framed every list table and filled its column row; B kept
@@ -1748,7 +1926,7 @@ function injectChrome(){
      on the page is drawn, and setting it later means one paint with the frame and one
      without. It is a no-op on a page with no table. */
   applyTableFrame();
-  applyLandingBg();
+  /* applyLandingBg() stood here and is gone (2026-10-07) with the gradient axis. */
   /* ⚠️⚠️ `data-bare` SKIPS THE BAR AND THE FOOTER, NOT THE REST (2026-10-01). The sign-in
      page is one card on a gradient and nothing else — a header offering `Sign in` above a
      sign-in form is the page arguing with itself, and a footer of legal links below a
@@ -2174,24 +2352,11 @@ function wireTabs(){
    ⚠️ It changes the FORM, not the data: both read `homeBannerVisible()`, in the same
    seniority order, with the same dismissal rules. */
 /* ⚠️ `homeBannerLayout()` IS GONE (2026-10-01) with the `Banner › Layout` axis. */
-/* ⚠️⚠️ WHAT THE THREE TONES ARE MADE OF (2026-09-30, by request) — a second answer to a
-   question the tones already answer, not a second set of tones. The conditions and their
-   seniority are untouched in both:
-     `tinted` — current. The GROUND carries the tone: a red condition sits on
-                `--surface-danger`, a dated one on ink, a quiet one on white.
-     `ink`    — every banner stands on ink, and the MARK carries the tone: the fault red,
-                the deadline amber, the quiet one white.
-   ⚠️ IT IS NOT A THIRD TONE AND IT IS NOT A CHOICE THE PRODUCT MAKES. The tone still
-   comes from the condition (`BANNER_TONE`, and the panel's copy in `alertTone`); this
-   only says which of the banner's two surfaces states it. A reader never sees this — it
-   is a comparison lever, like `Home banner` above it.
-   ⚠️ WHY `ink` CAN REUSE `tone-black` RATHER THAN NEEDING ITS OWN GROUND CLASS: on the
-   ink ground the banner's own palette is already written — the inverted primary, the
-   outlined secondary, the white todo line, the underlined licence link. Emitting
-   `tone-black` plus a `mark-*` class means every one of those rules keeps working
-   untouched, and the only new CSS in the pass is three colours. The alternative was
-   re-scoping nine button rules, which is nine chances to miss one. */
-function alertGround(){ return Store.get('alertGround') === 'ink' ? 'ink' : 'tinted'; }
+/* ⚠️⚠️ `alertGround()` AND THE `Alert tone` AXIS ARE GONE (2026-10-07, by request:
+   collapse to `Tinted — the ground carries it`). The comparison is closed, the losing
+   `ink` form's CSS went with it, and `toneClass` in components.js now returns the tone
+   class and nothing else. A stored `alertGround` is read by nothing — the key is left
+   rather than migrated, because the store is a demo. */
 /* ⚠️ HOW THE LICENCE PANEL'S PLAN BLOCK IS ARRANGED (2026-10-01, by request). `stacked`
    is the default and is what the panel has always done — the plan table, then Add-ons
    underneath it. `side` puts the two next to each other: the table in a left column, the
@@ -2208,17 +2373,23 @@ function arrivedProduct(){ return Store.get('arrived') === 'tbmq' ? 'tbmq' : 'th
 // page you were on (B). Read by the row wiring in components.js.
 /* The modal is the default presentation; the page variant stays in the settings
    panel for comparison. Only an explicit 'page' choice opts out. */
-/* ⚠️ THREE MODES SINCE 2026-09-29 (by request). `shared` is the page WITHOUT a back
-   control: the panel standing on its own as a destination under the Licenses tab,
-   which is what a licence URL pasted to a colleague actually opens into. `page` keeps
-   its Back because it is the presentation you reach FROM a list you were reading;
-   `shared` is the presentation you ARRIVE at, and a Back that returns to a list the
-   reader has never seen is an invitation to somewhere they did not come from.
-   ⚠️ Modal is still the default and still the shape of the test: anything that is not
-   one of the two explicit opt-outs reads as `modal`. */
+/* ⚠️⚠️ TWO MODES SINCE 2026-10-07 (by request: `Full page` and `Shared link` were the
+   same thing; `page` is gone). They were never two page TYPES — they were one page with
+   and without a Back control, and the Back was the only difference. What survives says
+   which ENTRY PATH the reader took, and the two paths are real and permanent:
+     · `modal`  — the person is navigating the portal and opened a licence from a list;
+                  the list is behind them, so the panel sits over it.
+     · `shared` — the person opened a link somebody sent them. There is no list behind
+                  them, and a Back that returns to one they have never seen is an
+                  invitation to somewhere they did not come from.
+   ⚠️ A `page` left in anyone's store now reads as `shared`, not as `modal`: it was the
+   page presentation, and `shared` is the page presentation. Falling back to `modal`
+   would move the reader to a different surface to settle a label.
+   ⚠️ Modal is still the default: anything that is not an explicit opt-out reads as
+   `modal`. */
 function licDetailsMode(){
-  var v = Store.get('licDetails');
-  return (v === 'page' || v === 'shared') ? v : 'modal';
+  return Store.get('licDetails') === 'page' || Store.get('licDetails') === 'shared'
+    ? 'shared' : 'modal';
 }
 // Whether the account already has billing data. With it the wizard commits on
 // Review & pay (3 steps); without it a Payment & Billing step is appended and the
@@ -2630,11 +2801,10 @@ var PAY_MODAL_HTML = ''
 + '        <div class="fielderr" data-payerr="cvc" hidden></div>'
 + '      </div>'
 + '      <div class="field2">'
-+ '        <div class="field"><label for="payName">Cardholder name</label><input type="text" id="payName" autocomplete="cc-name" value="Mariia Panchuk">'
-+ '          <div class="fielderr" data-payerr="name" hidden></div></div>'
-+ '        <div class="field"><label for="payCountry">Country</label><span class="selwrap"><select id="payCountry"><option value="">Select a country</option><option>United States</option><option>Ukraine</option><option>Germany</option><option>United Kingdom</option></select>'
-+           '<svg class="ic selchev" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-down"></use></svg></span>'
-+ '          <div class="fielderr" data-payerr="country" hidden></div></div>'
++ '        ' + field({ id:'payName', label:'Cardholder name', autocomplete:'cc-name',
+                        value:'Mariia Panchuk', errSlot:true, errAttrs:'data-payerr="name"' })
++ '        ' + field({ id:'payCountry', label:'Country', errSlot:true, errAttrs:'data-payerr="country"',
+                        options:'<option value="">Select a country</option><option>United States</option><option>Ukraine</option><option>Germany</option><option>United Kingdom</option>' })
 + '      </div>'
 + '    </div>'
 + '    <div class="paymodal-f">'

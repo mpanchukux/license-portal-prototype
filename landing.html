@@ -20,31 +20,14 @@
      One renderer, one set of rules, three surfaces — see the "Home: animated mesh
      gradient" block in styles.css. -->
 <div class="meshbg" aria-hidden="true">
-  <span class="mb-lav"></span><span class="mb-cream2"></span><span class="mb-cream"></span><span class="mb-lav2"></span>
+  <span class="mb-lav"></span><span class="mb-lav2"></span><span class="mb-cream2"></span>
 </div>
 
-<!-- ⚠️ GRADIENT VARIANT 2, AND IT IS A SECOND NODE RATHER THAN A REPLACEMENT: variant 1
-     above stays exactly as it is, on this page and on the twelve others that carry it,
-     and the ⚙ switch decides which of the two is displayed. Only one is ever visible.
-
-     ⚠️ TWO TRIOS, BOTH MOUNTED, AND THAT IS WHAT MAKES THE CROSS-FADE OPACITY-ONLY.
-     They are stacked on identical geometry — same centre, same orbit, same size — so
-     one group fades over the other and NOTHING moves. Building it as one group whose
-     colours change would animate the colour, which is a different picture: the sphere
-     would shift hue through grey on the way across.
-     ⚠️⚠️ `lm-tb` / `lm-mq` → `lm-a` / `lm-b` (2026-09-29, by request). The trios used to
-     BE the two products and the picker chose between them; they are set one and set two
-     of a background that drifts between them on its own now, and a class saying `tb`
-     would name a binding that no longer exists. The crossfade itself is in styles.css —
-     `.lm-b` is the only thing that animates.
-
-     ⚠️ Three blobs per trio, arranged around a shared centre in the upper half. Each
-     one is bigger than its offset from that centre, so they overlap heavily and the
-     combined falloff reads as one sphere of light rather than three spots. -->
-<div class="lmesh" id="landingMesh" aria-hidden="true">
-  <div class="lm-trio lm-a"><span class="lm-1"></span><span class="lm-2"></span><span class="lm-3"></span></div>
-  <div class="lm-trio lm-b"><span class="lm-1"></span><span class="lm-2"></span><span class="lm-3"></span></div>
-</div>
+<!-- ⚠️⚠️ THE SECOND GRADIENT LAYER STOOD HERE AND IS GONE (2026-10-07). `#landingMesh`
+     was variant 2 of the landing-gradient comparison — two trios of three blobs each,
+     crossfading one set into the other. The comparison closed on variant 3, whose numbers
+     are now the ONE gradient in `.meshbg` above; this layer, its twelve colour tokens and
+     the switch that chose between them went together. -->
 
 <div id="shellMain">
 <div class="dashview" id="landingView">

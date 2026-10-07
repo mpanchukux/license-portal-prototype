@@ -225,6 +225,166 @@
     return out.slice(0, limit || 40);
   }
 
+  /* ================= computed-value comparison (SCALES.md implementation rule 8) =========
+     ⚠️⚠️ THE GEOMETRY SWEEP ABOVE IS BLIND TO RADIUS, ELEVATION, OVERLAYS, MOTION AND
+     BORDER WIDTH. A broken `var()` in any of them renders a wrong screen with identical
+     x/y/width/height, so `diff()` would report a clean run. On those five axes the PRIMARY
+     check is this walk: read the property the axis owns on every element, across paired
+     mirrors, and diff the two maps.
+
+     Three numbers come out and all three matter — changed, LOST (had the property, now
+     does not) and gained. The second is what a broken token looks like and nothing else
+     sees it. */
+
+  /* what counts as "this element has the property at all", per property. `color` is
+     always present, so it has no absence to lose and is compared for change only. */
+  var ABSENT = {
+    'box-shadow': 'none',
+    'background-image': 'none',
+    'background-color': 'rgba(0, 0, 0, 0)',
+    'mask-image': 'none',
+    'border-radius': '0px',
+    /* ⚠️ `auto` is z-index's absence, and it is the one a broken --z-* token produces:
+       an invalid var() makes the declaration invalid at computed-value time, which falls
+       back to `auto` and silently drops the element out of its layer. */
+    'z-index': 'auto',
+    'transition-duration': '0s',
+    'animation-duration': '0s',
+    /* ⚠️ A border width of 0px is also what a BROKEN `border` shorthand computes to: the
+       declaration is dropped, border-style falls back to `none`, and the used width goes
+       to zero. So "lost" on these four is the check that matters most on that axis. */
+    'border-top-width': '0px',
+    'border-right-width': '0px',
+    'border-bottom-width': '0px',
+    'border-left-width': '0px',
+    'outline-width': '0px'
+  };
+
+  var PAINT_PROPS = ['background-color', 'background-image', 'color', 'box-shadow'];
+
+  /* ⚠️ HIDDEN ELEMENTS ARE INCLUDED HERE, unlike collect(). Half of this axis lives on
+     surfaces that are display:none until something opens them — scrims, sheets, menus,
+     the snackbar — and a walk that skips zero-size boxes cannot see any of them.
+     getComputedStyle resolves colours on a display:none element, which is the whole
+     property set this mode reads. */
+  function paintRows(doc, props) {
+    var rows = [], all = doc.querySelectorAll('body *');
+    for (var i = 0; i < all.length; i++) {
+      var el = all[i];
+      if (el.closest('.statebar')) continue;        // the instrument, not the product
+      if (el.closest('.meshbg, .lmesh')) continue;  // never still; see rule 7
+      var cs = doc.defaultView.getComputedStyle(el), v = [];
+      for (var j = 0; j < props.length; j++) v.push(cs.getPropertyValue(props[j]));
+      rows.push(path(el) + '|' + v.join('|'));
+    }
+    return rows;
+  }
+
+  /* the ladder and the roles, resolved off :root — a broken token shows up here as the
+     literal text of the var() call instead of a value */
+  function tokens(doc, names) {
+    var cs = doc.defaultView.getComputedStyle(doc.documentElement), out = {};
+    names.forEach(function (n) { out[n] = cs.getPropertyValue(n).trim(); });
+    return out;
+  }
+
+  function paint(url, width, opts) {
+    opts = opts || {};
+    var props = opts.props || PAINT_PROPS;
+    return new Promise(function (res) {
+      var f = document.createElement('iframe');
+      f.style.cssText = 'position:fixed;left:-99999px;top:0;border:0;width:' + width
+                      + 'px;height:' + (opts.height || 900) + 'px';
+      f.src = url + (url.indexOf('?') < 0 ? '?' : '&') + 'x=' + Date.now();
+      document.body.appendChild(f);
+      var done = false;
+      function finish(v) { if (done) return; done = true; try { f.remove(); } catch (e) {} res(v); }
+      f.onload = function () {
+        setTimeout(function () {
+          var d = f.contentDocument, w = f.contentWindow;
+          try {
+            var bar = d.querySelector('.statebar'); if (bar) bar.remove();
+            d.body.classList.remove('has-statebar');
+            var p = opts.open ? OPENERS[opts.open](d, w) : Promise.resolve();
+            Promise.resolve(p).then(function () {
+              setTimeout(function () {
+                var out = { url: url, w: width, surface: opts.open || 'page',
+                            props: props, rows: paintRows(d, props) };
+                out.n = out.rows.length;
+                if (opts.tokens) out.tokens = tokens(d, opts.tokens);
+                if (opts.probe) out.probe = probeIn(d, opts.probe, props);
+                finish(out);
+              }, opts.settle || 260);
+            }, function (e) { finish({ url: url, w: width, error: String(e) }); });
+          } catch (e) { finish({ url: url, w: width, error: String(e) }); }
+        }, opts.wait || 480);
+      };
+      setTimeout(function () { finish({ url: url, w: width, error: 'timeout' }); }, opts.timeout || 9000);
+    });
+  }
+
+  /* named selectors -> their computed values, for reporting PER COMPONENT rather than
+     per anonymous path. Reports `(no element)` rather than skipping, so a component that
+     is not on the surface is visible as such instead of silently absent. */
+  function probeIn(doc, sels, props) {
+    var out = {};
+    sels.forEach(function (s) {
+      var el = null;
+      try { el = doc.querySelector(s); } catch (e) {}
+      if (!el) { out[s] = '(no element)'; return; }
+      var cs = doc.defaultView.getComputedStyle(el), v = {};
+      props.forEach(function (p) { v[p] = cs.getPropertyValue(p); });
+      out[s] = v;
+    });
+    return out;
+  }
+
+  /* changed / lost / gained, element by element, property by property */
+  function paintDiff(before, after) {
+    var props = after.props || PAINT_PROPS;
+    var B = {};
+    (before.rows || []).forEach(function (r) {
+      var i = r.indexOf('|'); B[r.slice(0, i)] = r.slice(i + 1).split('|');
+    });
+    var changed = [], lost = [], gained = [], onlyAfter = 0, compared = 0;
+    (after.rows || []).forEach(function (r) {
+      var i = r.indexOf('|'), key = r.slice(0, i), av = r.slice(i + 1).split('|');
+      var bv = B[key];
+      if (!bv) { onlyAfter++; return; }
+      compared++;
+      for (var j = 0; j < props.length; j++) {
+        if (bv[j] === av[j]) continue;
+        var absent = ABSENT[props[j]];
+        if (absent !== undefined && av[j] === absent) {
+          lost.push({ el: key, prop: props[j], before: bv[j] });
+        } else if (absent !== undefined && bv[j] === absent) {
+          gained.push({ el: key, prop: props[j], after: av[j] });
+        } else {
+          changed.push({ el: key, prop: props[j], before: bv[j], after: av[j] });
+        }
+      }
+    });
+    return { url: after.url, w: after.w, surface: after.surface,
+             elements: after.n, compared: compared, unpaired: onlyAfter,
+             changed: changed, lost: lost, gained: gained,
+             counts: { changed: changed.length, lost: lost.length, gained: gained.length } };
+  }
+
+  function paintAll(list, widths, opts) {
+    var out = [], i = 0;
+    return (function next() {
+      if (i >= list.length * widths.length) return Promise.resolve(out);
+      var li = Math.floor(i / widths.length), wi = i % widths.length;
+      i++;
+      var item = list[li];
+      var url = typeof item === 'string' ? item : item.url;
+      var o = Object.assign({}, opts, typeof item === 'string' ? {} : item.opts);
+      return paint(url, widths[wi], o).then(function (r) { out.push(r); return next(); });
+    })();
+  }
+
   root.SWEEP = { page: page, all: all, diff: diff, rowDiff: rowDiff,
-                 overflowsIn: overflowsIn, newOverflow: newOverflow, OPENERS: OPENERS };
+                 overflowsIn: overflowsIn, newOverflow: newOverflow, OPENERS: OPENERS,
+                 paint: paint, paintAll: paintAll, paintDiff: paintDiff,
+                 PAINT_PROPS: PAINT_PROPS };
 })(window);

@@ -424,6 +424,28 @@ because the parent class survives elsewhere while the child never does.
 `.alert.mark-quiet .ic` and their `.licmodal` and `.gbanner` twins. The product uses `tone-*`;
 `mark-*` exists only here.
 
+> ⚠️⚠️ **DELETED 2026-10-07 — and this entry was WRONG about why they were dead.** All eight
+> rules are gone from `styles.css` with the `Alert tone` axis, which closed on
+> `Tinted — the ground carries it`.
+>
+> **They were not "never built". They were written by a live branch.** `toneClass()` in
+> `components.js` returned `'tone-black on-ink mark-' + TONE_MARK[tone]` whenever
+> `alertGround()` was `ink` — so the class WAS emitted, by the losing half of an open
+> comparison, every time somebody switched the axis and a banner was up.
+>
+> ⚠️⚠️ **The census drove the axis and still missed it, and that is the finding worth
+> keeping.** `tools/dead-selectors.js` has both scenarios — `home · alert tone ink` and
+> `licence modal · ink tone`. Neither produces the markup: the first inherits
+> `bannerForce: 'none'`, which is the default and means **no banner at all**, and the second
+> opens a healthy subscription, whose `.alert` renders `hidden`. **The axis was exercised;
+> the state that axis needs was not.** Setting a variant and not also setting the condition
+> that makes its markup appear reports a live rule as dead.
+>
+> **Group 2 is "the class is never written". For these eight it should have read "the class
+> is never written IN THE STATES THIS RUN REACHED".** Any other entry whose class is written
+> only under a non-default setting is suspect for the same reason — and the fix is scenarios
+> that cross a variant with a condition, not more scenarios of each alone.
+
 **Two wizard sub-systems that were designed and not wired**: the `.nl-pe*` plan-explainer
 (8 selectors) and the `.nl-success*` confirmation screen (6 selectors), plus `.licb-*`
 (9 selectors), a licence-block list that no page renders.

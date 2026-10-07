@@ -71,8 +71,8 @@ function openDeleteConfirm(){
   openModal('Delete account',
     '<p>This permanently removes your profile and your access to this portal. '
     + 'Active licenses and billing history are not affected.</p>'
-    + '<div class="field" style="margin-top:14px"><label for="delConfirm">Type <b>DELETE</b> to confirm</label>'
-    + '<input id="delConfirm" type="text" autocomplete="off" placeholder="DELETE"></div>');
+    + field({ id:'delConfirm', label:'Type <b>DELETE</b> to confirm', autocomplete:'off',
+              placeholder:'DELETE', wrapAttrs:'style="margin-top:14px"' }));
   $('#modalCloseBtn').textContent = 'Cancel';
   var foot = $('#overlay .mf');
   var del = document.createElement('button');

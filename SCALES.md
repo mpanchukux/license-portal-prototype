@@ -7,13 +7,36 @@ a proposal wearing a spec's title.
 
 ## Status
 
-**Spacing (§1) and border radius (§2) are APPLIED (2026-10-06).** Both are done end to end:
-the tokens are declared, every literal reads one, the values have moved and both passes are
-reported below.
+## ⚠⚠ ALL EIGHT AXES ARE APPLIED — 2026-10-07. THE TOKEN WORK IS FINISHED.
 
-**The remaining axes, in order:** **overlays (§4) next, then elevation (§3)** — elevation
-takes its alpha from the ink ladder and that ladder is built by the overlay pass, so the
-numbered order is the wrong order here. Then z-index, motion, border width, breakpoints.
+Spacing, border radius, elevation, overlays, z-index, motion, border width and breakpoints
+are each done end to end: the tokens are declared, every literal that axis owns reads one
+where the mechanism allows it, the values have moved, and every pass is reported below with
+its own measurement.
+
+**The handoff to the component work is at the end of this document, under
+"From scales to components".** Start there, not here.
+
+**How each axis landed:**
+
+| | | |
+|---|---|---|
+| ~~**z-index, motion, border width**~~ | §5 · §6 · §7 | **APPLIED 2026-10-07**, one pass, one report. 0 lost, 0 gained on 172,147 elements. One item left open: `320` in `shared.js` has no layer to become — §5 |
+| ~~**elevation**~~ | §3 | **APPLIED 2026-10-07.** Eight visible moves. `.nl-select.on` was added as a ninth and measured to be invisible — the rule it fixes was overridden in 100% of its carriers. The ink unification is in, except the press pair, which measured 13/255 |
+| ~~**breakpoints**~~ | §8 | **APPLIED 2026-10-07.** Two visible moves, both on the selling surface. **This was the last token pass — the axis work is finished.** |
+
+⚠️ **Elevation runs AFTER overlays, not in its numbered place** — it takes its alpha from the
+ink ladder, and §4 is what builds the ladder. That ordering is now history rather than a
+plan: the ladder exists.
+
+⚠️⚠️ **§3 OWNS EVERY SHADOW ALPHA, INCLUDING ONES §4's MAPPING LINE ALSO NAMES.** See
+"Where the §4 mapping line stops and §3 begins" below. Four occurrences were deliberately
+left at their old values by the overlay pass because §3 sends them somewhere else — one of
+them in the opposite direction.
+
+⚠️ **Everything in this document is decided. Applying a decision needs no green light;
+changing one does.** A pass stops when a finding contradicts the document, or when the
+document does not cover what the pass is standing in front of — not at the end of a stage.
 
 ### What the spacing pass cost, measured
 
@@ -493,7 +516,7 @@ either one silently change the other, and the failure would be visible on the la
 
 ---
 
-# 3 · Elevation — three levels
+# 3 · Elevation — APPLIED 2026-10-07
 
 27 distinct `box-shadow` values across 43 occurrences. Almost every shadow is unique, and
 **three different things are wearing one property.**
@@ -577,6 +600,150 @@ It is three in the end anyway, because `.statebar` leaves — see the next line.
 bar, which §4 excludes from the design system as a reviewing instrument. It goes when the
 bar goes.
 
+## ⚠️⚠️ What this pass inherits from §4, and must not rediscover
+
+**1 · It unifies the ink.** Every shadow here is written `rgba(0,0,0, …)` and every scrim is
+written `rgba(28,28,28, …)`, which is `--ink`. **Decided: one ink, and it is `--ink`** — the
+reasoning is in §4 under "One ink, and it is `--ink`". This pass is where it happens, because
+it is already rewriting every one of these declarations.
+⚠️ **Measure it, do not assume it.** `28,28,28` is lighter than black by `11/255`; at .18
+alpha that **should** be under the threshold of perception. **Report the computed difference
+on a shadow at EACH of the three levels before calling it free.** If a level reads as a
+change on screen, it is one, and it is reported as one rather than absorbed.
+
+### ⚠️ MEASURED 2026-10-07, BEFORE THE PASS — and it is free, by 3/255
+
+Each level's shadow rendered twice at its own geometry and alpha, black against ink, over
+both of the product's backgrounds, and the two rasters diffed pixel by pixel.
+
+| level | geometry / alpha | max channel Δ | mean Δ where it differs | arithmetic bound (28α) |
+|---|---|---:|---:|---:|
+| menu | `0 8px 24px` / .08 | **1** | 1.00 | 2.24 |
+| dialog | `0 16px 44px` / .18 | **3** | 1.58 | 5.04 |
+| docked | `0 -8px 24px` / .18 | **3** | 1.56 | 5.04 |
+
+Identical on the page background (`#f4f5f6`) and on a card (`#ffffff`) — the backdrop makes
+no difference, because the shadow is composited over whatever is there and only its own
+colour changed.
+
+⚠️ **The arithmetic bound is never reached, and that is the point.** `28α` is the difference
+at FULL shadow alpha; a blurred shadow delivers full alpha nowhere, so the real worst case is
+**3/255 on one channel of a soft gradient**, against 11/255 for the flat colours. The ink
+unification is free at every level.
+
+⚠️ **This is a canvas render, not a CSS one.** Canvas shadow compositing is the same
+operation — source-over through a blurred alpha mask — and it is what let the difference be
+measured in numbers instead of looked at. **Said plainly rather than passed off as a
+screen measurement.** The scrims, which are flat fills rather than blurred ones, already use
+ink and are not part of this question.
+
+**2 · It owns four alphas the overlay pass deliberately left behind.** §4 stage 2 moved six
+alphas and stopped at the occurrences this section sends elsewhere. They arrive here still
+carrying their original values, and the deltas in the tables above are measured from those
+originals — they are current, not stale:
+
+| occurrence | still at | goes to |
+|---|---:|---|
+| `.licmodal .fs-close`, `.dprofmenu`, `.totop` | `.16` | menu, `--ink-a2` (.08) |
+| `.fs-right.pinned` | `.10` | docked, `--ink-a4` (.18) |
+| `.blockmore-go` contact layer `.05` + hover `.07` | as written | the layer is deleted; see Rings |
+
+⚠️ **`.fs-right.pinned` is the one to not get wrong.** §4's per-value mapping line would have
+sent it DOWN to .08; this section sends it UP to .18. It was left untouched precisely so it
+makes one move instead of two in opposite directions.
+
+**3 · Four inline shadow specimens in `styleguide.html` (lines ~126–129) are literals, not
+tokens** — `0 3px 12px /.14` fab, `0 12px 32px /.16` menu, `0 14px 44px /.18` dialog,
+`0 24px 64px /.28` wizard. They are the OLD five levels drawn as swatches. The overlay pass
+could not reach them and did not try. **This pass collapses them to three or they become a
+styleguide that documents a scale the product no longer has.**
+
+## Applied — 2026-10-07
+
+**Three elevation levels, six ring tokens, one press token. 43 `box-shadow` declarations;
+three literals left, each for a named reason.**
+
+### The measurement (implementation rule 8: computed value, paired mirrors)
+
+| | |
+|---|---|
+| band | 10 surfaces × 8 widths = **80 cells** |
+| elements compared | **137,745** |
+| changed | 876 |
+| **lost** | **0** |
+| **gained** | **0** |
+| distinct transitions | **8** — every one of them a move from the tables above |
+
+Geometry was never in question on this axis and the rings do not take layout space.
+
+### ⚠⚠ THE INK UNIFICATION IS IN — EXCEPT THE PRESS PAIR, AND THAT IS A MEASUREMENT
+
+Measured before applying, at each level, black against ink, same geometry and alpha,
+rasters diffed:
+
+| | max channel Δ | mean | 28α bound |
+|---|---:|---:|---:|
+| menu `0 8px 24px` /.08 | **1** | 1.00 | 2.24 |
+| dialog `0 16px 44px` /.18 | **3** | 1.58 | 5.04 |
+| docked `0 -8px 24px` /.18 | **3** | 1.56 | 5.04 |
+| **press** `inset 0 3px 4px` /.55 | **13** | 6.12 | 15.4 |
+| **press** `inset 0 3px 4px` /.45 | **12** | 5.27 | 12.6 |
+
+**The press pair keeps black, and the reason is structural rather than a preference.** A
+press inset is a 4px blur at a high alpha, so it reaches nearly full strength, where the
+11/255 between black and ink lands almost undiluted. The three levels never get there
+because their blurs are 24–44px. §3 already holds press apart from elevation and from the
+overlay scale; it is held apart from the ink too, **for a number rather than for tidiness**.
+
+### ⚠⚠ THE NINTH MOVE IS NOT VISIBLE, AND THE RULE IT TOUCHES WAS NEVER WINNING
+
+`.nl-select.on` went 1px → 2px as decided. **It changes nothing on screen, and the reason
+matters more than the move.** Probed in the open wizard: **every `.nl-select` in the product
+is inside `.plangrid`** — 4 of 4 on the pick step, 0 anywhere else, 0 in any other step.
+`.plangrid .nl-select.on` is (0,3,0) against the bare rule's (0,2,0), so **the 1px rule was
+overridden in 100% of its carriers and never painted.**
+
+So there were never "two selected states at two widths" on screen; there was one that won
+and one that could not. The move is still right — it deletes the disagreement rather than
+leaving a rule that says something false about the product — but **the visible count stays
+at eight, not nine.**
+
+⚠⚠ **`.nl-select.on` IS THE `--s-sechead` PATTERN IN A NEW PLACE: overridden always, mapped
+anyway.** That is now two tokens/rules in this document carrying the same fault, which makes
+it a class rather than an incident. **The rule still goes** — it is in the dead-rule debt
+beside `--s-sechead`, and whoever runs that pass should grep for the shape rather than for
+these two names: a declaration whose every carrier is also matched by a more specific one.
+
+### ⚠️ `.blockmore-go` stops lifting on hover
+
+Rest and hover are both `--elevation-menu`; hover adds `--ring-hairline` over the halo. **The
+tint is the standard secondary hover fill (`--surface-quiet-hover`), inherited from
+`.btn--secondary:hover` and not restated.**
+
+⚠️ **It is NOT given `--overlay-hover`, and that is a deliberate reading.** `--overlay-hover`
+is ink at .08 — *translucent*. `.blockmore-go` stands on faded table rows, and a translucent
+fill would let them through, which is the exact thing `--ring-halo` exists to prevent. The
+instruction was that the button "joins the rule everything else already follows"; what
+everything else follows is the solid `--surface-quiet-hover`, so that is what it gets. Say
+the word and it becomes the literal token instead.
+
+### Two rings the six tokens do not cover
+
+Left as literals, named rather than forced into a token that would be wrong:
+
+| | | |
+|---|---|---|
+| `#nlModal .nl-cardstack .am-addon.on` | `inset 0 0 0 1px var(--accent)` | a selected ADD-ON. `--ring-recommended` is 2px accent and `--ring-selected` is 2px ink; neither is this |
+| `.plangrid .nl-select:hover` | `inset 0 0 0 1px var(--line)` | `--ring-hover` is the same colour and width but **outset**. An inset hover ring is a seventh ring, not one of the six |
+
+And `.statebar`'s `0 -6px 24px /.24` stays unmapped, as §4 decided — it goes when the bar goes.
+
+### The styleguide now documents three levels
+
+Four inline literals (`fab` `menu` `dialog` `wizard`) became three specimens reading the
+tokens. Left alone they would have gone on showing a five-level scale beside a stylesheet
+with three.
+
 ## ⚠️ Three things to look at once they are applied, not adjust quietly
 
 All three are the consequence of three levels instead of five, not of anything chosen for
@@ -634,7 +801,7 @@ with the alpha staying per-variant. **Not elevation, and not on the overlay scal
 
 ---
 
-# 4 · Overlays
+# 4 · Overlays — APPLIED 2026-10-07
 
 ## ⚠️⚠️ The settings bar is excluded from the design system
 
@@ -755,9 +922,147 @@ distinct alphas across six occurrences**, and they are different numbers:
 > at all.** The only reason it looked like a seventeen-value mess was that an instrument was
 > being counted as a product.
 
+## ⚠️⚠️ ONE INK, AND IT IS `--ink` — decided, and it is the ELEVATION pass that does it
+
+**The question.** The file writes "ink at an alpha" two ways: `rgba(0,0,0,…)` on all 27
+shadows and the fade ramp, and `rgba(28,28,28,…)` on the three scrims, `--scrollCue` and
+`--stickyShadow`. **`28,28,28` is `--ink`.** Stage 1 built the role tokens on ink and left
+the shadows their own black, taking only the alpha from the ladder — which parked the
+question rather than answering it.
+
+**The answer: one ink, and it is `--ink`.** A shadow and a scrim do the same thing — darken
+what is behind — and doing it with two different blacks has nothing behind it. The split is
+accidental, not principled. `rgba(0,0,0)` is the naive choice; `--ink` at an alpha stays tied
+to the palette and survives a second theme, where darkening is not black.
+
+⚠️ **It happens in the elevation pass (§3), not the overlay pass**, because that is where
+the shadows are being rewritten anyway and a colour change folded into a geometry change is
+one review instead of two.
+
+⚠️⚠️ **AND IT IS MEASURED, NOT ASSUMED.** `28,28,28` is lighter than black by `11/255`, which
+at .18 alpha **should** be under the threshold of perception — should be, not certainly.
+**§3 reports the computed difference on a shadow at each of the three levels before calling
+it free.** If any level reads as a change, it is a change, and it gets said.
+
+## ⚠️ `--on-ink-muted` is deliberately absent — do not declare it
+
+Every muted-on-ink value in the stylesheet (`.45 .62 .66 .82`) belongs to `.sb-*`, the
+settings bar, which this section excludes. A third role would be **an orphan on its first
+day**: declared, documented, and read by nothing that ships.
+
+**This is the `--s-sechead` lesson** (§1) applied before the fact instead of after it — that
+token is overridden in 100% of its uses and was mapped anyway, and the file now carries a
+name that describes nothing. `--on-ink-primary` and `--on-ink-secondary` are declared;
+the third is **named here and in the stylesheet's own comment, and left undeclared.** It gets
+declared the day a product surface needs muted text on ink, not before.
+
+## ⚠️⚠️ Where the §4 mapping line stops and §3 begins — found 2026-10-07, applying stage 2
+
+**The mapping line above was written over the WHOLE ink population, shadows included. §3
+then assigns those same shadow occurrences to three elevation levels, and on four of them it
+decides differently.** Both statements are in this document and they cannot both be executed.
+
+**§3 wins, every time.** It is per-component where the mapping line is per-value, and the
+ladder exists precisely so a shadow can share a darkness without being handed a role name
+that lies about its job. The mapping line is a **census** — which rank each raw alpha is
+nearest — not an instruction about who applies it.
+
+| occurrence | §4 line | §3 table | stage 2 did |
+|---|---|---|---|
+| `.dropmenu` `.10` | hover `.08` | menu `.08` | **moved** — they agree |
+| `.blockmore-go` cast layer `.10` | hover `.08` | menu `.08` | **moved** — they agree |
+| `.paymodal` `.20` | shadow `.18` | dialog `.18` | **moved** — they agree |
+| `.dprofmenu,#headKebabPop,.permenu` `.22` | shadow `.18` | docked `.18` | **moved** — they agree |
+| `.fs-box` `.28` | shadow `.18` | dialog `.18` | **moved** — they agree |
+| `.snack` `.28` | shadow `.18` | dialog `.18` | **moved** — they agree |
+| `.licmodal .fs-close` `.16` | edge `.14` | **menu `.08`** | **left alone** |
+| `.dprofmenu` `.16` | edge `.14` | **menu `.08`** | **left alone** |
+| `.totop` `.16` | edge `.14` | **menu `.08`** | **left alone** |
+| `.fs-right.pinned` `.10` | hover `.08` | **docked `.18`** | **left alone** |
+| `.blockmore-go` contact layer `.05` | wash `.04` | **layer is deleted** | **left alone** |
+| `.blockmore-go:hover` `.07` | hover `.08` | layer reshaped | **left alone** |
+
+⚠️⚠️ **`.fs-right.pinned` is why this mattered rather than being tidy.** §4 sends it DOWN to
+.08 and §3 sends it UP to .18. Moving it in stage 2 would have walked it .10 → .08 → .18 —
+two edits, in opposite directions, to land somewhere neither pass chose on its own.
+
+**So stage 2 moved six ink alphas across eight occurrences, and the other six occurrences
+are §3's to move, with their geometry, in one edit each.**
+
+## ⚠️ `--stickyShadow` is NOT on this axis, and the document never said so
+
+Found applying stage 2. `--stickyShadow` is
+`linear-gradient(to bottom, rgba(28,28,28,.16), rgba(28,28,28,.06) 45%, rgba(28,28,28,0))`,
+and **none of its three stops appears in the mapping line above** — the line counts `.16`
+three times, and the product has four if this one is included. `.06` and its `0` are not
+counted anywhere at all.
+
+**Two independent reasons say the omission was right, so it stands as a decision rather than
+a gap:**
+1. **It is a gradient, and the ramp's own argument covers it.** `--fade-rows` left this axis
+   because its stops have to hold their relative proportions or the fade stops being a fade.
+   The same is exactly true here with three stops instead of six.
+2. **The arithmetic already excluded it.** `.16`(3) is the count without it. Whoever wrote
+   the mapping line had already treated it as a gradient, and only the prose went missing.
+
+**It keeps its own values and is off the alpha scale, beside `--fade-rows`.** The role table
+above says `--overlay-edge` is "an edge cue; the shade under a sticky element" — that phrase
+describes `--scrollCue`, which does map here, and it should not be read as a claim on this
+gradient.
+
+## Stage 1 — declare and translate, zero change (2026-10-06)
+
+The ladder, the six roles, the three light tokens, `--fade-rows` and `--on-ink-*` declared
+in the existing `:root`; every literal that matched a rank exactly rewritten to read it.
+**16,998 elements across eight surfaces: 0 changed, 0 lost, 0 gained.** The ramp was checked
+separately, because it is a mask and does not appear in a `background-image` walk: 10 fading
+cells, identical computed `mask-image` on both sides.
+
+## Stage 2 — the moves (2026-10-07) — **applied**
+
+**Six alphas, eight occurrences.** Shadows keep their own `rgba(0,0,0, …)` and take the alpha
+from the ladder — the ink unification is §3's, above.
+
+| from | to | occurrences | Δ |
+|---:|---|---|---:|
+| `.10` | `--ink-a2` | `.dropmenu` (incl. `.navpick-menu`, `.permenu`), `.blockmore-go` cast layer | −.02 |
+| `.13` | `--overlay-edge` | `--scrollCue` | +.01 |
+| `.20` | `--ink-a4` | `.paymodal` (`#payOverlay`, `#couponOverlay`) | −.02 |
+| `.22` | `--ink-a4` | `.dprofmenu,#headKebabPop,.permenu` (≤600) | −.04 |
+| `.28` | `--ink-a4` | `.fs-box`, `.snack` | −.10 |
+| `.35` | `--overlay-scrim-sheet` | `.fsheet-scrim` | **+.15, and the colour** |
+
+⚠️ **`.fsheet-scrim` moved on two axes at once, and that is correct rather than an
+overreach.** It was `rgba(0,0,0,.35)` — the only scrim in the product written in black while
+its three siblings (`.overlay`, `.fs-screen`, `.payoverlay`) were already ink. Reading
+`--overlay-scrim-sheet` makes it `rgba(28,28,28,.50)`: **+.15 alpha and `0,0,0` → `28,28,28`.**
+This is not the deferred ink question — that one is about shadows. This is the fourth member
+of a family of four joining the other three.
+
+⚠️ **`--scrollCue` is defined AS the role, not replaced by it**: `--scrollCue:var(--overlay-edge)`.
+Two gradient stops read `--scrollCue` by name, and the comment beside it records that it is
+the one value in the file that will need a light-theme variant. Deleting the name to save an
+indirection would delete that.
+
+### What the pass cost, measured — paired mirrors, settings bar stripped
+
+**Primary check (implementation rule 8): per-element comparison of computed
+`background-color`, `background-image`, `color` and `box-shadow`.**
+
+| | |
+|---|---|
+| ten surfaces at 1280 | 17,229 elements compared — **67 changed, 0 lost, 0 gained** |
+| every changed element | one of the six moves above; nothing else moved |
+| geometry | unchanged, and never in question on this axis |
+
+⚠️ **Three of the eight occurrences live on surfaces that are not in a static walk** and were
+opened for the measurement rather than inferred: `.snack` via `Snack.show`, `.fsheet-scrim`
+and `.fsheet-panel` via a real `.perbtn` click at 390, the docked menu band at 390. The
+`:≤600` rules were read in a genuine render, not resolved from the CSSOM.
+
 ---
 
-# 5 · z-index
+# 5 · z-index — APPLIED 2026-10-07
 
 17 values in CSS, 36 occurrences, plus `'320'` written as a string in `shared.js:2038`.
 
@@ -916,9 +1221,79 @@ thing today.
 > all; 1 phone override (`.dprofmenu` at 120) is deleted as inert; 0 occurrences move
 > visibly.**
 
+## Applied — 2026-10-07
+
+**Ten tokens declared in the existing `:root`; 35 of the 36 occurrences read one. The 36th
+was deleted.**
+
+| | |
+|---|---|
+| converted, no change | 22 |
+| moved | 13 — `5`/`11`/`12`→10 (8), `60`→40 (1), `88`→90 (1), `95`→100 (2), `130`→10 (1) |
+| deleted | 1 — `.dprofmenu{z-index:120}` |
+| literals left in `z-index` | **none** |
+
+**Both behavioural confirmations this section asked for were run, and both were run as
+hit-tests in the browser rather than as arguments about numbers.**
+
+**1 · `.fs-right.pinned` at 390, wizard open on Capacity, step scrolled under the bar.**
+`z-index` 130 → 10, `position:fixed` both sides, **identical rect (top 649.2, height 194.8)**,
+and `elementFromPoint` at the card's own centre returns an element **inside the card** in
+both builds, over an identical paint stack
+(`.am-figures` › `.am-sec.fs-right` › `.fs-body` › `.fs-box` › `.fs-screen`).
+**The card still paints over the step content, and the browser says so.**
+
+**2 · `.dprofmenu`, both widths, menu open.** 120 → 40 at 390 and 60 → 40 at 1280; identical
+rect at both (`390×284` at 390, `232×231` at 1280), the menu topmost at both, identical
+paint stacks. **The deletion is inert, as the measurement predicted it would be.**
+
+### ⚠️ Three consequences that are real, measured, and were not in the section
+
+**1 · `.totop` and `.bnav` are now the SAME layer.** `88`→90 puts the back-to-top button on
+`--z-docked` beside the bottom bar. Measured at 390 on Activity with the page scrolled:
+`.bnav` occupies `y 780–844`, `.totop` `y 716–764` — **they do not overlap, by 16px.** And if
+they ever did, `.totop` comes after `.bnav` in the DOM, so it would still win. Free, and now
+free for a stated reason rather than by assumption.
+
+**2 · `.licmodal` and `.fsheet` are now the same layer as `.fs-screen`.** Both were 95, a
+deliberate half-step **below** the generic full-screen surface at 100. Measured with the
+licence panel open at 1280 and 390: `#licModal` computed **95 before, 100 after**, while
+`.fs-screen` was 100 on both sides. ⚠️ **Order between them is now DOM order, not z-index.**
+Driven as far as the product allows, they are never open together — the only control inside
+the panel that could do it (`#renewBtn`, "Renew subscription") does not open the wizard — so
+nothing changes today. **It is written down because the thing that used to express the
+intent has been removed, and the next surface that opens over a licence modal will not find
+it.**
+
+**3 · `.bnav`, `.totop` and the whole docked layer are PHONE-ONLY.** Resolved by walking the
+real media nesting rather than the nearest preceding `@media`: both rules live inside
+`@media (max-width:600px)`, and at 1280 both compute `z-index:auto`. This is what makes §5's
+claim about the 140 band correct — and it is also the fact the open question below turns on.
+
+## ⚠️⚠️ STILL OPEN: `320` has no layer to become, and this pass did not invent one
+
+**Decided here:** "it becomes a token the stylesheet also declares". **Not decided here:
+which token.** The ten-layer table has no band between `--z-sheet` (140) and `--z-toast`
+(400), and 320 sits in that gap. **`shared.js` was left exactly as it is**, because choosing
+the layer is changing the document, not applying it.
+
+⚠️ **The line is `shared.js:2085`, not `2038`** — the section's own reference has drifted.
+The function is `elevateOpenPops()`, which this document already corrected once from a
+`positionPop` that never existed.
+
+**What the measurement says, so the decision is cheap when it is taken:** the helper sets
+`position:fixed; z-index:320` on an open pop so no ancestor's overflow clips it, and it
+**skips `#headKebabPop` and `.permenu` on the phone** — so it is desktop-only. On desktop
+the entire band above `--z-popover` (40) is **empty**: `--z-docked` is phone-only (above),
+and every surface at `--z-overlay` (100) is `position:fixed` with a z-index, so a pop inside
+one is clamped to it and a pop outside one cannot coexist with it. **`--z-popover` looks
+sufficient, and 320 looks like the same kind of inert number as the 120 just deleted** — but
+that is a reading of the layers, not a hit-test, and the deleted 120 earned its deletion with
+a hit-test.
+
 ---
 
-# 6 · Motion
+# 6 · Motion — APPLIED 2026-10-07
 
 ## Durations
 
@@ -957,9 +1332,37 @@ and stops abruptly reads as a jump.
 > **5 transition durations collapse to 2 steps plus 1 loop token; 5 ambient values stay off
 > the scale; 3 easings survive as 3 named roles; 0 occurrences move visibly.**
 
+## Applied — 2026-10-07
+
+**Six tokens; 38 occurrences; no literal left in any `transition` or `animation` property
+except the five ambient periods.**
+
+| | |
+|---|---|
+| converted, no change | 32 — `ease`×11, `.12s`×9, `.18s`×6, `.7s`×2, `linear`×2, `ease-in-out`×2 |
+| moved | 6 — `.15s`→`.12s` (4), `.16s`→`.18s` (2) |
+| left as literals, by decision | `31s · 34s · 34s · 37s · 39s · 48s` — the mesh drift and the crossfade |
+
+⚠️ **The shorthands were converted in place, and that needed the parser to split on commas
+as well as spaces.** `transition:opacity .12s,filter .12s` tokenises as `opacity`,
+`.12s,filter`, `.12s` under whitespace-only splitting — **the first duration is invisible and
+silently survives the pass.** The census caught it before the conversion ran: `.12s` counted
+8, the specification said 9, and the missing one was inside `.12s,filter`. Comma-splitting is
+per-axis (`SPLIT_COMMA` in `tools/axes.py`), because it is wrong for the others — a spacing
+value never carries a top-level comma, and a `box-shadow` one does.
+
+## ⚠️ Both moves are below the threshold, and that was checked rather than asserted
+
+`.15s`→`.12s` is −30ms on 4 declarations and `.16s`→`.18s` is +20ms on 2. The computed
+comparison reports them as 40 and 10 changed elements across the band, which is the count of
+*elements inheriting those declarations*, not of things anybody can see. **Nothing was
+measured on screen here, and nothing claims to have been** — a 20ms difference in a hover
+transition is not something a static comparison can speak to.
+
+
 ---
 
-# 7 · Border width
+# 7 · Border width — APPLIED 2026-10-07
 
 6 values, 325 occurrences, 0% through tokens — and dominated by two.
 
@@ -990,9 +1393,41 @@ The number is the arrow's size. **Off the scale**, and it must not join a width 
 > **6 values collapse to 3 steps plus zero; 1 stays off the scale; 2 of 325 occurrences
 > move, 0 of them visibly.**
 
+## Applied — 2026-10-07
+
+**Four tokens; 324 of the 327 occurrences read one.**
+
+| | |
+|---|---|
+| converted, no change | 322 — `1px`×168, `0`×127, `2px`×27 |
+| moved | 2 — `3px`→`2px` on `.faq-cat` and `.sg-flag` |
+| left off the scale, by decision | `1.5px` (`.nl-smark`), `5px`×2 (the tooltip arrow) |
+
+⚠️ **The census found 327 where the specification said 325.** The two extra are `0` and `2px`
+added by last session's top-bar work (`.navpick`), exactly as the radius census ran two over
+its own figure for the same reason. **The drift is the document aging, not a miscount.**
+
+## ⚠️⚠️ THE ONLY MOVE ON THIS AXIS LANDS ON TWO RULES WITH NO MARKUP
+
+Checked after the conversion, not assumed from it: `.faq-cat` and `.sg-flag` have **zero
+elements on any surface, at any width.**
+
+- **`.sg-flag`** is already in `tools/dead-report.json` as a dead selector.
+- **`.faq-cat` is not, and it carries seven rules** (`styles.css` ~10079–10163, including a
+  `:hover`, an `.on`, a `:focus-visible` and a phone override). `faq.js` ships on
+  `index.html` and `landing.html` and emits `faq-i`, `faq-qh`, `faq-q`, `faq-a`, `faq-h` —
+  **never `faq-cat`.** It is a category rail that was designed and never built.
+
+**So §7's one visible-in-principle move is invisible in fact, and the reason is not that
+1px is small — it is that neither carrier exists.** The mapping is applied anyway, because a
+dead rule that reads the scale costs nothing and a dead rule holding a literal is one more
+thing for the deletion pass to read. **Added to the dead-rule debt, not deleted here:**
+deleting markup-less rules is its own pass, and this one is a scales pass.
+
+
 ---
 
-# 8 · Breakpoints
+# 8 · Breakpoints — APPLIED 2026-10-07
 
 9 thresholds across 23 media blocks, collapsing to three.
 
@@ -1117,6 +1552,369 @@ that surface should match; this pass stayed on the page the measurement was aske
 
 > **9 thresholds collapse to 3; 1 is deleted as inert, 2 stay off the scale as derived
 > (`760`, `952`); 13 of 23 blocks move, and 3 of those move something visible.**
+
+## Applied — 2026-10-07
+
+⚠⚠ **THE CENSUS ABOVE WAS STALE, AND THE REAL FIGURES ARE BIGGER.** Not 9 thresholds across
+23 blocks but **13 across 43** — the topbar band (1301) and the rest arrived after it was
+taken. Recorded rather than quietly corrected, because the shape of the decision did not
+change: three on the scale, three off it, two blocks deleted.
+
+| | |
+|---|---|
+| `1199` → **1200** | 1 block. A 1px shift; the only thing that changes is which side of 1200 the rule falls on |
+| `1080` → **1200**, `1081` → **1201** | 3 blocks. **Visible, and on the selling surface** |
+| `640` → **600** | 1 block. **Visible**, and free, because the field was fixed first |
+| `820` | **deleted** — three dead rules and one restating the base |
+| `1000` | **deleted** — an empty block; see below |
+| `760` · `952` · `1301` | off the scale, each tracking content |
+| `600`/`601` · `900`/`901` | already on the scale; nothing to move |
+
+### ⚠⚠ A MEDIA QUERY CANNOT READ A CUSTOM PROPERTY, SO THIS AXIS HAS NO STAGE 1
+
+`@media (max-width: var(--bp-phone))` is invalid and silently matches nothing. **Every
+`@media` still carries its number as a literal.** The three tokens are declared anyway — they
+are where the scale is *stated*, they are readable from JavaScript, and they give the next
+person a value to look up instead of a neighbour to copy. **Said here because "declare and
+translate with zero change" is the shape every other axis took, and on this one the
+translate half does not exist.**
+
+### The measurement
+
+| | |
+|---|---|
+| band | 10 surfaces × 15 widths = **150 cells**, straddling every move (1201/1200/1150/1100/1080, 641/620/601/600) |
+| elements compared | **258,314** |
+| changed | 54 |
+| **lost / gained** | **0 / 0** |
+| geometry | **146 / 150 identical** — the four that moved are the `640` → `600` move on `billing.html` and `account.html` at 620 and 601 |
+
+`check-css` 2197 → **2193**, 0 dropped: exactly the four rules of the deleted `820` block.
+
+### Move 1 — `640` → `600`, measured where it bites
+
+| | 620 | 601 |
+|---|---|---|
+| `.field2` | `1fr` → **`254px 254px`** | `1fr` → **`244.5px 244.5px`** |
+| `billing.html` height | 1520 → **1246** (−274) | 1520 → **1246** |
+| horizontal overflow | 0 → 0 | 0 → 0 |
+
+§8 predicted 255 and 245.5 for those cells. **Measured 254 and 244.5** — half a pixel of
+rounding, and nothing clips, because `.field2 > .fullrow` already gave the email its own row.
+
+### Move 2 — `1080` → `1200`, probed inside the wizard
+
+The plan grid is inside the purchase modal, which a static walk never opens, so it was driven
+directly. Four cards, at widths either side of the moved boundary:
+
+| width | before | after |
+|---|---|---|
+| 1250 | 1 + 3, cards 226px, popular pulled −14 | *identical* |
+| 1201 | 1 + 3, 217px, −14 | *identical* |
+| **1200** | 1 + 3, 216px, −14 | **3 + 1, 297px, 0** |
+| **1150** | 1 + 3, 206px, −14 | **3 + 1, 283px, 0** |
+| 1079 | 3 + 1, 264px, 0 | *identical* |
+
+**Between 1081 and 1200 the grid now takes its three-across form, and the cards are ~80px
+wider for it** — 216 → 297 at 1200, 206 → 283 at 1150. The popular card's −14px pull-out
+goes with it, which is the half that had to move in step: a card standing out of a row that
+is no longer there is a card hanging off nothing.
+
+⚠️ The same move shows on a STATIC surface too — `#sgPlans`, the styleguide's plan specimen,
+which is why `.plancard` padding `32 → 16` and the footer's margin appear in the diff. A
+consequence of the move, not a second one.
+
+### ⚠️ An empty block, and why it was deleted rather than mapped
+
+`@media (min-width:601px) and (max-width:1000px){}` — **no rules at all.** The last of the
+licence-zone comparison: its contents left with the `Zone` axis on 2026-10-01 and the braces
+stayed, so the file carried a fourteenth threshold that selected nothing. **An empty block is
+not a breakpoint**, and mapping it onto `--bp-tablet` would have invented a threshold at 1000
+for the scale to carry. Deleted on the same grounds as `820`. The content measurement its
+comment recorded is kept, because it will be true again if that zone is rebuilt.
+
+### ⚠️ The phone boundary is still written twice
+
+Nine `matchMedia('(max-width:600px)')` calls across six scripts hardcode 600. They are **not**
+wired to `--bp-phone`: building a media string from a custom property at runtime adds a
+failure mode — a missing token yields a query that matches nothing, silently — to a pass
+about CSS thresholds. In the debt, named, not fixed here.
+
+---
+
+# Variants — closed, and what the component work inherits
+
+**Written here because this is the document the component work will be read against, and
+the rule below is the one that will otherwise be got wrong.**
+
+## The prototype settings bar is two sections now, and they mean different things
+
+| section | what is in it | does it empty? |
+|---|---|---|
+| **Design variants** | competing designs waiting for a decision | **yes — that is the point** |
+| **States** | conditions that must all exist, permanently, so they can be demoed | **never** |
+
+Before 2026-10-07 the bar mixed them with no way to tell them apart, and the only record of
+which control was which was prose in NOTES. A reviewer could not tell "this is a question
+for you" from "this is the product having a bad day".
+
+**States, all permanent:** `Data` (Session · Account · Arrived for · Payment · Credit) ·
+`Banner › Condition` — each a different banner type from a different event · `Banner › Shape`
+— `Alone, full` and the count form, two states of one banner · `License › State` — page types
+by which banner the licence carries · `License › Type` and `Tier` — by subscription kind and
+tier · `License › Presentation` — two ENTRY PATHS: `Modal` when the person navigates the
+portal, `Shared link` when they open a link somebody sent · `Landing › Sign in` — two
+arrivals · `Dev › Actions` — levers that make states reachable.
+
+**Design variants:** `Home › Layout` — and it is the only tab in that section.
+
+## ⚠️⚠️ A COMPONENT IS ONE COMPONENT IN BOTH HOME LAYOUTS
+
+**Home's two layouts are NOT a pending decision for the component work.** Both are kept and
+both get components. The team has not chosen which Home ships with, and that choice does not
+block anything.
+
+**The table row and the card are two ARRANGEMENTS of the same thing** — same tokens, same
+states, same content, same actions, same copy. **They differ in arrangement only.**
+
+**They do not multiply.** There is no "card version" of a component with its own tokens or
+its own states. A change to the component changes both arrangements, and **anything true of
+one that is not true of the other is a defect, not a variant.**
+
+**The pairs that exist today:**
+
+| | |
+|---|---|
+| the licence row | the licence card |
+| the invoice row | the invoice card |
+
+**Component work is unblocked everywhere, Home included.**
+
+## What closed on 2026-10-07
+
+| axis | what happened |
+|---|---|
+| `Everywhere › Alert tone` | **collapsed to `Tinted — the ground carries it`.** The `ink` form deleted — switch, markup and CSS |
+| `Banner › Shape` | `Auto` and `With others — count` were **one state under two labels**; merged |
+| `License › Presentation` | `Full page` and `Shared link` were **one page type**; `Full page` dropped |
+
+⚠️ **The tone collapse took `--on-ink-primary` with it.** Its one reader was `.hb-todo`,
+white only while Home's banner could be ink. **A closed variant takes its tokens with it, not
+just its rules** — otherwise the next pass declares a scale around an orphan, which is the
+`--s-sechead` mistake arriving by a new route.
+
+## ⚠⚠ ZERO OPEN DESIGN VARIANTS — 2026-10-07
+
+**The first time this prototype has been in that state.** Every competing design that was
+waiting for somebody to choose has been chosen, and the losers are deleted rather than
+retired into a note.
+
+| axis | closed on | what happened to the losers |
+|---|---|---|
+| `Everywhere › Alert tone` | `Tinted — the ground carries it` | `ink` deleted: switch, markup, 13 CSS rules, `TONE_MARK`, `alertGround()`, `--on-ink-primary` |
+| `Landing › Gradient` | `3 — 1's pools, 2's arrangement` | variants 1 and 2 deleted: switch, markup, the `.lmesh` layer, the crossfade, **twelve colour tokens** |
+
+Plus two merges that were never comparisons at all — `Banner › Shape` (`Auto` and
+`With others — count` were one state) and `License › Presentation` (`Full page` and
+`Shared link` were one page type).
+
+**`Home › Layout` is the one tab left in `Design variants`, and it is not pending.** Both
+layouts are kept, both get components, and the rule above says why that blocks nothing.
+
+### ⚠⚠ The rule this produced twice, and it is the one to carry forward
+
+**A closed variant takes its TOKENS with it, not just its rules.** Both closures proved it:
+
+| closure | token | its only reader |
+|---|---|---|
+| alert tone | `--on-ink-primary` | `.hb-todo`, white only while Home's banner could be ink |
+| gradient | `--mesh-a-1..3`, `--mesh-b-1..3` and the six `--c-*-200` primitives behind them | the `.lmesh` layer, and nothing else |
+
+**Thirteen tokens in two passes**, every one of them an orphan the moment its variant lost.
+Left in place they would have been the `--s-sechead` mistake arriving by a new route — a
+scale built around a name that describes nothing.
+
+### ⚠⚠ The gradient reaches three surfaces, and that was the point of the sentence
+
+`.meshbg` is Home's ground and the licence header's as well as the landing's. Variant 3 lived
+behind `body[data-page="landing"][data-lbg="lifted"]`, scoped that way **on purpose** — the
+note beside it said a bare change "would have moved three surfaces that nobody asked about".
+
+**"One gradient, everywhere a gradient belongs" removes that scope deliberately.** Home's
+ground and the licence header now carry the same three-pool, 84%-blob, three-stop gradient
+the landing does. It is a visible change on two surfaces the comparison was never about, it
+was made knowingly, and it is the thing to look at first.
+
+### ⚠⚠ Neither trio survived, which corrects the premise
+
+The request assumed one of the two trios would survive as the gradient's colours. **Neither
+did.** Variant 3 is variant 1 re-placed, and variant 1 carries its own literals —
+`rgb(197 200 247)` lavender and `rgb(255 248 229)` cream. There was no set to keep, so both
+trios and all six primitives went.
+
+### The gap that left is closed — 2026-10-07, the following pass
+
+`--c-lav-200` (`#C5C8F7`) and `--c-amber-50` (`#FFF8E5`), minted to the palette's own shape
+(`--c-<hue>-<step>`, hex, step tracking HSL lightness: 87% → 200 beside `--c-red-200`, 95%
+→ 50 beside `--c-red-50`). The cream is named for its hue, 44°, which is the same ramp as
+`--c-amber-400` at 41° — **palette shape over the markup's word**, and `.mb-cream2` keeps
+its name.
+
+⚠⚠ **A THIRD COLOUR SPELLING ENTERS THE FILE, AND IT IS CONFINED TO THREE RULES.** The
+twelve mesh stops read `rgb(from var(--c-lav-200) r g b / .70)`. It is there because the two
+obvious spellings each break a decided rule, and both were measured rather than argued:
+
+| spelling | at `.70` | at `0` | verdict |
+|---|---|---|---|
+| `color-mix` from the hex | ✓ | **`color(srgb 0 0 0 / 0)`** | breaks the "never `transparent`" rule — it *is* the mud bug |
+| channel triplet | ✓ | ✓ | breaks "no second spelling of the same colours" |
+| relative colour | ✓ | ✓ | breaks neither: reads FROM the token, keeps channels at zero |
+
+**Relative colour serves the no-second-spelling rule better than `color-mix` did**, because
+there is nothing to keep in step. It is **not generalised** beyond these three rules.
+
+⚠⚠ **The accepted cost: three computed `background-image` values now serialise as
+`color(srgb 0.772549 …)` instead of `rgba(197, 200, 247, …)`.** Same colour —
+0.772549 × 255 = 197 exactly. Recorded so a later sweep does not read it as a regression.
+Note that `sweep.js` excludes `.meshbg` under implementation rule 7, so the ordinary run
+never sees them at all; they are measured on their own.
+
+⚠⚠ **AND THE PIXELS ARE NOT BIT-IDENTICAL, WHICH IS SAID RATHER THAN ROUNDED OFF.** Both
+spellings rasterised through `foreignObject` and diffed, 400×40: the control (same CSS
+twice) is **0**, and literal-against-relative is **80 channels in 64,000 — 0.125% — each at
+±1/255** (R 15, G 0, B 65, A 0). No column changes its colour; the differences are single
+pixels scattered across rows while row 0 is identical. **It is the gradient rasteriser's
+dither taking a different numeric path for `rgba()` and for `color(srgb …)`.** The colour is
+identical; the dither is not.
+
+⚠ **`--c-lav-50` was NOT re-pointed, and the comment claiming it was derived is corrected.**
+It said "that hue at about 12% on white" and "Derived, not picked". Reproducing `#F6F6FD`
+from `--c-lav-200` on white needs **a different percentage per channel — R 15.5%, G 16.4%,
+B 25.0%** — so no single mix produces it. The best single value renders `#F6F6FE`, one unit
+off on blue; the claimed 12% renders `#F8F8FE`. It is a hand-tuned neighbour in the same
+ramp, and it keeps its value.
+
+---
+
+# From scales to components
+
+**Read this first. It is written for somebody opening the button component with no memory of
+the eight passes above, and it is deliberately long where being brief would cost a day.**
+
+All eight axes are applied. What that bought you is this: **you never choose a number.** You
+choose a meaning, and the meaning already has a number behind it. If you find yourself typing
+a pixel value into a component, that is the signal that either you have missed a token or you
+have found something the scales do not answer — and the third list below is where to check
+which.
+
+## 1 · The tokens a component reads
+
+| for | read | not |
+|---|---|---|
+| space | `--space-glyph` `-tight` `-inline` `-control` `-stack` `-heading` `-block` `-band` `-gutter` `-inset` `-divide` | a pixel count |
+| corners | `--radius-sharp` `-tight` `-control` `-surface` `-feature` `-pill` `-circle`; **buttons read `--btn-r`** | `--radius-feature`, even though it is also 24 |
+| depth | `--elevation-menu` `-dialog` `-docked` | a hand-written `box-shadow` |
+| borders drawn without layout | `--ring-selected` `-recommended` `-invalid` `-hairline` `-hover` `-halo` | an `inset 0 0 0 …` of your own |
+| a pressed control | `--press-inset` + the variant's own alpha | the elevation levels |
+| a wash over something | `--overlay-wash` `-hover` `-edge` `-shadow` `-scrim` `-scrim-sheet` | the `--ink-a*` ladder — see below |
+| light on a dark ground | `--overlay-light-press` `-track` `-border`, `--on-ink-secondary` | `--on-ink-primary`, which no longer exists |
+| layering | `--z-beneath` `-raise` `-sticky` `-chrome` `-popover` `-docked` `-overlay` `-sheet` `-toast` | a number between two of them |
+| movement | `--motion-quick` `-settle` `-spin`, `--motion-ease` `-linear` `-drift` | a duration of your own |
+| line thickness | `--border-hairline-half` `-hairline`, `--border-emphasis`, `--border-none` | `--ring-halo`'s 4px, which is a distance |
+| type | the `--t-*` scale | `--t-body-sm-fs`, which has no reader |
+
+### ⚠⚠ Four things a component must NOT read, and why
+
+1. **`--ink-a1 … --ink-a6`.** A private ladder. Only the six `--overlay-*` roles and the three
+   `--elevation-*` levels are allowed to name it. Reading `--ink-a2` directly in a component
+   is how the stylesheet starts saying a hover and a menu shadow are the same thing: they
+   share a darkness, they do not share a job.
+2. **Anything `.sb-*` or `.statebar`.** That is the prototype's settings bar — a reviewing
+   instrument, excluded from the design system by §4. Its nine whites, its `.24` shadow and
+   its `880` layer are not product values. They leave when it leaves.
+3. **`--fade-rows`.** It is a **mask**, not a colour: the alphas in it are opacity and the
+   colour is there only because a mask gradient needs one.
+4. **`--s-sechead`.** It describes nothing — overridden in 100% of its uses. See the class
+   below.
+
+### ⚠️ Two tokens that look equal and are not
+
+`--btn-r` and `--radius-feature` are both 24px **and are deliberately separate.** The test is
+in §2 and it is the test to reuse whenever you are tempted to merge two tokens with the same
+value: *if the control radius moves, does the plan card move with it? No. If the plan card
+moves, do the buttons? No.* **Two "no"s means two tokens, whatever the numbers say.**
+
+## 2 · What is settled, that a component must not re-litigate
+
+- **Three elevation levels, not five.** A hover lift needs two levels; the product has three
+  for everything. **Hover is signalled by tint, not by rising** — `.blockmore-go` was the last
+  component rising on hover and it stopped (§3). If your component wants to lift on hover,
+  that is a request for a fourth level, not a component decision.
+- **Shadows are `--ink`, except the press pair, which is black.** Measured: 1–3/255 at the
+  three levels, **13/255 at press**. Press is a tight blur at high alpha and gets there; the
+  levels do not.
+- **Rings carry their width inside their value.** `--ring-selected` is
+  `inset 0 0 0 var(--border-emphasis) var(--ink)`, so moving `--border-emphasis` moves the
+  border and the ring together. Do not re-spell a width.
+- **One ink, two forms of alert tone are now one.** Alert tone collapsed to `tinted`; there is
+  no `ink` form and no `mark-*` vocabulary.
+- **One gradient.** `.meshbg` is the only one, on all three surfaces that carry one, and its
+  two colours are `--c-lav-200` and `--c-amber-50`.
+- **Zero open design variants** (2026-10-07). Nothing in the product is waiting for a
+  comparison to be decided. `Home › Layout` is kept-by-choice, not pending.
+- **A component is ONE component in both Home layouts.** The table row and the card are two
+  arrangements of the same thing — same tokens, states, content, actions, copy. They do not
+  multiply; a difference between them is a defect, not a variant.
+
+## 3 · What a component will hit that no scale answers
+
+**These are the real ones. Each will come up, and none of them has a number waiting.**
+
+1. **⚠⚠ A SECOND DARK SURFACE MAKES `surface` A FIFTH BUTTON AXIS.** The button's axes are
+   variant, size, content, state and tone — **none of them is the ground it stands on.** On
+   an ink banner a `primary` is ink-on-ink and vanishes, so today the banner declares its own
+   ground (`.gbanner.on-ink`) and re-paints the component's surfaces inside itself. **That is
+   one exception carrying its own palette.** The moment a second dark surface appears, the
+   answer is a fifth axis on the component, **not a second copy of that block.** This is the
+   single most likely thing to be got wrong in the button work.
+2. **A seventh ring.** Two rings do not fit the six tokens and are left as literals:
+   `#nlModal .nl-cardstack .am-addon.on` (a selected add-on at 1px accent — neither the 2px
+   accent `recommended` nor the 2px ink `selected`) and `.plangrid .nl-select:hover` (1px line
+   but **inset**, where `--ring-hover` is outset). If your component needs either shape, it is
+   a seventh ring and that is a decision.
+3. **Muted text on a dark ground.** `--on-ink-muted` is deliberately undeclared — every muted
+   on-ink value in the file belongs to the excluded settings bar, so declaring it would create
+   an orphan. The first product surface that needs it is the one that mints it.
+4. **Icon buttons grew and nothing re-checked the dense rows.** copy `58 → 62`, kebab
+   `42 → 46`, the gap between them `6 → 8`. **Count from 62 and 46, not from 58 and 42**, and
+   expect every dense row — toolbars, the key row, instances, banner actions — to be tighter
+   than its last recorded measurement.
+5. **There is no layout tier between 601 and 952.** Four tables overflow in that band. It is
+   **not a breakpoint problem** — the thresholds are right; what is missing is a layout the
+   tables can take. A component to design, not a number to tune.
+6. **Dark theme has exactly two values that cannot survive it as written.** `--ring-halo` is a
+   ring made of the *surface* colour and the hole has to match whatever is behind it;
+   `--scrollCue` is the one value the stylesheet names as needing a light variant. Everything
+   else on the colour axis is a token.
+7. **The phone boundary is written twice** — `--bp-phone` in CSS, and nine hardcoded
+   `matchMedia('(max-width:600px)')` calls in six scripts. A component that asks "am I on the
+   phone?" in JavaScript joins the second list, not the first.
+
+## 4 · What is still open in this document, and why each was left
+
+| open | why it was left |
+|---|---|
+| **`320` in `shared.js:2085`** (§5) | §5 decided it "becomes a token" but **not which one** — there is no band between `--z-sheet` (140) and `--z-toast` (400). Choosing is changing the document, not applying it. The measurement is there: on desktop the whole band above `--z-popover` is empty |
+| **`.insttoolbar.stickybar` declares `z-index:12` on a `position:static` element** | It does nothing and creates no stacking context, so it either lost its `position:sticky` or never needed to exist. **A correctness question, and a scales pass is the worst place to change whether something sticks** |
+| **`--s-sechead` and `.nl-select.on`** | The same fault twice: **overridden in 100% of carriers, mapped anyway.** Now a class, not two incidents — the dead-rule pass should grep for the *shape* (a declaration every carrier of which is also matched by a more specific one), not for these two names |
+| **`.faq-cat` — seven rules, no markup, and not in `dead-report.json`** | A hole in the census, found by a pass about widths. `faq.js` ships and emits `faq-i`/`faq-qh`/`faq-q`/`faq-a`/`faq-h`, never `faq-cat` |
+| **`DEAD.md` group 2 is unreliable where a class is written only under a non-default setting** | Eight `mark-*` rules were listed as "never written" while a live branch wrote them. The scenarios set the *variant* and never the *condition* that produces the markup |
+| **`sweep.js` cannot see `.meshbg`** | Implementation rule 7, and correct — the pools drift and would make every run report false positives. **Consequence: any mesh change must be measured directly.** It reported a clean zero while twelve gradient stops had just been rewritten |
+| **The 601–952 table band** | See item 5 above |
+| **`mockInvoiceUrl` is a second typography system** | A separate document with its own rules; it was never part of these axes |
+| **`?from` is written and read by nothing** | Left in the URL deliberately — a link must work the same for whoever opens it |
+| **The two collapsed z-index intents** | `.totop` is now level with `.bnav` (measured not to overlap, by 16px) and `.licmodal`/`.fsheet` are level with `.fs-screen` where they sat a deliberate half-step below. **Collapsed on purpose**; what expressed the intent is gone, so the next surface that opens over a licence modal must express it again |
+| **The gradient's dither** | Relative colour moves 80 channels in 64,000 by ±1/255. Colour identical, dither not. Accepted — trading the no-second-spelling rule for a render artefact is the wrong trade |
 
 ---
 

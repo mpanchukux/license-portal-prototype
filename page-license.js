@@ -12,41 +12,24 @@ var params = new URLSearchParams(location.search);
 var pageLic = params.get('id') ? licById(params.get('id')) : null;
 if(!pageLic) pageLic = licFromNamed(params.get('tier') || 'prototype');
 
-/* The details page belongs to the section it was opened from — that one origin
-   decides both the highlighted nav item and where back goes. Invoices is a real
-   origin now: an invoice's Product cell links here. */
-/* ⚠️ `href` AND `label` ARE GONE FROM THESE ENTRIES (2026-09-29). They fed the Back
-   button, and there is no Back button on either presentation any more (see below). What
-   `?from` still decides is the nav highlight, so that is all this map still holds — a
-   map whose two of three fields nothing reads is a map the next reader will wire
-   something to. The Instances entry, which was added because falling through to the
-   default offered a way back to a page the reader had not come from, stays for the same
-   reason in its new form: it lights the tab they actually came from. */
-var ORIGINS = {
-  home:      { nav:'home' },
-  invoices:  { nav:'invoices' },
-  instances: { nav:'instances' }
-};
-var origin = ORIGINS[params.get('from')] || { nav:'licenses' };
+/* ⚠️⚠️ `Full page` AND `Shared link` WERE THE SAME PAGE TYPE, AND ARE NOW ONE
+   (2026-10-07, by request). The note that stood here predicted it: once the Back button
+   left both presentations on 2026-09-29, the only thing separating them was which nav
+   tab lit — `?from`'s section for `Full page`, always `Licenses` for `Shared link`. That
+   is not a second page type, it is a highlight.
 
-/* ⚠️⚠️ NEITHER PRESENTATION CARRIES A BACK BUTTON ANY MORE (2026-09-29, by request:
-   "Full page must not have a back button in it"). `Full page` had one; `Shared link` was
-   defined as the same page WITHOUT it. So the button is gone from both, and this file no
-   longer passes `opts.back` at all — `mountPage` already treats a missing `back` as "no
-   button", which is why nothing there had to change.
-   ⚠️⚠️ AND THAT LEAVES THE TWO PRESENTATIONS ALMOST IDENTICAL — reported, not papered
-   over. What still separates them is one thing: which nav tab lights. `Full page` lights
-   the section named by `?from` (you came from Invoices, Invoices stays lit); `Shared link`
-   always lights `Licenses`, because a pasted URL had no journey to describe. If that is
-   not worth a third option, the two collapse into one and `licDetailsMode()` goes back to
-   two values.
-   ⚠️ `ORIGINS` IS STILL READ, and still earns its place: it decided two things and now
-   decides one. `?from` is not stripped from the URL either — the same link has to keep
-   working when the setting moves, and a link that loses information depending on a
-   viewer's preference is not a shareable link. */
-var shared = licDetailsMode() === 'shared';
+   **What this page IS, now that it is one thing: the page a shared link opens into.**
+   Nobody is behind you, so `Licenses` lights, and there is no Back.
 
-document.body.setAttribute('data-nav', shared ? 'licenses' : origin.nav);
+   ⚠️⚠️ `ORIGINS` AND `origin` ARE DELETED WITH IT, NOT LEFT STANDING. They existed only
+   to answer the highlight for the presentation that is gone; the surviving one answers it
+   with a constant. A map kept past its last reader is how `.licb-*` became nine dead
+   selectors — the merge has to take its own leavings with it.
+   ⚠️ `?from` IS STILL WRITTEN by `licenseHref` and is now READ BY NOTHING. Left in the
+   URL deliberately: the same link has to keep working whoever opens it, and stripping a
+   parameter because this viewer's build stopped reading it is how a shareable link stops
+   being shareable. Recorded as debt rather than hidden. */
+document.body.setAttribute('data-nav', 'licenses');
 syncTopNav();
 
 LicenseDetails.mountPage('#licDetailsHost', pageLic, {});

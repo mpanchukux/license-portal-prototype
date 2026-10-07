@@ -300,6 +300,16 @@ def button_findings(rel, text):
         tag, attrs = m.group(1).lower(), m.group(2)
         if "' + attrs + '" in attrs:
             continue                      # the component's own emit line, in shared.js
+        # ⚠⚠ A COMPONENT BUILDER'S OWN EMIT LINE BUILDS ITS CLASS AT RUNTIME, so a static
+        # scan sees no class at all and reports the builder as "a button outside the
+        # component" — which is backwards: it IS the component. `button()` is recognised
+        # by the line above; `chip()` arrived with the component pass (2026-10-07) and is
+        # recognised here.
+        # ⚠️ DELIBERATELY NARROW: the file must be shared.js (where the builders live) AND
+        # the class must be the `cls.join(' ')` shape a builder uses. A bare skip on
+        # "class is an expression" would exempt every future rogue button in the product.
+        if rel.endswith('shared.js') and "cls.join(' ')" in attrs:
+            continue                      # chip(): the component's own emit line
         cm = CLASS_IN.search(attrs)
         cls = cm.group(1).split() if cm else []
         if tag == 'a' and 'btn' not in cls:

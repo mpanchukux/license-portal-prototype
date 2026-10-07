@@ -120,13 +120,19 @@
     <div class="sg-item">
       <h3>Shadows</h3>
       <p class="sg-note">Elevation appears only on things that float: menus and dialogs.
+        <b>Three levels, not five</b> (2026-10-07) &mdash; <code>fab</code> and <code>wizard</code>
+        were folded in, and the third level is a <em>direction</em> rather than a depth:
+        three components cast upward, and inverting a downward shadow by hand is how two of
+        them ended up with different blurs for the same job.
         <b>The settings panel is gone</b> (2026-09-30) &mdash; the prototype&rsquo;s settings are the
         docked page-state bar now, and a docked bar carries no shadow.</p>
+      <!-- ⚠⚠ THESE WERE FOUR INLINE LITERALS AND THEY NOW READ THE TOKENS. Left as
+           literals they would have gone on documenting a scale the product no longer has
+           — a styleguide showing five levels beside a stylesheet with three. -->
       <div class="sg-shadow">
-        <div style="box-shadow:0 3px 12px rgba(0,0,0,.14)">fab</div>
-        <div style="box-shadow:0 12px 32px rgba(0,0,0,.16)">menu</div>
-        <div style="box-shadow:0 14px 44px rgba(0,0,0,.18)">dialog</div>
-        <div style="box-shadow:0 24px 64px rgba(0,0,0,.28)">wizard</div>
+        <div style="box-shadow:var(--elevation-menu)">menu</div>
+        <div style="box-shadow:var(--elevation-dialog)">dialog</div>
+        <div style="box-shadow:var(--elevation-docked)">docked</div>
       </div>
     </div>
   </section>

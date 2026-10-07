@@ -131,7 +131,7 @@ var DETAILS_HTML = ''
 + '                 Plan block. It is gone from both: downgrades take effect'
 + '                 immediately, so nothing is pending to state. -->'
 + '            <div class="metarow">'
-+ '              <span id="labelSlot"><button class="chip ghost" id="addLabel">+ Add label</button></span>'
++ '              <span id="labelSlot">' + chip({ kind:'plain', ghost:true, label:'+ Add label', attrs:'id="addLabel"' }) + '</span>'
 + '              <!-- phone: status and label merged into one calm supporting line'
 + '                   ("Active · Factory A"). The chip and the pencil step aside there —'
 + '                   see renderSupportLine and the ≤600px block. -->'
@@ -365,8 +365,10 @@ var DETAILS_HTML = ''
    simply states how many instances of its kind this licence has. Filled by
    `renderInstances`, which is the one place that already counts both. */
 + '                <div class="lic-typeseg" role="group" aria-label="Instance type">'
-+ '                  <button class="typechip is-on" data-insttype="prod" aria-pressed="true">Production<span class="chipcount" data-instcount="prod"></span></button>'
-+ '                  <button class="typechip" data-insttype="dev" aria-pressed="false">Development<span class="chipcount" data-instcount="dev"></span></button>'
++ '                  ' + chip({ kind:'type', label:'Production', on:true, pressed:true,
+                                 attrs:'data-insttype="prod"', count:'', countAttrs:'data-instcount="prod"' })
++ '                  ' + chip({ kind:'type', label:'Development', pressed:false,
+                                 attrs:'data-insttype="dev"', count:'', countAttrs:'data-instcount="dev"' })
 + '                </div>'
 + '                <span class="spacer"></span>'
 + '                <button class="btn btn--secondary btn--md btn--icon" data-refresh aria-label="Refresh" title="Refresh"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-refresh"></use></svg></button>'
@@ -561,7 +563,7 @@ function renderLabelSlot(lic){
          hover and pressed washes, so it still answers the pointer; only the rest goes. */
       + '<button class="btn btn--ghost btn--sm btn--icon labeledit" data-editlabel aria-label="Edit label" title="Edit label">' + PENCIL + '</button>';
   } else {
-    slot.innerHTML = '<button class="chip ghost" data-editlabel>+ Add label</button>';
+    slot.innerHTML = chip({ kind:'plain', ghost:true, label:'+ Add label', attrs:'data-editlabel' });
   }
 }
 /* the editing state */
@@ -1438,9 +1440,9 @@ function openInstanceLabelModal(instId){
   var hit = findInstance(instId); if(!hit) return;
   var lic = hit.lic, i = hit.inst;
   openModal('Edit instance label',
-    '<div class="field"><label for="instLabelInput">Label</label>'
-    + '<input id="instLabelInput" type="text" autocomplete="off" placeholder="e.g. HQ node 1" value="' + esc(i.label || '') + '">'
-    + '<div class="help">A label tells this instance apart from the others running on the same license.</div></div>');
+    field({ id:'instLabelInput', label:'Label', autocomplete:'off',
+            placeholder:'e.g. HQ node 1', value:i.label || '',
+            help:'A label tells this instance apart from the others running on the same license.' }));
   $('#modalCloseBtn').textContent = 'Cancel';
   var inp = $('#instLabelInput');
   var save = modalAction('Save', function(){
@@ -2195,16 +2197,14 @@ var LicenseDetails = (function(){
 /* ⚠️⚠️ THE SETTER HAS TO RE-PRESENT, NOT JUST STORE (fixed 2026-09-29). It wrote
    `licDetails` and called `PageStates.sync()`, which repaints the BAR — so the radio
    moved and the surface did not, and the setting looked broken. It was only ever
-   honoured by the NEXT open: picking `Full page` inside a modal left the modal
-   standing, and picking `Modal` on the page left the page.
+   honoured by the NEXT open: picking the page presentation inside a modal left the
+   modal standing, and picking `Modal` on the page left the page.
    ⚠️ IT HAS TO CROSS HOSTS, which is why this is not a re-render. Modal and page are
    two different surfaces on two different documents:
-     · to a PAGE presentation — navigate to `license.html`, which is that surface;
+     · to the SHARED presentation — navigate to `license.html`, which is that surface;
      · to MODAL from a page — go back to the list and open it there, because a modal
        needs something behind it and `license.html` behind a licence modal would be
        the same licence twice. `?open=` carries which one (read by page-licenses.js).
-   ⚠️ `page` -> `shared` and back is a RELOAD, not a no-op: the two differ only in the
-   back control, which `mountPage` decides at mount time.
    ⚠️ Falls back to a plain sync when there is no licence to re-present — which is now
    the ordinary case, not the styleguide's edge: the tab is reachable from the list page
    with nothing open, and there the choice simply waits for the next open. */
@@ -2218,11 +2218,24 @@ var LicenseDetails = (function(){
             else PageStates.sync();                 // already a modal, nothing moves
             return;
           }
-          if(onPage) location.reload();             // page <-> shared: same document
+          /* ⚠️ THE `page` <-> `shared` RELOAD IS GONE WITH `page` (2026-10-07). It
+             existed because the two differed only in a highlight decided at mount time,
+             so the same document had to be re-mounted; there is one page presentation
+             now, and if we are already standing on it there is nothing to move. */
+          if(onPage) PageStates.sync();
           else location.href = licenseHref(lic, 'licenses');
         },
-        options:[{ v:'modal', t:'Modal (default)' }, { v:'page', t:'Full page' },
-                 { v:'shared', t:'Shared link (no Back)' }] },
+        /* ⚠️⚠️ `Full page` IS GONE (2026-10-07, by request: it and `Shared link` were the
+           same thing). Once Back left both on 2026-09-29 the only difference was which
+           nav tab lit, which is a highlight and not a page type. The two options left are
+           ENTRY PATHS, and both are permanent:
+             · `Modal`  — the person is navigating the portal and opened a licence from a
+                          list. The list is behind them, so the panel sits over it.
+             · `Shared` — the person opened a link somebody sent them. Nothing is behind
+                          them, `Licenses` lights, and there is no Back.
+           ⚠️ A stored `page` reads as `shared`, not as `modal` — see `licDetailsMode`. */
+        options:[{ v:'modal', t:'Modal (default)', note:'opened from a list' },
+                 { v:'shared', t:'Shared link (no Back)', note:'opened from a link' }] },
 
       /* ⚠️ MOVED HERE FROM THE ⚙ PANEL (2026-09-30). It was scoped there to "a page that
          can open a licence", which is this spec's scope exactly — so it now sits beside

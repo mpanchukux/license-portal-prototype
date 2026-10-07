@@ -704,7 +704,19 @@ if(dashEmptyV && !dashEmptyV.hidden){
     when:function(){ return document.body.getAttribute('data-page') === 'home'; },
     tabs:[
       /* ---- Home: the shape of the page itself ---- */
-      { id:'homeLayout', group:'Home', label:'Layout',
+      /* ⚠️⚠️ THE ONLY DESIGN VARIANT LEFT IN THE BAR (2026-10-07). Both layouts are
+         KEPT and both get components — the team has not chosen which Home ships with,
+         and until it does this is the one control in the bar that is a question rather
+         than a condition.
+         ⚠️⚠️ IT DOES NOT BLOCK COMPONENT WORK, and that is the thing to not get wrong:
+         **a component is ONE component in both layouts.** The table row and the card are
+         two ARRANGEMENTS of the same thing — same tokens, same states, same content, same
+         actions, same copy. They do not multiply. There is no "card version" of a
+         component with its own tokens or its own states; a change to the component
+         changes both arrangements, and anything true of one that is not true of the
+         other is a DEFECT, not a variant. The pairs that exist today are the licence row
+         and the licence card, and the invoice row and the invoice card. */
+      { id:'homeLayout', group:'Home', section:'Design variants', label:'Layout',
         get:homeLayout,
         set:function(v){
           Store.set('homeLayout', v);
@@ -755,19 +767,30 @@ if(dashEmptyV && !dashEmptyV.hidden){
    see that the control exists and why it is not available.
    ⚠️ SHAPE IS A PROPERTY OF THE STACKED FORM ONLY (2026-09-30). The separate layout
    gives every card the full form by definition — that is the whole reason it exists —
-   so there is no "poorer shape" to choose. */
+   so there is no "poorer shape" to choose.
+   ⚠️⚠️ THIS IS A STATE, NOT A COMPARISON (2026-10-07). Both options are forms the banner
+   really takes in the product, and both stay for good — `Alone, full` when one condition
+   is live, the count form when several are. It is in the bar's `States` section for that
+   reason, and nothing here is waiting to be decided. */
         sub:{
           label:'Shape',
           get:bannerShape,
           set:function(v){ Store.set('bannerShape', v); renderHomeBanner(); PageStates.sync(); },
           /* ⚠️ The `stacked only` guard went with the `Layout` axis (2026-10-01): there is
              one layout now, and it is the one Shape describes. */
+          /* ⚠️⚠️ `Auto` AND `With others — count` WERE ONE STATE (merged 2026-10-07, by
+             request). `many` could not fabricate a count: below two live conditions it
+             fell back to the full form, which is what `auto` already did. Two options
+             now, and they are the banner's two STATES rather than three levers —
+             `auto` keeps the value because it is the stored default, so a `many` left
+             in anyone's store reads as the behaviour it already had. */
           options:function(){
             var n = homeBannerVisible().length;
             return [
-              { v:'auto', t:'Auto', note:n ? n + ' live' : 'no banner', disabled:!n },
-              { v:'one',  t:'Alone — full', note:'', disabled:!n },
-              { v:'many', t:'With others — count', note:n > 1 ? 'and ' + (n-1) + ' more' : 'needs 2+', disabled:n < 2 }
+              { v:'one',  t:'Alone — full', note:n ? 'the whole form' : 'no banner', disabled:!n },
+              { v:'auto', t:'With others — count',
+                note:!n ? 'no banner' : (n > 1 ? 'and ' + (n-1) + ' more' : 'needs 2+, shows full'),
+                disabled:!n }
             ];
           }
         } },
