@@ -481,9 +481,21 @@
     <p class="sg-note"><b><code class="sg-cls">raised</code> is the one button that answers the
       pointer by rising</b>, and it is a VARIANT rather than an exception: a rule reading &ldquo;hover
       is tint, except one button&rdquo; gets copied by whoever meets the button first.
-      <b>The test: a surface may answer the pointer by rising only if it carries no rows of data and
-      no more than one control.</b> The landing hero passes; <code class="sg-cls">.blockmore-go</code>
-      sits at the foot of a list of licences and does not, so it stays flat.</p>
+      <b>The test: a surface may answer the pointer by rising only if it neither carries rows of data
+      nor stands among them, and carries no more than one control &mdash; or if the surface is itself the
+      thing being chosen. A selectable object, one carrying no control beyond the one that selects it,
+      rises on its own behalf rather than on a button&rsquo;s, and the siblings of its own kind standing
+      beside it are not the rows of data this test protects.</b> The landing hero passes;
+      <code class="sg-cls">.blockmore-go</code> sits at the foot of a list of licences and is not a thing
+      in that list you can choose, so it fails both limbs and stays flat.</p>
+    <p class="sg-note"><b>The first limb says &ldquo;nor stands among them&rdquo; since 2026-10-09, and that
+      closed a gap rather than widening the rule.</b> It used to read &ldquo;carries no rows of data&rdquo;,
+      while the one surface the system had already failed &mdash; <code class="sg-cls">.blockmore-go</code>
+      &mdash; carries nothing whatever and was failed for what it stands among. The written test and the
+      applied test were two tests; this is the applied one, written down. <b>The second limb is bounded on
+      purpose:</b> &ldquo;no control beyond the one that selects it&rdquo; is what stops anything clickable
+      claiming it &mdash; a card with a checkbox and a kebab is a surface with two controls, not one
+      selectable object, and it is judged by the first limb.</p>
     <p><b>One component, four axes</b> (<code class="sg-cls">button()</code> in
       <code class="sg-cls">shared.js</code>). <b>Variant</b> &middot; <b>size</b> &middot; <b>content</b>
       &middot; <b>state</b>, plus <b>tone</b>. A flat list of named buttons would need a new name for

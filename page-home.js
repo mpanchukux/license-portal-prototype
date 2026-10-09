@@ -194,11 +194,11 @@ function renderBlockFades(){
     wrap.innerHTML = button({ variant:'secondary', size:'md', href:spec[1],
       label:'See all ' + spec[2], cls:'blockmore-go' });
     block.appendChild(wrap);
-    /* ⚠️ MEASURED, not a constant. Licence rows are two and three lines tall depending
-       on the table variant and on whether the licence has a label, so a fixed 96px
-       would either clip a tall row or eat into the third. The overlay is exactly the
-       fading row plus its own breathing room. */
-    block.style.setProperty('--fadeH', (fading.getBoundingClientRect().height + 18) + 'px');
+    /* ⚠️⚠️ `--fadeH` IS GONE (2026-10-09). It was the measured height of the overlay strip —
+       "the fading row plus its own breathing room" — and it existed because the strip was
+       absolutely positioned over that row and had to be exactly as tall as it. The button
+       sits below the fade now, in flow, so its height is its own and the block has nothing
+       to be told. `fading` is still what decides whether there is a button at all. */
   });
 }
 /* Home greeting follows the viewer's own clock — the one place the prototype

@@ -193,11 +193,23 @@ function chip(o){
   }
   if(o.on) cls.push('is-on');
   if(o.cls) cls.push(o.cls);
+  /* ⚠️⚠️ THE COUNT IS INSIDE THE LABEL, NOT BESIDE IT (2026-10-09, by request: "put the
+     count next to the label in parentheses — `Licenses (17)` — not a separate count pill
+     inside the chip"). It was a sibling of the label text, which made it its own FLEX ITEM:
+     the chip's `gap` applied to it, so the number stood a control's gap away from the word
+     it counts and read as a second object in the chip. Wrapped with the label it is one
+     phrase separated by one space, and the parentheses are drawn by `.chipcount` in CSS.
+     ⚠️ THE SPAN IS UNNAMED ON PURPOSE. Nothing styles it — it exists to stop the count
+     being a flex item — and a class invented for an element no rule selects is a word the
+     system has to carry for nothing. The two product chips already had exactly this bare
+     span around their label; this makes the builder agree with them.
+     ⚠️ `countAttrs` AND THE FILL POINTS ARE UNTOUCHED: every caller finds the number with
+     `.chipcount` or `[data-instcount]`, and nesting does not move either. */
+  var count = o.count == null ? ''
+            : ' <span class="chipcount"' + (o.countAttrs ? ' ' + o.countAttrs : '') + '>'
+              + esc(o.count) + '</span>';
   var inner = (o.icon ? icon(o.icon, { cls:o.iconCls || '' }) : '')
-            + esc(o.label == null ? '' : String(o.label))
-            + (o.count == null ? ''
-               : '<span class="chipcount"' + (o.countAttrs ? ' ' + o.countAttrs : '') + '>'
-                 + esc(o.count) + '</span>');
+            + '<span>' + esc(o.label == null ? '' : String(o.label)) + count + '</span>';
   /* ⚠️ A REMOVABLE CHIP IS A SPAN WITH A BUTTON INSIDE, NOT A BUTTON WITH A BUTTON INSIDE.
      Nesting an interactive element inside another is invalid and the remove control is the
      only thing on it that can be pressed. */

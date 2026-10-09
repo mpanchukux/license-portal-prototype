@@ -343,9 +343,19 @@
      one step later: the `raised` variant answers the pointer by moving, and a set that cannot
      see movement cannot check it.
      ⚠️ ADDED TO THE FILE, NOT PASSED PER RUN. A property that has to be remembered is a
-     property that will be forgotten — it already was, in the one run that needed it most. */
+     property that will be forgotten — it already was, in the one run that needed it most.
+     ⚠️⚠️ `border-width` JOINED THEM 2026-10-09, AND IT IS THE SAME FAULT A THIRD TIME. The set
+     held `border-color` since 10-08 because a pass that painted borders reported only fills;
+     the pass that THINNED them reported **0 changed on all nine portal pages** — a clean,
+     confident, completely empty result for a change touching 255 elements. `border-color` and
+     `border-width` are two properties, and knowing the first was missing did not make anyone
+     ask about the second.
+     ⚠️ THE QUESTION THAT CATCHES THIS IS NOT "what changed" BUT "could this set have shown
+     what I did". It has now failed three times — width, colour, movement — and each time the
+     answer arrived from a zero that looked like a pass. A zero from this tool means nothing
+     until the property that carries the change is in the list. */
   var PAINT_PROPS = ['background-color', 'background-image', 'color', 'box-shadow',
-                     'border-color', 'transform'];
+                     'border-color', 'border-width', 'transform'];
 
   /* ⚠️ HIDDEN ELEMENTS ARE INCLUDED HERE, unlike collect(). Half of this axis lives on
      surfaces that are display:none until something opens them — scrims, sheets, menus,

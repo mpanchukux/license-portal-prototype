@@ -106,7 +106,7 @@ var DETAILS_HTML = ''
    padding — 13px either side against the 10px a menu trigger asks for — so the header's
    overflow button came out wider than every other kebab in the product. The variant
    exists for this control; naming it is the whole fix. */
-+ '                  <button class="btn btn--menu btn--md btn--icon kebab-btn" id="headKebabBtn" aria-haspopup="true" aria-expanded="false" aria-label="More actions"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-dots-vertical"></use></svg></button>'
++ '                  <button class="btn btn--secondary btn--md btn--icon kebab-btn" id="headKebabBtn" aria-haspopup="true" aria-expanded="false" aria-label="More actions"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-dots-vertical"></use></svg></button>'
 + '                  <div class="pop" id="headKebabPop" role="menu" hidden>'
 + '                    <!-- mobile only: on a phone the header keeps just the primary'
 + '                         action, and Apply coupon moves in here (see the ≤600px'

@@ -512,7 +512,16 @@
      also translucent ink rather than grey, which is the whole point: ink at .08 over a white
      card and ink at .08 over the mesh are the same declaration and cannot clash with either,
      because each is made of what is under it. */
-  --btn-secondary-bg-hover:var(--overlay-hover);
+  /* ⚠️⚠️ HOVER DROPS TO `--overlay-wash` (2026-10-09, by request: `--ink-a2` .08 -> `--ink-a1`
+     .04). It is a step the overlay ladder already has — "the faintest tint still visible" —
+     not a new alpha, and the ramp it leaves is 0 / .04 / .14: a wider gap to the press than
+     to the rest, which is deliberate here only in the sense that nobody asked for the press
+     to move. If the press now reads as a jump, `--overlay-hover` is the step between them
+     and the ladder already holds it.
+     ⚠️ ALL THREE VARIANTS MOVE — secondary, ghost and menu read this one token by decision
+     (see the hover rule), so a lighter hover is a lighter hover for the family. That is the
+     token working, not scope creep. */
+  --btn-secondary-bg-hover:var(--overlay-wash);
   --btn-secondary-bg-active:var(--overlay-edge);
   /* ⚠️⚠️ `--mid`, CHOSEN ON A MEASUREMENT (2026-10-08). Three candidates were drawn on one
      sheet over white, `--page-bg` and the mesh. `--ink` was dropped on WEIGHT — a black
@@ -525,6 +534,21 @@
      ⚠️ The strong step is `--ink`: hover does not swap mechanism, it deepens the one that is
      already there. */
   --btn-secondary-border:var(--mid);
+  /* ⚠️⚠️ HOVER NO LONGER JUMPS TO INK (2026-10-09, by request: "that jump is most of what
+     reads as dirty — propose the smallest step that still says hovered"). `--mid` #6b6b6b to
+     `--ink` #1c1c1c is the width of the whole grey range in one state change, and against a
+     tint that has just become half as strong it was the only thing hover said.
+     ⚠️ THE SMALLEST STEP THE PRODUCT OWNS, not a new value: `--c-grey-600` #525252 is the
+     next rung down the neutral ramp from `--mid`, and it is the one already carried by
+     `--status-off`. Nothing between them exists to choose instead.
+     ⚠️ WHY NOT STAY AT `--mid`, which the request allows: with the tint at .04 and the border
+     unchanged, hover would have been a 1.04:1 wash and nothing else — on an icon-only
+     secondary the glyph going `--mid` -> `--ink` would be doing all the work, and a labelled
+     one would have no second signal at all. A boundary that strengthens is the mechanism
+     this variant was given on 10-08; it should strengthen less, not stop.
+     ⚠️ PRESS KEEPS INK, so the three states are a ramp in the border exactly as they are in
+     the fill: #6b6b6b / #525252 / #1c1c1c against transparent / .04 / .14. */
+  --btn-secondary-border-hover:var(--c-grey-600);
   --btn-secondary-border-strong:var(--ink);
   /* ⚠⚠ COLOUR IS A GROUND'S BUSINESS TOO, AND BORDER IS NOT. Measured across all four
      grounds: the border never moves; the fill moves on two of them and the text colour on
@@ -592,13 +616,14 @@
      complete shadow with the border-width scale (§7) in its width slot, so the width lives
      in one place and changing `--border-emphasis` moves the border AND the ring together.
      No interpolation, no second mechanism.
-     ⚠️ `--ring-halo` IS A RING MADE OF THE SURFACE COLOUR, not a line: it punches a hole in
-     the faded table rows behind `.blockmore-go` so the button separates from them. It is
-     the only ring whose colour is a surface, and it will not survive a dark theme
-     unchanged, because the hole has to match whatever is behind it.
-     ⚠️ ITS 4px IS NOT ON THE BORDER-WIDTH SCALE AND MUST NOT JOIN IT. That scale is
-     .5 / 1 / 2 — the widths of LINES. This is how far the hole reaches, which is a
-     distance, not a border. */
+     ⚠️⚠️ `--ring-halo` IS DELETED (2026-10-09) and this is the record of what it was: a ring
+     made of the SURFACE colour rather than of a line, four pixels of `--card` punched through
+     the faded table rows behind `.blockmore-go` so the button separated from them. It went
+     when that button moved off the fading row onto solid card — there is no faded text left
+     to mask. Its 4px was never on the border-width scale (.5 / 1 / 2, the widths of LINES)
+     and must not be read back onto it: that number was how far a hole reached, not a border.
+     ⚠️ It was also the one ring that could not survive a dark theme unchanged, because the
+     hole has to match whatever is behind it. That problem leaves with it. */
   /* ⚠️⚠️ DERIVED FROM `--accent`, NOT WRITTEN DOWN (2026-10-08, by request: the plan card's
      hover should be "a light derivative of 272759", not a grey). `color-mix` keeps it a
      DERIVATIVE: move `--accent` and this moves with it, which a pasted hex cannot promise —
@@ -620,7 +645,6 @@
      readers were secondary's hover ring and `.blockmore-go`'s restatement of it, both removed
      earlier the same day. A token with no readers is not a token. */
   --ring-hover:0 0 0 var(--border-hairline) var(--line);
-  --ring-halo:0 0 0 4px var(--card);
 
   /* ---- press: a control being pushed in ----
      ⚠️ GEOMETRY ONLY, AND THE ALPHA STAYS PER VARIANT. .55 on the primary and .45 on the
@@ -659,7 +683,25 @@
   --z-chrome:20;       /* the top bar and tooltips: above the page, below anything opened */
   --z-popover:40;      /* a menu anchored to the control that opened it */
   --z-docked:90;       /* the phone's bottom bar, the back-to-top button */
-  --z-overlay:100;     /* a modal, its scrim, the full-screen wizard */
+  --z-overlay:100;     /* a SURFACE opened over the page: a modal and its scrim */
+  /* ⚠️⚠️ TWO RUNGS ADDED 2026-10-09, and they exist because `--z-overlay` was being asked to
+     hold three things that open ON TOP OF EACH OTHER. The licence sheet, the purchase flow and
+     the card dialog were all 100, so which one won was decided by **document order** — and the
+     order is an accident of when each one's markup is built, not of what the reader opened.
+     Both defects below were measured with `elementFromPoint`, not reasoned about:
+       · `Manage` on the licence sheet starts the purchase flow, and the flow came out UNDER the
+         sheet — `#licModal` is appended when it opens, so it is last in the body and wins a tie;
+       · the card dialog opened from the flow's Billing step came out UNDER the flow, for the
+         mirror-image reason: `#payOverlay` is built with the page chrome, so it is EARLIER than
+         `#nlModal` and loses the same tie. Nobody had reported that one.
+     ⚠️ THE RUNGS NAME A RELATIONSHIP, not a list of ids: a flow runs above the surface that
+     started it, and a dialog runs above the flow that raised it. A third thing opened from a
+     dialog would be the next rung, and it does not exist yet, so it is not declared.
+     ⚠️ `#overlay` IS NOT MOVED ONTO THESE. It sits at `--z-toast` with a comment admitting it is
+     there to clear the wizard — the same problem these rungs solve properly. Folding it in is a
+     pass of its own, because that one is a shared stub with many callers. */
+  --z-flow:120;        /* a FLOW started from an open surface: the purchase wizard over a sheet */
+  --z-flow-dialog:130; /* a dialog raised BY that flow: the card and coupon overlays */
   --z-sheet:140;       /* a phone bottom sheet, which has to clear the bottom bar */
   --z-toast:400;       /* a snackbar: above everything the product can open */
   --z-instrument:880;  /* the settings bar; not product chrome */
@@ -685,16 +727,19 @@
      the comment that explains them. */
 
   /* ================= border width · SCALES.md §7 =====================================
-     ⚠️ `--border-hairline-half` HAS NO BORDER-PROPERTY READER YET, and is declared anyway.
-     Its readers are §3's ring tokens, which are drawn with `box-shadow` — a different
-     property set entirely. It is here so the rings take their width from this scale
-     rather than keeping a second copy of it. It is NOT the `--s-sechead` mistake: that
-     token's carriers are excluded from the system permanently, this one's arrive with
-     the elevation pass.
+     ⚠️⚠️ `--border-hairline-half` HAS ITS BORDER-PROPERTY READER NOW (2026-10-09): `.btn`
+     reserves it for every variant, which is what draws secondary's outline. This paragraph
+     used to say it had none and was declared anyway, on the argument that its readers were
+     §3's ring tokens drawn with `box-shadow` and that a real one would "arrive with the
+     elevation pass". It arrived from a different direction — a request to thin the button's
+     edge — and the prediction being wrong about WHICH pass is worth less than the record
+     being right that the token was worth declaring before it had one.
+     ⚠️ Its old reader `--ring-hairline` is deleted (2026-10-08), so the comment beside the
+     declaration naming it is history, not a pointer.
      ⚠️ `1.5px` on `.nl-smark` and `5px` on the tooltip arrow are OFF this scale, each for
      a reason recorded beside it — a judged width, and an arrow's size that is not a
      border at all. */
-  --border-hairline-half:.5px;  /* the sub-pixel hairline; §3's --ring-hairline */
+  --border-hairline-half:.5px;  /* the sub-pixel hairline; `.btn`'s reserved border */
   --border-hairline:1px;        /* every divider, frame and field edge */
   --border-emphasis:2px;        /* focus rings, selected states */
   --border-none:0;              /* the absence of a width, not a step on the ladder */
@@ -1427,7 +1472,7 @@ a{color:inherit}
    fade was written separately inside four containers and nowhere else. */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:var(--space-inline);
   font-family:inherit;font-size:var(--t-body-fs);line-height:1;text-decoration:none;
-  height:var(--btnH);padding:0 var(--space-control);border-radius:var(--btn-r);border:var(--border-hairline) solid transparent;
+  height:var(--btnH);padding:0 var(--space-control);border-radius:var(--btn-r);border:var(--border-hairline-half) solid transparent;
   background:transparent;color:var(--ink);cursor:pointer;position:relative;
   white-space:nowrap}
 .btn .btn-ic{flex:none}
@@ -1437,6 +1482,26 @@ a{color:inherit}
 .btn:not([disabled]):hover .btn-ic-end{transform:translateX(2px)}
 .btn-txt{display:inline-block}
 
+/* ⚠️⚠️ THE RESERVED WIDTH IS `--border-hairline-half` (2026-10-09, by request: "border
+   width down one step on the border-width scale"). The scale is §7's four names —
+   `--border-none` 0, `--border-hairline-half` .5px, `--border-hairline` 1px,
+   `--border-emphasis` 2px — so one step down from the hairline is the half, and this is
+   that token's FIRST border-property reader (§7 recorded that it had none and was declared
+   anyway).
+   ⚠️⚠️ IT MOVES ON `.btn`, NOT ON `.btn--secondary`, AND THAT IS THE WHOLE POINT. The
+   variant note below states the invariant this file has kept since 09-25: `.btn` reserves
+   the same border for EVERY variant so a button keeps the same box whichever one it wears.
+   Thinning the width on secondary alone would have come out 1px narrower than the primary
+   beside it — the same defect the note argues against, one pixel instead of two. Moving the
+   reservation keeps every variant on one width and still thins the only border that is
+   painted, because secondary's is the only one that is not either transparent or the same
+   colour as its own fill.
+   ⚠️ WHAT IT COSTS: every button is 1px narrower than it was (`border-box`, so heights do
+   not move — the band stays 26 / 40 / 48). Measured, not assumed; see the pass report.
+   ⚠️ HALF A PIXEL IS A DEVICE PIXEL ON A 2x SCREEN and is drawn as one; at 1x the browser
+   antialiases it into a lighter 1px line, which is still thinner than the line it replaces.
+   Either way the request — a finer edge — survives. ⚠️ This panel reports `devicePixelRatio`
+   2, and that is a property of THIS screen, not of the product. */
 /* ---- SIZE: three, and the third has one user by design -------------------------
    sm 26 — actions inside an ink banner, where the band would out-shout the banner.
    md 40 — `--btnH`, everything standing in a control row.
@@ -1524,7 +1589,7 @@ a{color:inherit}
 .btn--secondary:not([disabled]):not([aria-disabled="true"]):hover,
 .btn--ghost:not([disabled]):not([aria-disabled="true"]):hover,
 .btn--menu:not([disabled]):not([aria-disabled="true"]):hover{
-  background:var(--btn-secondary-bg-hover);border-color:var(--btn-secondary-border-strong);color:var(--ink)}
+  background:var(--btn-secondary-bg-hover);border-color:var(--btn-secondary-border-hover);color:var(--ink)}
 .btn--secondary:not([disabled]):not([aria-disabled="true"]):active,
 .btn--ghost:not([disabled]):not([aria-disabled="true"]):active,
 .btn--menu:not([disabled]):not([aria-disabled="true"]):active{
@@ -1622,13 +1687,32 @@ a{color:inherit}
    data it sits among. The landing hero is a different class of surface — a decorative,
    drifting ground carrying one control and no data.
    **THE TEST, so a future surface is judged against it and not against this precedent: a
-   surface may answer the pointer by rising only if it carries no rows of data and no more
-   than one control.** Anything that fails that test tints.
-   ⚠️⚠️ `.blockmore-go` IS INSIDE THE PORTAL AND STAYS FLAT. It was the last component rising
-   on hover and it stopped on 2026-10-07, by request; it sits at the foot of a list of
-   licences, which is rows of data, so it fails the test above. The two decisions are not in
-   conflict — they are the same test giving different answers to different surfaces, which is
-   what makes it a test rather than a precedent.
+   surface may answer the pointer by rising only if it NEITHER CARRIES ROWS OF DATA NOR STANDS
+   AMONG THEM, and carries no more than one control — or if the surface is itself the thing
+   being chosen. A selectable object, one carrying no control beyond the one that selects it,
+   rises on its own behalf rather than on a button's, and the siblings of its own kind standing
+   beside it are not the rows of data this test protects.** Anything that fails it tints.
+   ⚠️⚠️ THE FIRST LIMB IS WIDER THAN IT WAS, AND THAT IS A FIX, NOT AN EXTENSION (2026-10-09).
+   The sentence used to read "carries no rows of data", and the file has never applied it that
+   way: `.blockmore-go` carries nothing at all — no rows, no controls, it IS one — and it is
+   failed for the list it stands at the foot of. So the written test and the applied test were
+   two different tests, and every reading of it had to know which one was meant. "Neither
+   carries nor stands among" is the one the file has been using; now it is the one it says, and
+   `.blockmore-go` fails for a STATED reason instead of an unstated one.
+   ⚠️⚠️ THE SECOND LIMB NAMES A CATEGORY, so a future selectable object is judged by the test
+   rather than by whatever precedent it meets first. The first limb governs a GROUND answering
+   on a button's behalf — a surface that rises while the reader's business is with something
+   standing on it. An object that IS the control is a different question: there is no third
+   party for it to answer for, and what stands beside it is more of itself.
+   ⚠️ IT IS BOUNDED, and the bound is the point. "Carrying no control beyond the one that
+   selects it" is what stops the limb being claimed by anything clickable: a card with a
+   checkbox and a kebab is not one selectable object, it is a surface with two controls on it,
+   and it goes back to the first limb.
+   ⚠️ `.blockmore-go` IS INSIDE THE PORTAL AND STAYS FLAT. It was the last component rising on
+   hover and it stopped on 2026-10-07, by request. It fails the first limb (it stands among the
+   licence rows) and it is not the second (it is a way OUT of the list, not a thing in the list
+   you can choose). The decisions are not in conflict — they are one test giving different
+   answers to different surfaces, which is what makes it a test rather than a precedent.
    ⚠️ IT TAKES THE THREE-LEVEL LADDER AND INVENTS NO FOURTH: rest at `--elevation-menu`,
    hover one step up at `--elevation-dialog`, press flat on the surface. The brief said "rest:
    current elevation", and the current elevation was NONE — with no rest level there is no
@@ -2084,8 +2168,26 @@ tr.inv-row > td:nth-child(2){white-space:nowrap}
 /* the check-in cadence, stated once above the Instances table */
 .inst-note{margin:0 0 var(--space-stack);font-size:var(--t-body-fs);line-height:1.5;color:var(--mid)}
 .inst-note[hidden]{display:none}
-/* the id column keeps its width; the full value is in `title` and on the clipboard */
-.inst-id{display:inline-block;max-width:22ch;overflow:hidden;text-overflow:ellipsis;
+/* ⚠️⚠️ IT TRUNCATES ON THE UUID'S OWN BOUNDARY, NOT AT A CHARACTER COUNT (2026-10-09, by
+   request: "propose the rule rather than a number").
+   THE RULE: a UUID is cut at the end of a group, never inside one. The value is a v4 UUID,
+   36 characters in five groups of 8-4-4-4-12 (`8e2a6c04-9f51-4b73-a8d6-3c7b1e5f9024`), and
+   the groups are its only internal structure. The first one is the cut.
+   ⚠️ WHY NOT 22ch, WHICH IS WHAT IT WAS: 22 characters lands in the middle of the FOURTH
+   group — `8e2a6c04-9f51-4b73-a8…` — and a fragment that stops mid-group reads as a value
+   that failed to load rather than as an abbreviation. Where it landed also depended on the
+   font: the cap was a width, so the character it fell on was an accident.
+   ⚠️ WHY EIGHT IS ENOUGH: the first group is 32 bits of a v4's randomness, and an account
+   holds instances in the tens. It is also the length git, docker and kubectl abbreviate to,
+   so the shape is one a reader of this kind of value already knows.
+   ⚠️ 9ch = 8 hex + the ellipsis, AND IT IS EXACT BECAUSE THE FACE IS MONOSPACE: the element
+   is `.mono`, every glyph including `…` is one ch, so the browser's own ellipsis lands on
+   the ninth cell and never eats a ninth hex digit. In a proportional face this number would
+   be a guess; here it is arithmetic.
+   ⚠️ THE FULL VALUE STAYS REACHABLE, both ways it already was: `title` carries it on the
+   span, and the copy control that is already in the cell puts it on the clipboard. Nothing
+   about reachability is new — the cut is the only change. */
+.inst-id{display:inline-block;max-width:9ch;overflow:hidden;text-overflow:ellipsis;
   white-space:nowrap;vertical-align:-4px}
 /* ⚠️ `.inst-editlabel` IS GONE with the hover pencil it revealed (2026-09-24). Renaming
    is a row-menu action now, like every other thing you can do to an instance.
@@ -2236,6 +2338,49 @@ tr.inv-row > td:nth-child(2){white-space:nowrap}
    kept for a page that puts one back. */
 .lic-titlerow:has(> .titlecount){display:flex;align-items:center;gap:var(--space-control);flex-wrap:wrap}
 .lic-titlerow:has(> .titlecount) > .inst-hint{align-self:center}
+/* ⚠️⚠️⚠️ THE COUNT SITS ON THE HEADING'S X-HEIGHT BAND (2026-10-09, by request). THIS AXIS HAS
+   NOW MOVED THREE TIMES IN NINE DAYS — baseline (09-30), box centre (10-01), this — and the
+   reason it kept moving is that each pass recorded the ANSWER and not the grounds, so the next
+   look had nothing to argue with. All three anchors are written down here, with numbers, so
+   that a fourth look is a disagreement with reasoning rather than a fresh start.
+   ⚠️ MEASURED ON `Licenses` @1280, Ubuntu 36px/38.88, tokens read from the element: ascent
+   .94444em · descent .19444em · cap height .693em · x-height .526em · baseline at y 154.94.
+
+     ANCHOR              CENTRE      WHY NOT
+     box centre          141.44      what `align-items:center` gives on its own. It is the
+                                     centre of the LINE BOX, which includes a descent the word
+                                     mostly does not use — so against a Title-case word that is
+                                     one capital and seven lowercase letters, the chip covers
+                                     the upper half of the word's mass and reaches above most of
+                                     the letters. Reproducible, and reads high.
+     cap band centre     142.47      cap-top to baseline: the band a reader would call "the
+                                     height of the word" if the word were all capitals. These
+                                     are not. +1.03 from the box, which is not the distance the
+                                     eye is complaining about.
+   > x band centre       145.47  <   baseline minus half the x-height. The eye averages MASS,
+                                     and in a Title-case word the mass is the lowercase. CHOSEN.
+     ink band            varies      the real inked extent of the actual letters, and it is the
+                                     one anchor that is NOT a font constant: `Licenses` has an
+                                     `i` whose tittle reaches .766em, `Instances` has no `i` at
+                                     all and tops out at the cap, `Activity` hangs a `y` below
+                                     the baseline. Centring on ink would make the chip's height
+                                     depend on how the page is SPELLED. Ruled out for that, not
+                                     for being wrong about where the letters are.
+
+   ⚠️ ONE DECLARATION, ON THE ROW, NOT A MARGIN ON THE CHIP. A `transform` takes no layout: the
+   row's height, the heading's position and everything below are untouched, which a margin would
+   not leave alone. The offset is DERIVED, not typed — `(ascent − descent − x-height) / 2` is
+   the distance from the line box's centre to the x band's centre, and it is checked against the
+   direct measurement to five decimals (.11207 measured, .1120 from the formula).
+   ⚠️ IT SCALES BY ITSELF because `--t-h1-fs` is 36px on the desktop and 28px on the phone, and
+   the metrics are per-em constants of the face. The phone's `.pagetitlerow` is the second host
+   and takes the same line: there the h1 is a 44px flex box with its line box centred inside, so
+   the offset from the box centre is the same figure.
+   ⚠️ IF THE HEADING EVER LEAVES UBUNTU these three numbers move with it. They are the face's,
+   not the product's. */
+.lic-titlerow:has(> .titlecount) > .titlecount,
+.pagetitlerow > .titlecount{
+  transform:translateY(calc(var(--t-h1-fs) * (0.94444 - 0.19444 - 0.526) / 2))}
 /* the count is a statement, not a control — no hover, no target, no way in */
 /* ⚠️ `inline-block` + padding, NOT `inline-flex` + a fixed height, and that is what
    makes the line above work. An `inline-flex` with `align-items:center` exposes no text
@@ -3160,7 +3305,20 @@ body[data-tableframe] #dashView .dblock > table{margin-left:calc(-1 * var(--spac
    the rest of them; `overflow:hidden` is what rounds the two buttons inside it */
 .stepper{display:inline-flex;align-items:center;border:var(--border-hairline) solid var(--line);border-radius:var(--btn-r);overflow:hidden;width:max-content}
 .stepper button{width:var(--btnH);height:var(--btnH);border:var(--border-none);background:#fff;color:var(--ink);font-size:var(--t-body-fs);line-height:1;display:inline-flex;align-items:center;justify-content:center}
-.stepper button:hover{background:var(--hover)}
+/* ⚠️⚠️ HOVER IS AN INK TINT, NOT `--hover` (2026-10-09, by request: "lighter, and the tone
+   must not drift warm — not brown"). The declaration read `background:var(--hover)`, and
+   `--hover` #f0f0ee belongs to the OLD CHROME PALETTE — `--chrome` #efefec, `--chromeLine`
+   #dcdcd8, `--sel` #e4e4e0 — greys with a green-brown cast that sit beside the neutral
+   `--c-grey-*` ramp without being on it. A fixed warm grey is the diagnosis exactly: the
+   warmth is in the value, so no amount of lightening removes it.
+   ⚠️ `--overlay-wash` IS INK AT .04, and `--ink` is #1c1c1c — neutral — so ink at any alpha
+   over white cannot come out warm. That is the fix and it is the mechanism every other
+   hover in the product already uses, which is also why the stepper now answers the pointer
+   with the same step a secondary button does.
+   ⚠️ AND IT IS LIGHTER, which was the other half of the request: #f0f0ee against the white
+   it sits on is a 6% drop; ink at .04 resolves to about #F6F6F6, which is less than half
+   of that. */
+.stepper button:hover{background:var(--overlay-wash)}
 .stepper button[disabled]{color:var(--line);cursor:not-allowed;background:#fff}
 .stepper .val{min-width:46px;height:var(--btnH);display:inline-flex;align-items:center;justify-content:center;border-left:var(--border-hairline) solid var(--line);border-right:var(--border-hairline) solid var(--line);font-variant-numeric:tabular-nums;font-size:var(--t-body-fs)}
 
@@ -3473,7 +3631,13 @@ body.has-statebar .fs-box{height:min(90vh, calc(100vh - var(--sbH,0px) - 32px))}
 /* Licence details in modal mode: the same container, backdrop and blur as the
    wizard, but one layer below — Change plan, Manage add-ons, Apply coupon and
    the confirm dialogs all open ABOVE it and return to it when they close. */
+/* ⚠️ RESTATED, AND NOW IT SAYS SOMETHING. `.fs-screen` already sets `--z-overlay`, so this line
+   was a tie-breaker that broke no tie. It stays as the explicit statement that the licence sheet
+   is a SURFACE — the rung the flow above it is measured from. */
 .licmodal{z-index:var(--z-overlay)}
+/* ⚠️ THE PURCHASE FLOW IS A FLOW: `Manage` and `Change plan` start it from the licence sheet, and
+   it has to run above the sheet that started it. See the rung note in the token block. */
+#nlModal{z-index:var(--z-flow)}
 /* ONE surface. The details content used to arrive as a card on a card: the modal
    box carried the gray page ground, and .canvas laid a second white slab inside
    it. Here the modal box itself carries the white the content was built for, and
@@ -3535,7 +3699,27 @@ body.has-statebar .fs-box{height:min(90vh, calc(100vh - var(--sbH,0px) - 32px))}
   .licmodal .fs-close{width:36px;height:36px;border-radius:var(--radius-circle);
     border:var(--border-hairline) solid var(--line);background:#fff;color:var(--ink);font-size:var(--t-body-fs);
     box-shadow:var(--elevation-menu)}
-  .licmodal .fs-close:hover{background:var(--hover)}
+/* ⚠️⚠️ THE DISC LOST ITS FILL ON HOVER, AND THE CAUSE IS A SPECIFICITY LOSS (fixed 2026-10-09,
+   reported as "why does the close button's background disappear on hover?").
+   The element carries `btn btn--ghost` in the markup — kept deliberately, for the component's
+   focus ring and hit area — so `.btn--ghost:not([disabled]):not([aria-disabled="true"]):hover`
+   (0,4,0) was beating `.licmodal .fs-close:hover` (0,3,0) and replacing the disc's opaque white
+   with the variant's **translucent** ink tint. Half of this disc hangs off the sheet's corner,
+   so "translucent" means the page and the scrim show straight through it: the white disc
+   vanishes under the pointer and leaves a ring with a glyph in it.
+   ⚠️ IT IS NOT A REGRESSION OF THE TINT'S VALUE. The ghost hover has been a translucent tint
+   since 2026-10-08; lightening it to .04 this morning made the hole more obvious, not new.
+   ⚠️ THE FIX IS THE GUARD, NOT A BIGGER HAMMER: the rule takes the component's own
+   `:not([disabled]):not([aria-disabled="true"])` form (0,5,0), which is the idiom every button
+   state in this file already uses, so it wins on the same terms rather than on `!important`.
+   ⚠️ AND THE FILL IS OPAQUE AND NEUTRAL. `--surface-quiet` is the control ramp's resting step;
+   it replaces `--hover` #f0f0ee, the warm chrome grey this session removed from the stepper and
+   the add-on cards for the same reason. An opaque value is right HERE and nowhere else in the
+   button system: this disc is a shell that floats over the page, so it has to carry its own
+   ground — it is the one surface whose
+   background is not knowable. */
+  .licmodal .fs-close:not([disabled]):not([aria-disabled="true"]):hover{
+    background:var(--surface-quiet)}
   /* the body starts at the sheet's own top now that no band precedes it */
   /* ⚠️ THE 8px IS A MARGIN ON THE CONTENT, NOT PADDING ON THE SCROLLER, and the
      difference only became visible with a sticky tab bar. Padding on a scroll container
@@ -3811,8 +3995,38 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
    so the hover has to cover the whole thing and say so. Inside variant A's panel it
    reads by its hover alone — a border here would be a card inside a card — and the
    negative inset lets the hover span the panel's content width. */
+/* ⚠️⚠️ THE HOVER IS AN INK TINT, NOT `--hover` (2026-10-09, by request). The fill was
+   `#f0f0ee` — the SAME warm chrome grey the stepper's +/- carried, removed from it in the
+   same pass for the same reason — and the brief that reached this rule asked for elevation
+   "instead of the dirty fill". Measured first rather than built: the dirt is the VALUE, not
+   the brightness. `#f0f0ee` has blue two steps under red and green, so it reads brown beside
+   a neutral ramp, and no amount of lightening takes that out; `--overlay-wash` is `--ink`
+   #1c1c1c at .04, and ink is neutral, so it cannot come out warm at any alpha. It is also
+   lighter: a 7.84% luminance drop against 12.98%.
+   ⚠️⚠️ AND THAT IS WHY THESE CARDS DO NOT RISE. Elevation was asked for as the cure for a
+   dirty fill; with the fill clean there is nothing left for the rise to fix, so the cards
+   never enter the question the rise test asks. The test was extended in this pass anyway —
+   it was owed for a gap of its own (see the `raised` variant) — but it is not what decided
+   this rule. **One step fixed both halves of the complaint: lighter, and not brown.**
+   ⚠️ THE THREE WERE COMPARED ON THE REAL CARD, not argued: current, ink .04, and raised,
+   each on a clone of the same `.am-addon` on `#nlStepAdd`. */
+/* ⚠️⚠️ AND THE VALUE IS NOW THE PRODUCT SWITCHER'S OWN (2026-10-09, second request: "take the
+   hover state from the product switcher, so the add-on cards hover the same way; leave every
+   other state alone"). `.nl-prodcard:not([disabled]):hover` is `--surface-quiet`, so these two
+   rules read the same token. The two surfaces are the same object in the same flow — a card you
+   choose by clicking it — and step 1 and step 3 should not answer the pointer differently.
+   ⚠️ THIS SUPERSEDES `--overlay-wash` ON THESE TWO RULES ONLY, and it is not a reversal of the
+   reasoning that put it there: the complaint was that `--hover` #f0f0ee is WARM, and
+   `--surface-quiet` #F4F5F6 is on the neutral `--c-grey-*` ramp, so the diagnosis survives the
+   change of value. What moved is which neutral — from ink at .04 to the ramp's own resting step.
+   ⚠️ THE STEPPER KEEPS `--overlay-wash`. It was its own request with its own answer, and nothing
+   asked the two to agree. **They now differ: an opaque ramp step here, a translucent ink tint
+   there, on the same step of the same flow.** Named in the debt rather than quietly unified.
+   ⚠️ ONLY HOVER MOVES. `.on` keeps its `--c-blue-50` on hover, exactly as `.nl-prodcard.on` does,
+   and no `:active` is invented — the product card has one, this card has never had one, and the
+   request was explicit that other states stay untouched. */
 .fs-screen .am-addon{cursor:pointer;padding:var(--space-control) var(--space-stack);margin:0 calc(-1 * var(--space-stack));border-radius:var(--radius-control)}
-.fs-screen .am-addon:hover{background:var(--hover)}
+.fs-screen .am-addon:hover{background:var(--surface-quiet)}
 /* Variant B: no section headers — every item is its own white card in one vertical
    stack (capacity rows and add-ons alike), so each piece separates on its own edge.
    The stack rule beats .fs-screen .am-cell, which strips box and padding for A. */
@@ -3864,7 +4078,8 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
    as a calc rather than a number so it follows the band if that ever moves. */
 .fs-screen .nl-cardstack .am-locked .fs-devinput.locked{
   width:calc(var(--btnH) * 2 + 48px)}
-.fs-screen .nl-cardstack .am-addon:hover{background:var(--hover)}
+/* variant B's card carries the same answer — see the note on the variant A rule above */
+.fs-screen .nl-cardstack .am-addon:hover{background:var(--surface-quiet)}
 /* ⚠️⚠️ THE CHOSEN ADD-ON IS RINGED IN `--accent`, NOT INK (2026-09-29, by request:
    "the same dark blue as the Popular tag, 1px"). Ink said "selected" in the vocabulary
    of a list row; on this step the blue is already the product's word for "this one" —
@@ -3878,6 +4093,12 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
 /* the tint follows the ring, for the same reason the panel's own add-on chip is
    filled: "you have this" is a state worth reading from across the card, not a
    hairline. It is the same `--c-blue-50` that chip uses. */
+/* ⚠️ THE CHOSEN CARD STILL DOES NOT ANSWER THE POINTER, and the rule that keeps it that way
+   still has to exist (2026-10-09). `background` REPLACES rather than layers, so without this
+   line a hovered selected card would drop its blue and come back grey — the hover tint being
+   translucent does not change that, it is still a background-color. What the card says ("you
+   have this") is louder than what a hover says, and it was already the one card that stays
+   put under the cursor; this pass does not change that and does not hide it either. */
 .fs-screen .nl-cardstack .am-addon.on{background:var(--c-blue-50)}
 .fs-screen .nl-cardstack .am-addon.on:hover{background:var(--c-blue-50)}
 .fs-screen .am-cardprice{margin-top:var(--space-tight)}
@@ -4595,7 +4816,13 @@ button.nl-step:focus-visible{outline:var(--border-emphasis) solid var(--ink);out
 .usersbody #usersTable{margin-top:var(--space-block)}
 /* the list's name. h2 is the sheet's title, so the list one step below it takes h2-sm —
    the same step a block heading takes everywhere else. */
-.users-th{margin:0 0 var(--space-glyph);font-family:var(--font-ui);font-size:var(--t-h2-sm-fs);
+/* ⚠️ 2px -> 24px (2026-10-09, by request: more air between the heading and the table).
+   ⚠️ THE NUMBER IS THE PRODUCT'S OWN, not a taste pick: measured, a `.dblock-head` stands **24px**
+   above the table it heads (12 of its own margin plus 12 of the table's). `--space-glyph` is 2 —
+   the step for a glyph against its own label — and it was holding a heading off a table.
+   Written as one token here because there is one margin to write it on; it resolves to the same
+   distance the two-margin version produces. */
+.users-th{margin:0 0 var(--space-block);font-family:var(--font-ui);font-size:var(--t-h2-sm-fs);
   line-height:var(--t-h2-sm-lh);letter-spacing:var(--t-h2-sm-ls);font-weight:var(--t-h2-sm-fw)}
 /* ⚠️ Answered state of Copy invite link. It goes to INK — the link's resting colour is
    the quiet one, and for two seconds this is not an offer, it is a result. No width is
@@ -4884,8 +5111,24 @@ body[data-mesh] .dtopbar:not(.docked) .tnav-item:not(.on):hover{background:var(-
    in that shape beside `Subscription` would read as "9 new". This is the size of what
    the chip would show, so it takes the quiet treatment the row already has: the chip's
    own colour at one step down, tabular figures so the widths do not jitter as the
-   filters change, and no fill of its own. */
-.chipcount{margin-left:var(--space-inline);color:var(--mid);font-variant-numeric:tabular-nums}
+   filters change, and no fill of its own.
+   ⚠️⚠️ IT IS PART OF THE LABEL NOW, IN PARENTHESES (2026-10-09, by request: `Licenses (17)`).
+   Two things made it read as a separate object and both are gone: it was a FLEX ITEM of the
+   chip, so the chip's `gap` — a control's gap, `--space-inline` — stood between the word and
+   its number, and it carried a further `margin-left` of the same token on top, which put 16px
+   between them. The markup now nests it inside the label span (see `chip()`), so the only
+   thing separating them is one space character, which is what separates a word from its
+   parenthetical everywhere else.
+   ⚠️ THE BRACKETS ARE DRAWN, NOT TYPED, and that is what lets one change reach every carrier:
+   two hand-written chips in `licenses.html` and `instances.html` filled by page code, the two
+   type chips the licence panel builds, and the styleguide specimen. Each writes a bare number
+   into `.chipcount` and none of them has to learn the punctuation.
+   ⚠️ `:empty` STILL HIDES IT, brackets and all — generated content does not make an element
+   non-empty — so a chip whose count has not been filled shows the label alone, exactly as
+   before. That is why the rule below is still the one that matters. */
+.chipcount{color:var(--mid);font-variant-numeric:tabular-nums}
+.chipcount::before{content:"("}
+.chipcount::after{content:")"}
 .typechip.is-on .chipcount,.filterchip.is-on .chipcount{color:inherit;opacity:.72}
 .typechip:hover .chipcount{color:var(--mid)}
 .chipcount:empty{display:none}
@@ -5230,56 +5473,53 @@ body[data-mesh] .dtopbar:not(.docked) .tnav-item:not(.on):hover{background:var(-
   mask-image:var(--fade-rows);
   pointer-events:none}
 .dblock.has-fade tbody tr.is-fading{cursor:default}
-/* the block becomes the positioning context — see renderBlockFades for why not the
-   scroller (it scrolls sideways and would take the button with it) */
-.dblock.has-fade{position:relative}
-/* ⚠️ THE STRIP IS TRANSPARENT AND ONLY THE BUTTON TAKES THE POINTER. A ground of its
-   own here would paint over the fade it is supposed to reveal, and a strip that
-   swallowed clicks would make the last readable row unreachable. */
-.blockmore{position:absolute;left:0;right:0;bottom:0;height:var(--fadeH,96px);
-  display:flex;align-items:center;justify-content:center;pointer-events:none}
-.blockmore .btn{pointer-events:auto}
-/* ⚠️ A HALO, NOT A REPAINT. It stands ON the fading row and does need to separate from
-   the text behind it — but the first version did that by setting `background:var(--card)`,
-   which overwrote the secondary variant's own #F4F5F6 fill and left a button that looked
-   like a ghost sitting where a secondary was asked for. The component keeps its fill;
-   the card's white is spread AROUND it instead, as a 4px ring plus a soft drop. */
-/* ⚠️ A FLOATING-BUTTON SHADOW (2026-09-29, by request). It had a 1px drop and the
-   white halo — enough to separate it from the text behind, not enough to say it is ON
-   TOP of the list rather than in it. Two drops (a tight one for the edge, a wide soft
-   one for the lift) plus the halo that still masks the faded row under it, which is
-   the same stack `.gearfab` and the licence modal's ✕ use to sit above a surface. */
-/* ⚠️⚠️ WIDER AND LIGHTER (2026-10-01, by request: "spread it out and blur it, it looks
-   dirty"). The old stack was two SHORT drops at .10/.16 — a 20px blur under a 40px
-   button is a dark smudge sitting right behind its own edge, which is what reads as
-   grime rather than as height. A lift is a wide, faint field: the tight drop halves its
-   alpha and the wide one doubles its blur, so the same ink is spread over four times the
-   area and no part of it is dark enough to be seen as a shape.
-   ⚠️⚠️ AND HOVER HAD TO BE RESTATED AT THE VARIANT'S OWN SPECIFICITY, BECAUSE IT WAS
-   LOSING THE WHOLE SHADOW. `.btn--secondary:not([disabled]):not([aria-disabled]):hover`
-   sets `box-shadow` for the half-pixel ring — (0,4,0) against this rule's (0,2,0) — so
-   pointing at `See all` replaced the lift with a hairline and the button dropped flat
-   into the list. The ring is not lost: it is the last layer of the stack below, so the
-   component still hovers the way every other secondary does.
-   ⚠️ `:active` inherits this, which is right — pressed moves the fill, not the height. */
-.blockmore-go{box-shadow:var(--elevation-menu),var(--ring-halo)}
-.btn--secondary.blockmore-go:not([disabled]):not([aria-disabled="true"]):hover{
-  /* ⚠⚠ IT STOPS LIFTING ON HOVER (2026-10-07, by request), and that is the FIX rather
-     than the cost. A hover lift needs two elevation levels and the product decided on
-     three for everything; rather than admit a fourth for one button, this button joins
-     the rule every other control already follows — **hover is signalled by tint, not by
-     rising**. Rest and hover are both `--elevation-menu`; the tint is the standard
-     secondary hover fill, inherited from `.btn--secondary:hover` above and NOT restated
-     here. One component rising on hover was the inconsistency.
-     ⚠️ THE HALO IS WHY THIS RULE STILL EXISTS — the ring no longer is (2026-10-08).
-     `.btn--secondary:hover` used to set `box-shadow` for its half-pixel ring, which would
-     replace this stack whole and drop both the halo and the lift; that is the bug recorded
-     above, and it is why the stack was restated here. The variant's hover ring has now been
-     removed product-wide by request, so there is nothing left to restate FOR — but the rule
-     stays, because `.blockmore-go`'s own rest stack (`--elevation-menu` + `--ring-halo`) must
-     still survive any later `box-shadow` on the hover state, and dropping the rule would make
-     that depend on nobody adding one. `--ring-hairline` is gone from the stack with the ring. */
-  box-shadow:var(--elevation-menu),var(--ring-halo)}
+/* ⚠️ `position:relative` ON THE BLOCK IS GONE WITH THE ABSOLUTE STRIP (2026-10-09). It
+   existed only to be the containing block for the overlay — "see renderBlockFades for why
+   not the scroller (it scrolls sideways and would take the button with it)". The strip is
+   in flow now, so there is nothing to contain, and the class is left declaring the fade
+   alone. Checked against the sweep rather than assumed: nothing else in `.dblock` is
+   absolutely positioned, and no element moved when it went.
+   ⚠️ `pointer-events` IS GONE TOO, both halves. The strip was transparent and had to let
+   clicks through to the row under it while the button took its own; below the fade there is
+   no row under the strip and nothing to let through. */
+/* ⚠️⚠️ THE BUTTON SITS BELOW THE FADE, NOT ON IT (2026-10-09, by request: "nothing is
+   read through a gradient"). It was an absolutely-positioned strip over the fading row,
+   so the row's half-legible text showed through the button and the button needed a halo
+   punched out of the surface to stay readable against it. Now it is an ordinary last row
+   of the block, standing on the card's own white.
+   ⚠️ NO HOLE IN THE FADE BEHIND IT, which was named as the worse trade: a gradient with a
+   button-shaped gap in it stops being a fade and becomes a cut-out. The ramp is untouched
+   — the fading row still says "there is more of this" — and the button simply moved off it.
+   ⚠️ IT IS THE SAME MOVE THE PHONE ALREADY MADE. `#homeCards .hc-more` turned `See all N`
+   into a row of the frame on 2026-10-01; the two layouts now answer the same way.
+   ⚠️ NO DIVIDER ABOVE IT. The phone's version has one because it sits inside a bordered
+   card list; here nobody asked for a line, and a hairline added unasked is the one thing
+   this stylesheet is told never to do. The block's own padding separates it. */
+/* ⚠️ TWENTY PIXELS HIGHER (2026-10-09, by request). It sat `--space-control` (12) below the
+   fading row; now it takes nothing and pulls `--space-inline` (8) back over the row — 12 + 8 =
+   the 20 asked for.
+   ⚠️ THE OVERLAP IS ONTO DEAD PIXELS, and that is why it is safe to ask for. The row's mask
+   reaches zero at 55% of its height, so its bottom half is empty surface; the 8px the button
+   borrows is the very tail of that, at 87%–100% of the row. Nothing is read through it — which
+   is the same thing this button was moved off the fade to stop doing. */
+.blockmore{display:flex;align-items:center;justify-content:center;
+  padding-top:0;margin-top:calc(-1 * var(--space-inline))}
+/* ⚠️⚠️ THE LIFT AND THE HALO ARE GONE WITH THE ROW THEY ANSWERED (2026-10-09). Both were
+   written for a button standing ON the fading row: the halo was `--ring-halo`, four pixels
+   of the card's own white punched through the faded text so the label stayed readable, and
+   the drops were there to say the button was ON TOP of the list rather than in it. The
+   button is now in the list, on solid `--card`, so there is no faded text to mask and
+   nothing to float above. A rule does not outlive the thing it was written about.
+   ⚠️ THE PHONE REACHED THIS FIRST and by the same argument — `#homeCards .hc-more
+   .blockmore-go{box-shadow:none}` dropped the lift on 2026-10-01 when `See all N` became a
+   row of the frame there. This is that decision arriving on the desktop, not a new one.
+   ⚠️ AND IT AGREES WITH THE ELEVATION RULE the product already states: `.blockmore-go` sits
+   at the foot of a list of licences, which is rows of data, so it fails the rise test and
+   tints like every other control. It was the restatement of its own stack that kept it
+   lifted at rest; with the stack gone there is nothing left to restate.
+   ⚠️ `--ring-halo` IS DELETED WITH THEM — counted at the moment of deletion, these two
+   rules were its only readers. A token with no readers is not a token (the same count that
+   retired `--ring-hairline` on 2026-10-08). */
 
 /* the label editor's counter — quiet until it is the thing you need to see */
 .labelcount{font-size:var(--t-small-fs);color:var(--mid);font-variant-numeric:tabular-nums;
@@ -8139,7 +8379,17 @@ body.list-empty #pageTitleRow [id^="licNewBtn"]{display:none !important}
 .pagehead .btn[disabled]{opacity:.45;cursor:not-allowed}
 /* muted caption under a section title (e.g. billing address prefill note) */
 /* ---------- Update payment method: bespoke monochrome modal (NOT the generic .modal) ---------- */
-.payoverlay{position:fixed;inset:0;z-index:var(--z-overlay);background:var(--overlay-scrim);display:flex;align-items:center;justify-content:center;padding:var(--space-heading)}
+/* ⚠️⚠️ `--z-flow-dialog`, NOT `--z-overlay` (2026-10-09). Both callers of this chrome — the card
+   dialog and the coupon dialog — are opened from the purchase flow's Billing step, and at
+   `--z-overlay` they tied with the flow and lost the tie on document order: they are built with
+   the page chrome, so they stand EARLIER in the body than `#nlModal`. Measured with
+   `elementFromPoint`: with both visible, the topmost node at the centre of the window was
+   `#nlModal`. The dialog was under the thing that opened it.
+   ⚠️ IT WAS NOT REPORTED — it was found while fixing the flow-under-the-sheet defect, and it is
+   the same defect seen from the other end. Fixing only the first would have widened this one.
+   ⚠️ THE STANDALONE CALLER IS UNAFFECTED: opened from the Billing PAGE there is nothing above it
+   at either rung, so the change costs that surface nothing. */
+.payoverlay{position:fixed;inset:0;z-index:var(--z-flow-dialog);background:var(--overlay-scrim);display:flex;align-items:center;justify-content:center;padding:var(--space-heading)}
 .payoverlay[hidden]{display:none}
 /* modal widths: the two narrower dialogs that ride the payment-modal chrome */
 /* ⚠️ `.paymodal.narrow` removed: Add user was its only caller. */
@@ -9587,7 +9837,15 @@ th.lic-num{text-align:right}
   .licmodal .fs-close{width:44px;height:44px;border:var(--border-none);background:transparent;
     color:var(--ink);padding:0;display:inline-flex;align-items:center;
     justify-content:center;font-size:19px}
-  .licmodal .fs-close:hover{background:var(--hover)}
+  /* ⚠️⚠️ ITS `:hover` RULE IS DELETED, AND IT HAD BEEN DEAD SINCE 2026-10-08 (found 2026-10-09
+     while fixing the desktop disc). It read `.licmodal .fs-close:hover{background:var(--hover)}`
+     at (0,3,0) and lost every time to `.btn--ghost:not([disabled]):not([aria-disabled]):hover`
+     at (0,6,0) — order could not save it, the specificity settles it.
+     ⚠️ NOTHING IS LOST BY DELETING IT, and that is why it goes rather than getting the guard the
+     desktop rule got: here the ✕ is a bare 44px app-bar glyph, transparent at rest, so the
+     ghost variant's translucent tint is the correct answer and is already what renders. The
+     desktop disc needed the guard because it is opaque white and half of it hangs off the
+     sheet — see the note there. Same element, two surfaces, two right answers. */
   /* page presentation of the same screen: the leading control is already 44px and
      already plain (see .tb-back), and the avatar steps aside so ⋮ is the only
      trailing action — declared by the page via data-backicon (see syncAppBar). */

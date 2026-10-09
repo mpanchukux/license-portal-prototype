@@ -276,7 +276,7 @@ $$('.sgWizStep').forEach(function(box){
   function attnChip(t, n){
     /* the tick is LAST, as on both product chips (2026-10-08) */
     return '<button class="filterchip attnchip" tabindex="-1">'
-      + '<span>' + t + '</span><span class="chipcount">' + n + '</span>'
+      + '<span>' + t + ' <span class="chipcount">' + n + '</span></span>'
       + '<svg class="ic cc-check" aria-hidden="true"><use href="assets/icons.svg#ti-check"></use></svg></button>';
   }
   /* ⚠️ ONE SPECIMEN SINCE 2026-10-01: the `licBar` comparison closed on what was proposal
