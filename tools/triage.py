@@ -53,6 +53,17 @@ CAT = {
   '946a5df5c1': 'D',  # three Ubuntu metrics sit as literals in the count chip's calc()
   '867b99b4b9': 'B',  # .5px is unverified on a 1x display, and 255 buttons stand on it
   '98499909f7': 'B',  # the chip label wrapper reaches a chip with no count, where it does nothing
+  # ---- 2026-10-09, the sixth phone pass ----
+  # ---- 2026-10-09, the artifact / containment follow-up ----
+  'a1a7a764be': 'C',  # a third live copy of the prototype the notes never named
+  '98e944e781': 'D',  # .nl-couponerr answers differently at two widths — one component, two statements
+  '7ba589932c': 'C',  # nothing checks whether a phone rule reaches the web
+  '8b3cda5997': 'B',  # [hidden] vs display: seven cases, no checker — a greppable class of bug
+  '505d8bbe79': 'C',  # a measurement row that read the attribute, not the layout
+  '67846cbaa5': 'D',  # the instance id prints whole only from 390 up — type or a cut, undecided
+  '91f578cfb5': 'D',  # the wizard total now moves a line when the coupon errors — the named cost
+  '222b50fe72': 'C',  # two rules now restate the base sheet height for #usersModal
+  '6c4e63a639': 'D',  # the toolbar frame carries 12 vertical against 16 horizontal
   # ---- 2026-10-08, the revert / chip / trigger pass ----
   '64daf77a47': 'B',  # .perbtn carries an opaque grey again — deliberate, will bite on a tint
   'c9cc8dac5c': 'D',  # --sel stays the warm chrome grey in seven rules; the chip is the exception
