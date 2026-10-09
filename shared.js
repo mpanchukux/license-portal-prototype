@@ -74,7 +74,10 @@ function icon(name, opt){
      </button>
    `href` renders an <a> instead, with the same classes — several call sites are real
    navigations wearing a button.                                                     */
-var BTN_VARIANT = { primary:1, secondary:1, text:1, ghost:1, menu:1 };
+/* ⚠️ `raised` ADDED 2026-10-08: the landing's product switcher, which answers the pointer
+   by rising rather than by tint. It is a variant and not an exception — see the stylesheet,
+   where the test that admits a surface to it is written out. */
+var BTN_VARIANT = { primary:1, secondary:1, text:1, ghost:1, menu:1, raised:1 };
 var BTN_SIZE    = { sm:1, md:1, lg:1 };
 
 /* ⚠️ The BUSY spinner is markup, not a background image: it has to sit on top of the
@@ -469,9 +472,21 @@ var Store = (function(){
         addr:'Leopoldstrasse 21', addr2:''
       },                          // printed on every invoice (see invoiceParty)
       passwordChangedAt: null,    // Security: a date string. The password itself is NEVER stored.
-      /* who signed up in this browser — { email, name }. Events log against it, so a
-         purchase made by a new account is not attributed to the demo's own address. */
-      account: null,
+      /* who is signed in in this browser — { email, name }. Events log against it, so a
+         purchase made by a new account is not attributed to the demo's own address.
+         ⚠️⚠️ THE DEMO ACCOUNT NOW HAS A NAME, AS A RECORD (2026-10-08, by request). It was
+         `null`, and `portalName` covered for that with a constant; the constant is gone, so
+         without this the default account — the one every screenshot is taken of — showed its
+         address where a name belongs. **Seeding it is not the fallback coming back**: a
+         fallback is a stand-in for a value nobody has, and this is the account's own stored
+         data, written exactly as a sign-up writes it. An account that gives no name still
+         shows none, which was the whole objection.
+         ⚠️ THE ADDRESS IS SPELLED OUT, NOT `PORTAL_ACTOR` — and that was measured, not
+         assumed. `var PORTAL_ACTOR` is declared 200 lines BELOW this seed and the seed runs
+         at parse time, so the hoisted name is `undefined` here: the first build wrote
+         `{email: undefined}`. One of the two has to move for the token to be usable, and
+         moving a constant out of the block that explains it costs more than one string. */
+      account: { email:'mpanchuk@thingsboard.io', name:'Mariia Panchuk' },
       /* ⚠️ ACCOUNT CREDIT — one number, not a ledger of entries. What a ledger would add
          is a history of why the balance moved, and that history already exists: every
          change that creates or spends credit writes an activity entry saying so. A
@@ -654,13 +669,21 @@ function portalActor(){
   var a = Store.get('account');
   return (a && a.email) || PORTAL_ACTOR;
 }
-/* ⚠️ And the NAME, for the same reason. Signing up as someone else left the chrome
-   and Home's greeting saying "Mariia Panchuk" — the account's own screens addressing
-   a stranger. Falls back to the demo's own name when nobody signed up in this browser. */
-var PORTAL_NAME = 'Mariia Panchuk';
+/* ⚠️⚠️ NO FALLBACK (2026-10-08, by request). This used to return `PORTAL_NAME` when the
+   store held no name, and the previous pass made that reachable for real: `Full name` was
+   deleted from sign-up, so every new account had no name and every one of them was greeted
+   as "Mariia Panchuk" — the account's own screens addressing a stranger, which is the exact
+   bug the fallback was written to fix, arriving through the other door.
+   ⚠️ THE RULE IS "SHOW WHAT IS KNOWN, NEVER A STAND-IN THAT READS AS FACT." An empty string
+   is the honest answer, and each caller decides what to do with it: the greeting drops the
+   name, the chrome shows the address instead. A stand-in cannot be told apart from a fact by
+   the person reading it, and that is what makes it worse than an absence.
+   ⚠️ `PORTAL_NAME` IS GONE, not kept unused — a constant left behind is the next person's
+   fallback. The demo's seeded account has no stored name either, so it now shows its address
+   in the chrome, like any account that has not given one. */
 function portalName(){
   var a = Store.get('account');
-  return (a && a.name) || PORTAL_NAME;
+  return (a && a.name) || '';
 }
 function portalFirstName(){ return String(portalName()).split(' ')[0]; }
 /* ⚠️ Was 'Aug 19 2026, HH:MM' — the clock was real and the date was not, so an event
@@ -1193,7 +1216,9 @@ function chromeHTML(){
   +   '<div class="dprofile">'
   +     '<button class="dprofbtn" id="dashProfBtn" aria-haspopup="true" aria-expanded="false">'
   +       '<svg class="ic dprof-ic" aria-hidden="true"><use href="assets/icons.svg#ti-user"></use></svg>'
-  +       '<span class="dprof-name">' + esc(portalName()) + '</span>'
+  /* ⚠️ The address when no name is known — see portalName. The chrome has to name WHO is
+     signed in, and an address is the thing this account actually has. */
+  +       '<span class="dprof-name">' + esc(portalName() || portalActor()) + '</span>'
   +       '<span class="dprof-caret"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-down"></use></svg></span>'
   +     '</button>'
   +     '<div class="dprofmenu" id="dashProfMenu" role="menu" hidden>'
@@ -1927,18 +1952,20 @@ function injectChrome(){
      without. It is a no-op on a page with no table. */
   applyTableFrame();
   /* applyLandingBg() stood here and is gone (2026-10-07) with the gradient axis. */
-  /* ⚠️⚠️ `data-bare` SKIPS THE BAR AND THE FOOTER, NOT THE REST (2026-10-01). The sign-in
-     page is one card on a gradient and nothing else — a header offering `Sign in` above a
-     sign-in form is the page arguing with itself, and a footer of legal links below a
-     surface with no page to belong to is furniture.
+  /* ⚠️⚠️ `data-bare` SKIPS THE BAR ONLY — THE FOOTER CAME BACK (2026-10-08, by request).
+     It used to skip both, and the reason given for the footer was that legal links "below a
+     surface with no page to belong to" are furniture. That read the page as decoration; it
+     is the EXTERNAL SIGN-UP ROUTE, and the consequence was measured in the previous pass:
+     with the consent line now pointing at thingsboard.io, `signin.html` was the one surface
+     of fifteen with no path to the prototype's own legal pages at all.
+     ⚠️ THE BAR'S REASON STILL HOLDS and it stays skipped: a header offering `Sign in` above
+     a sign-in form is the page arguing with itself. One attribute, one meaning now — no bar.
      ⚠️ The MODALS and the prototype's own state bar are still mounted: the first because
      the surface uses them (the stub dialog behind `Forgot password`), the second because
      it is the review tool and every page carries it. */
   var bare = document.body.hasAttribute('data-bare');
-  if(!bare){
-    document.body.insertAdjacentHTML('afterbegin', chromeHTML());
-    if(main) main.insertAdjacentHTML('beforeend', footerHTML());
-  }
+  if(!bare) document.body.insertAdjacentHTML('afterbegin', chromeHTML());
+  if(main) main.insertAdjacentHTML('beforeend', footerHTML());
   document.body.insertAdjacentHTML('beforeend', modalsHTML());
   PageStates.mount();
 }
@@ -3079,6 +3106,11 @@ if(guardSession()){
   wireStickyFrames();
   /* after the frames: a frame measures its own wrapper, this catches every other one */
   window.syncScrollables = wireScrollables();
+  /* ⚠️ AFTER `wireScrollables`, because the cue reads `clientWidth` and that number is
+     different the moment a wrapper becomes a scroller. Its own observer catches every
+     later render; this is only the first measurement. */
+  wireScrollCues();
+  window.syncScrollCues = syncScrollCues;
 }
 
 /* ---------- the page title row (phone) ----------------------------------------
@@ -3359,6 +3391,78 @@ function wireScrollables(){
   window.addEventListener('resize', sync);
   sync();
   return sync;
+}
+/* ---------- the edge cue: HAS THE READER SCROLLED (2026-10-08, by request) ----------
+   ⚠️⚠️ THIS REPLACES A PURE-CSS MECHANISM THAT COULD NOT ANSWER THE QUESTION. Four
+   background layers used to say "there is content that way" by letting a cover ride with
+   the content (`local`) over a shade pinned to the box (`scroll`). The rule's own note
+   claimed it self-gated on a table that fits; it does not, and the reason is in the
+   stylesheet beside the rule — two gradients both fading to `transparent` cannot cancel,
+   so a faint smudge sat at both edges of every table in the product whether or not it
+   scrolled. The brief is no affordance at all until the reader has actually moved.
+   ⚠️ READ FROM THE ELEMENT, NOT FROM A CLASS. `.is-scrollable` answers "should this box
+   scroll" — a different question, applied from a measurement the sweep has recorded as
+   nondeterministic, and the licence panel's instance tables scroll without ever carrying
+   it. Three numbers off the wrapper answer this one exactly.
+   ⚠️ The right-hand cue is true AT REST on a table that overflows: `0 < scrollWidth −
+   clientWidth`. That is the brief as written, and it is worth stating because the
+   sentence above it ("no scroll affordance at all") reads as the opposite. */
+function markScrollCue(wrap){
+  if(!wrap) return;
+  var max = wrap.scrollWidth - wrap.clientWidth;
+  /* ⚠️ A ONE-PIXEL DEADBAND AT BOTH ENDS. Sub-pixel layout leaves `scrollLeft` at .5 of a
+     pixel short of its own maximum on a table that is scrolled fully right, which would
+     keep the right-hand cue lit at the end of the scroll — the exact thing the old note
+     called "a cue that appears after you no longer need it". */
+  /* ⚠️⚠️ BOTH SIDES ARE GATED ON HAVING SCROLLED (2026-10-08, by request). The first build
+     lit the right-hand cue AT REST on any table that overflowed — which is what the brief's
+     own two conditions said, and I flagged at the time that it contradicted the sentence
+     above them ("no scroll affordance at all"). That is now resolved the other way: at rest
+     both sides are clean whether the table overflows or not, each side appears only once the
+     reader has actually moved AND there is still content hidden that way, and returning to 0
+     clears both again.
+     ⚠️ `moved` is the AND that both lines share. Without it the right cue is a permanent
+     affordance on every wide table, which is the thing being removed. */
+  var moved = wrap.scrollLeft > 1;
+  wrap.classList.toggle('cue-l', moved);
+  wrap.classList.toggle('cue-r', moved && wrap.scrollLeft < max - 1);
+}
+/* ⚠️ EVERY `.tablescroll` IN THE DOCUMENT, not `#shellMain`'s. The licence panel is a
+   modal appended to `<body>`, so a scoped walk would leave its two instance tables — the
+   ones that scroll unconditionally — as the only tables with no cue at all. */
+function syncScrollCues(){ $$('.tablescroll').forEach(markScrollCue); }
+function wireScrollCues(){
+  /* ⚠️ CAPTURE, BECAUSE `scroll` DOES NOT BUBBLE. One listener on the document sees every
+     wrapper, including the ones a panel renders later; the alternative is binding and
+     unbinding per table on every re-render, which is how a listener gets left behind. */
+  document.addEventListener('scroll', function(e){
+    var t = e.target;
+    if(t && t.classList && t.classList.contains('tablescroll')) markScrollCue(t);
+  }, true);
+  window.addEventListener('resize', syncScrollCues);
+  /* ⚠️ AND A MUTATION OBSERVER, which is the cost the old CSS note priced and refused:
+     "a JS version would need scroll, resize and mutation listeners on every table". It
+     needs all three, and this is the third — a wrapper that is filled, emptied or mounted
+     changes `scrollWidth` without any event. One observer for the document rather than one
+     per table, and `childList` only: the class toggles above are attribute changes and
+     would re-enter it.
+     ⚠️ Coalesced, because a render writes many rows and measuring per node would mean a
+     forced layout per row.
+     ⚠️⚠️ COALESCED ON A TIMER, NOT ON A FRAME, and that is this environment rather than a
+     preference. The first build used `requestAnimationFrame`, and the licence panel's
+     instance tables then carried the cue on some loads and not others: rAF is not
+     guaranteed to run in a document the browser is not painting, which is the same family
+     as the `IntersectionObserver` that never fires in this panel at all and the rAF that
+     stalls in a hidden tab (see NOTES). A measurement that only lands when the page is
+     being painted is a measurement that is missing exactly when a harness looks at it.
+     `setTimeout` owes nothing to the compositor. */
+  var queued = false;
+  new MutationObserver(function(){
+    if(queued) return;
+    queued = true;
+    setTimeout(function(){ queued = false; syncScrollCues(); }, 0);
+  }).observe(document.body, { childList:true, subtree:true });
+  syncScrollCues();
 }
 /* every list page has at most one frame, and the page scroll is always #shellMain */
 function wireStickyFrames(){

@@ -274,9 +274,10 @@ $$('.sgWizStep').forEach(function(box){
   /* ⚠️ `typeChip` IS GONE 2026-10-01 — the type CHIPS were toolbar A's; the toolbar that
      won asks that question with a dropdown. */
   function attnChip(t, n){
+    /* the tick is LAST, as on both product chips (2026-10-08) */
     return '<button class="filterchip attnchip" tabindex="-1">'
-      + '<svg class="ic cc-check" aria-hidden="true"><use href="assets/icons.svg#ti-check"></use></svg>'
-      + '<span>' + t + '</span><span class="chipcount">' + n + '</span></button>';
+      + '<span>' + t + '</span><span class="chipcount">' + n + '</span>'
+      + '<svg class="ic cc-check" aria-hidden="true"><use href="assets/icons.svg#ti-check"></use></svg></button>';
   }
   /* ⚠️ ONE SPECIMEN SINCE 2026-10-01: the `licBar` comparison closed on what was proposal
      C — two dropdowns plus an independent `Needs attention` chip. A (four chips and an

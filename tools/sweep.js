@@ -336,7 +336,16 @@
     'outline-width': '0px'
   };
 
-  var PAINT_PROPS = ['background-color', 'background-image', 'color', 'box-shadow'];
+  /* ⚠️⚠️ `border-color` AND `transform` ADDED 2026-10-08, AND THE REASON IS A PASS THAT WENT
+     BLIND. The set was four properties, and the pass that turned every secondary in the product
+     into an OUTLINE came back reporting only the fills it had removed — 92 borders appearing
+     were invisible to the instrument measuring them. `transform` joins it for the same reason
+     one step later: the `raised` variant answers the pointer by moving, and a set that cannot
+     see movement cannot check it.
+     ⚠️ ADDED TO THE FILE, NOT PASSED PER RUN. A property that has to be remembered is a
+     property that will be forgotten — it already was, in the one run that needed it most. */
+  var PAINT_PROPS = ['background-color', 'background-image', 'color', 'box-shadow',
+                     'border-color', 'transform'];
 
   /* ⚠️ HIDDEN ELEMENTS ARE INCLUDED HERE, unlike collect(). Half of this axis lives on
      surfaces that are display:none until something opens them — scrims, sheets, menus,
@@ -354,6 +363,24 @@
       rows.push(path(el) + '|' + v.join('|'));
     }
     return rows;
+  }
+
+  /* ⚠️⚠️ EVERY CLASS ON THE SURFACE, UNFILTERED — this is what makes rule 9 LOUD instead of
+     silent. `ignoreClasses` is a list a human types, and the one time it mattered a human
+     typed two of the three names: `btn--raised` was missing, the switcher unpaired with
+     itself, and its change did not appear in the diff at all. A pass cannot be trusted to
+     remember; it can be made to fail. `paintDiff` compares these two vocabularies and refuses
+     to report when a class that exists only in `after` is not on the ignore list. */
+  function classesIn(doc) {
+    var set = {}, all = doc.querySelectorAll('body *');
+    for (var i = 0; i < all.length; i++) {
+      var el = all[i];
+      if (el.closest('.statebar')) continue;
+      if (typeof el.className !== 'string' || !el.className.trim()) continue;
+      var cl = el.className.trim().split(/\s+/);
+      for (var j = 0; j < cl.length; j++) set[cl[j]] = 1;
+    }
+    return Object.keys(set);
   }
 
   /* the ladder and the roles, resolved off :root — a broken token shows up here as the
@@ -384,8 +411,26 @@
             var p = opts.open ? OPENERS[opts.open](d, w) : Promise.resolve();
             Promise.resolve(p).then(function () {
               setTimeout(function () {
+                /* ⚠️⚠️ PRE-FLIGHT, IN THE TOOL (2026-10-08). A portal url loaded signed out
+                   REPLACES itself with the landing page, and this function had no idea: a
+                   cell labelled `landing` measured Home, and the only tell was two signed-in
+                   nodes turning up in the diff. A measurement that can be of the wrong page
+                   must say so itself rather than rely on the caller running a second pass
+                   first. */
+                var want = url.split('?')[0], got = d.location.pathname;
+                if (got.indexOf(want.replace(/^.*(\/[^\/]+)$/, '$1')) < 0) {
+                  finish({ url: url, w: width,
+                           error: 'preflight: ' + url + ' rendered ' + got });
+                  return;
+                }
                 var out = { url: url, w: width, surface: opts.open || 'page',
-                            props: props, rows: paintRows(d, props) };
+                            props: props, rows: paintRows(d, props),
+                            classes: classesIn(d),
+                            /* ⚠️ THE IGNORE LIST IS RECORDED WITH THE ROWS because `path()`
+                               applies it at PAINT time. Calling `ignoreClasses` after the two
+                               mirrors are painted changes nothing and looks like it worked —
+                               measured: 30 unpaired before and after naming the classes. */
+                            ignored: IGNORE.slice() };
                 out.n = out.rows.length;
                 if (opts.tokens) out.tokens = tokens(d, opts.tokens);
                 if (opts.probe) out.probe = probeIn(d, opts.probe, props);
@@ -418,15 +463,53 @@
   /* changed / lost / gained, element by element, property by property */
   function paintDiff(before, after) {
     var props = after.props || PAINT_PROPS;
+    /* ⚠️⚠️ RULE 9, ENFORCED RATHER THAN DOCUMENTED. A class that exists in `after` and not in
+       `before` changes the key of every element carrying it, so those elements never pair and
+       their changes never appear. The remedy was already here — `ignoreClasses` — and the
+       failure mode was that a human has to remember to use it. Now the tool refuses. */
+    /* ⚠️⚠️ THE TWO SIDES MUST HAVE BEEN PAINTED UNDER THE SAME LIST, AND IT MUST STILL BE THE
+       CURRENT ONE. `ignoreClasses` takes effect inside `path()`, so it has to be set BEFORE
+       the first `paint()`; setting it afterwards silently does nothing. This refuses rather
+       than letting a run report a pairing it did not get. */
+    var ig = IGNORE.slice().sort().join(',');
+    if (before.ignored && after.ignored) {
+      var bi = before.ignored.slice().sort().join(','), ai = after.ignored.slice().sort().join(',');
+      if (bi !== ai || ai !== ig) {
+        return { url: after.url, w: after.w, surface: after.surface,
+                 error: 'ignoreClasses mismatch: before painted with [' + bi + '], after with ['
+                      + ai + '], current list is [' + ig + ']. It is applied when the rows are '
+                      + 'collected, so it must be set before the first paint().',
+                 elements: after.n, compared: 0, unpaired: 0, unpairedBefore: 0,
+                 changed: [], lost: [], gained: [],
+                 counts: { changed: 0, lost: 0, gained: 0 } };
+      }
+    }
+    if (before.classes && after.classes) {
+      var had = {}, i;
+      for (i = 0; i < before.classes.length; i++) had[before.classes[i]] = 1;
+      for (i = 0; i < IGNORE.length; i++) had[IGNORE[i]] = 1;
+      var unlisted = after.classes.filter(function (c) { return !had[c]; });
+      if (unlisted.length) {
+        return { url: after.url, w: after.w, surface: after.surface,
+                 error: 'rule 9: ' + unlisted.length + ' class(es) are new in `after` and not on '
+                      + 'the ignore list — ' + unlisted.slice(0, 8).join(', ')
+                      + '. Pass them to SWEEP.ignoreClasses() or the elements carrying them '
+                      + 'will not pair.',
+                 elements: after.n, compared: 0, unpaired: 0, unpairedBefore: 0,
+                 changed: [], lost: [], gained: [],
+                 counts: { changed: 0, lost: 0, gained: 0 } };
+      }
+    }
     var B = {};
     (before.rows || []).forEach(function (r) {
       var i = r.indexOf('|'); B[r.slice(0, i)] = r.slice(i + 1).split('|');
     });
-    var changed = [], lost = [], gained = [], onlyAfter = 0, compared = 0;
+    var changed = [], lost = [], gained = [], onlyAfter = 0, compared = 0, seen = {};
     (after.rows || []).forEach(function (r) {
       var i = r.indexOf('|'), key = r.slice(0, i), av = r.slice(i + 1).split('|');
       var bv = B[key];
       if (!bv) { onlyAfter++; return; }
+      seen[key] = 1;
       compared++;
       for (var j = 0; j < props.length; j++) {
         if (bv[j] === av[j]) continue;
@@ -444,9 +527,15 @@
        failed arrives with no rows: changed/lost/gained are all 0 and `compared` is 0,
        which is indistinguishable from a clean pass unless the caller reads these two.
        Any summary that sums the counts must also assert `!error && compared > 0`. */
+    /* ⚠️⚠️ RULE 12: THE OTHER SIDE IS COUNTED TOO (2026-10-08). `onlyAfter` had no
+       counterpart, so a key present in `before` and gone from `after` was dropped in silence —
+       a pass that only DELETES elements reported zero unpaired and read as a clean run. */
+    var onlyBefore = 0;
+    for (var k in B) if (!seen[k]) onlyBefore++;
     return { url: after.url, w: after.w, surface: after.surface,
              error: after.error || before.error || null,
-             elements: after.n, compared: compared, unpaired: onlyAfter,
+             elements: after.n, compared: compared,
+             unpaired: onlyAfter, unpairedBefore: onlyBefore,
              changed: changed, lost: lost, gained: gained,
              counts: { changed: changed.length, lost: lost.length, gained: gained.length } };
   }

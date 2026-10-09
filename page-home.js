@@ -210,7 +210,12 @@ function renderGreeting(){
      (see renderEcHead), because it is the same price list and should read as one. The
      populated dashboard still greets — that one IS the reader's own page. */
   var el = $('#dashGreeting'); if(!el) return;
-  el.textContent = greetingFor(new Date().getHours()) + ', ' + portalFirstName();
+  /* ⚠️ THE NAME IS DROPPED WHEN THERE IS NONE (2026-10-08, by request), comma and all —
+     `Good afternoon` is a greeting; `Good afternoon, ` is a bug on screen. `portalName` no
+     longer stands in with the demo's own name, so this is now reachable: it is every
+     account created since `Full name` left sign-up. */
+  var who = portalFirstName();
+  el.textContent = greetingFor(new Date().getHours()) + (who ? ', ' + who : '');
 }
 /* Home activity block: latest batch first, then it grows in place. The count is
    per page load — a different dashboard state starts a fresh feed. */
@@ -293,7 +298,9 @@ function invCardRowHTML(v){
         : '<span class="muted">&mdash;</span>') + '</div>'
     + '<div class="hcinv-amt">' + esc(v.amount) + '</div>'
     + '<div class="hcinv-status"><span class="statwrap">' + invStatusMark(v) + autoChargeIcon(v) + '</span></div>'
-    + '<div class="hcinv-act"><span class="rowactions">' + invActionsHTML({ ghost:true }) + '</span></div>'
+    /* ⚠️ The `{ghost:true}` argument is gone with the flag (2026-10-08): the table's
+       actions are ghost too now, so there is nothing left to ask for. */
+    + '<div class="hcinv-act"><span class="rowactions">' + invActionsHTML() + '</span></div>'
   + '</div>';
 }
 /* ⚠️ THE FEED IS MOVED, NOT COPIED. Both layouts live in the markup at once, so a second

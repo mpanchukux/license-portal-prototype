@@ -104,9 +104,13 @@
       <button class="btn btn--secondary btn--md perbtn" aria-haspopup="true" aria-expanded="false" aria-label="License status"><b id="licStatusLabelC">Active</b><span class="perbtn-n" id="licStatusCountC" aria-hidden="true"></span> <svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-down"></use></svg></button>
       <div class="dropmenu licfiltermenu" id="licStatusMenuC" role="menu" hidden></div>
     </div>
+    <!-- ⚠️ THE TICK IS LAST (2026-10-08, by request: "the tick should go on the right when
+         selected"). It was first, which is the shape a MULTI-select uses — the same argument
+         the dropdown rows settled on 2026-10-01. It still collapses to zero width until it
+         means something, so the chip does not jump. -->
     <button class="filterchip attnchip" id="licAttnChipC" aria-pressed="false">
-      <svg class="ic cc-check" aria-hidden="true"><use href="assets/icons.svg#ti-check"></use></svg>
-      <span>Needs attention</span><span class="chipcount" data-count="attention"></span></button>
+      <span>Needs attention</span><span class="chipcount" data-count="attention"></span>
+      <svg class="ic cc-check" aria-hidden="true"><use href="assets/icons.svg#ti-check"></use></svg></button>
     </div>
     <!-- ⚠️ THE THIRD ROW, and it exists only when something is applied (2026-10-01, by
          request). Filled by `syncLicApplied`; `hidden` is set there, not here, so an

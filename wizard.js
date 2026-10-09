@@ -1490,10 +1490,11 @@ var NL = (function(){
     var payCard = isFree()
       ? '<div class="nl-payline">No payment method needed — this plan is free.</div>'
       : billingSaved()
-      /* ⚠️ `.on-tint` (2026-09-30): the row is filled `--page-bg`, and the pencil in it
+      /* ⚠️ `.on-tint` REMOVED 2026-10-08 — the note below is the record of why it was here.
+         The row is filled `--page-bg`, and the pencil in it
          is a secondary — on a tinted ground it takes the white fill. Same audit as the
          empty-state box. */
-      ? '<div class="billcard nl-paycard on-tint">'
+      ? '<div class="billcard nl-paycard">'
         + '<div class="nl-pc-main">'
         +   '<div class="nl-pc-method">' + paymentMethodHTML({ expiry:false }) + '</div>'
         +   '<span class="sp"></span>'
@@ -1897,7 +1898,12 @@ var NL = (function(){
       + '</div>'
       + '<div class="am-sec fs-right">'
       +   '<div class="am-sechead"><h4>Order summary</h4></div>'
-      +   '<div class="am-figures">'
+      /* ⚠️ `am-duerow-like` (2026-10-08): this block's total row states `Due today` and
+         Review states `Due today`, and they were two different type treatments — 16/700 here
+         against 20/500 there. The class is on the BLOCK rather than on the row because the
+         stylesheet ties the h2 treatment to the row that owns the figure, exactly as
+         `.nl-duerow` does on Review. */
+      +   '<div class="am-figures am-duerow-like">'
       +     '<div class="am-sumrow cur"><span>' + (st.product === 'tbmq' ? 'TBMQ' : 'ThingsBoard') + ' ' + (NAME[t] || st.plan) + '</span><span>' + money(BASE[t] || 0) + perSuffix() + '</span></div>'
       +     rows
       +     '<div class="am-sumrow am-total-row"><span>Due today</span><span>' + money(total()) + '</span></div>'
@@ -1990,6 +1996,17 @@ var NL = (function(){
     var list = steps();
     if(list.indexOf(k) < 0) k = list[0];
     st.step = k;
+    /* ⚠️⚠️ ARRIVING AT THE PICKER CLEARS THE PLAN (2026-10-08, by request: "if the user
+       picked a plan and then came back to Choose your plan, the one they picked before must
+       not be highlighted in any way"). Safe because a pick on this step NEVER stays on it —
+       `planPickerClick` returns `picked` and the host advances immediately — so the selected
+       ring was only ever visible to someone who had come BACK, which is exactly the reader
+       being told they have already decided something they are here to reconsider.
+       ⚠️ The PRODUCT and the BILLING MODEL are deliberately NOT cleared: those two are the
+       question the grid is an answer to, and forgetting them would re-ask what the reader
+       did not come back to change. `aria-pressed` follows the class, so the announcement
+       changes with the paint rather than drifting from it. */
+    if(k === 'pick') st.plan = null;
     if(k === 'pick') renderStepPick();
     else if(k === 'capacity') renderCapacity();
     else if(k === 'addons') renderAddons();

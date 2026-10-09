@@ -798,14 +798,16 @@ function invStatusMark(v){
    row of a different shape and a different column order. The row decides what it LOOKS
    like; it does not get to decide what an invoice can DO — two hand-written pairs is how
    one surface quietly ends up with an action the other lost. */
-/* ⚠️ `ghost` IS A CALLER'S CHOICE, NOT A SURFACE (2026-10-01, by request: the Home
-   invoice card's actions give up their fill). The `surface` axis is a class on the
-   CONTAINER because "what am I standing on" is a fact about the place; which VARIANT a
-   button is is a decision the call site makes, so it travels as an argument. The invoice
-   TABLE keeps its secondary: there the two actions sit in a cell at the end of a row of
-   data and the fill is what finds them; on a card they are the only controls there. */
-function invActionsHTML(opts){
-  var variant = (opts && opts.ghost) ? 'ghost' : 'secondary';
+/* ⚠️⚠️ BOTH SURFACES ARE GHOST NOW (2026-10-08, by request), and the argument that split
+   them is gone rather than overruled. It read: "the invoice TABLE keeps its secondary —
+   there the fill is what finds them". There is no fill. A resting box in a dense row is the
+   thing being removed, and these two sit in a cell at the end of a row of data, which is the
+   definition of one.
+   ⚠️ `opts.ghost` IS DROPPED WITH IT. A flag whose two branches now produce the same button
+   is a question nobody has to answer any more; the one caller that passed it is simpler for
+   losing it. */
+function invActionsHTML(){
+  var variant = 'ghost';
   return button({ variant:variant, size:'md', icon:'download', cls:'tip ra-act',
                   ariaLabel:'Download PDF',
                   attrs:'data-dlinv data-tip="Download PDF"' })
@@ -873,10 +875,13 @@ function userRow(u){
      ⚠️ The words are not lost — `aria-label` names the row's own person ("Delete
      n.rossi@…"), which the text buttons never did, and `data-tip` prints the verb. */
   var esce = esc(u.email);
-  var loginBtn = button({ variant:'secondary', size:'md', icon:'arrow-right', cls:'tip',
+  /* ⚠️ GHOST (2026-10-08): both sit in the last cell of a user ROW. Same move as the
+     licence row's copy and the invoice row's pair — 50 icon-only buttons in dense rows,
+     counted before any of them moved. */
+  var loginBtn = button({ variant:'ghost', size:'md', icon:'arrow-right', cls:'tip',
                           ariaLabel:'Log in as ' + u.email,
                           attrs:'data-loginas="' + esce + '" data-tip="Log in as"' });
-  var delBtn = button({ variant:'secondary', size:'md', icon:'trash', cls:'tip',
+  var delBtn = button({ variant:'ghost', size:'md', icon:'trash', cls:'tip',
                         ariaLabel:'Delete ' + u.email,
                         attrs:'data-deluser="' + esce + '" data-tip="Delete"' });
   return '<tr class="listrow user-row"><td>'+u.email+'</td><td>'+u.name+'</td><td>'+fmtDate(u.created)+'</td>'
@@ -1012,9 +1017,12 @@ function actionsCell(p, opts){
   // a grant cannot be changed, cancelled or topped up — the key is all there is,
   // so its row carries the copy action and no overflow menu (inferred)
   if(p && p.grant) return '<td class="cellact"><div class="lic-actions">'
-    + '<button class="btn btn--secondary btn--md btn--icon tip lic-copy" aria-label="Copy license key" data-tip="Copy license key">' + COPYSVG + '</button></div></td>';
+    + '<button class="btn btn--ghost btn--md btn--icon tip lic-copy" aria-label="Copy license key" data-tip="Copy license key">' + COPYSVG + '</button></div></td>';
+  /* ⚠️ GHOST, NOT SECONDARY (2026-10-08): this is the licence row's own cell, a dense row,
+     and the resting box was noise beside every other cell in it. The boundary arrives on
+     hover — see the variant pair in the stylesheet. */
   return '<td class="cellact"><div class="lic-actions">'
-    + '<button class="btn btn--secondary btn--md btn--icon tip lic-copy" aria-label="Copy license key" data-tip="Copy license key">' + COPYSVG + '</button>'
+    + '<button class="btn btn--ghost btn--md btn--icon tip lic-copy" aria-label="Copy license key" data-tip="Copy license key">' + COPYSVG + '</button>'
     + '<div class="menu"><button class="btn btn--menu btn--md btn--icon" aria-haspopup="true" aria-expanded="false" aria-label="More actions">' + KEBAB + '</button>'
     + '<div class="pop" role="menu" hidden>' + menuItems(p, opts) + '</div></div></div></td>';
 }
@@ -2257,13 +2265,12 @@ var pageDirty = false;
    button, Invoices gets a quiet link back to it, and Activity gets no action at all.
    Four buttons saying different words for the same next step would be four decisions
    where there is one. */
-/* ⚠️ `.on-tint` (2026-09-30): this box is filled `--surface-quiet`, so a secondary
-   inside it — the Development tab's `Manage add-ons` is the one that exists today —
-   stands on grey and has to turn white. The surface axis is a fact about the place;
-   the place is here. Found by auditing every secondary in the product against its
-   nearest painting ancestor, not by noticing it. */
+/* ⚠️⚠️ `.on-tint` REMOVED (2026-10-08). The note it replaces said this box is filled, so a
+   secondary inside it "has to turn white" — that was true of a button with an opaque grey
+   fill and is not true of one with no fill at all. The ground has nothing left to declare.
+   (The audit that found this place is still the right method; it is the answer that changed.) */
 function emptyStateHTML(o){
-  return '<div class="emptybox eb on-tint">'
+  return '<div class="emptybox eb">'
     + '<div class="eb-t">' + o.title + '</div>'
     + (o.line ? '<p class="eb-p">' + o.line + '</p>' : '')
     + (o.action ? '<div class="eb-a">' + o.action + '</div>' : '')
@@ -2602,7 +2609,9 @@ function productOf(sel){
    time two lines above the greeting.
    ⚠️ The product still decides the words in both, so both still re-render on a swap. */
 function landingHeading(sel, opts){
-  if(opts && opts.signedIn) return 'Welcome, ' + portalName();
+  /* ⚠️ Same rule as the greeting (2026-10-08): with no name known this is `Welcome`, not
+     `Welcome, ` and not a stand-in. See portalName. */
+  if(opts && opts.signedIn){ var who = portalName(); return who ? 'Welcome, ' + who : 'Welcome'; }
   return 'Buy and manage ' + productOf(sel).t + ' licenses';
 }
 /* ⚠️ ONE clause differs between the two surfaces that use this line, and it is the one
@@ -2641,7 +2650,9 @@ function productSwapHTML(sel){
      mark and an underlined link, so the thing you could press was the words and the frame
      around them was decoration — two targets' worth of surface with one target in it.
      Through `button()` like everything else, with the mark in the leading slot. */
-  return button({ variant:'secondary', size:'md', cls:'lp-swapbox nl-prodswap',
+  /* ⚠️ `raised` (2026-10-08): its own variant, not a secondary with a local repaint. The
+     stylesheet carries the test that admits a surface to rising instead of tinting. */
+  return button({ variant:'raised', size:'md', cls:'lp-swapbox nl-prodswap',
     iconHTML: productMark(other.v),
     label: 'Need ' + other.t + ' instead?',
     attrs: 'data-nl-product="' + other.v + '"' });

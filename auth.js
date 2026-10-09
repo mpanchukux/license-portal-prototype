@@ -44,16 +44,20 @@ var Auth = (function(){
          and will invite colleagues — "personal" sent the participant looking for a
          business sign-up that does not exist. */
       h:'Create your account',
-      fields:[ { id:'authName',  label:'Full name', type:'text', req:true, ac:'name' },
-               { id:'authEmail', label:'Email', type:'email', req:true, ac:'email' },
+      /* ⚠️ `authName` DELETED 2026-10-08, by request. The comment above describes why the
+         field was asked for, and it is kept because the reason has not stopped being true:
+         the invited person filled in their OWN details here. What changes is that nothing
+         now captures a name at sign-up, so `portalName()` falls back to the demo's own —
+         see NOTES, open debt. */
+      fields:[ { id:'authEmail', label:'Email', type:'email', req:true, ac:'email' },
                { id:'authPass',  label:'Create a password', type:'password', req:true, ac:'new-password' } ],
-      legal:true, cta:'Sign up', foot:'login', footTxt:'Already have an account?'
+      legal:true, cta:'Sign up', foot:'login'
     },
     login: {
       h:'Sign in with',
       fields:[ { id:'authUser', label:'Username (email)', type:'email', ac:'username' },
                { id:'authPass', label:'Password', type:'password', ac:'current-password' } ],
-      cta:'Sign in', foot:'signup', footTxt:'Do not have an account?', forgot:true
+      cta:'Sign in', foot:'signup', forgot:true
     }
   };
 
@@ -125,15 +129,34 @@ var Auth = (function(){
           + '</button>' : '')
       + '</div>';
   }
-  /* Consent names the button that gives it, and each document is a real link to the
-     page the prototype already has. ⚠️ Those three pages are PUBLIC (see
-     isPublicPage) — guarding them would bounce a visitor to the landing page the
-     moment they tried to read what they were agreeing to. */
+  /* ⚠️ IT BELONGS TO THE PASSWORD FIELD (2026-10-08, by request), and it is emitted by
+     the field loop for that reason: it used to be the last node in the box, below the
+     footer, with the primary and the way to the other screen standing between it and the
+     input it is about. Flush left because it lines up with the field, not with the card —
+     `.authbody` centres, and the fields already opt out of that. */
+  function forgotHTML(){
+    return '<div class="auth-forgot">'
+      + '<button class="link" data-stub="Forgot password">Forgot password?</button></div>';
+  }
+
+  /* Consent names what gives it, and each document is a real link.
+     ⚠️⚠️ THE TWO LINKS LEFT THE PROTOTYPE (2026-10-08, by request). They were
+     `terms.html` and `privacy.html` — pages this repository holds and serves — and they
+     are now ABSOLUTE URLs on thingsboard.io. Both questions this raises were MEASURED
+     rather than left open, and neither is resolved here:
+     ⚠️ THE THREE LOCAL PAGES KEEP A ROUTE — the FOOTER carries all three, on 14 of the 15
+     pages. `license-agreement.html` also keeps two more: the licence panel and the
+     wizard's review step. The one surface where this line was the only route is
+     `signin.html`, which has no footer: a visitor who signs up there can no longer reach
+     the prototype's own legal pages at all.
+     ⚠️ AND THE RELATIVE-PATHS RULE IS NOT WHAT THESE BREAK. That rule is about ASSET paths,
+     so the site works from a subfolder; outbound links to thingsboard.io were already here
+     in quantity — `faq.js` alone carries dozens. These two join that population rather than
+     opening an exception. See NOTES. */
   function legalHTML(){
-    return '<p class="auth-legal">By selecting Sign up, I agree to the '
-      + '<a class="link" href="terms.html">Terms of Use</a>, '
-      + '<a class="link" href="privacy.html">Privacy Policy</a> and acknowledge the '
-      + '<a class="link" href="license-agreement.html">License agreement</a>.</p>';
+    return '<p class="auth-legal">By signing up you agree to the '
+      + '<a class="link" href="https://thingsboard.io/legal/privacy-policy/">Privacy Policy</a> and '
+      + '<a class="link" href="https://thingsboard.io/legal/terms-of-use/">Terms of Use</a>.</p>';
   }
   /* ⚠️ ONE line, not a heading with a subtitle under it. It used to be
      `Create your account` with `Creating an account to buy ThingsBoard Pilot — $99/mo`
@@ -188,21 +211,27 @@ var Auth = (function(){
       +   (mode === 'signup' ? signupHeading() : esc(s.h)) + '</h2>'
       + socialHTML()
       + '<div class="auth-or"><span>OR</span></div>'
-      + s.fields.map(fieldHTML).join('')
+      /* ⚠️ Sign-up carries no forgot control and none was added: there is no password to
+         have forgotten on the screen that is creating one. */
+      + s.fields.map(function(f){
+          return fieldHTML(f) + (s.forgot && f.type === 'password' ? forgotHTML() : '');
+        }).join('')
       + (s.legal ? legalHTML() : '')
       + '<button class="btn btn--primary btn--md auth-primary" id="authSubmit">' + s.cta + '</button>'
       /* The footer is the door to the other screen, and the two are not the same
          shape: sign-up asks a question whose answer is a link, log-in asks one whose
          answer is an action you have not taken yet — so it gets a real secondary
          button. Straight from the reference, and it is also the honest hierarchy:
-         "I already have one" is a correction, "create one" is a second task. */
+         "I already have one" is a correction, "create one" is a second task.
+         ⚠️⚠️ THE QUESTION IS THE LABEL NOW (2026-10-08, by request). Both screens used to
+         say it twice: a question in quiet text (`.auth-footq`) with the control under it
+         repeating the subject. One control, and the question is on it. `footTxt` and
+         `.auth-footq` are gone — nothing else wore either. */
       + '<div class="auth-foot">'
-      +   '<span class="auth-footq">' + s.footTxt + '</span>'
       +   (mode === 'login'
-          ? '<button class="btn btn--secondary btn--md auth-alt" data-auth="signup">Create an account</button>'
-          : '<button class="link auth-altlink" data-auth="login">Sign in</button>')
-      + '</div>'
-      + (s.forgot ? '<div class="auth-forgot"><button class="link" data-stub="Forgot password">Forgot password?</button></div>' : '');
+          ? '<button class="btn btn--secondary btn--md auth-alt" data-auth="signup">New here? Create your account</button>'
+          : '<button class="link auth-altlink" data-auth="login">Already have an account?</button>')
+      + '</div>';
     scr.setAttribute('aria-label', s.h);
     /* ⚠️ THE PASSWORD FIELD IS CLEARED, and the reason matters for where to look:
        nothing in this prototype ever wrote a value into it. The prefill is the

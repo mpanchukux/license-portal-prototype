@@ -233,25 +233,24 @@
         <code class="sg-cls">secondary/sm</code>, <code class="sg-cls">secondary/lg</code>,
         <code class="sg-cls">text/md/label</code>, <code class="sg-cls">ghost/md/label</code>.
         Each would be a cell a matrix fills and the product does not use.</p>
-      <h4 class="sg-sub">The ground is a role token, not a fourth axis</h4>
-      <p class="sg-note"><b>A button does not know what it stands on; a ground does.</b> The
-        ground redefines one token and the component reads it &mdash; no new axis, no argument
-        at any call site.</p>
-      <div class="tablescroll"><table class="sg-type"><thead>
-        <tr><th>Who declares it</th><th><code class="sg-cls">--btn-secondary-bg</code></th><th>Why</th></tr>
-      </thead><tbody>
-        <tr><td><code class="sg-cls">:root</code></td><td><code class="sg-cls">var(--surface-quiet)</code></td><td>the ordinary case</td></tr>
-        <tr><td><code class="sg-cls">.on-tint</code></td><td><code class="sg-cls">var(--card)</code></td><td>white reads as a control on a tinted ground</td></tr>
-        <tr><td><code class="sg-cls">tr.listrow</code></td><td><code class="sg-cls">transparent</code></td><td>a row&rsquo;s ground <b>moves</b> on hover</td></tr>
-      </tbody></table></div>
-      <p class="sg-note"><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <b>The last two do not collapse into one value, and
-        that is measured rather than assumed.</b> <code class="sg-cls">.lic-row:hover</code> is
-        <code class="sg-cls">--row-hover</code> (#F8FAFD) while <code class="sg-cls">--card</code>
-        is #ffffff: a <code class="sg-cls">--card</code>-filled button would sit as a white patch
-        on a hovered row, and a transparent one lets the hover through.</p>
-      <p class="sg-note"><b>The cost is accepted and real:</b> you cannot see at a call site
-        that a given button will be white. The explicitness belongs in the CSS, where the ground
-        states it once, rather than across thirty calls where one omission paints the wrong thing.</p>
+      <h4 class="sg-sub">The ground axis is retired &mdash; 2026-10-08</h4>
+      <p class="sg-note"><b>There is no ground axis any more, and the three declarations that
+        were it are deleted.</b> The table that stood here listed who redeclares
+        <code class="sg-cls">--btn-secondary-bg</code>: <code class="sg-cls">:root</code>,
+        <code class="sg-cls">.on-tint</code> and <code class="sg-cls">tr.listrow</code>. All three
+        are gone, and so is the token.</p>
+      <p class="sg-note"><b>The proliferation was never four grounds needing four answers. It was
+        one opaque grey that had to be re-picked per ground.</b> A grey is a value chosen against
+        one background, so a second background wants a second value. Secondary has no fill at rest
+        now, and its hover and press are <b>translucent ink</b> &mdash; ink at .08 and at .14, made
+        of whatever is beneath them, which cannot clash with a ground it inherits. The mesh, which
+        this axis was invented for, never became a declared ground at all.</p>
+      <p class="sg-note"><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> <b>The row rule went the same way, and its own
+        argument is why.</b> It existed because a name left out of an enumeration had already cost
+        the Users modal its treatment &mdash; <code class="sg-cls">tr.user-row</code> was missing from
+        the list and its buttons kept a fill the other three rows had dropped. <b>The best version of
+        a rule that must not forget a name is a rule with no names in it:</b> transparent at rest is
+        what the component does everywhere, so a row has nothing left to say about it.</p>
     </div>
 
     <div class="sg-item">
@@ -464,24 +463,30 @@
 
   <section class="sg-sec" id="buttons">
     <h2>Buttons</h2>
-    <p class="sg-note"><b><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> THE FIFTH AXIS ARRIVED ON 2026-09-28:
-      <code class="sg-cls">surface</code> &mdash; what the button is standing on.</b> The model had no
-      answer for it, and twice in September a secondary had to be repainted by hand (on the ink banner,
-      and on the landing page&rsquo;s pale swap box); the note each time said <i>a third case and this
-      becomes an axis</i>. The third case was the licence header going to the gradient: on a coloured
-      ground <code class="sg-cls">--surface-quiet</code> neither reads as a control nor stays the same
-      colour as the pools drift under it.
-      <b>On white a secondary is grey; on the gradient it is white.</b>
-      <b><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> The class goes on the CONTAINER, not the button</b> &mdash;
-      <code class="sg-cls">.on-tint</code> on any block with a coloured ground &mdash; a mesh, or the
-      flat lavender the licence header took on 09-28. What a button stands on is a fact about the
-      place; a caller passing <code class="sg-cls">surface:'mesh'</code> would be repeating something
-      the surface already knows, and would be wrong the day the surface changes &mdash; which it was,
-      one pass later, when that header stopped being a mesh. Primary is untouched: ink on a pale tint
-      is the most contrast in the product.</p>
-    <p><b>One component, five axes</b> (<code class="sg-cls">button()</code> in
+    <p class="sg-note"><b><span class="sg-warn"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg></span> THE FIFTH AXIS AROSE ON 2026-09-28 AND WAS
+      RETIRED ON 2026-10-08.</b> <code class="sg-cls">surface</code> existed because a secondary had to
+      be repainted by hand on every ground that was not white &mdash; the ink banner, the landing&rsquo;s
+      swap box, then the licence header. <b>Secondary is an outline now: transparent at rest, a
+      <code class="sg-cls">--mid</code> border doing the work the fill did, and hover and press made of
+      translucent ink.</b> Nothing has to be re-picked per ground, so there is nothing for a surface
+      axis to carry. <code class="sg-cls">.on-tint</code> is deleted, markup and all.</p>
+    <p class="sg-note"><b>Ghost is the same button without the resting border</b>, and the two share
+      one declaration for hover and press &mdash; one shape, one difference: whether the boundary is
+      resting or summoned. <b>The border value was chosen on a measurement:</b>
+      <code class="sg-cls">--mid</code> clears 1.4.11&rsquo;s 3:1 on every ground in the product,
+      floor <b>3.294</b> on the densest point of the mesh. <code class="sg-cls">--ink</code> was
+      dropped on weight &mdash; a black border under a black label gives the button one voice &mdash;
+      and ink at .14 on contrast: 1.30&ndash;1.33 everywhere, because the property that makes a
+      translucent ink inherit its ground is the property that stops it being seen.</p>
+    <p class="sg-note"><b><code class="sg-cls">raised</code> is the one button that answers the
+      pointer by rising</b>, and it is a VARIANT rather than an exception: a rule reading &ldquo;hover
+      is tint, except one button&rdquo; gets copied by whoever meets the button first.
+      <b>The test: a surface may answer the pointer by rising only if it carries no rows of data and
+      no more than one control.</b> The landing hero passes; <code class="sg-cls">.blockmore-go</code>
+      sits at the foot of a list of licences and does not, so it stays flat.</p>
+    <p><b>One component, four axes</b> (<code class="sg-cls">button()</code> in
       <code class="sg-cls">shared.js</code>). <b>Variant</b> &middot; <b>size</b> &middot; <b>content</b>
-      &middot; <b>state</b> &middot; <b>surface</b>, plus <b>tone</b>. A flat list of named buttons would need a new name for
+      &middot; <b>state</b>, plus <b>tone</b>. A flat list of named buttons would need a new name for
       every combination (<code class="sg-cls">primaryLargeIconDisabled</code>); axes do not.
       <b>Every cell below is rendered by the component</b> &mdash; nothing on this page is drawn by hand,
       so the matrix cannot disagree with the product.</p>

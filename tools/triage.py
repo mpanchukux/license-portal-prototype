@@ -32,6 +32,38 @@ def sig(head):
 # D  a design-system decision — goes into SCALES.md / COMPONENTS.md first
 # E  closed (detected from the strikethrough, never written here)
 CAT = {
+  # ---- 2026-10-08, the revert / chip / trigger pass ----
+  '64daf77a47': 'B',  # .perbtn carries an opaque grey again — deliberate, will bite on a tint
+  'c9cc8dac5c': 'D',  # --sel stays the warm chrome grey in seven rules; the chip is the exception
+  'a330f4a034': 'C',  # the rule-9 guard watches classes, not child order
+  # ---- 2026-10-08, menu after the outline pass ----
+  '469ada971a': 'D',  # menu is ghost at another size — collapse or keep is a design call
+  '6741e81513': 'B',  # button()'s menu refusals are written twice and can drift
+  # ---- 2026-10-08, secondary as an outline ----
+  'a2c558a42b': 'D',  # .btn--menu answers the pointer with half of secondary's answer
+  '159f0bc029': 'C',  # sweep.js PAINT_PROPS cannot see a border
+  # ---- 2026-10-08, the secondary-as-outline census ----
+  '0ed3fdc0f6': 'D',  # the border value is unchosen; ink and mid clear 3:1, ink .14 fails everywhere
+  'dc67b5f6cb': 'D',  # the pager is a fifth host class nobody has ruled on
+  '6ef9d36152': 'D',  # .btn--menu is not covered by the new secondary description
+  'a96c5e39ca': 'D',  # --ring-hairline is a fixed grey at 1.70 on white — same defect
+  'f9a7b99b3b': 'A',  # the seeded demo account now shows its address instead of a name
+  # ---- 2026-10-08, the dropdown / accent / plan-card pass ----
+  'f021f726df': 'A',  # ticks and Capacity icons reported missing, measured present — needs the surface named
+  'd5c815fc28': 'D',  # Instance ID not shortened: its length was never the cause of the scroll
+  '3ad305ee13': 'D',  # "as wide as Description" read as the ROW's width, not the control's
+  '82df49a8c0': 'D',  # the modal's invoice and activity lists still run flush to its edge
+  'fd606032b1': 'C',  # the "one value, four places" record about --accent was false: 19 declarations
+  '7d6abb7831': 'B',  # --accent-soft is the first color-mix in a product rule — a new mechanism
+  'fdf0ff8be5': 'D',  # the z-index scale needs re-reading for other pairs sharing one rung
+  # ---- 2026-10-08, the auth/table pass ----
+  'c5ff71d892': 'D',  # elevation for a white button on a tint needs a FOURTH level — §2 says tint, not rising
+  '26f4713175': 'B',  # public header's `Sign in` is grey on --page-bg: the 09-30 rule never walked signed-out chrome
+  'd335f8645a': 'A',  # signin.html has no footer, so it now has no route to the legal pages at all
+  'a5ecfee2bc': 'C',  # .emptybox.on-tint holds no button in any measured state
+  '1003b5cf30': 'C',  # paintDiff counts unpaired only in `after` — a delete-only pass reads as clean
+  'dd2652e02e': 'A',  # the account name is no longer captured at sign-up; portalName() falls back
+  'fcf8917561': 'C',  # .nl-paycard listed from source, not runtime-confirmed
   '82becf0314': 'C',  # font-weight on <use> is unstable in this panel — run the same-mirror control
   '74b305470f': 'D',  # five of the nine help-and-hint collisions remain
   '0ec3dde8a9': 'D',  # .field > label and .dwelcome p carry the same shape, left alone
@@ -404,6 +436,12 @@ print(collections.Counter(e['cat'] for e in entries), file=sys.stderr)
 # product, its prices, its copy and two legal points; none of them is a design question
 # this document can settle, and none was attempted. Naming who answers is the whole job.
 OWNER = {
+  'f9a7b99b3b': 'product',  # should the demo account's own name be seeded as its record?
+  # ---- 2026-10-08 ----
+  'f021f726df': 'design',   # which surface and width showed the missing ticks/icons?
+  # ---- 2026-10-08, the auth/table pass ----
+  'd335f8645a': 'legal',    # signin.html now offers no route to the prototype's legal pages
+  'dd2652e02e': 'product',  # is a name asked later, or does the greeting stop naming anyone?
   'e78dc88de4': 'copy',  # TAX_NOTE — копірайт очікує підтвердження команди. 
   '377d8ba38d': 'copy',  # WL_DESC — inferred копірайт, чекає підтвердження. 
   '7af2d0ab14': 'copy',  # «Вся ліцензія блокується» за перевищення ліміту ін
@@ -455,7 +493,8 @@ OWNER_LABEL = {
   'product':     'Product — a decision about what the portal does or shows',
   'pricing':     'Pricing — a number nobody has confirmed in writing',
   'copy':        'Copywriting — a sentence waiting for approval, or missing entirely',
-  'legal':       'Legal — the two questions that are not ours to answer',
+  # ⚠️ NO COUNT IN A LABEL. This said "the two questions" and the table beside it printed 3.
+  'legal':       'Legal — questions that are not ours to answer',
   'engineering': 'Engineering — a data or release fact the prototype guessed',
   'design':      'Design — a team decision, twice deferred',
 }
@@ -522,7 +561,11 @@ w(f"| | **total** | **{len(entries)}** |")
 w("")
 NA = sum(1 for e in entries if e["cat"] == "A")
 w(f"⚠️⚠️ **The honest headline: {NA} entries block implementation and most of them are NOT design.**")
-w("They are unconfirmed prices, `inferred` version numbers, copy waiting for approval and two")
+# ⚠️ THE COUNT IS COMPUTED, NOT TYPED. This sentence said "two legal questions" as prose and
+# went stale the moment a third one was added (2026-10-08) — a generated file disagreeing with
+# its own table two paragraphs down, which is exactly the drift this generator exists to stop.
+NLEG = sum(1 for e in entries if e["cat"] == "A" and OWNER.get(e["sig"]) == "legal")
+w(f"They are unconfirmed prices, `inferred` version numbers, copy waiting for approval and {NLEG}")
 w("legal questions. **The redesign is further along than the facts it is drawn on.**")
 w("")
 w("## ⚠️⚠️ The designer reading, which is the part worth arguing with")

@@ -249,7 +249,8 @@ def main():
 # numeric stepper, the FAQ accordion, and the marks (`infoic`, `alertic`, `verm`) ruled
 # out of the component on purpose. Each one is a different component with its own
 # states; folding them in would be the flat list of names the axes exist to avoid.
-BTN_VARIANTS = {'primary', 'secondary', 'text', 'ghost', 'menu'}
+# 'raised' added 2026-10-08: the landing's product switcher, a variant rather than an exception
+BTN_VARIANTS = {'primary', 'secondary', 'text', 'ghost', 'menu', 'raised'}
 BTN_SIZES    = {'sm', 'md', 'lg'}
 BTN_EXTRA    = {'icon', 'destructive'}
 NOT_A_BUTTON = (

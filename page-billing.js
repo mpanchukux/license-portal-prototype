@@ -21,10 +21,12 @@ function renderPayCard(){
   card.classList.toggle('is-empty', !billingSaved());
   /* ⚠️ THE TINT COMES WITH A SURFACE, AND THE SURFACE IS DECLARED (2026-10-01, by
      request: the Add button must be white). `.is-empty` paints the row `--c-blue-50`, and
-     a button standing on a tint is exactly what `.on-tint` is for — so the row says what
+     a button standing on a tint used to need `.on-tint` — so the row said what
      ground it is rather than the stylesheet re-deriving it from the state class. Toggled
      with `is-empty`, never set alone: a filled card is white and its button is grey. */
-  card.classList.toggle('on-tint', !billingSaved());
+  /* ⚠️⚠️ THE `.on-tint` TOGGLE IS GONE (2026-10-08). It turned the card's secondary white
+     while nothing was saved, because the card is tinted then. The variant has no fill to
+     correct any more, so this line had nothing left to do. */
   if(billingSaved()){
     card.insertAdjacentHTML('afterbegin', paymentMethodHTML());
     if(btn){ btn.className = 'btn btn--secondary btn--md btn--icon'; btn.innerHTML = PENCIL_SVG;
