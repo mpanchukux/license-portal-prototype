@@ -4010,23 +4010,37 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
    this rule. **One step fixed both halves of the complaint: lighter, and not brown.**
    ⚠️ THE THREE WERE COMPARED ON THE REAL CARD, not argued: current, ink .04, and raised,
    each on a clone of the same `.am-addon` on `#nlStepAdd`. */
-/* ⚠️⚠️ AND THE VALUE IS NOW THE PRODUCT SWITCHER'S OWN (2026-10-09, second request: "take the
-   hover state from the product switcher, so the add-on cards hover the same way; leave every
-   other state alone"). `.nl-prodcard:not([disabled]):hover` is `--surface-quiet`, so these two
-   rules read the same token. The two surfaces are the same object in the same flow — a card you
-   choose by clicking it — and step 1 and step 3 should not answer the pointer differently.
-   ⚠️ THIS SUPERSEDES `--overlay-wash` ON THESE TWO RULES ONLY, and it is not a reversal of the
-   reasoning that put it there: the complaint was that `--hover` #f0f0ee is WARM, and
-   `--surface-quiet` #F4F5F6 is on the neutral `--c-grey-*` ramp, so the diagnosis survives the
-   change of value. What moved is which neutral — from ink at .04 to the ramp's own resting step.
-   ⚠️ THE STEPPER KEEPS `--overlay-wash`. It was its own request with its own answer, and nothing
-   asked the two to agree. **They now differ: an opaque ramp step here, a translucent ink tint
-   there, on the same step of the same flow.** Named in the debt rather than quietly unified.
-   ⚠️ ONLY HOVER MOVES. `.on` keeps its `--c-blue-50` on hover, exactly as `.nl-prodcard.on` does,
-   and no `:active` is invented — the product card has one, this card has never had one, and the
-   request was explicit that other states stay untouched. */
+/* ⚠️⚠️⚠️ THE FILL DOES NOT MOVE ON HOVER AT ALL — THE CARD RISES (2026-10-09, final). This value
+   moved THREE TIMES in one day and the record of all three is the useful part, because each move
+   had a different cause and only the last one was a correction of the TARGET rather than of the
+   value:
+     1. `--hover` #f0f0ee  — the original. Warm: blue two steps under red and green.
+     2. `--overlay-wash`   — ink at .04. Fixed the warmth; chosen over a rise because the brief
+                             asked for elevation as a cure for a dirty fill, and with the fill
+                             clean there was nothing left for a rise to fix.
+     3. `--surface-quiet`  — "take the hover from the product switcher". I read **product
+                             switcher** as the wizard's `.nl-prodcard` pair, matched its grey, and
+                             that was the wrong component.
+     4. a RISE            — the product switcher meant the LANDING button, `.lp-swapbox`, which is
+                             `.btn--raised`: white that stays white, answering with a shadow.
+   ⚠️⚠️ THE LESSON IS ABOUT THE WORD, NOT THE VALUE. "Product switcher" named two different things
+   on two different surfaces, and both were plausible; the three-way comparison I built to settle
+   step 2 was built on the wrong reference and settled nothing. **When a request names a component
+   rather than a value, the component has to be identified before anything is measured** — the
+   measurement is only as good as the thing it points at.
+   ⚠️⚠️ AND IT PASSES THE RISE TEST ON THE CLAUSE, which is the first use that clause has had. This
+   card is a `<label>` that IS the control, carrying exactly one — its checkbox — and standing
+   among more of its own kind. That is the second limb exactly: a selectable object rising on its
+   own behalf. Measured, not asserted: one control in the card, zero rows of data.
+   ⚠️ ONE RUNG LOWER THAN `.btn--raised`, for the same reason the product card is: rest here is
+   flat, so hover takes `--elevation-menu` rather than `--elevation-dialog`. No fourth level.
+   ⚠️ `.on` KEEPS `--c-blue-50` UNDER THE POINTER and now rises as well — the fill says "you have
+   this", the shadow says "you are pointing at it", and neither overwrites the other.
+   ⚠️ THE STEPPER KEEPS `--overlay-wash` AND IS NOW FURTHER AWAY THAN EVER: a tint there, a rise
+   here, on the same step of the same flow. It was its own request with its own answer and nothing
+   asked the two to agree. Named in the debt rather than quietly unified. */
 .fs-screen .am-addon{cursor:pointer;padding:var(--space-control) var(--space-stack);margin:0 calc(-1 * var(--space-stack));border-radius:var(--radius-control)}
-.fs-screen .am-addon:hover{background:var(--surface-quiet)}
+.fs-screen .am-addon:hover{box-shadow:var(--elevation-menu);transform:translateY(-1px)}
 /* Variant B: no section headers — every item is its own white card in one vertical
    stack (capacity rows and add-ons alike), so each piece separates on its own edge.
    The stack rule beats .fs-screen .am-cell, which strips box and padding for A. */
@@ -4079,7 +4093,7 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
 .fs-screen .nl-cardstack .am-locked .fs-devinput.locked{
   width:calc(var(--btnH) * 2 + 48px)}
 /* variant B's card carries the same answer — see the note on the variant A rule above */
-.fs-screen .nl-cardstack .am-addon:hover{background:var(--surface-quiet)}
+.fs-screen .nl-cardstack .am-addon:hover{box-shadow:var(--elevation-menu);transform:translateY(-1px)}
 /* ⚠️⚠️ THE CHOSEN ADD-ON IS RINGED IN `--accent`, NOT INK (2026-09-29, by request:
    "the same dark blue as the Popular tag, 1px"). Ink said "selected" in the vocabulary
    of a list row; on this step the blue is already the product's word for "this one" —
@@ -4670,7 +4684,30 @@ button.nl-step:focus-visible{outline:var(--border-emphasis) solid var(--ink);out
    (`--surface-quiet` then `--surface-quiet-hover`), started from the card's white.
    ⚠️ `:not([disabled])` because Change plan locks the card to the licence's product;
    a locked card that lights up is a control offering something it will not do. */
-.nl-prodcard:not([disabled]):hover{background:var(--surface-quiet)}
+/* ⚠️⚠️ HOVER RISES NOW, IT DOES NOT TINT (2026-10-09, by request, with the landing button as the
+   reference: "the background should stay white and a shadow should be added"). The note above is
+   the record of the grey-ramp version and is kept as the reason that version existed; it does not
+   describe this one. **The fill does not move on hover at all** — white stays white, and the
+   answer is `--elevation-menu` plus the 1px lift.
+   ⚠️⚠️ THIS IS THE SECOND LIMB OF THE RISE TEST, AND IT IS THE FIRST SURFACE TO USE IT. The test
+   (see the `raised` variant) allows a rise only for a surface that neither carries rows of data
+   nor stands among them — **or if the surface is itself the thing being chosen, carrying no
+   control beyond the one that selects it.** Measured against that: this card IS the control, a
+   `<button role="radio">` with zero controls inside it, and what stands beside it is one more of
+   its own kind. It passes on the clause, not on a precedent — which is what the clause was
+   written for the same morning, before anything needed it.
+   ⚠️ IT IS `.btn--raised`'S MECHANISM ONE RUNG LOWER, and the difference is the REST state, not
+   the idea: the landing button rests at `--elevation-menu` and hovers to `--elevation-dialog`;
+   this card rests FLAT, so its hover takes the first rung. No fourth level is invented, which is
+   the constraint the elevation axis carries.
+   ⚠️⚠️ `:active` STILL TINTS, AND IT IS LEFT ALONE DELIBERATELY — it was not asked about. The two
+   states now answer with two mechanisms (hover rises, press greys). `raised`'s own press is
+   "shadow none, translateY(1px)", and adopting that here is a decision rather than a tidy-up, so
+   it is named in the debt instead of taken.
+   ⚠️ THE CHOSEN CARD RISES TOO: the rules above keep `--c-blue-50` under the pointer, so the fill
+   goes on saying "this one" while the shadow says "you are pointing at it". Two facts, two
+   channels, neither overwriting the other. */
+.nl-prodcard:not([disabled]):hover{box-shadow:var(--elevation-menu);transform:translateY(-1px)}
 .nl-prodcard:not([disabled]):active{background:var(--surface-quiet-hover)}
 .nl-prodcard:focus-visible{outline:var(--border-emphasis) solid var(--ink);outline-offset:2px}
 .nl-prodcard[disabled]{cursor:default}                    /* change-plan: locked to the licence */
@@ -5498,12 +5535,42 @@ body[data-mesh] .dtopbar:not(.docked) .tnav-item:not(.on):hover{background:var(-
 /* ⚠️ TWENTY PIXELS HIGHER (2026-10-09, by request). It sat `--space-control` (12) below the
    fading row; now it takes nothing and pulls `--space-inline` (8) back over the row — 12 + 8 =
    the 20 asked for.
-   ⚠️ THE OVERLAP IS ONTO DEAD PIXELS, and that is why it is safe to ask for. The row's mask
-   reaches zero at 55% of its height, so its bottom half is empty surface; the 8px the button
-   borrows is the very tail of that, at 87%–100% of the row. Nothing is read through it — which
-   is the same thing this button was moved off the fade to stop doing. */
+   ⚠️⚠️ WHAT THE OVERLAP COSTS, IN MEASURED ALPHA — AND AN EARLIER VERSION OF THIS NOTE GOT IT
+   WRONG. It said "the mask reaches zero at 55% of the row", which is the number from the
+   TWO-SEGMENT ramp that 2026-10-01 replaced; the six-stop ramp three paragraphs above is the
+   current one and it reads `.78 / 0% · .50 / 18% · .28 / 36% · .12 / 56% · .04 / 76% · 0 / 100%`.
+   **Zero happens at 100%, not at 55%.** I quoted a superseded figure out of a comment whose own
+   successor sat a few lines below it.
+   ⚠️ THE HONEST FIGURE: at 8px the button's top edge lands at **93.2%** of the row, where the
+   mask is **≈1.1% alpha**; at 18px (the licences block, below) it lands at **84.7%**, where it is
+   **≈2.6%**. Glyph boxes do extend under the button — the licence name's box runs to 89.8% — but
+   they are drawn at about a thirtieth of the row's own starting opacity. **Nothing is readable
+   through the button; "nothing is drawn there" was the overstatement.** */
 .blockmore{display:flex;align-items:center;justify-content:center;
   padding-top:0;margin-top:calc(-1 * var(--space-inline))}
+/* ⚠️⚠️ TEN PIXELS MORE, AND ONLY IN THE LICENCES BLOCK (2026-10-09, by request: "raise the
+   `See all 17` button in the Licenses table on Home another 10px"). Total offset there is 18px
+   above the fading row's bottom edge, against 8px in the invoices block below it.
+   ⚠️ THE TWO BLOCKS ARE NOT ARBITRARILY DIFFERENT — THEIR ROWS ARE. Measured: the licence rows
+   run three lines, so the fading row is **117.88px** tall; an invoice row is one line and its
+   fading row is **64px**. The mask dies at 55% of the row either way, which leaves a dead tail of
+   ~53px in one and ~29px in the other, so the same 8px pull reads as much more air under the
+   licence table than under the invoice table. **The button is being levelled against what the
+   reader sees, not against the box.**
+   ⚠️ 18px IS NOT A STEP ON THE SPACING SCALE (2 · 4 · 8 · 12 · 16 · 20 · 24 …), and it is written
+   as a literal rather than dressed up as `--space-stack + --space-glyph`, which would be the same
+   number pretending to be derived. The nearest steps are 16 and 20; the request said 10 more than
+   8, and 18 is what that is.
+   ⚠️ `:has(#dashLicBody)` NAMES THE BLOCK BY WHAT IS IN IT rather than by its position, because
+   position is what a second block added above would quietly change. The same mechanism
+   `.lic-titlerow:has(> .titlecount)` already uses in this file.
+   ⚠️ WHAT IT COSTS, MEASURED, NOT ASSERTED: the button's top edge lands at **84.7%** down the
+   row, where the six-stop mask is at **≈2.6% alpha** (interpolating `.04` at 76% toward `0` at
+   100%). The licence name's own box reaches 89.8%, so there ARE glyphs under the top 6px of the
+   button — drawn at a thirtieth of the row's starting `.78`. Unreadable, not absent. Pushing
+   further would start eating alpha that can still be seen: at 76% the mask is `.04`, at 56% it
+   is `.12`. */
+.dblock:has(#dashLicBody) .blockmore{margin-top:-18px}
 /* ⚠️⚠️ THE LIFT AND THE HALO ARE GONE WITH THE ROW THEY ANSWERED (2026-10-09). Both were
    written for a button standing ON the fading row: the halo was `--ring-halo`, four pixels
    of the card's own white punched through the faded text so the label stayed readable, and
