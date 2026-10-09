@@ -32,6 +32,8 @@ def sig(head):
 # D  a design-system decision — goes into SCALES.md / COMPONENTS.md first
 # E  closed (detected from the strikethrough, never written here)
 CAT = {
+  # ---- 2026-10-09, the rise correction ----
+  '20c346ca0a': 'D',  # the product card rises on hover and greys on press: two mechanisms
   # ---- 2026-10-09, the second pass (layers, close buttons, hovers, spacing) ----
   'ec470ce42e': 'D',  # stepper and add-on cards answer the pointer with two mechanisms
   '3238d8f0a8': 'C',  # #overlay rides --z-toast to clear the wizard; its own comment admits it
