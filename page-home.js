@@ -416,11 +416,22 @@ function renderHomeCards(){
      question.
      ⚠️ Same button the table layout's fade overlay uses (`blockmore-go`), so the two
      ways of saying "there are more" are one control wearing one label. */
-  var more = $('#hcLicMore');
-  if(more) more.innerHTML = nL > DASH_CARDS
-    ? button({ variant:'secondary', size:'md', href:'licenses.html',
-               label:'See all ' + nL, cls:'blockmore-go' })
-    : '';
+  /* ⚠️⚠️ AND RECENT INVOICES HAS ONE TOO (2026-10-09, by request: "the `See all` is
+     missing from Recent invoices — put it back, placed like the one in Licenses"). The slot
+     was never built for that block: the argument above is about a reader who has run out of
+     cards with the heading off screen, and three invoices do exactly what three licences do.
+     ⚠️ ONE BUILDER, TWO SLOTS, so the two ways out of a Home block cannot drift — same
+     component, same label shape, same class, same cut-off question (`is there more than is
+     shown`). The lists differ only in how many are drawn: three invoices against `DASH_CARDS`
+     licences. */
+  [['#hcLicMore', nL, DASH_CARDS, 'licenses.html'],
+   ['#hcInvMore', nI, 3, 'invoices.html']].forEach(function(spec){
+    var slot = $(spec[0]); if(!slot) return;
+    slot.innerHTML = spec[1] > spec[2]
+      ? button({ variant:'secondary', size:'md', href:spec[3],
+                 label:'See all ' + spec[1], cls:'blockmore-go' })
+      : '';
+  });
   syncHomeBuy();
 }
 /* ⚠️⚠️ `Buy a license` MOVES INTO THE LICENCES HEADING ON THE PHONE (2026-10-01, by

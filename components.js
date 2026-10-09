@@ -566,10 +566,17 @@ function constraintEmptyHTML(q, hasFilters, nounPlural){
    a second place saying the same thing is a second place to undo it. */
 function syncAppliedRow(hostSel, getList){
   var host = $(hostSel); if(!host) return;
-  var list = getList();
-  host.hidden = !window.matchMedia('(max-width:600px)').matches || !list.length;
+  /* ⚠️⚠️ `dflt` IS A FILTER THE READER DID NOT CHOOSE (2026-10-09). A page may open with
+     one applied — Licenses opens on `Active` — and a chip row saying so on arrival reads as
+     "you have filtered this", with a `Clear all` for something nobody did. The entry stays in
+     the list so `licHasFilters` and the empty state still count it; only the chips skip it.
+     ⚠️ ONE LIST STILL, which is the rule this builder was written to keep. The two readers
+     agree about what is applied; they differ about what is worth a CONTROL, which is a
+     different question and the only one this flag answers. */
+  var list = getList(), shown = list.filter(function(f){ return !f.dflt; });
+  host.hidden = !window.matchMedia('(max-width:600px)').matches || !shown.length;
   if(host.hidden){ host.innerHTML = ''; return; }
-  host.innerHTML = list.map(function(f){
+  host.innerHTML = shown.map(function(f){
     return chip({ kind:'plain', label_:true, cls:'applied-chip', label:f.t, remove:true,
                   removeAttrs:'data-unset="' + esc(f.k) + '"',
                   removeLabel:'Remove filter ' + f.t });
@@ -591,8 +598,12 @@ function wireAppliedRow(hostSel, getList, apply){
       getList().forEach(function(f){ if(f.k === k) f.clear(); });
       apply(); return;
     }
+    /* ⚠️ `Clear all` ENDS THE ROW, SO IT CLEARS WHAT THE ROW SHOWS — the `dflt` entries are
+       skipped here for the same reason they have no chip. Taking the page's own default off
+       as well would be this control doing something the reader cannot see it offering. The
+       empty state's wider `Clear all` is a different control and still clears everything. */
     if(e.target.closest('[data-unsetall]')){
-      getList().forEach(function(f){ f.clear(); });
+      getList().forEach(function(f){ if(!f.dflt) f.clear(); });
       apply();
     }
   });
@@ -3691,12 +3702,25 @@ function instCardHTML(r){
     + '<div class="instc-head">'
     +   '<div class="instc-txt">'
     +     '<div class="ia-name">' + (i.label ? esc(i.label) : '<span class="muted">Unnamed</span>') + '</div>'
-    +     '<div class="ia-id mono"><span class="inst-id" title="' + id + '">' + id + '</span>'
-    +       '<button class="btn btn--ghost btn--md btn--icon tip inst-copy" data-instcopy="' + id + '"'
-    +         ' aria-label="Copy instance ID" data-tip="Copy instance ID">' + COPYSVG + '</button></div>'
+    /* ⚠️⚠️ NO COPY CONTROL, AND THE DECISION WAS ALREADY TAKEN (2026-10-09, by request:
+       "drop the copy button beside the id on the phone card; the id can have the whole line").
+       The phone block in the stylesheet has carried `.insttable .inst-copy{display:none}` since
+       the rows were re-poured, with the reason written beside it — "the instance ID is a
+       diagnostic string, not something you paste anywhere from a phone, and the row already
+       competes with the licence key's copy button". That selector names `.insttable`; the card
+       is not in a table, so it quietly took the control back the day it was drawn.
+       ⚠️ IN THE MARKUP, NOT IN CSS: the card is built for this width only, so a control hidden
+       here is a control with no reader at all. The full value stays on `title`, exactly as the
+       table row leaves it. */
     +   '</div>'
     +   '<div class="lic-actions">' + instRowMenu(i) + '</div>'
     + '</div>'
+    /* ⚠️⚠️ THE ID IS A ROW OF THE CARD, NOT A LINE OF THE NAME BLOCK, and that is what
+       "give it the whole line" costs in markup. Inside `.instc-txt` it shared the head row
+       with the kebab and got 269px of the card's 326 — measured, the UUID needs **311.6**, so
+       it ellipsed with 57px of empty card to its right that belonged to a button two lines
+       tall. Out here it takes the full inner width and prints whole, with 14px to spare. */
+    + '<div class="ia-id mono"><span class="inst-id" title="' + id + '">' + id + '</span></div>'
     + '<div class="instc-meta">'
     +   '<span class="statmark is-' + tone + '">' + icon(STATUS_IC[tone], { cls:'statmark-ic' })
     +     (stale ? 'Stale' : 'Healthy') + '</span>'

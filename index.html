@@ -175,6 +175,11 @@
           <section class="hcsect">
             <div class="hc-head" id="hcInvHead"></div>
             <div class="hc-card"><div class="hc-invlist" id="hcInvList"></div></div>
+            <!-- ⚠️ PHONE ONLY, and the same slot the licences block has (filled by
+                 renderHomeCards) — this block never had one, and the heading's count is off
+                 screen by the time a reader reaches the third invoice, which is the whole
+                 argument the licences block's slot was built on. -->
+            <div class="hc-more" id="hcInvMore"></div>
           </section>
           <section class="hcsect">
             <!-- ⚠️ NO COUNT CHIP ON THIS ONE, and the absence is deliberate — see the

@@ -3611,7 +3611,21 @@ body.has-statebar .fs-box{height:min(90vh, calc(100vh - var(--sbH,0px) - 32px))}
   body.has-statebar .fs-screen,
   body.has-statebar .payoverlay,
   body.has-statebar .overlay{bottom:0}
-  body.has-statebar .fs-box{height:90vh}
+  /* ⚠️⚠️ 90vh → 100vh (2026-10-09, reported: "the buy flow should be full screen — I can
+     see the bottom nav under a black layer"). The line said `90vh`, which is the DESKTOP
+     sheet's height, at a width where `.fs-box` is `100vh`. Measured at 390x844: the wizard's
+     box came out **759.59**, the scrim filled the remaining 84.4, and the app's bottom nav sat
+     under it, lit and readable. It was every full-screen sheet on every phone, whenever the
+     prototype's own state bar was switched on — and **the bar being reserved for is hidden at
+     this width**, `display:none` three lines up, so the reservation was for nothing.
+     ⚠️ SEVENTH CASE of "a rule wins by specificity a later decision did not account for", and
+     the fourth on this sheet alone (`#authModal`, `#usersModal`, `.fs-box.usersbox`).
+     ⚠️⚠️ AND IT HAS TO BE WRITTEN, NOT DELETED — the first build of this fix deleted it and
+     measured **no change at all**. `body.has-statebar .fs-box{height:min(90vh, …)}` carries no
+     media query, so at (0,2,0) it reaches the phone and beats `.fs-box{height:100vh}` (0,1,0)
+     on its own. This block is not a restatement of the desktop; it is the only thing that
+     stops the desktop reaching down here. */
+  body.has-statebar .fs-box{height:100vh}
 }
 /* ⚠️ The same radius as the buttons it stands beside (2026-09-27) — `.seg` has exactly
    one instance, the Instances view switcher, and it sat at 6px in a toolbar of 24px
@@ -6514,6 +6528,20 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
    label must not make its neighbours short. Every card in a row is as tall as the
    tallest, and the label zone is what absorbs the difference. */
 .hc-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:var(--space-heading)}
+/* ⚠️⚠️ WRITTEN IN THE SAME BREATH AS THE `display` ABOVE — the rule `.listbar[hidden]`
+   already states for this file, and the SEVENTH time it has been needed. `#instCards` and
+   `#invCards` carry `class="hc-cards …"` and are switched by the `hidden` attribute
+   (`page-instances.js`, `page-invoices.js`: `cards.hidden = !phone`). A component that
+   declares `display` beats the UA's `[hidden]{display:none}`, so at 1280 both hosts were
+   drawn in full UNDER the table they replace: measured on the working tree AND on `HEAD`,
+   **890.9px of instance cards and 523.8px of invoice cards**, ten of each, every record on
+   the page printed twice.
+   ⚠️ FOUND, NOT REPORTED — the 10-09 pass recorded "@1280 cards hidden, table shown,
+   desktop untouched", and what it had checked was the `hidden` ATTRIBUTE, which was correctly
+   set the whole time. **A flag is not a layout.** `#licensesList .liccards` carries the same
+   fault and shows nothing only because that host is left empty at this width; it is covered
+   here too rather than left as the next one to surface. */
+.hc-cards[hidden]{display:none}
 /* the count lives in the heading at this width — see the phone block */
 .hc-more{display:none}
 /* ⚠️⚠️ NO RESTING OUTLINE (2026-09-30, by request). The white fill is already the
@@ -8056,6 +8084,9 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
    text it reserves room for. */
 .nl-couponerr{flex:1 1 100%;margin-top:var(--space-tight);
   min-height:calc(var(--t-small-fs) * 1.4)}
+/* ⚠️ THE RESERVE STANDS HERE AND IS DROPPED ON THE PHONE — see the ≤600 block, which is
+   where the request that drops it was made and where the argument for dropping it was
+   measured. This line is the 09-28 decision, unchanged, and it still governs the web. */
 .nl-couponerr:empty{margin-top:var(--space-tight)}
 .nl-couponrow div:last-child{white-space:nowrap}
 /* the price the coupon replaced: struck through and quiet, so the pair reads as
@@ -9198,6 +9229,12 @@ th.lic-num{text-align:right}
      outrun 326px, and wrapping a fact to its own line is better than ellipsing one. */
   #instCards > .inst-card{background:var(--card);border-radius:var(--radius-surface);
     padding:var(--space-stack)}
+  /* ⚠️ THE ID TAKES THE WHOLE LINE HERE (2026-10-09, by request), because the copy button
+     that shared it is gone from the card — see `instCardHTML`. `.inst-id` is capped at 9ch
+     everywhere else so a UUID cannot push a table column; on a card the line is the card's
+     own width and there is nothing to push. */
+  #instCards .ia-id{max-width:100%;margin-top:var(--space-glyph)}
+  #instCards .inst-id{max-width:100%}
   .instc-head{display:flex;align-items:flex-start;gap:var(--space-control)}
   .instc-txt{flex:1;min-width:0}
   .instc-head .lic-actions{flex:none}
@@ -9250,9 +9287,20 @@ th.lic-num{text-align:right}
    ⚠️ SO IT JOINS THE LIST RATHER THAN ENDING IT: same white, same radius, same gap, no rule.
    What 10-01 asked for — "inside the frame, not outside it" — is still honoured; what is
    inside has simply become one frame per thing. */
-  #homeCards .hc-more{display:block;margin:0;background:var(--card);
-    border-top:var(--border-none);border-radius:var(--radius-surface);
-    padding:var(--space-control) var(--space-stack)}
+/* ⚠️⚠️ AND THE FRAME COMES OFF IT (2026-10-09, by request: "`See all` without the white
+   frame, the same distance away as the cards are from each other"). The note above is the
+   10-09 decision that gave it one — "it joins the list rather than ending it: same white,
+   same radius, same gap". The request keeps the second half and drops the first: it is a
+   CONTROL about the list, not another card in it, and a white frame is this page's word for
+   "a thing in the list". The gap is what makes it belong; the fill was what made it a member.
+   ⚠️ `--space-control` ON THE MARGIN, NOT ZERO. The slot is a sibling of `.hc-cards`, not an
+   item in it, so the flex gap that spaces the cards never reached it — measured before: the
+   frame sat flush against the last card at 0. The same 12 the cards use between themselves is
+   now written where it has to be written.
+   ⚠️ The button keeps `width:100%`: full width is what a secondary standing alone on the page
+   ground is, here and on every other phone surface in the product. */
+  #homeCards .hc-more{display:block;margin:var(--space-control) 0 0;background:transparent;
+    border-top:var(--border-none);border-radius:var(--radius-sharp);padding:0}
   #homeCards .hc-more .blockmore-go{width:100%;box-shadow:none}
   /* ⚠️ THE COUNT COMES OFF THE BLOCK HEADINGS (2026-10-01, by request): heading and
      arrow, nothing else. The number is not lost — `Licenses` ends in `See all 17` at the
@@ -10293,7 +10341,36 @@ th.lic-num{text-align:right}
   /* alone in its row, a single card takes the screen like every other card here */
   .plangrid.one{grid-template-columns:1fr}
   #nlModal .plangroups{margin-top:var(--s-grp)}
-  #nlModal .plangrid{margin-top:var(--s-grp);gap:var(--s-card)}
+  /* ⚠️⚠️ NO `margin-top` HERE (2026-10-09, by request: "less space from the description text
+     to the plan cards"). `--s-grp` is the gap BETWEEN GROUPS, and three lines up
+     `.plangroups.two .plangroup-h{display:none}` takes the group's heading away at this width
+     because the tabs say the same word. So the grid was holding itself 32px clear of a
+     heading that is not there, under a `.plangroups` already 16 clear of the description:
+     measured 16 + 32 = **48** from `Pay every month…` to the first card.
+     ⚠️ `.plangroup .plangrid{margin-top:0}` SIX LINES UP ALREADY SAID THIS, and said it for
+     this reason — it lost on specificity, (0,2,0) against this rule's id. The gap is 16 now,
+     which is still more than the 12 between the cards, so the sentence still reads as being
+     above the group rather than in it. */
+  #nlModal .plangrid{gap:var(--s-card)}
+  /* ⚠️⚠️ THE COUPON'S RESERVED ERROR LINE GOES, ON THE PHONE ONLY (2026-10-09, by request:
+     "when I press Apply coupon the gap from the fields to the divider and Monthly total grows
+     — it should not"). The slot is `.nl-couponerr`, and the rule that reserves it is a 09-28
+     decision whose argument is real: with the line held open, applying, failing and clearing
+     never move the total. **The cost was charged in the state people actually sit in.**
+     Measured at 390: closed, the control ends 13px above the row's bottom; open, the input
+     ends **50.6** above it — 8 of flex row-gap, 4 of margin and 19.6 of reserved line, under a
+     field with nothing wrong with it.
+     ⚠⚠ SCOPED, NOT GLOBAL, AND THAT IS A SECOND DECISION (by request: "mobile edits must not
+     affect the web"). The first build of this fix changed the component everywhere. The
+     component now answers the pointer differently at two widths, which is a divergence and is
+     recorded as one — but a phone request is not a mandate over the desktop, and the desktop
+     sheet has room the phone does not.
+     ⚠️ THE COST, NAMED: here the total moves down one line when a message does arrive. That is
+     movement the reader just caused by pressing Apply, and what they are moved to is the
+     answer — a better trade than a permanent gap on a correct code.
+     ⚠️ `display:none` RATHER THAN `min-height:0`: the slot is `flex:1 1 100%`, so even at zero
+     height it holds a line of its own and still costs the row one 8px row-gap. */
+  .nl-couponerr:empty{display:none}
   /* the plan cards were transparent, so they dissolved into the gray sheet ground */
   #nlModal .plangrid > .plancard{background:var(--card)}
   /* ⚠️ Both card kinds carry `.dblock`, and the phone gives `.dblock` a
@@ -10432,10 +10509,24 @@ the content keeps the page gutter. */
      twice. With the bleed gone, `.listcard` already sits inside the page gutter, so children
      adding `margin:0 var(--pageX)` of their own came out at x=32 in a 390 screen and 326 wide.
      The children take the gutter as PADDING (the rule below this one) and no margin at all. */
+  /* ⚠️⚠️ AND IT NEEDS VERTICAL PADDING, WHICH IT NEVER HAD (2026-10-09, by request: "the
+     toolbar has no inset at the top — make it like the bottom one"). `.listframe
+     .stickybar` zeroes top and bottom at this width, written when the toolbar was a BAND
+     on the list's own sheet: a band has no inset, it has a divider. A FRAME does — every
+     card beside it carries 16, and this one carried 0, so the search field sat on the
+     frame's top edge.
+     ⚠️⚠️ AND THE "BOTTOM PADDING" THE REQUEST COMPARES IT TO WAS NEVER PADDING. Measured at
+     390 with no filters applied: top 0, bottom **13** — and the 13 was the flex row-gap of
+     an EMPTY `.barapplied`, which is `display:flex` and so outranks `[hidden]`. The moment a
+     filter chip arrived the row filled and the "padding" vanished, which is the second half
+     of the same report. Both halves are one defect: a gap nobody declared, read as a value.
+     ⚠️ `--space-control`, not `--space-stack`: 12 is what was being seen and asked for, and
+     the row-to-row rhythm inside the frame is 12 already. The horizontal 16 stays — it is the
+     page gutter, and it lines the field up with the cards below. */
   .listframe > .listbar{
     background:var(--card);border-radius:var(--radius-surface);
     margin:0 0 var(--space-control);
-    padding-left:var(--space-stack);padding-right:var(--space-stack)}
+    padding:var(--space-control) var(--space-stack)}
   .listframe .tablescroll{background:var(--card);border-radius:var(--radius-surface)}
 
   /* ⚠️ THE TITLE ROW IS A DIRECT CHILD ON SOME PAGES AND A GRANDCHILD ON OTHERS.
@@ -10856,6 +10947,14 @@ so the only thing that showed was a
     align-items:center;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
   #licBarC .barapplied::-webkit-scrollbar,.insttoolbar .barapplied::-webkit-scrollbar{display:none}
   #licBarC .barapplied > *,.insttoolbar .barapplied > *{flex:none}
+  /* ⚠️⚠️ AND THE `display` ABOVE HAS TO GIVE `[hidden]` BACK (2026-10-09). `syncAppliedRow`
+     sets `host.hidden` when nothing is applied — and a component that declares `display`
+     beats the UA's `[hidden]{display:none}`, which this file has now watched happen six
+     times. The row stayed a 0px flex item on its own line and charged the toolbar one
+     12px row-gap for it, on every list page at every phone width. That gap was being read
+     as the frame's bottom padding; the frame has real padding now and this is deleted
+     rather than left to impersonate it. */
+  #licBarC .barapplied[hidden],.insttoolbar .barapplied[hidden]{display:none}
   .applied-chip{display:inline-flex;align-items:center;gap:var(--space-glyph);min-height:32px}
   .applied-clear{white-space:nowrap;padding:0 var(--space-tight)}
 
@@ -10892,7 +10991,11 @@ so the only thing that showed was a
      ⚠️ ON THE TOOLBAR, NOT ON THE FEED: the feed's own `margin-top` is the rhythm between
      its entries' groups, and borrowing it here would make the gap above the first day
      differ from the gap above the second. */
-  body[data-page="activity"] .listframe .stickybar{padding-bottom:var(--space-heading)}
+  /* ⚠️⚠️ AND IT IS GONE (2026-10-09). The air it bought is now the frame's own: the toolbar
+     became a separate white frame on 10-09 with `--space-control` of page ground under it,
+     so the first feed entry no longer lands against the controls — it lands against a gap and
+     a frame edge. Left in place it was the one toolbar in the product with 20 at the bottom
+     and 0 at the top, which is the asymmetry the request names. */
 
   /* ⚠️⚠️ THE `side` PLAN BLOCK FALLS BACK TO `stacked` HERE (2026-10-01), AND THIS IS
      BEYOND THE BRIEF — reported rather than slipped in. It is the open item the notes
@@ -11300,14 +11403,19 @@ so the only thing that showed was a
      THEIR OWN below the field rather than a share of it.
      ⚠️ REMOVED, NOT NARROWED. A class nothing toggles and rules nothing reaches is how
      the next person spends an afternoon. */
-  /* ⚠️ FILTERS TO THE RIGHT, and `margin-left:auto` rather than `justify-content` on
-     the bar: the bar also holds the spacer and,
-on some pages,
-controls the title row
-     has not taken yet. Pushing from the first filter is the one thing that means "these
-     start after the search" whatever else is in the row. */
-  .lic-controls .lic-typeseg,.insttoolbar .dropwrap:first-of-type,
-  .lic-controls .dropwrap:first-of-type{margin-left:auto}
+  /* ⚠️⚠️ FILTERS TO THE LEFT (2026-10-09, by request: "on Invoices and Activity the filters
+     should sit on the left"). What was here pushed the first filter with `margin-left:auto`,
+     and the comment said why: "these start after the search", written when the filters SHARED
+     the search field's line. They have had a line of their own since 10-01, and on a line of
+     their own the push has nothing to start after — it just moves them to the far edge.
+     ⚠️⚠️ AND IT WAS INVISIBLE ON TWO OF THE FOUR PAGES, WHICH IS WHY IT SURVIVED. `.barfilters`
+     scrolls sideways; when its children OVERFLOW, `auto` resolves to zero. Licenses (three
+     controls, 1268px of them) and Instances were left-aligned by accident, Invoices (one
+     dropdown) and Activity (two) were pushed right — one rule, two appearances, and the
+     report named only the two pages where it showed.
+     ⚠️ DELETED, NOT OVERRIDDEN: an override would leave two statements about where a filter
+     row starts and the next reader would have to diff them. Desktop is untouched — this whole
+     block is inside the phone media query. */
   /* the frame gives up its box to the cards inside it — see the row rule below */
   .insttable{display:block;width:100%;background:transparent;border:var(--border-none);
     border-radius:var(--radius-sharp);padding:0}

@@ -350,7 +350,21 @@ function licAppliedList(){
   var out = [];
   if(licType) out.push({ k:'type', t:filterOptLabel(LIC_TYPE_OPTS, licType, ''),
     clear:function(){ licType = null; } });
+  /* ⚠️⚠️ THE DEFAULT IS NOT AN APPLIED FILTER (2026-10-09, by request: "`Active` in the
+     toolbar is the default state — there should be no chips and no Clear all when you arrive
+     on the page"). `applyLicBar` opens this page on `active` when nothing has been chosen, and
+     the chip row was reporting that as the reader's own doing: an `Active ✕` chip and a
+     `Clear all` on a page nobody had filtered yet.
+     ⚠️ `licStatusTouched` IS THE WHOLE TEST, and it exists already — it is what tells
+     `applyLicBar` whether to impose the default at all. Picking `Active` from the dropdown sets
+     it, so a chosen `Active` still gets its chip; only the one nobody chose is silent.
+     ⚠️⚠️ AND THE LIST STAYS ONE LIST, which is the rule written above this function. The
+     entry is still HERE and still counted by `licHasFilters`, because the default still hides
+     the cancelled licences and the empty state must be able to offer a way out of it — what
+     changes is that the CHIP ROW skips it. `dflt` is read by `syncAppliedRow`, so the two read
+     the same objects and cannot come to disagree about what is applied. */
   if(licStatus) out.push({ k:'status', t:filterOptLabel(LIC_STATUS_OPTS_C, licStatus, ''),
+    dflt: !licStatusTouched,
     clear:function(){ licStatus = null; licStatusTouched = true; } });
   if(licAttnOnly) out.push({ k:'attn', t:'Needs attention',
     clear:function(){ licAttnOnly = false; } });
