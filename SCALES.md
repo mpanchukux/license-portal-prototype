@@ -1913,6 +1913,7 @@ moves, do the buttons? No.* **Two "no"s means two tokens, whatever the numbers s
 | **`sweep.js` keys elements by their class list** | Implementation rule 9. A pass that ADDS a class unpairs every element it touched: `paintDiff()` skips them as `unpaired`, so the run is loud and blind at the same time. `SWEEP.ignoreClasses([...])` before the first cell |
 | **An opener that resolves without arriving** | Implementation rule 10. `OPENERS.usersModal` reported `0/0/0` on a surface it never opened, three times across two sessions. Every opener now ends in `must()`; `diff()`/`paintDiff()` carry `error` and `compared` so a dead cell cannot read as a pass |
 | **A scan keyed on literal token values** | Implementation rule 11. It reported "no failures" after the pass moved the three values it was written against, and had stopped matching anything at all. Resolve targets from `:root` at run time — this is how `--faint`'s 507 failures stayed invisible |
+| **`paintDiff` counts unpaired on ONE side** | Implementation rule 12. `onlyAfter++` has no counterpart: a key present in `before` and absent from `after` is dropped in silence, so **a pass that only DELETES elements reports zero unpaired and reads as a clean run.** Found 2026-10-08 by diffing the two key sets by hand — the tool said 4, the sets said 5 before and 4 after. Diff the key sets, or read `elements` on both sides, before trusting an unpaired count |
 | **The 601–952 table band** | See item 5 above |
 | **`mockInvoiceUrl` is a second typography system** | A separate document with its own rules; it was never part of these axes |
 | **`?from` is written and read by nothing** | Left in the URL deliberately — a link must work the same for whoever opens it |
@@ -2054,8 +2055,15 @@ watch for rather than the three cases:
 | rule 10 | `OPENERS.usersModal` | `0 changed / 0 lost / 0 gained` | the modal never opened; `tr.user-row` was 0 in the DOM |
 | rule 9 | `path()` keyed by class list | "element count changed", 1,500 `unpaired` | an added class; the real elements were never compared |
 | rule 11 | a scan keyed on literal hexes | "no failing groups" | it could no longer match any of its three targets |
+| rule 12 | `paintDiff` counting `onlyAfter` alone | `4 unpaired` on a pass that moved two nodes and deleted one | 5 keys left, 4 arrived; the deleted one was never counted anywhere |
 
-**All three fail by going QUIET, not by going wrong.** A tool that throws gets fixed in a
+⚠️ **RULE 12 WAS ADDED 2026-10-08 AND MAKES IT FOUR, NOT THREE.** The heading above says
+"third instance in two sessions" and it is kept as written, because the point it makes is
+about the SHAPE and not about the count — but the count is four, and the fourth was found the
+same way as the other three: by asking what the instrument could not have seen. A deletion-only
+pass is the case this one hides, and no pass had been deletion-only until one was.
+
+**All four fail by going QUIET, not by going wrong.** A tool that throws gets fixed in a
 minute; a tool that returns a confident zero gets believed. So the question to ask of any
 check here is not "did it pass" but **"could this instrument still have seen a failure if one
 were there"** — and the cheap way to answer it is a control: break the thing on purpose and
