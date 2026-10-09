@@ -32,6 +32,18 @@ def sig(head):
 # D  a design-system decision — goes into SCALES.md / COMPONENTS.md first
 # E  closed (detected from the strikethrough, never written here)
 CAT = {
+  # ---- 2026-10-09, the second pass (layers, close buttons, hovers, spacing) ----
+  'ec470ce42e': 'D',  # stepper and add-on cards answer the pointer with two mechanisms
+  '3238d8f0a8': 'C',  # #overlay rides --z-toast to clear the wizard; its own comment admits it
+  '81e3570234': 'B',  # the close disc's opaque fill is the one justified case — do not fold it in
+  'eace05b65f': 'D',  # the header kebab is secondary, the row kebabs are not: two spellings now
+  # ---- 2026-10-09, the seven-item pass (fade, borders, tints, chips, id, anchor) ----
+  '4c6021a8a1': 'D',  # --hover #f0f0ee survives in 30 rules — the warm chrome palette again
+  '423fb5048c': 'D',  # the chosen add-on does not answer the pointer; background replaces
+  '80e5b89ab5': 'D',  # secondary's ramp is 0 / .04 / .14 — the press step was never asked about
+  '946a5df5c1': 'D',  # three Ubuntu metrics sit as literals in the count chip's calc()
+  '867b99b4b9': 'B',  # .5px is unverified on a 1x display, and 255 buttons stand on it
+  '98499909f7': 'B',  # the chip label wrapper reaches a chip with no count, where it does nothing
   # ---- 2026-10-08, the revert / chip / trigger pass ----
   '64daf77a47': 'B',  # .perbtn carries an opaque grey again — deliberate, will bite on a tint
   'c9cc8dac5c': 'D',  # --sel stays the warm chrome grey in seven rules; the chip is the exception
