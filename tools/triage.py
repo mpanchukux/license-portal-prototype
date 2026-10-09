@@ -32,6 +32,13 @@ def sig(head):
 # D  a design-system decision — goes into SCALES.md / COMPONENTS.md first
 # E  closed (detected from the strikethrough, never written here)
 CAT = {
+  # ---- 2026-10-09, the mobile pass and the licence modal ----
+  '079eb86428': 'A',  # the invite placeholder lost its "comma separated" instruction: copy
+  '3015412618': 'A',  # the four-colour Google G has to come from Google's own brand kit
+  '01b3393253': 'B',  # three phone rules lost to id-scoped desktop rules the same day
+  '27bcc23d9c': 'D',  # grouped Instances stays a table on the phone: two presentations
+  'c4dafa04fe': 'C',  # cards are taller than rows; the phone pager matters more now
+  '7e92a85eca': 'A',  # Account/Billing actions still wrap at 375: needs shorter copy
   # ---- 2026-10-09, the rise correction ----
   '20c346ca0a': 'D',  # the product card rises on hover and greys on press: two mechanisms
   # ---- 2026-10-09, the second pass (layers, close buttons, hovers, spacing) ----
@@ -450,6 +457,10 @@ print(collections.Counter(e['cat'] for e in entries), file=sys.stderr)
 # product, its prices, its copy and two legal points; none of them is a design question
 # this document can settle, and none was attempted. Naming who answers is the whole job.
 OWNER = {
+  # ---- 2026-10-09, the mobile pass ----
+  '079eb86428': 'copy',     # the invite field lost its "comma separated" instruction
+  '3015412618': 'design',   # the four-colour Google G has to come from Google's brand kit
+  '7e92a85eca': 'copy',     # `Change password` is too long for the phone's title row
   'f9a7b99b3b': 'product',  # should the demo account's own name be seeded as its record?
   # ---- 2026-10-08 ----
   'f021f726df': 'design',   # which surface and width showed the missing ticks/icons?
