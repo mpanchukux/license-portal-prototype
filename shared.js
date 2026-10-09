@@ -3021,9 +3021,26 @@ var USERS_MODAL_HTML = ''
    `inputmode="email"` keeps the phone keyboard; `parse` was always the real validator. */
 +           '<input type="text" inputmode="email" class="invite-in" id="usersEmail"'
 +             ' autocomplete="off" autocapitalize="off" spellcheck="false"'
-+             ' placeholder="Add comma separated emails to invite" aria-label="Emails to invite">'
++             /* ⚠️ SHORTENED 2026-10-09, by request, and the reason is a measurement: at 390px the field
+   beside the icon button is 259px wide and the old string needed 275.9, so it clipped — the
+   defect that was reported. `Add emails to invite` needs about 160.
+   ⚠️ ONE STRING, NOT ONE PER WIDTH. A second placeholder for the desktop would be a second
+   copy of the same instruction, which is how two sources start.
+   ⚠️ WHAT IT GIVES UP, named rather than quietly dropped: the old text said "comma
+   separated", which taught the field's one non-obvious behaviour. The field still accepts
+   commas and still turns each address into a chip; nothing above it says so any more. */
++             ' placeholder="Add emails to invite" aria-label="Emails to invite">'
 +         '</div>'
-+         '<button class="btn btn--primary btn--md invite-go" data-invite>Invite</button>'
+/* ⚠️ THE BUTTON CARRIES BOTH A WORD AND A MARK (2026-10-09, by request: on the phone the
+   send control becomes an icon-only primary beside the field). Same shape as `Buy a
+   license` on the page title row: the markup holds both, and each width shows one —
+   `.ivg-ic` is hidden above 600px, `.ivg-txt` below it. A second button would be a second
+   thing to keep in step. ⚠️ `aria-label` is on the button, so the accessible name is the
+   same word at both widths even when the word is not drawn. */
++         '<button class="btn btn--primary btn--md invite-go" data-invite aria-label="Invite">'
++           '<svg class="ic ivg-ic" aria-hidden="true"><use href="assets/icons.svg#ti-send"></use></svg>'
++           '<span class="ivg-txt">Invite</span>'
++         '</button>'
 +       '</div>'
 /* ⚠️ The message slot is ALWAYS in the layout, empty or not: toggled with visibility,
    not `hidden`, so an error cannot change the block's height. Problems only —

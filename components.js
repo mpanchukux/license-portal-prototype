@@ -3670,6 +3670,49 @@ function instRowOpen(r, cls){
   return '<tr class="listrow inst-row' + (cls ? ' ' + cls : '') + '" data-instid="' + esc(r.inst.id)
     + '" data-licid="' + esc(r.lic.id) + '">';
 }
+/* ⚠️⚠️ THE PHONE'S INSTANCE IS A CARD, NOT A RE-POURED ROW (2026-10-09, by request: "the
+   same for Instances"). This was the last list in the product still turning a `<tr>` into a
+   card with CSS — the third shape for "an instance in a list" and the only one nobody had
+   drawn. Measured before: `#instTable` ran **1887px** tall at 390 because six columns were
+   squeezing instead of stacking.
+   ⚠️ EVERY PART IS THE ROW'S OWN. Status is the same `statmark` pair `instStatusCell` prints,
+   the version is the same `verline` with the same `versionMark`, the age is `agoText`, the
+   licence is `licenseMark` + the same link and `data-invlic` contract the panel intercepts,
+   and the actions are `instRowMenu`. **Nothing here is a second implementation** — the card
+   reorders the facts and stacks them, which is the one thing a `<td>` cannot be made to do.
+   ⚠️ `data-instid` / `data-licid` ARE WHAT THE ROW CARRIES, so everything already delegated
+   to an instance row — the kebab, copy, the licence interceptor — finds the same contract on
+   the card without knowing which shape it is looking at. */
+function instCardHTML(r){
+  var i = r.inst, l = r.lic, id = esc(i.id);
+  var stale = instStale(i), tone = stale ? 'alert' : 'ok';
+  var behind = cmpVersion(i.version, LATEST_VERSION) < 0;
+  return '<div class="inst-card" data-instid="' + id + '" data-licid="' + esc(l.id) + '">'
+    + '<div class="instc-head">'
+    +   '<div class="instc-txt">'
+    +     '<div class="ia-name">' + (i.label ? esc(i.label) : '<span class="muted">Unnamed</span>') + '</div>'
+    +     '<div class="ia-id mono"><span class="inst-id" title="' + id + '">' + id + '</span>'
+    +       '<button class="btn btn--ghost btn--md btn--icon tip inst-copy" data-instcopy="' + id + '"'
+    +         ' aria-label="Copy instance ID" data-tip="Copy instance ID">' + COPYSVG + '</button></div>'
+    +   '</div>'
+    +   '<div class="lic-actions">' + instRowMenu(i) + '</div>'
+    + '</div>'
+    + '<div class="instc-meta">'
+    +   '<span class="statmark is-' + tone + '">' + icon(STATUS_IC[tone], { cls:'statmark-ic' })
+    +     (stale ? 'Stale' : 'Healthy') + '</span>'
+    +   '<span class="verline' + (behind ? ' is-behind' : '') + '">'
+    +     '<span class="ver-run">' + (i.version ? versionMark(behind) : '') + esc(i.version || '\u2014') + '</span></span>'
+    +   '<span class="instc-ago">' + agoText(i.agoMin) + '</span>'
+    + '</div>'
+    + '<div class="instc-lic"><span class="lp-cell">'
+    +   '<span class="lp-ic lp-ic--sm" aria-hidden="true">' + licenseMark(l) + '</span>'
+    +   '<span class="ia-lictxt">'
+    +     '<a class="link" href="' + licenseHref(l, 'instances') + '" data-invlic="' + esc(l.id) + '">'
+    +     esc(l.label || l.name) + '</a>'
+    +     '<span class="ia-licsub">' + esc(l.product || '') + ' \u00b7 ' + esc(l.type) + '</span>'
+    +   '</span></span></div>'
+  + '</div>';
+}
 function instAllRow(r){
   return instRowOpen(r) + instNameCell(r.inst) + instStatusCell(r.inst) + instVerCell(r.inst)
     + instAgoCell(r.inst) + instLicCell(r.lic) + instActCell(r.inst) + '</tr>';
@@ -3735,6 +3778,47 @@ function renderInstancesView(licId){
   if(r) r.textContent = rows.length ? ('1–' + rows.length + ' of ' + rows.length) : '0 of 0';
 }
 /* Find an instance anywhere in the account, with the licence that owns it. */
+/* ⚠️⚠️ `invCardRowHTML` MOVED HERE FROM `page-home.js` (2026-10-09, by request: the
+   Invoices page gets cards on the phone). Second reader, so it moves — the same rule and
+   the same move `licCardHTML` made on 2026-10-01 when the Licenses page borrowed Home's
+   licence card. Nothing about it changed in the move: Home calls it exactly as it did, and
+   the two surfaces cannot drift because there is one builder. */
+function invCardRowHTML(v){
+  var lic = v.licId && licById(v.licId);
+  return '<div class="hcinv">'
+    + '<div class="hcinv-when">'
+    +   '<div class="hcinv-date">' + fmtDate(v.date) + '</div>'
+    +   '<div class="hcinv-num mono">' + esc(v.num) + '</div>'
+    + '</div>'
+    /* ⚠️⚠️ ONE LINE, THREE FACTS, MIDDOTS BETWEEN THEM (2026-10-01, by request): product ·
+       purchase type · plan. It was the product and plan on one line with the TYPE on a
+       second, quieter one — two lines saying one thing about one licence, and the second
+       line was the shortest and least useful of the three. The middot is the separator
+       this product already uses for exactly this (`ThingsBoard · Subscription` in every
+       licence row), so nothing new is introduced.
+       ⚠️ `title` CARRIES THE WHOLE RUN, because one line of three facts is the thing most
+       likely to ellipse in a card. */
+    + '<div class="hcinv-prod">' + (lic
+        ? '<a class="hcinv-lic" data-invlic="' + esc(lic.id) + '" href="' + licenseHref(lic, 'invoices') + '">'
+          + '<span class="hcinv-licname" title="' + esc([lic.product, lic.type, lic.name].filter(Boolean).join(' \u00b7 ')) + '">'
+          + [lic.product, lic.type, lic.name].filter(Boolean).map(esc).join(' &middot; ')
+          + '</span></a>'
+        : '<span class="muted">&mdash;</span>') + '</div>'
+    /* ⚠️⚠️ THE AUTO-CHARGE MARK RIDES THE AMOUNT NOW (2026-10-09, by request: "put the
+       recurring icon next to the invoice amount, on its right"). It sat with the STATUS,
+       where it read as a second status glyph — two marks in one `.statwrap`, one of which
+       says "paid" and the other "this one repeats". Beside the figure it qualifies the
+       figure, which is what it has always meant: this amount comes off the card again.
+       ⚠️ It is still `aria-hidden`, so for a screen reader nothing moved — which is also
+       the open debt about this glyph: sighted readers use it as data and it is announced
+       to nobody. Moving it does not fix that and does not make it worse. */
+    + '<div class="hcinv-amt">' + esc(v.amount) + autoChargeIcon(v) + '</div>'
+    + '<div class="hcinv-status"><span class="statwrap">' + invStatusMark(v) + '</span></div>'
+    /* ⚠️ The `{ghost:true}` argument is gone with the flag (2026-10-08): the table's
+       actions are ghost too now, so there is nothing left to ask for. */
+    + '<div class="hcinv-act"><span class="rowactions">' + invActionsHTML() + '</span></div>'
+  + '</div>';
+}
 function findInstance(instId){
   var hit = null;
   (DATA().licenses || []).forEach(function(l){

@@ -77,6 +77,16 @@
        on a different inset from the toolbar above them. Same two wrappers as the other
        two pages now; nothing about the table changed. -->
   <div id="invoicesList">
+  <!-- ⚠️⚠️ THE PHONE'S LIST IS CARDS (2026-10-09, by request: "the same for Instances and
+       Invoices"). Same arrangement the Licenses page settled on 2026-10-01: the host is a
+       SIBLING of the table rather than a replacement for it, because a `<div>` cannot live
+       in a `<tbody>` and the table has to stay whole for the desktop. `renderInvoicesPage`
+       fills exactly one of the two and hides the other, so the list is never in the DOM
+       twice.
+       ⚠️ `.hc-cards` is Home's own grid class, so the phone rules Home carries — one frame
+       per card, a gap between them — apply here without being restated. The card itself is
+       `invCardRowHTML`, now in `components.js` for exactly this second reader. -->
+  <div class="hc-cards invcards" id="invCards" hidden></div>
   <div class="tablescroll">
   <table>
     <thead class="stickyhead">

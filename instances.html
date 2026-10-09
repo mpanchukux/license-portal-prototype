@@ -116,6 +116,15 @@
   <div id="instancesList">
     <!-- states the filter the blocked banner arrived with, and carries the way out of it -->
     <p class="inst-filter" id="instFilter" hidden></p>
+    <!-- ⚠️⚠️ THE PHONE'S LIST IS CARDS (2026-10-09, by request). A sibling of the table,
+         not a replacement: a `<div>` cannot live in a `<tbody>` and the table has to stay
+         whole for the desktop. `renderInstancesPage` fills exactly one of the two and hides
+         the other, so the list is never in the DOM twice — the arrangement Licenses settled
+         on 2026-10-01 and Invoices took the same day as this.
+         ⚠️ GROUPED VIEW KEEPS THE TABLE. The group headings are `<tr colspan>`s that the
+         card host has no form for, and nobody asked for one; when grouping is on at this
+         width the table stays, which is also why the switch below tests it. -->
+    <div class="hc-cards instcards" id="instCards" hidden></div>
     <div class="tablescroll">
       <table id="instTable">
         <thead id="instAllHead" class="stickyhead"></thead>

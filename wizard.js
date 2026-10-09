@@ -1668,6 +1668,21 @@ var NL = (function(){
       +   '<button class="btn btn--primary btn--md fs-nextbtn" id="nlCommit">' + cta + '</button>'
       + '</div>'
       + '</div>';
+    /* ⚠️⚠️ THE PINNED SUMMARY HAS TO BE RE-DECIDED HERE (2026-10-09, reported: "applying a
+       coupon makes the fixed bottom block disappear"). Review is the one step whose pin is
+       MEASURED rather than declared, and the measurement lives in `syncPinnedSummary()` —
+       which this function was not calling. Every coupon path (open · apply · cancel ·
+       change) re-renders Review, the fresh `.fs-right` comes back without `pinned` and the
+       step without `haspin`, and nothing ever asked the question again, so the bar simply
+       went away for the rest of the flow.
+       ⚠️ THE `ResizeObserver` COULD NOT SAVE IT, and that is worth stating because it looks
+       like it should: it watches `#nlBody`, which is a fixed-height flex child of the sheet.
+       Its BORDER BOX never changes when the content inside it does, so a re-render inside a
+       scroll box fires nothing.
+       ⚠️ Capacity and Add-ons already paired `render…()` with `syncPinnedSummary()` at every
+       call site. Putting the call INSIDE this renderer instead means Review cannot grow a
+       fourth caller that forgets — which is how this one was lost. */
+    syncPinnedSummary();
   }
 
   /* ---- step 4: billing & payment (no billing data on file) --------------------

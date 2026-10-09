@@ -24,12 +24,24 @@
 
 var Auth = (function(){
 
-  /* Monochrome glyphs, drawn not fetched: the prototype makes no external requests,
-     and brand colour is not available to it anyway. The shapes still have to be
-     recognisable at 18px, so Google is its G and GitHub is its mark. */
+  /* ⚠️⚠️ THE TWO PLATFORM MARKS ARE FILES IN THEIR OWN COLOUR (2026-10-09, by request:
+     "these have to be exceptions, with each platform's standard colours"). They were
+     Tabler glyphs in the sprite, drawn in `currentColor` like every other icon — and the
+     note here used to justify that with "brand colour is not available to it anyway",
+     which stopped being true the moment two local files were allowed to hold it.
+     ⚠️ THE EXCEPTION IS NAMED BY FILES, NOT BY A HOLE IN THE RULE — the same shape the
+     wordmark's exception takes. `assets/brand-google.svg` and `assets/brand-github.svg`
+     are built by `tools/build-brands.py` from simple-icons, pinned and sha1-verified, and
+     placed with <img> rather than <use>: an <img> cannot inherit `currentColor`, so the
+     rule "no CSS paints an icon" is not bent, it simply does not apply to them.
+     ⚠️ `ti-brand-google` and `ti-brand-github` LEAVE THE SPRITE in the same pass. They had
+     exactly these two readers, and a closed set is only closed if nothing sits in it
+     unused. `ti-brand-mastercard` stays — the card row still draws it in ink, by design.
+     ⚠️ `alt=""` + `aria-hidden`: the button's own word ("Google", "GitHub") is the name,
+     and a second one would make a screen reader say it twice. */
   var SOCIALS = [
-    { k:'google', t:'Google', ic:'brand-google' },
-        { k:'github', t:'GitHub', ic:'brand-github' }
+    { k:'google', t:'Google', mark:'assets/brand-google.svg' },
+    { k:'github', t:'GitHub', mark:'assets/brand-github.svg' }
   ];
 
   /* The two screens differ in their words, their fields and their footer — nothing
@@ -95,7 +107,7 @@ var Auth = (function(){
     return '<div class="auth-social">'
       + SOCIALS.map(function(s){
           return '<button class="btn btn--secondary btn--md auth-soc" data-auth-social="' + s.k + '">'
-            + icon(s.ic)
+            + '<img class="auth-socmark" src="' + s.mark + '" alt="" aria-hidden="true">'
             + '<span>' + s.t + '</span></button>';
         }).join('')
       + '</div>';

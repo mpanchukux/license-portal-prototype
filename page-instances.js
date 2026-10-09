@@ -184,6 +184,10 @@ document.addEventListener('click', function(e){
   renderInstancesPage();
 });
 
+var INST_PHONE_MQ = window.matchMedia('(max-width:600px)');
+function onInstPhone(){ return INST_PHONE_MQ.matches; }
+INST_PHONE_MQ.addEventListener('change', function(){ renderInstancesPage(); });
+
 function renderInstancesPage(){
   var head = $('#instAllHead'), body = $('#instAllBody');
   if(!head || !body) return;
@@ -219,6 +223,14 @@ function renderInstancesPage(){
       + ' <a class="link" href="instances.html">Show all instances</a>';
   }
 
+  /* ⚠️⚠️ ONE QUESTION IN ONE PLACE, with a listener that repaints on the crossing — the
+     shape `page-licenses.js` and `page-invoices.js` both use. The card host stands down for
+     the grouped view and for every empty state, so the table's `<td colspan>` messages stay
+     the single place those words live. */
+  var phone = onInstPhone() && !grouped;
+  var cards = $('#instCards'), scroller = $('#instancesList .tablescroll');
+  if(cards) cards.hidden = !phone || !rows.length;
+  if(scroller) scroller.hidden = phone && !!rows.length;
   if(rows.length){
     var searching = !!instQuery();
     /* ⚠️ GROUPING AND PAGING CANNOT BOTH BE ON, and grouping wins. A page of ten rows
@@ -229,6 +241,8 @@ function renderInstancesPage(){
     var shown = (searching || grouped) ? rows : pageSlice(rows, instPage);
     if(searching || grouped) instPage.total = rows.length;
     body.innerHTML = grouped ? instGroupedHTML(shown) : shown.map(instAllRow).join('');
+    /* the phone's presentation of the SAME slice — see the host's note in instances.html */
+    if(cards) cards.innerHTML = shown.map(instCardHTML).join('');
   } else if(all.length){
     /* ⚠️ A CHIP THAT LEAVES NOTHING IS THE READER'S OWN DOING, and it keeps the
        toolbar, because the way out is to unset the filter they set. Same split the

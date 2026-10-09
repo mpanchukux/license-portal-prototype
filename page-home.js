@@ -275,34 +275,10 @@ function hcHeadHTML(title, count, href, aria){
    so this row cannot end up offering a different pair from the table's.
    ⚠️ The licence stays a LINK, as it is in every other invoice row: `data-invlic` is the
    contract the delegated interceptor reads, so the panel opens over Home here too. */
-function invCardRowHTML(v){
-  var lic = v.licId && licById(v.licId);
-  return '<div class="hcinv">'
-    + '<div class="hcinv-when">'
-    +   '<div class="hcinv-date">' + fmtDate(v.date) + '</div>'
-    +   '<div class="hcinv-num mono">' + esc(v.num) + '</div>'
-    + '</div>'
-    /* ⚠️⚠️ ONE LINE, THREE FACTS, MIDDOTS BETWEEN THEM (2026-10-01, by request): product ·
-       purchase type · plan. It was the product and plan on one line with the TYPE on a
-       second, quieter one — two lines saying one thing about one licence, and the second
-       line was the shortest and least useful of the three. The middot is the separator
-       this product already uses for exactly this (`ThingsBoard · Subscription` in every
-       licence row), so nothing new is introduced.
-       ⚠️ `title` CARRIES THE WHOLE RUN, because one line of three facts is the thing most
-       likely to ellipse in a card. */
-    + '<div class="hcinv-prod">' + (lic
-        ? '<a class="hcinv-lic" data-invlic="' + esc(lic.id) + '" href="' + licenseHref(lic, 'invoices') + '">'
-          + '<span class="hcinv-licname" title="' + esc([lic.product, lic.type, lic.name].filter(Boolean).join(' \u00b7 ')) + '">'
-          + [lic.product, lic.type, lic.name].filter(Boolean).map(esc).join(' &middot; ')
-          + '</span></a>'
-        : '<span class="muted">&mdash;</span>') + '</div>'
-    + '<div class="hcinv-amt">' + esc(v.amount) + '</div>'
-    + '<div class="hcinv-status"><span class="statwrap">' + invStatusMark(v) + autoChargeIcon(v) + '</span></div>'
-    /* ⚠️ The `{ghost:true}` argument is gone with the flag (2026-10-08): the table's
-       actions are ghost too now, so there is nothing left to ask for. */
-    + '<div class="hcinv-act"><span class="rowactions">' + invActionsHTML() + '</span></div>'
-  + '</div>';
-}
+/* ⚠️ `invCardRowHTML` MOVED TO `components.js` (2026-10-09, by request: "the same for the
+   Invoices page"). It is rendered by two surfaces now — Home's invoice block and the
+   Invoices page's phone list — and a renderer with a second reader lives in `components.js`.
+   Same move `licCardHTML` made on 2026-10-01, for the same reason. */
 /* ⚠️ THE FEED IS MOVED, NOT COPIED. Both layouts live in the markup at once, so a second
    `#dashFeed` would put two nodes with one id in the document — and `$('#…')` takes the
    first, which is the defect already on record for the details modal opened over the

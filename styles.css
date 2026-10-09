@@ -227,7 +227,21 @@
      ⚠️ `--sel` ITSELF IS NOT MOVED. Seven other rules read it — the nav's current item, the
      text button's press, the bottom nav's indicator, the FAQ's open category — and none of
      them was named. See the debt: they still carry the warm grey. */
-  --surface-selected:var(--c-grey-100);
+  /* ⚠️⚠️ IT IS BLUE NOW, AND IT GAINED AN EDGE (2026-10-09, by request: the selected filter
+     chip takes "the dark lavender-blue border and the light blue fill"). The paragraph above
+     is the record of the neutral grey it replaces and of why `--sel` had to go; the complaint
+     that produced it — a warm, dirty grey — is not reopened by this, because the value moves
+     off the neutral ramp on purpose rather than back onto the old chrome palette.
+     ⚠️⚠️ THE PAIR IS THE POINT. `--accent` on `--c-blue-50` is already what the product says
+     for "this one is chosen" — it rings the Popular plan card, the chosen product card and a
+     selected add-on. The filter chip was saying the same thing in a different vocabulary
+     (ink edge, grey fill), which is two words for one state. **Named as a pair so the three
+     card surfaces can be folded onto it later**; they still write the two primitives
+     literally, and that is in the debt.
+     ⚠️ `--surface-selected` had exactly ONE reader when it moved — the chip — so repointing it
+     is the whole change rather than a value that drags other rules with it. */
+  --surface-selected:var(--c-blue-50);
+  --border-selected:var(--accent);
   /* the same three steps in red, for the one tone that is not grey */
   --surface-danger:var(--c-red-50);
   /* the edge that goes with that ground. A VALUE, because `--c-red-100` is a primitive
@@ -7890,6 +7904,8 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
   color:var(--ink);outline:none}
 .invite-in::placeholder{color:var(--mid)}
 .invite-go{flex:none}
+/* the mark is the phone's form of this button; above 600px the word is the button */
+.ivg-ic{display:none}
 /* the link is the quiet third option, at the END of the row — a second button here
    would make two equal ways in, which is exactly what it must not be */
 .invite-link{flex:none;margin-left:var(--space-tight);font-size:var(--t-body-fs)}
@@ -8371,6 +8387,13 @@ body.list-empty #pageTitleRow [id^="licNewBtn"]{display:none !important}
    height or the gap after them — only what is inside the box differs */
 .brandbadge-mark{display:inline-flex;align-items:center;padding:var(--space-glyph) var(--space-inline);line-height:0}
 .brandmark{width:34px;height:20px;display:block}
+/* ⚠️ THE SIGN-IN MARKS ARE <img>, SO THIS RULE SIZES AND NEVER COLOURS (2026-10-09). 20px
+   is `--ic-20`, the same middle step every icon-bearing button draws at, so the two files
+   sit on the band the sprite would have put them on — the exception is the colour and the
+   mechanism, not the geometry. There is deliberately no `color`, no `filter` and no
+   `opacity` here: the whole point of the exception is that each platform's mark arrives in
+   its own colour and leaves in it. */
+.auth-socmark{width:var(--ic-20);height:var(--ic-20);flex:none;display:block}
 /* ⚠️ `nowrap` (2026-09-29). A masked card number is ONE token — `•••• •••• •••• 4242`
    broken across two lines stops reading as a card at all, and the spaces in it are
    grouping, not word boundaries. Caught in the purchase modal's new pay card, where
@@ -8680,7 +8703,7 @@ body.fsheet-open #shellMain{overflow:hidden}
 .filterchip:hover{border-color:var(--mid);color:var(--ink)}
 /* the check occupies no width until it means something, so the chip does not jump */
 .filterchip .cc-check{width:0;height:var(--ic-16);opacity:0;transition:width var(--motion-quick) var(--motion-ease)}
-.filterchip.is-on{border-color:var(--ink);background:var(--surface-selected);color:var(--ink);font-weight:500}
+.filterchip.is-on{border-color:var(--border-selected);background:var(--surface-selected);color:var(--ink);font-weight:500}
 .filterchip.is-on .cc-check{width:var(--ic-16);opacity:1}
 /* ⚠️⚠️ THE GAP IS LEFT EXACTLY AS IT WAS, and that was arrived at by measuring rather than by
    reasoning. Moving the tick to the end, I also set `gap:0` and gave the glyph its own margin
@@ -9118,7 +9141,7 @@ th.lic-num{text-align:right}
   /* ⚠️ AND THE ONE INSIDE THE CARD GOES, for the reason the licence card's did: two line
      weights, one of them separating cards and one separating halves of a card, is a
      reader counting edges to find out where a card ends. */
-  #homeCards .hcinv-prod{padding-top:var(--space-inline);border-top:var(--border-none)}
+  #homeCards .hcinv-prod,#invCards .hcinv-prod{padding-top:var(--space-inline);border-top:var(--border-none)}
   /* ---------- the Licenses page's own list, same cards (2026-10-01, by request) ----
      ⚠️ THE SAME THREE RULES AS HOME'S GRID, and they are listed beside it rather than
      written again: `#prodCards` carries `.hc-cards` for exactly this reason. What the
@@ -9146,12 +9169,66 @@ th.lic-num{text-align:right}
      16px channel is a desktop idea; on a phone the surface IS the page.
      ⚠️ THE HEADING KEEPS THE GUTTER rather than riding the bleed — it stands on the page
      ground above the frame, not on the frame. */
-  #homeCards .hcsect{margin-left:calc(-1 * var(--pageX));margin-right:calc(-1 * var(--pageX))}
-  #homeCards .hc-head{padding-left:var(--pageX);padding-right:var(--pageX)}
-  #homeCards .hc-cards,#licensesList .liccards{border-radius:var(--radius-sharp)}
+/* ⚠️⚠️⚠️ EVERY CARD IS ITS OWN FRAME AGAIN (2026-10-09, by request: "put each licence and
+   invoice card on its own white frame instead of joining them into one white block, take the
+   dividers out, and give them a gap instead").
+   **THIS REVERSES THE 09-30 / 10-01 DESIGN, AND EVERY NOTE ABOVE IS ITS REASONING.** Those
+   passes turned the phone's cards into ROWS OF ONE SURFACE on a stated argument — "a card
+   floating in a 16px channel is a desktop idea; on a phone the surface IS the page" — and
+   built four things on it: the full bleed, the shared white ground, the `border-top` between
+   cards, and the removal of each card's internal rule so two line weights could not compete.
+   The first three go here. **The fourth stays**: the internal divider was taken out because
+   it fought the divider BETWEEN cards, and with no divider between cards there is nothing
+   left for it to fight — but nobody asked for it back, so it does not come back.
+   ⚠️ THE BLEED IS WHAT HAD TO GO FIRST. A frame per card and a surface that reaches both
+   screen edges are the same claim made twice; with the gutter restored, the gap between the
+   frames is the page ground showing through, which is what makes them read as separate
+   objects rather than as a list that has been cut up.
+   ⚠️ `--space-control` BETWEEN THEM, not `--space-stack`: these are cards of one kind in one
+   list, and 16 between them reads as a break in the list rather than as its rhythm. */
+  #homeCards .hcsect{margin-left:0;margin-right:0}
+  #homeCards .hc-head{padding-left:0;padding-right:0}
+  #homeCards .hc-cards,#licensesList .liccards,#invCards,#instCards{
+    display:flex;flex-direction:column;gap:var(--space-control);
+    background:transparent;border-radius:var(--radius-sharp)}
+  /* ⚠️ THE INSTANCE CARD IS THE LAST LIST TO GET ONE (2026-10-09). It takes the frame every
+     other card on the phone now has; what is its own is the three-fact meta line — status,
+     version, last check-in — which the row spent three columns on and the card spends one
+     line on. `flex-wrap` because `Updates end in 12 days` and a long version can together
+     outrun 326px, and wrapping a fact to its own line is better than ellipsing one. */
+  #instCards > .inst-card{background:var(--card);border-radius:var(--radius-surface);
+    padding:var(--space-stack)}
+  .instc-head{display:flex;align-items:flex-start;gap:var(--space-control)}
+  .instc-txt{flex:1;min-width:0}
+  .instc-head .lic-actions{flex:none}
+  .instc-meta{display:flex;flex-wrap:wrap;align-items:center;
+    gap:var(--space-inline) var(--space-control);margin-top:var(--space-control)}
+  .instc-ago{color:var(--mid);font-size:var(--t-small-fs)}
+  .instc-lic{margin-top:var(--space-control);padding-top:var(--space-control);
+    border-top:var(--border-hairline) solid var(--line2)}
   #homeCards .hc-cards > .lcard,#licensesList .liccards > .lcard{
-    padding-left:var(--pageX);padding-right:var(--pageX)}
-  #homeCards .hc-cols .hc-card{border-radius:var(--radius-sharp);padding-left:var(--pageX);padding-right:var(--pageX)}
+    background:var(--card);border-radius:var(--radius-surface);
+    padding-left:var(--space-stack);padding-right:var(--space-stack)}
+  /* the join between rows goes with the surface that made them rows */
+  #homeCards .hc-cards > .lcard + .lcard,
+  #licensesList .liccards > .lcard + .lcard{border-top:var(--border-none)}
+  /* ⚠️ THE INVOICE LIST IS THE SAME CHANGE ONE LEVEL DOWN: `.hc-card` was the white frame
+     and `.hcinv` its rows, bled to the screen edges with a rule between them. The frame
+     gives up its ground to the rows, which become the frames. */
+  #homeCards .hc-cols .hc-card{background:transparent;border:var(--border-none);
+    border-radius:var(--radius-sharp);padding:0}
+  #homeCards .hc-invlist{display:flex;flex-direction:column;gap:var(--space-control)}
+/* ⚠️ `#invCards` IS NAMED BESIDE `#homeCards` RATHER THAN THE RULE BEING LOOSENED TO
+     `.hcinv` (2026-10-09). The class is also drawn inside Home's block above 600px, where it
+     is still a ROW of a card and must keep its `border-bottom`; the frame treatment belongs
+     to the two phone hosts, so the two phone hosts are what the selector says. */
+  #homeCards .hcinv,#invCards .hcinv{background:var(--card);border-radius:var(--radius-surface);
+    border-bottom:var(--border-none);
+    margin-left:0;margin-right:0;padding:var(--space-stack)}
+  /* ⚠️ THE AUTO-CHARGE MARK SITS WITH THE FIGURE (2026-10-09) — see the builder in
+     `page-home.js` for why. It needs a line of its own here only because `.hcinv-amt` was a
+     plain block and is now a figure with a glyph after it. */
+  .hcinv-amt{display:flex;align-items:center;gap:var(--space-tight)}
   /* ⚠️⚠️ `See all N` IS A ROW OF THE FRAME NOW (2026-10-01, by request: "it should be
      inside the frame, not outside it"). It sat under the white surface on the page
      ground, which read as a second object about the block rather than as the end of it.
@@ -9164,8 +9241,18 @@ th.lic-num{text-align:right}
      would otherwise have killed it along with the lift. The variant has no hover ring any
      more (2026-10-08, by request), so the rule that gave it back had nothing left to give
      and is deleted rather than left matching nothing. Hover here is the fill, like everywhere. */
+/* ⚠️⚠️ IT IS ITS OWN FRAME NOW, AND THAT IS A CONSEQUENCE OF THE CARDS BECOMING FRAMES
+   (2026-10-09). The note below is the 10-01 decision — `See all N` as "the last row of the
+   frame", carried by the frame's own fill and a `border-top` for the join. With one frame per
+   card there is no frame left for it to be a row of, and the rule it kept was a hairline with
+   nothing above it to divide: measured, a white bar 358 wide with a stray line on top and no
+   gap to the card before it.
+   ⚠️ SO IT JOINS THE LIST RATHER THAN ENDING IT: same white, same radius, same gap, no rule.
+   What 10-01 asked for — "inside the frame, not outside it" — is still honoured; what is
+   inside has simply become one frame per thing. */
   #homeCards .hc-more{display:block;margin:0;background:var(--card);
-    border-top:var(--border-hairline) solid var(--line2);padding:var(--space-control) var(--pageX)}
+    border-top:var(--border-none);border-radius:var(--radius-surface);
+    padding:var(--space-control) var(--space-stack)}
   #homeCards .hc-more .blockmore-go{width:100%;box-shadow:none}
   /* ⚠️ THE COUNT COMES OFF THE BLOCK HEADINGS (2026-10-01, by request): heading and
      arrow, nothing else. The number is not lost — `Licenses` ends in `See all 17` at the
@@ -9232,6 +9319,19 @@ th.lic-num{text-align:right}
      width, but a two-class modifier outranks it even from a later media query, so the
      820px card would stay centred on a phone. Restated, not relied upon. */
   .fs-box.usersbox{width:100vw;height:100vh;max-height:none;border:var(--border-none);border-radius:var(--radius-sharp)}
+  /* ⚠️⚠️ AND THE ID RULE HAS TO BE RESTATED, WHICH IS THE WHOLE DEFECT (2026-10-09, reported:
+     "the Manage users modal opens oddly — you can see the bottom bar under the black layer").
+     `#usersModal .fs-box{height:auto;max-height:min(90vh, …)}` is (1,1,0) and beats the line
+     above it (0,2,0) from any media query, so the sheet came out **759.6px of an 844px
+     viewport** and left an 84px strip of scrim at the bottom. The bottom bar sits under that
+     strip at `--z-docked` 90, below the scrim's 100 — measured with `elementFromPoint`, the
+     scrim IS on top — but `--overlay-scrim` is ink at **.32**, and a white bar read through a
+     32% wash is perfectly legible. **It was never a stacking bug; it was a sheet that did not
+     reach the bottom of the screen.**
+     ⚠️ The note two rules up already warned that "a two-class modifier outranks it even from a
+     later media query" and restated `.fs-box.usersbox` for exactly this reason — it just did
+     not go far enough up the specificity ladder to clear the id. */
+  #usersModal .fs-box{height:100vh;max-height:none}
   .usersbody{padding:var(--space-stack) var(--pageX) var(--space-block)}
   .authbody{padding:0 var(--space-heading) var(--space-band);display:flex;flex-direction:column;justify-content:center;flex:1}
   .auth-h{font-size:var(--t-h2-sm-fs);line-height:var(--t-h2-sm-lh);letter-spacing:var(--t-h2-sm-ls)}
@@ -9648,7 +9748,22 @@ th.lic-num{text-align:right}
      gap between the tinted title block and the white below it; in this column
      `.head-rest` is not below the title (see the finding recorded in NOTES about its
      missing `order`), so the space would just be a strip of tint above the key row. */
-  .head-rest{margin-top:0}
+/* ⚠️⚠️ `.head-rest` DISSOLVES, AND THAT IS THE DEFECT THE NOTE ABOVE ALREADY NAMED
+   (2026-10-09). It said "in this column `.head-rest` is not below the title (see the finding
+   recorded in NOTES about its missing `order`)" — and the finding was the whole story: it is
+   a plain flex ITEM at order 0, so it sorted ahead of every zone, and everything inside it —
+   the banner, the key, the facts — laid out in DOM order within it, untouched by the `order`
+   values written for them. Measured: key at y109 and identity at y426, with the zone numbers
+   saying the reverse.
+   ⚠️ `display:contents` is the same instrument `.top`, `.keygrid` and `.keycol` already use
+   two rules up, and for the same reason: a wrapper that generates no box lets its children
+   become items of the column that sorts them. Giving `.head-rest` an `order` instead would
+   keep its three zones welded into one band and only move the band.
+   ⚠️ IT ALSO DROPS THE WRAPPER'S FILL, WHICH IS CORRECT HERE: the second band exists on the
+   desktop to paint white below the tinted title block. At this width the whole head is one
+   tint and there is no second band to paint — the rule above already zeroed the gap that
+   went with it. */
+  .head-rest{margin-top:0;display:contents}
   .head .top{display:contents}
   .keygrid{display:contents}
   /* ⚠️ `:not([hidden])` on `.keycol` is the STRUCTURAL guard, not a cosmetic one.
@@ -9869,6 +9984,57 @@ th.lic-num{text-align:right}
 
   /* ---------- zone 4: one primary, full width, nothing beside it ---------- */
   .headactions{order:7;width:100%;margin:var(--space-stack) 0 0;padding:0;display:flex;gap:var(--space-control)}
+/* ⚠️⚠️⚠️ THE ZONES ARE RE-ORDERED (2026-10-09, by request: "the key, status, period and
+   version must come after the plan name and the Change plan / menu buttons, and the info
+   banner after the buttons and above the key").
+   **EVERY `order` ABOVE IS SUPERSEDED BY THE SIX BELOW**, and the notes above are kept
+   because they are the reasoning for the ZONES — what belongs in each band and why the
+   wrappers dissolve. Only the sequence changes:
+
+     was   1 banner · 3 identity · 4 label · 5 key · 6 period/version · 7 actions
+     now   1 identity · 2 label · 3 actions · 4 banner · 5 key · 6 status · 7 period/version
+
+   ⚠️ THE BANNER STOPS BEING THE FIRST THING ON THE SCREEN. It led because a condition is
+   the most urgent fact; the request puts the licence's own identity first and the banner
+   where it qualifies what follows — immediately above the key it is a condition ON, which
+   is also where the desktop has always had it.
+   ⚠️ STATUS JOINS THE FACTS AND GETS A ROW. `#statusCol` dissolves at this width like every
+   other `.keycol`, so `#statusSlot` was a loose item at order 0 and landed wherever the
+   column happened to put it — measured, at y175, above the key it is supposed to follow.
+   It is the `statusMark` the whole product uses; it only ever needed a place in the
+   sequence. `.zonerule` keeps the same order so it still rules off the facts from the key.
+   ⚠️ The `Status` caps heading goes with the other `.periodhead`s at this width — the rows
+   are led by a glyph, not by a label, which is what zone 3 has always said. */
+  .idline{order:1}
+  .metarow{order:2}
+  .headactions{order:3;margin:var(--space-control) 0 0}
+  #subAlert:not([hidden]){order:4}
+  .keyline{order:5}
+  .zonerule,#statusCol,#statusSlot{order:6}
+  #statusSlot{display:flex;align-items:center;gap:var(--space-control);
+    min-height:44px;margin:0;padding:0}
+  #statusCol > .periodhead{display:none}
+  .rowvalue:not([hidden]){order:7}
+/* ⚠️⚠️ THE KEY'S TWO BUTTONS GO BACK TO BEING THE COMPONENT (2026-10-09, reported: "the
+   reveal and copy buttons are not from the components — they should be icon secondary").
+   They were: the markup has carried `btn btn--secondary btn--md btn--icon` since it was
+   written. What took it away was the phone rule above — `width:44px;height:44px;border:none;
+   border-radius:var(--radius-surface);background:var(--sel)` — a filled tonal tile invented
+   here so an icon button would "mean the same thing on the list and on the detail".
+   Measured before: 44×44, `rgb(228,228,224)` (`--sel`, the warm chrome grey this session has
+   been removing everywhere else), zero border, 12px radius. That is not secondary, and it is
+   not any variant the button model has.
+   ⚠️ WHAT COMES BACK IS THE BAND, TOO: `--btnH` is 44 at this width, so the touch target the
+   tile was protecting is the component's own height. Nothing is traded for the component.
+   ⚠️ The two negative margins that tightened the filled tiles against the key go with them —
+   they were optical compensation for a fill that is no longer there. */
+  .keyline #revealBtn,.keyline #installBtn,.keyline #copyBtn{flex:none;align-self:center;
+    width:auto;height:var(--btnH);padding:0 var(--space-heading);
+    border-width:var(--border-hairline-half);border-style:solid;border-radius:var(--radius-pill);
+    background:transparent;color:var(--mid);justify-content:center}
+  .keyline #revealBtn,.keyline #copyBtn,.keyline #installBtn{margin-left:0;margin-right:0}
+  .keyline #revealBtn:hover,.keyline #installBtn:hover,.keyline #copyBtn:hover{
+    color:var(--ink);background:var(--btn-secondary-bg-hover)}
   /* ⚠️ A grant has no zone-4 action at all, so the row has to go entirely rather
      than leave a 16px hole. `[hidden]` cannot do this: the UA `[hidden]{display:none}`
      loses to ANY author `display`, whatever the specificity. Hence a class the
@@ -9890,7 +10056,34 @@ th.lic-num{text-align:right}
      items of `.fs-header`; then order puts ✕ first and ⋮ last. `elevateOpenPops`
      and `placeOverflow` both test `closest('.fs-headactions')`, and that is DOM,
      not layout, so dissolving the box does not break either. */
-  .licmodal .fs-header{gap:var(--space-inline);padding:var(--space-inline) var(--space-inline)}
+/* ⚠️⚠️⚠️ THE GREY BAND GOES AND ✕ BECOMES A CORNER CONTROL (2026-10-09, by request: "drop
+   the title `License`, drop that grey frame altogether, and just put the close button in the
+   top-right corner, roughly where the black-and-white Active status was").
+   ⚠️ THE TITLE WAS ALREADY SAYING NOTHING NEW. `renderKicker`'s own note says the eyebrow is
+   written so that "neither repeats the modal's own header (`License`)" — the overline says
+   Subscription, the headline names the product and the plan, and the band above them spent a
+   56px row to say the word `License` once more.
+   ⚠️ IT LEAVES THE FLOW RATHER THAN BEING SHRUNK. A transparent band would still take its
+   row and push the identity down by the height of a control nobody reads; absolute puts ✕ in
+   the corner and gives the sheet its first 56px back. The sheet is `position:relative`
+   already — it was made so for the overhanging disc — so there is nothing new to anchor to.
+   ⚠️⚠️ AND IT LANDS WHERE THE CHIP WAS, which is why this is safe rather than a collision:
+   the status chip this pass removed from the overline occupied exactly that corner, so the
+   identity block is already written to end before it. `padding-right` on the title block
+   keeps it that way for a long plan name instead of trusting that it stays short. */
+  /* ⚠️ `#licModal .fs-header` SETS BOTH THE FILL AND THE RULE AT (1,1,0), so the id has to
+     be in the key or the band stays grey behind the ✕ — measured, `rgb(244,245,246)` and a
+     1px bottom border on a 60×61 box in the corner. */
+  .licmodal .fs-header,
+  #licModal .fs-header{position:absolute;top:0;right:0;left:auto;width:auto;z-index:var(--z-sticky);
+    gap:var(--space-inline);padding:var(--space-inline);
+    background:transparent;border-bottom:var(--border-none);box-shadow:none}
+  .licmodal .fs-maintitle{display:none}
+  .licmodal .fs-header .spacer{display:none}
+  /* ⚠️ The reserve is the ✕'s own 44 plus the padding either side of it, not a round
+     number: measured, the button sits at x=338 in a 390 screen, so the title block has to
+     stop at 330 or a long plan name runs under it. */
+  .licmodal .titleblock{padding-right:calc(var(--btnH) + var(--space-stack))}
   .licmodal .fs-close{order:-1}
   .licmodal .fs-maintitle{order:0;flex:1;font-size:var(--t-h2-sm-fs);
     line-height:var(--t-h2-sm-lh);font-weight:var(--t-h2-sm-fw);
@@ -9961,6 +10154,15 @@ th.lic-num{text-align:right}
   .nc-when{order:-2}
   .nc-amount{order:-1;margin:0}
   .nextcharge .big{display:inline-block}
+/* ⚠️⚠️ THE EDIT CONTROL TAKES THE CARD'S TOP-RIGHT (2026-10-09, by request). It was the last
+   item of a wrapping flex row, so it settled wherever the wrap left it — measured at y=1084
+   in a card running 997 to 1144, i.e. pinned to the bottom edge by accident rather than
+   placed. The same treatment the instance card's menu got in this pass: absolute, because a
+   corner cannot be held by a flex item whose row reflows.
+   ⚠️ `.nc-main` keeps a right reserve so the amount and the date cannot run under it. */
+  .nextcharge{position:relative}
+  .nextcharge .btn{position:absolute;top:var(--space-tight);right:var(--space-tight);flex:none}
+  .nextcharge .nc-main{padding-right:var(--btnH)}
   /* line 2: the card and its pencil SHARE the line.
      ⚠️ `flex-basis:100%` put the pencil on a third line — the method had taken the
      whole width, leaving nothing beside it. The basis has to leave exactly the
@@ -10027,7 +10229,47 @@ th.lic-num{text-align:right}
      step alone (see the `.nl-step` rules), so `--nl-stepw` measures one label — the
      switcher takes the column instead and the two cards stack. The chosen one still
      expands: it is the one with a description. */
-  .nl-prodcards{flex-direction:column;width:auto;gap:var(--s-card)}
+/* ⚠️⚠️ THE SWITCHER IS ONE ROW, AND THE UNCHOSEN CARD IS ITS MARK (2026-10-09, by request:
+   "the product switcher should be on one line, and the card that is not selected should show
+   only the icon, as on the web"). It was a column — chosen card 100px tall, the other 60
+   under it — which is a list of two products rather than a switch between them.
+   ⚠️ THE CHOSEN CARD TAKES THE ROW AND THE OTHER HUGS: `flex:1 1 auto` against `flex:none`,
+   so the row is "this one, with its sentence — or that one", which is the shape the desktop
+   already draws at full size.
+   ⚠️⚠️ THE NAME IS HIDDEN FROM THE EYE, NOT FROM THE ACCESSIBILITY TREE, and that distinction
+   is load-bearing here: these cards are `<button role="radio">` whose accessible NAME is their
+   text. `display:none` on it would leave a radio with no name at all — the mark is
+   `aria-hidden`, so there would be nothing left to announce. This is the `.vh` recipe written
+   inline because a stylesheet cannot hand an element another class. */
+  .nl-prodcards{flex-direction:row;align-items:stretch;width:auto;gap:var(--s-card)}
+  .nl-prodcards > .nl-prodcard.on{flex:1 1 auto;min-width:0}
+  .nl-prodcards > .nl-prodcard:not(.on){flex:none}
+  .nl-prodcards > .nl-prodcard:not(.on) .nl-prodtxt{
+    position:absolute;width:1px;height:1px;margin:-1px;padding:0;
+    overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
+
+  /* ⚠️⚠️ THE STEP WAS NOT HIDDEN ON THE PHONE — IT WAS CRUSHED TO ZERO (2026-10-09, reported:
+     "the stepper's step should be centred in the header"). The block above already shows only
+     the current step at this width and names it; what killed it is the stepbar's own
+     `max-width:calc(100% - 420px)`, a reserve for a desktop title and the ✕. At 390 that
+     resolves NEGATIVE, so the strip came out **0px wide at x=195** and the step simply was not
+     there. It was never a centring problem — the absolute `left:50%` centring has always been
+     right, which is why nothing looked off-centre: there was nothing to look at.
+     ⚠️ 200px is the phone's own reserve, measured: title 105 + ✕ 44 + the header's two 12px
+     gaps, rounded up. The current step (`1 Choose your plan`) is about 150 and fits in the 190
+     that leaves. */
+  #nlModal .nl-stepbar{max-width:calc(100% - 200px)}
+  /* ⚠️⚠️ AND THE TITLE HAS TO YIELD, BECAUSE A CENTRED STRIP CANNOT NEGOTIATE. The stepbar is
+     absolutely positioned at the header's centre, so it does not take part in the flex row and
+     cannot push anything: measured at 390, `Buy a license` ends at x=121 and the widest step
+     (`1 Choose your plan`, 152 wide) starts at x=119 — a 2px overlap that no glyph falls into
+     yet. At 375 the same arithmetic gives 9.5px and letters do collide.
+     ⚠️ `calc(50% - 84px)` IS THAT ARITHMETIC, not a guess: half the header, less half the
+     widest step and the gap. At 390 it resolves to 111 and the 105px title is untouched; below
+     that the title ellipses instead of running under the step. **The title gives way because
+     it is the only one of the three that can** — the ✕ is a target and the step is the thing
+     the request asked to centre. */
+  #nlModal .fs-maintitle{max-width:calc(50% - 84px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .nl-billrow{gap:var(--s-grphead)}
   /* the tab strip's gray baseline runs edge to edge while the LABELS keep the
      content inset — the rule is chrome for the whole width, the words are content.
@@ -10164,6 +10406,38 @@ the content keeps the page gutter. */
   .listframe > .pagetitlerow,.listframe > .feed,.listframe > .feedmore,
   .listframe > .emptybox,.listframe > .noresults{
     padding-left:var(--pageX);padding-right:var(--pageX)}
+/* ⚠️⚠️⚠️ AND THE ONE SURFACE BREAKS BACK INTO FRAMES (2026-10-09, by request: "on the
+   Licenses page make cards too, with the toolbar on its own white frame — and the same for
+   Instances and Invoices"). **This reverses the rule immediately above**, which joined the
+   toolbar and the list onto one white surface running to both screen edges, on the same
+   argument Home's cards were joined by. Both are kept: the rule above is why that surface
+   existed, this one is what replaced it.
+   ⚠️ THE BLEED GOES WITH THE SURFACE. With the frame transparent, the negative margin would
+   only push the page ground past the gutter; the children already carry `--pageX` as padding,
+   so the title row and the pager land on the page's own line without further help.
+   ⚠️ THE TOOLBAR IS A FRAME, NOT A BAND: it gets the card's fill, the card's radius and the
+   same `--space-control` gap the cards use between themselves, so the page reads as a stack
+   of objects — controls, then rows — rather than as one sheet with a rule across it.
+   ⚠️⚠️ INSTANCES AND INVOICES ARE STILL TABLES AT THIS WIDTH, and that is the part of the
+   request this does NOT finish: measured, `#instTable` is 1887px tall and the Invoices table
+   1435px, both real `<table>`s, where Licenses has carried `.lcard`s since 10-01. Turning
+   those two lists into cards is a renderer each, not a rule — Invoices has a card already in
+   `.hcinv` on Home and could borrow it; Instances has none. Until then their scroller keeps
+   ONE frame of its own, so the page is still frames-on-ground rather than a sheet, and the
+   day the cards arrive this is the line that goes. */
+  .listframe,
+  .listcard:has(> .listbar){
+    margin-left:0;margin-right:0;background:transparent;border-radius:var(--radius-sharp)}
+  /* ⚠️ THE GUTTER IS THE FRAME'S, NOT THE CHILDREN'S — and the first build of this got it
+     twice. With the bleed gone, `.listcard` already sits inside the page gutter, so children
+     adding `margin:0 var(--pageX)` of their own came out at x=32 in a 390 screen and 326 wide.
+     The children take the gutter as PADDING (the rule below this one) and no margin at all. */
+  .listframe > .listbar{
+    background:var(--card);border-radius:var(--radius-surface);
+    margin:0 0 var(--space-control);
+    padding-left:var(--space-stack);padding-right:var(--space-stack)}
+  .listframe .tablescroll{background:var(--card);border-radius:var(--radius-surface)}
+
   /* ⚠️ THE TITLE ROW IS A DIRECT CHILD ON SOME PAGES AND A GRANDCHILD ON OTHERS.
      Licenses and Instances wrap their H1 in `.lic-titlerow`, so the row `syncTitleRow`
      builds inherits that gutter; Activity and Invoices put the H1 straight in the
@@ -10185,11 +10459,51 @@ the content keeps the page gutter. */
      deliberate instead of accidental: the title takes the first line, and the two
      actions share the second at equal width. `.sp` is dropped because a spacer that
      pushes nothing is just an invisible row item. */
-  .setcard-h-page.pagetitlerow{gap:var(--space-inline);flex-wrap:wrap;padding-bottom:var(--space-control)}
-  .setcard-h-page.pagetitlerow .lic-h1{flex:1 1 100%;min-height:0}
+/* ⚠️⚠️ THE ACTIONS HUG AND SIT BESIDE THE TITLE (2026-10-09, by request, on Account and on
+   Payment & Billing — the same header component, so one rule).
+   The lines this replaces put the title on a row of its own (`flex:1 1 100%`) and split the
+   row below it between the buttons (`flex:1 1 0`), so `Save` was 151px wide on Account and
+   310px on Billing — a primary stretched to the screen because there was nothing else on its
+   line.
+   ⚠️⚠️ IT FITS AT 390 AND ONLY JUST, AND THE NUMBER IS WHY THE GAP IS `--space-tight`.
+   Measured at their natural widths: `Account` **104**, `Change password` **152.8**, `Save`
+   **58.4** — 315.2 of content. At `--space-inline` the row needs **331.2** and the header
+   offers **326**, so it would wrap at every width. At `--space-tight` it needs 323.2 and fits
+   with 2.8px to spare.
+   ⚠️⚠️ BELOW 390 IT STILL WRAPS, and that is left as it is rather than hidden: at 375 the
+   header offers 311 and three objects need 323.2. `flex-wrap` stays on, so the buttons drop
+   to a second line — but they drop HUGGING, not stretched, which is the half of the request
+   that holds at every width. The other half needs shorter copy than `Change password`.
+   ⚠️ The title grows into the space instead of a spacer doing it, so when the row does wrap
+   there is no empty flex child left stranded on the first line. */
+  .setcard-h-page.pagetitlerow{gap:var(--space-tight);flex-wrap:wrap;
+    padding-bottom:var(--space-block)}
+  .setcard-h-page.pagetitlerow .lic-h1{flex:1 1 auto;min-height:0}
   .setcard-h-page.pagetitlerow .sp{display:none}
-  .setcard-h-page.pagetitlerow .btn{flex:1 1 0;min-width:0}
+  .setcard-h-page.pagetitlerow .btn{flex:none;min-width:0}
   .setcard-h-page.pagetitlerow .savednote{flex:1 1 100%}
+/* ⚠️⚠️ THE DIVIDERS RUN THE WHOLE FRAME (2026-10-09, by request). `.setcard-h`'s own
+   `border-bottom` and `.setdiv` both stopped at the content box — measured x=16 w=358 inside a
+   390 card — so they read as a rule drawn INSIDE a card rather than as the card's own join.
+   Each gives the card's padding back as a negative margin and takes it again as padding, the
+   same bleed the list frames use.
+   ⚠️ A SIDE EFFECT THAT IS A FIX: the page header carried `padding:20px 24px 12px` of its own,
+   so the title sat at x=40 while every field below it sat at x=16. Matching the card's own
+   gutter puts them on one line — the title was the only thing on these two pages that was not
+   on it.
+   ⚠️ THE GAPS ARE THE ONE THE PAGE ALREADY HAD: `--space-block` above the rule and below it,
+   which is what `.setdiv` has always put between the last field and itself (measured 24). The
+   header was giving 12 above and **0** below, so the first field started on the line. */
+  /* ⚠️ `.pagetitlerow` IS IN THE KEY BECAUSE `body[data-page="account"] .pagetitlerow` sets
+     `margin-bottom:0` at (0,2,1) and would otherwise win — measured, the first field sat on
+     the rule at 0px after the first build. Three classes beat two classes and an element. */
+  .setcard-page .setcard-h-page.pagetitlerow,
+  .setcard .setcard-h-page.pagetitlerow{
+    margin-left:calc(-1 * var(--space-stack));margin-right:calc(-1 * var(--space-stack));
+    margin-bottom:var(--space-block);
+    padding-left:var(--space-stack);padding-right:var(--space-stack)}
+  .setcard .setdiv{
+    margin-left:calc(-1 * var(--space-stack));margin-right:calc(-1 * var(--space-stack))}
   /* ⚠️ This once had to out-specify `body.nav-v2 .lic-h1{display:block}` (0,2,1),
      which beat a bare `.pagetitlerow .lic-h1` (0,2,0) and left the title 7px off
      centre. That rule is now `.lic-h1` (0,1,0), so a single class is enough — but
@@ -10299,15 +10613,28 @@ the content keeps the page gutter. */
      field. Full-width input, full-width Invite under it, the link as a quiet text
      action below. Same position — above whatever is below it — and NOT a bottom
      sheet: it is how this page grows, not a thing you summon. */
-  /* the row stacks; the CARD does not change — its height still comes from resting
-     content, there is just more of it stacked */
-  .inviterow{flex-direction:column;align-items:stretch;gap:var(--space-control)}
-  /* ⚠️ `flex:none` is load-bearing. The desktop rule is `.invite-in{flex:1}`, and
-     flex sizing follows the MAIN axis — which this rule just turned vertical, so
-     `flex:1` gave the input a flex-basis of 0 in HEIGHT and collapsed it to 21px.
-     Measured before the fix: input h=21 above a 44px button. */
-  .inviterow .invite-in{flex:none;height:var(--btnH)}
-  .inviterow .invite-go{width:100%;height:var(--btnH)}
+  /* ⚠️⚠️ THE ROW IS A ROW AGAIN (2026-10-09, by request: "replace the send button with an
+     icon-only primary and put it to the right of the input"). The note above this block
+     still argues for stacking — "a 44px button beside a field leaves the field about 180px
+     wide, which is not a field" — and that argument was about a button carrying a WORD.
+     An icon-only primary is 60px, and the field keeps 286.
+     ⚠️⚠️ AND `.inviterow .invite-in{flex:none}` IS DELETED, WHICH IS THE ACTUAL BUG REPORTED
+     ("the invite input clips its placeholder"). Its comment read: "`flex:none` is
+     load-bearing. The desktop rule is `.invite-in{flex:1}`, and flex sizing follows the MAIN
+     axis — which this rule just turned vertical, so `flex:1` gave the input a flex-basis of
+     0 in HEIGHT and collapsed it to 21px." **That reasoning is about a child of
+     `.inviterow`, and `.invite-in` is not one** — it is a child of `.invite-field`, which is
+     and always was a horizontal flex box. The rule predates the token-field rewrite of
+     2026-09-29, which put `.invite-field` between them; after that it only ever starved the
+     input of width. Measured before deleting it: field 358 wide, input **170.5**, placeholder
+     needs **275.9**. */
+  .inviterow{align-items:center;gap:var(--space-control)}
+  .inviterow .invite-in{height:var(--btnH)}
+  /* the component's own icon-only md box, reproduced here rather than by adding
+     `btn--icon` to the markup — the class would make it icon-only at every width */
+  .inviterow .invite-go{flex:none;height:var(--btnH);padding:0 var(--space-heading)}
+  .inviterow .ivg-txt{display:none}
+  .inviterow .ivg-ic{display:inline-flex}
   .inviterow .invite-link{align-self:flex-start;margin-left:0}
   .invite-in{font-size:var(--t-body-fs)}          /* 16px or iOS zooms the page on focus */
   .solo{padding:0}
@@ -10378,6 +10705,91 @@ so the only thing that showed was a
   .lic-typeseg > *,.inst-statusseg > *{flex:none}
   /* the switch and its sentence are replaced by the Canceled chip in the row above */
   .lic-toggle{display:none}
+  /* ⚠️⚠️ THE BILLING ROW AND THE PLAN CARDS TAKE ONE STEP EACH (2026-10-09, by request:
+     "a bit more room between the tabs and the description, and the same gap again between
+     the description and the plan cards"). Measured before: tabs to description **0**, and
+     description to cards **64px** (`.plangroups{margin-top}`, `--sp-11`) — the two ends of
+     the same little block were a whole scale apart, so the sentence read as part of the tab
+     strip and the cards read as a separate page.
+     ⚠️ `--space-stack` is the scale's own "between stacked components", which is what these
+     three are. Both gaps are the same token, so they cannot drift apart again.
+     ⚠️ IT REACHES THE PURCHASE FLOW TOO, and that is the same request arriving from the
+     other side: step 1 of the wizard renders the identical `.nl-billrow` + `.plangroups`,
+     and its own note asked for exactly this gap to come down. One rule, both surfaces. */
+  /* ⚠️⚠️ THE PRODUCT SWITCHER IS A FULL-WIDTH CONTROL HERE (2026-10-09, by request: "make
+     it taller and the full width of the screen"). On the desktop it is a raised button
+     sitting in the hero's right-hand slot, and its height comes from that row stretching
+     it — measured on a 390px screen, that row is short and the control came out **29px
+     tall and 232.9 wide**, which is a chip pretending to be the page's second decision.
+     ⚠️ `--btnH` IS THE NUMBER, not a new one: 40px is the band every control in this
+     product stands on, and this is a control. The 48px step exists but is spoken for — it
+     is "the page's own primary beside its h1", and borrowing it here would say this switch
+     outranks `Sign up`.
+     ⚠️ The wrapper stops stretching (`align-self:stretch` is what tied the height to that
+     hero row) so the button can own its height instead of inheriting a layout accident. */
+  .lp-swap{align-self:auto;width:100%}
+  .lp-swapbox{width:100%;height:var(--btnH);justify-content:center}
+
+  .nl-billdesc{margin-top:var(--space-stack)}
+  /* ⚠️ BOTH OWNERS HAVE TO BE NAMED, and a bare `.plangroups` reaches neither: the landing
+     picker sets this margin at `.planpicker .plangroups` (0,2,0) and the wizard at
+     `#nlModal .plangroups` (1,1,0). A single-class rule in a later media query loses to both
+     — measured: the gap stayed at 64 after the first attempt. */
+  .planpicker .plangroups,
+  #nlModal .plangroups{margin-top:var(--space-stack)}
+
+  /* ⚠️⚠️ THE PLAN CARDS ARE A SWIPE RAIL (2026-10-09, by request, on the landing page and in
+     the purchase flow — the same two surfaces, the same grid, so one rule).
+     Measured before: five cards stacked in a single 358px column, 432–537px tall each, so
+     comparing two plans meant scrolling past a whole screen of one to reach the other. A rail
+     puts them side by side again, which is what a price list is for.
+     ⚠️ THE RAIL BLEEDS TO THE SCREEN EDGES and pays the gutter back as padding, so the first
+     card still starts on the page's own left line and the last one can scroll fully clear of
+     the right edge. A rail inset inside the gutter looks like a cropped column.
+     ⚠️ `min(300px, 84vw)` LEAVES THE NEXT CARD PEEKING, which is the only thing that tells a
+     reader a rail scrolls at all — a card at 100% looks like a single column that happens to
+     move. ⚠️ `scroll-snap-align:start` with `mandatory`: a price card half on screen is a
+     price half read.
+     ⚠️ ALL FOUR OWNERS ARE NAMED. `.plangrid` alone reaches none of them — the landing picker,
+     the wizard host and the two-group layout each win on specificity, the same trap the
+     `.plangroups` margin hit an hour earlier.
+     ⚠️ The scrollbar is hidden the way `.faq-rail` above already hides it, so the two rails on
+     this page behave as one idea. */
+  /* ⚠️⚠️ THE TRACK HAS TO BE CAPPED OR THE RAIL NEVER SCROLLS, and this cost a measurement
+     to find: `.plangroups` is `display:grid` with no `grid-template-columns`, so its implicit
+     track is `auto` — and an `auto` track sizes to its content's MAX-CONTENT. The rail's
+     max-content is all five cards laid end to end, so the track grew to 1236px inside a 358px
+     container and `overflow-x:auto` had nothing to clip. Measured: `.plangroup` 1236 wide
+     inside `.plangroups` at 358, page overflowing by 878.
+     ⚠️ `minmax(0,1fr)` is the fix in one declaration — the `0` minimum is what lets the track
+     be smaller than its content, which is the whole difference between a rail and a flood. */
+  .planpicker .plangroups,
+  #nlPlanCards.plangroups,
+  .plangroups{grid-template-columns:minmax(0,1fr)}
+  .plangroup{min-width:0}
+  .planpicker .plangrid,
+  #nlPlanCards .plangrid,
+  .plangroups.two .plangrid,
+  .plangroups.two .plangrid.one{
+    min-width:0;
+    display:flex;grid-template-columns:none;align-items:stretch;
+    gap:var(--space-control);overflow-x:auto;scroll-snap-type:x mandatory;
+    margin-inline:calc(-1 * var(--pageX));padding-inline:var(--pageX);
+    /* ⚠️⚠️ `scroll-padding` IS NOT OPTIONAL WITH `mandatory`, and leaving it out undid the
+       gutter: snapping aligns an item to the SNAPPORT edge, which without this is the
+       padding edge — so the browser immediately scrolled the rail by 16px to sit the first
+       card flush against it, and the card came out at x=0 instead of on the page's own left
+       line. Measured: `padding-inline` resolved to 16 and the card still read 0. The
+       snapport has to be told about the gutter separately from the box. */
+    scroll-padding-inline:var(--pageX);
+    scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .planpicker .plangrid::-webkit-scrollbar,
+  #nlPlanCards .plangrid::-webkit-scrollbar{display:none}
+  .planpicker .plangrid > .plancard,
+  #nlPlanCards .plangrid > .plancard,
+  .plangroups.two .plangrid > .plancard{
+    flex:0 0 min(300px, 84vw);scroll-snap-align:start}
+
   .filterchip,.typechip{min-height:40px}
   /* ⚠️ Two DIFFERENT kinds of filter in one row, and they must not look alike:
      Subscription/Perpetual are a mutually exclusive group, Canceled is an
@@ -10896,13 +11308,33 @@ controls the title row
      start after the search" whatever else is in the row. */
   .lic-controls .lic-typeseg,.insttoolbar .dropwrap:first-of-type,
   .lic-controls .dropwrap:first-of-type{margin-left:auto}
-  .insttable{display:block;width:100%;background:#fff;border:var(--border-hairline) solid var(--line2);
-    border-radius:var(--radius-control);padding:0 var(--space-control)}
+  /* the frame gives up its box to the cards inside it — see the row rule below */
+  .insttable{display:block;width:100%;background:transparent;border:var(--border-none);
+    border-radius:var(--radius-sharp);padding:0}
   .insttable thead{display:none}
   .insttable tbody{display:block}
+/* ⚠️⚠️ THE INSTANCE CARD IS A FILL, NOT A RULE, AND ITS MENU OWNS THE CORNER (2026-10-09, by
+   request: "make the instance card a light grey fill instead of an outline, with the menu
+   button in the card's top-right").
+   The rows were already re-poured into cards at this width; what separated them was a
+   `border-bottom` and what carried them was the table's own white box with an outline — two
+   edges doing one job, which is the same complaint the Home cards answered earlier today.
+   ⚠️ THE FILL IS `--surface-quiet`, the ramp's resting step and the fill this product gives a
+   surface that is present but is not the page's own. The TABLE gives up its outline and its
+   white in the same move: a frame around a stack of filled cards is a box of boxes.
+   ⚠️ THE MENU IS LIFTED OUT OF THE FLOW. `.cellact` was a flex item in a wrapping row, so it
+   landed wherever the wrap left it — measured at x=173 in a 334-wide card, i.e. the middle of
+   the second line. Absolute is the only way to pin it to a corner of a box whose content
+   reflows; the card takes `position:relative` and the id line takes a right reserve so a long
+   value cannot run under it. */
   .insttable tbody tr{display:flex;flex-wrap:wrap;align-items:center;gap:0 var(--space-tight);
-    padding:var(--space-control) 0;border-bottom:var(--border-hairline) solid var(--line2)}
-  .insttable tbody tr:last-child{border-bottom:var(--border-none)}
+    position:relative;
+    padding:var(--space-control);border-bottom:var(--border-none);
+    background:var(--surface-quiet);border-radius:var(--radius-control)}
+  .insttable tbody tr + tr{margin-top:var(--space-inline)}
+  .insttable tbody tr > td.cellact{position:absolute;top:var(--space-tight);right:var(--space-tight);
+    width:auto;flex:none}
+  .insttable tbody tr > td.mono{padding-right:var(--btnH)}
   .insttable tbody td{display:block;padding:0;border:var(--border-none)}
   /* no select-all and no bulk actions on a phone, and the Label column is empty here */
   .insttable tbody td.chk,.insttable tbody td:nth-child(3){display:none}
@@ -11090,6 +11522,15 @@ controls the title row
     border:var(--border-hairline) solid var(--line2);padding:var(--space-inline) var(--space-stack)}
   .faq-cat.on{border-color:var(--ink);background:var(--sel)}
   .faq-q{font-size:var(--t-body-fs);padding:var(--space-control) var(--space-stack);gap:var(--space-control)}
-  .faq-a{padding:0 var(--space-stack) var(--space-control)}
+  /* ⚠️⚠️ ONE DECLARATION WAS CAUSING BOTH HALVES OF THE REPORT (2026-10-09: "in an open FAQ
+     item the answer should be left-aligned with the heading, and further from the divider").
+     It read `padding:0 var(--space-stack) var(--space-control)` — the `0` put the text hard
+     against the rule it opens under, and the `--space-stack` on the SIDES pushed it 16px
+     past the question above it. Measured: question text at x=33, answer paragraph at x=49,
+     divider-to-text 0.
+     ⚠️ The box already carries `margin:0 var(--space-stack)` from the main block, which is
+     what lines its EDGE up with the question; the phone rule was adding a second inset
+     inside that one. Sides go back to 0 and the air moves to the top, where it was asked for. */
+  .faq-a{padding:var(--space-stack) 0 var(--space-stack)}
   .faqsect{margin-top:var(--space-band)}
 }

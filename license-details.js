@@ -1107,12 +1107,16 @@ function renderKicker(lic, pk){
      twice — the same reason the table's copy of this square is hidden. */
   var mk = $('#appView #licHeadMark');
   if(mk) mk.innerHTML = licenseMark(lic);
-  el.innerHTML = esc(type)
-    + '<span class="kickchip mob-only">'
-    +   '<span class="chip status' + (lic.status === 'canceled' ? ' off' : '') + '">'
-    +     (lic.status === 'canceled' ? 'Canceled' : '<span class="sdot"></span>Active')
-    +   '</span>'
-    + '</span>';
+  /* ⚠️⚠️ THE PHONE'S OWN STATUS CHIP IS GONE (2026-10-09, by request: "remove the
+     black-and-white Active status to the right of Subscription"). The paragraph above is
+     why it existed — `#statusSlot` sits in `.titlerow` beside the h1 and `order` does not
+     carry a child across parents, so the eyebrow emitted its own short copy.
+     ⚠️ WHAT MAKES REMOVING IT SAFE IS THAT THE REAL ONE NOW HAS A PLACE. The same pass gave
+     `#statusSlot` an `order` among the facts, so status is stated once, by `statusMark`,
+     in the product's own vocabulary — a coloured mark with a word — instead of twice, once
+     as a grey pill on the overline and once in a column nobody could see.
+     ⚠️ The overline is the TYPE alone again, which is what its own note says it is for. */
+  el.innerHTML = esc(type);
 }
 
 /* A grant rides the perpetual details layout, with the few things that differ
@@ -1228,6 +1232,10 @@ function renderLicenseDetails(lic){
    row holds only its heading.
    ⚠️ Runs from `renderLicenseDetails`, i.e. on every open in BOTH hosts — the modal
    re-mounts its markup each time, so anything set once at boot would be lost. */
+/* ⚠️ The crossing has to repaint, or the button stays where the width it was rendered at
+   put it. Same shape `page-licenses.js` and the other list pages use for their own switch. */
+var LIC_PLAN_MQ = window.matchMedia('(max-width:600px)');
+LIC_PLAN_MQ.addEventListener('change', function(){ try { applyLicPlan(); } catch(e){} });
 function applyLicPlan(){
   $$('#appView .planblock').forEach(function(block){
     var btn = $('#planManageBtn', block);
@@ -1237,7 +1245,16 @@ function applyLicPlan(){
        where `Manage` sits at the far right of the card rather than on the `Plan` row. The
        attribute is gone with the axis — the arrangement is the stylesheet's default now —
        and this function survives for the one thing CSS cannot do: move a node. */
-    var target = featSh;
+    /* ⚠️⚠️ THE PHONE PUTS IT BACK ON THE `Plan` ROW (2026-10-09, by request: "Manage should
+       be in the Plan title row, not Add-ons"). The note above is the 10-01 decision — always
+       the Add-ons heading, because the side-by-side reference puts it at the far right of the
+       card — and that reference is a two-column layout this width does not have: at 390 the
+       blocks are stacked, so `Manage` on the Add-ons line sits under a plan table it does not
+       act on. **It acts on the plan, so on the stacked form it rides the plan's heading**,
+       which is also where the markup has always written it.
+       ⚠️ Both directions, both widths: the function is idempotent by contract, so the only
+       thing needed is a listener for the crossing — see `LIC_PLAN_MQ` below. */
+    var target = LIC_PLAN_MQ.matches ? planSh : featSh;
     if(btn.parentNode === target) return;
     if(!$('.spacer', target)){
       var sp = document.createElement('span');

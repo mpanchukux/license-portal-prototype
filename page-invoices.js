@@ -39,6 +39,13 @@ function renderInvStatusMenu(){
   var ctl = $('#invStatusCtl');
   if(ctl) ctl.hidden = opts.length < 2;
 }
+/* ⚠️⚠️ ONE QUESTION, ASKED IN ONE PLACE, AND A LISTENER THAT REPAINTS ON THE CROSSING
+   (2026-10-09). Same shape `page-licenses.js` uses (`LIC_PHONE_MQ`) and `page-home.js`
+   before it: two pages answering "am I on a phone" two different ways is how they drift. */
+var INV_PHONE_MQ = window.matchMedia('(max-width:600px)');
+function onInvPhone(){ return INV_PHONE_MQ.matches; }
+INV_PHONE_MQ.addEventListener('change', function(){ renderInvoicesPage(); });
+
 function renderInvoicesPage(){
   var b = $('#invoicesView tbody'); if(!b) return;
   var all = invoicesSorted();          // newest first, everywhere (see invoicesSorted)
@@ -49,6 +56,13 @@ function renderInvoicesPage(){
   var searching = !!invQuery();
   var shown = searching ? inv : pageSlice(inv, invPage);
   if(searching) invPage.total = inv.length;
+  /* ⚠️ The empty / no-match branches below write into the TABLE only, and that is
+     deliberate: at this width the card host is hidden whenever it has nothing to show, so
+     the table's `<td colspan>` states keep being the one place those three messages live. */
+  var phone = onInvPhone();
+  var cards = $('#invCards'), wrap = $('#invoicesList .tablescroll');
+  if(cards) cards.hidden = !phone || !inv.length;
+  if(wrap) wrap.hidden = phone && !!inv.length;
   if(inv.length){
     /* ⚠️ `bareProduct`, the SAME cell Home's invoice block renders. The full product
        cell belongs to the Licenses table, where the licence is the subject of the row;
@@ -58,6 +72,8 @@ function renderInvoicesPage(){
        the invoice number two columns to the left. Product, type, and a link to the
        licence: nothing else earns a place. */
     b.innerHTML = shown.map(function(v){ return invRow(v, { bareProduct:true }); }).join('');
+    /* the phone's presentation of the SAME slice — see the host's note in invoices.html */
+    if(cards) cards.innerHTML = shown.map(invCardRowHTML).join('');
   } else if(all.length){
     /* ⚠️ A FILTER THAT MATCHES NOTHING IS NOT AN EMPTY ACCOUNT — it keeps the toolbar,
        because the way out is to undo what the reader set. Same split the Licenses page

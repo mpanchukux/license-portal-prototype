@@ -32,6 +32,9 @@ SEARCH = [os.path.join(ROOT, 'node_modules', '@tabler', 'icons', 'icons')]
 # how the set grows, and it is reported in the pass that adds it (see NOTES).
 # ---------------------------------------------------------------------------
 ICONS = [
+    # ⚠️ added 2026-10-09: the phone's invite button is icon-only, and the action is
+    # SENDING an invitation — `plus` would have said "add a row", which is not what it does.
+    'send',
     # navigation and structure
     # ⚠️ The five destinations were renamed 2026-09-24, and the swap is one-for-one:
     #   home -> smart-home · server -> server-2 · receipt -> file-invoice
@@ -96,7 +99,7 @@ ICONS = [
     'cpu',
     # products and brands
     'topology-star', 'rss', 'credit-card',
-    'brand-google', 'brand-github', 'brand-mastercard',
+      'brand-mastercard',
     # ⚠️ The one FILLED icon, and it is not decoration: the attention marker on a licence
     # row is a solid ink triangle by the prototype's own rule (state is carried by weight
     # and fill, never by colour), so an outline triangle would read as the quiet variant
