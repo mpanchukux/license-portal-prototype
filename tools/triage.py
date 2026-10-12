@@ -53,6 +53,13 @@ CAT = {
   '946a5df5c1': 'D',  # three Ubuntu metrics sit as literals in the count chip's calc()
   '867b99b4b9': 'B',  # .5px is unverified on a 1x display, and 255 buttons stand on it
   '98499909f7': 'B',  # the chip label wrapper reaches a chip with no count, where it does nothing
+  # ---- 2026-10-12, the attention-chip reveal ----
+  '969b194344': 'B',  # the pressed chip grows after the rail scrolled; 0.1px of slack left
+  # ---- 2026-10-12, the styleguide strip ----
+  '0c9928cfaf': 'B',  # the pressed attention chip is 63px cut at 390; nothing scrolls it in
+  'd1a60f4be3': 'C',  # .sg-warn's CSS is unreachable now that nothing writes the class
+  '7035db87d2': 'A',  # PLANS_INCLUDE_NOTE / PE_FEATURES: approved copy, no renderer, no signpost
+  '101981c26c': 'A',  # 11 of 29 activity lines reach active voice — a copy answer, not a bug
   # ---- 2026-10-12, the three-message phone pass ----
   '4c4b800bd1': 'C',  # three passes unverified by a full geometry diff — campaign closed on evidence
   '7bf8ac142b': 'C',  # the 601 width finding was my own probe's missing border:0 — raised and withdrawn
@@ -475,6 +482,9 @@ print(collections.Counter(e['cat'] for e in entries), file=sys.stderr)
 # product, its prices, its copy and two legal points; none of them is a design question
 # this document can settle, and none was attempted. Naming who answers is the whole job.
 OWNER = {
+  # ---- 2026-10-12, the styleguide strip ----
+  '7035db87d2': 'copy',     # the TBMQ baseline the removed block documented was never written
+  '101981c26c': 'copy',     # 11 of 29 activity lines reach active voice; the rest need a ruling
   # ---- 2026-10-09, the mobile pass ----
   '079eb86428': 'copy',     # the invite field lost its "comma separated" instruction
   '3015412618': 'design',   # the four-colour Google G has to come from Google's brand kit
