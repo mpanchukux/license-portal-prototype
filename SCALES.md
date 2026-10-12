@@ -446,7 +446,7 @@ stage 2, where every change matched this table exactly. See implementation rule 
 |---|---:|---|
 | `--radius-sharp` | `0` | a surface that meets another surface flush |
 | `--radius-tight` | `4px` | the smallest rounding that reads as intentional — focus rings, small marks |
-| `--radius-control` | `8px` | inputs, cells, inset fields |
+| `--radius-control` | `8px` | menus, popovers, cards, modal headers, panels — **small surfaces**. ⚠️ This row said *"inputs, cells, inset fields"* until 2026-10-12, and the inputs part was never true: every field in the product reads `--radius-interactive`. Censused: 68 rules, 49 live, not one of them an input |
 | `--radius-surface` | `12px` | cards, menus, dialogs |
 | `--radius-feature` | `24px` | the plan card |
 
@@ -471,14 +471,29 @@ the 16–20 band, on the largest object on the selling surface. It does not join
 `--radius-surface` (that would be −8 and visible in the wrong direction), and it does not
 stay an orphan literal. **It moves 20 → 24 (+4) and takes `--radius-feature`.**
 
-## ⚠️⚠️ The collision: `--btn-r` is already 24, and the two are allowed to be equal
+## ⚠️ `--btn-r` IS NOW `--radius-interactive` — renamed 2026-10-12, zero pixels
 
-`--btn-r:24px` is declared at `styles.css:22` and read 12 times. From this pass on, **two
+**The old name named one of its nine readers.** Censused before the rename: `.btn`,
+`.stepper`, `.fs-devinput`, `.navpick-btn` (the Instances switcher), `.invite-field`,
+`.field input`, `.paystripe`, `.searchbox input` and the date input — nine live rules, of
+which exactly one is a button, plus four on dead selectors (`.inline input`, `.pager select`,
+`.seg`, `.fsheet-extra input[type="date"]`). It is the radius of an **interactive control**.
+⚠️ **It could not take the name `--radius-control`**, which is the obvious one and is already
+spent on 8px — a token read by menus, cards and modal headers. **Both names were wrong in the
+same direction**, and only one of them was fixed in this pass: see the row above.
+⚠️ The declaration also moved — it sat up among the colour tokens rather than in the radius
+ladder. **Verified by the comparison this axis requires** (implementation rule 8): 37 cells
+across the band, 38,800 elements, `border-radius` in the property set — **0 changed, 0 lost,
+0 gained**.
+
+## ⚠️⚠️ The collision: `--radius-interactive` is already 24, and the two are allowed to be equal
+
+`--radius-interactive:24px` is declared at `styles.css:22` and read 12 times. From this pass on, **two
 tokens hold the number 24 for two unrelated reasons**:
 
 | token | 24 means | read by |
 |---|---|---|
-| `--btn-r` | **control radius** — how round a control is | buttons, chips, toolbar, fields, selects, stepper, `.paystripe`, date input |
+| `--radius-interactive` | **control radius** — how round a control is | buttons, chips, toolbar, fields, selects, stepper, `.paystripe`, date input |
 | `--radius-feature` | **feature-card radius** — how round the plan card is | `.plancard` |
 
 **They must never be merged, and the equality is not the reason to merge them — it is a
@@ -492,6 +507,35 @@ change with it? No. If the plan card changes, do the buttons? No. Two answers of
 two tokens, whatever the values say. A single shared token would make the next change to
 either one silently change the other, and the failure would be visible on the landing page.
 
+## ⚠️⚠️ MEASURED AND NOT ACTED ON: 24 never renders as a visible corner on a control
+
+**Asked 2026-10-12: is there any control shorter than 48px that reads this token — that is,
+does 24 ever render as anything but a pill?** The answer is no. It is recorded here so nobody
+re-derives it later and folds the value into `--radius-pill` believing the move is free.
+
+**The measurement.** Every element matching the token's readers, walked across pages, across
+the band, and across the surfaces a plain load never opens (the wizard, the licence panel, the
+Users modal): **199 elements authored at 24px**, and their shorter side came out at **26, 30,
+40, 42, 44 and 48 — nothing above 48.** A radius clamps to half the shorter side, so at 48 24
+is *exactly* a stadium end and everywhere below it is rounder than the box allows. **On screen,
+for every control in the product today, `--radius-interactive` and `--radius-pill` are the same
+thing.**
+
+**Why it is kept anyway, deliberately:**
+1. **The value is not redundant — the control radius is.** `--radius-feature` is also 24 and
+   sits on `.plancard`, a large box where 24 *is* a visible corner. Folding the control token
+   into the pill removes one name and leaves the number under the other, which is a different
+   change from the one the measurement licenses.
+2. **A pill and a 24 that happens to look like one are different statements.** `999px` means
+   *as round as this box can be*; `24px` means *this number*. The day a control renders taller
+   than 48 — a stacked field, a two-line button — the two stop agreeing, and the one written as
+   24 keeps its corner while the one written as a pill does not.
+3. **The equality is a fact about today's sizes, not about the scale**, which is the same
+   argument the section above makes for refusing to merge the two 24s.
+
+⚠️ **What would change the answer:** a control that renders taller than 48px. There is none
+today. If one appears, this is the entry to re-read before anyone reaches for the pill.
+
 ## Mapping
 
 | current | × | → | move | |
@@ -502,7 +546,7 @@ either one silently change the other, and the failure would be visible on the la
 | `8px` | 32 | control | — | |
 | `999px` | 22 | pill | — | |
 | `50%` | 15 | circle | — | |
-| `var(--btn-r)` | 12 | unchanged | — | stays its own token, see above |
+| `var(--radius-interactive)` | 12 | unchanged | — | stays its own token, see above |
 | `4px` | 7 | tight | — | |
 | `12px` | 5 | surface | — | |
 | `7px` | 5 | control (8) | +1 | |
@@ -1812,7 +1856,7 @@ which.
 | for | read | not |
 |---|---|---|
 | space | `--space-glyph` `-tight` `-inline` `-control` `-stack` `-heading` `-block` `-band` `-gutter` `-inset` `-divide` | a pixel count |
-| corners | `--radius-sharp` `-tight` `-control` `-surface` `-feature` `-pill` `-circle`; **buttons read `--btn-r`** | `--radius-feature`, even though it is also 24 |
+| corners | `--radius-sharp` `-tight` `-control` `-surface` `-feature` `-pill` `-circle`; **buttons read `--radius-interactive`** | `--radius-feature`, even though it is also 24 |
 | depth | `--elevation-menu` `-dialog` `-docked` | a hand-written `box-shadow` |
 | borders drawn without layout | `--ring-selected` `-recommended` `-invalid` `-hairline` `-hover` `-halo` | an `inset 0 0 0 …` of your own |
 | a pressed control | `--press-inset` + the variant's own alpha | the elevation levels |
@@ -1839,7 +1883,7 @@ which.
 
 ### ⚠️ Two tokens that look equal and are not
 
-`--btn-r` and `--radius-feature` are both 24px **and are deliberately separate.** The test is
+`--radius-interactive` and `--radius-feature` are both 24px **and are deliberately separate.** The test is
 in §2 and it is the test to reuse whenever you are tempted to merge two tokens with the same
 value: *if the control radius moves, does the plan card move with it? No. If the plan card
 moves, do the buttons? No.* **Two "no"s means two tokens, whatever the numbers say.**

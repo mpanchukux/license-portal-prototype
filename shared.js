@@ -114,7 +114,7 @@ var BTN_SPIN = '<span class="btn-spin" aria-hidden="true"></span>';
    FIELD — one component, and the census is why (component pass, 2026-10-07)
    ============================================================================
    25 rendered instances, **7 signatures, ONE form.** 40px tall (44 on the phone, by the
-   touch floor), `--btn-r`, white, a 1px `--line` border, 16px text. Every one of the seven
+   touch floor), `--radius-interactive`, white, a 1px `--line` border, 16px text. Every one of the seven
    differences is CONTENT rather than variant:
      · padding grows 16 → 36 or 40 when a glyph sits in the box (search, select chevron);
      · the locked wizard input swaps the fill, because locked is a STATE;

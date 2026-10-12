@@ -8,41 +8,64 @@
 var CSSVAR = function(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); };
 
 /* ---------- colour ---------- */
-var COLORS = [
-  ['--ink',        'text, fills, focus'],
-  ['--mid',        'secondary text'],
-  ['--c-grey-400', 'decorative glyphs and inactive text only \u2014 never live text'],
-  ['--line',       'control borders'],
-  ['--line2',      'hairlines, card borders'],
-  ['--bg',         'page background'],
-  ['--card',       'card / bar surface'],
-  ['--fill',       'meter fill'],
-  ['--track',      'meter track'],
-  ['--chrome',     'chrome surface'],
-  ['--chromeLine', 'chrome border'],
-  ['--hover',      'hover wash'],
-  ['--sel',        'selected nav item']
-];
-/* ⚠️ THE COLOURED LAYER IS LISTED SEPARATELY, and it is listed at all because this page
-   claimed token swatches "cannot drift from the values the product uses" while the list
-   above was curated by hand — the three selling-surface exceptions had never appeared on
-   it, and the status colours would have been the fourth omission. Two rows now: what the
-   value IS, and what it is FOR.
-   ⚠️ A PRIMITIVE IS SHOWN AS ITS OWN ROW, dimmed by its label rather than by a rule: it
-   is not a colour any component may read, and a page that shows it beside the meanings
-   without saying so teaches exactly the mistake the two layers exist to prevent. */
+/* ⚠️⚠️ THE "GREYS" BLOCK IS GONE (2026-10-12). It was a third category beside primitives
+   and meanings, and it was a leftover of the monochrome era: everything in it was either a
+   raw value (which belongs with the primitives) or a role that rules read (which belongs
+   with the meanings). Keeping it meant the product's commonest colours were the only ones
+   outside the two-layer model this page states. The values moved into `--c-grey-*` /
+   `--c-warm-*`, the roles moved down to the meanings, and nothing changed on screen. */
 var COLORS_PRIMITIVE = [
-  ['--c-green-600', 'primitive — read only by a meaning below'],
-  ['--c-red-600',   'primitive — read only by a meaning below'],
-  ['--c-grey-600',  'primitive — read only by a meaning below']
+  ['--c-grey-0',    'neutral ramp — the step number is lightness, bigger is darker'],
+  ['--c-grey-50',   'neutral ramp'],
+  ['--c-grey-100',  'neutral ramp'],
+  ['--c-grey-125',  'neutral ramp'],
+  ['--c-grey-150',  'neutral ramp'],
+  ['--c-grey-200',  'neutral ramp'],
+  ['--c-grey-300',  'neutral ramp'],
+  ['--c-grey-400',  'neutral ramp'],
+  ['--c-grey-500',  'neutral ramp'],
+  ['--c-grey-600',  'neutral ramp'],
+  ['--c-grey-700',  'neutral ramp'],
+  ['--c-grey-800',  'neutral ramp'],
+  ['--c-grey-900',  'neutral ramp'],
+  ['--c-warm-50',   'the old chrome palette — warm, outside the neutral ramp'],
+  ['--c-warm-100',  'the old chrome palette'],
+  ['--c-warm-200',  'the old chrome palette'],
+  ['--c-warm-300',  'the old chrome palette'],
+  ['--c-indigo-900','the brand indigo'],
+  ['--c-blue-25',   'blue'],
+  ['--c-blue-50',   'blue'],
+  ['--c-lav-50',    'the mesh lavender, flattened'],
+  ['--c-lav-200',   'the mesh lavender'],
+  ['--c-green-600', 'green'],
+  ['--c-red-50',    'red'],
+  ['--c-red-100',   'red'],
+  ['--c-red-200',   'red'],
+  ['--c-red-600',   'red'],
+  ['--c-red-700',   'red'],
+  ['--c-amber-50',  'amber'],
+  ['--c-amber-400', 'amber']
 ];
 var COLORS_MEANING = [
+  ['--ink',          'text, fills, focus'],
+  ['--mid',          'secondary text'],
+  ['--glyph-decorative', 'glyphs that carry no meaning alone \u2014 every one aria-hidden'],
+  ['--text-inactive','text inside a disabled control'],
+  ['--line',         'control borders'],
+  ['--line2',        'hairlines, card borders'],
+  ['--bg',           'page background'],
+  ['--card',         'card / bar surface'],
+  ['--fill',         'meter fill'],
+  ['--track',        'meter track'],
+  ['--chromeLine',   'one reader left: the phone bottom nav\u2019s top border'],
+  ['--hover',        'hover wash \u2014 the warm axis the product is leaving'],
+  ['--sel',          'selected nav item \u2014 the warm axis the product is leaving'],
   ['--status-ok',    'healthy, current, running as intended'],
   ['--status-alert', 'needs doing — failed charge, release behind'],
   ['--status-off',   'switched off rather than wrong — cancelled, ended'],
-  ['--accent',       'Popular card ring and tag — LITERAL, not through a primitive'],
+  ['--accent',       'Popular card ring and tag \u2014 reads --c-indigo-900'],
   ['--tick',         'plan-card ticks — points at --accent'],
-  ['--page-bg',      'Home ground under the mesh — LITERAL, not through a primitive'],
+  ['--page-bg',      'Home ground under the mesh \u2014 reads --c-blue-50'],
   /* ⚠️ Added 2026-09-28 with the licence header's flat tint. It is the mesh's own
      lavender at ~12% on white — derived from the pool colour, not picked — so the two
      surfaces read as one family without one being a copy of the other. */
@@ -56,11 +79,34 @@ function sgSwatches(list){
       + '</div>';
   }).join('');
 }
-$('#sgColors').innerHTML = sgSwatches(COLORS);
 /* ⚠️ `CSSVAR` resolves the COMPUTED value, so a meaning that points at a primitive
    (or at another meaning, as --tick points at --accent) prints the colour it actually
    paints — the indirection is documented in the prose, not hidden by the swatch. */
 if($('#sgColorsPrim')) $('#sgColorsPrim').innerHTML = sgSwatches(COLORS_PRIMITIVE);
+/* ---------- radii ----------
+   ⚠️ READ FROM `:root`, NEVER TYPED. The block this replaced was seven literals — 5px, 6px,
+   24px, 8px, 10px, 12px, 999px — under the page's own promise that swatches cannot drift
+   from the product. Three of those numbers (5, 6, 10) were in no rule anywhere, and the
+   three tokens the product does have and the page did not show (sharp, tight, circle) were
+   missing. A specimen that is typed is a specimen that goes stale in silence.
+   ⚠️ The DESCRIPTION is still written here, because what a radius is FOR is a decision and
+   not something a stylesheet can be asked. The VALUE never is. */
+var RADII = [
+  ['--radius-sharp',       'a surface that meets another flush'],
+  ['--radius-tight',       'focus rings and small marks'],
+  ['--radius-control',     'menus, popovers, cards, modal headers'],
+  ['--radius-surface',     'cards, menus, dialogs'],
+  ['--radius-feature',     'the plan card'],
+  ['--radius-interactive', 'every interactive control \u2014 button, field, search, stepper, switcher'],
+  ['--radius-pill',        'a shape, not a size'],
+  ['--radius-circle',      'a shape, not a size']
+];
+if($('#sgRadii')) $('#sgRadii').innerHTML = RADII.map(function(r){
+  var v = CSSVAR(r[0]);
+  return '<div style="border-radius:' + v + '" title="' + esc(r[1]) + '">'
+       + '<b>' + v + '</b>' + r[0].replace('--radius-', '') + '</div>';
+}).join('');
+
 if($('#sgColorsMeaning')) $('#sgColorsMeaning').innerHTML = sgSwatches(COLORS_MEANING);
 
 /* ---------- type scale ----------

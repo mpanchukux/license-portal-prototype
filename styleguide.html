@@ -43,35 +43,12 @@
   <!-- ============================ TOKENS ============================ -->
   <section class="sg-sec" id="tokens">
     <h2>Tokens</h2>
-    <p>The variables on <code class="sg-cls">:root</code>. Swatches and sizes are read from the live
-      stylesheet at load, so they cannot drift from the values the product uses.</p>
+    <p>Variables on <code class="sg-cls">:root</code>, read from the live stylesheet at load.</p>
 
     <div class="sg-item">
       <h3>Colour</h3>
-      <p class="sg-note"><b>Two layers, and a component may read only the second.</b>
-        <b>Primitives</b> (<code class="sg-cls">--c-green-600</code>,
-        <code class="sg-cls">--c-red-600</code>, <code class="sg-cls">--c-grey-600</code>) are raw
-        values named by hue and step; nothing reads them directly. <b>Meanings</b>
-        (<code class="sg-cls">--status-ok</code>, <code class="sg-cls">--status-alert</code>,
-        <code class="sg-cls">--status-off</code>) are what a rule reads.</p>
-      <p class="sg-note"><b>Colour is never the only carrier.</b> Every coloured mark ships with a
-        differently shaped glyph and, where there is room, the word: status is
-        <code class="sg-cls">circle-check</code> &middot; <code class="sg-cls">circle-x</code> &middot;
-        <code class="sg-cls">alert-triangle-filled</code>, the Home banner is
-        <code class="sg-cls">alert-circle</code> &middot; <code class="sg-cls">clock</code> &middot;
-        <code class="sg-cls">alert-triangle</code>. Remove the colour and every one of them still reads.</p>
-      <p class="sg-note"><b>Two text greys, not three.</b> <b>A text colour clears 4.5:1 on its
-        ground, and a glyph that identifies a control or its state clears 3:1</b> &mdash; which is
-        the floor the third grey could not meet. Every text reader takes
-        <code class="sg-cls">--mid</code>; where a stack needs a third level it is carried by
-        <b>size</b>. <code class="sg-cls">#9a9a9a</code> exists under two roles only &mdash;
-        <code class="sg-cls">--glyph-decorative</code> (<code class="sg-cls">aria-hidden</code> glyphs
-        that carry no meaning alone) and <code class="sg-cls">--text-inactive</code> (text inside a
-        disabled control). A glyph that identifies a control or its state is not decorative.</p>
-      <p class="sg-note"><code class="sg-cls">--accent</code>, <code class="sg-cls">--tick</code> and
-        <code class="sg-cls">--page-bg</code> are literals and do not go through the primitive layer.</p>
-      <h4 class="sg-sub">Greys &mdash; the system everything still defaults to</h4>
-      <div class="sg-grid" id="sgColors"></div>
+      <p class="sg-note">Two layers: primitives named by hue and step, meanings that rules read.
+        Colour never carries alone &mdash; every coloured mark has its own glyph shape.</p>
       <h4 class="sg-sub">Primitives <span class="sg-cls">nothing reads these directly</span></h4>
       <div class="sg-grid" id="sgColorsPrim"></div>
       <h4 class="sg-sub">Meanings <span class="sg-cls">this is what a rule reads</span></h4>
@@ -80,9 +57,8 @@
 
     <div class="sg-item">
       <h3>Type scale</h3>
-      <p class="sg-note">Nine levels across two tiers plus the key, a 14px floor, and weight that
-        grows with size (700 only on display and h1). The compact tier is what &le;600px substitutes
-        for h1, h2 and body. <code class="sg-cls">display</code> has no user in the product today.</p>
+      <p class="sg-note">Nine levels across two tiers plus the key, 14px floor. The compact tier
+        is what &le;600px substitutes for h1, h2 and body.</p>
       <div class="tablescroll"><table class="sg-type"><thead>
         <tr><th>Level</th><th>Token</th><th>Size / line / tracking / weight</th><th>Specimen</th></tr>
       </thead><tbody id="sgType"></tbody></table></div>
@@ -107,26 +83,36 @@
 
     <div class="sg-item">
       <h3>Radii</h3>
-      <p class="sg-note"><code class="sg-cls">--btn-r</code> is the toolbar corner: every 40px
-        control standing in a row together takes it &mdash; buttons, the search field and the
-        Instances view switcher. At 40px tall it clamps to a pill, so the number only shows on
-        anything shorter.</p>
-      <div class="sg-radii">
-        <div style="border-radius:5px">5px · controls</div>
-        <div style="border-radius:6px">6px · inputs</div>
-        <div style="border-radius:24px">24px · --btn-r</div>
-        <div style="border-radius:8px">8px · cards</div>
-        <div style="border-radius:10px">10px · blocks</div>
-        <div style="border-radius:12px">12px · modal</div>
-        <div style="border-radius:999px">999px · chips</div>
-      </div>
+      <!-- ⚠️⚠️ THE LINE ASKED FOR WAS "Four values: 8 for controls, inputs and cards; 12 for
+           modals and blocks; 24 for the button; 999 for chips." It is not written here because
+           three of its four clauses are false against the swatches directly below it, which are
+           rendered from `:root`: there are EIGHT tokens, inputs read 24 and not 8, and the 8 is
+           read by menus, cards and modal headers rather than by controls. Measured 2026-10-12;
+           SCALES.md carries the numbers. Reverting to the asked line is one edit. -->
+      <p class="sg-note">Eight values: 0, 4, 8, 12 and 24 are sizes; pill and circle are shapes.
+        Interactive controls take 24, small surfaces take 8 &mdash; and 24 renders as a pill on
+        every control in the product, which is measured and deliberately kept.</p>
+      <!-- ⚠️ RENDERED FROM `:root`, NOT TYPED (2026-10-12). This block was seven hand-written
+           literals sitting under a lead that says swatches are read live and cannot drift —
+           and three of them (5px, 6px, 10px) existed nowhere in the product. Every
+           border-radius in the stylesheet reads a token; this now reads the same ones. -->
+      <div class="sg-radii" id="sgRadii"></div>
+      <p class="sg-note" style="margin-top:12px"><b>What each is for.</b>
+        <code class="sg-cls">sharp</code> a surface meeting another flush &middot;
+        <code class="sg-cls">tight</code> focus rings and small marks &middot;
+        <code class="sg-cls">control</code> menus, popovers, cards, modal headers &mdash;
+        small surfaces, <b>not</b> inputs &middot;
+        <code class="sg-cls">surface</code> cards, menus, dialogs &middot;
+        <code class="sg-cls">feature</code> the plan card &middot;
+        <code class="sg-cls">interactive</code> every interactive control: button, field,
+        search, stepper, the Instances switcher &middot;
+        <code class="sg-cls">pill</code> and <code class="sg-cls">circle</code> are shapes,
+        not sizes.</p>
     </div>
 
     <div class="sg-item">
       <h3>Shadows</h3>
-      <p class="sg-note">Elevation appears only on things that float: menus and dialogs.
-        <b>Three levels</b>, and the third is a <em>direction</em> rather than a depth &mdash; three
-        components cast upward.</p>
+      <p class="sg-note">Elevation only on what floats. Three levels; the third casts upward.</p>
       <div class="sg-shadow">
         <div style="box-shadow:var(--elevation-menu)">menu</div>
         <div style="box-shadow:var(--elevation-dialog)">dialog</div>
@@ -135,293 +121,6 @@
     </div>
   </section>
 
-
-  <!-- ============================ COMPONENTS ============================
-       The sections that follow are SPECIMENS — here is the button, this is the class you
-       write. This one is the SPEC: what each component is, which axes it has, which values
-       exist on each, its states, where its specimens are, and the rules it must keep.
-       ⚠️ DESCRIPTION ONLY. Why a decision was taken, what was weighed and rejected, what was
-       measured and when — all of it is in COMPONENTS.md and SCALES.md, and none of it is
-       repeated here. A rule that cannot be stated without its argument belongs there too. -->
-  <section class="sg-sec" id="components">
-    <h2>Components</h2>
-    <p>Nine components in three groups. Every entry has the same shape: what it is, its axes
-      and the values on each, its states, its specimens, and its rules. The reasoning behind
-      each decision is in <code class="sg-cls">COMPONENTS.md</code>; the scales the components
-      read are in <code class="sg-cls">SCALES.md</code>.</p>
-
-    <div class="sg-item">
-      <h3>Rules for every component</h3>
-      <ul class="sg-note">
-        <li>A component reads <b>meanings</b>, never the primitive layer. Four tokens are off
-          limits; <code class="sg-cls">COMPONENTS.md</code> and <code class="sg-cls">SCALES.md</code>
-          name them.</li>
-        <li>A form that cannot be justified as a variant is <b>not built</b>.</li>
-      </ul>
-    </div>
-
-    <h3 class="sg-sub">Group 1 &mdash; interactive <span class="sg-cls">button &middot; field &middot; chip &middot; tag</span></h3>
-
-    <div class="sg-item">
-      <h3>Button <span class="sg-cls">button() in shared.js</span></h3>
-      <p class="sg-note">A control that performs an action, as a label, a label with an icon, or
-        an icon alone.</p>
-      <h4 class="sg-sub">Axes</h4>
-      <div class="tablescroll"><table class="sg-type"><thead>
-        <tr><th>Axis</th><th>Values</th></tr>
-      </thead><tbody>
-        <tr><td><b>variant</b></td><td><code class="sg-cls">primary</code> &middot; <code class="sg-cls">secondary</code> &middot; <code class="sg-cls">menu</code> &middot; <code class="sg-cls">ghost</code> &middot; <code class="sg-cls">text</code> &middot; <code class="sg-cls">raised</code></td></tr>
-        <tr><td><b>size</b></td><td><code class="sg-cls">sm</code> 26 &middot; <code class="sg-cls">md</code> 40 &middot; <code class="sg-cls">lg</code> 48. Below 600px <code class="sg-cls">sm</code> and <code class="sg-cls">md</code> are <b>44</b></td></tr>
-        <tr><td><b>content</b></td><td>label &middot; label with icon &middot; icon only. One icon, leading or trailing &mdash; never both</td></tr>
-        <tr><td><b>tone</b></td><td>default &middot; destructive (<code class="sg-cls">--status-alert</code>)</td></tr>
-      </tbody></table></div>
-      <h4 class="sg-sub">States</h4>
-      <p class="sg-note">rest &middot; hover &middot; pressed &middot; focus-visible &middot;
-        disabled &middot; busy. Secondary carries no fill at rest: a <code class="sg-cls">--mid</code>
-        border, with hover and press made of translucent ink.</p>
-      <h4 class="sg-sub">Specimens</h4>
-      <p class="sg-note"><a href="#buttons">Buttons</a></p>
-      <h4 class="sg-sub">Rules</h4>
-      <ul class="sg-note">
-        <li><code class="sg-cls">menu</code> takes no label and no <code class="sg-cls">lg</code>;
-          the builder refuses both.</li>
-        <li><code class="sg-cls">busy</code> and <code class="sg-cls">disabled</code> never hold at
-          once &mdash; busy wins.</li>
-        <li><code class="sg-cls">lg</code> does not take the 44px touch floor; it is already above it.</li>
-        <li><code class="sg-cls">primary</code> is never icon-only &mdash; the product names its
-          primary action.</li>
-        <li><code class="sg-cls">text</code> and <code class="sg-cls">ghost</code> have no
-          <code class="sg-cls">lg</code>.</li>
-        <li>An icon-only button is sized from its icon and its own padding, not from the label form
-          narrowed.</li>
-        <li>A busy button keeps its accessible name and its width, and takes
-          <code class="sg-cls">aria-disabled</code> rather than <code class="sg-cls">disabled</code>,
-          so focus is not lost mid-action.</li>
-        <li>Unbuilt, and left unbuilt: <code class="sg-cls">secondary/sm</code>,
-          <code class="sg-cls">secondary/lg</code>, <code class="sg-cls">text/md/label</code>,
-          <code class="sg-cls">ghost/md/label</code>.</li>
-      </ul>
-    </div>
-
-    <div class="sg-item">
-      <h3>Field <span class="sg-cls">field() in shared.js</span></h3>
-      <p class="sg-note">A labelled form control with optional help and an error slot. <b>One
-        form:</b> 40px (44 on the phone), <code class="sg-cls">--btn-r</code>, white, 1px
-        <code class="sg-cls">--line</code>, 16px text.</p>
-      <h4 class="sg-sub">Axes</h4>
-      <div class="tablescroll"><table class="sg-type"><thead>
-        <tr><th>Axis</th><th>Values</th></tr>
-      </thead><tbody>
-        <tr><td><b>content</b></td><td>input &middot; select &middot; textarea</td></tr>
-      </tbody></table></div>
-      <h4 class="sg-sub">States</h4>
-      <p class="sg-note">rest &middot; focus &middot; locked &middot; error &middot; disabled</p>
-      <h4 class="sg-sub">Specimens</h4>
-      <p class="sg-note"><a href="#inputs">Inputs</a></p>
-      <h4 class="sg-sub">Rules</h4>
-      <ul class="sg-note">
-        <li>No variant axis and no size axis.</li>
-        <li>A select keeps <code class="sg-cls">.selwrap</code>: padding does not move the native
-          arrow, so the chevron is drawn from the sprite.</li>
-        <li>A textarea takes <code class="sg-cls">--radius-surface</code>, not the pill.</li>
-        <li>The error slot is emitted with the field and stays <code class="sg-cls">hidden</code>
-          until it has something to say.</li>
-        <li><code class="sg-cls">.help</code> is suppressed while an error shows.</li>
-        <li>The error message is a caption (<code class="sg-cls">--t-caption</code>), says what is
-          wrong rather than that something is, and carries no glyph.</li>
-      </ul>
-    </div>
-
-    <div class="sg-item">
-      <h3>Chip <span class="sg-cls">chip()</span></h3>
-      <p class="sg-note">A control shaped as a pill: selectable, countable, removable.</p>
-      <h4 class="sg-sub">Axes</h4>
-      <div class="tablescroll"><table class="sg-type"><thead>
-        <tr><th>Axis</th><th>Values</th></tr>
-      </thead><tbody>
-        <tr><td><b>kind</b></td><td><code class="sg-cls">filter</code> (<code class="sg-cls">.filterchip</code>) &middot; <code class="sg-cls">type</code> (<code class="sg-cls">.typechip</code>) &middot; <code class="sg-cls">plain</code> (<code class="sg-cls">.chip</code>)</td></tr>
-        <tr><td><b>height</b> <i>unresolved</i></td><td><b>26</b> <code class="sg-cls">.chip.ghost</code> &middot; <b>32</b> <code class="sg-cls">.chip.label.applied-chip</code> &middot; <b>40</b> <code class="sg-cls">.filterchip</code> / <code class="sg-cls">.typechip</code></td></tr>
-        <tr><td><b>content</b></td><td>label &middot; label with count &middot; label with icon &middot; label with remove</td></tr>
-      </tbody></table></div>
-      <h4 class="sg-sub">States</h4>
-      <p class="sg-note">rest &middot; selected (<code class="sg-cls">is-on</code>)</p>
-      <h4 class="sg-sub">Specimens</h4>
-      <p class="sg-note"><a href="#chips">Status chips</a> &middot;
-        <a href="#lictoolbar">Licences toolbar</a></p>
-      <h4 class="sg-sub">Rules</h4>
-      <ul class="sg-note">
-        <li><code class="sg-cls">kind</code> names the surface&rsquo;s own spelling. It is not a
-          variant axis.</li>
-        <li><code class="sg-cls">.filterchip</code> and <code class="sg-cls">.typechip</code> are
-          height-locked controls; <code class="sg-cls">.chip</code> is content-sized.</li>
-        <li>A removable chip is a span with a button inside &mdash; never a button inside a button.</li>
-        <li>The count sits <b>inside</b> the label, not beside it.</li>
-        <li>An empty state is a sentence, not a chip.</li>
-      </ul>
-    </div>
-
-    <div class="sg-item">
-      <h3>Tag <span class="sg-cls">tag() &middot; .fi-chip</span></h3>
-      <p class="sg-note">A named thing inside a sentence: <code class="sg-cls">display:inline</code>
-        with <code class="sg-cls">box-decoration-break:clone</code>, so it wraps across lines like
-        the prose it sits in.</p>
-      <h4 class="sg-sub">Specimens</h4>
-      <p class="sg-note"><a href="#feed">Activity</a></p>
-      <h4 class="sg-sub">Rules</h4>
-      <ul class="sg-note">
-        <li>A tag takes <b>text</b>, not children.</li>
-        <li>No hit area, no state, nothing to select &mdash; it is not a variant of the chip.</li>
-        <li>One per entry in a feed: the entity, and nothing else.</li>
-      </ul>
-    </div>
-
-    <h3 class="sg-sub">Group 2 &mdash; overlay <span class="sg-cls">dropdown + sheet &middot; modal shell &middot; toolbar</span></h3>
-
-    <div class="sg-item">
-      <h3>Modal shell</h3>
-      <p class="sg-note">The floating surface a dialog, a sheet or a menu is drawn on. Fill is
-        <code class="sg-cls">--card</code> on every shell.</p>
-      <h4 class="sg-sub">Axes</h4>
-      <div class="tablescroll"><table class="sg-type"><thead>
-        <tr><th>Shell</th><th>Corner</th><th>Elevation</th><th>Footer</th></tr>
-      </thead><tbody>
-        <tr><td><code class="sg-cls">.modal</code></td><td>12</td><td>dialog</td><td><code class="sg-cls">.mf</code> 12 / 16</td></tr>
-        <tr><td><code class="sg-cls">.fs-box</code></td><td>12</td><td>dialog</td><td>&mdash;</td></tr>
-        <tr><td><code class="sg-cls">.paymodal</code></td><td>12</td><td>dialog</td><td><code class="sg-cls">.paymodal-f</code> 16 / 24</td></tr>
-        <tr><td><code class="sg-cls">.fsheet-panel</code></td><td>12 12 0 0</td><td>docked</td><td><code class="sg-cls">.fsheet-foot</code> 12 / 16</td></tr>
-        <tr><td><code class="sg-cls">.dprofmenu</code></td><td>12</td><td>menu</td><td>&mdash;</td></tr>
-      </tbody></table></div>
-      <p class="sg-note"><b>The centred box is <code class="sg-cls">.fs-box</code>&rsquo;s own
-        default</b>, and the licence-details and Users modals ride it. The wizard is the surface
-        that opts out, by taking the full screen.</p>
-      <h4 class="sg-sub">Specimens</h4>
-      <p class="sg-note"><a href="#modals">Modals</a> &middot; <a href="#sheet">Bottom sheet</a></p>
-      <h4 class="sg-sub">Rules</h4>
-      <ul class="sg-note">
-        <li>Each footer matches its own shell.</li>
-        <li>The corner close (<code class="sg-cls">.fs-close</code>) belongs to the shell, not to the
-          button component. It keeps <code class="sg-cls">btn btn--ghost</code> in the markup, which
-          is what gives it a focus ring and a hit area.</li>
-        <li>Below 600px every <code class="sg-cls">.fs-screen</code> is a full-screen sheet.</li>
-        <li>A sheet carries a grab handle, 22px under the last item, and scrolls at
-          <code class="sg-cls">max-height:72vh</code>.</li>
-      </ul>
-    </div>
-
-    <div class="sg-item">
-      <h3>Toolbar <span class="sg-cls">.listbar</span></h3>
-      <p class="sg-note">The row of controls that narrows a list &mdash; search, filters, refresh,
-        and the page&rsquo;s primary action.</p>
-      <h4 class="sg-sub">Axes</h4>
-      <div class="tablescroll"><table class="sg-type"><thead>
-        <tr><th>Axis</th><th>Values</th></tr>
-      </thead><tbody>
-        <tr><td><b>band</b></td><td><code class="sg-cls">.stickybar</code> &mdash; fill <code class="sg-cls">--card</code>, padding 16 / 20, sticky at <code class="sg-cls">--z-sticky</code> &middot; <b>bare</b> &mdash; transparent, no padding, static</td></tr>
-      </tbody></table></div>
-      <h4 class="sg-sub">Specimens</h4>
-      <p class="sg-note"><a href="#lictoolbar">Licences toolbar</a></p>
-      <h4 class="sg-sub">Rules</h4>
-      <ul class="sg-note">
-        <li><code class="sg-cls">.stickybar</code> is what turns a control row into a band.</li>
-        <li><code class="sg-cls">.lic-controls</code> and <code class="sg-cls">.insttoolbar</code>
-          stay on the element beside <code class="sg-cls">.listbar</code>: each still carries
-          one-sided rules that are not the component&rsquo;s.</li>
-        <li>Controls that narrow the list go on the left; presentation goes after the spacer.</li>
-        <li>Below 600px the filters are a rail that scrolls sideways. <b>The attention chip is
-          last in it</b>, and <b>arriving filtered</b> (<code class="sg-cls">?attention=1</code>)
-          scrolls the rail so the pressed chip is visible &mdash; by the rail&rsquo;s own
-          <code class="sg-cls">scrollLeft</code>, never
-          <code class="sg-cls">scrollIntoView</code>, which would move the page too.
-          <b>Arrival only:</b> a chip the reader pressed is already in view, and nothing may
-          move under a finger that just tapped.</li>
-      </ul>
-    </div>
-
-    <h3 class="sg-sub">Group 3 &mdash; surface <span class="sg-cls">card &middot; table row + frame &middot; banner</span></h3>
-
-    <div class="sg-item">
-      <h3>Card <span class="sg-cls">.lcard</span></h3>
-      <p class="sg-note">A surface carrying one object &mdash; a licence, a plan, a section of a
-        settings page.</p>
-      <h4 class="sg-sub">Axes</h4>
-      <div class="tablescroll"><table class="sg-type"><thead>
-        <tr><th>Form</th><th>Radius</th><th>Border</th></tr>
-      </thead><tbody>
-        <tr><td>desktop</td><td>12</td><td>none</td></tr>
-        <tr><td>phone, first</td><td>0</td><td>none</td></tr>
-        <tr><td>phone, rest</td><td>0</td><td>1px top hairline</td></tr>
-      </tbody></table></div>
-      <p class="sg-note">The three forms divide by <b>width</b>, not by host: Home&rsquo;s card and
-        the Licenses card are the same form at every width.</p>
-      <h4 class="sg-sub">Specimens</h4>
-      <p class="sg-note"><a href="#cards">Cards</a></p>
-      <h4 class="sg-sub">Rules</h4>
-      <ul class="sg-note">
-        <li>The card and the table row are <b>two arrangements of one component</b>: same tokens,
-          same states, same content, same actions, same copy. Anything true of one and not the other
-          is a defect, not a variant.</li>
-        <li>At &le;600 the card loses its corners and becomes a row with a hairline.</li>
-        <li><code class="sg-cls">.plancard</code> keeps <code class="sg-cls">--radius-feature</code>
-          with two paddings &mdash; that is the <code class="sg-cls">is-popular</code> state.</li>
-      </ul>
-    </div>
-
-    <div class="sg-item">
-      <h3>Table row + frame <span class="sg-cls">.listrow &middot; .listframe</span></h3>
-      <p class="sg-note">A row of a list, and the frame the rows sit in.</p>
-      <h4 class="sg-sub">Axes</h4>
-      <div class="tablescroll"><table class="sg-type"><thead>
-        <tr><th>Axis</th><th>Values</th></tr>
-      </thead><tbody>
-        <tr><td><b>name</b></td><td><code class="sg-cls">tr.lic-row</code> &middot; <code class="sg-cls">tr.inv-row</code> &middot; <code class="sg-cls">tr.inst-row</code> &middot; <code class="sg-cls">tr.user-row</code> &mdash; identical in every painted property, and all four carry <code class="sg-cls">.listrow</code></td></tr>
-        <tr><td><b>frame bands</b></td><td>toolbar &middot; column header &middot; rows &middot; pagination footer, in that order</td></tr>
-      </tbody></table></div>
-      <h4 class="sg-sub">States</h4>
-      <p class="sg-note">rest &middot; hover (<code class="sg-cls">--row-hover</code>)</p>
-      <h4 class="sg-sub">Specimens</h4>
-      <p class="sg-note"><a href="#table">Table</a> &middot; <a href="#lictable">Licence table</a></p>
-      <h4 class="sg-sub">Rules</h4>
-      <ul class="sg-note">
-        <li>The four names are <b>not</b> merged: each carries per-table column targeting.
-          <code class="sg-cls">.listrow</code> stands beside them and carries only what is common in
-          rule text &mdash; the hover, the ground token, the phone <code class="sg-cls">thead</code>
-          suppression and the phone cell reset.</li>
-        <li>The toolbar and the column row stick; the footer does not.</li>
-        <li>The frame comes off below 600px, where every row is already its own card.</li>
-        <li><code class="sg-cls">tr.user-row</code> stays a card at &le;600: it lives in a modal,
-          which has no page frame to be a row of.</li>
-        <li>An empty list has no footer, and the last row takes its bottom corners back.</li>
-        <li>The row carries <code class="sg-cls">.statmark</code>: 20px, radius 0, transparent, no
-          padding, no border &mdash; no box of any kind.</li>
-      </ul>
-    </div>
-
-    <div class="sg-item">
-      <h3>Banner <span class="sg-cls">.gbanner &middot; .alert</span></h3>
-      <p class="sg-note">One statement across the top of a surface: what is wrong, and what fixes it.
-        One form on four hosts.</p>
-      <h4 class="sg-sub">Axes</h4>
-      <div class="tablescroll"><table class="sg-type"><thead>
-        <tr><th>Axis</th><th>Values</th></tr>
-      </thead><tbody>
-        <tr><td><b>tone</b></td><td><code class="sg-cls">tone-red</code> &mdash; already broken &middot; <code class="sg-cls">tone-black</code> &mdash; breaks on a known date &middot; <code class="sg-cls">tone-quiet</code> &mdash; nothing broken</td></tr>
-        <tr><td><b>host</b></td><td>Home slot &middot; licence panel (<code class="sg-cls">#subAlert</code>) &middot; impersonation &middot; dismissible success</td></tr>
-      </tbody></table></div>
-      <h4 class="sg-sub">Specimens</h4>
-      <p class="sg-note"><a href="#banners">Banners &amp; alerts</a> &middot;
-        <a href="#homebanner">Home banner</a></p>
-      <h4 class="sg-sub">Rules</h4>
-      <ul class="sg-note">
-        <li><b>One banner at a time.</b> If two conditions are true, state the more serious one and
-          name the other in the same banner.</li>
-        <li>A blocking state carries no close control.</li>
-        <li>On the licence page the same conditions are never dismissible: Home notifies, the licence
-          records.</li>
-        <li>Nothing renders that is not in the Home banner inventory &mdash; a condition with no row
-          there does not get a banner invented for it.</li>
-      </ul>
-    </div>
-  </section>
 
   <!-- ============================ ICONS ============================ -->
   <section class="sg-sec" id="icons">
@@ -476,93 +175,46 @@
 
   <section class="sg-sec" id="buttons">
     <h2>Buttons</h2>
-    <p class="sg-note">Every cell below is rendered by <code class="sg-cls">button()</code>
-      &mdash; nothing on this page is drawn by hand, so the matrix cannot disagree with the
-      product. The axes, the states and the rules are under <a href="#components">Components</a>.</p>
-    <p class="sg-note"><b>Ghost is the same button without the resting border.</b> The two share one
-      declaration for hover and press; the difference is whether the boundary is resting or summoned.
-      The border is <code class="sg-cls">--mid</code>, which <b>clears 1.4.11&rsquo;s 3:1 on every
-      ground in the product</b> &mdash; that threshold is what a replacement has to meet.</p>
-    <p class="sg-note"><b><code class="sg-cls">raised</code> is the one button that answers the
-      pointer by rising.</b> The test: <b>a surface may answer the pointer by rising only if it
-      neither carries rows of data nor stands among them, and carries no more than one control
-      &mdash; or if the surface is itself the thing being chosen.</b>
-      <code class="sg-cls">.blockmore-go</code> fails it; the landing hero passes.</p>
+    <p class="sg-note">A control that performs an action. Six variants, three sizes, two
+      contents, one tone. Every cell below is rendered by <code class="sg-cls">button()</code>.
+      Ghost is the same button without the resting border.</p>
 
     <div class="sg-item">
       <h3>The matrix <span class="sg-cls">variants down, states across</span></h3>
-      <p class="sg-note"><b>The last column is the icon-only form</b>, sized from the icon plus
-        its own padding rather than from the label form narrowed. At <code class="sg-cls">md</code>
-        a ghost or text one is <b>54&times;40</b>, a secondary one is <b>62&times;40</b>, and
-        <code class="sg-cls">menu</code> is <b>38&times;40</b>.</p>
-      <p class="sg-note"><b>An icon-only button carries a grey glyph</b> &mdash;
-        <code class="sg-cls">--mid</code> at rest, <code class="sg-cls">--ink</code> on hover and
-        press. A secondary <i>with</i> a label keeps ink, where the word carries the contrast.</p>
-      <p class="sg-note"><b>Radius: 24px on everything with a label, a stadium on everything
-        without one.</b> The browser clamps 999px to half the shorter side, and clamps 24 to 20 at
-        <code class="sg-cls">md</code> &mdash; so only <code class="sg-cls">lg</code> shows 24 as an
-        actual corner.</p>
+      <p class="sg-note">The last column is the icon-only form, sized from its icon rather than
+        from the label form narrowed.</p>
       <div class="tablescroll"><table class="sg-btnmatrix"><thead id="sgBtnHead"></thead><tbody id="sgBtnBody"></tbody></table></div>
     </div>
 
     <div class="sg-item">
-      <h3>Sizes <span class="sg-cls">three, and the third has one user by design</span></h3>
-      <p class="sg-note"><code class="sg-cls">sm</code> 26 &mdash; actions inside an ink banner.
-        <code class="sg-cls">md</code> 40 (<code class="sg-cls">--btnH</code>) &mdash; everything
-        standing in a control row. <code class="sg-cls">lg</code> 48 &mdash; the page&rsquo;s own
-        primary beside its h1, one call site. <b>Below 600px <code class="sg-cls">sm</code> and
-        <code class="sg-cls">md</code> both resolve to 44</b>, and that rule lives in the component,
-        once. No call site says anything about size.</p>
+      <h3>Sizes</h3>
+      <p class="sg-note"><code class="sg-cls">sm</code> 26 &middot; <code class="sg-cls">md</code> 40
+        &middot; <code class="sg-cls">lg</code> 48. Below 600px <code class="sg-cls">sm</code> and
+        <code class="sg-cls">md</code> resolve to 44.</p>
       <div class="sg-row" id="sgBtnSizes"></div>
     </div>
 
     <div class="sg-item">
       <h3>Tone <span class="sg-cls">default &middot; destructive</span></h3>
-      <p class="sg-note"><b>An axis, not a variant:</b> the variant decides the shape, the tone
-        decides the colour, from <code class="sg-cls">--status-alert</code>. The product needs a
-        destructive <code class="sg-cls">primary</code> (the confirm in the cancel dialog) and a
-        destructive <code class="sg-cls">text</code> item (Delete in a kebab).</p>
+      <p class="sg-note">An axis, not a variant: the variant sets the shape, the tone sets the
+        colour from <code class="sg-cls">--status-alert</code>.</p>
       <div class="sg-row" id="sgBtnTone"></div>
     </div>
 
     <div class="sg-item">
-      <h3>States without colour</h3>
-      <p class="sg-note"><b>Hover and pressed are two different surfaces, not two opacities of
-        one.</b> On a <b>filled</b> button hover goes flat black and pressed adds an inset well at
-        the top edge. On a <b>quiet filled</b> one (menu) hover and pressed are the next two steps
-        of that fill&rsquo;s own ramp. On a <b>transparent</b> one (secondary, text, ghost) hover
-        takes <code class="sg-cls">--hover</code> and pressed takes <code class="sg-cls">--sel</code>.</p>
-      <p class="sg-note"><b>Every icon button in a list row is the same one</b>, so a row&rsquo;s
-        actions read the same wherever you are.</p>
-      <p class="sg-note"><b>Focus is a ring and it is not hover:</b>
-        <code class="sg-cls">:focus-visible</code> only &mdash; a mouse click does not raise it.</p>
-      <p class="sg-note"><b>Disabled does not respond.</b> Every hover and active rule is guarded.</p>
-      <p class="sg-note"><b>Busy is the sixth state, and it is not disabled.</b> Disabled means
-        <i>you cannot do this</i>; busy means <i>this is happening</i>. It reserves its own width
-        with the hidden label, keeps the accessible name, sets <code class="sg-cls">aria-busy</code>,
-        and takes <code class="sg-cls">aria-disabled</code> rather than the
-        <code class="sg-cls">disabled</code> attribute, so focus is not lost mid-action. Restoring is
-        the default. The 600ms refresh spin is this state at a shorter duration.</p>
+      <h3>States</h3>
+      <p class="sg-note">rest &middot; hover &middot; pressed &middot; focus-visible &middot;
+        disabled &middot; busy. Focus is <code class="sg-cls">:focus-visible</code> only. Busy is
+        not disabled &mdash; it keeps its name, its width and its focus.</p>
       <div class="sg-row" id="sgBtnBusy"></div>
-    </div>
-
-    <div class="sg-item">
-      <h3>Not allowed, on purpose</h3>
-      <p class="sg-note">The component <b>refuses</b> these rather than leaving them undocumented:</p>
-      <ul class="sg-note">
-        <li><code class="sg-cls">menu</code> with a label.</li>
-        <li><code class="sg-cls">menu</code> at <code class="sg-cls">lg</code>.</li>
-        <li><code class="sg-cls">busy</code> together with <code class="sg-cls">disabled</code>
-          &mdash; busy wins.</li>
-      </ul>
     </div>
   </section>
 
   <!-- ============================ INPUTS ============================ -->
   <section class="sg-sec" id="inputs">
     <h2>Inputs</h2>
-    <p>Form controls share the control height and the same focus treatment: the border goes to ink.</p>
-    <p class="sg-note">Fields read <code class="sg-cls">--btn-r</code>, and the padding is 16px
+    <p class="sg-note"><b>Field</b> &mdash; a labelled form control with optional help and an error slot. One form &mdash; 40px (44 on the phone), <code class="sg-cls">--radius-interactive</code>, white, 1px <code class="sg-cls">--line</code>, 16px text &mdash; and one axis: input, select, textarea. The rules and the axes are in <code class="sg-cls">COMPONENTS.md</code>.</p>
+    <p class="sg-note">Fields read <code class="sg-cls">--radius-interactive</code>, and the padding is 16px
       so the text clears the arc. <b>The select&rsquo;s chevron is ours</b> &mdash; drawn from the
       sprite inside <code class="sg-cls">.selwrap</code>, because no padding reaches the native one;
       <code class="sg-cls">--sel-gutter</code> is read twice so the glyph cannot drift from the
@@ -636,9 +288,7 @@
   <!-- ============================ CHIPS ============================ -->
   <section class="sg-sec" id="chips">
     <h2>Status chips</h2>
-    <p>A licence&rsquo;s status is a coloured word (<code class="sg-cls">statusMark</code>)
-      &mdash; the word alone, in the colour of its state. The chips below read by weight and
-      border: attention states take the ink fill, quiet states stay outlined.</p>
+    <p class="sg-note"><b>Status mark</b> &mdash; a coloured glyph and a word, with no box of any kind. It belongs to the row rather than to the chip, which is why it is not one. The chips and pills below are the separate Chip component. The rules and the axes are in <code class="sg-cls">COMPONENTS.md</code>.</p>
     <div class="sg-item">
       <h3>The licence status mark</h3>
       <p class="sg-note"><b>The word, in its own colour, with its own glyph.</b>
@@ -723,9 +373,7 @@
   <!-- ============================ TABLE ============================ -->
   <section class="sg-sec" id="table">
     <h2>Table</h2>
-    <p>The licence table, rendered by the same builders the Licenses page calls
-      (<code class="sg-cls">headHtml()</code> / <code class="sg-cls">rowHtml()</code>) &mdash; header, sortable column,
-      a row with its actions, and the pager.</p>
+    <p class="sg-note"><b>Table row + frame</b> &mdash; a row of a list and the frame the rows sit in. One component under four names, identical in every painted property; the frame is four bands &mdash; toolbar, column header, rows, pagination footer. The rules and the axes are in <code class="sg-cls">COMPONENTS.md</code>.</p>
     <p><b>A table is a framed object:</b> the head is a filled
       <code class="sg-cls">--surface-quiet</code> band and the whole table sits inside its own
       hairline with a 10px radius. Home, Licenses, Invoices and the flat Instances list are all
@@ -853,9 +501,7 @@
   <!-- ================= LICENCES TOOLBAR ================= -->
   <section class="sg-sec" id="lictoolbar">
     <h2>Licences toolbar</h2>
-    <p>Search, a <b>Type</b> dropdown, a <b>Status</b> dropdown, and an independent <b>Needs
-      attention</b> chip beside them. <b>Needs attention is its own control</b> rather than a
-      fourth value of Status, because a licence can be Blocked <i>and</i> need attention.</p>
+    <p class="sg-note"><b>Toolbar</b> &mdash; the row of controls that narrows a list. One axis: <code class="sg-cls">.stickybar</code> makes it a band, without it it is a bare row. The rules and the axes are in <code class="sg-cls">COMPONENTS.md</code>.</p>
     <p><b>The dropdown is Activity&rsquo;s dropdown.</b> Same trigger
       (<code class="sg-cls">.dropwrap.perctl</code> + <code class="sg-cls">.btn--secondary.perbtn</code>),
       same panel (<code class="sg-cls">.dropmenu</code>), same rows
@@ -895,6 +541,7 @@
   <!-- ============================ CARDS ============================ -->
   <section class="sg-sec" id="cards">
     <h2>Cards</h2>
+    <p class="sg-note"><b>Card</b> &mdash; a surface carrying one object. Three forms, and they divide by width rather than by host; at &le;600 the card loses its corners and becomes a row with a hairline. The rules and the axes are in <code class="sg-cls">COMPONENTS.md</code>.</p>
     <div class="sg-item">
       <h3>Section card</h3>
       <p class="sg-note"><code class="sg-cls">.setcard</code> — the settings-page container, with its header row.</p>
@@ -960,8 +607,7 @@
   <!-- ============================ MODALS ============================ -->
   <section class="sg-sec" id="modals">
     <h2>Modals</h2>
-    <p>Three chromes: the generic dialog, the payment-style dialog for focused forms, and the large
-      wizard box. Shown here in place (the real ones sit on a dimmed backdrop).</p>
+    <p class="sg-note"><b>Modal shell</b> &mdash; the floating surface a dialog, a sheet or a menu is drawn on. Five shells, all on <code class="sg-cls">--card</code>, all at corner 12 except the phone sheet. The rules and the axes are in <code class="sg-cls">COMPONENTS.md</code>.</p>
     <div class="sg-item">
       <h3>Standard dialog <span class="sg-cls">.overlay &gt; .modal</span></h3>
       <div class="sg-static">
@@ -1073,6 +719,7 @@
   <!-- ============================ BANNERS ============================ -->
   <section class="sg-sec" id="banners">
     <h2>Banners &amp; alerts</h2>
+    <p class="sg-note"><b>Banner</b> &mdash; one statement across the top of a surface: what is wrong, and what fixes it. One form on four hosts, three tones. The rules and the axes are in <code class="sg-cls">COMPONENTS.md</code>.</p>
     <div class="sg-item">
       <h3>Page alert <span class="sg-cls">.alert</span></h3>
       <p class="sg-note">Sits in a reserved slot on licence details; hidden while nothing needs attention.</p>
@@ -1093,10 +740,7 @@
   <!-- ============================ FEED ============================ -->
   <section class="sg-sec" id="feed">
     <h2>Activity</h2>
-    <p>Every activity entry in the product renders through <b>one component</b>
-      (<code class="sg-cls">activityEntry</code>), from <b>one copy map</b>
-      (<code class="sg-cls">ACTIVITY_TEXT</code>). Home&rsquo;s block, the Activity page and a
-      licence&rsquo;s own tab all call it; <b>no page assembles a row</b>.</p>
+    <p class="sg-note"><b>Tag</b> &mdash; the named thing inside a sentence (<code class="sg-cls">.fi-chip</code>) &mdash; inline, wrapping with the prose, no hit area and no state. The feed below is where it lives. The rules and the axes are in <code class="sg-cls">COMPONENTS.md</code>.</p>
     <p><b>A feed is an axis with entries hanging off it</b>
       (<code class="sg-cls">activityList</code>): the entry renders a row with a mark, the list
       renders the <b>day separators</b> between the runs and draws the rail. The specimens below

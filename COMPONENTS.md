@@ -36,6 +36,16 @@ section). `.listrow` and `.listbar` exist; nothing was renamed and nothing merge
    them.** They are different and a matrix cannot tell them apart.
 4. **A form you cannot justify as a variant does not get built.**
 
+## The two rules that hold for all nine
+
+> **A component reads MEANINGS, never the primitive layer.** Four tokens are off limits;
+> `SCALES.md` names them. ⚠️ This file pointed at that rule and never stated it, which is
+> why the styleguide was carrying it instead — moved here 2026-10-12 when the page that
+> held it was dissolved.
+>
+> **A form that cannot be justified as a variant is not built** (the same as point 4 above,
+> said as a rule rather than as a step).
+
 ## ⚠⚠ THE HARD RULE — it has cost twice in the same shape, so it is a rule, not advice
 
 > **Before calling a form an accident, or two names two components, enumerate every host
@@ -75,9 +85,70 @@ answers the pointer by **rising** rather than by tinting. The test that admits a
 rising is in the stylesheet and on the styleguide's Buttons page; `.blockmore-go` fails it and
 the landing hero passes.
 
-⚠️ **`text` has four instances and stays.** All four are the wizard's `Back`. It is the only
+⚠️ **`text` has three call sites in the product and stays.** ⚠️ **This said "four instances,
+all four are the wizard's `Back`" until 2026-10-12, and the second half was wrong**: the three
+are the wizard's `Back` (`wizard.js`) and **two "Leave without saving" guards**
+(`components.js`, `wizard.js`) — the fourth was the styleguide's own confirmation specimen,
+which is not the product. Enumerated across every builder. It is the only
 form in the product that is a label with no box at all, and folding it into `ghost` would
 give `Back` a 40px hit area it does not want in a step bar. One place, but a real variant.
+
+## The rising test, and the values behind the axes — moved from the styleguide 2026-10-12
+
+⚠️⚠️ **THE TEST THAT ADMITS A SURFACE TO RISING, STATED HERE RATHER THAN POINTED AT.** This
+file said "the test … is in the stylesheet and on the styleguide's Buttons page", and when
+that page's prose was cut the test would have survived only as a CSS comment:
+
+> **A surface may answer the pointer by rising only if it neither carries rows of data nor
+> stands among them, and carries no more than one control — or if the surface is itself the
+> thing being chosen.**
+
+`.blockmore-go` fails it: it sits at the foot of a list of licences and is not a thing in that
+list you can choose. The landing hero passes. ⚠️ The first limb says *"nor stands among them"*
+because the one surface the system had already failed carries nothing whatever and was failed
+for what it stands among; the second limb is bounded — "no control beyond the one that selects
+it" — so a card with a checkbox and a kebab is judged by the first limb instead.
+
+**Ghost is the same button without the resting border**, and the two share one declaration for
+hover and press. ⚠️ **The border value was chosen on a measurement:** `--mid` **clears
+1.4.11's 3:1 on every ground in the product**, floor 3.294 on the densest point of the mesh —
+**that threshold is what any replacement has to meet.** `--ink` was dropped on weight, and ink
+at .14 on contrast (1.30–1.33: the property that makes a translucent ink inherit its ground is
+the property that stops it being seen).
+
+**What each size is for:** `sm` 26 — actions inside an ink banner, where the band would
+out-shout the banner. `md` 40 (`--btnH`) — everything standing in a control row. `lg` 48 —
+the page's own primary beside its h1, one call site.
+
+**The icon-only form is sized from its icon plus its own padding, not from the label form
+narrowed.** Measured at `md`: a ghost or text one is **54×40**, a secondary one **62×40** (it
+carries a 24px glyph), and `menu` is **38×40** — taller than wide, because a kebab is a glyph
+three dots across. That contrast is the point: a menu trigger is tellable from an action at
+the end of a row without reading either.
+
+⚠️ **An icon-only button carries a GREY glyph** — `--mid` at rest, `--ink` on hover and press.
+**A secondary WITH a label keeps ink**, where the glyph is decoration beside a word and the
+word has to carry the contrast.
+
+**Tone is an axis rather than a variant because the product needs a destructive `primary`**
+(the confirm in the cancel dialog) **and a destructive `text` item** (Delete in a kebab). As
+variants each of those would need its own name.
+
+**Hover and pressed are two different surfaces, not two opacities of one.** On a **filled**
+button hover goes flat black and pressed adds an inset well at the top edge — a recess, which
+flat black cannot be. On a **quiet filled** one (`menu`) they are the next two steps of that
+fill's own ramp. On a **transparent** one (`secondary`, `ghost`, `text`) they are translucent
+ink: `--btn-secondary-bg-hover` then `--btn-secondary-bg-active`.
+
+## Rules — moved from the styleguide 2026-10-12
+
+- **`busy` and `disabled` never hold at once — busy wins.** "You cannot do this" and "this is
+  happening" are different statements and one button cannot make both. The builder applies it:
+  `disabled = !!o.disabled && !busy`.
+- **A busy button keeps its accessible name and its width**, and takes `aria-disabled` rather
+  than the `disabled` attribute, **so focus is not lost mid-action** — a disabled element drops
+  out of the tab order, and a keyboard reader would land somewhere unrelated when the button
+  came back. The width is reserved by the hidden label, not frozen with an inline style.
 
 ## ⚠️⚠️ The size axis FLOORS at 44 on the phone. It does not flatten to it.
 
@@ -206,7 +277,7 @@ the decision arrives there whether or not it is taken first.
 
 **The page title row stopped re-cornering the component.** `.pagetitlerow` set
 `border-radius:var(--radius-control)` (8px) and `padding:0` on three buttons at ≤600 —
-**the only button corner in the product that was neither `--btn-r` nor `--radius-pill`.**
+**the only button corner in the product that was neither `--radius-interactive` nor `--radius-pill`.**
 Measured at 390 on all five pages that have the row: with both properties gone every button
 stays **44×44**, row overflow **0**, document overflow **0**. The squeeze bought nothing.
 
@@ -222,7 +293,7 @@ override that is itself wrong. In the debt for the phone work.
 **One component. No variant axis and no size axis, and this pass did not invent one.**
 
 25 rendered instances, 7 signatures, **one form**: 40px (44 on the phone, by the floor),
-`--btn-r`, white, 1px `--line`, 16px text. Every one of the seven differences is **content**:
+`--radius-interactive`, white, 1px `--line`, 16px text. Every one of the seven differences is **content**:
 
 | difference | why it is not a variant |
 |---|---|
@@ -234,6 +305,19 @@ override that is itself wrong. In the debt for the phone work.
 ⚠️⚠️ **IT HAD NO BUILDER AT ALL** — 28 hand-written spellings across five files, each free to
 drift. That is exactly how a one-form component becomes a seven-form one. `field()` now
 exists and the call sites read it.
+
+## The axis, and the rules — moved from the styleguide 2026-10-12
+
+**One axis, `content`: input · select · textarea.** No variant axis and no size axis.
+
+- **The error slot is emitted with the field and stays `hidden` until it has something to
+  say.** A slot created only on failure has to be inserted into a live DOM at the moment the
+  reader is already dealing with a problem, which is the moment a missing parent shows up.
+- **`.help` is suppressed while an error shows.** Two lines under one field, one of them now
+  wrong, is worse than either alone.
+- **The error message is a caption** (`--t-caption`), **says what is wrong rather than that
+  something is** — "Use MM / YY" can be acted on, "invalid" cannot — **and carries no glyph**:
+  the fault is already signalled by the border, the label and the line itself.
 
 ⚠️ **The select keeps its wrapper.** `padding-right` does not move the native arrow —
 measured and recorded in the stylesheet — so the chevron is drawn by us and `.selwrap` is
@@ -257,6 +341,22 @@ of them are chips.**
 
 ⚠️ `.fchip-none` ("No add-ons on this license.") is **an empty state wearing chip clothes** —
 reported, not built. An empty state is a sentence.
+
+## Rules — moved from the styleguide 2026-10-12
+
+**Chip**
+- **A removable chip is a span with a button inside — never a button inside a button.** Nesting
+  one interactive element in another is invalid, and the remove control is the only thing on it
+  that can be pressed.
+- **The count sits INSIDE the label, not beside it.** As a sibling it became its own flex item,
+  so the chip's `gap` applied to it and the number stood a control's gap away from the word it
+  counts, reading as a second object in the chip.
+
+**Tag**
+- **A tag takes TEXT, not children.** It is a word in a sentence; anything richer is a different
+  thing wearing its background.
+- **One per entry in a feed: the entity, and nothing else.** Everything else in the sentence is
+  plain, values included — which is what gives the feed a scannable column of names.
 
 ## ⚠️⚠️ STILL OPEN: the chip has three heights and unifying them is visible
 
@@ -326,6 +426,20 @@ box at all.** Folding them would give the instances toolbar a fill and a sticky 
 has never had. They are probably **two components, not one with a variant** — but that is a
 decision, and the census only says they are not the same thing today.
 
+## Toolbar — the axis and the rules, moved from the styleguide 2026-10-12
+
+**One axis, `band`:** `.stickybar` — fill `--card`, padding 16 / 20, sticky at `--z-sticky` ·
+**bare** — transparent, no padding, static. `.stickybar` is what turns a control row into a band.
+
+- **Controls that narrow the list go on the left; presentation goes after the spacer.** The
+  Instances view switcher sits there because it does not filter.
+- **Below 600px the filters are a rail that scrolls sideways, and the attention chip is last
+  in it.** Arriving filtered (`?attention=1`) **scrolls the rail so the pressed chip is
+  visible — by the rail's own `scrollLeft`, never `scrollIntoView`**, which walks up and
+  scrolls every scrollable ancestor and would move the page under a reader who has just
+  arrived. **Arrival only:** a chip the reader pressed is in view by definition, and nothing
+  may move under a finger that has only this moment tapped.
+
 ## ⚠️⚠️ `.insttoolbar.stickybar` declares `z-index:12` on a `position:static` element
 
 Carried over from `SCALES.md`'s "found while reading". The census confirms it renders
@@ -392,6 +506,28 @@ The question was whether `.paymodal-f`'s `16px 24px` is a stray against `.mf`'s 
 | `.paymodal` | 20 / 24 | **24** | 16 / **24** |
 
 Two shells, internally consistent, one step apart. **Nothing moved.**
+
+## Modal shell — the axes and the rules, moved from the styleguide 2026-10-12
+
+| shell | corner | elevation | footer |
+|---|---:|---|---|
+| `.modal` | 12 | dialog | `.mf` 12 / 16 |
+| `.fs-box` | 12 | dialog | — |
+| `.paymodal` | 12 | dialog | `.paymodal-f` 16 / 24 |
+| `.fsheet-panel` | 12 12 0 0 | docked | `.fsheet-foot` 12 / 16 |
+| `.dprofmenu` | 12 | menu | — |
+
+Fill is `--card` on every shell.
+
+- **Each footer matches its own shell.** Nothing was moved to make the three agree with each
+  other; a footer belongs to the box it closes.
+- **Below 600px every `.fs-screen` is a full-screen sheet.**
+- **A sheet carries a grab handle** (36×4, centred, drawn by `::before` so no extra markup is
+  needed), **22px under the last item** — a list ending flush against the screen edge gives no
+  way to tell whether it continues — **and scrolls at `max-height:72vh`**, or a sheet taller
+  than the viewport silently loses its tail.
+- **The centred box is `.fs-box`'s own default**, and the licence-details and Users modals ride
+  it; the wizard is the surface that opts out by taking the full screen.
 
 ## ⚠️⚠️ §5 — THE MEASUREMENT CONTRADICTS THE DECISION, SO NOTHING WAS RENAMED
 
@@ -536,6 +672,37 @@ whole form is the absence of one. **Recorded as the row's, unchanged.**
 already in force: **red is already broken, black breaks on a known date, quiet is nothing
 broken — tinted, and the ground carries it.** `.alert` likewise renders one form. Nothing to
 collapse.
+
+## The frame — the bands and the rules, moved from the styleguide 2026-10-12
+
+**The frame is four bands, in this order: toolbar · column header · rows · pagination footer.**
+One block, one surface, one hairline round the outside.
+
+- **The toolbar and the column row stick; the footer does not.** The top of the frame is pinned
+  already, and pinning the bottom too leaves a strip of list between two fixed bands.
+- **The frame comes off below 600px**, where every row is already its own card — an outer frame
+  would be a box holding boxes.
+- **An empty list has no footer at all, and the last row takes its bottom corners back**, because
+  it is the bottom of the box once more. A band reading `0 of 0` under an empty state is a
+  control describing the absence of the thing it controls.
+
+## Banner — the axes and the rules, moved from the styleguide 2026-10-12
+
+| axis | values |
+|---|---|
+| **tone** | `tone-red` already broken · `tone-black` breaks on a known date · `tone-quiet` nothing broken |
+| **host** | Home slot · licence panel (`#subAlert`) · impersonation · dismissible success |
+
+- **One banner at a time.** If two conditions are true, state the more serious one and **name
+  the other in the same banner** rather than stacking: two banners are two problems competing
+  for one glance.
+- **A blocking state carries no close control.** Blocked, payment failed and no-payment-method
+  are conditions where something has already stopped or is about to, and a dismissible blocker
+  is one that gets closed once and never seen again.
+- **On the licence page the same conditions are never dismissible: Home notifies, the licence
+  records.**
+- **Nothing renders that is not in the Home banner inventory** — a condition with no row there
+  does not get a banner invented for it.
 
 ## Table header — four forms, and all four are the same cell
 
