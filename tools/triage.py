@@ -32,6 +32,8 @@ def sig(head):
 # D  a design-system decision — goes into SCALES.md / COMPONENTS.md first
 # E  closed (detected from the strikethrough, never written here)
 CAT = {
+  # ---- 2026-10-12, publishing version 14 ----
+  '0251ed39cb': 'C',  # the artifact drifts behind main between sessions; publishing is manual
   # ---- 2026-10-12, the fourteenth pass: field states built, tables and toolbars gathered ----
   'd333ddfb0d': 'C',  # the hand-built stepper specimen has no media rules of its own
   '0c95f72b50': 'B',  # instAllRow calls instStatusCell across files; the row builder is not self-contained
