@@ -980,8 +980,21 @@ function licCardHTML(p){
        past its neighbours — see `.lcard-label` in the stylesheet. */
     + '<div class="lcard-label">' + (label
         ? '<span class="lic-prodlabel lcard-labeltxt">' + esc(label) + '</span>'
-        : chip({ kind:'plain', ghost:true, cls:'lcard-add', label:'Add label',
-                 icon:'pencil', iconCls:'lcard-addic', attrs:'data-editlabel' }))
+        /* ⚠⚠⚠ IT IS A GHOST BUTTON NOW, NOT A DASHED CHIP (2026-10-12, by request: "where
+           is this button from? the design system has no such thing — put a ghost text button
+           there"). It was `chip({ghost:true})`, whose dashes say "a shape waiting to be
+           filled"; a chip is a thing you REMOVE or SELECT, and this is an action. The button
+           component already has the quietest variant in the system, and `ghost` is it.
+           ⚠️ THIS IS THE ONE EDIT IN THIS PASS THAT REACHES THE DESKTOP, and it is reported as
+           such: the dashed chip was drawn at every width, so a fix to what the control IS
+           cannot be a phone rule. The 10-01 decision that stripped the dashes on Home's phone
+           list is superseded rather than contradicted — it removed the dashes from one list;
+           this removes the reason they were there.
+           ⚠️ TWO MORE GHOST CHIPS REMAIN, both `+ Add label` on the details surface
+           (`license-details.js`). They are not touched: the request named the CARD, and the
+           same change there is a second surface's decision. */
+        : button({ variant:'ghost', size:'sm', cls:'lcard-add', label:'Add label',
+                   icon:'pencil', attrs:'data-editlabel' }))
     + '</div>'
   + '</div>';
 }
@@ -3824,8 +3837,23 @@ function invCardRowHTML(v){
        likely to ellipse in a card. */
     + '<div class="hcinv-prod">' + (lic
         ? '<a class="hcinv-lic" data-invlic="' + esc(lic.id) + '" href="' + licenseHref(lic, 'invoices') + '">'
+          /* ⚠️⚠️ THE RUN IS TWO SPANS, NOT ONE (2026-10-12, by request: "the product keeps
+             the text style it has now; the subscription type and the plan go lighter and
+             non-bold"). One span could only be styled as one thing. The split is where the
+             sentence changes subject: the PRODUCT is what this invoice is for, the type and
+             the plan QUALIFY it — which is the same relationship the amount and its date have
+             on the line below, and they are now set the same way.
+             ⚠️ THE MIDDOT BETWEEN THEM MOVES INTO THE QUIET SPAN, so the separator is as quiet
+             as what it introduces; a 500-weight middot before a 400-weight phrase reads as the
+             product's own punctuation.
+             ⚠️ `title` STILL CARRIES THE WHOLE RUN, unchanged — it is one phrase to a reader
+             whatever it is set in. */
           + '<span class="hcinv-licname" title="' + esc([lic.product, lic.type, lic.name].filter(Boolean).join(' \u00b7 ')) + '">'
-          + [lic.product, lic.type, lic.name].filter(Boolean).map(esc).join(' &middot; ')
+          + esc(lic.product || '')
+          + (([lic.type, lic.name].filter(Boolean).length)
+              ? '<span class="hcinv-licqual"> &middot; '
+                + [lic.type, lic.name].filter(Boolean).map(esc).join(' &middot; ') + '</span>'
+              : '')
           + '</span></a>'
         : '<span class="muted">&mdash;</span>') + '</div>'
     /* ⚠️⚠️ THE AUTO-CHARGE MARK RIDES THE AMOUNT NOW (2026-10-09, by request: "put the

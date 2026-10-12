@@ -1717,6 +1717,16 @@ var NL = (function(){
       value: bill[name] || '',
       placeholder: opts.ph,
       options: opts.select ? countryOptions(bill[name]) : null,
+      /* ⚠⚠ THE TOKEN IS PASSED THROUGH, NOT GUESSED FROM THE FIELD NAME (2026-10-12).
+         `field()` has always supported `autocomplete` and this helper never handed it one, so
+         every field it builds went out with none — including `Cardholder name`, where the
+         matching modal in `shared.js` does set `cc-name`. One form asked the browser to fill
+         the card holder and the other did not, for no reason either file states.
+         ⚠️ AT THE CALL SITE rather than mapped from `name` here: a token is a fact about what
+         the field IS, and a lookup table inside the helper hides it from whoever reads the
+         form. The country select is deliberately left without one — `cc-country` would be a
+         second decision and nobody asked for it. */
+      autocomplete: opts.autocomplete,
       attrs: 'data-nlb="' + name + '"',
       help: opts.help,
       errSlot: true,
@@ -1894,7 +1904,7 @@ var NL = (function(){
       +       '<div class="paystripe">'
       +         '<svg class="ic paystripe-glyph" aria-hidden="true"><use href="assets/icons.svg#ti-credit-card"></use></svg>'
       +         '<input class="ps-num" id="nlb-num" data-nlb="num" type="text" inputmode="numeric" autocomplete="cc-number" placeholder="0000 0000 0000 0000" aria-label="Card number" maxlength="24" value="' + bill.num + '">'
-      +         '<input class="ps-exp" data-nlb="exp" type="text" inputmode="numeric" autocomplete="cc-exp" placeholder="MM / YY" aria-label="Expiry date" maxlength="7" inputmode="numeric" value="' + bill.exp + '">'
+      +         '<input class="ps-exp" data-nlb="exp" type="text" inputmode="numeric" autocomplete="cc-exp" placeholder="MM / YY" aria-label="Expiry date" maxlength="7" value="' + bill.exp + '">'
       +         '<input class="ps-cvc" data-nlb="cvc" type="text" inputmode="numeric" autocomplete="cc-csc" placeholder="CVC" aria-label="Security code" maxlength="4" value="' + bill.cvc + '">'
       +       '</div>'
       /* one slot per card subfield: they share a .field, so they cannot share a slot
@@ -1904,7 +1914,7 @@ var NL = (function(){
       +       '<div class="fielderr" data-nlb-err="cvc" hidden></div>'
       +       '</div>'
       +     '<div class="field2">'
-      +       fld('cardName', 'Cardholder name', true)
+      +       fld('cardName', 'Cardholder name', true, { autocomplete:'cc-name' })
       +       fld('cardCountry', 'Country', true, { select:true })
       +     '</div>'
       +     '<div class="paystripe-note">Powered by <b>Stripe</b></div>'

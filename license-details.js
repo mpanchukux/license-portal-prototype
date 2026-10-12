@@ -130,6 +130,11 @@ var DETAILS_HTML = ''
 + '            <!-- ⚠️ The scheduled-change line used to sit here, then moved into the'
 + '                 Plan block. It is gone from both: downgrades take effect'
 + '                 immediately, so nothing is pending to state. -->'
+/* ⚠️ THE HOST IS EMPTY MARKUP AND HIDDEN ABOVE 600 — `applyLicHeadTags` moves the three
+   existing fact nodes into it on the phone and back out again above it, so this element adds
+   a box and never a second copy of anything. On the desktop it is `hidden` and renders
+   nothing, which keeps "desktop unchanged" true of the markup as well as of the paint. */
++ '            <div class="headtags" id="headTags" hidden></div>'
 + '            <div class="metarow">'
 + '              <span id="labelSlot">' + chip({ kind:'plain', ghost:true, label:'+ Add label', attrs:'id="addLabel"' }) + '</span>'
 + '              <!-- phone: status and label merged into one calm supporting line'
@@ -462,7 +467,11 @@ var DETAILS_HTML = ''
 + '                         pencil, same icon-button, as Payment method there. -->'
 /* ⚠️ The card is `--c-blue-50`, so the button on it is WHITE — the `surface` axis, taken
    by the card declaring `.on-tint` rather than by this caller naming a colour. */
-+ '                    <a class="btn btn--secondary btn--md btn--icon tip" id="ncEditPay" href="billing.html" aria-label="Payment and Billing" data-tip="Payment &amp; Billing">'
+/* ⚠️ GHOST, NOT SECONDARY (2026-10-12, by request). It is a pencil beside a value inside a
+   card — the quiet, in-place kind of edit — and the product already draws that kind as a
+   ghost icon button everywhere else (the licence row's actions, the invoice row's actions).
+   A secondary's outline here made it the loudest thing in a card whose subject is a figure. */
++ '                    <a class="btn btn--ghost btn--md btn--icon tip" id="ncEditPay" href="billing.html" aria-label="Payment and Billing" data-tip="Payment &amp; Billing">'
 + '                      <svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-pencil"></use></svg>'
 + '                    </a>'
 + '                  </div>'
@@ -481,6 +490,16 @@ var DETAILS_HTML = ''
 + '                </thead>'
 + '                <tbody id="licInvBody"></tbody>'
 + '              </table>'
+/* ⚠⚠ AND THE PHONE GETS THE SAME CARD THE INVOICES PAGE DRAWS (2026-10-12, by request:
+   "the invoice card should be the same as on the Invoices page"). This tab was the last list
+   in the product still re-pouring a `<tr>` into a card with CSS — the third shape for "an
+   invoice in a list", after the Invoices page and Home both moved to `invCardRowHTML`.
+   ⚠️ THIRD READER, THIRD MOVE OF THE SAME BUILDER, and no new one: `invCardRowHTML` already
+   lives in `components.js` precisely because it had two readers. The host is a SIBLING of the
+   table, not a replacement — a `<div>` cannot live in a `<tbody>`, the desktop keeps its table
+   whole, and the renderer fills exactly one of the two. Same contract `#invCards` and
+   `#instCards` have on their pages. */
++ '              <div class="hc-cards licinvcards" id="licInvCards" hidden></div>'
 /* ⚠️ THROUGH THE SHARED BUILDER (2026-09-28). This was fifteen lines of hand-written
    pager with its own `#licInvRange`, and it showed: on a licence with no charges it
    printed `Items per page 10 · 0 of 0` with four arrows, directly under an empty state
@@ -736,9 +755,23 @@ function renderLicInvoices(lic){
     : (neverPaid
         ? 'No invoices yet. The first one appears when this license is charged.'
         : 'No charges on this license yet.');
+  var shown = list.length ? pageSlice(list, licInvPage) : [];
   body.innerHTML = list.length
-    ? pageSlice(list, licInvPage).map(function(v){ return invRow(v, opts); }).join('')
+    ? shown.map(function(v){ return invRow(v, opts); }).join('')
     : '<tr><td colspan="' + invCols(opts) + '" class="emptybox">' + msg + '</td></tr>';
+  /* ⚠⚠ EXACTLY ONE OF THE TWO IS FILLED, and the host stands down when it has nothing —
+     the same contract `renderInvoicesPage` and `renderInstances` already keep. The card host
+     goes when there are no invoices so the table's own `<td colspan>` message stays the ONE
+     place those three sentences live; there is no second empty state to keep in step.
+     ⚠️ THE SCROLLER IS WHAT HIDES, not the table: `.tablescroll` is the box the desktop
+     frames, and hiding the table inside it would leave an empty frame. */
+  var cards = $('#licInvCards'), wrap = $('#licInvBlock .tablescroll') || $('#licInvBlock table');
+  var phone = window.matchMedia('(max-width:600px)').matches;
+  if(cards){
+    cards.hidden = !phone || !list.length;
+    cards.innerHTML = cards.hidden ? '' : shown.map(invCardRowHTML).join('');
+  }
+  if(wrap) wrap.hidden = phone && !!list.length;
   if(!list.length) licInvPage.total = 0;
   /* the footer still removes itself when there is nothing to count, and still shows the
      count alone while there is only one page — that part never depended on paging */
@@ -817,7 +850,10 @@ function renderLicenseVersion(lic){
   if(v == null){
     var dash = '<span class="muted">&mdash;</span>';
     var e0 = $('#licVersion'); if(e0) e0.innerHTML = dash;
-    var m0 = $('#licVersionMob'); if(m0) m0.innerHTML = dash;
+    /* ⚠️ THE FLAG IS SET BY WHOEVER KNOWS, not read back off the glyph. `licenseVersion`
+       returning null is the fact; a mover comparing text against an em dash would be a
+       second, weaker definition of the same thing. */
+    var m0 = $('#licVersionMob'); if(m0){ m0.innerHTML = dash; m0.dataset.novalue = '1'; }
     return;
   }
   var behind = cmpVersion(v, LATEST_VERSION) < 0;
@@ -832,7 +868,7 @@ function renderLicenseVersion(lic){
   var txt = '<span class="ver-run">' + versionMark(behind) + esc(v) + '</span>'
     + (versionMixed(lic) ? ' <span class="ver-mixed">across ' + instRunning(lic) + ' instances</span>' : '');
   var el = $('#licVersion'); if(el) el.innerHTML = txt;
-  var mob = $('#licVersionMob'); if(mob) mob.innerHTML = txt;
+  var mob = $('#licVersionMob'); if(mob){ mob.innerHTML = txt; delete mob.dataset.novalue; }
 }
 /* ⚠️⚠️ THE PANEL'S OWN COPY OF THE TONE MAPPING (2026-09-30, by request). The three
    tones are Home's — red already broken, black will break on a known date, quiet
@@ -1155,7 +1191,18 @@ function renderLicenseDetails(lic){
   $$('#appView [data-page]').forEach(function(el){ el.hidden = el.getAttribute('data-page') !== pk; });
   var nameEl = isPerp ? $('#planNamePerp') : $('#planName');
   // the headline carries product · plan; the eyebrow above it carries the type
-  if(nameEl) nameEl.textContent = (lic.product || 'ThingsBoard') + ' · ' + lic.name;
+  /* ⚠⚠ THREE SPANS WHERE THERE WAS ONE STRING (2026-10-12, by request: "the product and
+     the licence name go on separate lines — `ThingsBoard ·` ending a line reads as a break,
+     not a separator"). A single text node can only wrap where the browser decides, and at 390
+     it decided after the separator. The split is where the sentence changes subject.
+     ⚠️ INERT ON THE DESKTOP, AND THAT IS THE POINT: three inline spans render the identical
+     string with the identical separator, so nothing above 600 moves. The phone turns the two
+     halves into blocks and drops the separator — which is a layout question, answered in the
+     stylesheet, on the one width that asked it.
+     ⚠️ `innerHTML`, so both halves are escaped by hand; `lic.name` and `lic.product` are
+     dataset strings and go through `esc` exactly as the old `textContent` protected them. */
+  if(nameEl) nameEl.innerHTML = '<span class="pn-prod">' + esc(lic.product || 'ThingsBoard') + '</span>'
+    + '<span class="pn-sep"> · </span><span class="pn-name">' + esc(lic.name) + '</span>';
   renderKicker(lic, pk);
   $('#statusSlot').innerHTML = statusChipHTML(lic);
   renderLabelSlot(lic);
@@ -1212,6 +1259,12 @@ function renderLicenseDetails(lic){
   renderLicenseAlert(lic);
   renderLicenseVersion(lic);
   renderLicenseActions(lic);
+  /* ⚠️⚠️ AFTER `renderLicenseVersion`, AND THE ORDER IS LOAD-BEARING NOW. The first build of
+     the tag row called this up beside `renderPeriodRow`, which is BEFORE the version is
+     written — harmless while the mover only moved nodes, and wrong the moment it started
+     READING one: it would have decided whether to show the version tag from the PREVIOUS
+     licence's content. A mover that reads a fact has to run after the fact is written. */
+  applyLicHeadTags();
   applyLicPlan();
   renderLicFeed(lic);
 }
@@ -1236,6 +1289,87 @@ function renderLicenseDetails(lic){
    put it. Same shape `page-licenses.js` and the other list pages use for their own switch. */
 var LIC_PLAN_MQ = window.matchMedia('(max-width:600px)');
 LIC_PLAN_MQ.addEventListener('change', function(){ try { applyLicPlan(); } catch(e){} });
+/* ⚠️ The masked key is TEXT, so the width cannot be answered in the stylesheet: the short
+   form is chosen here and re-chosen on the crossing, like every other width switch on this
+   surface. Only the masked face changes — `dataset.full` is never touched. */
+/* the phone shows one group of dots and the tail; every other width keeps the full mask */
+function maskedFace(t){
+  return (LIC_PLAN_MQ.matches && t.dataset.maskedShort) ? t.dataset.maskedShort : t.dataset.masked;
+}
+/* ⚠️ ONLY REPAINTS A KEY THAT IS STILL MASKED — a revealed key is showing `dataset.full`, and
+   a width change is no reason to hide it again under the reader's hands. */
+function applyLicKeyMask(){
+  var t = $('#keyText'), b = $('#revealBtn');
+  if(!t || !t.dataset.full) return;
+  if(b && b.getAttribute('aria-pressed') === 'true') return;
+  t.textContent = maskedFace(t);
+}
+LIC_PLAN_MQ.addEventListener('change', function(){ try { applyLicKeyMask(); } catch(e){} });
+/* ⚠⚠⚠ THE THREE FACTS ARE MOVED, NOT COPIED (2026-10-12, by request: "status, version and
+   renewal become tags below the Demo line, replacing the four stacked single-fact rows").
+   Each one keeps its id, its renderer and its tone; what changes is the box it sits in and
+   where that box is. A second copy would be two nodes for one fact — the defect this file has
+   recorded on `#dashFeed` and on the status chip of this very header.
+   ⚠⚠ THE TAG IS THE BOX, THE EXISTING MARK IS THE CONTENT, which is what keeps the tones out
+   of this decision: `statusMark` colours its own glyph and word, `versionMark` its own, and
+   both win on specificity inside `.pill`. **No new pill variant and no new tone** — the
+   request said to report rather than choose if one were forced, and none is.
+   ⚠️ HOME IS REMEMBERED ON FIRST MOVE so the desktop gets its own structure back exactly:
+   `#statusSlot` belongs to `#statusCol`, and the two `.rowvalue`s to their own `.keycol`s. */
+function applyLicHeadTags(){
+  var host = $('#headTags'); if(!host) return;
+  /* status, version, renewal — the order the request names, and the order the row renders in,
+     because inside the tag row the column's `order` numbers are cancelled (see the stylesheet)
+     and DOM order governs. Appending in this sequence is therefore the whole specification. */
+  var ids = ['statusSlot', 'licVersionMob', 'periodValueSub'];
+  var phone = LIC_PLAN_MQ.matches;
+  ids.forEach(function(id){
+    var el = $('#' + id); if(!el) return;
+    if(!el.__tagHome) el.__tagHome = el.parentNode;
+    /* ⚠⚠ THE ROW CLASS COMES OFF WHILE IT IS A TAG, and that is what keeps the component
+       honest. Measured with both on: `.rowvalue` sets `padding:0` and `font-size:16` at
+       (0,2,0) and simply beat `.pill` at (0,1,0) — two of the three "tags" came out 24.4px
+       tall in 16px type with no inset, i.e. a `.rowvalue` wearing a border and a radius.
+       Restating `.pill`'s padding and size to win that fight is forking the component; taking
+       the row class off is saying what the node IS in this position. It is a ROW on the
+       desktop and a TAG here, never both. */
+    /* ⚠️⚠️⚠️ A FACT BECOMES A TAG ONLY IF IT READS WITHOUT ITS LABEL (2026-10-12, the rule
+       this row needed and the next fact will need again).
+       A ROW may say "—": the label beside it gives the dash its meaning, so `Version —` reads
+       as "no version reported". A TAG HAS NO LABEL, so the same dash in a pill is a tag about
+       nothing — measured on a licence with no version, the row came out as `Active · — · No
+       expiry`. The version tag is therefore ABSENT on the phone when there is no version,
+       while the desktop's labelled row goes on saying `Version —` exactly as it does today.
+       ⚠️ The two presentations stay honest about the same data: one omits a fact it cannot
+       state, the other states it with the label that makes it statable. Neither invents one. */
+    if(phone && el.dataset.novalue){
+      el.hidden = true;
+      if(el.__tagHome && el.parentNode !== el.__tagHome) el.__tagHome.appendChild(el);
+      el.classList.remove('pill', 'soft');
+      if(el.id !== 'statusSlot') el.classList.add('rowvalue');
+      return;
+    }
+    el.hidden = false;
+    if(phone){
+      if(el.parentNode !== host) host.appendChild(el);
+      el.classList.remove('rowvalue');
+      el.classList.add('pill', 'soft');
+    } else {
+      if(el.__tagHome && el.parentNode !== el.__tagHome) el.__tagHome.appendChild(el);
+      el.classList.remove('pill', 'soft');
+      if(el.id !== 'statusSlot') el.classList.add('rowvalue');
+    }
+  });
+  host.hidden = !phone;
+}
+LIC_PLAN_MQ.addEventListener('change', function(){ try { applyLicHeadTags(); } catch(e){} });
+/* ⚠️ THE INVOICES TAB CROSSES THE SAME LINE, so it repaints on the same signal — the table
+   and the card host are chosen by width inside `renderLicInvoices`, and without this the one
+   that was right when the panel opened stays on screen after a rotation. `activeLicense` is
+   what the panel is showing; before anything is open there is nothing to repaint. */
+LIC_PLAN_MQ.addEventListener('change', function(){
+  if(activeLicense){ try { renderLicInvoices(activeLicense); } catch(e){} }
+});
 function applyLicPlan(){
   $$('#appView .planblock').forEach(function(block){
     var btn = $('#planManageBtn', block);
@@ -1295,7 +1429,12 @@ function hasNextCharge(lic){
 function setKeyRevealed(on){
   var t = $('#keyText'), b = $('#revealBtn');
   if(!t || !b) return;
-  t.textContent = on ? t.dataset.full : t.dataset.masked;
+  /* ⚠⚠ THE MASKED FACE IS CHOSEN HERE, BECAUSE THIS IS THE ONE PLACE THAT WRITES IT
+     (2026-10-12). My first build set it in `setLicenseKey` and lost: the render calls this
+     function afterwards, and it wrote the long mask straight back over the short one —
+     measured, `dataset.maskedShort` was correct and the screen showed the long form.
+     **Two writers of one face is the race; one writer that knows the width is the fix.** */
+  t.textContent = on ? t.dataset.full : maskedFace(t);
   var eye = $('.eye', b), eyeOff = $('.eyeoff', b);
   // note: .hidden as a JS property is a no-op on SVG elements — toggle the attribute
   if(on){ eye && eye.setAttribute('hidden',''); eyeOff && eyeOff.removeAttribute('hidden'); }
@@ -1308,7 +1447,20 @@ function renderLicenseKey(lic){
   var t = $('#keyText'); if(!t) return;
   var key = licenseKeyFor(lic);
   t.dataset.full = key;
+  /* ⚠⚠ TWO MASKS, AND ONLY THE SHORT ONE IS NEW (2026-10-12, by request: "twenty dots carry
+     nothing; the tail is what a person recognises"). The desktop mask is `licenseKeyMask` and is
+     untouched — it is shared with the licence rows, and changing it there would reach every
+     surface in the product. The phone's is one group of dots and the tail.
+     ⚠⚠ WHAT MAKES THE TRUNCATION SAFE IS THAT NEITHER READER OF THE VALUE GOES THROUGH IT:
+     `setKeyRevealed` prints `dataset.full` and `copyValue` sends `dataset.full`. Verified at
+     runtime before the change, not assumed — reveal returned the whole key and copy's source
+     string equalled it exactly.
+     ⚠️ WHY THE SHORTER MASK EARNS THE ROW: at 390 the five dot groups pushed the copy button
+     onto a line of its own. The tail is the only part of a masked key a reader can match
+     against their own, so the dots that went were carrying nothing. */
   t.dataset.masked = licenseKeyMask(key);
+  t.dataset.maskedShort = '\u2022\u2022\u2022\u2022 ' + String(key).split(/\s+/).pop();
+  applyLicKeyMask();
   setKeyRevealed(false);              // never inherit the previous licence's state
 }
 
