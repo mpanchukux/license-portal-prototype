@@ -297,6 +297,20 @@ function renderLicMenus(){
    (`licStatus === 'attention'`), C's is an independent AND on top of one
    (`licAttnOnly`). Same object, two readings, and that difference is the whole point of
    toolbar C — see `licVisible`. */
+/* the one box that moves, and only when the chip is actually out of sight */
+function revealAttnChipC(){
+  var chip = $('#licAttnChipC'), rail = chip && chip.closest('.barfilters');
+  if(!rail || rail.scrollWidth <= rail.clientWidth) return;   // no rail, or nothing to scroll
+  var over = chip.getBoundingClientRect().right - rail.getBoundingClientRect().right;
+  if(over > 0) rail.scrollLeft += over + LIC_RAIL_GUTTER;
+}
+/* ⚠️ SLACK, NOT A GUTTER, AND THE NAME IS THE RAIL'S PADDING ONLY BY COINCIDENCE. It was
+   written to leave the chip one inset off the edge; measured, it does not — the chip is still
+   growing when the scroll happens (see `applyLicBar`), and these 16px are what that growth
+   eats. End state at 390: the chip's right edge lands 0.1px inside the rail, not 16.
+   ⚠️ Raising it is safe and lowering it is not: the chip is the LAST thing in the rail, so the
+   browser clamps an over-scroll at the end, while an under-scroll leaves the chip cut. */
+var LIC_RAIL_GUTTER = 16;
 function syncAttnChipC(){
   var chip = $('#licAttnChipC'); if(!chip) return;
   chip.classList.toggle('is-on', licAttnOnly);
@@ -452,9 +466,33 @@ if(licAttnChipC) licAttnChipC.addEventListener('click', function(){
    of its own rather than as a fourth status. Without the line the trigger would read
    `All statuses` over a list of five. */
 function applyLicBar(){
-  if(licStatus === 'attention'){ licStatus = null; licAttnOnly = true; }
+  /* ⚠️ `arrived` IS THE ARRIVAL TEST, and it costs nothing because the translation below
+     can only fire once: `licStatus` is `'attention'` exactly when the URL put it there,
+     and this line clears it. Every later call — a settings change, a toolbar swap — sees
+     `null` and does nothing. */
+  var arrived = licStatus === 'attention';
+  if(arrived){ licStatus = null; licAttnOnly = true; }
   if(licStatus === null && !licStatusTouched) licStatus = 'active';
   syncAttnChip(); licApply();
+  /* ⚠️⚠️ ON ARRIVAL, BRING THE PRESSED CHIP INTO THE RAIL (2026-10-12). The chip is LAST
+     in the phone filter row and the row scrolls sideways, so a reader arriving from the
+     Home banner met a filtered list of five with the control that filtered it cut off at
+     the right edge — measured at 390: the chip ran to x=437 against a rail ending at 374.
+     ⚠️ `scrollLeft` ON THE RAIL, NEVER `scrollIntoView`: that method walks up and scrolls
+     every scrollable ancestor it finds, which on arrival would move the page itself under
+     a reader who has not touched anything yet. This moves one box and nothing else.
+     ⚠️ ARRIVAL ONLY. A chip the reader pressed themselves is in view by definition — they
+     just tapped it — and nothing may move under a finger that has only this moment landed.
+     ⚠️⚠️ THE GUTTER IS ALSO SLACK, AND THAT IS WHY IT IS ADDED RATHER THAN SUBTRACTED. The
+     pressed chip is still GROWING when this runs: `is-on` sets its label to weight 500, and
+     the chip goes 168.6 → 184.6px over the next ~120ms as that face is applied. It is not a
+     transition (`transition-duration` computes to 0s) and `document.fonts.ready` does not
+     cover it — tried, measured, changed nothing, so it is not in the code. Over-scrolling by
+     one gutter absorbs that growth, and over-scrolling is SAFE here precisely because the chip
+     is the LAST thing in the rail: the browser clamps at the end, so this can overshoot and
+     never lands past it. Measured end state at 390: `scrollLeft` 63.5 of a possible 79, chip
+     right 373.9 against a rail edge of 374. */
+  if(arrived) revealAttnChipC();
   /* the column row sticks under the toolbar, and `wireStickyFrame` measures that height
      into `--barH` — the measurement has to be re-taken after the bar is settled */
   window.dispatchEvent(new Event('resize'));

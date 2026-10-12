@@ -61,9 +61,19 @@ between specifying a component and specifying one page's view of it.
 
 # 1 · Button
 
-**Five variants, three sizes, two contents, one tone, three states.** All five variants are
+**Six variants, three sizes, two contents, one tone, three states.** Every variant is
 justified by the census: `primary` (44 instances), `secondary` (219), `menu` (86),
-`ghost` (24), `text` (4).
+`ghost` (24), `text` (4), `raised` (1).
+
+⚠️⚠️ **THIS FILE SAID FIVE UNTIL 2026-10-12, AND THIS FILE WAS THE WRONG ONE.** `raised` was
+added to `BTN_VARIANT` on 2026-10-08 — the day after this section was written — and the
+sentence here was never revisited, so the spec and `shared.js` disagreed for four days while
+both were being read as the source. The styleguide says six.
+⚠️ **One instance is not a reason to fold it**, on the same terms as `text`: `raised` is the
+product-swap box on the selling surface (`components.js`, `nl-prodswap`), the one surface that
+answers the pointer by **rising** rather than by tinting. The test that admits a surface to
+rising is in the stylesheet and on the styleguide's Buttons page; `.blockmore-go` fails it and
+the landing hero passes.
 
 ⚠️ **`text` has four instances and stays.** All four are the wizard's `Back`. It is the only
 form in the product that is a label with no box at all, and folding it into `ghost` would

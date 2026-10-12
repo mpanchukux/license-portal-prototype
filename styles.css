@@ -8307,7 +8307,13 @@ body.list-empty #pageTitleRow [id^="licNewBtn"]{display:none !important}
   opacity:0;transition:opacity var(--motion-settle) var(--motion-ease),transform var(--motion-settle) var(--motion-ease);pointer-events:none}
 .snack.on{opacity:1;transform:translate(-50%,0);pointer-events:auto}
 .snack[hidden]{display:none}
-.snack-t{font-size:var(--t-body-fs);line-height:1.45}
+/* ⚠️ THE TEXT OWNS THE SLACK, WHICH IS WHAT PUTS THE DISMISS ON THE RIGHT EDGE. Without
+   `flex:1` both children are content-sized and packed at the start, so the ✕ sat against
+   the end of the sentence with the rest of the box empty beside it — on the phone, where
+   the bar is `left:16;right:16`, that is a cross floating in the middle of a full-width
+   band. `min-width:0` so a long message wraps inside its own column instead of pushing
+   the button out of the box. */
+.snack-t{flex:1 1 auto;min-width:0;text-align:left;font-size:var(--t-body-fs);line-height:1.45}
 /* the dismiss is quiet: the message leaves by itself, this is for the impatient */
 .snack-x{flex:none;color:#fff;opacity:.7}
 .snack-x:hover{opacity:1;background:var(--overlay-light-press)}
