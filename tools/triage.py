@@ -32,6 +32,27 @@ def sig(head):
 # D  a design-system decision — goes into SCALES.md / COMPONENTS.md first
 # E  closed (detected from the strikethrough, never written here)
 CAT = {
+  # ---- 2026-10-12, the fourteenth pass: field states built, tables and toolbars gathered ----
+  'd333ddfb0d': 'C',  # the hand-built stepper specimen has no media rules of its own
+  '0c95f72b50': 'B',  # instAllRow calls instStatusCell across files; the row builder is not self-contained
+  # ---- 2026-10-12, the thirteenth pass: matrices scroll, bar hidden, width unblocked ----
+  '72897736f9': 'C',  # styleguide takes ~16s to fire onload in an iframe; cause unknown
+  '4fbf8e91f4': 'C',  # the console buffer is history, not state: curl before believing a 404
+  # ---- 2026-10-12, the twelfth pass: input matrices, Activity rebuilt as states ----
+  '8c547ceac5': 'B',  # three field states the product has no rule for; each fix is visible
+  '80e62577e9': 'D',  # four live forms lost their specimen with the chips block
+  '5f0f75cf26': 'C',  # five .sg-act* rules orphaned by the Activity rebuild
+  # ---- 2026-10-12, the eleventh pass: two prose-only tabs taken out of the design system ----
+  'aebe754765': 'C',  # .sg-head / .sg-lead lost their last markup with the page lead
+  'c976b7e085': 'D',  # five more rail tabs need the same specimen census
+  # ---- 2026-10-12, the tenth pass: stepper, Activity split in two, empty states ----
+  '19c87d6b35': 'C',  # #empty is still a drawer in the file; six blocks are promoted at boot
+  # ---- 2026-10-12, the ninth pass: four sections cut, three dead specimens pulled ----
+  'a3e73aa682': 'C',  # the shadow specimen draws nothing: box-shadow fed a gradient token
+  '27b5730ec1': 'D',  # three CSS rules now have zero readers anywhere; removal is its own pass
+  'b6bbadc51c': 'D',  # .pill.attn is named in live page copy but DEAD.md counts it dead
+  # ---- 2026-10-12, the eighth pass: the styleguide cut that censused past its list ----
+  'efda4620d0': 'D',  # three literals in styleguide prose that no token backs; scan the rest
   # ---- 2026-10-09, the mobile pass and the licence modal ----
   '079eb86428': 'A',  # the invite placeholder lost its "comma separated" instruction: copy
   '3015412618': 'A',  # the four-colour Google G has to come from Google's own brand kit

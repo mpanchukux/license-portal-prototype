@@ -3474,10 +3474,15 @@ function bannerIcon(tone){
    again: three stacked banners push the licence list off the screen, and an action beside
    a LIST of alerts acts on one of them while looking like it settles the banner. The
    stacked band's own answer to both is `and N more`. */
-function renderHomeBanner(){
-  var slot = $('#homeBanner');
+/* ⚠️ THE TWO ARGUMENTS ARE FOR THE STYLEGUIDE, AND THEY ARE OPTIONAL (2026-10-12).
+   The design system used to carry this banner as HAND-TYPED markup, which is how it came
+   to show a shape the product does not build: a todo line and two action buttons beside
+   an `and N more`, when the several-alerts form drops both. A specimen of a banner has to
+   be built by the banner. With no arguments this behaves exactly as it always did. */
+function renderHomeBanner(slotEl, itemsIn){
+  var slot = slotEl || $('#homeBanner');
   if(!slot) return;
-  var items = homeBannerVisible();
+  var items = itemsIn || homeBannerVisible();
   if(!items.length){ slot.hidden = true; slot.innerHTML = ''; slot.className = ''; return; }
   var blocking = items.some(function(c){ return BANNER_BLOCKING[c.state]; });
   /* ⚠️ The ✕ dismisses THE ONE ON SCREEN, and only it. While the banner listed three,

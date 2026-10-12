@@ -2870,7 +2870,18 @@ th .arrow .ic{width:var(--ic-16);height:var(--ic-16);display:block}
 th[aria-sort="ascending"] .arrow{transform:rotate(180deg)}
 th.chk,td.chk{width:34px;text-align:center;padding-left:var(--space-inline);padding-right:0}
 input[type=checkbox]{accent-color:var(--ink);width:14px;height:14px;margin:0}
-.emptybox{padding:var(--space-band) 0;text-align:center;color:var(--mid);font-size:var(--t-body-fs)}
+/* ⚠️⚠️ ONE EMPTY TREATMENT, NOT THREE (2026-10-12, by request). `.emptybox` was unfilled
+   with no corners, `.noresults` was a DASHED outline on transparent, and `.emptybox.eb`
+   was the tinted block — three looks for "there is nothing here". They are one look now:
+   the tint, no border, centred text. ⚠️ THIS REVERSES A RECORDED RULE — `COMPONENTS.md`
+   said solid-vs-dashed was deliberate, "because two different facts must not look like
+   one" (the account has nothing / your filter hid it). The difference is now carried by
+   the WORDS and by the way out that `.noresults` keeps, which is what it always had on
+   top of the border. The rule is rewritten there rather than left contradicting the file. */
+.emptybox{padding:var(--space-band) var(--space-heading);text-align:center;color:var(--mid);
+  font-size:var(--t-body-fs);background:var(--surface-empty);border-radius:var(--radius-surface)}
+/* a `<td>` carrying it must not also draw the cell's own stroke */
+td.emptybox{border:var(--border-none)}
 /* ---------- .listbar — the control row above a list ------------------------------
    ⚠️⚠️ ONE COMPONENT THAT HAD TWO NAMES. `.lic-controls` and `.insttoolbar` declared
    this same band in two places, byte for byte, and the stylesheet paired them in seven
@@ -3379,7 +3390,7 @@ body[data-tableframe] #dashView .dblock > table{margin-left:calc(-1 * var(--spac
    ⚠️ AND IT IS LIGHTER, which was the other half of the request: #f0f0ee against the white
    it sits on is a 6% drop; ink at .04 resolves to about #F6F6F6, which is less than half
    of that. */
-.stepper button:hover{background:var(--overlay-wash)}
+.stepper button:hover,.sg-st-hover .stepper button{background:var(--overlay-wash)}
 .stepper button[disabled]{color:var(--line);cursor:not-allowed;background:#fff}
 .stepper .val{min-width:46px;height:var(--btnH);display:inline-flex;align-items:center;justify-content:center;border-left:var(--border-hairline) solid var(--line);border-right:var(--border-hairline) solid var(--line);font-variant-numeric:tabular-nums;font-size:var(--t-body-fs)}
 
@@ -3395,7 +3406,7 @@ body[data-tableframe] #dashView .dblock > table{margin-left:calc(-1 * var(--spac
   background:#fff;border:var(--border-hairline) solid var(--line);box-sizing:border-box;transition:var(--motion-quick)}
 .switch input:checked + .track{background:var(--ink);border-color:var(--ink)}
 .switch input:checked + .track::after{transform:translateX(18px);background:#fff;border-color:#fff}
-.switch input:focus-visible + .track{outline:var(--border-emphasis) solid var(--ink);outline-offset:2px}
+.switch input:focus-visible + .track,.sg-st-focus .switch .track{outline:var(--border-emphasis) solid var(--ink);outline-offset:2px}
 /* The large switch: the billing toggle on step 1 and the add-on blocks on step 2 —
    controls that carry a decision, not a quiet list setting. The base size stays for
    the latter (e.g. "Display canceled licenses" in the Licenses toolbar). */
@@ -8074,7 +8085,7 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
    be two answers to one question. 5.09:1 on white — it passes as text.
    ⚠️ COLOUR IS STILL NOT THE ONLY CARRIER. The border thickens, the label turns, and
    the message is words. Print this page in grey and every failed field still reads. */
-.field.err > input,.field.err > select,.field.err > textarea,
+.field.err > input,.field.err > select,.field.err > textarea,.field.err .selwrap > select,
 .field.err .paystripe{border-color:var(--status-alert);box-shadow:var(--ring-invalid)}
 .field.err > label{color:var(--status-alert)}
 .field.err .help{display:none}
@@ -8214,7 +8225,7 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
    full width and sits above the buttons — nothing is shrunk, tightened or truncated. */
 .cancel-help{flex:1 1 100%;order:-1;font-size:var(--t-body-fs);color:var(--mid);text-align:left}
 
-.noresults{border:var(--border-hairline) dashed var(--line);border-radius:var(--radius-control);background:transparent;
+.noresults{border:var(--border-none);border-radius:var(--radius-surface);background:var(--surface-empty);
   padding:var(--space-block) var(--space-heading);text-align:center}
 .nr-t{font-size:var(--t-body-fs);line-height:var(--t-body-lh);color:var(--ink)}
 .nr-clear{margin-top:var(--space-inline);font-size:var(--t-body-fs)}
@@ -8427,7 +8438,28 @@ body.list-empty #pageTitleRow [id^="licNewBtn"]{display:none !important}
    CONTENT, which is what the character count is about.
    ⚠️ Measured before: 104 characters fitted a 770px content box. */
 #bill-descr{max-width:calc(74ch + 28px)}
-.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--ink)}
+/* ⚠️⚠️ THE `.sg-st-*` SELECTORS ARE THE STYLEGUIDE'S WAY IN, AND THEY RIDE THE REAL RULE
+   RATHER THAN COPYING IT (2026-10-12). The state matrices have to show hover and focus
+   standing still, and the browser owns both — so the page labels a column and the cell
+   carries `.sg-st-hover` / `.sg-st-focus`. Writing those as their own rules would put the
+   value in two places and let the matrix drift from the product; added to the SAME
+   declaration block, a change to the product changes the specimen in the same edit.
+   ⚠️ They select nothing outside `styleguide.html`: no builder emits them. */
+.field input:focus,.field select:focus,.field textarea:focus,
+.sg-st-focus .field input,.sg-st-focus .field select,.sg-st-focus .field textarea{border-color:var(--ink)}
+/* ⚠️⚠️ HOVER DID NOT EXIST ON A FIELD AT ALL, and the matrix is how that was found: the
+   `hovered` column was pixel-identical to `filled`. `--mid` is the border every other
+   hovered control in the product takes (`.typechip:hover`), so this is the existing
+   answer applied to the one family that had none, not a new one. */
+.field input:hover:not([readonly]):not(:disabled),
+.field select:hover:not(:disabled),
+.field textarea:hover:not([readonly]):not(:disabled),
+.sg-st-hover .field input,.sg-st-hover .field select,.sg-st-hover .field textarea{border-color:var(--mid)}
+/* ⚠️⚠️ NOR DID DISABLED. A disabled field rendered as the browser's default, which is why
+   that column matched `filled` too. The values are `.pager select:disabled`'s, which is
+   the one disabled control the product already had. */
+.field input:disabled,.field select:disabled,.field textarea:disabled{
+  background:var(--surface-quiet);color:var(--text-inactive);cursor:default}
 /* ⚠️ Placeholders were browser-default grey, which in a monochrome interface sits
    close enough to real text to be read as one. The participant nearly submitted the
    billing form believing the phone number was already filled in. `--faint` is the
@@ -8436,7 +8468,7 @@ body.list-empty #pageTitleRow [id^="licNewBtn"]{display:none !important}
    present an example as a value. */
 .field input::placeholder,.field textarea::placeholder,
 .paystripe input::placeholder{color:var(--mid);opacity:1}
-.field.ro input{background:var(--bg);color:var(--mid);cursor:default}
+.field.ro input,.field.ro textarea{background:var(--bg);color:var(--mid);cursor:default}
 .field .help{font-size:var(--t-small-fs);line-height:var(--t-small-lh);letter-spacing:var(--t-small-ls);color:var(--mid);margin-top:var(--space-tight)}
 .field2{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-control) var(--space-stack)}
 .field2 .field{margin-bottom:0}   /* the grid gap spaces rows — no double margin */
@@ -8685,12 +8717,24 @@ body.list-empty #pageTitleRow [id^="licNewBtn"]{display:none !important}
    a glyph at 10px sat on it. 14px clears the curve; the text follows at 38. */
 .searchbox .searchglyph{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:var(--ic-16);height:var(--ic-16);color:var(--glyph-decorative);pointer-events:none}
 .searchbox input{font:inherit;font-size:var(--t-body-fs);width:100%;height:var(--btnH);border:var(--border-hairline) solid var(--line);border-radius:var(--radius-interactive);padding:0 var(--space-control) 0 var(--space-gutter);background:#fff;color:var(--ink);outline:none}
-.searchbox input:focus{border-color:var(--ink)}
+.searchbox input:focus,.sg-st-focus .searchbox input{border-color:var(--ink)}
+.searchbox input:hover:not(:disabled),.sg-st-hover .searchbox input{border-color:var(--mid)}
+.searchbox input:disabled{background:var(--surface-quiet);color:var(--text-inactive);cursor:default}
+.searchbox:has(input:disabled) .searchglyph{opacity:.5}
 /* the clear control — inside the field, trailing edge, only when there is text */
 /* ⚠️ Position only: the box is `btn--ghost btn--md btn--icon`. 40px inside a 40px
    field would touch both edges, so this one keeps a size — see the report. */
+/* ⚠️⚠️ THE RESET WAS MISSING AND THE PRODUCT HAS BEEN DRAWING A UA BUTTON (found by the
+   Search matrix, 2026-10-12). `button{font:inherit;cursor:pointer}` is the only global
+   reset, so this one kept the browser's `background:ButtonFace` and `border:outset` —
+   a grey square with hard corners sitting inside a rounded field. The hover rule below
+   has always said what it was meant to be (`background:var(--hover)` ARRIVING on hover),
+   which only reads if there is no fill at rest. It is a glyph now, and the hover fill is
+   a disc so it matches every other icon-only control in the product. */
 .searchclear{position:absolute;right:4px;top:50%;transform:translateY(-50%);
-  width:32px;height:32px;color:var(--mid)}
+  width:32px;height:32px;color:var(--mid);
+  border:var(--border-none);background:transparent;border-radius:var(--radius-circle);
+  display:inline-flex;align-items:center;justify-content:center;padding:0}
 .searchclear:hover{color:var(--ink);background:var(--hover)}
 .searchclear[hidden]{display:none}
 .searchclear .ic{width:var(--ic-16);height:var(--ic-16)}
@@ -8803,7 +8847,7 @@ body.fsheet-open #shellMain{overflow:hidden}
    (see `.filterchip`, "two kinds of filter in one row, and they must not look alike") and it
    is reported rather than resolved. */
 .typechip{height:var(--btnH);display:inline-flex;align-items:center;font-size:var(--t-small-fs);padding:0 var(--space-stack);border:var(--border-hairline) solid var(--line);border-radius:var(--radius-pill);background:#fff;color:var(--mid)}
-.typechip:hover{border-color:var(--mid);color:var(--ink)}
+.typechip:hover,.sg-st-hover .typechip{border-color:var(--mid);color:var(--ink)}
 /* ⚠⚠ THE SELECTED STATE IS NOW THE PRODUCT'S SELECTED STATE (2026-10-12, by request).
    It was an ink fill with white text — the loudest treatment in the system — while every
    other filter chip says "this one" with `--surface-selected` on `--border-selected`, which is
@@ -9080,7 +9124,20 @@ th.lic-num{text-align:right}
    styleguide.html — scaffolding for the component inventory. Only the page's own
    frame lives here; every specimen on it uses the product classes above.
    ========================================================================== */
-.sg-wrap{width:100%;max-width:var(--pageW);margin:0 auto;padding:var(--pageY) var(--pageX) 80px}
+/* ⚠️⚠️⚠️ THIS RULE USED TO CAP THE PAGE AT `--pageW` AND IT CONTRADICTED THE SHELL THAT
+   REPLACED IT. The two-column shell (2026-09-25) sets `.sg-wrap{max-width:none;margin:0}`
+   with a comment saying the rail "has to reach the left edge of the window" — but this
+   block sits LATER in the file at the same specificity, so `max-width:1180px` and
+   `margin:0 auto` won, the whole thing was centred, and the rail reached nothing. The
+   comment described an intention the cascade had already overruled. The cap is gone; the
+   shell's own rule is the only one now, which is what widens the content column without
+   touching the 240px rail.
+   ⚠️ THE PRODUCT'S TOP BAR IS HIDDEN HERE. The design system is scaffolding about the
+   product, not a page of it: a ThingsBoard wordmark and an account menu above a component
+   inventory invite the reader to treat the inventory as a screen. `shared.js` still
+   renders the bar — nothing is special-cased in JS — it is simply not shown on this one
+   page. */
+body[data-page="styleguide"] .dtopbar{display:none}
 .sg-head{padding:var(--space-block) 0 var(--space-inline)}
 .sg-lead{font-size:var(--t-body-fs);line-height:var(--t-body-lh);color:var(--mid);max-width:70ch;margin:var(--space-inline) 0 0}
 .sg-toc{display:flex;flex-wrap:wrap;gap:var(--space-inline);margin:var(--space-heading) 0 0}
@@ -9101,6 +9158,39 @@ th.lic-num{text-align:right}
 .sg-btnmatrix th[scope="row"]{font-weight:500;color:var(--ink);white-space:nowrap;padding-right:var(--space-heading)}
 .sg-btnmatrix td{border-bottom:var(--border-hairline) solid var(--line2);padding:var(--space-control) var(--space-control)}
 .sg-btnmatrix .sg-btnonly{border-left:var(--border-hairline) solid var(--line2);padding-left:var(--space-heading)}
+/* ⚠️ THE INPUT MATRICES NEED A FLOOR UNDER THE CELL, AND THE BUTTON ONE DOES NOT.
+   A button is content-sized, so its column takes the width of the widest label. A field
+   is `width:100%`, so in a seven-column table every cell collapses to whatever is left —
+   measured at 1280: ~60px, with the label wrapping to one letter per line. The floor is
+   the field's own width in the product (280px, `.searchbox`) rounded down to a column
+   that still lets seven of them sit in a scroller. `.tablescroll` already handles the
+   overflow this creates; the table was always allowed to be wider than the page. */
+.sg-fieldmatrix td{min-width:190px;vertical-align:top}
+/* ⚠️ THE FOCUS RING ON A CONTROL THE GLOBAL RULE REACHES BY `:focus-visible` CANNOT RIDE
+   THAT RULE. Adding `.sg-st-focus .typechip` to `:focus-visible{…}` would raise the
+   specificity above `.typechip` and the chip would take the rule's `border-radius`
+   (`--radius-tight`) as well — a pill squaring itself on focus, which is not what the
+   product does. So these two declarations are the one place in the hooks that repeats a
+   value, and they repeat it from the same tokens. */
+.sg-st-focus .typechip,.sg-st-focus .stepper button,.sg-st-focus .searchclear{
+  outline:var(--border-emphasis) solid var(--ink);outline-offset:2px}
+/* the clear control is a glyph, not a boxed button: no fill until it is pointed at */
+.sg-st-hover .searchclear{color:var(--ink);background:var(--hover)}
+/* ⚠️⚠️ AND THE WRAPPER HAS TO SCROLL, OR THE FLOOR ABOVE JUST PUSHES THE TABLE OUT OF
+   THE CARD. `.tablescroll` is `overflow:visible` by default — the list pages toggle
+   `.is-scrollable` from script, and nothing on this page runs that script — so a matrix
+   wider than its column ran PAST the frame with no scrollbar and no cue: the right-hand
+   states were simply unreachable. Declared here rather than script-toggled for the same
+   reason the licence panel declares it: the reason for toggling is a sticky `thead`
+   sticking to a box with no height limit, and these matrices have no sticky head. */
+/* ⚠️ EVERY SCROLLER ON THIS PAGE, not just the matrices. The first version of this rule
+   named `.sg-btnmatrix` and left the specimen TABLES — licences, instances, invoices,
+   users, the token table — running past their cards at narrow widths, which is the same
+   defect one scope narrower. The product keeps `.is-scrollable` script-toggled because a
+   scroller computes `overflow-y:auto` and a sticky `thead` then sticks to a box with no
+   height limit; nothing on this page scrolls vertically inside a card, so the reason does
+   not reach here and the plain rule is correct. */
+body[data-page="styleguide"] .tablescroll{overflow-x:auto}
 .sg-sub{margin:var(--space-heading) 0 var(--space-inline);font-family:var(--font-ui);font-size:var(--t-small-fs);
   font-weight:500;color:var(--mid)}
 .sg-sub .sg-cls{margin-left:var(--space-inline);font-weight:400}

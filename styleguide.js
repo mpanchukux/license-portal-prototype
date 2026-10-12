@@ -279,6 +279,49 @@ $$('.sgWizStep').forEach(function(box){
   var ha = $('#sgLicHeadA'), ba = $('#sgLicBodyA');
   if(ha) ha.innerHTML = licHeadHTML();
   if(ba) ba.innerHTML = rows.map(function(p){ return licRowHTML(p, { noLabelEdit:true }); }).join('');
+
+  /* ---------- the other four tables, each from ITS OWN builder --------------------
+     ⚠️ THE PAGE DOCUMENTED ONE TABLE AND THE PRODUCT HAS FIVE. Instances renders two
+     different column sets, invoices and users one each, and none of them were here — so
+     "Table row, one component under four names" was a claim the page never showed. Each
+     block below calls the function the real page calls; the two heads that the product
+     types inline (invoices, users) are typed here too, and that is the only duplication. */
+  function fill(headSel, bodySel, headHTML, rowsHTML){
+    var h = $(headSel), b = $(bodySel);
+    if(h) h.innerHTML = headHTML;
+    if(b) b.innerHTML = rowsHTML;
+  }
+  /* ⚠️ `allInstances()` IS THE PAGE'S OWN COLLECTOR, and instances hang off the LICENCE
+     (`l.instances`) rather than sitting in `DATA()` as a list of their own — which is why
+     the first attempt here read `DATA().instances` and got an empty table. */
+  var insts = (typeof instStatusCell === 'function') ? allInstances() : [];
+  if(insts.length){
+    fill('#sgInstHead', '#sgInstBody', instAllHeadHTML(),
+         insts.slice(0, 4).map(function(r){ return instAllRow(r); }).join(''));
+    fill('#sgInstGHead', '#sgInstGBody', instGroupHeadHTML(),
+         insts.slice(0, 4).map(function(r){ return instGroupRow(r); }).join(''));
+  }
+  var invs = (DATA().invoices || []).slice(0, 4);
+  if(invs.length){
+    fill('#sgInvHead', '#sgInvBody',
+      '<tr><th>Invoice #</th><th>Date</th><th class="num">Amount</th><th>Licence</th>'
+        + '<th>Status</th><th aria-label="Invoice actions"></th></tr>',
+      invs.map(function(v){ return invRow(v); }).join(''));
+  }
+  var users = (DATA().users || []).slice(0, 4);
+  if(users.length){
+    fill('#sgUserHead', '#sgUserBody',
+      '<tr><th>Email</th><th>Name</th><th>Added</th><th aria-label="User actions"></th></tr>',
+      users.map(function(u){ return userRow(u); }).join(''));
+  }
+
+  /* ---------- the scrolled-sideways state ----------------------------------------
+     ⚠️ THE SAME ROWS IN A NARROWER BOX, not a drawing of a scrollbar. `.is-scrollable`
+     is the class the list pages toggle when the table outgrows its wrapper, and
+     `.cue-r` is the edge cue that says there is more to the right. Both are the
+     product's; the only thing this specimen adds is the narrow box. */
+  fill('#sgScrollHead', '#sgScrollBody', licHeadHTML(),
+       rows.slice(0, 3).map(function(p){ return licRowHTML(p, { noLabelEdit:true }); }).join(''));
 })();
 
 /* ---------- LICENCES TOOLBAR: the one that won, and its two menus ----------------
@@ -437,68 +480,204 @@ $$('.sgWizStep').forEach(function(box){
       'Replacing it.']
   };
   var TS = 'Sep 13 2026, 07:12';
-  /* ⚠️ THE SHAPE IS DERIVED, NOT DECLARED. Grouping by hand would be a second list to
-     keep in step with the first, and the first is `ACTIVITY_TEXT`, which grows. A type
-     lands in a group because of what its sample actually renders — a detail array, a
-     missing actor, the fold flag — so a new type cannot be filed wrongly, only filed. */
-  function actShape(k){
-    var d = S[k];
-    if(k === 'instance.checks_grouped') return 'fold';
-    if(!d) return null;                        // no sample: reported as a gap, below
-    if(d[2]) return 'detail';
-    if(!d[0]) return 'system';
-    return 'plain';
-  }
-  $$('.sg-actlist').forEach(function(box){
-    var pre = box.getAttribute('data-actshape');
-    var keys = Object.keys(ACTIVITY_TEXT).filter(function(k){
-      var sh = actShape(k);
-      /* a type with no sample has no shape either — it is shown once, in the first
-         group, as the gap it is, rather than vanishing from the page entirely */
-      return sh === pre || (sh === null && pre === 'plain');
-    });
-    box.innerHTML = keys.map(function(k, n){
-      var d = S[k];
-      if(!d) return '<div class="sg-actrow"><p class="sg-note">'
-        + '<span class="sg-warn"><svg class="ic" aria-hidden="true">'
-        + '<use href="assets/icons.svg#ti-alert-triangle"></use></svg></span>'
-        + ' no sample for <code class="sg-cls">' + k + '</code></p></div>';
-      var rec = { type:k, ts:TS, actor:d[0], f:d[1] };
-      if(d[2]) rec.detail = d[2];
-      /* ⚠️ BOTH SCOPES, and only when they differ — a second copy of an identical
-         sentence would teach the opposite of the rule it is there to show. */
-      var lic = activitySentence(rec, 'license'), glob = activitySentence(rec, 'global');
-      return '<div class="sg-actrow">'
-        + '<div class="sg-actkey"><code class="sg-cls">' + k + '</code>'
-        +   '<span class="sg-actwhere">' + d[3] + '</span></div>'
-        + activityEntry(rec, 'global', pre + n)
-        + (lic === glob ? ''
-            : '<div class="sg-actscope"><span class="sg-actlabel">In the licence&rsquo;s own tab</span>'
-              + activityEntry(rec, 'license', pre + n + 'L') + '</div>')
-        + '</div>';
-    }).join('');
-  });
-
-  /* ---------- the gap specimen: two runs and the hole between them ----------------
-     ⚠️ THE ONLY CONSTRUCTED PAIR ON THIS PAGE, and it has to be: a gap is a relationship
-     BETWEEN two entries, so no single sample from `ACTIVITY_TEXT` can render it. The
-     records are the same shape `foldChecks` emits — same type, same `f` — and they go
-     through `activityList` like every real feed, so what is shown is the component and
-     not a drawing of it.
-     ⚠️ The numbers are chosen to BE a gap: the older run ends 18:10, the newer begins
-     20:10, and 19:10 is the slot nothing arrived for. Whoever edits these must keep the
-     hole; two runs an hour apart would silently become one continuous story. */
+  /* ---------- the component, in its states ----------------------------------------
+     ⚠️ STATES, NOT A CATALOGUE OF COPY. This block used to print every key in
+     `ACTIVITY_TEXT` grouped by shape, which is a list of SENTENCES — and the sentences
+     are already in `ACTIVITY_TEXT`, readable in one screen. What a design system shows
+     is the component: one representative record per state, through `activityList`, so
+     the rail, the day separator and the mark are the product's and not a drawing.
+     ⚠️ The records are picked from the same sample map the page already carries, so a
+     state cannot drift from what the product can actually build.
+     ⚠️ `grouped` is the only CONSTRUCTED pair, and it has to be: a run is a relationship
+     between entries, so no single sample renders it. The numbers are chosen to BE a gap —
+     the older run ends 18:10, the newer begins 20:10, and 19:10 is the slot nothing
+     arrived for. Whoever edits these keeps the hole. */
   (function(){
-    var host = $('#sgActGap'); if(!host) return;
+    var host = $('#sgActStates'); if(!host) return;
+    function rec(k, ts){
+      var d = S[k]; if(!d) return null;
+      var r = { type:k, ts:ts || TS, actor:d[0], f:d[1] };
+      if(d[2]) r.detail = d[2];
+      return r;
+    }
+    var STATES = [
+      ['default',      'license.created',          null],
+      ['with details', 'license.plan_changed',     null],
+      ['alert',        'license.payment_failed',   null]
+    ];
+    var out = STATES.map(function(st){
+      var r = rec(st[1], st[2]);
+      if(!r) return '<h3>' + st[0] + '</h3>'
+        + '<p class="sg-note"><span class="sg-warn">' + icon('alert-triangle')
+        + '</span> no sample for <code class="sg-cls">' + st[1] + '</code></p>';
+      return '<h3>' + st[0]
+        + ' <span class="sg-cls">' + st[1] + '</span></h3>'
+        + '<div class="listcard"><div class="feed">'
+        + activityList([r], 'global', 'st' + st[0]) + '</div></div>';
+    });
     var mk = function(count, from, to, ts){
       return { type:'instance.checks_grouped', ts:ts,
                f:{ entity:'Factory A', count:count, from:from, to:to } };
     };
-    host.innerHTML = activityList([
-      mk(4, 'Sep 23, 2026, 20:10', 'Sep 23, 2026, 23:10', 'Sep 23 2026, 23:10'),
-      mk(5, 'Sep 23, 2026, 14:10', 'Sep 23, 2026, 18:10', 'Sep 23 2026, 18:10')
-    ], 'global', 'gap');
+    /* ⚠️⚠️ `.feed` IS NOT DECORATION — IT DRAWS THE RAIL. The vertical line is
+       `.feed > .fsep::before, .feed > .fitem::before`, a DIRECT-CHILD selector, so an
+       entry rendered into a plain `.listcard` loses the axis and the component stops
+       looking like itself. The first build of this block did exactly that. Both hosts in
+       the product wrap the list this way (`#actFeed`, `#dashFeed`). */
+    out.push('<h3>grouped, one run '
+      + '<span class="sg-cls">instance.checks_grouped</span></h3>'
+      + '<div class="listcard"><div class="feed">'
+      + activityList([mk(24, 'Sep 23, 2026, 00:10', 'Sep 23, 2026, 23:10', 'Sep 23 2026, 23:10')],
+                     'global', 'stmany') + '</div></div>');
+    out.push('<h3>grouped, a gap between two runs '
+      + '<span class="sg-cls">the structure is the message</span></h3>'
+      + '<div class="listcard"><div class="feed">' + activityList([
+          mk(4, 'Sep 23, 2026, 20:10', 'Sep 23, 2026, 23:10', 'Sep 23 2026, 23:10'),
+          mk(5, 'Sep 23, 2026, 14:10', 'Sep 23, 2026, 18:10', 'Sep 23 2026, 18:10')
+        ], 'global', 'stgrouped') + '</div></div>');
+    host.innerHTML = out.join('');
   })();
+})();
+
+/* ---------- the Home banner, in its two shapes, BUILT BY THE BANNER ---------------
+   ⚠️⚠️ THESE WERE HAND-TYPED AND THEY WERE WRONG. The page carried the markup for both
+   shapes as literal HTML, and the several-alerts one showed a todo line and two action
+   buttons beside `and N more` — a form `renderHomeBanner` does not build. The reason the
+   product drops both is written down (an action is an answer, and an answer is only
+   honest once the reader has seen the question), so the specimen was teaching against
+   its own rule. `renderHomeBanner` now takes an optional slot and an optional list.
+   ⚠️ THE CONDITIONS ARE REAL ROWS from the dataset, shaped the way `attentionConditions`
+   shapes them — `{p, state, lic}` — so the copy comes out of `homeBannerCopy` exactly as
+   it does on Home. */
+(function(){
+  var one = $('#sgBannerOne'), many = $('#sgBannerMany');
+  if(!one && !many) return;
+  var lics = (DATA().licenses || []);
+  if(!lics.length) return;
+  function cond(state, lic, extra){
+    var c = { p:1, state:state, lic:lic };
+    if(extra) for(var k in extra) c[k] = extra[k];
+    return c;
+  }
+  /* a licence that is actually over its limit, so `homeBannerCopy` can count instances */
+  var blocked = lics.filter(function(l){ return instOverLimit(l); })[0] || lics[0];
+  if(one)  renderHomeBanner(one,  [cond('blocked', blocked)]);
+  /* seven conditions → the most urgent in full-fact form and `and 6 more`, which is the
+     shape a crowded account actually gets */
+  if(many) renderHomeBanner(many, [cond('blocked', blocked)].concat(
+    lics.slice(0, 6).map(function(l){ return cond('payment_failed', l); })));
+})();
+
+/* ---------- the input matrices: one per family, forms down, states across --------
+   ⚠️⚠️ HOVER AND FOCUS ARE SHOWN STANDING STILL, and the mechanism matters. The browser
+   owns `:hover` and `:focus-visible`, so a matrix cannot put a control into them — the
+   first build labelled the column and left a live control in the cell, and every one of
+   those columns rendered pixel-identical to `default`. A column that says `hovered` and
+   shows an untouched control is worse than no column: it teaches that hover does nothing.
+   The cell now carries `.sg-st-hover` / `.sg-st-focus`, and those selectors are written
+   INTO the product's own rules in `styles.css` — one declaration block, two ways in — so
+   the specimen cannot drift from the component. Every other state (filled, read-only,
+   error, disabled, on) is a real attribute or class and needs no hook.
+   ⚠️ FINDING THE STATES WAS THE WORK. `hovered` and `disabled` were identical to `filled`
+   on three of the four families because the product HAD no such state: no `:hover` on a
+   field, no `:disabled` on a field or a search box. Those rules exist now, taking the
+   values the product already uses elsewhere (`--mid` border, the pager's disabled fill). */
+(function(){
+  function matrix(headSel, bodySel, cols, rows, opts){
+    var head = $(headSel), body = $(bodySel);
+    if(!head || !body) return;
+    opts = opts || {};
+    head.innerHTML = '<tr>' + (opts.noFormColumn ? '' : '<th>Form</th>')
+      + cols.map(function(c){ return '<th>' + c + '</th>'; }).join('') + '</tr>';
+    body.innerHTML = rows.map(function(r){
+      return '<tr>' + (opts.noFormColumn ? '' : '<th scope="row">' + r.name + '</th>')
+        + cols.map(function(c){
+            var cell = r.cell(c);
+            if(cell === null) return '<td><span class="sg-cls">&mdash;</span></td>';
+            var hook = c === 'hovered' || c === 'clear hovered' ? ' class="sg-st-hover"'
+                     : c === 'focused' ? ' class="sg-st-focus"' : '';
+            return '<td' + hook + '>' + cell + '</td>';
+          }).join('')
+        + '</tr>';
+    }).join('');
+  }
+
+  /* ---- text inputs ---- */
+  function fieldCell(tag, c){
+    var cls = 'field' + (c === 'read-only' ? ' ro' : c === 'error' ? ' err' : '');
+    var dis = c === 'disabled' ? ' disabled' : '';
+    var ro  = c === 'read-only' ? ' readonly' : '';
+    var val = c === 'default' ? '' : 'Factory A';
+    var ctl = tag === 'textarea'
+      ? '<textarea rows="2"' + dis + ro + ' aria-label="Label">' + val + '</textarea>'
+      : '<input type="text" value="' + val + '" placeholder="Placeholder"' + dis + ro + ' aria-label="Label">';
+    return '<div class="' + cls + '"><label>Label</label>' + ctl
+      + (c === 'error' ? '<div class="fielderr">A card number is at least 12 digits.</div>' : '')
+      + '</div>';
+  }
+  matrix('#sgFieldHead', '#sgFieldBody',
+    ['default', 'filled', 'hovered', 'focused', 'read-only', 'error', 'disabled'], [
+    { name:'input',    cell:function(c){ return fieldCell('input', c); } },
+    { name:'textarea', cell:function(c){ return fieldCell('textarea', c); } }
+  ]);
+
+  /* ---- dropdowns ---- */
+  function selCell(c){
+    var cls = 'field' + (c === 'error' ? ' err' : '');
+    var dis = c === 'disabled' ? ' disabled' : '';
+    return '<div class="' + cls + '"><label>Label</label>'
+      + '<span class="selwrap"><select' + dis + ' aria-label="Label">'
+      +   '<option>Display activation link</option><option>Send activation email</option>'
+      + '</select>' + icon('chevron-down', { cls:'selchev' }) + '</span>'
+      + (c === 'error' ? '<div class="fielderr">Pick how the key is delivered.</div>' : '')
+      + '</div>';
+  }
+  matrix('#sgSelHead', '#sgSelBody',
+    ['default', 'hovered', 'focused', 'error', 'disabled'], [{ name:'select', cell:selCell }]);
+
+  /* ---- search ----
+     ⚠️ NO `Form` COLUMN: one form, so a column naming it is a column of one repeated word.
+     ⚠️ THE CLEAR IS A GLYPH, NOT A BOXED BUTTON — `.searchclear` takes its fill only on
+     hover, which is the state the last column is for. */
+  function searchCell(c){
+    var has = c === 'with text' || c === 'clear hovered';
+    var dis = c === 'disabled' ? ' disabled' : '';
+    return '<div class="searchbox">' + icon('search', { cls:'searchglyph' })
+      + '<input type="text" aria-label="Search licenses" placeholder="Search licenses"'
+      + dis + ' value="' + (has ? 'Factory' : '') + '">'
+      + (has ? '<button type="button" class="searchclear" aria-label="Clear search">'
+               + icon('x') + '</button>' : '')
+      + '</div>';
+  }
+  matrix('#sgSearchHead', '#sgSearchBody',
+    ['empty', 'hovered', 'focused', 'with text', 'clear hovered', 'disabled'],
+    [{ name:'.searchbox', cell:searchCell }], { noFormColumn:true });
+
+  /* ---- small elements ---- */
+  function sw(size, c){
+    if(c === 'hovered') return null;              /* the track answers checked and focus, not hover */
+    return '<span class="switch' + (size === 'lg' ? ' lg' : '') + '">'
+      + '<input type="checkbox" aria-label="Toggle"' + (c === 'on' ? ' checked' : '')
+      + (c === 'disabled' ? ' disabled' : '') + '><span class="track"></span></span>';
+  }
+  matrix('#sgSmallHead', '#sgSmallBody', ['default', 'hovered', 'focused', 'on', 'disabled'], [
+    { name:'.typechip', cell:function(c){
+        return '<button type="button" class="typechip' + (c === 'on' ? ' is-on' : '') + '"'
+          + (c === 'disabled' ? ' disabled' : '')
+          + ' aria-pressed="' + (c === 'on') + '">Subscription</button>'; } },
+    { name:'.switch',    cell:function(c){ return sw('', c); } },
+    { name:'.switch.lg', cell:function(c){ return sw('lg', c); } },
+    { name:'.stepper',   cell:function(c){
+        if(c === 'on') return null;
+        var d = c === 'disabled' ? ' disabled' : '';
+        return '<div class="stepper">'
+          + '<button type="button" class="stepbtn" aria-label="Decrease"' + d + '>−</button>'
+          + '<span class="val">2</span>'
+          + '<button type="button" class="stepbtn" aria-label="Increase"' + d + '>+</button></div>'; } },
+    { name:'.fchip',     cell:function(c){
+        if(c !== 'default') return null;          /* a tag has no states — it is read, not operated */
+        return '<span class="fchip">' + icon('check', { cls:'fmark' }) + 'White labeling</span>'; } }
+  ]);
 })();
 
 /* ---------- the button matrix: variants down, states across ---------------------
@@ -554,15 +733,6 @@ $$('.sgWizStep').forEach(function(box){
       + '<span class="sg-cls">' + v + ' &middot; destructive</span></div>';
   }).join('');
 
-  $('#sgBtnBusy').innerHTML = '<div class="sg-cell">'
-      + button({ variant:'primary', size:'md', label:'Confirm purchase', busy:true })
-      + '<span class="sg-cls">busy &mdash; the hidden label is holding the width</span></div>'
-    + '<div class="sg-cell">'
-      + button({ variant:'secondary', size:'md', icon:'refresh', ariaLabel:'Refresh', busy:true })
-      + '<span class="sg-cls">busy &middot; icon only</span></div>'
-    + '<div class="sg-cell">'
-      + button({ variant:'primary', size:'md', label:'Confirm purchase', disabled:true })
-      + '<span class="sg-cls">disabled &mdash; same button, different statement</span></div>';
 })();
 
 /* ⚠️⚠️ `#sgSplit` IS GONE, AND SO IS THE UNGUARDED LOOKUP THAT KILLED THE PAGE.
@@ -590,12 +760,6 @@ $$('.sgWizStep').forEach(function(box){
   $('#sgIcSizes').innerHTML = [16, 20, 24].map(function(s){
     return '<div class="sg-cell">' + icon('device-desktop', { size:s === 16 ? 0 : s })
       + '<span class="sg-cls">' + (s === 16 ? '.ic' : '.ic-' + s) + '</span></div>';
-  }).join('');
-
-  /* the same icon three times, inheriting three different text colours */
-  $('#sgIcColour').innerHTML = ['var(--ink)', 'var(--mid)', 'var(--glyph-decorative)'].map(function(c){
-    return '<div class="sg-cell" style="color:' + c + '">' + icon('alert-circle', { size:20 })
-      + '<span class="sg-cls">' + c + '</span></div>';
   }).join('');
 
   fetch('assets/icons.svg').then(function(r){ return r.text(); }).then(function(txt){
@@ -626,7 +790,7 @@ $$('.sgWizStep').forEach(function(box){
    with it. The old `.sg-toc` was a hand-typed list and had already drifted — it linked
    to `#solo`, `#snack`, `#sheet` and four others that were not sections at all.
 
-   ⚠️ SEVEN ITEMS ARE PROMOTED TO PAGES OF THEIR OWN, and they are promoted HERE rather
+   ⚠️ FIVE ITEMS ARE PROMOTED TO PAGES OF THEIR OWN, and they are promoted HERE rather
    than re-nested in the HTML. They were `.sg-item`s inside `#empty`, which had become a
    drawer: an empty state, a bottom sheet, a snackbar and the Home banner are four
    different components that shared a section only because nobody had moved them out.
@@ -643,7 +807,7 @@ $$('.sgWizStep').forEach(function(box){
   if(!wrap || !nav) return;
 
   /* [id, label] — the label is what the rail shows; the page keeps its own heading */
-  var PROMOTE = ['infoicon', 'alerticon', 'homebanner', 'instancesview', 'messages', 'sheet', 'snack', 'solo'];
+  var PROMOTE = ['infoicon', 'alerticon', 'homebanner', 'sheet', 'snack'];
   PROMOTE.forEach(function(id){
     var item = document.getElementById(id);
     if(!item || item.classList.contains('sg-sec')) return;
@@ -661,9 +825,9 @@ $$('.sgWizStep').forEach(function(box){
      written to be read above a specimen — "Where a message goes — two places, one rule
      each" — which is right there and wrong in a 240px rail. Overridden by id; every other
      page still takes its own heading, so nothing has to be kept in step. */
-  var LABEL = { messages:'Messages', homebanner:'Home banner', instancesview:'Instances view',
+  var LABEL = { homebanner:'Home banner',
                 infoicon:'Info icon', alerticon:'Alert icon', sheet:'Bottom sheet',
-                snack:'Snackbar', solo:'Solo state' };
+                snack:'Snackbar' };
   function labelOf(sec){
     if(LABEL[sec.id]) return LABEL[sec.id];
     var h = sec.querySelector('h2, h3');

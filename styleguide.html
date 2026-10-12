@@ -33,12 +33,6 @@
   </div>
 
   <div class="sg-main">
-  <div class="sg-head">
-    <p class="sg-lead">Every token and component the portal is built from, rendered from the same
-      <code class="sg-cls">styles.css</code> the pages load — nothing here is a copy or a screenshot.
-      Change a rule and this page changes with the product. Each specimen is labelled with the class
-      you write to get it.</p>
-  </div>
 
   <!-- ============================ TOKENS ============================ -->
   <section class="sg-sec" id="tokens">
@@ -125,42 +119,11 @@
   <!-- ============================ ICONS ============================ -->
   <section class="sg-sec" id="icons">
     <h2 class="sg-h2">Icons</h2>
-    <p class="sg-note"><b>One closed set, and nothing else draws.</b> Every icon is a
-      <code class="sg-cls">&lt;symbol&gt;</code> in <code class="sg-cls">assets/icons.svg</code>, generated from
-      <b>@tabler/icons 3.48.0</b> by <code class="sg-cls">tools/build-icons.py</code>. No inline
-      <code class="sg-cls">&lt;path&gt;</code>, no emoji, no text glyph, no second library &mdash; and
-      <code class="sg-cls">tools/check-icons.py</code> fails the pass if one appears.</p>
-
-    <div class="sg-item">
-      <h3>How an icon is placed</h3>
-      <p class="sg-note">The same four lines everywhere. The path is relative, because the site has
-        to work from a subfolder.</p>
-      <pre class="sg-code">&lt;svg class="ic" aria-hidden="true"&gt;
-  &lt;use href="assets/icons.svg#ti-device-desktop"&gt;&lt;/use&gt;
-&lt;/svg&gt;</pre>
-      <p class="sg-note">In markup built by JS there is a helper that writes exactly that:
-        <code class="sg-cls">icon('device-desktop', { size:20, cls:'gb-ic', label:'…' })</code>.</p>
-    </div>
 
     <div class="sg-item">
       <h3>Three sizes <span class="sg-cls">.ic / .ic-20 / .ic-24</span></h3>
       <p class="sg-note">16 is the base and needs no class. There is no fourth size.</p>
       <div class="sg-row" id="sgIcSizes"></div>
-    </div>
-
-    <div class="sg-item">
-      <h3>Colour</h3>
-      <p class="sg-note">An icon is the colour of the text it sits in. The symbol paints with
-        <code class="sg-cls">currentColor</code> and <b>no rule anywhere may paint one</b> &mdash; set
-        <code class="sg-cls">color</code> on the thing that contains it.</p>
-      <div class="sg-row" id="sgIcColour"></div>
-    </div>
-
-    <div class="sg-item">
-      <h3>Labelling</h3>
-      <p class="sg-note">An icon that carries meaning <b>on its own</b> gets
-        <code class="sg-cls">role="img"</code> and a name. An icon beside a text label is
-        <code class="sg-cls">aria-hidden</code>, because announcing it reads the same thing twice.</p>
     </div>
 
     <div class="sg-item">
@@ -201,131 +164,72 @@
       <div class="sg-row" id="sgBtnTone"></div>
     </div>
 
+    </section>
+
+  <!-- ============================ INPUTS ============================ -->
+    <!-- ========================= TEXT INPUTS ========================= -->
+  <section class="sg-sec" id="inputs">
+    <h2>Text inputs</h2>
     <div class="sg-item">
-      <h3>States</h3>
-      <p class="sg-note">rest &middot; hover &middot; pressed &middot; focus-visible &middot;
-        disabled &middot; busy. Focus is <code class="sg-cls">:focus-visible</code> only. Busy is
-        not disabled &mdash; it keeps its name, its width and its focus.</p>
-      <div class="sg-row" id="sgBtnBusy"></div>
+      <div class="tablescroll"><table class="sg-btnmatrix sg-fieldmatrix"><thead id="sgFieldHead"></thead><tbody id="sgFieldBody"></tbody></table></div>
     </div>
   </section>
 
-  <!-- ============================ INPUTS ============================ -->
-  <section class="sg-sec" id="inputs">
-    <h2>Inputs</h2>
-    <p class="sg-note"><b>Field</b> &mdash; a labelled form control with optional help and an error slot. One form &mdash; 40px (44 on the phone), <code class="sg-cls">--radius-interactive</code>, white, 1px <code class="sg-cls">--line</code>, 16px text &mdash; and one axis: input, select, textarea. The rules and the axes are in <code class="sg-cls">COMPONENTS.md</code>.</p>
-    <p class="sg-note">Fields read <code class="sg-cls">--radius-interactive</code>, and the padding is 16px
-      so the text clears the arc. <b>The select&rsquo;s chevron is ours</b> &mdash; drawn from the
-      sprite inside <code class="sg-cls">.selwrap</code>, because no padding reaches the native one;
-      <code class="sg-cls">--sel-gutter</code> is read twice so the glyph cannot drift from the
-      text&rsquo;s own inset. <b>A textarea is not a pill</b> (12px), and a menu is a container
-      (10px).</p>
-    <p class="sg-note"><b>Spacing is 18px, and it is one number:</b>
-      <code class="sg-cls">.field</code>&rsquo;s bottom margin, and
-      <code class="sg-cls">.field2</code>&rsquo;s row gap <i>and</i> its own bottom margin.</p>
-    <p class="sg-note"><b>The card field&rsquo;s expiry and CVC are blocks inside it</b>, not
-      columns of it: two quiet chips at 28px inside a 40px field, with no divider &mdash; the gap
-      between two filled shapes is the divider.</p>
+  <!-- ========================== DROPDOWNS =========================== -->
+  <section class="sg-sec" id="dropdowns">
+    <h2>Dropdowns</h2>
     <div class="sg-item">
-      <div class="setcard" style="margin-top:0">
-        <div class="field"><label for="sgIn1">Default</label><input id="sgIn1" type="text" value="Mariia"><span class="sg-cls">.field &gt; label + input</span></div>
-        <div class="field"><label for="sgIn2">With description</label><input id="sgIn2" type="email" value="mpanchuk@thingsboard.io"><div class="help">Your sign-in email — changing it requires confirmation.</div><span class="sg-cls">.field .help</span></div>
-        <div class="field ro"><label for="sgIn3">Read-only</label><input id="sgIn3" type="text" value="ThingsBoard" readonly><div class="help">No page uses this state today — it is kept as a system state.</div><span class="sg-cls">.field.ro</span></div>
-        <div class="field2">
-          <div class="field"><label for="sgSel">Dropdown</label><span class="selwrap"><select id="sgSel"><option>Display activation link</option><option>Send activation email</option></select><svg class="ic selchev" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-down"></use></svg></span><span class="sg-cls">.field &gt; select</span></div>
-          <div class="field"><label for="sgTa">Textarea</label><textarea id="sgTa" rows="2">Free-form description</textarea><span class="sg-cls">.field &gt; textarea</span></div>
-        </div>
-      </div>
-      <div class="sg-row" style="margin-top:18px">
-        <div class="sg-cell">
-          <div class="searchbox"><svg class="ic searchglyph" aria-hidden="true"><use href="assets/icons.svg#ti-search"></use></svg><input type="text" placeholder="Search licenses" aria-label="Search licenses"></div>
-          <span class="sg-cls">.searchbox</span>
-        </div>
-        <div class="sg-cell"><label class="lic-toggle"><span class="switch"><input type="checkbox" checked><span class="track"></span></span> Display canceled products</label><span class="sg-cls">.switch</span></div>
-        <div class="sg-cell"><span class="switch lg"><input type="checkbox" checked><span class="track"></span></span><span class="sg-cls">.switch.lg</span></div>
-        <div class="sg-cell"><label class="sb-opt is-on"><input type="checkbox" checked><span class="sb-opt-t">Checkbox option</span></label><span class="sg-cls">.sb-opt &gt; input</span></div>
-        <div class="sg-cell">
-          <div class="stepper"><button type="button" class="stepbtn" aria-label="Decrease">−</button><input type="text" value="2" aria-label="Amount"><button type="button" class="stepbtn" aria-label="Increase">+</button></div>
-          <span class="sg-cls">.stepper</span>
-        </div>
-        <div class="sg-cell">
-          <div class="lic-typeseg"><button class="typechip is-on" aria-pressed="true">Subscription</button><button class="typechip" aria-pressed="false">Perpetual</button></div>
-          <span class="sg-cls">.typechip / .is-on</span>
-        </div>
-      </div>
+      <div class="tablescroll"><table class="sg-btnmatrix sg-fieldmatrix"><thead id="sgSelHead"></thead><tbody id="sgSelBody"></tbody></table></div>
     </div>
-  
+      <div class="sg-item">
+      <h3>The two menus <span class="sg-cls">LIC_TYPE_OPTS / LIC_STATUS_OPTS</span></h3>
+      <p class="sg-note">Rendered from the lists the page reads. <b>Counts are of the account, not of the current view.</b></p>
+      <div class="sg-row sg-menuspecs">
+        <div class="dropmenu sg-staticmenu" id="sgLicTypeMenu" role="menu"></div>
+        <div class="dropmenu sg-staticmenu" id="sgLicStatusMenu" role="menu"></div>
+      </div>
+      <h3>Status holds two axes</h3>
+      <p class="sg-note">A state &mdash; Active &middot; Blocked &middot; Canceled &mdash; and a condition &mdash; Payment failed &middot; Over instance limit &middot; Updates ending. <b>The separator says the fourth item is not a fourth state.</b></p>
+    </div>
+  </section>
+
+  <!-- ============================ SEARCH ============================ -->
+  <section class="sg-sec" id="search">
+    <h2>Search</h2>
     <div class="sg-item">
-      <h3>Error state <span class="sg-cls">.field.err &gt; .fielderr</span></h3>
-      <p class="sg-note">The error colour is <code class="sg-cls">--status-alert</code> &mdash;
-        the red that already means <i>act now</i> on <code class="sg-cls">Blocked</code> and
-        <code class="sg-cls">Past due</code>, not a second red. It clears 4.5:1 as text.</p>
-      <p class="sg-note"><b>Colour is not the only carrier:</b> the border thickens and turns, the
-        label turns with it, and the message is words. <b>The message says what is wrong, not that
-        something is</b> &mdash; &ldquo;Use MM / YY&rdquo; can be acted on, &ldquo;invalid&rdquo;
-        cannot. <code class="sg-cls">.help</code> is hidden while an error shows, and the message
-        carries no glyph.</p>
-      <p class="sg-note"><b>The message is a caption</b> (<code class="sg-cls">--t-caption</code>,
-        13/1.35), and <code class="sg-cls">.field.err</code> drops its bottom margin to pay for it.
-        Use <code class="sg-cls">--t-caption</code> for something that sits under something else,
-        and for nothing else.</p>
-      <p class="sg-note"><b>A primary action is never left disabled with nothing said.</b> Either it
-        is enabled and answers on submit &mdash; painting every failure at once and moving focus to
-        the first &mdash; or it is disabled with the reason visible beside it. Fields answer on blur,
-        and typing again withdraws the answer.</p>
-      <div class="sg-static">
-        <div class="setcard" style="margin-top:0">
-          <div class="field err"><label for="sgErr1">Card number <span class="req" aria-hidden="true">*</span></label><input id="sgErr1" type="text" value="4242"><div class="fielderr">A card number is at least 12 digits &mdash; this one has 4.</div></div>
-          <div class="field err"><label for="sgErr2">Billing email <span class="req" aria-hidden="true">*</span></label><input id="sgErr2" type="text" value="mariia"><div class="help">This help line is suppressed while the error shows.</div><div class="fielderr">This does not look like an email address &mdash; check for a missing @ or domain.</div></div>
-          <div class="formerr">2 fields need attention before this order can be placed.</div>
-          <button type="button" class="btn btn--primary btn--md">Place order</button>
-        </div>
-      </div>
+      <div class="tablescroll"><table class="sg-btnmatrix sg-fieldmatrix"><thead id="sgSearchHead"></thead><tbody id="sgSearchBody"></tbody></table></div>
     </div>
+  </section>
 
-</section>
+  <!-- ======================== SMALL ELEMENTS ======================== -->
+  <section class="sg-sec" id="smallelements">
+    <h2>Small elements</h2>
+    <div class="sg-item">
+      <div class="tablescroll"><table class="sg-btnmatrix sg-fieldmatrix"><thead id="sgSmallHead"></thead><tbody id="sgSmallBody"></tbody></table></div>
+    </div>
+      <div class="sg-item">
+      <h3>Stated product</h3>
+      <p class="sg-note"><code class="sg-cls">.nl-stated</code> + <code class="sg-cls">.nl-prodswap</code> &mdash; the product is stated, not chosen: one line states it, a quiet link offers the other.</p>
+      <div id="sgProducts"></div>
+      
+    </div>
+  </section>
 
-  <!-- ============================ CHIPS ============================ -->
-  <section class="sg-sec" id="chips">
+<section class="sg-sec" id="chips">
     <h2>Status chips</h2>
-    <p class="sg-note"><b>Status mark</b> &mdash; a coloured glyph and a word, with no box of any kind. It belongs to the row rather than to the chip, which is why it is not one. The chips and pills below are the separate Chip component. The rules and the axes are in <code class="sg-cls">COMPONENTS.md</code>.</p>
+    <p class="sg-note"><b>Status mark</b> &mdash; a coloured glyph and a word, no box. It belongs to the row, not to the chip. The chips and pills below are the separate Chip component. The rules and the axes are in <code class="sg-cls">COMPONENTS.md</code>.</p>
     <div class="sg-item">
       <h3>The licence status mark</h3>
-      <p class="sg-note"><b>The word, in its own colour, with its own glyph.</b>
-        <code class="sg-cls">--status-ok</code> for Active, <code class="sg-cls">--status-off</code>
-        for Canceled, <code class="sg-cls">--status-alert</code> for Blocked. Three states, three
-        outlines &mdash; <code class="sg-cls">circle-check</code>,
-        <code class="sg-cls">circle-x</code>, <code class="sg-cls">alert-triangle-filled</code>
-        &mdash; so removing the colour leaves the column readable. <b>All three clear AA as text
-        (4.5:1)</b>; the ratios are in <code class="sg-cls">CONTRAST.md</code>.</p>
-      <p class="sg-note"><b>The line that must not be crossed:</b> the moment two statuses share a
-        word and differ only in hue, this cell fails.</p>
-      <p class="sg-note"><b><code class="sg-cls">Canceled</code>, one L</b> &mdash; the spelling
-        every other surface uses, including the dialog that sets it.</p>
-      <p class="sg-note">The licence panel uses this builder too. These three are <b>typed out
-        here</b>, not rendered: <code class="sg-cls">statusMark</code> takes a licence, and Blocked
-        needs one that is over its instance limit. The glyph choice lives in
-        <code class="sg-cls">STATUS_IC</code>.</p>
+      <p class="sg-note">The word in its own colour with its own glyph: <code class="sg-cls">--status-ok</code> Active, <code class="sg-cls">--status-off</code> Canceled, <code class="sg-cls">--status-alert</code> Blocked &mdash; <code class="sg-cls">circle-check</code>, <code class="sg-cls">circle-x</code>, <code class="sg-cls">alert-triangle-filled</code>. <b>Blocked carries a tooltip; the other two do not.</b></p>
       <div class="sg-row">
         <div class="sg-cell"><span class="statmark is-ok"><svg class="ic statmark-ic" aria-hidden="true"><use href="assets/icons.svg#ti-circle-check"></use></svg>Active</span><span class="sg-cls">.statmark.is-ok</span></div>
         <div class="sg-cell"><span class="statmark is-off"><svg class="ic statmark-ic" aria-hidden="true"><use href="assets/icons.svg#ti-circle-x"></use></svg>Canceled</span><span class="sg-cls">.statmark.is-off</span></div>
         <div class="sg-cell"><span class="statmark is-alert tip wide" tabindex="0" data-tip="2 production instances running, 1 allowed. The license is blocked until the count is back within its limit."><svg class="ic statmark-ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle-filled"></use></svg>Blocked</span><span class="sg-cls">.statmark.is-alert.tip</span></div>
       </div>
-      <p class="sg-note"><b><code class="sg-cls">Blocked</code> carries a tooltip; the other two
-        do not</b> &mdash; it is the only one of the three that raises a question the cell cannot
-        answer. The sentence is <code class="sg-cls">ATTN_TIP.blocked</code>, the same text the
-        licence banner shows. <b>Not a <code class="sg-cls">&lt;button&gt;</code></b>: it hangs off
-        the cell&rsquo;s own words and offers no action. It takes
-        <code class="sg-cls">tabindex</code> so the keyboard can reach the bubble, and the sentence
-        is repeated in a <code class="sg-cls">.vh</code> span &mdash; <b>a tooltip is not a
-        carrier</b>, only a convenience for the pointer.</p>
     </div>
     <div class="sg-item">
       <h3>An instance&rsquo;s status <span class="sg-cls">instStatusCell</span></h3>
-      <p class="sg-note"><b>The same mark.</b> Licence, invoice and instance share one
-        builder&rsquo;s vocabulary. The <b>words</b> are what
-        <code class="sg-cls">instMatchesStatus</code> compares and what the filter chips count, so
-        the mark is a presentation and not a state.</p>
+      <p class="sg-note"><b>The same mark.</b> Licence, invoice and instance share one vocabulary.</p>
       <div class="sg-row">
         <div class="sg-cell"><span class="statmark is-ok"><svg class="ic statmark-ic" aria-hidden="true"><use href="assets/icons.svg#ti-circle-check"></use></svg>Healthy</span><span class="sg-cls">.statmark.is-ok</span></div>
         <div class="sg-cell"><span class="statmark is-alert"><svg class="ic statmark-ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle-filled"></use></svg>Stale</span><span class="sg-cls">.statmark.is-alert</span></div>
@@ -333,72 +237,25 @@
     </div>
     <div class="sg-item">
       <h3>The version mark <span class="sg-cls">versionMark</span></h3>
-      <p class="sg-note"><b>One line, one type treatment, and a mark only when something is
-        wrong.</b> What is left is the number, and an alert beside it when the number is not the
-        latest. <b>Silence is the up-to-date state</b>, and the digits are one weight in both.</p>
-      <p class="sg-note">The number the running one is compared against lives in the alert&rsquo;s
-        tooltip; <b>only the alert has one</b>. The alert is a real
-        <code class="sg-cls">&lt;button&gt;</code> &mdash; hover on a pointer device, focus for the
-        keyboard, and a tap below 600px. <b>A circled exclamation, not a triangle:</b> a triangle
-        means something is broken, and running an older release is the step below that.</p>
-      <p class="sg-note"><code class="sg-cls">across N instances</code> exists in exactly one place
-        &mdash; the licence <b>details header</b>. A licence&rsquo;s figure is the <b>lowest</b> of
-        its instances, so one laggard and a whole estate print the same number.</p>
+      <p class="sg-note">The number, with an alert beside it when it is not the latest. <b>Silence is the up-to-date state.</b></p>
       <div class="sg-row">
         <div class="sg-cell"><span class="ver-run">3.9.4</span><span class="sg-cls">current &middot; no mark</span></div>
         <div class="sg-cell"><span class="ver-run"><span class="verm"><svg class="ic ic-20" aria-hidden="true"><use href="assets/icons.svg#ti-alert-circle"></use></svg></span>3.8.1</span><span class="sg-cls">behind &middot; tooltip on the mark</span></div>
       </div>
     </div>
-    <div class="sg-item">
-      <h3>The rest, still monochrome</h3>
-      <p class="sg-note"><code class="sg-cls">.pill.is-accent</code> is the filled
-        <code class="sg-cls">--accent</code> pill: <code class="sg-cls">Popular</code> on a plan
-        card, <code class="sg-cls">Included</code> / <code class="sg-cls">Enabled</code> on a
-        feature row. <b>Use it for what the reader already has or what we recommend</b> &mdash;
-        never for a state that needs acting on, which is what
-        <code class="sg-cls">.pill.attn</code> is for.</p>
-      <div class="sg-row">
-        <div class="sg-cell"><span class="chip status"><span class="sdot"></span>Active</span><span class="sg-cls">.chip.status</span></div>
-        <div class="sg-cell"><span class="chip">Free</span><span class="sg-cls">.chip</span></div>
-        <div class="sg-cell"><span class="pill soft">Waiting for first check-in</span><span class="sg-cls">.pill.soft</span></div>
-        <div class="sg-cell"><span class="chip ghost">+ Add label</span><span class="sg-cls">.chip.ghost</span></div>
-        <div class="sg-cell"><span class="pill">Active</span><span class="sg-cls">.pill</span></div>
-        <div class="sg-cell"><span class="pill off">Canceled</span><span class="sg-cls">.pill.off</span></div>
-        <div class="sg-cell"><span class="pill is-accent">Included</span><span class="sg-cls">.pill.is-accent</span></div>
-        <div class="sg-cell"><span class="fchip"><svg class="ic fmark" aria-hidden="true"><use href="assets/icons.svg#ti-check"></use></svg>White labeling</span><span class="sg-cls">.fchip</span></div>
-      </div>
-    </div>
-  </section>
+    </section>
 
   <!-- ============================ TABLE ============================ -->
   <section class="sg-sec" id="table">
     <h2>Table</h2>
-    <p class="sg-note"><b>Table row + frame</b> &mdash; a row of a list and the frame the rows sit in. One component under four names, identical in every painted property; the frame is four bands &mdash; toolbar, column header, rows, pagination footer. The rules and the axes are in <code class="sg-cls">COMPONENTS.md</code>.</p>
-    <p><b>A table is a framed object:</b> the head is a filled
-      <code class="sg-cls">--surface-quiet</code> band and the whole table sits inside its own
-      hairline with a 10px radius. Home, Licenses, Invoices and the flat Instances list are all
-      this one look. <b>A row under the cursor takes <code class="sg-cls">--row-hover</code></b>,
-      and it is transient: nothing is selected, the pointer is simply there.</p>
-    <p class="sg-note">The specimen carries <code class="sg-cls">.listframe</code>, because that is
-      what the frame is scoped to.</p>
-    <p class="sg-note"><b>The frame comes off below 600px</b> &mdash; every row is already its own
-      card there. <b>A collapsed group has no outline at all.</b> Grouped rows are inset 12px from
-      the frame.</p>
-    <h3>The frame is four bands, in this order</h3>
-    <p class="sg-note"><b>Toolbar &middot; column header &middot; rows &middot; pagination
-      footer.</b> One block, one surface, one hairline round the outside. <b>The first two
-      stick</b> &mdash; the toolbar (<code class="sg-cls">.stickybar</code>) under the app bar, the
-      column row (<code class="sg-cls">.stickyhead</code>) directly beneath it &mdash; and rows pass
-      under both for the whole length of the list. <b>The footer is not sticky.</b></p>
-    <p class="sg-note"><b>The footer shows only what is true.</b> The <b>count always shows</b>;
-      the page arrows and the items-per-page control appear <b>only above one page</b>, hidden
-      rather than removed. <b>An empty list has no footer at all</b>, and the frame closes itself
-      again &mdash; the last row takes its bottom corners back.</p>
-    <p class="sg-note"><b>Below 600px the footer sheds what will not fit:</b> the items-per-page
-      control and the First / Last buttons go, the count takes the free space, prev and next stay.</p>
-    <p class="sg-note"><b>Activity has no footer</b> &mdash; it does not page, it is a log. Every
-      other list is the framed pattern above. <b>Users has no pager either</b>: that list is four
-      people by design.</p>
+    <p class="sg-note"><b>Table row + frame</b> &mdash; a row of a list and the frame the rows sit in. One component under four names; the frame is four bands. The rules and the axes are in <code class="sg-cls">COMPONENTS.md</code>.</p>
+
+    <h3>The frame</h3>
+    <p class="sg-note">Toolbar &middot; column header &middot; rows &middot; pagination footer. <b>The toolbar and the column row stick; the footer does not.</b> Below 600px the frame comes off &mdash; every row is its own card.</p>
+
+    <h3>The footer</h3>
+    <p class="sg-note">The count always shows. Page arrows and items-per-page appear only above one page. <b>An empty list has no footer.</b></p>
+
     <div class="sg-item">
       <div class="listcard listframe">
         <div class="tablescroll"><table><thead id="sgTableHead"></thead><tbody id="sgTableBody"></tbody></table></div>
@@ -409,139 +266,163 @@
           <span class="pagebtns"><button type="button" class="btn btn--secondary btn--md btn--icon" aria-label="First page" disabled aria-disabled="true" ><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevrons-left"></use></svg></button><button type="button" class="btn btn--secondary btn--md btn--icon" aria-label="Previous page" disabled aria-disabled="true" ><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-left"></use></svg></button><button type="button" class="btn btn--secondary btn--md btn--icon" aria-label="Next page" ><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-right"></use></svg></button><button type="button" class="btn btn--secondary btn--md btn--icon" aria-label="Last page" ><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevrons-right"></use></svg></button></span>
         </div>
       </div>
-      <p class="sg-note" style="margin-top:12px"><b>The specimen is showing the MULTI-PAGE footer.</b>
-        Its arrows and per-page control are in the markup by hand, because this page never runs
-        <code class="sg-cls">syncPager</code>; a real list of two rows shows the count alone.</p>
       <p class="sg-note">Sortable header: <code class="sg-cls">th.sortable[aria-sort]</code> ·
         row actions: <code class="sg-cls">.cellact .lic-actions</code> · footer: <code class="sg-cls">.listframe .pager</code></p>
     </div>
 
-    <div class="sg-item" id="stickyblock">
-      <h3>The sticky list block <span class="sg-cls">.listframe</span></h3>
-      <p class="sg-note"><b>One frame.</b> Toolbar, column row and rows are one block: one thing
-        to read, and on scroll one thing that stays. Nothing loose sits between the page title and
-        the frame. Every list page uses it &mdash; Licenses, Instances, Invoices, Activity, Users
-        &mdash; and so does the licence panel&rsquo;s tab bar, in its own scroll.</p>
-      <p class="sg-note"><b>What happens on scroll.</b> The app bar is already fixed and the page
-        title scrolls away like any content. The toolbar stops at the bottom edge of the app bar;
-        the column row stops directly beneath it; rows pass under both.</p>
-      <p class="sg-note"><b>The scroll container is <code class="sg-cls">#shellMain</code>, not the
-        document</b>, so <code class="sg-cls">top:0</code> already means &ldquo;under the app
-        bar&rdquo; and no header height is hard-coded. <b>The column row&rsquo;s own offset is the
-        toolbar&rsquo;s measured height</b> (<code class="sg-cls">--barH</code>), because the
-        toolbar is a different height on every page.</p>
-      <p class="sg-note"><b>A horizontal scroller is a sticky container too.</b>
-        <code class="sg-cls">overflow-x:auto</code> computes
-        <code class="sg-cls">overflow-y</code> to <code class="sg-cls">auto</code> as well, so the
-        wrapper is made scrollable only when the table actually overflows it
-        (<code class="sg-cls">.tablescroll.is-scrollable</code>). <b>Sideways scrolling and a stuck
-        column row cannot both happen</b>, and the width decides which.</p>
-
-      <h4 style="margin:18px 0 8px">The shadow <span class="sg-cls">--stickyShadow</span></h4>
-      <p class="sg-note"><b>A depth cue, not a border.</b> It appears only once content has actually gone
-        under the block and is gone at rest. One token, used by the page frames and by the licence
-        panel&rsquo;s tab bar:</p>
-      <div class="listcard" style="padding:0;max-width:520px">
-        <div style="padding:12px 16px;background:var(--card);border-radius:10px 10px 0 0;position:relative">
-          <b style="font-size:var(--t-body-fs)">Stuck block</b>
-          <span style="position:absolute;left:0;right:0;bottom:-1px;height:8px;box-shadow:var(--stickyShadow)"></span>
-        </div>
-        <div style="padding:12px 16px;color:var(--mid);font-size:var(--t-body-fs)">a row passing underneath</div>
-        <div style="padding:12px 16px;color:var(--mid);font-size:var(--t-body-fs)">another row</div>
+    <div class="sg-item">
+      <h3>Scrolled sideways <span class="sg-cls">.tablescroll.is-scrollable</span></h3>
+      <p class="sg-note">The same frame in a box too narrow for it: the wrapper scrolls, and the cue at the edge says which way there is more.</p>
+      <div class="listcard listframe" style="max-width:420px">
+        <div class="tablescroll is-scrollable cue-r" id="sgScrollBox"><table><thead id="sgScrollHead"></thead><tbody id="sgScrollBody"></tbody></table></div>
       </div>
-      <p class="sg-note" style="margin-top:12px"><b>Drawn by whichever row is LAST in the stuck
-        block</b> &mdash; under the column row where there is one, under the toolbar where there is
-        not. Two stacked shadows would read as two blocks.</p>
-      <p class="sg-note"><b>&ldquo;Stuck&rdquo; is not &ldquo;scrolled at all.&rdquo;</b> The test
-        is a rect comparison against where the element actually comes to rest, and <b>that resting
-        line is not the container&rsquo;s top edge</b>: a scroll container&rsquo;s padding insets
-        its scrollport, so a sticky child parks that far down.</p>
-
-      <h4 style="margin:18px 0 8px">Below 600px</h4>
-      <p class="sg-note"><b>Only the column row sticks; the toolbar scrolls away with the
-        title.</b> Three stuck rows would take a third of a phone screen.</p>
-      <p class="sg-note"><b>On every list today that means nothing sticks at all</b>, and it is not
-        a gap in the rule: Licenses, Instances, Invoices and Users turn their rows into cards at
-        this width and hide <code class="sg-cls">thead</code> with them, and Activity is a feed with
-        no column row. <b>The frame is also not a surface</b> at this width: the rows carry a card
-        each.</p>
     </div>
-  </section>
+</section>
 
   <!-- ==================== LICENCE TABLE: A vs B ==================== -->
+    <!-- ======================= TABLE EXAMPLES ======================== -->
   <section class="sg-sec" id="lictable">
-    <h2>Licence table</h2>
-    <p><b>Four columns</b>, with the licence&rsquo;s own name folded into the product cell
-      rather than given a column of its own.</p>
+    <h2>Table examples</h2>
+    <p class="sg-note">Every table the product has, each from its own builder.</p>
 
     <div class="sg-item">
-      <h3>The table <span class="sg-cls">licHeadHTML / licRowHTML</span></h3>
-      <p class="sg-note">Four columns. <b>The duplication is what went:</b> the product moved onto
-        the licence cell&rsquo;s second line (and the mark already carries it), the plan moved there
-        with it, and <b>Updated</b> left entirely &mdash; it had one reader and nothing sorted or
-        filtered by it.</p>
-      <p class="sg-note"><b>Two lines, never empty, never blank-first.</b> Line one is the label;
-        line two is <b>product &middot; billing model &middot; plan</b>. With no label the plan moves
-        up to line one and line two drops to product &middot; billing model.</p>
-      <p class="sg-note"><b>Version is the only figure</b>, so it is the only right-aligned
-        column, with tabular numerals. <b>Newest first.</b></p>
+      <h3>Licences <span class="sg-cls">licHeadHTML / licRowHTML</span></h3>
       <div class="tablescroll"><table><thead id="sgLicHeadA"></thead><tbody id="sgLicBodyA"></tbody></table></div>
     </div>
 
     <div class="sg-item">
-      <h3>The label is a name <span class="sg-cls">LABEL_MAX</span></h3>
-      <p class="sg-note"><b>40 characters, with a visible counter</b>, in the licence
-        panel&rsquo;s label editor. A <b>data rule</b>.
-        <code class="sg-cls">maxlength</code> refuses new input but never truncates a stored value,
-        so seeded labels that predate it keep their text; the cell clamps to one line with an
-        ellipsis and carries the full string in <code class="sg-cls">title</code>.</p>
+      <h3>Instances, flat <span class="sg-cls">instAllHeadHTML / instAllRow</span></h3>
+      <div class="tablescroll"><table><thead id="sgInstHead"></thead><tbody id="sgInstBody"></tbody></table></div>
+    </div>
+
+    <div class="sg-item">
+      <h3>Instances, grouped by licence <span class="sg-cls">instGroupHeadHTML / instGroupRow</span></h3>
+      <div class="tablescroll"><table class="is-grouped"><thead id="sgInstGHead"></thead><tbody id="sgInstGBody"></tbody></table></div>
+    </div>
+
+    <div class="sg-item">
+      <h3>Invoices <span class="sg-cls">invRow</span></h3>
+      <div class="tablescroll"><table><thead id="sgInvHead"></thead><tbody id="sgInvBody"></tbody></table></div>
+    </div>
+
+    <div class="sg-item">
+      <h3>Users <span class="sg-cls">userRow</span></h3>
+      <div class="tablescroll"><table><thead id="sgUserHead"></thead><tbody id="sgUserBody"></tbody></table></div>
+    </div>
+
+    <div class="sg-item">
+      <h3>The label <span class="sg-cls">LABEL_MAX</span></h3>
+      <p class="sg-note">40 characters with a visible counter. The cell clamps to one line and carries the full string in <code class="sg-cls">title</code>.</p>
     </div>
   </section>
 
-  <!-- ================= LICENCES TOOLBAR ================= -->
-  <section class="sg-sec" id="lictoolbar">
-    <h2>Licences toolbar</h2>
-    <p class="sg-note"><b>Toolbar</b> &mdash; the row of controls that narrows a list. One axis: <code class="sg-cls">.stickybar</code> makes it a band, without it it is a bare row. The rules and the axes are in <code class="sg-cls">COMPONENTS.md</code>.</p>
-    <p><b>The dropdown is Activity&rsquo;s dropdown.</b> Same trigger
-      (<code class="sg-cls">.dropwrap.perctl</code> + <code class="sg-cls">.btn--secondary.perbtn</code>),
-      same panel (<code class="sg-cls">.dropmenu</code>), same rows
-      (<code class="sg-cls">.dropcheck</code>). The one difference is arity: Activity&rsquo;s event
-      types are multi-select and lead with a checkbox; these are single-select and end with a tick.</p>
+<section class="sg-sec" id="lictoolbar">
+    <h2>Toolbar</h2>
+    <p class="sg-note"><b>Toolbar</b> &mdash; the row of controls that narrows a list. One axis: <code class="sg-cls">.stickybar</code> makes it a band, without it a bare row. The rules and the axes are in <code class="sg-cls">COMPONENTS.md</code>.</p>
 
     <div class="sg-item">
       <h3>The toolbar <span class="sg-cls">.dropwrap.perctl &times; 2 + .attnchip</span></h3>
-      <p class="sg-note"><b>Everything is shown until the reader narrows it.</b> Type starts at
-        <b>All</b>; Status opens on <b>Active</b>, which is the one default the toolbar sets,
-        and <b>Canceled</b> is one of its four answers rather than a switch that pre-hides those
-        rows.</p>
+      <p class="sg-note">Everything shows until the reader narrows it. Type starts at All, Status at Active.</p>
       <div class="sg-toolbarspec" id="sgBarA"></div>
-      <p class="sg-note"><b>The trigger states the answer</b>, so a narrowed list is readable
-        without opening the menu. The chip states its own count for the same reason.</p>
+      <p class="sg-note">The trigger states the answer; the chip states its count.</p>
+    </div>
+
+    
+    <div class="sg-item">
+      <h3>Licences <span class="sg-cls">licenses.html</span></h3>
+      <div class="sg-toolbarspec"><div class="listbar lic-controls lic-barb lic-barc stickybar">
+    <div class="searchbox"><svg class="ic searchglyph" aria-hidden="true"><use href="assets/icons.svg#ti-search"></use></svg><input type="search" enterkeyhint="search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" placeholder="Search licenses" aria-label="Search licenses"></div>
+    <div class="barfilters">
+    <div class="dropwrap perctl">
+      <button class="btn btn--secondary btn--md perbtn" aria-haspopup="true" aria-expanded="false" aria-label="License type"><b>All types</b><span class="perbtn-n" aria-hidden="true"></span> <svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-down"></use></svg></button>
+      <div class="dropmenu licfiltermenu" role="menu" hidden></div>
+    </div>
+    <div class="dropwrap perctl">
+      <button class="btn btn--secondary btn--md perbtn" aria-haspopup="true" aria-expanded="false" aria-label="License status"><b>Active</b><span class="perbtn-n" aria-hidden="true"></span> <svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-down"></use></svg></button>
+      <div class="dropmenu licfiltermenu" role="menu" hidden></div>
+    </div>
+    <button class="filterchip attnchip" aria-pressed="false">
+      <span>Needs attention <span class="chipcount" data-count="attention"></span></span>
+      <svg class="ic cc-check" aria-hidden="true"><use href="assets/icons.svg#ti-check"></use></svg></button>
+    </div>
+    <div class="barapplied" hidden></div>
+    <span class="spacer"></span>
+    <button class="btn btn--secondary btn--md btn--icon" data-refresh aria-label="Refresh" title="Refresh"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-refresh"></use></svg></button>
+    <button class="btn btn--primary btn--md"><svg class="ic lnb-ic" aria-hidden="true"><use href="assets/icons.svg#ti-plus"></use></svg><span class="lnb-txt">Buy a license</span></button>
+  </div></div>
     </div>
 
     <div class="sg-item">
-      <h3>The two menus <span class="sg-cls">LIC_TYPE_OPTS / LIC_STATUS_OPTS</span></h3>
-      <p class="sg-note">Rendered from the same two lists the page reads, so this specimen cannot
-        fall behind what the filters offer. <b>Counts are of the account</b>, not of the current
-        view &mdash; which is why they add up to the number in the page title.</p>
-      <div class="sg-row sg-menuspecs">
-        <div class="dropmenu sg-staticmenu" id="sgLicTypeMenu" role="menu"></div>
-        <div class="dropmenu sg-staticmenu" id="sgLicStatusMenu" role="menu"></div>
-      </div>
-      <p class="sg-note"><b>The Status cell holds two axes.</b> A <b>STATE</b>
-        (<b>Active &middot; Blocked &middot; Canceled</b>, the three words the chip can print) and a
-        <b>CONDITION</b> (<b>Payment failed &middot; Over instance limit &middot; Updates
-        ending</b>, which replaces the date line). A licence stored as
-        <code class="sg-cls">payment_failed</code> shows <b>Active</b> in the chip; one stored as
-        <code class="sg-cls">active</code> can show <b>Blocked</b>. <b>The separator is what says
-        the fourth item is not a fourth state.</b> Blocked is on both axes.</p>
+      <h3>Instances <span class="sg-cls">instances.html</span></h3>
+      <div class="sg-toolbarspec"><div class="listbar insttoolbar stickybar">
+    <div class="searchbox"><svg class="ic searchglyph" aria-hidden="true"><use href="assets/icons.svg#ti-search"></use></svg><input type="search" enterkeyhint="search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" placeholder="Search instances" aria-label="Search instances"></div>
+    <div class="barfilters">
+    <button class="filterchip attnchip" aria-pressed="false">
+      <span>Stale <span class="chipcount"></span></span>
+      <svg class="ic cc-check" aria-hidden="true"><use href="assets/icons.svg#ti-check"></use></svg></button>
+    </div>
+    <div class="barapplied" hidden></div>
+    <span class="spacer"></span>
+    <label class="lic-toggle"><span class="switch"><input type="checkbox"><span class="track"></span></span> Group by license</label>
+    <button class="btn btn--secondary btn--md btn--icon" data-refresh aria-label="Refresh" title="Refresh"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-refresh"></use></svg></button>
+  </div></div>
+    </div>
+
+    <div class="sg-item">
+      <h3>Invoices <span class="sg-cls">invoices.html</span></h3>
+      <div class="sg-toolbarspec"><div class="listbar insttoolbar stickybar">
+    <div class="searchbox"><svg class="ic searchglyph" aria-hidden="true"><use href="assets/icons.svg#ti-search"></use></svg><input type="search" enterkeyhint="search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" placeholder="Search invoices" aria-label="Search invoices"></div>
+    <div class="barfilters">
+    <div class="dropwrap perctl">
+      <button class="btn btn--secondary btn--md perbtn" aria-haspopup="true" aria-expanded="false" aria-label="Invoice status"><b>All statuses</b> <svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-down"></use></svg></button>
+      <div class="dropmenu" role="menu" hidden></div>
+    </div>
+    </div>
+    <div class="barapplied" hidden></div>
+    <span class="spacer"></span>
+    <button class="btn btn--secondary btn--md btn--icon" data-refresh aria-label="Refresh" title="Refresh"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-refresh"></use></svg></button>
+  </div></div>
+    </div>
+
+    <div class="sg-item">
+      <h3>Activity <span class="sg-cls">activity.html</span></h3>
+      <div class="sg-toolbarspec"><div class="listbar insttoolbar stickybar">
+    <div class="searchbox"><svg class="ic searchglyph" aria-hidden="true"><use href="assets/icons.svg#ti-search"></use></svg><input type="search" enterkeyhint="search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" placeholder="Search activity" aria-label="Search activity"></div>
+    <div class="barfilters">
+    <div class="dropwrap perctl">
+      <button class="btn btn--secondary btn--md perbtn" aria-haspopup="true" aria-expanded="false" aria-label="Period"><b class="perlabel">All time</b> <svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-down"></use></svg></button>
+      <div class="dropmenu permenu" hidden>
+                    <button type="button" role="menuitemradio" data-period="all">All time</button>
+                    <button type="button" role="menuitemradio" data-period="24h">Last 24 hours</button>
+                    <button type="button" role="menuitemradio" data-period="7d">Last 7 days</button>
+                    <button type="button" role="menuitemradio" data-period="30d">Last 30 days</button>
+                    <button type="button" role="menuitemradio" data-period="custom">Custom range&hellip;</button>
+                    <div class="percustom">
+                      <div class="perrow">
+                        <input type="date" class="perfrom" aria-label="From date">
+                        <span class="permid">to</span>
+                        <input type="date" class="perto" aria-label="To date">
+                      </div>
+                      <button class="btn btn--secondary btn--md perapply">Apply</button>
+                    </div>
+                  </div>
+    </div>
+    <div class="dropwrap perctl acttypectl">
+      <button class="btn btn--secondary btn--md perbtn" aria-haspopup="true" aria-expanded="false" aria-label="Event types"><b>All event types</b> <svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-chevron-down"></use></svg></button>
+      <div class="dropmenu acttypemenu" role="menu" hidden></div>
+    </div>
+    </div>
+    <div class="barapplied" hidden></div>
+    <span class="spacer"></span>
+    <button class="btn btn--secondary btn--md btn--icon" data-refresh aria-label="Refresh" title="Refresh"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-refresh"></use></svg></button>
+  </div></div>
     </div>
   </section>
 
   <!-- ============================ CARDS ============================ -->
   <section class="sg-sec" id="cards">
     <h2>Cards</h2>
-    <p class="sg-note"><b>Card</b> &mdash; a surface carrying one object. Three forms, and they divide by width rather than by host; at &le;600 the card loses its corners and becomes a row with a hairline. The rules and the axes are in <code class="sg-cls">COMPONENTS.md</code>.</p>
+    <p class="sg-note"><b>Card</b> &mdash; a surface carrying one object. Three forms, dividing by width: at &le;600 the card loses its corners and becomes a row with a hairline. The rules and the axes are in <code class="sg-cls">COMPONENTS.md</code>.</p>
     <div class="sg-item">
       <h3>Section card</h3>
       <p class="sg-note"><code class="sg-cls">.setcard</code> — the settings-page container, with its header row.</p>
@@ -552,49 +433,23 @@
     </div>
     <div class="sg-item">
       <h3>Plan card</h3>
-      <p class="sg-note"><code class="sg-cls">.plancard</code> in the plan grid, with the
-        <code class="sg-cls">.pc-current</code> strip the current plan wears; the strip's height is reserved on every
-        card so plan names stay on one line.</p>
-      <p class="sg-note"><b>Free plans use the same card.</b> A card whose data carries
-        <code class="sg-cls">free:true</code> puts the word <i>Free</i> where a price goes and its
-        qualifier in <code class="sg-cls">.pc-term</code>. It gets no extra rows, so it is visibly
-        shorter than a paid one.</p>
+      <p class="sg-note"><code class="sg-cls">.plancard</code> with the <code class="sg-cls">.pc-current</code> strip the current plan wears; <b>the strip&rsquo;s height is reserved on every card.</b></p>
+      <p class="sg-note">A free plan puts <code class="sg-cls">Free</code> where a price goes and gets no extra rows.</p>
       <div class="plangrid" id="sgPlans"></div>
 
       <h4 style="margin:22px 0 8px">Two billing models, one surface <span class="sg-cls">.plangroups</span></h4>
-      <p class="sg-note"><b>Both billing models sit on one surface above 600px.</b> Each group
-        carries its own <b>label and one-line description</b>; there is no active tab to speak for
-        them.</p>
-      <p class="sg-note"><b>One row: Pay-as-you-go, then Perpetual.</b> All the cards sit on the
-        same line, laid out by <b>one grid</b> &mdash; the wrapper owns a column per card and each
-        group claims its slice, which is what keeps a card the same width across a group boundary.
-        Each group&rsquo;s label is centred over <i>its own</i> cards.</p>
-      <p class="sg-note"><b>A pick carries its group&rsquo;s billing model</b>, read from the group
-        rather than from the card&rsquo;s name.</p>
-      <p class="sg-note"><b>Change plan gets ONE group.</b> A subscription does not become a
-        perpetual licence by picking a card, so a locked selection renders only its own model.</p>
-      <p class="sg-note"><b>Below 600px the tabs come back</b> and the inactive group is hidden,
-        with the group headings going with it &mdash; the tab above already names what is on
-        screen. <b>Same markup both ways.</b></p>
+      <p class="sg-note">Both groups on one line above 600px, one grid, each group labelled over its own cards.</p>
+
+      <p class="sg-note">Below 600px the tabs come back and the inactive group is hidden. <b>Same markup both ways.</b></p>
     </div>
+    </section>
+
+  <!-- ============================ MODALS ============================ -->
+    <!-- ======================= DASHBOARD BLOCK ======================= -->
+  <section class="sg-sec" id="dashblock">
+    <h2>Dashboard block</h2>
     <div class="sg-item">
-      <h3>Stated product</h3>
-      <p class="sg-note"><code class="sg-cls">.nl-stated</code> with
-        <code class="sg-cls">.nl-prodswap</code> &mdash; how every selling surface names the
-        product: <b>stated, not chosen</b>. One line states it; a quiet link offers the other, and
-        choosing it swaps both the line and the link. Which product is stated comes from the
-        session&rsquo;s arrival (<i>Prototype settings</i> &rarr; <i>Arrived for</i>); in a real
-        portal it would come from the referrer.</p>
-      <div id="sgProducts"></div>
-      <p class="sg-note"><code class="sg-cls">.nl-prodcard</code> and
-        <code class="sg-cls">productCardHTML</code> have no user. They drew the two-card selector
-        this replaced, and are left in place rather than deleted.</p>
-    </div>
-    <div class="sg-item">
-      <h3>Dashboard block</h3>
-      <p class="sg-note"><code class="sg-cls">.dblock</code> with <code class="sg-cls">.dblock-head</code> — the Home page's section container.
-        The heading is the way through: <code class="sg-cls">.dbh-link</code> fills the row, so the whole
-        line is the target, and the arrow beside the title is an icon rather than a button.</p>
+            <p class="sg-note"><code class="sg-cls">.dblock</code> + <code class="sg-cls">.dblock-head</code> &mdash; Home&rsquo;s section container. <b>The whole heading row is the link.</b></p>
       <div class="dblock">
         <div class="dblock-head">
           <a class="dbh-link" href="licenses.html" aria-label="Open all 17 licenses"><h2>Licenses</h2><span class="dbh-count">17</span><svg class="ic ic-24 dbh-arrow" aria-hidden="true"><use href="assets/icons.svg#ti-arrow-right"></use></svg></a>
@@ -604,8 +459,7 @@
     </div>
   </section>
 
-  <!-- ============================ MODALS ============================ -->
-  <section class="sg-sec" id="modals">
+<section class="sg-sec" id="modals">
     <h2>Modals</h2>
     <p class="sg-note"><b>Modal shell</b> &mdash; the floating surface a dialog, a sheet or a menu is drawn on. Five shells, all on <code class="sg-cls">--card</code>, all at corner 12 except the phone sheet. The rules and the axes are in <code class="sg-cls">COMPONENTS.md</code>.</p>
     <div class="sg-item">
@@ -686,33 +540,18 @@
   <!-- ============================ STEPPER ============================ -->
   <section class="sg-sec" id="stepper">
     <h2>Wizard stepper</h2>
-    <p>One stepper: <b>every step at once</b>, each a numbered circle and a name, joined by a line.
-      Only the <b>circle</b> of the current step is filled.</p>
-    <p class="sg-note"><b>The list is computed, never written down.</b> The steps are built per
-      mode &mdash; <i>Choose your plan &middot; Capacity &middot; Add-ons &middot; Review</i>, plus
-      <i>Payment &amp; Billing</i> when the account has no billing data &mdash; and steps drop out
-      of it: a free plan has no Capacity, no Add-ons and no billing, TBMQ subscriptions have no
-      Add-ons, and Manage add-ons has no plan step. The stepper renders
-      <code class="sg-cls">steps()</code>, so it cannot show a step the flow does not have.</p>
+    <p class="sg-note">Every step at once: a numbered circle and a name, joined by a line. <b>Only the current step&rsquo;s circle is filled.</b> The rules and the axes are in <code class="sg-cls">COMPONENTS.md</code>.</p>
+    
     <div class="sg-item">
       <h3>Three states <span class="sg-cls">.nl-steps &gt; .nl-step</span></h3>
-      <p class="sg-note"><b>Done</b> is a ringed number in ink, <b>current</b> is a filled
-        circle, <b>upcoming</b> is a ringed number in grey.</p>
-      <p class="sg-note"><b>The fill is ink, not the accent.</b> The accent is spent on the
-        Popular plan card, where it means &ldquo;we suggest this&rdquo;; a filled step says you are
-        here.</p>
-      <p class="sg-note"><b>The connector carries progress.</b> The line <i>behind</i> a step is
-        solid ink and the line <i>ahead</i> of it is grey, so how far along you are is readable from
-        the row&rsquo;s own shape &mdash; no glyph, nothing that depends on colour. The line into
-        the <b>current</b> step counts as travelled.</p>
+      <p class="sg-note"><b>Done</b> &mdash; ringed number in ink. <b>Current</b> &mdash; filled circle. <b>Upcoming</b> &mdash; ringed number in grey. The line behind a step is ink, the line ahead is grey.</p>
+
       <div class="sg-static" style="padding:0">
         <div class="nl-stepbar"><div class="sgWizStep"></div></div>
       </div>
-      <p class="sg-note"><b>Done steps are clickable</b>; the current one is where you are, and
-        an upcoming one cannot be jumped to because the next step is computed from what this one
-        holds. <code class="sg-cls">gotoStep</code> only re-renders.</p>
-      <p class="sg-note"><b>Below 900px the names go</b> &mdash; circles joined by lines still read
-        as a stepper. <b>Below 600px only the current step is shown</b>, named.</p>
+      
+      <h3>Widths</h3>
+      <p class="sg-note">Below 900px the names go. Below 600px only the current step shows, named.</p>
     </div>
   </section>
 
@@ -738,130 +577,15 @@
   </section>
 
   <!-- ============================ FEED ============================ -->
+    <!-- =========================== ACTIVITY ========================== -->
   <section class="sg-sec" id="feed">
     <h2>Activity</h2>
-    <p class="sg-note"><b>Tag</b> &mdash; the named thing inside a sentence (<code class="sg-cls">.fi-chip</code>) &mdash; inline, wrapping with the prose, no hit area and no state. The feed below is where it lives. The rules and the axes are in <code class="sg-cls">COMPONENTS.md</code>.</p>
-    <p><b>A feed is an axis with entries hanging off it</b>
-      (<code class="sg-cls">activityList</code>): the entry renders a row with a mark, the list
-      renders the <b>day separators</b> between the runs and draws the rail. The specimens below
-      call <code class="sg-cls">activityEntry</code> <b>directly</b>, without the list, which is why
-      they print a time and no date, and no rail.</p>
-    <p class="sg-note"><b>The shape, in four parts.</b></p>
-    <ul class="sg-note">
-      <li><b>The day is a separator ROW on the axis</b>, not a heading beside the rows.</li>
-      <li><b>An entry is plain text with a mark on the axis</b>, not a card.</li>
-      <li><b>A box appears only when there is more than the sentence.</b></li>
-      <li><b>The time trails the sentence</b> after a middot.</li>
-    </ul>
-    <p class="sg-note"><b>The mark is keyed on the type&rsquo;s PREFIX</b>, with three named
-      exceptions &mdash; payment failed, check failed, and updates expiring &mdash; so a new event
-      type gets the right mark without anyone adding a line. <b>The disc is filled
-      <code class="sg-cls">--accent</code></b>; <b>the two things that can go wrong take
-      <code class="sg-cls">--status-alert</code></b>. The disc is a <b>container</b> and what it
-      holds is a <b>shape</b>: the glyph differs per kind and the sentence says it in words, so no
-      category is carried by hue alone. <b>There is no per-category palette.</b></p>
-
     <div class="sg-item">
-      <h3>Anatomy</h3>
-      <p class="sg-note"><b>What it is about &middot; what happened &middot; what changed, from and to
-        &middot; who did it &middot; the time.</b> A reason or an amount sits <b>inside the
-        sentence</b>, never only behind the expander &mdash; a failure that hides its cause behind a click
-        is a failure you have to go and ask about.</p>
-      <p class="sg-note"><b>The day is a separator, the time trails the sentence.</b> The entry
-        keeps only <code class="sg-cls">07:12</code>, after the sentence, and the date is a row of
-        its own above the run of entries that share it. The entry is <b>not self-sufficient</b>
-        because of that, which is why every surface goes through
-        <code class="sg-cls">activityList</code> and only this page does not.</p>
-      <p class="sg-note"><b>A changed value is drawn as the change:</b> the old value struck through
-        and quiet, an arrow, the new one in a <code class="sg-cls">.pill</code> &mdash; the plain
-        pill, not a coloured one. The pill is the only enclosed thing in the row, so the eye lands
-        on it; the struck value is there to be checked rather than read.</p>
-      <p class="sg-note"><b>One chip per entry, always the same thing.</b> In the account-wide feed
-        the <b>entity</b> sits in a chip (<code class="sg-cls">.fi-chip</code>) &mdash; the licence
-        label, the instance label, the user&rsquo;s email, the invoice number. Everything else is
-        plain, <b>values included</b>. A chip says <b>&ldquo;this is a named thing&rdquo;</b>, not
-        &ldquo;this matters more&rdquo;. Two entries have no chip at all: a password change and an
-        invite link have no named subject but the account itself.</p>
-      <p class="sg-note"><b>In a licence&rsquo;s own tab the entity is dropped, not chipped
-        again.</b> In the map it is one template: the bracketed segment
-        (<code class="sg-cls">[ on {entity}]</code>) is what the licence scope removes. For an
-        <b>instance</b> event the bracket holds the <em>licence</em> and the instance keeps the
-        chip.</p>
-      <p class="sg-note"><b>Voice.</b> Past tense, no auxiliary: <i>Plan changed from Startup to
-        Business</i>, never <i>Plan was changed</i>. One sentence, ending in a period. No
-        &ldquo;successfully&rdquo;, no adjectives. A date inside a sentence uses the product&rsquo;s
-        one format, <code class="sg-cls">Sep 13, 2026</code>.</p>
-      <p class="sg-note"><b>Who did it is in the sentence</b>, as <code class="sg-cls">{by}</code>,
-        and the template says where. <b>A machine event has no actor at all</b>, rather than saying
-        &ldquo;System&rdquo;: the absence of a name is what says nobody did it.</p>
-      <p class="sg-note"><b>No HTML in a string, ever.</b> The copy says what happened; the
-        component decides what is emphasised. That is what lets search match the sentence directly.</p>
-      <p class="sg-note"><b>The expander is not a raw record.</b> It shows named
-        <b>field &middot; from &rarr; to</b> rows, and only for the types that have something to
-        show; a type with no detail gets <b>no button</b>. It must never repeat the sentence.</p>
-    </div>
-
-    <!-- ⚠️ GROUPED BY TYPE, NOT BY DOMAIN (2026-09-25). This used to be four lists —
-         Licences, Instances, Users, Billing — each printing every content variant in its
-         domain. That is a catalogue of COPY, and the copy is already in `ACTIVITY_TEXT`
-         where it can be read in one screen; what a design system has to show is the
-         component's SHAPES, because those are what a new type has to fit into.
-         Four shapes, and every type in the map still appears in exactly one of them —
-         the grouping changed, the coverage did not. Miscategorise nothing: the shape is
-         derived from the sample at render time, not typed here. -->
-    <div class="sg-item">
-      <h3>1 &middot; Sentence and actor <span class="sg-cls">the default</span></h3>
-      <p class="sg-note">Somebody did something. One sentence, the actor at the end, the time at the
-        right. No panel, nothing to expand &mdash; most of the map is this.</p>
-      <div class="listcard sg-actlist" data-actshape="plain"></div>
-    </div>
-    <div class="sg-item">
-      <h3>2 &middot; With a detail panel <span class="sg-cls">rec.detail</span></h3>
-      <p class="sg-note">The sentence carries the headline change; the panel carries what the
-        sentence left out, as named <b>field &middot; from &rarr; to</b> rows. <b>It must never
-        repeat the sentence.</b></p>
-      <div class="listcard sg-actlist" data-actshape="detail"></div>
-    </div>
-    <div class="sg-item">
-      <h3>3 &middot; No actor <span class="sg-cls">a machine event</span></h3>
-      <p class="sg-note">Check-ins, expiries, automatic charges and the credit a downgrade
-        returns. The sentence simply <b>ends</b> rather than saying &ldquo;System&rdquo;. An
-        <b>automatic charge is its own type</b>, not a paid-invoice entry with the name left off.</p>
-      <div class="listcard sg-actlist" data-actshape="system"></div>
-    </div>
-    <div class="sg-item">
-      <h3>4 &middot; A grouped run <span class="sg-cls">instance.checks_grouped</span></h3>
-      <p class="sg-note">Check-ins are <b>derived, not stored</b> &mdash; the licence reports hourly, so
-        a nineteen-instance account would otherwise write hundreds of rows a day. An <b>unbroken</b> run
-        of <b>successful</b> checks <b>for the same instance</b> becomes one entry carrying the count and
-        both ends of the run.</p>
-      <p class="sg-note"><b>It does not expand, and nothing in the feed does.</b></p>
-      <p class="sg-note"><b>A failure never joins a run</b>, even between two successes: it is the
-        entry the reader is scanning for, and it names its cause in the sentence.</p>
-      <div class="listcard sg-actlist" data-actshape="fold"></div>
-    </div>
-
-    <!-- ⚠️ A CONSTRUCTED PAIR, and the only specimen on this page that is. Everything
-         else here renders one record from ACTIVITY_TEXT; a gap is a relationship BETWEEN
-         two entries, so it cannot be shown by a single sample. The two records are built
-         in styleguide.js from the same component as every other row. -->
-    <div class="sg-item">
-      <h3>5 &middot; A gap between two runs <span class="sg-cls">the structure is the message</span></h3>
-      <p class="sg-note">A run covers <b>consecutive</b> checks. When an expected check never arrives,
-        the run <b>ends</b> and a new one starts after the hole &mdash; so two groups with nothing
-        between them are how the feed says <b>a check is missing</b>. Below: a run ending at 18:10 and
-        the next beginning at 20:10, with <b>no failure row between them</b>. The 19:10 check never
-        came.</p>
-      <p class="sg-note"><b>The cadence is recorded, not guessed.</b> The gap is measured against
-        <code class="sg-cls">CHECKIN_INTERVAL_H</code> &mdash; the interval the product states
-        &mdash; and a delta below <b>1.5&times;</b> it is treated as the same check arriving early
-        or late. Only room for a whole missed slot breaks a run.</p>
-      <div class="listcard sg-actlist" id="sgActGap"></div>
+      <div id="sgActStates"></div>
     </div>
   </section>
 
-  <!-- ============================ TOOLTIPS ============================ -->
-  <section class="sg-sec" id="tooltip">
+<section class="sg-sec" id="tooltip">
     <h2>Tooltips</h2>
     <p>A tooltip is an attribute, not a component: <code class="sg-cls">.tip[data-tip]</code>. It shows on hover
       and focus; adding <code class="sg-cls">.show</code> pins it (that is how “Copied” is confirmed).</p>
@@ -936,7 +660,7 @@
   <!-- ============================ EMPTY ============================ -->
   <section class="sg-sec" id="empty">
     <h2>Empty states</h2>
-    <p>An empty state says why it is empty and, where there is one, what would fill it.</p>
+    <p class="sg-note">An empty state says why it is empty and, where there is one, what would fill it. The rules and the axes are in <code class="sg-cls">COMPONENTS.md</code>.</p>
     <div class="sg-item">
       <div class="sg-row" style="align-items:stretch">
         <div class="sg-cell" style="flex:1;min-width:280px">
@@ -960,26 +684,8 @@
       <p class="sg-note"><b>Home says what is wrong and what fixes it; the explanation lives one
         click in.</b> The migration sentence belongs to the licence&rsquo;s own banner and the line
         above the Instances list, not here.</p>
-      <div class="sg-static" style="padding:0;margin-bottom:12px">
-        <div class="gbanner homebanner tone-red">
-          <svg class="ic gb-ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg>
-          <div class="hb-body">
-            <p class="hb-fact"><b><a class="gb-lic" href="#">On-prem HQ</a> is blocked</b> &mdash; 2 production instances running, 1 allowed.</p>
-            <p class="hb-todo">Raise the limit or deactivate the extra instance. The license checks in hourly and unblocks at the next check.</p>
-            <div class="hb-acts"><button class="btn btn--primary btn--sm gb-act">Manage</button><a class="btn btn--secondary btn--sm gb-act" href="#">Deactivate an instance</a></div>
-          </div>
-        </div>
-      </div>
-      <div class="sg-static" style="padding:0;margin-bottom:12px">
-        <div class="gbanner homebanner tone-red">
-          <svg class="ic gb-ic" aria-hidden="true"><use href="assets/icons.svg#ti-alert-triangle"></use></svg>
-          <div class="hb-body">
-            <p class="hb-fact"><b><a class="gb-lic" href="#">On-prem HQ</a> is blocked</b> &mdash; 2 production instances running, 1 allowed.<a class="gb-lic hb-more" href="#">and 3 more</a></p>
-            <p class="hb-todo">Raise the limit or deactivate the extra instance. The license checks in hourly and unblocks at the next check.</p>
-            <div class="hb-acts"><button class="btn btn--primary btn--sm gb-act">Manage</button><a class="btn btn--secondary btn--sm gb-act" href="#">Deactivate an instance</a></div>
-          </div>
-        </div>
-      </div>
+      <div class="sg-static" style="padding:0;margin-bottom:12px"><div class="gbanner homebanner" id="sgBannerOne"></div></div>
+      <div class="sg-static" style="padding:0;margin-bottom:12px"><div class="gbanner homebanner" id="sgBannerMany"></div></div>
       <p class="sg-note"><b>The order, and the whole inventory.</b> Nothing renders that is not on
         this list; a condition without a row here does not get a banner invented for it.</p>
       <div class="tablescroll"><table class="sg-table">
@@ -1016,82 +722,6 @@
         function (<code class="sg-cls">attentionOf</code>), so the banner and the filtered list
         cannot disagree about which rows belong in it. <b>The two account-level conditions</b> (no
         payment method, card expiring) have no licence to mark and appear in the banner only.</p>
-    </div>
-
-    <div class="sg-item" id="instancesview">
-      <h3>The Instances page <span class="sg-cls">instances.html</span></h3>
-      <p class="sg-note"><b>Columns: instance &middot; licence &middot; last check-in &middot;
-        version &middot; status.</b> <b>Nothing about plans or money lives here</b> &mdash; that is
-        what the licence row is for.</p>
-      <p class="sg-note"><b>Two views, and they do not have the same columns.</b> A switcher on the
-        page&rsquo;s own toolbar picks between a <b>flat list</b> (instance &middot; licence &middot;
-        last check-in &middot; version &middot; status) and <b>grouped by licence</b> (instance
-        &middot; status &middot; version &middot; last check-in). Grouped drops the <b>License</b>
-        column because the heading above the rows <em>is</em> the licence.</p>
-      <p class="sg-note"><b>The switcher sits after the spacer</b>, beside Refresh: the controls on
-        the left narrow the list and this one does not, so the toolbar reads as filters then
-        presentation. <b>It is not a chip pair</b> &mdash; a chip group means
-        &ldquo;this is filtering&rdquo; on both pages that carry one.</p>
-      <p class="sg-note"><b>The first group is open, the rest are closed.</b> The state holds only
-        the groups a reader has actually toggled; everything else falls through to the index rule,
-        which is what lets the first group be closed by hand and <em>stay</em> closed. <b>The state
-        is not stored</b> &mdash; it is where a reader happens to be looking, not a setting.
-        <b>A search forces every group open</b>, because rows are filtered in the DOM; headings whose
-        every row was filtered out hide with them. <b>Grouping and paging cannot both be on</b>, and
-        grouping wins.</p>
-      <p class="sg-note"><b>A group is one outline, not a run of rows.</b> Each group is a box with
-        an <b>8px radius</b> and a stroke that starts at the heading and closes under the last
-        instance in it; groups are separated by space, not by a rule. <b>Nothing inside is indented
-        and nothing gains padding.</b> The gap between groups is a <b>spacer row</b>.
-        <b>On the phone the group closes and becomes a heading</b> &mdash; a labelled band over a
-        stack of cards, no cards inside cards.</p>
-      <p class="sg-note"><b>The id carries a ghost copy button</b>
-        (<code class="sg-cls">.ghostbtn.inst-copy</code>): the id is a 36-character uuid that the
-        cell ellipsizes, so the clipboard is the only way to get all of it.</p>
-      <p class="sg-note"><b>It filters by the one thing an instance has:</b> search plus a
-        <code class="sg-cls">.inst-statusseg</code> chip pair (Healthy / Stale), the same mutually
-        exclusive group as the Licenses type filter. <b>Version is not a filter</b> &mdash;
-        &ldquo;behind latest&rdquo; is a fact about a release, not a state of the deployment.</p>
-      <p class="sg-note"><b>The empty state offers nothing.</b> An instance is not something you
-        create in the portal, so the only line is how one appears: a deployment somewhere activates
-        itself with a key. <b>No action.</b></p>
-      <p class="sg-note"><b>On the phone the row is a card</b>
-        (<code class="sg-cls">.inst-row</code>). Reading order is the deployment, the licence it
-        draws on, then the three facts that answer &ldquo;is it healthy&rdquo; on one line.</p>
-      <p class="sg-note"><b>Deactivate and Delete live on the instance row and nowhere else.</b> The
-        blocked banner <em>routes</em> here. Discovery is handled by copy, in two places: the blocked
-        banner and a quiet persistent line above this list
-        (<code class="sg-cls">.inst-hint</code>).</p>
-      <p class="sg-note"><b>The confirmation is destructive treatment</b>, because this turns off
-        live infrastructure. It <b>names the instance</b>, shows its full ID and last check-in, and
-        says what happens and <b>when</b>: the server keeps running until its next check-in, within
-        the hour, and then stops. The seat is freed immediately.</p>
-    </div>
-
-    <div class="sg-item" id="messages">
-      <h3>Where a message goes &mdash; two places, one rule each</h3>
-      <p class="sg-note"><b>A message has one place, decided by its kind.</b> Nothing invents a
-        third.</p>
-      <p class="sg-note"><b>1 &middot; Result of an action <svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-arrow-right"></use></svg> snackbar.</b>
-        Something the person just did, which is finished and will not become truer by staying on
-        screen: plan changed, capacity purchased, add-on removed, coupon applied, label saved,
-        payment method updated, subscription cancelled, updates renewed, invoice downloaded. It lives
-        <b>outside</b> the licence panel &mdash; bottom of the viewport on desktop, top below 600px
-        &mdash; and leaves on its own.</p>
-      <p class="sg-note"><b>2 &middot; Persistent state <svg class="ic" aria-hidden="true"><use href="assets/icons.svg#ti-arrow-right"></use></svg> the slot below the panel header</b>
-        (<code class="sg-cls">#subAlert</code>). Facts that stay true until something changes:
-        payment failed, over the instance limit, cancelled and active until a date, software updates
-        expiring. <b>One at a time.</b> If two are true, show the more serious one and <b>name the
-        other in the same banner</b>. Nothing transient goes here.</p>
-      <p class="sg-note"><b>The one banner that sits above the header</b> is
-        <code class="sg-cls">#licNewBanner</code> &mdash; <i>License created</i> &mdash; so a newly
-        created licence <i>with a problem</i> can show it and the state banner at once. It appears
-        <b>once per licence, ever</b>: the seen mark is written when it is shown, not when it is
-        dismissed.</p>
-      <p class="sg-note"><b>Exception.</b> <i>License key copied</i> and <i>Instance ID copied</i>
-        answer <b>in the button&rsquo;s own tooltip</b>, not the snackbar: a copy is a micro-action
-        on a small control, and an answer at the edge of the screen makes the reader look away from
-        the thing they just pressed.</p>
     </div>
 
     <div class="sg-item" id="sheet">
@@ -1140,9 +770,8 @@
     </div>
 
     <div class="sg-item">
-      <h3>Snackbar or saved note? <span class="sg-cls">.snack</span> vs <span class="sg-cls">.savednote</span></h3>
-      <p class="sg-note">They coexist, and they are not two ways of doing one thing. The split is what
-        the message <i>is</i>, not how loud it should be.</p>
+      <h3>Saved note vs snackbar <span class="sg-cls">.savednote</span> &middot; <span class="sg-cls">.snack</span></h3>
+      <p class="sg-note">The saved note is a <b>persistent fact about a form</b>, beside the button that caused it. The snackbar is a <b>transient event on a list</b>, outside the layout.</p>
       <div class="tablescroll"><table class="sg-type"><thead>
         <tr><th>&nbsp;</th><th>Saved note</th><th>Snackbar</th></tr>
       </thead><tbody>
@@ -1151,11 +780,7 @@
         <tr><td>Leaves</td><td>when the next edit contradicts it</td><td>on a timer</td></tr>
         <tr><td>Used on</td><td>Account, Billing, Security &mdash; pages with a page-level Save</td><td>Users &mdash; pages with a list and no page-level Save</td></tr>
       </tbody></table></div>
-      <p class="sg-note">They never appear on the same surface, which is why the pair does not compete:
-        a page either has a Save whose result is a stored state, or it has a list whose result is a
-        changed row. A page-level Save reporting into a snackbar would put a fact on a timer; a list
-        action reporting into an inline note would leave a receipt sitting next to a control the reader
-        has finished with.</p>
+      <p class="sg-note"><b>They never share a surface.</b></p>
       <div class="sg-static">
         <div class="setcard" style="margin-top:0">
           <div class="field"><label for="sgSave1">Company name</label><input id="sgSave1" type="text" value="ThingsBoard"></div>
@@ -1166,30 +791,16 @@
 
     <div class="sg-item">
       <h3>Invite block <span class="sg-cls">.inviterow</span></h3>
-      <p class="sg-note"><b>One row, always on screen</b>; only the table comes and goes. It is
-        not a card, has no border and no heading, because it is how the list grows rather than a
-        panel you operate.</p>
-      <p class="sg-note"><b>Copy invite link is in the header.</b> It is the other way to invite,
-        not a second button belonging to the field, and it is a text action so it does not outrank
-        the thing the sheet is about.</p>
-      <p class="sg-note"><b>Its height does not change.</b> The message slot is always in the layout
-        (<code class="sg-cls">visibility</code>, not <code class="sg-cls">hidden</code>, and exactly
-        one line tall), confirmations go to the snackbar which is outside the layout, and nothing is
-        revealed inside it on copy.</p>
+      <p class="sg-note">One row, always on screen; only the table comes and goes.</p>
+      
+      <p class="sg-note"><b>Its height does not change</b> &mdash; the message slot is always in the layout.</p>
     </div>
 
     <div class="sg-item">
       <h3>New-account empty <span class="sg-cls">.emptybox.eb</span></h3>
-      <p class="sg-note">The same <span class="sg-cls">.emptybox</span> the one-line empties use, holding
-        three parts instead of one sentence: what this page is, what will appear here, and at most one
-        action. The parts are optional, so the one-line form still renders exactly as it did.</p>
-      <p class="sg-note"><b>Only one page carries a primary.</b> A new account has exactly one thing to
-        do, and invoices and activity fill themselves as a side effect of it &mdash; so Licenses gets the
-        button, Invoices gets a quiet link back to it, and Activity gets no action at all. Four buttons
-        saying different words for the same next step would be four decisions where there is one.</p>
-      <p class="sg-note"><b>An empty page shows no chrome that operates on rows</b> &mdash; no search,
-        filters, sort headers, pagination, items-per-page or refresh. There is nothing to search or sort,
-        and it all comes back with the first row (<span class="sg-cls">body.list-empty</span>).</p>
+      <p class="sg-note">Three parts: what this page is, what will appear here, and at most one action.</p>
+      <p class="sg-note"><b>Only Licenses carries a primary.</b></p>
+      
       <div class="sg-row" style="align-items:stretch">
         <div class="sg-cell" style="flex:1;min-width:300px">
           <div class="listcard"><div class="tablescroll"><table><tbody>
@@ -1202,55 +813,22 @@
           <span class="sg-cls">.emptybox.eb with a primary</span>
         </div>
       </div>
-      <p class="sg-note" style="margin-top:14px"><b>Not the same block as
-        <code class="sg-cls">.noresults</code>.</b> Solid border here, dashed there: this one
-        describes the <i>account</i>, that one describes the <i>view</i> and its exit is to clear the
-        search. <b>Two different facts must not look like one.</b></p>
+      
     </div>
 
     <div class="sg-item">
       <h3>No results <span class="sg-cls">.noresults</span></h3>
-      <p class="sg-note">Not the same thing as an empty state, and deliberately not the same block.
-        <span class="sg-cls">.emptybox</span> says <i>nothing here yet</i> and waits for you to create
-        something; this says <i>nothing matched</i> and waits for you to undo a filter you set — so it
-        carries the way out. Dashed rather than solid, because it describes a temporary condition of
-        the view rather than a fact about the account.</p>
+      <p class="sg-note">Dashed, not solid: it describes the view, not the account, and carries the way out.</p>
       <div class="sg-static">
         <div class="noresults">
           <div class="nr-t">No matches for &ldquo;gateway&rdquo;</div>
           <button type="button" class="link nr-clear">Clear search</button>
         </div>
       </div>
-      <p class="sg-note" style="margin-top:14px">Used by all five working searches: Licenses, Invoices,
-        Users, Activity and the licence&rsquo;s own Activity tab. Inside a table it is wrapped in
-        <span class="sg-cls">td.noresults-cell</span> so it does not draw a cell&rsquo;s borders as well
-        as its own.</p>
+      
     </div>
 
-    <div class="sg-item" id="solo">
-      <h3>Solo state <span class="sg-cls">.solo + .inviterow</span></h3>
-      <p class="sg-note">A <b>third</b> kind of empty, and the only one that is not a box inside a
-        surface: the surface itself is gone. When the account has one user &mdash; you &mdash; the
-        table and its pager are removed rather than shown holding a single row. A one-row table of
-        yourself is a control panel for a decision nobody is making. What replaces it is the control
-        that changes the state, not an illustration of the state.</p>
-      <div class="sg-static">
-        <div class="solo">
-          <p class="solo-line">You&rsquo;re the only person with access. Invite users by sending link to the e-mail or copy invite link and send directly.</p>
-          <div class="inviterow">
-            <input type="email" class="invite-in" placeholder="name@company.com, another@company.com" aria-label="Emails to invite">
-            <button type="button" class="btn btn--primary btn--md invite-go">Invite</button>
-          </div>
-          <p class="invite-note">Anyone you invite gets full access to your licenses, invoices and payment method.</p>
-        </div>
-      </div>
-      <p class="sg-note" style="margin-top:14px">The same <span class="sg-cls">.inviterow</span> is on
-        screen in both states, directly under the header &mdash; not a card, no border, no heading, because
-        it is how the list grows rather than a panel you operate. Only the sentence above it is solo-only,
-        where it is read <i>before</i> the first invite. Below 600px the row stacks: full-width input, then
-        full-width <b>Invite</b> &mdash; same position, and never a bottom sheet.</p>
-    </div>
-  </section>
+    </section>
 
 </div><!-- /.sg-main -->
 </div>
@@ -1259,6 +837,12 @@
 <script src="data.js"></script>
 <script src="shared.js"></script>
 <script src="components.js"></script>
+<!-- ⚠️ THE PAIR, AND THE STYLEGUIDE NEEDS IT FOR ONE CELL. `instAllRow` is in
+     components.js but calls `instStatusCell`, which is defined in license-details.js —
+     so the shared instance-row builder is not self-contained, and a page rendering it
+     has to carry the pair. wizard.js comes first because license-details calls NL. -->
+<script src="wizard.js"></script>
+<script src="license-details.js"></script>
 <script src="styleguide.js"></script>
 </body>
 </html>
