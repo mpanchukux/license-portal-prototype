@@ -53,6 +53,13 @@ CAT = {
   '946a5df5c1': 'D',  # three Ubuntu metrics sit as literals in the count chip's calc()
   '867b99b4b9': 'B',  # .5px is unverified on a 1x display, and 255 buttons stand on it
   '98499909f7': 'B',  # the chip label wrapper reaches a chip with no count, where it does nothing
+  # ---- 2026-10-12, the three-message phone pass ----
+  '4c4b800bd1': 'C',  # three passes unverified by a full geometry diff — campaign closed on evidence
+  '7bf8ac142b': 'C',  # the 601 width finding was my own probe's missing border:0 — raised and withdrawn
+  'e2494fe989': 'D',  # typechip vs filterchip now differ only by the tick — collapse or keep
+  'e0a718577e': 'D',  # the Capacity step is 18px taller: description width bought with step height
+  '8301c3f72d': 'B',  # .lic-typeseg scrolls 29 instead of 13 at 320 after the chip inset was matched
+  'c3033c6209': 'D',  # the add-ons empty box sits at x=44 while the capacity rows now sit at 16
   # ---- 2026-10-09, the sixth phone pass ----
   # ---- 2026-10-09, the artifact / containment follow-up ----
   'a1a7a764be': 'C',  # a third live copy of the prototype the notes never named

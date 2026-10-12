@@ -1914,6 +1914,9 @@ moves, do the buttons? No.* **Two "no"s means two tokens, whatever the numbers s
 | **An opener that resolves without arriving** | Implementation rule 10. `OPENERS.usersModal` reported `0/0/0` on a surface it never opened, three times across two sessions. Every opener now ends in `must()`; `diff()`/`paintDiff()` carry `error` and `compared` so a dead cell cannot read as a pass |
 | **A scan keyed on literal token values** | Implementation rule 11. It reported "no failures" after the pass moved the three values it was written against, and had stopped matching anything at all. Resolve targets from `:root` at run time — this is how `--faint`'s 507 failures stayed invisible |
 | **`paintDiff` counts unpaired on ONE side** | Implementation rule 12. `onlyAfter++` has no counterpart: a key present in `before` and absent from `after` is dropped in silence, so **a pass that only DELETES elements reports zero unpaired and reads as a clean run.** Found 2026-10-08 by diffing the two key sets by hand — the tool said 4, the sets said 5 before and 4 after. Diff the key sets, or read `elements` on both sides, before trusting an unpaired count |
+| **`PAINT_PROPS` carried no geometry at all** | Implementation rule 12b, and the fifth instance of the 9–12 shape — the first four were one property each, this one is a whole DIMENSION. Seven properties, all paint, so `paintDiff` was structurally unable to see a box change size. Caught 2026-10-12 on a layout pass it called clean: `licenses` reported **0 changed** while the licence card's label zone went 66 → 50.6 and the filter rail moved 32px. `box-width`/`box-height` now ride the set, read off the rect; `paintDiff` returns `covers` so a zero cannot be quoted as a layout result |
+| **A `<use>` rect is not the element's geometry** | `getBoundingClientRect()` on a `<use>` resolves against the referenced symbol and drifts between two loads of the same document: the 10-08 geometry pair reported shifts of up to **−1185px**, every one of them a `<use>`, with **no parent `<svg>` moved**. `rowDiff` now drops a `<use>` whose own `<svg>` is present on both sides and unmoved, and counts what it dropped in `out.useNoise`. ⚠️ The parent key is **not** the child's key minus its last step — `path()` keeps six ancestors, so the window slides; the match is by SUFFIX, and the first build of the filter suppressed 0 of 20 by assuming equality |
+| **⚠⚠ IMPLEMENTATION RULE 13 — the inverse of 9–12, and worth as much** | **An ad-hoc tool written beside the one in the repo is a SECOND tool. Its disagreement with the first is a claim about ITSELF until proven otherwise. Prove the probe before reading its result as a fault in what it measured.** Rules 9–12 are about the instrument being blind; this one is about the probe being wrong while the instrument was right — and it is the cheaper mistake to make, because a fresh probe looks like independent confirmation |
 | **The 601–952 table band** | See item 5 above |
 | **`mockInvoiceUrl` is a second typography system** | A separate document with its own rules; it was never part of these axes |
 | **`?from` is written and read by nothing** | Left in the URL deliberately — a link must work the same for whoever opens it |
@@ -2056,6 +2059,37 @@ watch for rather than the three cases:
 | rule 9 | `path()` keyed by class list | "element count changed", 1,500 `unpaired` | an added class; the real elements were never compared |
 | rule 11 | a scan keyed on literal hexes | "no failing groups" | it could no longer match any of its three targets |
 | rule 12 | `paintDiff` counting `onlyAfter` alone | `4 unpaired` on a pass that moved two nodes and deleted one | 5 keys left, 4 arrived; the deleted one was never counted anywhere |
+| rule 12b | `PAINT_PROPS`, seven paint properties | `0 changed` on `licenses` across four widths | the label zone had lost 15px and the filter rail had moved 32 — no property in the set could carry either |
+| **rule 13** | **a hand-written probe beside `sweep.js`** | **"an iframe styled 601px renders at 597 — every recorded width is 4px short"** | **the probe omitted `border:0`. An `<iframe>` carries a default 2px border per side, and under `box-sizing:border-box` those 4px come out of the CONTENT box. `page()` and `paint()` have always set it. The file was right and the probe was wrong** |
+
+### ⚠⚠⚠ Rule 13, and the worked example is mine
+
+**An ad-hoc tool written beside the one in the repo is a second tool. Its disagreement with
+the first is a claim about itself until proven otherwise. Prove the probe before reading its
+result as a fault in what it measured.**
+
+On 2026-10-12 I measured an iframe labelled `601` rendering at `innerWidth` 597, and wrote it
+up as a harness fault invalidating every cell this file has ever recorded at a breakpoint —
+including the `640 → 600` pass, whose central claim is about the pixel either side of 600.
+I listed seven records as needing re-measurement.
+
+**The probe was wrong.** An `<iframe>` has a **default border of 2px on each side**; under
+`box-sizing:border-box` those 4px come out of the content box, so `width:601px` yields
+`innerWidth` 597. My inline style omitted `border:0`. `page()` and `paint()` set it and always
+have. Verified on one frame, both ways: with `border:0` → 601 and `border-left/right` 0px;
+without → 597 and `border-left/right` 2px, at an identical frame rect of 601.
+
+⚠⚠ **AND THE CONTRADICTION THAT WOULD HAVE CAUGHT IT WAS ALREADY IN THE RECORD.** The `Move 1`
+table says `.field2` went `1fr` → `244.5px 244.5px` at the "601" cell. Two-up at 597 is
+impossible, so either the cell was really 601 or the gate was not where I thought. **Both were
+true, and the second proves the first:** `.field2` is two-up by default (`styles.css:8388`,
+no media query) and collapses only under `@media(max-width:600px)` (`styles.css:8411`) — a
+**max-width** rule. There is no `min-width:601px` block for it at all. The two-up state at 601
+was itself the evidence that the cell was 601.
+
+⚠️ **The 601 column stands. Nothing in that pass needed re-measuring.** What the episode cost
+was one audit list and the time to withdraw it — and what it bought is this rule, which is why
+it is written here rather than left as a note about one afternoon.
 
 ⚠️ **RULE 12 WAS ADDED 2026-10-08 AND MAKES IT FOUR, NOT THREE.** The heading above says
 "third instance in two sessions" and it is kept as written, because the point it makes is
