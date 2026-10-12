@@ -10,8 +10,25 @@
  * ⚠️ THE SETTINGS BAR IS STRIPPED BEFORE MEASURING. It takes 158px off every overlay
  * at 1280 and 229px at 601, and a sweep that inherits it invents findings.
  * ⚠️ VIEWPORT EMULATION IN THIS PANEL DOES NOT WORK — resize_window reports the size it
- * was given and innerWidth stays the pane's. Every width here is an iframe of that width,
- * where media queries resolve honestly (verified: innerWidth === the width asked for).
+ * was given and innerWidth stays the pane's. Every width here is an iframe of that width.
+ * ⚠⚠⚠ AND THE SENTENCE THAT ENDS THAT LINE IS TRUE — I BRIEFLY RECORDED THAT IT WAS NOT, AND
+ * THAT WAS MY OWN BUG (raised and withdrawn 2026-10-12). An ad-hoc probe reported a frame styled
+ * `601px` rendering at `innerWidth` 597, and I wrote it up as a harness fault reaching every
+ * recorded width. It is not. **An `<iframe>` carries a default 2px border on each side**, and
+ * under `box-sizing:border-box` those 4px come out of the CONTENT box: 601 → 597. The probe's
+ * inline style omitted `border:0`. `page()` and `paint()` have always set it — verified on both
+ * paths: with `border:0`, `innerWidth` is 601; without it, 597, on the same frame rect of 601.
+ * ⚠️ THE LESSON IS NOT ABOUT THE TOOL. A measuring instrument written fresh beside the one in
+ * the repository is a SECOND instrument, and it has to be proved before its disagreement with
+ * the first is read as the first one's fault. Mine was wrong and the file was right.
+ * ⚠️ `fitWidth()` IS KEPT, as a guard rather than as a fix: it would have refused that probe
+ * instead of letting it publish a number under a width it did not have.
+ *
+ * ⚠⚠ TWO MODES, TWO QUESTIONS, AND A LAYOUT PASS NEEDS BOTH:
+ *   paint / paintAll / paintDiff — what it LOOKS like, plus box size (`box-width`,
+ *     `box-height`). It cannot see POSITION.
+ *   page / all / diff / rowDiff — where everything IS: x, y, width, height, overflow.
+ * A zero from one of them is not a zero from the other. `paintDiff` says so in its result.
  */
 (function (root) {
   /* ⚠️⚠️ CLASS NAMES ARE PART OF THE PATH KEY, SO ADDING A CLASS UNPAIRS THE ELEMENT.
@@ -112,6 +129,27 @@
   }
 
   /* opts.open: name of a surface to open before measuring (see OPENERS) */
+  /* ⚠⚠ A GUARD, NOT A FIX (2026-10-12). Nothing in this file was ever giving a cell the wrong
+     width — see the header for the bug that was mine and not its. What this adds is the refusal
+     that would have caught it: read `innerWidth` back, and if it is not the width the cell is
+     NAMED after, correct once and then **return an error** rather than publish numbers under a
+     label they do not belong to. Same shape as the preflight, and for the same reason.
+     ⚠️ THE ONE CORRECTION PASS is for a genuine shortfall such as a platform scrollbar, which
+     does not change when the frame grows by it. A second round would only mask a real failure.
+     ⚠️ IT IS CHEAP AND IT IS AT THE BOUNDARY THAT MATTERS: `601` is the first tablet width in
+     this product, so a cell 4px short there is not a slightly narrow tablet — it is the phone
+     tier wearing a tablet label, and nothing downstream would say so. */
+  function fitWidth(frame, win, want) {
+    var got = win.innerWidth;
+    if (got === want) return { inner: got };
+    frame.style.width = (want + (want - got)) + 'px';
+    got = win.innerWidth;
+    if (got === want) return { inner: got };
+    return { inner: got,
+             error: 'width: asked for ' + want + ', frame renders at ' + got
+                  + ' — the cell would measure a width it is not named after' };
+  }
+
   function page(url, width, opts) {
     opts = opts || {};
     return new Promise(function (res) {
@@ -128,6 +166,9 @@
           try {
             var bar = d.querySelector('.statebar'); if (bar) bar.remove();
             d.body.classList.remove('has-statebar');
+            var wid = fitWidth(f, w, width);
+            if (wid.error) { finish({ url: url, w: width, surface: opts.open || 'page',
+                                      inner: wid.inner, error: wid.error }); return; }
             var p = opts.open ? OPENERS[opts.open](d, w) : Promise.resolve();
             Promise.resolve(p).then(function () {
               setTimeout(function () {
@@ -290,15 +331,64 @@
   }
 
   /* row-level diff for one cell, when the hash says something moved */
+  /* ⚠⚠⚠ A `<use>` RECT IS NOT THE ELEMENT'S GEOMETRY, AND THIS USED TO REPORT IT AS IF IT
+     WERE (fixed 2026-10-12). `getBoundingClientRect()` on a `<use>` resolves against the
+     referenced symbol rather than against the box on the page, and in this panel it drifts
+     wildly between two loads of the SAME document. Measured on the 10-08 pair: shifts of up to
+     **−1185px** reported on four pages — every one of them a `<use>`, and **not one parent
+     `<svg>` had moved at all**.
+     ⚠⚠ THE COST OF LEAVING IT IN IS NOT NOISE, IT IS DISBELIEF. A clean pass that prints a
+     1185px shift teaches its reader to skim the output, and the next run that reports a real
+     one is skimmed too. A tool that cries wolf stops being a tool.
+     ⚠️ THE TEST IS THE PARENT, NOT THE TAG. A `<use>` is dropped only when its own `<svg>` is
+     present on both sides and did NOT move — if the svg moved, the glyph really did travel and
+     the row stays. The parent key is this row's path minus its last step, which is why the
+     ancestry in `path()` is what makes this possible at all.
+     ⚠️ WHAT IT SUPPRESSED IS COUNTED, NOT HIDDEN: `out.useNoise`. A filter whose work is
+     invisible is the next thing nobody can audit. */
+  /* keys grouped by their LAST step, so a suffix lookup does not scan every row on the page */
+  function indexByTail(A, B) {
+    var ix = {}, k;
+    for (k in A) { var t = k.slice(k.lastIndexOf('>') + 1); (ix[t] = ix[t] || []).push(k); }
+    for (k in B) { if (A[k] === undefined) { var t2 = k.slice(k.lastIndexOf('>') + 1); (ix[t2] = ix[t2] || []).push(k); } }
+    return ix;
+  }
   function rowDiff(beforeRows, afterRows, limit) {
-    var B = {}, out = [];
+    var B = {}, A = {}, out = [], useNoise = 0, svgIx = null;
     beforeRows.forEach(function (r) { var i = r.indexOf('|'); B[r.slice(0, i) ] = r.slice(i + 1); });
+    afterRows.forEach(function (r) { var i = r.indexOf('|'); A[r.slice(0, i) ] = r.slice(i + 1); });
     afterRows.forEach(function (r) {
       var i = r.indexOf('|'), p = r.slice(0, i), v = r.slice(i + 1);
       if (B[p] === undefined) { out.push({ p: p, before: '(absent)', after: v }); return; }
-      if (B[p] !== v) out.push({ p: p, before: B[p], after: v });
+      if (B[p] === v) return;
+      if (/(^|>)use:\d+$/.test(p)) {
+        /* ⚠⚠ THE PARENT KEY IS NOT THIS KEY MINUS ITS LAST STEP, and the first build of this
+           filter assumed it was and suppressed nothing. `path()` keeps only the six nearest
+           ancestors, so the window SLIDES: the `<use>` key is `A1>…>A5>use`, and its `<svg>`
+           key is `B1>A1>…>A5` — one more ancestor at the front, the child's step gone from the
+           end. What holds between them is not equality but SUFFIX: the svg's key ENDS WITH
+           this key minus its last step. Measured on the 10-08 pair: exact-match lookup found
+           the parent 0 times out of 20; suffix lookup finds it. */
+        var tail = p.slice(0, p.lastIndexOf('>'));
+        if (tail) {
+          if (!svgIx) svgIx = indexByTail(A, B);
+          var hits = svgIx[tail.slice(tail.lastIndexOf('>') + 1)] || [];
+          var found = 0, movedParent = 0;
+          for (var k = 0; k < hits.length; k++) {
+            var key = hits[k];
+            if (key.length < tail.length || key.slice(key.length - tail.length) !== tail) continue;
+            found++;
+            if (B[key] !== A[key]) movedParent++;
+          }
+          /* suppressed only when a parent was actually found and none of them moved */
+          if (found && !movedParent) { useNoise++; return; }
+        }
+      }
+      out.push({ p: p, before: B[p], after: v });
     });
-    return out.slice(0, limit || 40);
+    var cut = out.slice(0, limit || 40);
+    cut.useNoise = useNoise;
+    return cut;
   }
 
   /* ================= computed-value comparison (SCALES.md implementation rule 8) =========
@@ -354,8 +444,27 @@
      what I did". It has now failed three times — width, colour, movement — and each time the
      answer arrived from a zero that looked like a pass. A zero from this tool means nothing
      until the property that carries the change is in the list. */
+  /* ⚠⚠⚠ AND THE FIFTH INSTANCE IS NOT A PROPERTY — IT IS A WHOLE DIMENSION (2026-10-12).
+     The four above were one property each: width, colour, movement, and the second border
+     half. This one is every question about SIZE. The set was seven properties and all seven
+     are paint, so `paintDiff` was structurally unable to see a box change size, and its zero
+     was being read as "nothing moved" by passes that had moved things on purpose.
+     ⚠️ CAUGHT ON A LAYOUT PASS THAT IT CALLED CLEAN: `licenses` came back **0 changed** at
+     every width on a run where the licence card's label zone went 66 → 50.6 and the filter rail
+     moved 32px. Not one of those numbers is in the list above, so not one of them could appear.
+     ⚠⚠ `box-width` / `box-height` ARE READ FROM THE RECT, NOT FROM `getComputedStyle`, and the
+     distinction is load-bearing here: `paintRows` deliberately walks hidden elements too (see
+     its own note), and computed `width` on a `display:none` box is the useless string `auto`,
+     while a rect is a stable `0`. They are named `box-*` so nothing mistakes them for the CSS
+     properties of the same name.
+     ⚠️ POSITION IS STILL THE OTHER SIDE'S JOB. `collect()` + `diff()` + `rowDiff()` answer
+     "did it move"; this answers "did it change size". A pass about layout runs both — which is
+     now stated in `paintDiff`'s own result rather than left to be remembered. */
   var PAINT_PROPS = ['background-color', 'background-image', 'color', 'box-shadow',
-                     'border-color', 'border-width', 'transform'];
+                     'border-color', 'border-width', 'transform',
+                     'box-width', 'box-height'];
+  /* the two that come off the rect rather than off the cascade */
+  var RECT_PROPS = { 'box-width': 'width', 'box-height': 'height' };
 
   /* ⚠️ HIDDEN ELEMENTS ARE INCLUDED HERE, unlike collect(). Half of this axis lives on
      surfaces that are display:none until something opens them — scrims, sheets, menus,
@@ -368,8 +477,12 @@
       var el = all[i];
       if (el.closest('.statebar')) continue;        // the instrument, not the product
       if (el.closest('.meshbg, .lmesh')) continue;  // never still; see rule 7
-      var cs = doc.defaultView.getComputedStyle(el), v = [];
-      for (var j = 0; j < props.length; j++) v.push(cs.getPropertyValue(props[j]));
+      var cs = doc.defaultView.getComputedStyle(el), v = [], r = null;
+      for (var j = 0; j < props.length; j++) {
+        var rp = RECT_PROPS[props[j]];
+        if (rp) { r = r || el.getBoundingClientRect(); v.push(r[rp].toFixed(2)); }
+        else v.push(cs.getPropertyValue(props[j]));
+      }
       rows.push(path(el) + '|' + v.join('|'));
     }
     return rows;
@@ -418,6 +531,8 @@
           try {
             var bar = d.querySelector('.statebar'); if (bar) bar.remove();
             d.body.classList.remove('has-statebar');
+            var wid = fitWidth(f, w, width);
+            if (wid.error) { finish({ url: url, w: width, inner: wid.inner, error: wid.error }); return; }
             var p = opts.open ? OPENERS[opts.open](d, w) : Promise.resolve();
             Promise.resolve(p).then(function () {
               setTimeout(function () {
@@ -434,6 +549,7 @@
                   return;
                 }
                 var out = { url: url, w: width, surface: opts.open || 'page',
+                            inner: w.innerWidth,
                             props: props, rows: paintRows(d, props),
                             classes: classesIn(d),
                             /* ⚠️ THE IGNORE LIST IS RECORDED WITH THE ROWS because `path()`
@@ -473,6 +589,18 @@
   /* changed / lost / gained, element by element, property by property */
   function paintDiff(before, after) {
     var props = after.props || PAINT_PROPS;
+    /* ⚠⚠ A CELL THAT RENDERED AT ANOTHER WIDTH IS NOT THE CELL IT IS NAMED AFTER (2026-10-12).
+       `fitWidth` already refuses at paint time; this catches a pair stitched together from
+       runs taken before it existed, or from two different frames. */
+    var wrong = [];
+    if (before.inner != null && before.inner !== before.w) wrong.push('before ' + before.w + '→' + before.inner);
+    if (after.inner != null && after.inner !== after.w) wrong.push('after ' + after.w + '→' + after.inner);
+    if (wrong.length) {
+      return { url: after.url, w: after.w, surface: after.surface,
+               error: 'width mismatch: ' + wrong.join(', ') + ' — the cell measured a width it is not named after',
+               elements: after.n, compared: 0, unpaired: 0, unpairedBefore: 0,
+               changed: [], lost: [], gained: [], counts: { changed: 0, lost: 0, gained: 0 } };
+    }
     /* ⚠️⚠️ RULE 9, ENFORCED RATHER THAN DOCUMENTED. A class that exists in `after` and not in
        `before` changes the key of every element carrying it, so those elements never pair and
        their changes never appear. The remedy was already here — `ignoreClasses` — and the
@@ -542,11 +670,16 @@
        a pass that only DELETES elements reported zero unpaired and read as a clean run. */
     var onlyBefore = 0;
     for (var k in B) if (!seen[k]) onlyBefore++;
+    /* ⚠⚠ `covers` IS PART OF THE ANSWER, NOT A LABEL (2026-10-12). Four times this set has
+       been read as "nothing moved" when it could not see the thing that moved; the fifth was a
+       whole dimension. The result now carries the sentence a reader needs to hear beside a
+       zero, so a paint-only run cannot be quoted as a layout result. */
     return { url: after.url, w: after.w, surface: after.surface,
              error: after.error || before.error || null,
              elements: after.n, compared: compared,
              unpaired: onlyAfter, unpairedBefore: onlyBefore,
              changed: changed, lost: lost, gained: gained,
+             covers: 'paint + box size; NOT position — run page()/diff() for where things are',
              counts: { changed: changed.length, lost: lost.length, gained: gained.length } };
   }
 
