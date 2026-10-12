@@ -53,6 +53,17 @@ CAT = {
   '946a5df5c1': 'D',  # three Ubuntu metrics sit as literals in the count chip's calc()
   '867b99b4b9': 'B',  # .5px is unverified on a 1x display, and 255 buttons stand on it
   '98499909f7': 'B',  # the chip label wrapper reaches a chip with no count, where it does nothing
+  # ---- 2026-10-12, dissolving the Components tab ----
+  '566a391cca': 'A',  # the AA thresholds left the page with the colour text — keep or not
+  'e17fe589b0': 'D',  # the type-scale exceptions block has no owner since the text swap
+  # ---- 2026-10-12, the three small fixes ----
+  '5460b3c9b2': 'D',  # 20 --hover + 5 --sel readers outside the button: recorded, not moved
+  '2f1e5ef42e': 'D',  # --chromeLine has one live reader, .bnav — what draws that line is a decision
+  # ---- 2026-10-12, the greys census and the radii page ----
+  '793a4d2e2d': 'C',  # the greys block shows a primitive and hides the two meanings that read it
+  'f4bb20f83d': 'D',  # --chrome has no live reader; --chromeLine has one. Deleting a value is a decision
+  '97583fd76e': 'D',  # the warm greys are not dead: --hover x21 live, --sel x6, inside button and chip
+  '230fbb9b47': 'B',  # --radius-control is read by surfaces, not controls — the name invites the bug
   # ---- 2026-10-12, the attention-chip reveal ----
   '969b194344': 'B',  # the pressed chip grows after the rail scrolled; 0.1px of slack left
   # ---- 2026-10-12, the styleguide strip ----
@@ -482,6 +493,8 @@ print(collections.Counter(e['cat'] for e in entries), file=sys.stderr)
 # product, its prices, its copy and two legal points; none of them is a design question
 # this document can settle, and none was attempted. Naming who answers is the whole job.
 OWNER = {
+  # ---- 2026-10-12, dissolving the Components tab ----
+  '566a391cca': 'design',   # whether the page states its own AA floor is a design-system call
   # ---- 2026-10-12, the styleguide strip ----
   '7035db87d2': 'copy',     # the TBMQ baseline the removed block documented was never written
   '101981c26c': 'copy',     # 11 of 29 activity lines reach active voice; the rest need a ruling

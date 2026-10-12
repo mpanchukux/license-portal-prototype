@@ -1,6 +1,6 @@
 # Triage — the debt, read by who has to act on it
 
-**`NOTES.md` keeps 359 debt entries in one list, newest first. That list is a log: it
+**`NOTES.md` keeps 367 debt entries in one list, newest first. That list is a log: it
 is ordered by when something was found, which is the one order that helps nobody decide what
 to do.** This file is the same entries sorted by **who acts**.
 
@@ -21,14 +21,14 @@ find the entry quickly, not to refer to it from anywhere else.
 
 | | | n |
 |---|---|---:|
-| **A** | Blocked — needs an answer before anyone writes code | 52 |
-| **B** | Build it — and do not copy this | 119 |
-| **C** | Prototype-local — a developer can ignore all of it | 77 |
-| **D** | Design-system decision — not a developer's call | 65 |
-| **E** | Closed | 46 |
-| | **total** | **359** |
+| **A** | Blocked — needs an answer before anyone writes code | 53 |
+| **B** | Build it — and do not copy this | 120 |
+| **C** | Prototype-local — a developer can ignore all of it | 78 |
+| **D** | Design-system decision — not a developer's call | 68 |
+| **E** | Closed | 48 |
+| | **total** | **367** |
 
-⚠️⚠️ **The honest headline: 52 entries block implementation and most of them are NOT design.**
+⚠️⚠️ **The honest headline: 53 entries block implementation and most of them are NOT design.**
 They are unconfirmed prices, `inferred` version numbers, copy waiting for approval and 2
 legal questions. **The redesign is further along than the facts it is drawn on.**
 
@@ -40,38 +40,38 @@ the move is the finding** — not a second opinion about the same thing.
 
 | # | entry | dev | designer | why it moves |
 |---:|---|:---:|:---:|---|
-| 67 | `ti-repeat` ×11 — `aria-hidden`, АЛЕ НЕСЕ ФАКТ ПРО АВТОПЛАТІЖ (2026-10-07). | B | **D** | a glyph marked decorative that sighted readers use as data is a question about what the mark should say, not about its colour |
-| 68 | `.link` ×27 — ЄДИНИЙ МАРШРУТ ДО PRIVACY, TERMS І ЛІЦЕНЗІЙНОЇ УГОДИ (2026-10-07). | B | **D** | whether a link needs a cue beyond being a link is a design decision; the developer just needs to know it has none |
-| 78 | КОНТРАСТ: ЧИСЛА ЗАМІРЯНІ, РІШЕННЯ НЕ УХВАЛЕНЕ (2026-10-07). | D | **A** | an undecided accessibility floor blocks handoff — for a developer it is not a preference to wait on |
-| 80 | ОБХІД ПРЕДКІВ БРЕШЕ ПРО КОНТРАСТ НАД МЕШЕМ — ЦЕ ПОСТІЙНА ВЛАСТИВІСТЬ | C | **D** | a contrast checker that reads the wrong ground will certify the gradient as passing — the designer owns the surface it lies about |
-| 86 | `.sg-item` не обрізає свій `.tablescroll` на телефоні (2026-10-07). | C | **D** | a specimen box that overflows its own border on a phone is the design system failing to show itself |
-| 92 | Чіп має три висоти — 26 / 32 / 40 (2026-10-07). | D | **A** | three chip heights is a visible change nobody has decided — a developer needs the number |
-| 94 | Фонова межа телефона написана двічі (2026-10-07). | D | **B** | one boundary written twice is a developer trap: two sources, one of them silently wrong |
-| 102 | `Landing › Gradient` — ЄДИНЕ ВІДКРИТЕ ПОРІВНЯННЯ ДИЗАЙНУ (2026-10-07). | C | **A** | the last open design comparison — nothing can be handed over with three competing backgrounds |
-| 106 | `320` У `shared.js:2085` НЕ МАЄ ЧИМ СТАТИ (2026-10-07). | D | **B** | a z-index with no layer to become is a developer decision at implementation time |
-| 110 | ТОПБАР МАЄ ВЛАСНУ РОДИНУ КОНТРОЛІВ ПОЗА КОМПОНЕНТОМ КНОПКИ — ПИТАННЯ ДО ФАЗИ | B | **D** | the topbar's own control family is a component question before it is a fix |
-| 141 | `mockInvoiceUrl` — ДРУГА СИСТЕМА ТИПОГРАФІКИ (2026-10-02). | D | **A** | a second type system in a generated document is a system question, not a page bug |
-| 150 | ДВАНАДЦЯТЬ НЕЗАКРИТИХ ПОРІВНЯНЬ У СМУЗІ (аудит 2026-10-01). | C | **A** | twelve unclosed comparisons are twelve undecided designs, not prototype plumbing |
-| 161 | Варіант 3 має ВЛАСНІ стопи й розмір (2026-10-01). | C | **D** | variant 3 carries its own stops: that is a design fact, now the shipped one |
-| 171 | `licPlan: side` падає в `stacked` на ≤600 (2026-10-01). | D | **B** | side falling back to stacked at <=600 is the missing mobile treatment, which a developer must build |
-| 191 | ЗЕЛЕНИЙ СТАТУС У ШАПЦІ ЛІЦЕНЗІЇ — 4.24:1 (заміряно 2026-09-30, пас 15). | B | **A** | 4.24:1 is a token value, not a page bug — the green has to change, which changes every surface |
-| 193 | ПАНЕЛЬ ЛІЦЕНЗІЇ БІЛЬШЕ НЕ КАЖЕ НІЧОГО ПРО ТЕ, ЩО РОБИТИ З КЛЮЧЕМ, І БІЛЬШЕ НЕ | D | **A** | the panel no longer says what to do with the key: copy that has to exist before build |
-| 200 | Специмена тулбара C у стайлгайді немає (2026-09-30). | C | **D** | a missing specimen is missing documentation of a shipped decision |
-| 201 | НА ТЕЛЕФОНІ НЕМА ЖОДНОЇ ПОВЕРХНІ НАЛАШТУВАНЬ (2026-09-30, наслідок вибору). | C | **D** | no settings surface on the phone is a consequence of a layout choice |
-| 206 | ЧЕРВОНА МАРКА НА INK — 3.35:1 (заміряно 2026-09-30, пас 13). | B | **A** | 3.35:1 on ink: same, and it is the one place colour carries tone alone |
-| 207 | В INK-ФОРМІ НА ПАНЕЛІ ЛІЦЕНЗІЇ ТОН НЕСЕ ТІЛЬКИ КОЛІР (2026-09-30, пас 13). | B | **A** | tone carried by colour alone breaks the rule the system states about itself |
-| 208 | Специмени банерів у стайлгайді написані літеральними `tone-*` і не слухають | C | **D** | specimens written as literals document a scale the product no longer has |
-| 211 | СТАТУС НА КАРТЦІ ІНВОЙСА: РЕФЕРЕНС ПРОСИТЬ ПІЛЮЛЮ, СТОЇТЬ КОМПОНЕНТ (2026-09-30). | B | **D** | reference asks for a pill, the component is there: which one wins is a design call |
-| 215 | ЛІД БАНЕРА ПАНЕЛІ НЕ ПРОХОДИТЬ AA: 4.48:1 (заміряно 2026-09-30). | B | **A** | 4.48:1 on the panel lead — a type/colour pairing decision before it is a fix |
-| 216 | ТЕМНОЇ ТЕМИ НЕМАЄ, І ЦЕ ТЕПЕР НАЗВАНО (2026-09-30). | D | **A** | no dark theme at all: for a developer a non-requirement, for a designer an unanswered half of the system |
-| 239 | Заголовок секції карткової розкладки — 20px, референс просить 24. | B | **D** | 20px against a reference asking ~24 is a scale decision, not a defect |
-| 258 | `.plantable` — обрамлена таблиця на 69% ширини секції (записано 2026-09-27). | B | **D** | a framed table at 69% of the section is a layout decision that was never taken |
-| 266 | `.infoic` чекає на власний компонент. | B | **D** | the info icon is waiting for a component, which is this phase's work |
-| 267 | 22 `<button class="link">` поза кнопкою — текст усередині речень. | B | **D** | 22 button.link outside the component is the boundary of the button model |
-| 272 | Варіант B на телефоні не стилізований — свідомо, показаний «як є» на прохання. | C | **D** | an unstyled variant cannot be compared, so the comparison cannot close |
-| 277 | КОНТРАСТ: чотири рядки нижче AA, усі `--mid` `#6b6b6b` 14px, усі лише В СПОКОЇ. | B | **A** | four lines below AA, all --mid at 14px: one token, every surface |
-| 282 | Десять брейкпоінтів, а ноутси кажуть «один ≤600px»: 600, 601, 640, 700, 760, 820, | B | **A** | ten breakpoints against a documented one: the developer builds from whichever list is true |
-| 332 | Колонкові заголовки на Home просили «зменшити, але ≥14px» — а 14px і є поточне | B | **D** | 'smaller but >=14px' is the floor the scale already sets |
+| 75 | `ti-repeat` ×11 — `aria-hidden`, АЛЕ НЕСЕ ФАКТ ПРО АВТОПЛАТІЖ (2026-10-07). | B | **D** | a glyph marked decorative that sighted readers use as data is a question about what the mark should say, not about its colour |
+| 76 | `.link` ×27 — ЄДИНИЙ МАРШРУТ ДО PRIVACY, TERMS І ЛІЦЕНЗІЙНОЇ УГОДИ (2026-10-07). | B | **D** | whether a link needs a cue beyond being a link is a design decision; the developer just needs to know it has none |
+| 86 | КОНТРАСТ: ЧИСЛА ЗАМІРЯНІ, РІШЕННЯ НЕ УХВАЛЕНЕ (2026-10-07). | D | **A** | an undecided accessibility floor blocks handoff — for a developer it is not a preference to wait on |
+| 88 | ОБХІД ПРЕДКІВ БРЕШЕ ПРО КОНТРАСТ НАД МЕШЕМ — ЦЕ ПОСТІЙНА ВЛАСТИВІСТЬ | C | **D** | a contrast checker that reads the wrong ground will certify the gradient as passing — the designer owns the surface it lies about |
+| 94 | `.sg-item` не обрізає свій `.tablescroll` на телефоні (2026-10-07). | C | **D** | a specimen box that overflows its own border on a phone is the design system failing to show itself |
+| 100 | Чіп має три висоти — 26 / 32 / 40 (2026-10-07). | D | **A** | three chip heights is a visible change nobody has decided — a developer needs the number |
+| 102 | Фонова межа телефона написана двічі (2026-10-07). | D | **B** | one boundary written twice is a developer trap: two sources, one of them silently wrong |
+| 110 | `Landing › Gradient` — ЄДИНЕ ВІДКРИТЕ ПОРІВНЯННЯ ДИЗАЙНУ (2026-10-07). | C | **A** | the last open design comparison — nothing can be handed over with three competing backgrounds |
+| 114 | `320` У `shared.js:2085` НЕ МАЄ ЧИМ СТАТИ (2026-10-07). | D | **B** | a z-index with no layer to become is a developer decision at implementation time |
+| 118 | ТОПБАР МАЄ ВЛАСНУ РОДИНУ КОНТРОЛІВ ПОЗА КОМПОНЕНТОМ КНОПКИ — ПИТАННЯ ДО ФАЗИ | B | **D** | the topbar's own control family is a component question before it is a fix |
+| 149 | `mockInvoiceUrl` — ДРУГА СИСТЕМА ТИПОГРАФІКИ (2026-10-02). | D | **A** | a second type system in a generated document is a system question, not a page bug |
+| 158 | ДВАНАДЦЯТЬ НЕЗАКРИТИХ ПОРІВНЯНЬ У СМУЗІ (аудит 2026-10-01). | C | **A** | twelve unclosed comparisons are twelve undecided designs, not prototype plumbing |
+| 169 | Варіант 3 має ВЛАСНІ стопи й розмір (2026-10-01). | C | **D** | variant 3 carries its own stops: that is a design fact, now the shipped one |
+| 179 | `licPlan: side` падає в `stacked` на ≤600 (2026-10-01). | D | **B** | side falling back to stacked at <=600 is the missing mobile treatment, which a developer must build |
+| 199 | ЗЕЛЕНИЙ СТАТУС У ШАПЦІ ЛІЦЕНЗІЇ — 4.24:1 (заміряно 2026-09-30, пас 15). | B | **A** | 4.24:1 is a token value, not a page bug — the green has to change, which changes every surface |
+| 201 | ПАНЕЛЬ ЛІЦЕНЗІЇ БІЛЬШЕ НЕ КАЖЕ НІЧОГО ПРО ТЕ, ЩО РОБИТИ З КЛЮЧЕМ, І БІЛЬШЕ НЕ | D | **A** | the panel no longer says what to do with the key: copy that has to exist before build |
+| 208 | Специмена тулбара C у стайлгайді немає (2026-09-30). | C | **D** | a missing specimen is missing documentation of a shipped decision |
+| 209 | НА ТЕЛЕФОНІ НЕМА ЖОДНОЇ ПОВЕРХНІ НАЛАШТУВАНЬ (2026-09-30, наслідок вибору). | C | **D** | no settings surface on the phone is a consequence of a layout choice |
+| 214 | ЧЕРВОНА МАРКА НА INK — 3.35:1 (заміряно 2026-09-30, пас 13). | B | **A** | 3.35:1 on ink: same, and it is the one place colour carries tone alone |
+| 215 | В INK-ФОРМІ НА ПАНЕЛІ ЛІЦЕНЗІЇ ТОН НЕСЕ ТІЛЬКИ КОЛІР (2026-09-30, пас 13). | B | **A** | tone carried by colour alone breaks the rule the system states about itself |
+| 216 | Специмени банерів у стайлгайді написані літеральними `tone-*` і не слухають | C | **D** | specimens written as literals document a scale the product no longer has |
+| 219 | СТАТУС НА КАРТЦІ ІНВОЙСА: РЕФЕРЕНС ПРОСИТЬ ПІЛЮЛЮ, СТОЇТЬ КОМПОНЕНТ (2026-09-30). | B | **D** | reference asks for a pill, the component is there: which one wins is a design call |
+| 223 | ЛІД БАНЕРА ПАНЕЛІ НЕ ПРОХОДИТЬ AA: 4.48:1 (заміряно 2026-09-30). | B | **A** | 4.48:1 on the panel lead — a type/colour pairing decision before it is a fix |
+| 224 | ТЕМНОЇ ТЕМИ НЕМАЄ, І ЦЕ ТЕПЕР НАЗВАНО (2026-09-30). | D | **A** | no dark theme at all: for a developer a non-requirement, for a designer an unanswered half of the system |
+| 247 | Заголовок секції карткової розкладки — 20px, референс просить 24. | B | **D** | 20px against a reference asking ~24 is a scale decision, not a defect |
+| 266 | `.plantable` — обрамлена таблиця на 69% ширини секції (записано 2026-09-27). | B | **D** | a framed table at 69% of the section is a layout decision that was never taken |
+| 274 | `.infoic` чекає на власний компонент. | B | **D** | the info icon is waiting for a component, which is this phase's work |
+| 275 | 22 `<button class="link">` поза кнопкою — текст усередині речень. | B | **D** | 22 button.link outside the component is the boundary of the button model |
+| 280 | Варіант B на телефоні не стилізований — свідомо, показаний «як є» на прохання. | C | **D** | an unstyled variant cannot be compared, so the comparison cannot close |
+| 285 | КОНТРАСТ: чотири рядки нижче AA, усі `--mid` `#6b6b6b` 14px, усі лише В СПОКОЇ. | B | **A** | four lines below AA, all --mid at 14px: one token, every surface |
+| 290 | Десять брейкпоінтів, а ноутси кажуть «один ≤600px»: 600, 601, 640, 700, 760, 820, | B | **A** | ten breakpoints against a documented one: the developer builds from whichever list is true |
+| 340 | Колонкові заголовки на Home просили «зменшити, але ≥14px» — а 14px і є поточне | B | **D** | 'smaller but >=14px' is the floor the scale already sets |
 
 **The shape of it, in one line each:**
 
@@ -108,63 +108,64 @@ attempted here.
 | **copy** | 14 | a sentence waiting for approval, or missing entirely |
 | **engineering** | 11 | a data or release fact the prototype guessed |
 | **pricing** | 6 | a number nobody has confirmed in writing |
-| **design** | 3 | a team decision, twice deferred |
+| **design** | 4 | a team decision, twice deferred |
 | **legal** | 2 | questions that are not ours to answer |
 
 | # | owner | entry | |
 |---:|---|---|---|
-| 4 | copy | `PLANS_INCLUDE_NOTE` І `PE_FEATURES` ЛИШИЛИСЬ БЕЗ ЖОДНОГО ВКАЗІВНИКА (2026-10-12). |  |
-| 5 | copy | КОПІЯ АКТИВНОСТІ НЕ ВИКОНУЄ ВЛАСНОГО ПРАВИЛА ГОЛОСУ, І ЦЕ ЄДИНИЙ ЗАПИС ПРО ТОЙ АУДИТ |  |
-| 21 | copy | ПЛЕЙСХОЛДЕР ІНВАЙТУ НЕ ВЛАЗИТЬ, І РОЗКЛАДКА ЦЬОГО НЕ ВИРІШУЄ (2026-10-09). |  |
-| 26 | copy | НА 375px КНОПКИ ACCOUNT І BILLING ВСЕ ОДНО ПЕРЕНОСЯТЬСЯ (2026-10-09). |  |
-| 227 | copy | ПРОДУКТ БІЛЬШЕ НІДЕ НЕ КАЖЕ, ЩО КЛЮЧ ВВОДИТЬСЯ В ThingsBoard АБО TBMQ |  |
-| 271 | copy | ФАКТ ПРО 12 МІСЯЦІВ ОНОВЛЕНЬ НЕ СКАЗАНИЙ НІДЕ НА ПРОДАВАЛЬНІЙ ПОВЕРХНІ. |  |
-| 300 | copy | `TAX_NOTE` — копірайт очікує підтвердження команди. |  |
-| 302 | copy | Опису не мають: `assets`, `sessions`, `msg/sec`. |  |
-| 305 | copy | `WL_DESC` — `inferred` копірайт, чекає підтвердження. |  |
-| 312 | copy | «Вся ліцензія блокується» за перевищення ліміту інстансів — ПОПЕРЕДНЄ формулювання. |  |
-| 323 | copy | Формулювання маркера для заблокованої ліцензії. |  |
-| 324 | copy | Речення про датування терміну оновлень — відкритий конфлікт. |  |
-| 348 | copy | Голос активності виконаний не повністю (2026-09-24, девʼятий батч). |  |
-| 355 | copy | Чотири константи копірайту лишились у `data.js` без жодного читача. |  |
-| 22 | design | ЧОТИРИКОЛІРНОЇ «G» GOOGLE У ПРОДУКТІ НЕМАЄ (2026-10-09). |  |
-| 50 | design | ГАЛКИ КАРТОК ПЛАНІВ І ІКОНКИ CAPACITY/ADD-ONS: ПОВІДОМЛЕНІ ЯК ЗНИКЛІ, ЗАМІРОМ НА |  |
-| 317 | design | КОЛІР ПОМИЛКИ проти монохрому — рішення за командою, двічі відкладене. |  |
-| 298 | engineering | Auth-форми нічого не перевіряють (див. |  |
-| 303 | engineering | Адресний блок на Billing у новому акаунті показує чужу адресу — ВСЕ ЩЕ ВІДКРИТЕ. |  |
-| 307 | engineering | Пояснення про оновлення недосяжне на телефоні. |  |
-| 310 | engineering | ВІДКРИТЕ ПИТАННЯ, і 2026-09-22 воно стало конкретнішим: яку ВЕРСІЮ ThingsBoard |  |
-| 320 | engineering | `LATEST_VERSION = '3.9.4'` і версії інстансів — `inferred`. |  |
-| 326 | engineering | `Forgot password?` — стаб. |  |
-| 340 | engineering | Причини провалу перевірки — три, і це стеля даних. |  |
-| 341 | engineering | `CHECK_WINDOW_DAYS = 3` — `inferred`. |  |
-| 349 | engineering | Пʼять засіяних шейпів досі без живого писача (2026-09-24, інвентар активності): |  |
-| 350 | engineering | Два формати таймстемпа в сирці: `Aug 17 2026, 16:20` у data.js проти |  |
-| 351 | engineering | `PRODUCT_CHOICES[].ic` став фолбеком, який ніколи не спрацьовує. |  |
-| 311 | legal | ВІДКРИТЕ ПИТАННЯ (записано 2026-09-18, §12): ліцензійна угода в футері — загальна. |  |
-| 325 | legal | Чи потрібна юридична згода в Change plan / Manage add-ons. |  |
-| 296 | pricing | «From $X / mo» у прототипі НЕМАЄ. |  |
-| 314 | pricing | `UPDATES_RENEW_RATE = 0.40` не підтверджений документом — теж усна цифра. |  |
-| 315 | pricing | Ціни на «вільні» девайси перпетуала немає. |  |
-| 319 | pricing | `COUPON_RATE = 0.20` і саме правило купона — стаб. |  |
-| 334 | pricing | Докупка AI на перпетуалі: разова ціна за місячну квоту. |  |
-| 335 | pricing | NL-флоу — inferred ціни: perp-юніти (TB prod $1,999 / AI $500 / TBMQ prod $999) |  |
-| 238 | product | ЛІЧИЛЬНИК RECENT ACTIVITY — ВІДКРИТЕ РІШЕННЯ (2026-09-29). |  |
-| 283 | product | У TBMQ немає плану «Business». |  |
-| 284 | product | «Updates period over» на Home не показується і з теперішньою пʼятіркою не може: |  |
-| 285 | product | Free-рядок показує «—» у колонці стану. |  |
-| 294 | product | ВІДКРИТЕ РІШЕННЯ: що робити з ліцензіями на Maker / Prototype в датасеті. |  |
-| 295 | product | Change plan на legacy-плані не має якоря. |  |
-| 301 | product | Блок `Included in every plan` для TBMQ ЗНЯТО 2026-09-22, не заповнено. |  |
-| 306 | product | `Enabled` для White labeling сьогодні недосяжний з даних. |  |
-| 308 | product | Info-іконка покриває два рядки з шести. |  |
-| 330 | product | `Renew subscription` на скасованій — secondary, хоч це єдина дія зони 4. |  |
-| 331 | product | Сортування колонок — тепер ЄДИНИЙ контрол, який видимо реагує й нічого не |  |
-| 339 | product | ВІДКРИТЕ: чи показує Home перевірки інстансів. |  |
-| 347 | product | Заголовок групи на Change plan. |  |
-| 352 | product | ВІДКРИТЕ (2026-09-24, сьомий батч): `Renew software updates` не їде на шеллі |  |
-| 353 | product | ВІДКРИТЕ (2026-09-24, восьма правка): лічильник банера і список, куди він веде, |  |
-| 354 | product | Дві перпетуальні картки описані по-різному (2026-09-24, шоста правка). |  |
+| 12 | copy | `PLANS_INCLUDE_NOTE` І `PE_FEATURES` ЛИШИЛИСЬ БЕЗ ЖОДНОГО ВКАЗІВНИКА (2026-10-12). |  |
+| 13 | copy | КОПІЯ АКТИВНОСТІ НЕ ВИКОНУЄ ВЛАСНОГО ПРАВИЛА ГОЛОСУ, І ЦЕ ЄДИНИЙ ЗАПИС ПРО ТОЙ АУДИТ |  |
+| 29 | copy | ПЛЕЙСХОЛДЕР ІНВАЙТУ НЕ ВЛАЗИТЬ, І РОЗКЛАДКА ЦЬОГО НЕ ВИРІШУЄ (2026-10-09). |  |
+| 34 | copy | НА 375px КНОПКИ ACCOUNT І BILLING ВСЕ ОДНО ПЕРЕНОСЯТЬСЯ (2026-10-09). |  |
+| 235 | copy | ПРОДУКТ БІЛЬШЕ НІДЕ НЕ КАЖЕ, ЩО КЛЮЧ ВВОДИТЬСЯ В ThingsBoard АБО TBMQ |  |
+| 279 | copy | ФАКТ ПРО 12 МІСЯЦІВ ОНОВЛЕНЬ НЕ СКАЗАНИЙ НІДЕ НА ПРОДАВАЛЬНІЙ ПОВЕРХНІ. |  |
+| 308 | copy | `TAX_NOTE` — копірайт очікує підтвердження команди. |  |
+| 310 | copy | Опису не мають: `assets`, `sessions`, `msg/sec`. |  |
+| 313 | copy | `WL_DESC` — `inferred` копірайт, чекає підтвердження. |  |
+| 320 | copy | «Вся ліцензія блокується» за перевищення ліміту інстансів — ПОПЕРЕДНЄ формулювання. |  |
+| 331 | copy | Формулювання маркера для заблокованої ліцензії. |  |
+| 332 | copy | Речення про датування терміну оновлень — відкритий конфлікт. |  |
+| 356 | copy | Голос активності виконаний не повністю (2026-09-24, девʼятий батч). |  |
+| 363 | copy | Чотири константи копірайту лишились у `data.js` без жодного читача. |  |
+| 1 | design | ЗАМІНА ТЕКСТУ КОЛЬОРУ ЗНЯЛА ЗІ СТОРІНКИ ДВА ПОРОГИ, ЯКІ САМІ Ж ПРОСИЛИ ПОВЕРНУТИ |  |
+| 30 | design | ЧОТИРИКОЛІРНОЇ «G» GOOGLE У ПРОДУКТІ НЕМАЄ (2026-10-09). |  |
+| 58 | design | ГАЛКИ КАРТОК ПЛАНІВ І ІКОНКИ CAPACITY/ADD-ONS: ПОВІДОМЛЕНІ ЯК ЗНИКЛІ, ЗАМІРОМ НА |  |
+| 325 | design | КОЛІР ПОМИЛКИ проти монохрому — рішення за командою, двічі відкладене. |  |
+| 306 | engineering | Auth-форми нічого не перевіряють (див. |  |
+| 311 | engineering | Адресний блок на Billing у новому акаунті показує чужу адресу — ВСЕ ЩЕ ВІДКРИТЕ. |  |
+| 315 | engineering | Пояснення про оновлення недосяжне на телефоні. |  |
+| 318 | engineering | ВІДКРИТЕ ПИТАННЯ, і 2026-09-22 воно стало конкретнішим: яку ВЕРСІЮ ThingsBoard |  |
+| 328 | engineering | `LATEST_VERSION = '3.9.4'` і версії інстансів — `inferred`. |  |
+| 334 | engineering | `Forgot password?` — стаб. |  |
+| 348 | engineering | Причини провалу перевірки — три, і це стеля даних. |  |
+| 349 | engineering | `CHECK_WINDOW_DAYS = 3` — `inferred`. |  |
+| 357 | engineering | Пʼять засіяних шейпів досі без живого писача (2026-09-24, інвентар активності): |  |
+| 358 | engineering | Два формати таймстемпа в сирці: `Aug 17 2026, 16:20` у data.js проти |  |
+| 359 | engineering | `PRODUCT_CHOICES[].ic` став фолбеком, який ніколи не спрацьовує. |  |
+| 319 | legal | ВІДКРИТЕ ПИТАННЯ (записано 2026-09-18, §12): ліцензійна угода в футері — загальна. |  |
+| 333 | legal | Чи потрібна юридична згода в Change plan / Manage add-ons. |  |
+| 304 | pricing | «From $X / mo» у прототипі НЕМАЄ. |  |
+| 322 | pricing | `UPDATES_RENEW_RATE = 0.40` не підтверджений документом — теж усна цифра. |  |
+| 323 | pricing | Ціни на «вільні» девайси перпетуала немає. |  |
+| 327 | pricing | `COUPON_RATE = 0.20` і саме правило купона — стаб. |  |
+| 342 | pricing | Докупка AI на перпетуалі: разова ціна за місячну квоту. |  |
+| 343 | pricing | NL-флоу — inferred ціни: perp-юніти (TB prod $1,999 / AI $500 / TBMQ prod $999) |  |
+| 246 | product | ЛІЧИЛЬНИК RECENT ACTIVITY — ВІДКРИТЕ РІШЕННЯ (2026-09-29). |  |
+| 291 | product | У TBMQ немає плану «Business». |  |
+| 292 | product | «Updates period over» на Home не показується і з теперішньою пʼятіркою не може: |  |
+| 293 | product | Free-рядок показує «—» у колонці стану. |  |
+| 302 | product | ВІДКРИТЕ РІШЕННЯ: що робити з ліцензіями на Maker / Prototype в датасеті. |  |
+| 303 | product | Change plan на legacy-плані не має якоря. |  |
+| 309 | product | Блок `Included in every plan` для TBMQ ЗНЯТО 2026-09-22, не заповнено. |  |
+| 314 | product | `Enabled` для White labeling сьогодні недосяжний з даних. |  |
+| 316 | product | Info-іконка покриває два рядки з шести. |  |
+| 338 | product | `Renew subscription` на скасованій — secondary, хоч це єдина дія зони 4. |  |
+| 339 | product | Сортування колонок — тепер ЄДИНИЙ контрол, який видимо реагує й нічого не |  |
+| 347 | product | ВІДКРИТЕ: чи показує Home перевірки інстансів. |  |
+| 355 | product | Заголовок групи на Change plan. |  |
+| 360 | product | ВІДКРИТЕ (2026-09-24, сьомий батч): `Renew software updates` не їде на шеллі |  |
+| 361 | product | ВІДКРИТЕ (2026-09-24, восьма правка): лічильник банера і список, куди він веде, |  |
+| 362 | product | Дві перпетуальні картки описані по-різному (2026-09-24, шоста правка). |  |
 
 ---
 
@@ -174,125 +175,126 @@ The surface is decided. These are defects measured in the prototype: overflow, c
 
 | # | entry | |
 |---:|---|---|
-| 1 | ЧІП `Needs attention` ЩЕ РОСТЕ, КОЛИ РЕЙКУ ВЖЕ ПРОГОРНУЛИ (2026-10-12). |  |
-| 10 | `.lic-typeseg` НА 320 ГОРТАЄТЬСЯ 29px ЗАМІСТЬ 13 (2026-10-12). |  |
-| 15 | `[hidden]` ПРОТИ `display` — СІМ ВИПАДКІВ, І ЖОДНОГО ЧЕКЕРА (2026-10-09). |  |
-| 23 | ТРИ РІЗНІ ЗАПИСИ ПРО ОДНУ Й ТУ САМУ ВАДУ СПЕЦИФІЧНОСТІ (2026-10-09). |  |
-| 30 | НЕПРОЗОРА ЗАЛИВКА ДИСКА ✕ — ТРЕТІЙ ВИПАДОК «ЗНАЧЕННЯ ПІД ОДИН ФОН», І ЄДИНИЙ |  |
-| 36 | `.5px` НЕ ПЕРЕВІРЕНА НА 1x ЕКРАНІ (2026-10-09). |  |
-| 37 | ОБГОРТКОВИЙ СПАН ЛЕЙБЛА ЧІПА ДІСТАВСЯ `+ Add label` (2026-10-09). |  |
-| 38 | `.perbtn` ЗНОВУ НЕСЕ НЕПРОЗОРУ СІРУ ЗАЛИВКУ, І ЦЕ СВІДОМО (2026-10-08). |  |
-| 42 | ВІДМОВИ `button()` ДЛЯ `menu` ЖИВУТЬ У ДВОХ МІСЦЯХ (`shared.js:230` і `:343`, |  |
-| 55 | `--accent-soft` — ПЕРШИЙ `color-mix` У ПРОДУКТОВОМУ ПРАВИЛІ (2026-10-08). |  |
-| 58 | `Sign in` У ПУБЛІЧНІЙ ШАПЦІ — СІРИЙ НА `--page-bg` (заміряно 2026-10-08). |  |
-| 67 | `ti-repeat` ×11 — `aria-hidden`, АЛЕ НЕСЕ ФАКТ ПРО АВТОПЛАТІЖ (2026-10-07). | → **D** for a designer |
-| 68 | `.link` ×27 — ЄДИНИЙ МАРШРУТ ДО PRIVACY, TERMS І ЛІЦЕНЗІЙНОЇ УГОДИ (2026-10-07). | → **D** for a designer |
-| 93 | `.pagetitlerow` губить підпис `Buy a license` на телефоні (2026-10-07). |  |
-| 104 | `?from` у посиланнях на ліцензію більше ніхто не читає (2026-10-07). |  |
-| 108 | ІКОНКИ-КНОПКИ ВИРОСЛИ ПО ВСЬОМУ ПРОДУКТУ, І ЗВІТ ПРО ПАС ЦЬОГО НЕ НАЗВАВ |  |
-| 110 | ТОПБАР МАЄ ВЛАСНУ РОДИНУ КОНТРОЛІВ ПОЗА КОМПОНЕНТОМ КНОПКИ — ПИТАННЯ ДО ФАЗИ | → **D** for a designer |
-| 113 | `.insttoolbar.stickybar` ОГОЛОШУЄ `z-index:12` НА `position:static` ЕЛЕМЕНТІ |  |
-| 114 | Візард парує `Billing email` з `Company name` у вужчій колонці (2026-10-06). |  |
-| 116 | СМУГА 601–952: ЦИФРИ ЗАМІРЯНІ 2026-10-06, ПОЧИНАТИ З НИХ, А НЕ З «ВОНО |  |
-| 117 | ОБГОРТКА, ЯКУ НІХТО НЕ МІРЯЄ, НЕ РОБИТЬ НІЧОГО (знайдено 2026-10-06). |  |
-| 118 | Recent invoices на Home: обгортка — СТОПГЕП, не лік (2026-10-06). |  |
-| 133 | ТАБЛИЦЯ ІНВОЙСІВ ЛАМАЄ НОМЕР І ДАТУ НАДВОЄ НА 944 (заміряно 2026-10-01). |  |
-| 134 | Переповнення топбара на `index` стало на 5px гіршим (заміряно 2026-10-01). |  |
-| 143 | Чіпи add-on'ів переносять текст на вузькому десктопі (2026-10-02). |  |
-| 144 | Кнопка Copy у рядку ключа переноситься на другий рядок — на 0.7px (заміряно |  |
-| 145 | `.licc-label` оголошує `white-space:nowrap`, а діє `normal` (заміряно 2026-10-02). |  |
-| 146 | Пошук в Activity не бачить подій, яких немає в завантаженій сторінці (2026-10-02). |  |
-| 153 | Засіяна подія `license.labeled` у вже збереженому сторі не має деталі (2026-10-01). |  |
-| 158 | ТОПБАР ПЕРЕПОВНЮЄ ВІКНО ВІД 601 ДО 1150px (заміряно 2026-10-01). |  |
-| 162 | ДУБЛЬОВАНИЙ `id` — КЛАС ВАДИ, ЯКИЙ НІЩО НЕ СТЕРЕГЛО ДО 2026-10-01. |  |
-| 163 | `sgWizStep` дублюється у `styleguide.html`. |  |
-| 164 | Тінь табів панелі ліцензії полагоджена, але не побачена в дії (2026-10-01). |  |
-| 165 | Під баром тепер і волосина, і тінь (2026-10-01). |  |
-| 166 | ЧОТИРИ LIST-ТУЛБАРИ СТАЛИ ДВОМА ПОВЕДІНКАМИ ПОШУКУ (2026-10-01). |  |
-| 168 | Обидва тригери C у спокої читаються `All 17` (2026-10-01). |  |
-| 169 | `Show N licenses` і пейджер рахують різне (2026-10-01). |  |
-| 170 | ПАНЕЛЬ ЛІЦЕНЗІЇ ШИРША ЗА ТЕЛЕФОН НА 51px (заміряно 2026-10-01). |  |
-| 172 | ПʼЯТИЙ ВИПАДОК «ПРАВИЛО ПЕРЕМАГАЄ ПОЗИЦІЄЮ» (2026-10-01, друга сесія). |  |
-| 173 | Рядок колонок не липне, поки таблиця скролиться вбік (2026-10-01). |  |
-| 174 | Лічильник у заголовку більше не ділить базову лінію з ним (2026-10-01). |  |
-| 175 | `.inst-hint` лишився з опт-аутом, якого нікому застосовувати (2026-10-01). |  |
-| 176 | Чіп Activity рахує згорнуті прогони за один (2026-10-01). |  |
-| 177 | ТОНОВАНИЙ ВИГЛЯД БАНЕРА І ВИГЛЯД `ink` ТЕПЕР РОЗРІЗНЯЮТЬ РІЗНУ КІЛЬКІСТЬ СТАНІВ |  |
-| 178 | `.fi-mark` виріс до 30px, а відступи фіда під нього не переглядались |  |
-| 179 | Мультиселект-рядок більше не `menuitemcheckbox` — це `<label>` з нативним |  |
-| 180 | `.fs-screen .am-celltop` ТЕПЕР ТРЕТІЙ ВИПАДОК ТОГО САМОГО ПЕРЕВИЩЕННЯ СКОУПУ |  |
-| 187 | `.fs-screen .infoic{24px}` ДОТЯГУЄТЬСЯ ДАЛІ, НІЖ ЙОГО НАМІР (знайдено 2026-10-01). |  |
-| 188 | Значення ключа сидить на 5.2px нижчій базовій лінії за три сусідні (2026-10-01). |  |
-| 189 | `secondary` на білому банері алерта — правило без сьогоднішнього читача |  |
-| 190 | Зона картки Home виросла на 5px (2026-10-01): дівайдер y93→y98, картка |  |
-| 191 | ЗЕЛЕНИЙ СТАТУС У ШАПЦІ ЛІЦЕНЗІЇ — 4.24:1 (заміряно 2026-09-30, пас 15). | → **A** for a designer |
-| 192 | ТРЕТІЙ РІД КОЛІЗІЇ ПРАВИЛ, І ЙОГО ВАРТО ШУКАТИ ГРЕПОМ (знайдено 2026-09-30). |  |
-| 194 | МОДАЛКА І СТОРІНКА ЛІЦЕНЗІЇ ТЕПЕР РОЗХОДЯТЬСЯ В ҐРУНТІ АЛЕРТА (2026-09-30). |  |
-| 195 | Прогрес у степері тихіший, ніж був (2026-09-30). |  |
-| 196 | `Payment` як заголовок картки Review — `inferred` копірайт (2026-09-30). |  |
-| 197 | Заголовки кроків Capacity/Add-ons і секційні лейбли розрізняються вже не кеглем |  |
-| 198 | Крапка-роздільник на картці ліцензії Home схована на ≤600 (2026-09-30). |  |
-| 199 | Чіп `Stale` зʼявився на телефоні, і його там ніхто не проєктував (2026-09-30). |  |
-| 202 | Три групи на Licenses дають рядок табів у три лінії (заміряно 2026-09-30). |  |
-| 206 | ЧЕРВОНА МАРКА НА INK — 3.35:1 (заміряно 2026-09-30, пас 13). | → **A** for a designer |
-| 207 | В INK-ФОРМІ НА ПАНЕЛІ ЛІЦЕНЗІЇ ТОН НЕСЕ ТІЛЬКИ КОЛІР (2026-09-30, пас 13). | → **A** for a designer |
-| 209 | Дві картки в ряд зупиняються на 900, і це моє судження, не число із запиту |  |
-| 210 | Скидання треку на першу картку після дисміса тепер помітніше (запис від того ж |  |
-| 211 | СТАТУС НА КАРТЦІ ІНВОЙСА: РЕФЕРЕНС ПРОСИТЬ ПІЛЮЛЮ, СТОЇТЬ КОМПОНЕНТ (2026-09-30). | → **D** for a designer |
-| 212 | Два дівайдери на картці інвойса розрізняються лише вставкою (2026-09-30). |  |
-| 213 | Роздільна розкладка банера не анімує перехід між картками (2026-09-30). |  |
-| 214 | Після дисміса картки трек стає на першу (2026-09-30). |  |
-| 215 | ЛІД БАНЕРА ПАНЕЛІ НЕ ПРОХОДИТЬ AA: 4.48:1 (заміряно 2026-09-30). | → **A** for a designer |
-| 217 | Марка банера розходиться між Home і панеллю (2026-09-30). |  |
-| 218 | РЕЙЛ КРОКІВ НЕ ЦЕНТРОВАНИЙ У СМУЗІ, І ЦЕ ВПИРАЄТЬСЯ В ЗАПИСАНЕ РІШЕННЯ |  |
-| 219 | ЧІПА КІЛЬКОСТІ НА `Invoices` І `Activity` НЕМАЄ ВЗАГАЛІ (2026-09-30). |  |
-| 220 | `#backBtn` у шапці ліцензії — мертва кнопка з голим гліфом `←` (знайдено |  |
-| 222 | На телефоні заголовок кроку налазить на ✕ у шапці візарда. |  |
-| 223 | У ТАБЛИЦІ Licenses ГЛІФ СТАТУСУ (16) І МАРКА ВЕРСІЇ (20) ДОСІ РІЗНОГО РОЗМІРУ |  |
-| 224 | Гліф статусу в панелі сидить на 1.7px нижче оптичного центру слова, марка версії — |  |
-| 225 | Продукт більше ніде не каже «no instance has checked in yet» банером (2026-09-30). |  |
-| 228 | `Next charge` у варіанті B зони дублює картку `Next charge` нижче. |  |
-| 230 | НА ТЕЛЕФОНІ ВЕСЬ БЛОК КЛЮЧА СТОЇТЬ НАД НАЗВОЮ ЛІЦЕНЗІЇ, І ВЕСЬ `order` |  |
-| 231 | На сторінці ліцензії жолоб back-кнопки лишився порожнім (2026-09-29). |  |
-| 232 | ВІЗАРД НЕ СКЛАДАЄТЬСЯ В ОДНУ КОЛОНКУ НА ТЕЛЕФОНІ — кроки Capacity і Add-ons |  |
-| 233 | Три рядки інвойсів у 600px рамці карткової розкладки (2026-09-29). |  |
-| 235 | `Full page` І `Shared link` ТЕПЕР РІЗНЯТЬСЯ ОДНІЄЮ РІЧЧЮ (2026-09-29). |  |
-| 237 | ПРАВИЛО, ЯКЕ ПРОГРАЄ, АЛЕ ЗБІГАЄТЬСЯ ЗНАЧЕННЯМ, — ЦЕ ТИХИЙ БОРГ. |  |
-| 239 | Заголовок секції карткової розкладки — 20px, референс просить 24. | → **D** for a designer |
-| 240 | `✎ Add label` (картка Home) проти `+ Add label` (деталі ліцензії) — два написання |  |
-| 241 | `aria-label` РЯДКА І КАРТКИ КАЖЕ `status: Active` ТАМ, ДЕ ВИДНО `Blocked`. |  |
-| 243 | Карткова розкладка не має телефонного чергування поверхонь. |  |
-| 246 | ТОПБАР ПЕРЕПОВНЮЄТЬСЯ МІЖ 600 І 1100px (заміряно 2026-09-29). |  |
-| 251 | Лічильники двох тулбарів Licenses рахують РІЗНЕ — A фасетно, B по акаунту. |  |
-| 253 | `.authscreen .fs-header` лишилась прозорою, коли решта шапок діалогів стала |  |
-| 255 | ЛИПКИЙ КОЛОНКОВИЙ РЯДОК НЕ ЛИПНЕ, КОЛИ ТАБЛИЦЯ ЇДЕ ВБІК (заміряно 2026-09-28). |  |
-| 258 | `.plantable` — обрамлена таблиця на 69% ширини секції (записано 2026-09-27). | → **D** for a designer |
-| 260 | Біла підкладка під заокругленим кутом голови таблиці (`thead th::before`) |  |
-| 261 | `[hidden]` ЛАМАЄТЬСЯ ЩОРАЗУ, КОЛИ КОМПОНЕНТ ДІСТАЄ `display` — І ЦЕ ВЖЕ |  |
-| 263 | `Instance renamed to {entity}` проти пункту меню `Edit label`. |  |
-| 265 | МЕРТВЕ ПРАВИЛО НЕ ІНЕРТНЕ, КОЛИ ЙОГО ІМʼЯ ОЧЕВИДНЕ (2026-09-29). |  |
-| 266 | `.infoic` чекає на власний компонент. | → **D** for a designer |
-| 267 | 22 `<button class="link">` поза кнопкою — текст усередині речень. | → **D** for a designer |
-| 274 | `--accent` задано, а не виведено. |  |
-| 275 | `assets/logo.svg` і `tools/build-logo.py` більше нічим не читаються — вордмарк |  |
-| 277 | КОНТРАСТ: чотири рядки нижче AA, усі `--mid` `#6b6b6b` 14px, усі лише В СПОКОЇ. | → **A** for a designer |
-| 278 | `--ic-30` і `--ic-44` НЕ ОГОЛОШЕНІ, і використовуються без фолбека (`.iconbutton`, |  |
-| 279 | `--t-h3-fs` теж не оголошений, але має фолбек `18px`, тож працює. |  |
-| 280 | `--pg-start` і `--pg-cols` пишуться щоразу і не читаються ніким: CSS перейшов на |  |
-| 281 | `--s-own` — колізія імені: 10px у `#nlStepPick`, 16px у `.setgrid`, різні селектори, |  |
-| 282 | Десять брейкпоінтів, а ноутси кажуть «один ≤600px»: 600, 601, 640, 700, 760, 820, | → **A** for a designer |
-| 286 | Альтернатива `--page-bg` не перевірена на екрані. |  |
-| 287 | `corner-shape:squircle` діє лише в Chrome 139+. |  |
-| 309 | Дублікати id, коли модалка деталей відкривається ПОВЕРХ сторінки деталей. |  |
-| 316 | ВІДКРИТЕ: Home — 2.93 екрана на телефоні (записано 2026-09-18, §14). |  |
-| 321 | Розкладка пʼяти планових карток на 390 — рішення за користувачкою. |  |
-| 322 | Крок Capacity на 390 — 1.47 екрана. |  |
-| 328 | `renderLicenseAlert` малює порожній банер, якщо забути `.amsg` — і взагалі |  |
-| 332 | Колонкові заголовки на Home просили «зменшити, але ≥14px» — а 14px і є поточне | → **D** for a designer |
-| 337 | Три варіанти степера в дизайн-системі ТЗ просило показати всі три; варіанти |  |
-| 344 | `Deactivate` ставить `i.active = false`, і ніщо це поле не читає у фільтрах. |  |
-| 356 | Назва перпетуала у візарді лягає в ТРИ рядки (2026-09-24, перший батч). |  |
-| 357 | `max-width:62ch` знято з підказки Instances (2026-09-24, восьма правка) — ТЗ просило |  |
+| 8 | `--radius-control` НАЗИВАЄ НЕ ТЕ, ЩО ЙОГО ЧИТАЄ (ценз 2026-10-12). |  |
+| 9 | ЧІП `Needs attention` ЩЕ РОСТЕ, КОЛИ РЕЙКУ ВЖЕ ПРОГОРНУЛИ (2026-10-12). |  |
+| 18 | `.lic-typeseg` НА 320 ГОРТАЄТЬСЯ 29px ЗАМІСТЬ 13 (2026-10-12). |  |
+| 23 | `[hidden]` ПРОТИ `display` — СІМ ВИПАДКІВ, І ЖОДНОГО ЧЕКЕРА (2026-10-09). |  |
+| 31 | ТРИ РІЗНІ ЗАПИСИ ПРО ОДНУ Й ТУ САМУ ВАДУ СПЕЦИФІЧНОСТІ (2026-10-09). |  |
+| 38 | НЕПРОЗОРА ЗАЛИВКА ДИСКА ✕ — ТРЕТІЙ ВИПАДОК «ЗНАЧЕННЯ ПІД ОДИН ФОН», І ЄДИНИЙ |  |
+| 44 | `.5px` НЕ ПЕРЕВІРЕНА НА 1x ЕКРАНІ (2026-10-09). |  |
+| 45 | ОБГОРТКОВИЙ СПАН ЛЕЙБЛА ЧІПА ДІСТАВСЯ `+ Add label` (2026-10-09). |  |
+| 46 | `.perbtn` ЗНОВУ НЕСЕ НЕПРОЗОРУ СІРУ ЗАЛИВКУ, І ЦЕ СВІДОМО (2026-10-08). |  |
+| 50 | ВІДМОВИ `button()` ДЛЯ `menu` ЖИВУТЬ У ДВОХ МІСЦЯХ (`shared.js:230` і `:343`, |  |
+| 63 | `--accent-soft` — ПЕРШИЙ `color-mix` У ПРОДУКТОВОМУ ПРАВИЛІ (2026-10-08). |  |
+| 66 | `Sign in` У ПУБЛІЧНІЙ ШАПЦІ — СІРИЙ НА `--page-bg` (заміряно 2026-10-08). |  |
+| 75 | `ti-repeat` ×11 — `aria-hidden`, АЛЕ НЕСЕ ФАКТ ПРО АВТОПЛАТІЖ (2026-10-07). | → **D** for a designer |
+| 76 | `.link` ×27 — ЄДИНИЙ МАРШРУТ ДО PRIVACY, TERMS І ЛІЦЕНЗІЙНОЇ УГОДИ (2026-10-07). | → **D** for a designer |
+| 101 | `.pagetitlerow` губить підпис `Buy a license` на телефоні (2026-10-07). |  |
+| 112 | `?from` у посиланнях на ліцензію більше ніхто не читає (2026-10-07). |  |
+| 116 | ІКОНКИ-КНОПКИ ВИРОСЛИ ПО ВСЬОМУ ПРОДУКТУ, І ЗВІТ ПРО ПАС ЦЬОГО НЕ НАЗВАВ |  |
+| 118 | ТОПБАР МАЄ ВЛАСНУ РОДИНУ КОНТРОЛІВ ПОЗА КОМПОНЕНТОМ КНОПКИ — ПИТАННЯ ДО ФАЗИ | → **D** for a designer |
+| 121 | `.insttoolbar.stickybar` ОГОЛОШУЄ `z-index:12` НА `position:static` ЕЛЕМЕНТІ |  |
+| 122 | Візард парує `Billing email` з `Company name` у вужчій колонці (2026-10-06). |  |
+| 124 | СМУГА 601–952: ЦИФРИ ЗАМІРЯНІ 2026-10-06, ПОЧИНАТИ З НИХ, А НЕ З «ВОНО |  |
+| 125 | ОБГОРТКА, ЯКУ НІХТО НЕ МІРЯЄ, НЕ РОБИТЬ НІЧОГО (знайдено 2026-10-06). |  |
+| 126 | Recent invoices на Home: обгортка — СТОПГЕП, не лік (2026-10-06). |  |
+| 141 | ТАБЛИЦЯ ІНВОЙСІВ ЛАМАЄ НОМЕР І ДАТУ НАДВОЄ НА 944 (заміряно 2026-10-01). |  |
+| 142 | Переповнення топбара на `index` стало на 5px гіршим (заміряно 2026-10-01). |  |
+| 151 | Чіпи add-on'ів переносять текст на вузькому десктопі (2026-10-02). |  |
+| 152 | Кнопка Copy у рядку ключа переноситься на другий рядок — на 0.7px (заміряно |  |
+| 153 | `.licc-label` оголошує `white-space:nowrap`, а діє `normal` (заміряно 2026-10-02). |  |
+| 154 | Пошук в Activity не бачить подій, яких немає в завантаженій сторінці (2026-10-02). |  |
+| 161 | Засіяна подія `license.labeled` у вже збереженому сторі не має деталі (2026-10-01). |  |
+| 166 | ТОПБАР ПЕРЕПОВНЮЄ ВІКНО ВІД 601 ДО 1150px (заміряно 2026-10-01). |  |
+| 170 | ДУБЛЬОВАНИЙ `id` — КЛАС ВАДИ, ЯКИЙ НІЩО НЕ СТЕРЕГЛО ДО 2026-10-01. |  |
+| 171 | `sgWizStep` дублюється у `styleguide.html`. |  |
+| 172 | Тінь табів панелі ліцензії полагоджена, але не побачена в дії (2026-10-01). |  |
+| 173 | Під баром тепер і волосина, і тінь (2026-10-01). |  |
+| 174 | ЧОТИРИ LIST-ТУЛБАРИ СТАЛИ ДВОМА ПОВЕДІНКАМИ ПОШУКУ (2026-10-01). |  |
+| 176 | Обидва тригери C у спокої читаються `All 17` (2026-10-01). |  |
+| 177 | `Show N licenses` і пейджер рахують різне (2026-10-01). |  |
+| 178 | ПАНЕЛЬ ЛІЦЕНЗІЇ ШИРША ЗА ТЕЛЕФОН НА 51px (заміряно 2026-10-01). |  |
+| 180 | ПʼЯТИЙ ВИПАДОК «ПРАВИЛО ПЕРЕМАГАЄ ПОЗИЦІЄЮ» (2026-10-01, друга сесія). |  |
+| 181 | Рядок колонок не липне, поки таблиця скролиться вбік (2026-10-01). |  |
+| 182 | Лічильник у заголовку більше не ділить базову лінію з ним (2026-10-01). |  |
+| 183 | `.inst-hint` лишився з опт-аутом, якого нікому застосовувати (2026-10-01). |  |
+| 184 | Чіп Activity рахує згорнуті прогони за один (2026-10-01). |  |
+| 185 | ТОНОВАНИЙ ВИГЛЯД БАНЕРА І ВИГЛЯД `ink` ТЕПЕР РОЗРІЗНЯЮТЬ РІЗНУ КІЛЬКІСТЬ СТАНІВ |  |
+| 186 | `.fi-mark` виріс до 30px, а відступи фіда під нього не переглядались |  |
+| 187 | Мультиселект-рядок більше не `menuitemcheckbox` — це `<label>` з нативним |  |
+| 188 | `.fs-screen .am-celltop` ТЕПЕР ТРЕТІЙ ВИПАДОК ТОГО САМОГО ПЕРЕВИЩЕННЯ СКОУПУ |  |
+| 195 | `.fs-screen .infoic{24px}` ДОТЯГУЄТЬСЯ ДАЛІ, НІЖ ЙОГО НАМІР (знайдено 2026-10-01). |  |
+| 196 | Значення ключа сидить на 5.2px нижчій базовій лінії за три сусідні (2026-10-01). |  |
+| 197 | `secondary` на білому банері алерта — правило без сьогоднішнього читача |  |
+| 198 | Зона картки Home виросла на 5px (2026-10-01): дівайдер y93→y98, картка |  |
+| 199 | ЗЕЛЕНИЙ СТАТУС У ШАПЦІ ЛІЦЕНЗІЇ — 4.24:1 (заміряно 2026-09-30, пас 15). | → **A** for a designer |
+| 200 | ТРЕТІЙ РІД КОЛІЗІЇ ПРАВИЛ, І ЙОГО ВАРТО ШУКАТИ ГРЕПОМ (знайдено 2026-09-30). |  |
+| 202 | МОДАЛКА І СТОРІНКА ЛІЦЕНЗІЇ ТЕПЕР РОЗХОДЯТЬСЯ В ҐРУНТІ АЛЕРТА (2026-09-30). |  |
+| 203 | Прогрес у степері тихіший, ніж був (2026-09-30). |  |
+| 204 | `Payment` як заголовок картки Review — `inferred` копірайт (2026-09-30). |  |
+| 205 | Заголовки кроків Capacity/Add-ons і секційні лейбли розрізняються вже не кеглем |  |
+| 206 | Крапка-роздільник на картці ліцензії Home схована на ≤600 (2026-09-30). |  |
+| 207 | Чіп `Stale` зʼявився на телефоні, і його там ніхто не проєктував (2026-09-30). |  |
+| 210 | Три групи на Licenses дають рядок табів у три лінії (заміряно 2026-09-30). |  |
+| 214 | ЧЕРВОНА МАРКА НА INK — 3.35:1 (заміряно 2026-09-30, пас 13). | → **A** for a designer |
+| 215 | В INK-ФОРМІ НА ПАНЕЛІ ЛІЦЕНЗІЇ ТОН НЕСЕ ТІЛЬКИ КОЛІР (2026-09-30, пас 13). | → **A** for a designer |
+| 217 | Дві картки в ряд зупиняються на 900, і це моє судження, не число із запиту |  |
+| 218 | Скидання треку на першу картку після дисміса тепер помітніше (запис від того ж |  |
+| 219 | СТАТУС НА КАРТЦІ ІНВОЙСА: РЕФЕРЕНС ПРОСИТЬ ПІЛЮЛЮ, СТОЇТЬ КОМПОНЕНТ (2026-09-30). | → **D** for a designer |
+| 220 | Два дівайдери на картці інвойса розрізняються лише вставкою (2026-09-30). |  |
+| 221 | Роздільна розкладка банера не анімує перехід між картками (2026-09-30). |  |
+| 222 | Після дисміса картки трек стає на першу (2026-09-30). |  |
+| 223 | ЛІД БАНЕРА ПАНЕЛІ НЕ ПРОХОДИТЬ AA: 4.48:1 (заміряно 2026-09-30). | → **A** for a designer |
+| 225 | Марка банера розходиться між Home і панеллю (2026-09-30). |  |
+| 226 | РЕЙЛ КРОКІВ НЕ ЦЕНТРОВАНИЙ У СМУЗІ, І ЦЕ ВПИРАЄТЬСЯ В ЗАПИСАНЕ РІШЕННЯ |  |
+| 227 | ЧІПА КІЛЬКОСТІ НА `Invoices` І `Activity` НЕМАЄ ВЗАГАЛІ (2026-09-30). |  |
+| 228 | `#backBtn` у шапці ліцензії — мертва кнопка з голим гліфом `←` (знайдено |  |
+| 230 | На телефоні заголовок кроку налазить на ✕ у шапці візарда. |  |
+| 231 | У ТАБЛИЦІ Licenses ГЛІФ СТАТУСУ (16) І МАРКА ВЕРСІЇ (20) ДОСІ РІЗНОГО РОЗМІРУ |  |
+| 232 | Гліф статусу в панелі сидить на 1.7px нижче оптичного центру слова, марка версії — |  |
+| 233 | Продукт більше ніде не каже «no instance has checked in yet» банером (2026-09-30). |  |
+| 236 | `Next charge` у варіанті B зони дублює картку `Next charge` нижче. |  |
+| 238 | НА ТЕЛЕФОНІ ВЕСЬ БЛОК КЛЮЧА СТОЇТЬ НАД НАЗВОЮ ЛІЦЕНЗІЇ, І ВЕСЬ `order` |  |
+| 239 | На сторінці ліцензії жолоб back-кнопки лишився порожнім (2026-09-29). |  |
+| 240 | ВІЗАРД НЕ СКЛАДАЄТЬСЯ В ОДНУ КОЛОНКУ НА ТЕЛЕФОНІ — кроки Capacity і Add-ons |  |
+| 241 | Три рядки інвойсів у 600px рамці карткової розкладки (2026-09-29). |  |
+| 243 | `Full page` І `Shared link` ТЕПЕР РІЗНЯТЬСЯ ОДНІЄЮ РІЧЧЮ (2026-09-29). |  |
+| 245 | ПРАВИЛО, ЯКЕ ПРОГРАЄ, АЛЕ ЗБІГАЄТЬСЯ ЗНАЧЕННЯМ, — ЦЕ ТИХИЙ БОРГ. |  |
+| 247 | Заголовок секції карткової розкладки — 20px, референс просить 24. | → **D** for a designer |
+| 248 | `✎ Add label` (картка Home) проти `+ Add label` (деталі ліцензії) — два написання |  |
+| 249 | `aria-label` РЯДКА І КАРТКИ КАЖЕ `status: Active` ТАМ, ДЕ ВИДНО `Blocked`. |  |
+| 251 | Карткова розкладка не має телефонного чергування поверхонь. |  |
+| 254 | ТОПБАР ПЕРЕПОВНЮЄТЬСЯ МІЖ 600 І 1100px (заміряно 2026-09-29). |  |
+| 259 | Лічильники двох тулбарів Licenses рахують РІЗНЕ — A фасетно, B по акаунту. |  |
+| 261 | `.authscreen .fs-header` лишилась прозорою, коли решта шапок діалогів стала |  |
+| 263 | ЛИПКИЙ КОЛОНКОВИЙ РЯДОК НЕ ЛИПНЕ, КОЛИ ТАБЛИЦЯ ЇДЕ ВБІК (заміряно 2026-09-28). |  |
+| 266 | `.plantable` — обрамлена таблиця на 69% ширини секції (записано 2026-09-27). | → **D** for a designer |
+| 268 | Біла підкладка під заокругленим кутом голови таблиці (`thead th::before`) |  |
+| 269 | `[hidden]` ЛАМАЄТЬСЯ ЩОРАЗУ, КОЛИ КОМПОНЕНТ ДІСТАЄ `display` — І ЦЕ ВЖЕ |  |
+| 271 | `Instance renamed to {entity}` проти пункту меню `Edit label`. |  |
+| 273 | МЕРТВЕ ПРАВИЛО НЕ ІНЕРТНЕ, КОЛИ ЙОГО ІМʼЯ ОЧЕВИДНЕ (2026-09-29). |  |
+| 274 | `.infoic` чекає на власний компонент. | → **D** for a designer |
+| 275 | 22 `<button class="link">` поза кнопкою — текст усередині речень. | → **D** for a designer |
+| 282 | `--accent` задано, а не виведено. |  |
+| 283 | `assets/logo.svg` і `tools/build-logo.py` більше нічим не читаються — вордмарк |  |
+| 285 | КОНТРАСТ: чотири рядки нижче AA, усі `--mid` `#6b6b6b` 14px, усі лише В СПОКОЇ. | → **A** for a designer |
+| 286 | `--ic-30` і `--ic-44` НЕ ОГОЛОШЕНІ, і використовуються без фолбека (`.iconbutton`, |  |
+| 287 | `--t-h3-fs` теж не оголошений, але має фолбек `18px`, тож працює. |  |
+| 288 | `--pg-start` і `--pg-cols` пишуться щоразу і не читаються ніким: CSS перейшов на |  |
+| 289 | `--s-own` — колізія імені: 10px у `#nlStepPick`, 16px у `.setgrid`, різні селектори, |  |
+| 290 | Десять брейкпоінтів, а ноутси кажуть «один ≤600px»: 600, 601, 640, 700, 760, 820, | → **A** for a designer |
+| 294 | Альтернатива `--page-bg` не перевірена на екрані. |  |
+| 295 | `corner-shape:squircle` діє лише в Chrome 139+. |  |
+| 317 | Дублікати id, коли модалка деталей відкривається ПОВЕРХ сторінки деталей. |  |
+| 324 | ВІДКРИТЕ: Home — 2.93 екрана на телефоні (записано 2026-09-18, §14). |  |
+| 329 | Розкладка пʼяти планових карток на 390 — рішення за користувачкою. |  |
+| 330 | Крок Capacity на 390 — 1.47 екрана. |  |
+| 336 | `renderLicenseAlert` малює порожній банер, якщо забути `.amsg` — і взагалі |  |
+| 340 | Колонкові заголовки на Home просили «зменшити, але ≥14px» — а 14px і є поточне | → **D** for a designer |
+| 345 | Три варіанти степера в дизайн-системі ТЗ просило показати всі три; варіанти |  |
+| 352 | `Deactivate` ставить `i.active = false`, і ніщо це поле не читає у фільтрах. |  |
+| 364 | Назва перпетуала у візарді лягає в ТРИ рядки (2026-09-24, перший батч). |  |
+| 365 | `max-width:62ch` знято з підказки Instances (2026-09-24, восьма правка) — ТЗ просило |  |
 
 ---
 
@@ -302,83 +304,84 @@ The measurement harness, the mirrors, the checkers, the settings bar, seeded dem
 
 | # | entry | |
 |---:|---|---|
-| 3 | `.sg-warn` БІЛЬШЕ НІХТО НЕ ПИШЕ, А CSS ЛИШИВСЯ (2026-10-12). |  |
-| 6 | ТРИ ПАСИ НЕПЕРЕВІРЕНІ ПОВНИМ ГЕОМЕТРИЧНИМ ДІФОМ, І КАМПАНІЮ ЗАКРИТО СВІДОМО |  |
-| 7 | ЗНАХІДКА ПРО ШИРИНУ 601 ЗНЯТА ТОГО САМОГО ДНЯ — ВАДА БУЛА В МОЄМУ ЗОНДІ (2026-10-12). |  |
-| 12 | ТРЕТЯ ЖИВА КОПІЯ ПРОТОТИПУ НЕ БУЛА НАЗВАНА В ЦЬОМУ ФАЙЛІ (2026-10-09). |  |
-| 14 | СТРИМАННЯ ПРАВОК НІХТО НЕ ПЕРЕВІРЯЄ АВТОМАТИЧНО (2026-10-09). |  |
-| 16 | ЗАМІР 10-09 «ДЕСКТОП НЕДОТОРКАНИЙ» БУВ ПРО АТРИБУТ, А НЕ ПРО РОЗКЛАДКУ (2026-10-09). |  |
-| 19 | `#usersModal .fs-box{height:100vh}` І `.fs-box.usersbox` ТЕПЕР КАЖУТЬ ОДНЕ Й ТЕ САМЕ |  |
-| 25 | КАРТКИ ВИЩІ ЗА РЯДКИ, І СТОРІНКИ ПОДОВШАЛИ (2026-10-09). |  |
-| 29 | `#overlay` СИДИТЬ НА `--z-toast`, ЩОБ ПЕРЕКРИТИ ВІЗАРД, І ЙОГО КОМЕНТАР ЦЕ ВИЗНАЄ |  |
-| 40 | ҐАРД ПРАВИЛА 9 НЕ БАЧИТЬ ПЕРЕСТАНОВКИ ДІТЕЙ (2026-10-08). |  |
-| 54 | ЗАПИС «ОДНЕ ЗНАЧЕННЯ, ЧОТИРИ МІСЦЯ» ПРО `--accent` БУВ НЕПРАВДОЮ (виправлено |  |
-| 60 | `.emptybox.eb.on-tint` НЕ ТРИМАЄ ЖОДНОЇ КНОПКИ В ЗАМІРЯНИХ СТАНАХ (2026-10-08). |  |
-| 63 | `.billcard.nl-paycard.on-tint` РАНТАЙМОМ НЕ ПІДТВЕРДЖЕНИЙ (2026-10-08). |  |
-| 64 | `font-weight` НА `<use>` НЕСТАБІЛЬНИЙ У ЦІЙ ПАНЕЛІ (2026-10-07). |  |
-| 70 | `--text-inactive` — сім правил, і жодне не відрендерилось у заміряному датасеті |  |
-| 71 | `--surface-quiet` 4.471 — записано й закрито (2026-10-07). |  |
-| 73 | СКАН КОНТРАСТУ МУСИТЬ ЧИТАТИ ТОКЕНИ З `:root`, А НЕ ЗНАТИ ЇХ HEX |  |
-| 75 | Пілюля нижньої навігації ловиться в середині транзиції (механізм, 2026-10-07). |  |
-| 76 | `.tablescroll` недетерміновано дістає `.is-scrollable` (2026-10-07). |  |
-| 80 | ОБХІД ПРЕДКІВ БРЕШЕ ПРО КОНТРАСТ НАД МЕШЕМ — ЦЕ ПОСТІЙНА ВЛАСТИВІСТЬ | → **D** for a designer |
-| 82 | Банери `over_limit` / `updates_*` / `canceled` недосяжні з датасету `dashB` за |  |
-| 84 | `OPENERS.usersModal` ДО МОДАЛКИ НЕ ДОХОДИТЬ (2026-10-07). |  |
-| 85 | `invoices.html@768` недетермінований на переповненні (2026-10-07). |  |
-| 86 | `.sg-item` не обрізає свій `.tablescroll` на телефоні (2026-10-07). | → **D** for a designer |
-| 87 | Номери в `TRIAGE.md` — ПОЗИЦІЇ, не id (2026-10-07). |  |
-| 88 | Категорії в `tools/triage.py` — це судження, і воно ревізується (2026-10-07). |  |
-| 97 | `sweep.js` НЕ БАЧИТЬ МЕШУ ВЗАГАЛІ — ЦЕ ПОСТІЙНА ВЛАСТИВІСТЬ |  |
-| 98 | ТРИ `background-image` МЕШУ СЕРІАЛІЗУЮТЬСЯ ЯК `color(srgb …)` (2026-10-07). |  |
-| 99 | Дизер градієнта розійшовся на ±1/255 у 0.125% каналів (2026-10-07). |  |
-| 102 | `Landing › Gradient` — ЄДИНЕ ВІДКРИТЕ ПОРІВНЯННЯ ДИЗАЙНУ (2026-10-07). | → **A** for a designer |
-| 103 | ГРУПА 2 `DEAD.md` ПІД ПІДОЗРОЮ ТАМ, ДЕ КЛАС ПИШЕТЬСЯ ЛИШЕ ПІД НЕДЕФОЛТНИМ |  |
-| 105 | `.faq-cat` — ДІРА В ЦЕНЗІ МЕРТВОГО, ЗНАЙДЕНА ПАСОМ ПРО ТОВЩИНУ РАМКИ |  |
-| 122 | ЗАМІР КЕРУЄ РИШТУВАННЯМ, А НЕ УСПАДКОВУЄ ЙОГО (2026-10-02). |  |
-| 126 | `csscheck.py` не бачить зіпсованих коментарів (2026-10-02). |  |
-| 127 | `MODALS.md` §3.2 і §3.3 описують версію з `flex-wrap` (2026-10-02) — у файлі є |  |
-| 128 | −53px на 944 у модалі заміряно й не пояснено (2026-10-02). |  |
-| 129 | Згрупований режим інстансів і `tableframe`/`mesh` не в сітці мертвих селекторів |  |
-| 130 | Модалка авторизації не в сітці заміру (2026-10-02) — їй потрібна сесія `out`, а |  |
-| 131 | 15 із 16 діалогів спільного `#overlay` не міряні (2026-10-02). |  |
-| 132 | БЛОК «ФАЙЛИ» І СПИСОК СТОРІНОК РОЗХОДИЛИСЬ ІЗ РЕПОЗИТОРІЄМ У ПʼЯТИ МІСЦЯХ |  |
-| 138 | Одинадцять ролей позначені непевними (2026-10-02), найспірніша — `.field > label` |  |
-| 142 | 559 — стверджене число, виведене з заміру (2026-10-02, другий пас). |  |
-| 147 | `data-tableframe` лишився константою (2026-10-01). |  |
-| 148 | Ключі `licBar`, `licTable`, `licZone`, `licPlan`, `homeBlocks`, `bannerLayout`, |  |
-| 150 | ДВАНАДЦЯТЬ НЕЗАКРИТИХ ПОРІВНЯНЬ У СМУЗІ (аудит 2026-10-01). | → **A** for a designer |
-| 151 | `Payment` і `Credit` стоять на `landing` і `signin` (аудит 2026-10-01) — білінг |  |
-| 152 | Три роди контролів лежать в одному ряду: дані · порівняння · навігація. |  |
-| 155 | `signin.html` не має жодного посилання В ПРОДУКТІ, окрім осі в смузі налаштувань. |  |
-| 159 | Прогін сторінок міряв ДВІ ширини, 1280 і 375 — рівно ті, де все гаразд. |  |
-| 160 | 25 повторно оголошених класів не прочитані (2026-10-01). |  |
-| 161 | Варіант 3 має ВЛАСНІ стопи й розмір (2026-10-01). | → **D** for a designer |
-| 200 | Специмена тулбара C у стайлгайді немає (2026-09-30). | → **D** for a designer |
-| 201 | НА ТЕЛЕФОНІ НЕМА ЖОДНОЇ ПОВЕРХНІ НАЛАШТУВАНЬ (2026-09-30, наслідок вибору). | → **D** for a designer |
-| 203 | `instView` лишився поза системою — світч на тулбарі Instances, а не таб смуги. |  |
-| 204 | `Purchase` не показується на лендінгу, хоч звідти можна почати покупку: `when` |  |
-| 205 | `settingsContext()` лишився з попереднім імʼям, хоч панелі налаштувань уже нема. |  |
-| 208 | Специмени банерів у стайлгайді написані літеральними `tone-*` і не слухають | → **D** for a designer |
-| 229 | Видимість усередині модалки не можна міряти `offsetParent` — він `null` для всього |  |
-| 234 | Ліниву дозавантажку фіда не перевірити в цій панелі — і ніколи не було можна. |  |
-| 236 | Розгорнута смуга станів накриває останні 176px сторінки (2026-09-29, за запитом). |  |
-| 242 | Група `Table frame` лишається в ⚙ і на Home з картками, де жодної таблиці нема. |  |
-| 249 | Смуга станів знає лише дві поверхні. |  |
-| 250 | ЧЕКЕР ІКОНОК НЕ ЗНАЄ ЧЕТВЕРТОГО НАПИСАННЯ: HTML-СУТНОСТІ СТРІЛКИ. |  |
-| 254 | Запит пошуку не переживає свап тулбарів Licenses — свідомо (див. |  |
-| 264 | `--bg` більше не ґрунт жодної поверхні (2026-09-28). |  |
-| 270 | Пропущені перевірки — додані ДЕМО-ДАНІ (2026-09-25). |  |
-| 272 | Варіант B на телефоні не стилізований — свідомо, показаний «як є» на прохання. | → **D** for a designer |
-| 276 | `AUDIT.md` застарів. |  |
-| 288 | `AUDIT.md` List C — 37 кластерів і жодного рішення. |  |
-| 290 | `prototypeaddons` не має лінка у флоу: у датасетах такого рядка немає, тож |  |
-| 327 | Log in не чіпає `billingData`. |  |
-| 333 | Дрібні свідомі рішення (можуть «повернутися» питанням): Users сортовані Created |  |
-| 336 | `.claude/launch.json` містить сесійний scratchpad-шлях (див. |  |
-| 342 | Специмен `#groupedcheck` у стайлгайді розходиться з продуктом: `feedGroupItem` кладе |  |
-| 343 | Мертвий коментар у `styles.css` перед блоком `.acttypemenu`: абзац про «chips … |  |
-| 358 | GitHub Pages — опубліковано. |  |
-| 359 | Claude-артефакт — друга, приватна копія (2026-09-16, оновлено 2026-09-24): |  |
+| 5 | БЛОК СІРИХ ПОКАЗУЄ ПРИМІТИВ І ХОВАЄ ОБОХ ЙОГО ЧИТАЧІВ (ценз 2026-10-12). |  |
+| 11 | `.sg-warn` БІЛЬШЕ НІХТО НЕ ПИШЕ, А CSS ЛИШИВСЯ (2026-10-12). |  |
+| 14 | ТРИ ПАСИ НЕПЕРЕВІРЕНІ ПОВНИМ ГЕОМЕТРИЧНИМ ДІФОМ, І КАМПАНІЮ ЗАКРИТО СВІДОМО |  |
+| 15 | ЗНАХІДКА ПРО ШИРИНУ 601 ЗНЯТА ТОГО САМОГО ДНЯ — ВАДА БУЛА В МОЄМУ ЗОНДІ (2026-10-12). |  |
+| 20 | ТРЕТЯ ЖИВА КОПІЯ ПРОТОТИПУ НЕ БУЛА НАЗВАНА В ЦЬОМУ ФАЙЛІ (2026-10-09). |  |
+| 22 | СТРИМАННЯ ПРАВОК НІХТО НЕ ПЕРЕВІРЯЄ АВТОМАТИЧНО (2026-10-09). |  |
+| 24 | ЗАМІР 10-09 «ДЕСКТОП НЕДОТОРКАНИЙ» БУВ ПРО АТРИБУТ, А НЕ ПРО РОЗКЛАДКУ (2026-10-09). |  |
+| 27 | `#usersModal .fs-box{height:100vh}` І `.fs-box.usersbox` ТЕПЕР КАЖУТЬ ОДНЕ Й ТЕ САМЕ |  |
+| 33 | КАРТКИ ВИЩІ ЗА РЯДКИ, І СТОРІНКИ ПОДОВШАЛИ (2026-10-09). |  |
+| 37 | `#overlay` СИДИТЬ НА `--z-toast`, ЩОБ ПЕРЕКРИТИ ВІЗАРД, І ЙОГО КОМЕНТАР ЦЕ ВИЗНАЄ |  |
+| 48 | ҐАРД ПРАВИЛА 9 НЕ БАЧИТЬ ПЕРЕСТАНОВКИ ДІТЕЙ (2026-10-08). |  |
+| 62 | ЗАПИС «ОДНЕ ЗНАЧЕННЯ, ЧОТИРИ МІСЦЯ» ПРО `--accent` БУВ НЕПРАВДОЮ (виправлено |  |
+| 68 | `.emptybox.eb.on-tint` НЕ ТРИМАЄ ЖОДНОЇ КНОПКИ В ЗАМІРЯНИХ СТАНАХ (2026-10-08). |  |
+| 71 | `.billcard.nl-paycard.on-tint` РАНТАЙМОМ НЕ ПІДТВЕРДЖЕНИЙ (2026-10-08). |  |
+| 72 | `font-weight` НА `<use>` НЕСТАБІЛЬНИЙ У ЦІЙ ПАНЕЛІ (2026-10-07). |  |
+| 78 | `--text-inactive` — сім правил, і жодне не відрендерилось у заміряному датасеті |  |
+| 79 | `--surface-quiet` 4.471 — записано й закрито (2026-10-07). |  |
+| 81 | СКАН КОНТРАСТУ МУСИТЬ ЧИТАТИ ТОКЕНИ З `:root`, А НЕ ЗНАТИ ЇХ HEX |  |
+| 83 | Пілюля нижньої навігації ловиться в середині транзиції (механізм, 2026-10-07). |  |
+| 84 | `.tablescroll` недетерміновано дістає `.is-scrollable` (2026-10-07). |  |
+| 88 | ОБХІД ПРЕДКІВ БРЕШЕ ПРО КОНТРАСТ НАД МЕШЕМ — ЦЕ ПОСТІЙНА ВЛАСТИВІСТЬ | → **D** for a designer |
+| 90 | Банери `over_limit` / `updates_*` / `canceled` недосяжні з датасету `dashB` за |  |
+| 92 | `OPENERS.usersModal` ДО МОДАЛКИ НЕ ДОХОДИТЬ (2026-10-07). |  |
+| 93 | `invoices.html@768` недетермінований на переповненні (2026-10-07). |  |
+| 94 | `.sg-item` не обрізає свій `.tablescroll` на телефоні (2026-10-07). | → **D** for a designer |
+| 95 | Номери в `TRIAGE.md` — ПОЗИЦІЇ, не id (2026-10-07). |  |
+| 96 | Категорії в `tools/triage.py` — це судження, і воно ревізується (2026-10-07). |  |
+| 105 | `sweep.js` НЕ БАЧИТЬ МЕШУ ВЗАГАЛІ — ЦЕ ПОСТІЙНА ВЛАСТИВІСТЬ |  |
+| 106 | ТРИ `background-image` МЕШУ СЕРІАЛІЗУЮТЬСЯ ЯК `color(srgb …)` (2026-10-07). |  |
+| 107 | Дизер градієнта розійшовся на ±1/255 у 0.125% каналів (2026-10-07). |  |
+| 110 | `Landing › Gradient` — ЄДИНЕ ВІДКРИТЕ ПОРІВНЯННЯ ДИЗАЙНУ (2026-10-07). | → **A** for a designer |
+| 111 | ГРУПА 2 `DEAD.md` ПІД ПІДОЗРОЮ ТАМ, ДЕ КЛАС ПИШЕТЬСЯ ЛИШЕ ПІД НЕДЕФОЛТНИМ |  |
+| 113 | `.faq-cat` — ДІРА В ЦЕНЗІ МЕРТВОГО, ЗНАЙДЕНА ПАСОМ ПРО ТОВЩИНУ РАМКИ |  |
+| 130 | ЗАМІР КЕРУЄ РИШТУВАННЯМ, А НЕ УСПАДКОВУЄ ЙОГО (2026-10-02). |  |
+| 134 | `csscheck.py` не бачить зіпсованих коментарів (2026-10-02). |  |
+| 135 | `MODALS.md` §3.2 і §3.3 описують версію з `flex-wrap` (2026-10-02) — у файлі є |  |
+| 136 | −53px на 944 у модалі заміряно й не пояснено (2026-10-02). |  |
+| 137 | Згрупований режим інстансів і `tableframe`/`mesh` не в сітці мертвих селекторів |  |
+| 138 | Модалка авторизації не в сітці заміру (2026-10-02) — їй потрібна сесія `out`, а |  |
+| 139 | 15 із 16 діалогів спільного `#overlay` не міряні (2026-10-02). |  |
+| 140 | БЛОК «ФАЙЛИ» І СПИСОК СТОРІНОК РОЗХОДИЛИСЬ ІЗ РЕПОЗИТОРІЄМ У ПʼЯТИ МІСЦЯХ |  |
+| 146 | Одинадцять ролей позначені непевними (2026-10-02), найспірніша — `.field > label` |  |
+| 150 | 559 — стверджене число, виведене з заміру (2026-10-02, другий пас). |  |
+| 155 | `data-tableframe` лишився константою (2026-10-01). |  |
+| 156 | Ключі `licBar`, `licTable`, `licZone`, `licPlan`, `homeBlocks`, `bannerLayout`, |  |
+| 158 | ДВАНАДЦЯТЬ НЕЗАКРИТИХ ПОРІВНЯНЬ У СМУЗІ (аудит 2026-10-01). | → **A** for a designer |
+| 159 | `Payment` і `Credit` стоять на `landing` і `signin` (аудит 2026-10-01) — білінг |  |
+| 160 | Три роди контролів лежать в одному ряду: дані · порівняння · навігація. |  |
+| 163 | `signin.html` не має жодного посилання В ПРОДУКТІ, окрім осі в смузі налаштувань. |  |
+| 167 | Прогін сторінок міряв ДВІ ширини, 1280 і 375 — рівно ті, де все гаразд. |  |
+| 168 | 25 повторно оголошених класів не прочитані (2026-10-01). |  |
+| 169 | Варіант 3 має ВЛАСНІ стопи й розмір (2026-10-01). | → **D** for a designer |
+| 208 | Специмена тулбара C у стайлгайді немає (2026-09-30). | → **D** for a designer |
+| 209 | НА ТЕЛЕФОНІ НЕМА ЖОДНОЇ ПОВЕРХНІ НАЛАШТУВАНЬ (2026-09-30, наслідок вибору). | → **D** for a designer |
+| 211 | `instView` лишився поза системою — світч на тулбарі Instances, а не таб смуги. |  |
+| 212 | `Purchase` не показується на лендінгу, хоч звідти можна почати покупку: `when` |  |
+| 213 | `settingsContext()` лишився з попереднім імʼям, хоч панелі налаштувань уже нема. |  |
+| 216 | Специмени банерів у стайлгайді написані літеральними `tone-*` і не слухають | → **D** for a designer |
+| 237 | Видимість усередині модалки не можна міряти `offsetParent` — він `null` для всього |  |
+| 242 | Ліниву дозавантажку фіда не перевірити в цій панелі — і ніколи не було можна. |  |
+| 244 | Розгорнута смуга станів накриває останні 176px сторінки (2026-09-29, за запитом). |  |
+| 250 | Група `Table frame` лишається в ⚙ і на Home з картками, де жодної таблиці нема. |  |
+| 257 | Смуга станів знає лише дві поверхні. |  |
+| 258 | ЧЕКЕР ІКОНОК НЕ ЗНАЄ ЧЕТВЕРТОГО НАПИСАННЯ: HTML-СУТНОСТІ СТРІЛКИ. |  |
+| 262 | Запит пошуку не переживає свап тулбарів Licenses — свідомо (див. |  |
+| 272 | `--bg` більше не ґрунт жодної поверхні (2026-09-28). |  |
+| 278 | Пропущені перевірки — додані ДЕМО-ДАНІ (2026-09-25). |  |
+| 280 | Варіант B на телефоні не стилізований — свідомо, показаний «як є» на прохання. | → **D** for a designer |
+| 284 | `AUDIT.md` застарів. |  |
+| 296 | `AUDIT.md` List C — 37 кластерів і жодного рішення. |  |
+| 298 | `prototypeaddons` не має лінка у флоу: у датасетах такого рядка немає, тож |  |
+| 335 | Log in не чіпає `billingData`. |  |
+| 341 | Дрібні свідомі рішення (можуть «повернутися» питанням): Users сортовані Created |  |
+| 344 | `.claude/launch.json` містить сесійний scratchpad-шлях (див. |  |
+| 350 | Специмен `#groupedcheck` у стайлгайді розходиться з продуктом: `feedGroupItem` кладе |  |
+| 351 | Мертвий коментар у `styles.css` перед блоком `.acttypemenu`: абзац про «chips … |  |
+| 366 | GitHub Pages — опубліковано. |  |
+| 367 | Claude-артефакт — друга, приватна копія (2026-09-16, оновлено 2026-09-24): |  |
 
 ---
 
@@ -388,71 +391,74 @@ Open questions about the system itself: which scale a value collapses to, whethe
 
 | # | entry | |
 |---:|---|---|
-| 8 | `.typechip` І `.filterchip` ТЕПЕР ВІДРІЗНЯЮТЬСЯ ЛИШЕ ГАЛОЧКОЮ (2026-10-12). |  |
-| 9 | КРОК CAPACITY СТАВ ВИЩИЙ НА 18px (2026-10-12). |  |
-| 11 | ПОРОЖНІЙ БОКС ADD-ONS СТОЇТЬ НА x=44, А НЕ НА 16 (2026-10-12). |  |
-| 13 | `.nl-couponerr` ТЕПЕР РІЗНИЙ НА ДВОХ ШИРИНАХ (2026-10-09). |  |
-| 17 | ID ІНСТАНСА ЦІЛИЙ ЛИШЕ ВІД 390px (2026-10-09). |  |
-| 18 | ТОТАЛ ВІЗАРДА ТЕПЕР РУХАЄТЬСЯ НА РЯДОК, КОЛИ КУПОН ВІДПОВІДАЄ ПОМИЛКОЮ (2026-10-09). |  |
-| 20 | ТУЛБАР ДІСТАВ 12 ЗВЕРХУ Й ЗНИЗУ ПРИ ГОРИЗОНТАЛЬНИХ 16 (2026-10-09). |  |
-| 24 | ЗГРУПОВАНИЙ ВИГЛЯД INSTANCES ЛИШИВСЯ ТАБЛИЦЕЮ НА ТЕЛЕФОНІ (2026-10-09). |  |
-| 27 | `.nl-prodcard` ТЕПЕР ПІДНІМАЄТЬСЯ НА ХОВЕРІ Й СІРІЄ НА НАТИСКУ (2026-10-09). |  |
-| 28 | СТЕПЕР І КАРТКИ ADD-ON'ІВ ВІДПОВІДАЮТЬ НА ВКАЗІВНИК РІЗНИМИ МЕХАНІЗМАМИ (2026-10-09). |  |
-| 31 | ЧОТИРИ КЕБАБИ СТАЛИ ТРЬОМА (2026-10-09). |  |
-| 32 | `--hover` `#f0f0ee` ЛИШАЄТЬСЯ У 30 ПРАВИЛАХ (2026-10-09). |  |
-| 33 | ВИБРАНИЙ ADD-ON НЕ ВІДПОВІДАЄ НА ВКАЗІВНИК (2026-10-09). |  |
-| 34 | РАМПА SECONDARY ТЕПЕР 0 / .04 / .14 (2026-10-09). |  |
-| 35 | ТРИ МЕТРИКИ UBUNTU СТОЯТЬ ЛІТЕРАЛАМИ В `calc()` ЯКОРЯ ЛІЧИЛЬНИКА (2026-10-09). |  |
-| 39 | `--sel` `#e4e4e0` ЛИШАЄТЬСЯ ТЕПЛИМ СІРИМ У СЕМИ ПРАВИЛАХ (2026-10-08). |  |
-| 41 | `.btn--menu` — ЦЕ GHOST ІНШОГО РОЗМІРУ, І ЗГОРТАТИ ЙОГО ЧИ НІ — ВІДКРИТЕ (заміряно |  |
-| 47 | `.btn--menu` НЕ НАКРИТИЙ НОВИМ ОПИСОМ SECONDARY (2026-10-08). |  |
-| 51 | ДОВЖИНУ `Instance ID` НЕ СКОРОЧЕНО (2026-10-08). |  |
-| 53 | СПИСКИ ІНВОЙСІВ І АКТИВНОСТІ В МОДАЛЦІ ЛІЦЕНЗІЇ ВСЕ ЩЕ ЙДУТЬ ВПРИТУЛ (2026-10-08). |  |
-| 56 | ДВІ РУНГИ ЗАМІСТЬ ОДНОЇ НА ОСІ `z-index` (2026-10-08). |  |
-| 57 | ЕЛЕВАЦІЯ ДЛЯ БІЛОЇ КНОПКИ НА КОЛЬОРОВОМУ ҐРУНТІ ПРОСИТЬ ЧЕТВЕРТОГО РІВНЯ (2026-10-08, |  |
-| 65 | Пʼять із девʼяти колізій help-і-hint лишились (2026-10-07). |  |
-| 66 | `.field > label` і `.dwelcome p` — та сама форма, не чіпані (2026-10-07). |  |
-| 69 | Девʼять help-і-hint стоять `--mid` 16px під лейблом `--mid` 16px (2026-10-07). |  |
-| 77 | `.pg-d` проходить тонко над градієнтом (2026-10-07). |  |
-| 78 | КОНТРАСТ: ЧИСЛА ЗАМІРЯНІ, РІШЕННЯ НЕ УХВАЛЕНЕ (2026-10-07). | → **A** for a designer |
-| 79 | Зелений має ЛАТЕНТНУ діру на `--surface-quiet` (2026-10-07). |  |
-| 81 | Гліф `tone-black` на банері Home — рішення, не правка (2026-10-07). |  |
-| 89 | ПʼЯТНАДЦЯТЬ ОДНОСТОРОННІХ ПРАВИЛ ЧЕКАЮТЬ НА ОДНЕ ПИТАННЯ КОЖНЕ (2026-10-07). |  |
-| 90 | `.lic-row,.inv-row,.inst-row` — ТРИ З ЧОТИРЬОХ, І ЦЕ НЕ ОГЛЯД (2026-10-07). |  |
-| 91 | ВІСЬ ГРУНТУ ДЛЯ КНОПКИ ВЖЕ ЗАСЛУЖЕНА, І СВІТЛИМИ ПОВЕРХНЯМИ |  |
-| 92 | Чіп має три висоти — 26 / 32 / 40 (2026-10-07). | → **A** for a designer |
-| 94 | Фонова межа телефона написана двічі (2026-10-07). | → **B** for a designer |
-| 95 | КЛАС ВАДИ «ПЕРЕКРИТИЙ ЗАВЖДИ, ЗАМАПЛЕНИЙ ВСЕ ОДНО» — ДВА ВИПАДКИ, |  |
-| 96 | Два рінги поза шісткою токенів (2026-10-07). |  |
-| 100 | ГРАДІЄНТ ТЕПЕР НА ТРЬОХ ПОВЕРХНЯХ, І ДВІ З НИХ ПОРІВНЯННЯ НЕ СТОСУВАЛОСЬ |  |
-| 101 | Два кольори градієнта лишились літералами (2026-10-07). |  |
-| 106 | `320` У `shared.js:2085` НЕ МАЄ ЧИМ СТАТИ (2026-10-07). | → **B** for a designer |
-| 107 | ДВА НАМІРИ ЗГОРНУТО НАВМИСНО, І ЇХ БІЛЬШЕ НІЩО НЕ ВИРАЖАЄ (2026-10-07). |  |
-| 111 | Activity на 390 став на 869px довшим (2026-10-06) — ПРИЙНЯТО, не борг. |  |
-| 112 | МОДЕЛЬ «НЕГАТИВ = ЗАПЕРЕЧЕННЯ ІНСЕТА» ПОКРИВАЄ ТРЕТИНУ (заміряно 2026-10-06). |  |
-| 115 | `--s-own` тепер ПЕРЕДУМОВА пасу спейсингу, а не пункт у черзі (2026-10-06). |  |
-| 119 | СКРОЛ МІЖ 601 І 952 — ПРИЙНЯТИЙ, НЕ ВІДКРИТИЙ (рішення 2026-10-05). |  |
-| 121 | КРОК CAPACITY СКРОЛИТЬСЯ НА 600 — ЦЕ РІШЕННЯ (2026-10-02). |  |
-| 125 | ЗМІНА РЕЖИМУ ЗАГОРТАННЯ — ЦЕ ЗМІНА ВНУТРІШНЬОГО РОЗМІРУ (2026-10-02). |  |
-| 139 | `--t-body-sm-fs` (15px) не має жодного читача (2026-10-02) — токен лишився, бо |  |
-| 140 | Текст на телефоні тепер 16/1.40, десктоп 16/1.50 (2026-10-02). |  |
-| 141 | `mockInvoiceUrl` — ДРУГА СИСТЕМА ТИПОГРАФІКИ (2026-10-02). | → **A** for a designer |
-| 149 | Три порівняння ще відкриті: `Home › Layout` (таблиці/картки), `Everywhere › Alert |  |
-| 154 | Проміжок між картками планів виріс на 20% трека (2026-10-01). |  |
-| 156 | Три нові спільні будівники (`syncAppliedRow`, `wireSheetTrigger`, |  |
-| 157 | Період на телефоні втратив ОДНУ річ, і це свідомо: поля дати в шіті відкриваються |  |
-| 167 | ТЕЛЕФОННИЙ ТУЛБАР Є ТІЛЬКИ В C (2026-10-01, за рішенням). |  |
-| 171 | `licPlan: side` падає в `stacked` на ≤600 (2026-10-01). | → **B** for a designer |
-| 181 | Опис `Description` прибитий до гарнітури (2026-10-01). |  |
-| 182 | Порожній стан Production тепер веде в доку, а Development вів туди й раніше — |  |
-| 183 | Опис locked-рядків зведений до одного речення на ВСІ три (2026-10-01). |  |
-| 184 | `DEVICES_DESC` лишився з одним читачем — редагований рядок девайсів. |  |
-| 185 | Вісь `licPlan` не має мобільного трактування (2026-10-01). |  |
-| 186 | `subgrid` у варіанті `side` — progressive enhancement. |  |
-| 193 | ПАНЕЛЬ ЛІЦЕНЗІЇ БІЛЬШЕ НЕ КАЖЕ НІЧОГО ПРО ТЕ, ЩО РОБИТИ З КЛЮЧЕМ, І БІЛЬШЕ НЕ | → **A** for a designer |
-| 216 | ТЕМНОЇ ТЕМИ НЕМАЄ, І ЦЕ ТЕПЕР НАЗВАНО (2026-09-30). | → **A** for a designer |
-| 226 | ПОГЛИНУТО ЗАПИСОМ ПАСУ 15 ВИЩЕ («панель більше не каже нічого про ключ і не веде |  |
-| 293 | Дані рядка → деталі зведені: деталі тепер керуються об'єктом ліцензії (не `PAGES`) — |  |
+| 2 | БЛОК ВИНЯТКІВ ТИПОГРАФІКИ ЛИШИВСЯ БЕЗ ВЛАСНИКА (2026-10-12). |  |
+| 3 | ТЕПЛІ СІРІ ПОЗА КНОПКОЮ: 20 + 5 ЧИТАЧІВ, ЗАПИСАНІ Й НЕ ЗРУШЕНІ (2026-10-12). |  |
+| 4 | `--chromeLine` МАЄ РІВНО ОДНОГО ЖИВОГО ЧИТАЧА (2026-10-12). |  |
+| 16 | `.typechip` І `.filterchip` ТЕПЕР ВІДРІЗНЯЮТЬСЯ ЛИШЕ ГАЛОЧКОЮ (2026-10-12). |  |
+| 17 | КРОК CAPACITY СТАВ ВИЩИЙ НА 18px (2026-10-12). |  |
+| 19 | ПОРОЖНІЙ БОКС ADD-ONS СТОЇТЬ НА x=44, А НЕ НА 16 (2026-10-12). |  |
+| 21 | `.nl-couponerr` ТЕПЕР РІЗНИЙ НА ДВОХ ШИРИНАХ (2026-10-09). |  |
+| 25 | ID ІНСТАНСА ЦІЛИЙ ЛИШЕ ВІД 390px (2026-10-09). |  |
+| 26 | ТОТАЛ ВІЗАРДА ТЕПЕР РУХАЄТЬСЯ НА РЯДОК, КОЛИ КУПОН ВІДПОВІДАЄ ПОМИЛКОЮ (2026-10-09). |  |
+| 28 | ТУЛБАР ДІСТАВ 12 ЗВЕРХУ Й ЗНИЗУ ПРИ ГОРИЗОНТАЛЬНИХ 16 (2026-10-09). |  |
+| 32 | ЗГРУПОВАНИЙ ВИГЛЯД INSTANCES ЛИШИВСЯ ТАБЛИЦЕЮ НА ТЕЛЕФОНІ (2026-10-09). |  |
+| 35 | `.nl-prodcard` ТЕПЕР ПІДНІМАЄТЬСЯ НА ХОВЕРІ Й СІРІЄ НА НАТИСКУ (2026-10-09). |  |
+| 36 | СТЕПЕР І КАРТКИ ADD-ON'ІВ ВІДПОВІДАЮТЬ НА ВКАЗІВНИК РІЗНИМИ МЕХАНІЗМАМИ (2026-10-09). |  |
+| 39 | ЧОТИРИ КЕБАБИ СТАЛИ ТРЬОМА (2026-10-09). |  |
+| 40 | `--hover` `#f0f0ee` ЛИШАЄТЬСЯ У 30 ПРАВИЛАХ (2026-10-09). |  |
+| 41 | ВИБРАНИЙ ADD-ON НЕ ВІДПОВІДАЄ НА ВКАЗІВНИК (2026-10-09). |  |
+| 42 | РАМПА SECONDARY ТЕПЕР 0 / .04 / .14 (2026-10-09). |  |
+| 43 | ТРИ МЕТРИКИ UBUNTU СТОЯТЬ ЛІТЕРАЛАМИ В `calc()` ЯКОРЯ ЛІЧИЛЬНИКА (2026-10-09). |  |
+| 47 | `--sel` `#e4e4e0` ЛИШАЄТЬСЯ ТЕПЛИМ СІРИМ У СЕМИ ПРАВИЛАХ (2026-10-08). |  |
+| 49 | `.btn--menu` — ЦЕ GHOST ІНШОГО РОЗМІРУ, І ЗГОРТАТИ ЙОГО ЧИ НІ — ВІДКРИТЕ (заміряно |  |
+| 55 | `.btn--menu` НЕ НАКРИТИЙ НОВИМ ОПИСОМ SECONDARY (2026-10-08). |  |
+| 59 | ДОВЖИНУ `Instance ID` НЕ СКОРОЧЕНО (2026-10-08). |  |
+| 61 | СПИСКИ ІНВОЙСІВ І АКТИВНОСТІ В МОДАЛЦІ ЛІЦЕНЗІЇ ВСЕ ЩЕ ЙДУТЬ ВПРИТУЛ (2026-10-08). |  |
+| 64 | ДВІ РУНГИ ЗАМІСТЬ ОДНОЇ НА ОСІ `z-index` (2026-10-08). |  |
+| 65 | ЕЛЕВАЦІЯ ДЛЯ БІЛОЇ КНОПКИ НА КОЛЬОРОВОМУ ҐРУНТІ ПРОСИТЬ ЧЕТВЕРТОГО РІВНЯ (2026-10-08, |  |
+| 73 | Пʼять із девʼяти колізій help-і-hint лишились (2026-10-07). |  |
+| 74 | `.field > label` і `.dwelcome p` — та сама форма, не чіпані (2026-10-07). |  |
+| 77 | Девʼять help-і-hint стоять `--mid` 16px під лейблом `--mid` 16px (2026-10-07). |  |
+| 85 | `.pg-d` проходить тонко над градієнтом (2026-10-07). |  |
+| 86 | КОНТРАСТ: ЧИСЛА ЗАМІРЯНІ, РІШЕННЯ НЕ УХВАЛЕНЕ (2026-10-07). | → **A** for a designer |
+| 87 | Зелений має ЛАТЕНТНУ діру на `--surface-quiet` (2026-10-07). |  |
+| 89 | Гліф `tone-black` на банері Home — рішення, не правка (2026-10-07). |  |
+| 97 | ПʼЯТНАДЦЯТЬ ОДНОСТОРОННІХ ПРАВИЛ ЧЕКАЮТЬ НА ОДНЕ ПИТАННЯ КОЖНЕ (2026-10-07). |  |
+| 98 | `.lic-row,.inv-row,.inst-row` — ТРИ З ЧОТИРЬОХ, І ЦЕ НЕ ОГЛЯД (2026-10-07). |  |
+| 99 | ВІСЬ ГРУНТУ ДЛЯ КНОПКИ ВЖЕ ЗАСЛУЖЕНА, І СВІТЛИМИ ПОВЕРХНЯМИ |  |
+| 100 | Чіп має три висоти — 26 / 32 / 40 (2026-10-07). | → **A** for a designer |
+| 102 | Фонова межа телефона написана двічі (2026-10-07). | → **B** for a designer |
+| 103 | КЛАС ВАДИ «ПЕРЕКРИТИЙ ЗАВЖДИ, ЗАМАПЛЕНИЙ ВСЕ ОДНО» — ДВА ВИПАДКИ, |  |
+| 104 | Два рінги поза шісткою токенів (2026-10-07). |  |
+| 108 | ГРАДІЄНТ ТЕПЕР НА ТРЬОХ ПОВЕРХНЯХ, І ДВІ З НИХ ПОРІВНЯННЯ НЕ СТОСУВАЛОСЬ |  |
+| 109 | Два кольори градієнта лишились літералами (2026-10-07). |  |
+| 114 | `320` У `shared.js:2085` НЕ МАЄ ЧИМ СТАТИ (2026-10-07). | → **B** for a designer |
+| 115 | ДВА НАМІРИ ЗГОРНУТО НАВМИСНО, І ЇХ БІЛЬШЕ НІЩО НЕ ВИРАЖАЄ (2026-10-07). |  |
+| 119 | Activity на 390 став на 869px довшим (2026-10-06) — ПРИЙНЯТО, не борг. |  |
+| 120 | МОДЕЛЬ «НЕГАТИВ = ЗАПЕРЕЧЕННЯ ІНСЕТА» ПОКРИВАЄ ТРЕТИНУ (заміряно 2026-10-06). |  |
+| 123 | `--s-own` тепер ПЕРЕДУМОВА пасу спейсингу, а не пункт у черзі (2026-10-06). |  |
+| 127 | СКРОЛ МІЖ 601 І 952 — ПРИЙНЯТИЙ, НЕ ВІДКРИТИЙ (рішення 2026-10-05). |  |
+| 129 | КРОК CAPACITY СКРОЛИТЬСЯ НА 600 — ЦЕ РІШЕННЯ (2026-10-02). |  |
+| 133 | ЗМІНА РЕЖИМУ ЗАГОРТАННЯ — ЦЕ ЗМІНА ВНУТРІШНЬОГО РОЗМІРУ (2026-10-02). |  |
+| 147 | `--t-body-sm-fs` (15px) не має жодного читача (2026-10-02) — токен лишився, бо |  |
+| 148 | Текст на телефоні тепер 16/1.40, десктоп 16/1.50 (2026-10-02). |  |
+| 149 | `mockInvoiceUrl` — ДРУГА СИСТЕМА ТИПОГРАФІКИ (2026-10-02). | → **A** for a designer |
+| 157 | Три порівняння ще відкриті: `Home › Layout` (таблиці/картки), `Everywhere › Alert |  |
+| 162 | Проміжок між картками планів виріс на 20% трека (2026-10-01). |  |
+| 164 | Три нові спільні будівники (`syncAppliedRow`, `wireSheetTrigger`, |  |
+| 165 | Період на телефоні втратив ОДНУ річ, і це свідомо: поля дати в шіті відкриваються |  |
+| 175 | ТЕЛЕФОННИЙ ТУЛБАР Є ТІЛЬКИ В C (2026-10-01, за рішенням). |  |
+| 179 | `licPlan: side` падає в `stacked` на ≤600 (2026-10-01). | → **B** for a designer |
+| 189 | Опис `Description` прибитий до гарнітури (2026-10-01). |  |
+| 190 | Порожній стан Production тепер веде в доку, а Development вів туди й раніше — |  |
+| 191 | Опис locked-рядків зведений до одного речення на ВСІ три (2026-10-01). |  |
+| 192 | `DEVICES_DESC` лишився з одним читачем — редагований рядок девайсів. |  |
+| 193 | Вісь `licPlan` не має мобільного трактування (2026-10-01). |  |
+| 194 | `subgrid` у варіанті `side` — progressive enhancement. |  |
+| 201 | ПАНЕЛЬ ЛІЦЕНЗІЇ БІЛЬШЕ НЕ КАЖЕ НІЧОГО ПРО ТЕ, ЩО РОБИТИ З КЛЮЧЕМ, І БІЛЬШЕ НЕ | → **A** for a designer |
+| 224 | ТЕМНОЇ ТЕМИ НЕМАЄ, І ЦЕ ТЕПЕР НАЗВАНО (2026-09-30). | → **A** for a designer |
+| 234 | ПОГЛИНУТО ЗАПИСОМ ПАСУ 15 ВИЩЕ («панель більше не каже нічого про ключ і не веде |  |
+| 301 | Дані рядка → деталі зведені: деталі тепер керуються об'єктом ліцензії (не `PAGES`) — |  |
 
 ---
 
@@ -462,50 +468,52 @@ Struck through in `NOTES.md` and kept for the reasoning. **Listed so nobody re-o
 
 | # | entry | |
 |---:|---|---|
-| 2 | ПРЕСОВАНИЙ ЧІП `Needs attention` НЕ ПІДТЯГУЄ СЕБЕ У ВИДИМІСТЬ — ЗАЯВА БУЛА ХИБНА |  |
-| 43 | `.btn--menu` ВІДПОВІДАЄ НА ВКАЗІВНИК НАПОЛОВИНУ (заміряно 2026-10-08). |  |
-| 44 | `PAINT_PROPS` У `sweep.js` НЕ МІСТИТЬ `border-color` (2026-10-08). |  |
-| 45 | SECONDARY ЯК КОНТУР: ЗНАЧЕННЯ ОБВОДКИ НЕ ОБРАНЕ, ЗБІРКА ЗАЧЕКАНА (2026-10-08). |  |
-| 46 | ПЕЙДЖЕР — ПʼЯТИЙ КЛАС ХОСТІВ, І ПРО НЬОГО НІХТО НЕ ПИТАВ (2026-10-08). |  |
-| 48 | `--ring-hairline` — ФІКСОВАНИЙ СІРИЙ `#c9c9c9`, 1.70 на білому (заміряно 2026-10-08). |  |
-| 49 | ДЕФОЛТНИЙ ДЕМО-АКАУНТ ТЕПЕР ПОКАЗУЄ АДРЕСУ, А НЕ ІМʼЯ (2026-10-08). |  |
-| 52 | «ШИРИНА ЯК DESCRIPTION» ВИКОНАНА ЯК ШИРИНА РЯДКА, НЕ КОНТРОЛА (2026-10-08). |  |
-| 59 | `signin.html` НЕ МАЄ ФУТЕРА, І ТЕПЕР ТАМ НЕМА ЖОДНОГО МАРШРУТУ ДО ЮРИДИЧНИХ СТОРІНОК |  |
-| 61 | `paintDiff` РАХУЄ НЕПАРНІ ЛИШЕ В «ПІСЛЯ» (2026-10-08). |  |
-| 62 | ІМʼЯ АКАУНТА БІЛЬШЕ НЕ ЗБИРАЄТЬСЯ ПРИ РЕЄСТРАЦІЇ (2026-10-08, наслідок пункту 2). |  |
-| 72 | `--faint` ПРОВАЛЮЄ AA ЯК ТЕКСТ У 507 МІСЦЯХ ЗАКРИТО 2026-10-07 (батч |  |
-| 74 | ПАРНИЙ ПРОГІН МУСИТЬ МАТИ ПРЕ-ФЛІТ «ЦЯ URL РЕНДЕРИТЬ СВОЮ СТОРІНКУ» |  |
-| 83 | `path()` У `sweep.js` КЛЮЧУЄ ЕЛЕМЕНТ ЙОГО КЛАСАМИ — ЦЕ ПОСТІЙНА ВЛАСТИВІСТЬ, |  |
-| 109 | ТОПБАР — НАСТУПНИЙ ПАС, І ВІН ІДЕ САМ (2026-10-06). |  |
-| 120 | 48px ПОВІТРЯ БІЛЯ AMOUNT ДІЄ НА ОДНІЙ ПОВЕРХНІ З ТРЬОХ ВИРІШЕНО |  |
-| 123 | `MODALS.md` названо чотири не-типографічні вади, жодна не полагоджена |  |
-| 124 | Одинадцять рядків сітки `MODALS.md` досі міряні ЗІ смугою (2026-10-02) |  |
-| 135 | `mirror.sh` живе в scratchpad, як і `roles.py` (2026-10-01) ЗАКРИТО |  |
-| 136 | ЗВІТ ПРО ПОЛОМКИ ПАСУ 2 НЕ ЗРОБЛЕНИЙ ЗАКРИТО 2026-10-01 — повний звіт |  |
-| 137 | Класифікація 173 декларацій живе у scratchpad (`ds/roles.py`), не в репо |  |
-| 221 | СТЕПЕР ПРИ ПʼЯТИ КРОКАХ ВИЛАЗИТЬ ЗА ВІКНО ЗАКРИТО 2026-09-30 (пас 15), |  |
-| 244 | СІМ БЛОКІВ ЗАПИТУ 2026-09-28 НЕ ПОЧАТО ЗАКРИТО 2026-09-29 (другий |  |
-| 245 | ТРИ РІШЕННЯ, ЯКІ ТОЙ ЗАПИТ СКАСОВУЄ ЗАКРИТО 2026-09-29: усі три |  |
-| 247 | `card_expiring` недосяжний із чистого демо ЗАКРИТО 2026-09-28 |  |
-| 248 | `settingsContext().home` і `.details` більше ніхто не читає ПОЛОВИНА |  |
-| 252 | У барі два ховер-фони ЗАКРИТО 2026-09-28 (десятий батч): обидва читають |  |
-| 256 | Три різні відповіді на «як цей список гортається» ЗАКРИТО 2026-09-28 |  |
-| 257 | Моделі кнопки бракує осі «на чому вона стоїть» ЗАКРИТО 2026-09-28. |  |
-| 259 | Колір — єдиний носій у колонці Status. |  |
-| 262 | Три речення згорнутої групи кажуть дату тричі. |  |
-| 268 | `--status-ok` (#009A4F) не проходить AA як текст: 3.66:1 ЗАКРИТО |  |
-| 269 | `Rename` у кебабі на сторінці Instances не робить нічого ЗАКРИТО |  |
-| 273 | Пройдені кроки степера не клікабельні знято 2026-09-25 (четвертий батч): |  |
-| 289 | Превʼю Invoices і Users на дашборді — статичні копії виправлено: дашборд |  |
-| 291 | `AMF` не знає про плани / статичні лейбли markup TB-словами знято разом |  |
-| 292 | TBMQ не має детальних сторінок виправлено: TBMQ-рядки (sub і perp) відкривають |  |
-| 297 | Search-інпути невізуальні виправлено 2026-09-17: `wireSearch()` фільтрує з |  |
-| 299 | ЧЕКАЄ НА URL: `EXT.install` виправлено 2026-09-18: |  |
-| 304 | Фільтр до нуля на Licenses не показує нічого. |  |
-| 313 | `CHECKIN_INTERVAL_H = 24` не підтверджений ВИПРАВЛЕНО 2026-09-22: перевірка щогодини. |  |
-| 318 | Повернення при зниженні плану. |  |
-| 329 | Таблиця Invoices всередині деталей на телефоні рве заголовки виправлено |  |
-| 338 | Залишки Vite-збірки в корені прибрано перед публікацією: `package.json`, |  |
-| 345 | Пейджери Licenses та Invoices досі інертні. |  |
-| 346 | Пейджери Licenses та Invoices досі інертні — і 2026-09-28 це стало ВИДИМИМ. |  |
+| 6 | `--chrome` НЕ ЧИТАЄ НІЩО ЖИВЕ (заміряно 2026-10-12). |  |
+| 7 | «ТЕПЛИЙ ХРОМ МЕРТВИЙ» — ПОЛОВИНА ЦЬОГО ХИБНА (заміряно 2026-10-12). |  |
+| 10 | ПРЕСОВАНИЙ ЧІП `Needs attention` НЕ ПІДТЯГУЄ СЕБЕ У ВИДИМІСТЬ — ЗАЯВА БУЛА ХИБНА |  |
+| 51 | `.btn--menu` ВІДПОВІДАЄ НА ВКАЗІВНИК НАПОЛОВИНУ (заміряно 2026-10-08). |  |
+| 52 | `PAINT_PROPS` У `sweep.js` НЕ МІСТИТЬ `border-color` (2026-10-08). |  |
+| 53 | SECONDARY ЯК КОНТУР: ЗНАЧЕННЯ ОБВОДКИ НЕ ОБРАНЕ, ЗБІРКА ЗАЧЕКАНА (2026-10-08). |  |
+| 54 | ПЕЙДЖЕР — ПʼЯТИЙ КЛАС ХОСТІВ, І ПРО НЬОГО НІХТО НЕ ПИТАВ (2026-10-08). |  |
+| 56 | `--ring-hairline` — ФІКСОВАНИЙ СІРИЙ `#c9c9c9`, 1.70 на білому (заміряно 2026-10-08). |  |
+| 57 | ДЕФОЛТНИЙ ДЕМО-АКАУНТ ТЕПЕР ПОКАЗУЄ АДРЕСУ, А НЕ ІМʼЯ (2026-10-08). |  |
+| 60 | «ШИРИНА ЯК DESCRIPTION» ВИКОНАНА ЯК ШИРИНА РЯДКА, НЕ КОНТРОЛА (2026-10-08). |  |
+| 67 | `signin.html` НЕ МАЄ ФУТЕРА, І ТЕПЕР ТАМ НЕМА ЖОДНОГО МАРШРУТУ ДО ЮРИДИЧНИХ СТОРІНОК |  |
+| 69 | `paintDiff` РАХУЄ НЕПАРНІ ЛИШЕ В «ПІСЛЯ» (2026-10-08). |  |
+| 70 | ІМʼЯ АКАУНТА БІЛЬШЕ НЕ ЗБИРАЄТЬСЯ ПРИ РЕЄСТРАЦІЇ (2026-10-08, наслідок пункту 2). |  |
+| 80 | `--faint` ПРОВАЛЮЄ AA ЯК ТЕКСТ У 507 МІСЦЯХ ЗАКРИТО 2026-10-07 (батч |  |
+| 82 | ПАРНИЙ ПРОГІН МУСИТЬ МАТИ ПРЕ-ФЛІТ «ЦЯ URL РЕНДЕРИТЬ СВОЮ СТОРІНКУ» |  |
+| 91 | `path()` У `sweep.js` КЛЮЧУЄ ЕЛЕМЕНТ ЙОГО КЛАСАМИ — ЦЕ ПОСТІЙНА ВЛАСТИВІСТЬ, |  |
+| 117 | ТОПБАР — НАСТУПНИЙ ПАС, І ВІН ІДЕ САМ (2026-10-06). |  |
+| 128 | 48px ПОВІТРЯ БІЛЯ AMOUNT ДІЄ НА ОДНІЙ ПОВЕРХНІ З ТРЬОХ ВИРІШЕНО |  |
+| 131 | `MODALS.md` названо чотири не-типографічні вади, жодна не полагоджена |  |
+| 132 | Одинадцять рядків сітки `MODALS.md` досі міряні ЗІ смугою (2026-10-02) |  |
+| 143 | `mirror.sh` живе в scratchpad, як і `roles.py` (2026-10-01) ЗАКРИТО |  |
+| 144 | ЗВІТ ПРО ПОЛОМКИ ПАСУ 2 НЕ ЗРОБЛЕНИЙ ЗАКРИТО 2026-10-01 — повний звіт |  |
+| 145 | Класифікація 173 декларацій живе у scratchpad (`ds/roles.py`), не в репо |  |
+| 229 | СТЕПЕР ПРИ ПʼЯТИ КРОКАХ ВИЛАЗИТЬ ЗА ВІКНО ЗАКРИТО 2026-09-30 (пас 15), |  |
+| 252 | СІМ БЛОКІВ ЗАПИТУ 2026-09-28 НЕ ПОЧАТО ЗАКРИТО 2026-09-29 (другий |  |
+| 253 | ТРИ РІШЕННЯ, ЯКІ ТОЙ ЗАПИТ СКАСОВУЄ ЗАКРИТО 2026-09-29: усі три |  |
+| 255 | `card_expiring` недосяжний із чистого демо ЗАКРИТО 2026-09-28 |  |
+| 256 | `settingsContext().home` і `.details` більше ніхто не читає ПОЛОВИНА |  |
+| 260 | У барі два ховер-фони ЗАКРИТО 2026-09-28 (десятий батч): обидва читають |  |
+| 264 | Три різні відповіді на «як цей список гортається» ЗАКРИТО 2026-09-28 |  |
+| 265 | Моделі кнопки бракує осі «на чому вона стоїть» ЗАКРИТО 2026-09-28. |  |
+| 267 | Колір — єдиний носій у колонці Status. |  |
+| 270 | Три речення згорнутої групи кажуть дату тричі. |  |
+| 276 | `--status-ok` (#009A4F) не проходить AA як текст: 3.66:1 ЗАКРИТО |  |
+| 277 | `Rename` у кебабі на сторінці Instances не робить нічого ЗАКРИТО |  |
+| 281 | Пройдені кроки степера не клікабельні знято 2026-09-25 (четвертий батч): |  |
+| 297 | Превʼю Invoices і Users на дашборді — статичні копії виправлено: дашборд |  |
+| 299 | `AMF` не знає про плани / статичні лейбли markup TB-словами знято разом |  |
+| 300 | TBMQ не має детальних сторінок виправлено: TBMQ-рядки (sub і perp) відкривають |  |
+| 305 | Search-інпути невізуальні виправлено 2026-09-17: `wireSearch()` фільтрує з |  |
+| 307 | ЧЕКАЄ НА URL: `EXT.install` виправлено 2026-09-18: |  |
+| 312 | Фільтр до нуля на Licenses не показує нічого. |  |
+| 321 | `CHECKIN_INTERVAL_H = 24` не підтверджений ВИПРАВЛЕНО 2026-09-22: перевірка щогодини. |  |
+| 326 | Повернення при зниженні плану. |  |
+| 337 | Таблиця Invoices всередині деталей на телефоні рве заголовки виправлено |  |
+| 346 | Залишки Vite-збірки в корені прибрано перед публікацією: `package.json`, |  |
+| 353 | Пейджери Licenses та Invoices досі інертні. |  |
+| 354 | Пейджери Licenses та Invoices досі інертні — і 2026-09-28 це стало ВИДИМИМ. |  |
 
