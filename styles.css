@@ -2322,7 +2322,12 @@ tr.inv-row > td:nth-child(2){white-space:nowrap}
    value did not; and the glyph coming BACK on 09-27 did not fix it either, because the
    mark and the word are measured by different rules and only the mark was ever in
    question. Fixed in the primitive, so nothing here names a colour. */
-.statmark{display:inline-flex;align-items:center;gap:var(--space-inline);font-size:var(--t-small-fs);white-space:nowrap;
+/* ⚠️⚠️ `--t-body-fs`, NOT `--t-small-fs` (2026-10-13, by request). The status mark and the
+   version mark stand one above the other in the licence header and one column apart in the
+   table, and the status was a step smaller — two sizes for two facts of the same rank. The
+   version mark has never set a size, so it inherits body; this now says the same thing
+   explicitly. Taken from the scale, not chosen. */
+.statmark{display:inline-flex;align-items:center;gap:var(--space-inline);font-size:var(--t-body-fs);white-space:nowrap;
   color:var(--status-off)}
 /* ⚠️ `currentColor` and nothing else — the glyph takes the tone from `.statmark`, so the
    three state rules below stay the only place a status colour is written. 16px, the
@@ -2546,7 +2551,7 @@ tr.inv-row > td:nth-child(2){white-space:nowrap}
 .ia-lictxt{display:flex;flex-direction:column;min-width:0}
 .ia-lic .lp-cell{align-items:center}
 .ia-id{font-size:var(--t-caption-fs);color:var(--mid);max-width:30ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.ia-licsub{display:block;font-size:var(--t-caption-fs);color:var(--mid)}
+.ia-licsub{display:block;font-size:var(--t-body-fs);line-height:var(--t-body-lh);color:var(--mid)}
 /* the one destructive entry in a row menu */
 /* ⚠️ A DESTRUCTIVE MENU ITEM READS AS DESTRUCTIVE (2026-09-25). This set `--ink`, i.e.
    exactly the colour of every other item — the class existed and said nothing. A menu
@@ -3375,7 +3380,13 @@ body[data-tableframe] #dashView .dblock > table{margin-left:calc(-1 * var(--spac
 
 /* the stepper is three controls in one box, so the box takes the control radius like
    the rest of them; `overflow:hidden` is what rounds the two buttons inside it */
+/* ⚠️⚠️ BACK TO `overflow:hidden`, AND THE RING GOES INSIDE INSTEAD (2026-10-13, second
+   pass). The first fix gave this `overflow:clip` with a 4px clip margin so the focus ring
+   could escape — and the margin let the BUTTONS' square corners escape with it, so they
+   drew over the rounded border at both ends. The clip has to stay tight; what moves is the
+   ring, which `outline-offset:-2px` draws just inside the button, where nothing clips it. */
 .stepper{display:inline-flex;align-items:center;border:var(--border-hairline) solid var(--line);border-radius:var(--radius-interactive);overflow:hidden;width:max-content}
+.stepper button:focus-visible,.sg-st-focus .stepper button{outline-offset:-2px}
 .stepper button{width:var(--btnH);height:var(--btnH);border:var(--border-none);background:#fff;color:var(--ink);font-size:var(--t-body-fs);line-height:1;display:inline-flex;align-items:center;justify-content:center}
 /* ⚠️⚠️ HOVER IS AN INK TINT, NOT `--hover` (2026-10-09, by request: "lighter, and the tone
    must not drift warm — not brown"). The declaration read `background:var(--hover)`, and
@@ -3955,8 +3966,13 @@ body.licmodal-open #shellMain{overflow:hidden}   /* the page behind holds its pl
    grey. The radius is the container's MINUS its 1px border, which is where the inside of
    the curve actually is. (Adding `overflow:hidden` to the containers would do it too and
    would clip anything that ever needs to escape them — this does not.) */
-.modal .mh{border-radius:var(--radius-control) var(--radius-control) var(--radius-sharp) var(--radius-sharp)}
-.paymodal-h{border-radius:var(--radius-control) var(--radius-control) var(--radius-sharp) var(--radius-sharp)}
+/* ⚠️⚠️ THESE TWO WERE LEFT BEHIND WHEN `.modal` WENT 8 -> 12 (fixed 2026-10-13). Both
+   containers read `--radius-surface` now, and the band kept `--radius-control` — so the
+   grey corner was SQUARER than the curve it sits in and painted over the rounded stroke
+   at both top corners. The same shape as the four dead `10px`: a value moved and the
+   thing computed from it did not. Derived now, so it cannot drift again. */
+.modal .mh{border-radius:calc(var(--radius-surface) - var(--border-hairline)) calc(var(--radius-surface) - var(--border-hairline)) var(--radius-sharp) var(--radius-sharp)}
+.paymodal-h{border-radius:calc(var(--radius-surface) - var(--border-hairline)) calc(var(--radius-surface) - var(--border-hairline)) var(--radius-sharp) var(--radius-sharp)}
 .fs-maintitle{margin:0;font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);letter-spacing:var(--t-h2-ls);font-weight:var(--t-h2-fw);flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}   /* a long licence label must not push ✕ onto a second row */
 .fs-headactions{display:flex;align-items:center;gap:var(--space-stack);flex:none}
 /* ONE close control, for every surface that has one. The licence-details modal set
@@ -4485,8 +4501,15 @@ button.nl-step:focus-visible{outline:var(--border-emphasis) solid var(--ink);out
 .nl-smark{flex:none;display:inline-flex;align-items:center;justify-content:center;
   width:28px;height:28px;border-radius:var(--radius-circle);border:1.5px solid var(--line);
   font-size:var(--t-small-fs);font-variant-numeric:tabular-nums;color:var(--mid)}
-.nl-step.is-done .nl-smark{border-color:var(--ink);color:var(--ink)}
-.nl-step.is-cur .nl-smark{border-color:var(--ink);background:var(--ink);color:#fff}
+/* ⚠️⚠️ DONE AND CURRENT ARE `--accent`, NOT INK (2026-10-13, by request). The ring and the
+   fill said "you are here" in the same black every control in the product wears, so the
+   one thing on the screen that marks PROGRESS looked like another control. The accent is
+   the product's own mark for "this one" — it is what the Popular plan card and the
+   selected pill already carry — and the stepper is the clearest case of that meaning.
+   ⚠️ The NAME stays ink: the step's label is text to read, and tinting it would put the
+   accent on two things at once for one state. */
+.nl-step.is-done .nl-smark{border-color:var(--accent);color:var(--accent)}
+.nl-step.is-cur .nl-smark{border-color:var(--accent);background:var(--accent);color:#fff}
 .nl-stxt{display:flex;flex-direction:column;min-width:0}
 .nl-sname{font-size:var(--t-small-fs);line-height:1.25;white-space:nowrap}
 .nl-step.is-done .nl-sname{color:var(--ink)}
@@ -4711,7 +4734,10 @@ button.nl-step:focus-visible{outline:var(--border-emphasis) solid var(--ink);out
 #nlModal .nl-prodcard.on{border-color:var(--accent)}
 /* the hover wash must not wipe the chosen card's tint — it is a state, not a rest */
 .nl-prodcard.on:not([disabled]):hover,
+.sg-st-hover .nl-prodcard.on,
 .nl-prodcard.on:not([disabled]):active{background:var(--c-blue-50)}
+/* the switcher's focus ring, for the matrix — see the note on the `.sg-st-*` hooks */
+.sg-st-focus .nl-prodcard{outline:var(--border-emphasis) solid var(--ink);outline-offset:2px}
 /* ⚠️⚠️ `.nl-prodradio` IS GONE (2026-09-29, by request) — the product MARK is the
    radio now. The rules that drew the dot are removed rather than left unused, for the
    reason `.keynote` proved earlier the same day: a dead rule whose name is still
@@ -7774,6 +7800,12 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
    ⚠️ `#dashFeedMore` takes the same box or "Load more" would sit under the left edge
    of a column that is no longer there. */
 #dashFeed,#dashFeedMore,#actFeed{max-width:var(--feed-col);margin-inline:auto}
+/* ⚠️⚠️ AN EMPTY STATE IS NOT A READING COLUMN (2026-10-13, by request). `--feed-col` is the
+   measure the SENTENCES want; when the feed holds no sentences and draws the account's empty
+   block instead, that cap made the tinted box 616px inside a 1132px frame while the same
+   block on Licenses filled its frame. The empty state belongs to the FRAME — it is the
+   surface saying it has nothing — so the cap stands down for exactly that case. */
+#dashFeed:has(> .emptybox),#actFeed:has(> .emptybox){max-width:none}
 /* ⚠️⚠️ THE FIRST TRACK IS THE MARK'S OWN WIDTH (2026-10-02, by request: "the dot on the
    date is no longer centred on the line, it slides left"). It was a literal `24px`,
    written when the mark was 24 — and it was left behind when the mark went 24 -> 30, the
@@ -8230,7 +8262,10 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
 .nr-t{font-size:var(--t-body-fs);line-height:var(--t-body-lh);color:var(--ink)}
 .nr-clear{margin-top:var(--space-inline);font-size:var(--t-body-fs)}
 /* inside a table the block is a cell, so it must not also draw the cell's borders */
-td.noresults-cell{padding:0;border:var(--border-none)}
+/* ⚠️ THE CELL IS WHITE UNDER THE BLOCK (2026-10-13, by request). `--surface-quiet` from
+   the table's own empty treatment showed as a grey band around the tinted block — two
+   grounds for one empty state. The block carries the tint; what is behind it is the card. */
+td.noresults-cell{padding:0;border:var(--border-none);background:var(--card)}
 td.noresults-cell .noresults{margin:var(--space-stack)}
 
 /* ================= empty states =================
@@ -8437,7 +8472,18 @@ body.list-empty #pageTitleRow [id^="licNewBtn"]{display:none !important}
    ⚠️ The padding is added back because the box is `border-box`: the cap has to describe the
    CONTENT, which is what the character count is about.
    ⚠️ Measured before: 104 characters fitted a 770px content box. */
-#bill-descr{max-width:calc(74ch + 28px)}
+/* ⚠️⚠️ ONE WIDTH FOR THE WHOLE BLOCK, AND THE DESCRIPTION IS WHERE IT CAME FROM
+   (2026-10-13, by request). The description was capped at a MEASURE — 74 characters plus
+   the field's own padding — while every other row in the section ran to the card's 800px,
+   so one form had two right edges and the one that looked deliberate was the short one.
+   The cap is now the section's, and the textarea simply fills it.
+   ⚠️ THE TWO-UP ROWS STAY TWO-UP. `.field2` is a grid of two columns inside the row, so
+   narrowing the ROW narrows both of its fields and nothing re-flows onto a line of its
+   own — which is the thing a smaller `max-width` on the fields themselves would have done.
+   ⚠️ Named once: the textarea reads the same custom property, so the two cannot drift. */
+#companySec{--company-col:calc(74ch + 28px)}
+#companySec > .field,#companySec > .field2{max-width:var(--company-col)}
+#bill-descr{max-width:none}
 /* ⚠️⚠️ THE `.sg-st-*` SELECTORS ARE THE STYLEGUIDE'S WAY IN, AND THEY RIDE THE REAL RULE
    RATHER THAN COPYING IT (2026-10-12). The state matrices have to show hover and focus
    standing still, and the browser owns both — so the page labels a column and the cell
@@ -8977,7 +9023,13 @@ a.lp-cell:hover .lp-name{text-decoration:underline;text-underline-offset:2px}
    fixes the bottom tier by moving the top one, and a plan name does not want emphasis.
    ⚠️ Measured: the label is the field that tells rows apart, so it stays full prose
    (`white-space:normal`) and only drops a size step. */
-.lic-prodlabel{font-size:var(--t-small-fs);color:var(--mid);margin-top:var(--space-glyph);white-space:normal}
+/* ⚠️⚠️ BODY, NOT SMALL (2026-10-13, by request). Three secondary lines in the two list
+   tables — the licence label here, the state line under the status, and the licence's
+   sub-line in the Instances table — were a step below the VERSION cell beside them, so one
+   row carried two text sizes for facts of the same rank. They take the version's size now;
+   the version itself sets none, which is to say it is body. Colour is untouched: these are
+   still secondary lines, and `--mid` is what says so. */
+.lic-prodlabel{font-size:var(--t-body-fs);line-height:var(--t-body-lh);color:var(--mid);margin-top:var(--space-glyph);white-space:normal}
 .lic-num{font-variant-numeric:tabular-nums;white-space:nowrap}   /* dates stay on one line now that Product takes the width */
 /* ⚠️ THE HEADING HAS TO MOVE WITH THE CELLS. Variant B right-aligns the Version cells
    (see `.licb-row .lic-ver`) and `headHtmlB` already said in a comment that the heading
@@ -9070,7 +9122,7 @@ th.lic-num{text-align:right}
 /* ⚠️ The alert icon lives INSIDE this line, not as a third item in the column above it.
    As a sibling of the chip it became its own flex row and stacked over the words it
    qualifies; the mark and the four words it marks are one statement. */
-.licstat-txt{font-size:var(--t-small-fs);color:var(--mid);font-variant-numeric:tabular-nums;white-space:nowrap;
+.licstat-txt{font-size:var(--t-body-fs);line-height:var(--t-body-lh);color:var(--mid);font-variant-numeric:tabular-nums;white-space:nowrap;
   display:inline-flex;align-items:center;gap:var(--space-tight)}
 .licstat-txt .alertic{margin:0}
 .lic-row.off .lp-name{color:var(--mid)}
@@ -9148,7 +9200,11 @@ body[data-page="styleguide"] .dtopbar{display:none}
 .sg-sec > p{font-size:var(--t-body-fs);color:var(--mid);margin:0 0 var(--space-stack);max-width:70ch}
 /* one specimen: a label naming the class, then the live component */
 .sg-item{background:var(--card);border:var(--border-hairline) solid var(--line2);border-radius:var(--radius-surface);padding:var(--space-stack) var(--space-heading);margin-top:var(--space-control)}
-.sg-item > h3{font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);font-weight:var(--t-h2-fw);margin:0 0 var(--space-glyph)}
+/* ⚠️ `--space-control`, NOT `--space-glyph` (2026-10-13, by request). A glyph gap is the
+   space between an icon and its word; between a block's TITLE and the specimen under it it
+   read as the two being one object. Same step the product puts under a heading. */
+.sg-item > h3{font-family:var(--font-ui);font-size:var(--t-h2-fs);line-height:var(--t-h2-lh);font-weight:var(--t-h2-fw);margin:0 0 var(--space-control)}
+.sg-item > h3 + .sg-note{margin-top:0}
 /* a step below `.sg-item > h3` — for a specimen block holding more than one group,
    like the three colour layers under Tokens */
 /* the button matrix: variants down, states across, icon-only in its own column so the
@@ -9172,8 +9228,19 @@ body[data-page="styleguide"] .dtopbar{display:none}
    (`--radius-tight`) as well — a pill squaring itself on focus, which is not what the
    product does. So these two declarations are the one place in the hooks that repeats a
    value, and they repeat it from the same tokens. */
-.sg-st-focus .typechip,.sg-st-focus .stepper button,.sg-st-focus .searchclear{
+.sg-st-focus .typechip,.sg-st-focus .stepper button:first-child,.sg-st-focus .searchclear{
   outline:var(--border-emphasis) solid var(--ink);outline-offset:2px}
+/* ⚠️ AND THE STEPPER'S GOES BACK INSIDE. This rule sits after the `outline-offset:-2px`
+   one up the file, so without this line it won the cascade and put the ring outside the
+   clip again — where `overflow:hidden` eats it. Same declaration, the offset it needs. */
+/* ⚠️ `:first-child` — two stepper buttons cannot hold focus at once, and a cell ringing
+   both says the control has a state it does not have. */
+.sg-st-focus .stepper button:first-child{outline-offset:-2px}
+/* a done step is the only one the product makes a <button>, so it is the only one with a
+   hover and a focus to show — both ride the component's own rules */
+.sg-st-hover button.nl-step .nl-sname{text-decoration:underline;text-underline-offset:3px}
+.sg-st-focus button.nl-step{outline:var(--border-emphasis) solid var(--ink);outline-offset:3px;
+  border-radius:var(--radius-control)}
 /* the clear control is a glyph, not a boxed button: no fill until it is pointed at */
 .sg-st-hover .searchclear{color:var(--ink);background:var(--hover)}
 /* ⚠️⚠️ AND THE WRAPPER HAS TO SCROLL, OR THE FLOOR ABOVE JUST PUSHES THE TABLE OUT OF

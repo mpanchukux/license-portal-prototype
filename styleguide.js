@@ -241,7 +241,37 @@ $('#sgProducts').innerHTML = nlProductStatedHTML({});
    WORKED — this reads them with `$$`, which is `querySelectorAll` — but it is the same
    fault that cost Home its column row the same day, two pages away. Changed so the new
    duplicate-id guard can be green rather than carrying an exception. */
-$$('.sgWizStep').forEach(function(box){
+/* ---------- the step's own states, side by side ---------------------------------
+   ⚠️ SAME MARKUP AS THE BAR BELOW, one step at a time, so a state cannot look one way
+   here and another in the stepper. `hovered` and `focused` exist only on a DONE step —
+   that is the only one the product makes a <button> — so the other two rows say so
+   rather than drawing a state nothing can enter. */
+(function(){
+  var head = $('#sgStepHead'), body = $('#sgStepBody');
+  if(!head || !body) return;
+  var COLS = ['default', 'hovered', 'focused'];
+  function step(state, n, name){
+    var done = state === 'done', cur = state === 'current';
+    var tag = done ? 'button' : 'div';
+    return '<' + tag + ' type="button" class="nl-step' + (done ? ' is-done' : '')
+      + (cur ? ' is-cur' : '') + '">'
+      + '<span class="nl-smark">' + n + '</span>'
+      + '<span class="nl-stxt"><span class="nl-sname">' + name + '</span></span>'
+      + '</' + tag + '>';
+  }
+  var ROWS = [['done', 1, 'Choose your plan'], ['current', 2, 'Capacity'],
+              ['upcoming', 3, 'Add-ons']];
+  head.innerHTML = '<tr><th>State</th>' + COLS.map(function(c){ return '<th>' + c + '</th>'; }).join('') + '</tr>';
+  body.innerHTML = ROWS.map(function(r){
+    return '<tr><th scope="row">' + r[0] + '</th>' + COLS.map(function(c){
+      if(c !== 'default' && r[0] !== 'done') return '<td><span class="sg-cls">&mdash;</span></td>';
+      var hook = c === 'hovered' ? ' class="sg-st-hover"' : c === 'focused' ? ' class="sg-st-focus"' : '';
+      return '<td' + hook + '>' + step(r[0], r[1], r[2]) + '</td>';
+    }).join('') + '</tr>';
+  }).join('');
+})();
+
+function sgFillWizSteps(){ $$('.sgWizStep').forEach(function(box){
   /* second field = the optional note, not a description: the stepper stopped printing
      descriptions in 2026-09-27 and prints "(Optional)" under the one step that can be
      passed without answering it (see stepOptional in wizard.js) */
@@ -263,7 +293,11 @@ $$('.sgWizStep').forEach(function(box){
       + (d[1] ? '<span class="nl-sopt">' + esc(d[1]) + '</span>' : '') + '</span></div>';
   });
   box.innerHTML = '<div class="nl-steps">' + out + '</div>';
-});
+}); }
+/* ⚠️ CALLED AGAIN AFTER THE WIZARD SHELL IS BUILT, because that shell CREATES a
+   `.sgWizStep` and this pass has already run by then — the stepper in the header was
+   empty until the second call. */
+sgFillWizSteps();
 
 /* ---------- the licence table, both layouts, from the same rows ------------------
    ⚠️ RENDERED BY THE PRODUCT'S OWN BUILDERS, not by markup typed here — and by BOTH of
@@ -298,8 +332,43 @@ $$('.sgWizStep').forEach(function(box){
   if(insts.length){
     fill('#sgInstHead', '#sgInstBody', instAllHeadHTML(),
          insts.slice(0, 4).map(function(r){ return instAllRow(r); }).join(''));
-    fill('#sgInstGHead', '#sgInstGBody', instGroupHeadHTML(),
-         insts.slice(0, 4).map(function(r){ return instGroupRow(r); }).join(''));
+    /* ⚠️⚠️ THE GROUPED TABLE NEEDS ITS GROUP HEADINGS, OR IT IS JUST THE FLAT TABLE WITH
+       A COLUMN MISSING. The rows alone showed "grouping" with nothing saying what each
+       group was; the heading row IS the licence, which is why the grouped view drops the
+       License column at all.
+       ⚠️ `instGroupHeadRow` lives in `page-instances.js`, which this page does not load:
+       that file calls `renderInstancesPage()` at top level, and a page script booting
+       here is how the instance table took the whole script down once already. The row is
+       reproduced from it and flagged — the third copied specimen on this page, with the
+       stepper and the dashboard head. */
+    var byLic = {}, order = [];
+    insts.forEach(function(r){
+      var k = r.lic.id;
+      if(!byLic[k]){ byLic[k] = { lic:r.lic, rows:[] }; order.push(k); }
+      byLic[k].rows.push(r);
+    });
+    var gout = '';
+    order.slice(0, 3).forEach(function(k, n){
+      var g = byLic[k], open = n === 0, last = g.rows.length - 1;
+      gout += '<tr class="instgroup' + (open ? ' is-open' : '') + (n % 2 ? ' is-alt' : '')
+        + '"><td colspan="5"><div class="ig-row">'
+        + '<button type="button" class="ig-btn" aria-expanded="' + (open ? 'true' : 'false') + '">'
+        +   '<span class="ig-chev" aria-hidden="true">' + icon('chevron-down') + '</span>'
+        +   '<span class="ig-mark" aria-hidden="true">' + licenseMark(g.lic) + '</span>'
+        +   '<span class="ig-name"><b>' + esc(g.lic.product || '') + '</b>'
+        +     '<span class="ig-kind"> &middot; ' + esc(g.lic.type || '') + '</span></span>'
+        +   (g.lic.label ? '<span class="ig-desc">' + esc(g.lic.label) + '</span>' : '')
+        +   '<span class="ig-count">' + g.rows.length + ' instance'
+        +     (g.rows.length === 1 ? '' : 's') + '</span>'
+        + '</button>'
+        + '<a class="btn btn--ghost btn--md btn--icon tip ig-open" href="licenses.html"'
+        +   ' aria-label="View license" data-tip="View license">' + icon('arrow-right') + '</a>'
+        + '</div></td></tr>';
+      if(open) gout += g.rows.map(function(r, i){
+        return instGroupRow(r, i === last ? 'is-last' : '');
+      }).join('');
+    });
+    fill('#sgInstGHead', '#sgInstGBody', instGroupHeadHTML(), gout);
   }
   var invs = (DATA().invoices || []).slice(0, 4);
   if(invs.length){
@@ -320,8 +389,12 @@ $$('.sgWizStep').forEach(function(box){
      is the class the list pages toggle when the table outgrows its wrapper, and
      `.cue-r` is the edge cue that says there is more to the right. Both are the
      product's; the only thing this specimen adds is the narrow box. */
+  /* ⚠️ ENOUGH ROWS TO OVERFLOW VERTICALLY TOO. The box was capped in width only, so the
+     specimen called `Scrolled sideways` demonstrated one axis and the other was a
+     straight edge — `overflow-x:auto` computes `overflow-y:auto`, which is the whole
+     reason the product toggles this class rather than declaring it. */
   fill('#sgScrollHead', '#sgScrollBody', licHeadHTML(),
-       rows.slice(0, 3).map(function(p){ return licRowHTML(p, { noLabelEdit:true }); }).join(''));
+       rows.map(function(p){ return licRowHTML(p, { noLabelEdit:true }); }).join(''));
 })();
 
 /* ---------- LICENCES TOOLBAR: the one that won, and its two menus ----------------
@@ -515,28 +588,166 @@ $$('.sgWizStep').forEach(function(box){
         + '<div class="listcard"><div class="feed">'
         + activityList([r], 'global', 'st' + st[0]) + '</div></div>';
     });
-    var mk = function(count, from, to, ts){
-      return { type:'instance.checks_grouped', ts:ts,
-               f:{ entity:'Factory A', count:count, from:from, to:to } };
-    };
-    /* ⚠️⚠️ `.feed` IS NOT DECORATION — IT DRAWS THE RAIL. The vertical line is
-       `.feed > .fsep::before, .feed > .fitem::before`, a DIRECT-CHILD selector, so an
-       entry rendered into a plain `.listcard` loses the axis and the component stops
-       looking like itself. The first build of this block did exactly that. Both hosts in
-       the product wrap the list this way (`#actFeed`, `#dashFeed`). */
-    out.push('<h3>grouped, one run '
-      + '<span class="sg-cls">instance.checks_grouped</span></h3>'
-      + '<div class="listcard"><div class="feed">'
-      + activityList([mk(24, 'Sep 23, 2026, 00:10', 'Sep 23, 2026, 23:10', 'Sep 23 2026, 23:10')],
-                     'global', 'stmany') + '</div></div>');
-    out.push('<h3>grouped, a gap between two runs '
-      + '<span class="sg-cls">the structure is the message</span></h3>'
-      + '<div class="listcard"><div class="feed">' + activityList([
-          mk(4, 'Sep 23, 2026, 20:10', 'Sep 23, 2026, 23:10', 'Sep 23 2026, 23:10'),
-          mk(5, 'Sep 23, 2026, 14:10', 'Sep 23, 2026, 18:10', 'Sep 23 2026, 18:10')
-        ], 'global', 'stgrouped') + '</div></div>');
+    /* ⚠️⚠️ THE GROUPED STATES GO THROUGH `foldChecks`, NOT A HAND-BUILT RECORD
+       (2026-10-13). Typed records carried neither `members` nor `f.license`, so the
+       disclosure never rendered — the specimen printed `24 successful checks … on ·`
+       with a dangling `on` and no `View N more`, which is the one thing a GROUP has to
+       show. Folding real checks gives both, because they are what the fold emits. */
+    var fold = (typeof foldChecks === 'function' && typeof instanceChecks === 'function');
+    var runs = [];
+    if(fold){
+      (DATA().licenses || []).some(function(l){
+        return (l.instances || []).some(function(i){
+          var g = foldChecks(instanceChecks(l, i))
+                    .filter(function(r){ return r.type === 'instance.checks_grouped'; });
+          if(g.length >= 2){ runs = g; return true; }
+          return false;
+        });
+      });
+    }
+    if(runs.length){
+      /* the biggest single run on its own */
+      var big = runs.slice().sort(function(x, y){ return y.f.count - x.f.count; })[0];
+      out.push('<h3>grouped, one run '
+        + '<span class="sg-cls">instance.checks_grouped</span></h3>'
+        + '<div class="listcard"><div class="feed">'
+        + activityList([big], 'global', 'stmany') + '</div></div>');
+      /* ⚠️ TWO CONSECUTIVE RUNS off the same instance, which is what a gap looks like:
+         the fold broke them apart, so the hole between them is the product's own and
+         not a pair of numbers chosen to suggest one. */
+      out.push('<h3>grouped, a gap between two runs '
+        + '<span class="sg-cls">the structure is the message</span></h3>'
+        + '<div class="listcard"><div class="feed">'
+        + activityList(runs.slice(0, 2), 'global', 'stgrouped') + '</div></div>');
+    }
     host.innerHTML = out.join('');
   })();
+})();
+
+/* ---------- the product switcher, both cards, every state ------------------------
+   ⚠️ THE CARD HAS TWO FORMS AND THEY ARE NOT THE SAME COMPONENT TWICE: the chosen one
+   keeps its description and grows (`flex:1 1 auto`), the other hides it. Showing only
+   the live pair showed one of each and no states at all. */
+(function(){
+  var head = $('#sgProdHead'), body = $('#sgProdBody');
+  if(!head || !body || typeof PRODUCT_CHOICES === 'undefined') return;
+  var COLS = ['default', 'hovered', 'focused', 'disabled'];
+  function card(on, dis){
+    var o = PRODUCT_CHOICES[0];
+    return '<div class="nl-prodcards" style="width:auto">'
+      + '<button type="button" class="dblock nl-prodcard' + (on ? ' on' : '') + '"'
+      +   ' role="radio" aria-checked="' + on + '"' + (dis ? ' disabled' : '') + '>'
+      +   '<span class="nl-prodic">' + (productMark(o.v) || icon(o.ic, { size:24 })) + '</span>'
+      +   '<span class="nl-prodtxt"><span class="nl-prodname">' + esc(o.t) + '</span>'
+      +     '<span class="nl-proddesc">' + esc(o.d) + '</span></span>'
+      + '</button></div>';
+  }
+  head.innerHTML = '<tr><th>Card</th>' + COLS.map(function(c){ return '<th>' + c + '</th>'; }).join('') + '</tr>';
+  body.innerHTML = [['selected', true], ['not selected', false]].map(function(r){
+    return '<tr><th scope="row">' + r[0] + '</th>' + COLS.map(function(c){
+      var hook = c === 'hovered' ? ' class="sg-st-hover"' : c === 'focused' ? ' class="sg-st-focus"' : '';
+      return '<td' + hook + '>' + card(r[1], c === 'disabled') + '</td>';
+    }).join('') + '</tr>';
+  }).join('');
+})();
+
+/* ---------- the bottom sheet and the wizard shell, from the product's markup ------
+   ⚠️⚠️ BOTH WERE DRAWINGS AND BOTH WERE WRONG. The sheet was a `.pop` with six inline
+   styles faking a handle and a radius — not one class the component actually uses — and
+   the wizard box had no mesh ground, a `ghost` close instead of `secondary`, and the
+   stepper OUTSIDE the header, which is the one thing the 2026-09-29 pass moved into it.
+   The strings below are the product's own (`components.js` ensureSheet, `wizard.js`
+   nlModal); every control goes through `button()` so the button guard still reads them. */
+(function(){
+  var sheet = $('#sgSheet');
+  if(sheet){
+    function opt(text, count, on){
+      return '<button type="button" class="dropcheck fsheet-opt' + (on ? ' is-on' : '') + '"'
+        + ' role="checkbox" aria-checked="' + (on ? 'true' : 'false') + '">'
+        + '<span class="fsheet-opt-t">' + text + '</span>'
+        + '<span class="fsheet-opt-n">' + count + '</span>'
+        + icon('check', { cls:'cc-check' }) + '</button>';
+    }
+    /* the panel only — the scrim is the surface behind it, and a specimen that painted
+       one would be showing the page it covers rather than the sheet */
+    sheet.innerHTML = '<div class="fsheet is-open" style="position:static;display:block">'
+      + '<div class="fsheet-panel" role="dialog" aria-modal="true" aria-label="Status">'
+      +   '<div class="fsheet-head">'
+      +     '<h2 class="fsheet-title">Status</h2>'
+      +     button({ variant:'ghost', size:'md', icon:'x', ariaLabel:'Close', cls:'fsheet-x' })
+      +   '</div>'
+      +   '<div class="fsheet-list" role="group">'
+      +     opt('All statuses', 17, true) + opt('Active', 12, false)
+      +     opt('Blocked', 2, false) + opt('Canceled', 3, false)
+      +   '</div>'
+      +   '<div class="fsheet-foot">'
+      +     button({ variant:'primary', size:'lg', label:'Show', cls:'fsheet-apply' })
+      +   '</div>'
+      + '</div></div>';
+  }
+
+  var box = $('#sgWizBox');
+  if(box){
+    box.innerHTML = '<div class="fs-screen" style="position:static;display:block">'
+      + '<div class="fs-box" style="height:460px">'
+      /* ⚠️ THE SAME MESH NODE HOME CARRIES, not a copy of it: identical markup, identical
+         rules, and `.fs-box` isolates so the z-index:-1 layer stays inside the box. */
+      +   '<div class="meshbg" aria-hidden="true">'
+      +     '<span class="mb-lav"></span><span class="mb-lav2"></span><span class="mb-cream2"></span>'
+      +   '</div>'
+      +   '<div class="fs-header nl-header">'
+      +     '<h2 class="fs-maintitle">Buy a license</h2>'
+      +     '<div class="nl-stepbar"><div class="sgWizStep"></div></div>'
+      +     '<span class="spacer"></span>'
+      +     '<div class="fs-headactions">'
+      +       button({ variant:'secondary', size:'md', icon:'x', ariaLabel:'Close', cls:'fs-close' })
+      +     '</div>'
+      +   '</div>'
+      +   '<div class="fs-body"><p class="sg-note" style="margin:0">Step content renders here.</p></div>'
+      /* ⚠️ NO ACTION ROW (2026-10-13, by request). The footer belongs to the STEP, not
+         to the shell: which buttons it carries is what each step decides. */
+      + '</div></div>';
+    if(typeof sgFillWizSteps === 'function') sgFillWizSteps();
+  }
+})();
+
+/* ---------- Home's three blocks, with their real bodies -------------------------
+   ⚠️ THE PAGE SHOWED ONE EMPTY BLOCK WITH A HEADING AND THE WORDS "Block body", which
+   documents the frame and nothing about what the frame is for. Home carries three and
+   they are not interchangeable: two hold tables, one holds the feed, and the ground
+   alternates between them.
+   ⚠️ THE HEAD MARKUP IS COPIED, and it is the second place on this page that is.
+   `blockHeadHTML` lives in `page-home.js`, which this page does not load and should not
+   — loading it would run Home's boot. Four lines, flagged here the way the stepper
+   specimen is: if `.dbh-link` changes, this changes. */
+(function(){
+  var host = $('#sgDashBlocks'); if(!host) return;
+  function head(n, title, href){
+    return '<div class="dblock-head"><a class="dbh-link" href="' + href + '"'
+      + ' aria-label="Open all ' + (n === null ? '' : n + ' ') + title.toLowerCase() + '">'
+      + '<h2>' + title + '</h2>'
+      + (n === null ? '' : '<span class="dbh-count">' + n + '</span>')
+      + icon('arrow-right', { size:24, cls:'dbh-arrow' }) + '</a></div>';
+  }
+  var lics = (DATA().licenses || []).slice(0, 3);
+  var invs = (DATA().invoices || []).slice(0, 3);
+  var acts = (DATA().activity || []).slice(0, 3);
+  var out = '';
+  out += '<div class="dblock band">' + head(lics.length, 'Licenses', 'licenses.html')
+    + '<div class="tablescroll"><table><thead>' + licHeadHTML() + '</thead><tbody>'
+    + lics.map(function(p){ return licRowHTML(p, { noLabelEdit:true }); }).join('')
+    + '</tbody></table></div></div>';
+  out += '<div class="dblock noband">' + head(invs.length, 'Invoices', 'invoices.html')
+    + '<div class="tablescroll"><table><thead>'
+    + '<tr><th>Invoice #</th><th>Date</th><th class="num">Amount</th><th>Status</th>'
+    + '<th class="lic-prodhead">Product</th><th aria-label="Invoice actions"></th></tr>'
+    + '</thead><tbody>' + invs.map(function(v){ return invRow(v); }).join('')
+    + '</tbody></table></div></div>';
+  /* ⚠️ NO COUNT ON THE FEED, and the absence is the product's: the feed is mostly derived
+     check-ins, so a number here would say "the machine reported a lot". */
+  out += '<div class="dblock band">' + head(null, 'Activity', 'activity.html')
+    + '<div class="feed">' + activityList(acts, 'global', 'dash') + '</div></div>';
+  host.innerHTML = out;
 })();
 
 /* ---------- the Home banner, in its two shapes, BUILT BY THE BANNER ---------------
@@ -790,7 +1001,7 @@ $$('.sgWizStep').forEach(function(box){
    with it. The old `.sg-toc` was a hand-typed list and had already drifted — it linked
    to `#solo`, `#snack`, `#sheet` and four others that were not sections at all.
 
-   ⚠️ FIVE ITEMS ARE PROMOTED TO PAGES OF THEIR OWN, and they are promoted HERE rather
+   ⚠️ THREE ITEMS ARE PROMOTED TO PAGES OF THEIR OWN, and they are promoted HERE rather
    than re-nested in the HTML. They were `.sg-item`s inside `#empty`, which had become a
    drawer: an empty state, a bottom sheet, a snackbar and the Home banner are four
    different components that shared a section only because nobody had moved them out.
@@ -807,7 +1018,7 @@ $$('.sgWizStep').forEach(function(box){
   if(!wrap || !nav) return;
 
   /* [id, label] — the label is what the rail shows; the page keeps its own heading */
-  var PROMOTE = ['infoicon', 'alerticon', 'homebanner', 'sheet', 'snack'];
+  var PROMOTE = ['homebanner', 'sheet', 'snack'];
   PROMOTE.forEach(function(id){
     var item = document.getElementById(id);
     if(!item || item.classList.contains('sg-sec')) return;
@@ -825,9 +1036,7 @@ $$('.sgWizStep').forEach(function(box){
      written to be read above a specimen — "Where a message goes — two places, one rule
      each" — which is right there and wrong in a 240px rail. Overridden by id; every other
      page still takes its own heading, so nothing has to be kept in step. */
-  var LABEL = { homebanner:'Home banner',
-                infoicon:'Info icon', alerticon:'Alert icon', sheet:'Bottom sheet',
-                snack:'Snackbar' };
+  var LABEL = { homebanner:'Home banner', sheet:'Bottom sheet', snack:'Snackbar' };
   function labelOf(sec){
     if(LABEL[sec.id]) return LABEL[sec.id];
     var h = sec.querySelector('h2, h3');

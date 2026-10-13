@@ -3674,9 +3674,15 @@ function instLicCell(l){
   return '<td class="ia-lic"><span class="lp-cell">'
     + '<span class="lp-ic lp-ic--sm" aria-hidden="true">' + licenseMark(l) + '</span>'
     + '<span class="ia-lictxt">'
+    /* ⚠️⚠️ THE PRODUCT LINE LEADS, THE LABEL FOLLOWS (2026-10-13, by request). It was the
+       other way round, so the License column opened with `Factory A`, `On-prem HQ`, `Demo`
+       and you had to read the grey second line to learn what kind of licence each was —
+       the same fault the GROUPED view's heading was turned around to fix on 2026-09-29,
+       left standing in the flat view. ⚠️ The label is simply ABSENT when there is none;
+       nothing stands in for it, which is what the grouped heading does too. */
     +   '<a class="link" href="' + licenseHref(l, 'instances') + '" data-invlic="' + esc(l.id) + '">'
-    +   esc(l.label || l.name) + '</a>'
-    +   '<span class="ia-licsub">' + esc(l.product || '') + ' · ' + esc(l.type) + '</span>'
+    +   esc(l.product || '') + ' · ' + esc(l.type) + '</a>'
+    +   (l.label ? '<span class="ia-licsub">' + esc(l.label) + '</span>' : '')
     + '</span></span></td>';
 }
 function instAgoCell(i){ return '<td>' + agoText(i.agoMin) + '</td>'; }
