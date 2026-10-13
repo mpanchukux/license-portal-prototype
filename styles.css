@@ -916,6 +916,20 @@ a{color:inherit}
 .menu .pop{position:absolute;right:0;top:36px;background:#fff;border:var(--border-hairline) solid var(--line2);border-radius:var(--radius-control);min-width:160px;padding:var(--space-tight);box-shadow:var(--elevation-menu);z-index:var(--z-popover)}
 .menu .pop[hidden]{display:none}
 .menu .pop button{display:block;width:100%;text-align:left;padding:var(--space-inline) var(--space-inline);border:var(--border-none);background:transparent;border-radius:var(--radius-control);font-size:var(--t-body-fs);color:var(--ink)}
+/* ⚠️⚠️ `[hidden]` ON A MENU ITEM HAD NO EFFECT, AND THE ITEM WAS `Cancel subscription`
+   (found 2026-10-13, while the ⋮ became the phone's primary action). The rule above sets
+   `display:block` at (0,2,1) and the UA's `[hidden]{display:none}` is (0,0,1), so every
+   item the renderer hides by attribute went on showing: measured on a Community Grant at
+   375px, the sheet offered `Apply coupon` and `Cancel subscription` — a grant has neither
+   a coupon nor a subscription to cancel — and `elementFromPoint` returned the button, so
+   they were pressable, not merely painted.
+   ⚠️ THIS IS THE EIGHTH CASE OF THE CLASS `NOTES.md` HAS BEEN COUNTING: a class declares
+   `display`, JS flips `hidden`, the flag is set and the layout ignores it. It is fixed for
+   every `.menu .pop` at once rather than for the one item that exposed it, because the
+   cause is the rule, not the item. (0,3,1) — it also outranks the phone block's
+   `.menu .pop .mob-only{display:block}` at (0,3,0), which is the other rule that was
+   showing hidden items at this width. */
+.menu .pop button[hidden]{display:none}
 .menu .pop button:hover{background:var(--hover)}
 
 /* ⚠️ `overflow:visible`, and it was `auto`. In page mode that made THIS the nearest
@@ -3387,6 +3401,18 @@ body[data-tableframe] #dashView .dblock > table{margin-left:calc(-1 * var(--spac
    ring, which `outline-offset:-2px` draws just inside the button, where nothing clips it. */
 .stepper{display:inline-flex;align-items:center;border:var(--border-hairline) solid var(--line);border-radius:var(--radius-interactive);overflow:hidden;width:max-content}
 .stepper button:focus-visible,.sg-st-focus .stepper button{outline-offset:-2px}
+/* ⚠️⚠️ AND THE RING NEEDS A CURVE TO FOLLOW (2026-10-13, third pass). The offset moved it
+   inside the clip, which stopped `overflow:hidden` eating it whole — but an outline takes
+   the radius of the ELEMENT IT RINGS, and the buttons had none. So a square ring met the
+   pill end of the box, and its two outer corners were the part the clip cut: the ring read
+   as broken at exactly the corners the request named. The buttons carry the box's own
+   radius on their outer corners now, and the ring follows it.
+   ⚠️ SAME TOKEN, NOT A COPIED NUMBER: the button is 40 tall and the box 42 with its two
+   hairlines, so `--radius-interactive` clamps to 20 on the button and to 21 on the box —
+   whose PADDING box, the thing that clips, is 20. The two curves are concentric, which is
+   why a −2px ring sits 2px inside the clip the whole way round rather than at one end. */
+.stepper button:first-child{border-radius:var(--radius-interactive) 0 0 var(--radius-interactive)}
+.stepper button:last-child{border-radius:0 var(--radius-interactive) var(--radius-interactive) 0}
 .stepper button{width:var(--btnH);height:var(--btnH);border:var(--border-none);background:#fff;color:var(--ink);font-size:var(--t-body-fs);line-height:1;display:inline-flex;align-items:center;justify-content:center}
 /* ⚠️⚠️ HOVER IS AN INK TINT, NOT `--hover` (2026-10-09, by request: "lighter, and the tone
    must not drift warm — not brown"). The declaration read `background:var(--hover)`, and
@@ -6795,7 +6821,19 @@ body[data-mesh] .dtopbar.docked{background:var(--card);border-bottom-color:var(-
   .hcinv{grid-template-columns:auto auto minmax(0,1fr);row-gap:var(--space-control);column-gap:var(--space-control);
     align-items:start;padding:var(--space-stack) 0}
   .hcinv-when{display:contents}
-  .hcinv-num{grid-row:1;grid-column:1/3;margin-top:0}
+  /* ⚠️⚠️ THE NUMBER CENTRES ON THE BUTTONS, AND TAKES THE INK (2026-10-13, by request).
+     Band 1 holds two things of very different heights — a 14px line and a 44px pair of
+     targets — and `align-items:start` above put both at the band's top edge, so the
+     number sat 11.9px above the glyphs it shares the line with (measured). `align-self`
+     on the number alone: the buttons define the band's height, so the shorter item is
+     the one with somewhere to move.
+     ⚠️ INK, NOT `--mid`, AND ONLY HERE. On the desktop this card leads with the DATE and
+     the number sits under it as a reference, which is what the quiet grey says. This
+     layout reversed that — the number is row 1, the thing you read to find an invoice —
+     and a lead line in reference grey was the one place the phone card still spoke the
+     desktop's order. The colour follows the ROLE the layout gives it, which is why it is
+     written in the layout that changes the role. */
+  .hcinv-num{grid-row:1;grid-column:1/3;margin-top:0;align-self:center;color:var(--ink)}
   .hcinv-act{grid-row:1;grid-column:3;justify-self:end}
   .hcinv-prod{grid-row:2;grid-column:1/-1;padding-top:var(--space-control);border-top:var(--border-hairline) solid var(--line2)}
   .hcinv-licname{white-space:normal}
@@ -9817,6 +9855,21 @@ body[data-page="styleguide"] .tablescroll{overflow-x:auto}
 
   /* ---------- Home: single column, full width ---------- */
   body[data-page="home"] .dwrap{padding-top:var(--space-block)}
+  /* ---------- the list pages open at the same height as Home ----------
+     ⚠️⚠️ ONE GAP, NOT THREE (2026-10-13, by request: "as on Home"). The four list pages
+     ran 52px from the app bar to their title and Home ran 24, and the 52 was not one
+     decision: `--pageY` on `.licview` (20) + the frame's own `margin-top` (16) + the
+     title row's `padding-top` (16), three rules that never met. Each is right on the
+     desktop, where the frame is a visible card standing off the page; on the phone the
+     frame has no border and no ground of its own, so all three were measuring a box
+     nobody can see.
+     ⚠️ THE WRAPPER OWNS THE GAP, exactly as Home's line above does, and the two inside
+     it give up theirs. `:has` rather than four `data-page` names: the shape is "a list
+     page with a title row", and the fifth page to carry one should not have to be
+     remembered here. */
+  .licview:has(> .listcard > .lic-titlerow){padding-top:var(--space-block)}
+  .licview > .listcard:has(> .lic-titlerow){margin-top:0}
+  .lic-titlerow{padding-top:0}
   /* greeting, then the banner, then the blocks — the action goes full width under
      the greeting instead of sitting beside it */
   .dwelcome{flex-direction:column;align-items:stretch;gap:var(--space-stack)}
@@ -10423,6 +10476,19 @@ body[data-page="styleguide"] .tablescroll{overflow-x:auto}
      from a component that has one. Saying "take the tag's size" costs no value and cannot
      drift from `.pill`; writing 14 here would be the second place that number lives. */
   #appView .headtags .statmark{font-size:inherit}
+  /* ⚠️⚠️ NO OUTLINE, AND NO FILL EITHER (2026-10-13, by request: "take the grey outline off
+     the tags so they just lie on the background"). `.pill.soft` is a white box with a
+     `--line` hairline, and the head it stands on is the lavender tint — so dropping only the
+     border would have left a white box on a tinted ground, which is the same box with a
+     softer edge and not what the request describes. Both go; the facts lie on the head's own
+     ground, separated by the row's gap and by the glyph each one leads with.
+     ⚠️ THE COMPONENT IS NOT FORKED. This is the tag ROW overriding what a pill looks like IN
+     THIS ONE ROW, the way the row already overrides `order` and `font-size` above; `.pill`
+     itself is untouched and its 32 other instances keep the box. If the tags are ever asked
+     to be boxes again, this is the one block to delete.
+     ⚠️ Measured: the tag loses its 2px of border height (26.3 → 24.3) and the inset stays,
+     so the gap between two facts reads as 8 (row) + 8 + 8 (their own side padding) = 24. */
+  #appView .headtags > .pill{border:var(--border-none);background:none}
   .idline{order:1}
   .metarow{order:2}
   .headactions{order:8;margin:var(--space-stack) 0 0}
@@ -10468,8 +10534,22 @@ body[data-page="styleguide"] .tablescroll{overflow-x:auto}
      the note where placeOverflow used to be). `:not(.kebab-btn)` is what stops the
      overflow being stretched to half the row. */
   .headactions .btn:not(.kebab-btn){flex:1}
-  .headactions .kebab-btn{flex:none;width:44px;padding:0;
+  /* ⚠️⚠️ `:not(.is-action)` — THE DISC SIZING APPLIES WHILE IT IS A DISC (2026-10-13).
+     When a licence has no other action the renderer turns this button into the primary one,
+     with the word `Menu` in it (see `applyLicMenuAction`), and a 44px square with `padding:0`
+     would have clipped the word to its first letter. The square is what an ICON-ONLY button
+     needs, so it is written as the icon-only case rather than as "the kebab, always". */
+  .headactions .kebab-btn:not(.is-action){flex:none;width:44px;padding:0;
     display:inline-flex;align-items:center;justify-content:center;font-size:20px}
+  /* it is the row's only action then, so it takes the row — the same band `Change plan`
+     fills on every licence that has one.
+     ⚠️ THE FLEX ITEM IS THE `.menu` WRAPPER, NOT THE BUTTON. `#headKebabBtn` sits inside
+     `#headKebabMenu` (the pop has to be positioned against something), so `flex:1` on the
+     button is a declaration on a child of an `inline-block` and does nothing: measured
+     90.25px in a 343px row with `flex:1 1 0%` computed on it. The wrapper grows and the
+     button fills it. */
+  .headactions .menu:has(> .kebab-btn.is-action){flex:1}
+  .headactions .kebab-btn.is-action{width:100%}
 
   /* ---------- the app bar: ✕ leading, title, ⋮ as the single trailing action ----
      ⚠️ In the sheet the ✕ sits inside `.fs-headactions`, so `order` alone could not

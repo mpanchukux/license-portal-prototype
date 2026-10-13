@@ -272,13 +272,13 @@ $('#sgProducts').innerHTML = nlProductStatedHTML({});
 })();
 
 function sgFillWizSteps(){ $$('.sgWizStep').forEach(function(box){
-  /* second field = the optional note, not a description: the stepper stopped printing
-     descriptions in 2026-09-27 and prints "(Optional)" under the one step that can be
-     passed without answering it (see stepOptional in wizard.js) */
-  var S = [['Choose your plan',''],
-           ['Capacity',''],
-           ['Add-ons','(Optional)'],
-           ['Review & pay','']];
+  /* ⚠️ NAMES ONLY, LIKE THE PRODUCT (2026-10-13, by request). The second field was the
+     "(Optional)" note under Add-ons, and the product stopped printing it on 2026-09-28
+     together with `stepOptional` and `.nl-sopt` — the rule that styled it went from the
+     stylesheet in the same pass. So this specimen was printing an unstyled span for a
+     label no step has carried for two weeks: the page promising what the product does
+     not do, in the one place that claims to BE the product's stepper. */
+  var S = ['Choose your plan', 'Capacity', 'Add-ons', 'Review & pay'];
   var here = 1;                                   // done · CURRENT · upcoming · upcoming
   var out = '';
   S.forEach(function(d, n){
@@ -289,8 +289,7 @@ function sgFillWizSteps(){ $$('.sgWizStep').forEach(function(box){
 
     out += '<div class="nl-step' + (done ? ' is-done' : '') + (cur ? ' is-cur' : '') + '">'
       + '<span class="nl-smark">' + (n + 1) + '</span>'
-      + '<span class="nl-stxt"><span class="nl-sname">' + esc(d[0]) + '</span>'
-      + (d[1] ? '<span class="nl-sopt">' + esc(d[1]) + '</span>' : '') + '</span></div>';
+      + '<span class="nl-stxt"><span class="nl-sname">' + esc(d) + '</span></span></div>';
   });
   box.innerHTML = '<div class="nl-steps">' + out + '</div>';
 }); }

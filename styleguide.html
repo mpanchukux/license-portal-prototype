@@ -575,10 +575,6 @@
           <div class="listcard"><div class="tablescroll"><table><tbody><tr><td colspan="6" class="emptybox">No invoices &mdash; the Community Grant is free.</td></tr></tbody></table></div></div>
           <span class="sg-cls">td.emptybox (in a table)</span>
         </div>
-        <div class="sg-cell" style="flex:1;min-width:280px">
-          <div class="emptybox">No events in the selected period.</div>
-          <span class="sg-cls">.emptybox (in a feed)</span>
-        </div>
       </div>
     </div>
 
@@ -617,16 +613,10 @@
 
     <div class="sg-item" id="snack">
       <h3>Snackbar <span class="sg-cls">.snack</span></h3>
-      <p class="sg-note">A transient message that reports something <b>happened</b>, then leaves
-        on its own (4.2s) &mdash; with a dismiss for the impatient. <b>Two anchors, one per
-        breakpoint:</b> on the desktop it sits at the <b>bottom</b> of the viewport, in the margin
-        below the content; <b>below 600px it anchors to the TOP</b>, 12px under the app bar, where
-        there is one fixed thing to clear and nothing pinned below it.
-        <code class="sg-cls">role="status"</code>, not <code class="sg-cls">alert</code> &mdash; an
-        alert interrupts.</p>
-      <p class="sg-note"><b>Confirmations leave; problems stay.</b> The snackbar carries completed
-        actions. <b>It never carries a field error</b>: those stay inline beside the input, because
-        the person reads them <i>while</i> fixing the thing they describe.</p>
+      <p class="sg-note">A transient message that reports something happened and leaves after
+        4.2s, with a dismiss. <code class="sg-cls">role="status"</code>, not
+        <code class="sg-cls">alert</code>. It sits at the bottom of the viewport on desktop;
+        below 600px at the top, 12px under the app bar.</p>
       <div class="sg-static" style="min-height:96px">
         <div class="snack on" style="position:static;transform:none;margin:0 auto;max-width:420px">
           <span class="snack-t">Invitations sent to 3 people</span>

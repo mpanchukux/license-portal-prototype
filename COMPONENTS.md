@@ -1016,6 +1016,11 @@ which is why the page can now carry a single heading for it.
 |---|---|
 | **result of an action** — finished, and no truer for staying on screen | **snackbar**, outside the licence panel: bottom of the viewport on desktop, top below 600px. Leaves on its own |
 | **persistent state** — true until something changes | **the slot below the panel header** (`#subAlert`). One at a time; if two are true, the more serious one names the other |
+| **field error** — about one input | **inline beside that input**, never the snackbar: the person reads it *while* fixing the thing it describes |
+
+⚠️ **The field-error row came here 2026-10-13**, when the snackbar's prose on the styleguide
+was cut to a description. It was the only place the rule was written down, and a description
+is not where a rule lives — the same move the Messages tab made a day earlier.
 
 **The snackbar's inventory**, and it is a closed list: plan changed · capacity purchased ·
 add-on removed · coupon applied · label saved · payment method updated · subscription

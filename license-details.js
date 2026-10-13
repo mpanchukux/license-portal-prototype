@@ -1265,6 +1265,9 @@ function renderLicenseDetails(lic){
      READING one: it would have decided whether to show the version tag from the PREVIOUS
      licence's content. A mover that reads a fact has to run after the fact is written. */
   applyLicHeadTags();
+  /* ⚠️ AFTER `renderLicenseActions`, for the same reason the tags run after the version:
+     it reads which buttons are showing, and that is decided there. */
+  applyLicMenuAction();
   applyLicPlan();
   renderLicFeed(lic);
 }
@@ -1321,7 +1324,18 @@ function applyLicHeadTags(){
   /* status, version, renewal — the order the request names, and the order the row renders in,
      because inside the tag row the column's `order` numbers are cancelled (see the stylesheet)
      and DOM order governs. Appending in this sequence is therefore the whole specification. */
-  var ids = ['statusSlot', 'licVersionMob', 'periodValueSub'];
+  /* ⚠️⚠️ THE TERM TAG FOLLOWS THE VARIANT, AND BEFORE THIS IT DID NOT (2026-10-13, by
+     request: "No expiry goes in the tag instead of Renews, and so does Updates — they are
+     two kinds of one thing, a term"). The list named `periodValueSub` outright, so on a
+     perpetual or a grant the mover carried off a node whose own `[data-page]` parent was
+     hidden — the panel does not hide the CHILD, only the column — and the row gained an
+     EMPTY pill: measured 18 × 6px, a grey dash beside `Active` on every grant and every
+     perpetual since the tags were built. The same fact exists for those two licences under
+     another id, and it was sitting in a hidden column saying `No expiry` / `Updates until`.
+     ⚠️ ONE TAG EITHER WAY, never two: the variant that is not on screen is sent home below,
+     so the row carries the term of the licence it is describing and nothing else. */
+  var perp = !!$('#appView [data-page="perp"]:not([hidden])');
+  var ids = ['statusSlot', 'licVersionMob', perp ? 'periodValuePerp' : 'periodValueSub'];
   var phone = LIC_PLAN_MQ.matches;
   ids.forEach(function(id){
     var el = $('#' + id); if(!el) return;
@@ -1351,7 +1365,15 @@ function applyLicHeadTags(){
     }
     el.hidden = false;
     if(phone){
-      if(el.parentNode !== host) host.appendChild(el);
+      /* ⚠️⚠️ APPEND EVERY TIME, NOT ONLY ON ARRIVAL (2026-10-13). The guard `parentNode !==
+         host` left a node that was already here where it stood, which was harmless while the
+         same three nodes moved in every time — they kept their first order for ever. Once the
+         term tag became one of TWO nodes (sub or perp), the newcomer landed at the END: the
+         same licence read `Active · 3.9.4 · Updates until …` or `Active · Updates until … ·
+         3.9.4` depending on which licence had been open before it. Re-appending an element
+         that is already here MOVES it, so the sequence in `ids` is the order on screen every
+         time, which is what the comment above always claimed. */
+      host.appendChild(el);
       el.classList.remove('rowvalue');
       el.classList.add('pill', 'soft');
     } else {
@@ -1360,9 +1382,67 @@ function applyLicHeadTags(){
       if(el.id !== 'statusSlot') el.classList.add('rowvalue');
     }
   });
+  /* ⚠️ THE OTHER VARIANT'S VALUE GOES HOME. Opening a perpetual after a subscription would
+     otherwise leave the subscription's node in the tag row — moved there by the previous
+     licence, and not in `ids` any more to be moved back. It returns to its own column,
+     where its `[data-page]` parent is already hidden, and the row is left with one term. */
+  var idle = $('#periodValue' + (perp ? 'Sub' : 'Perp'));
+  if(idle && idle.__tagHome && idle.parentNode !== idle.__tagHome){
+    idle.__tagHome.appendChild(idle);
+    idle.classList.remove('pill', 'soft');
+    idle.classList.add('rowvalue');
+  }
   host.hidden = !phone;
 }
 LIC_PLAN_MQ.addEventListener('change', function(){ try { applyLicHeadTags(); } catch(e){} });
+/* ⚠️⚠️ WHEN THE ⋮ IS THE ONLY ACTION LEFT, IT STOPS BEING AN OVERFLOW (2026-10-13, by
+   request: "if there is no Change plan button, the menu becomes the primary action, with
+   the text and the title Menu"). A perpetual and a grant have no primary — the one was
+   dropped because they do not change plan, the other because they do not renew — so the
+   phone's action row was a single 44px disc under a full-width band of white, and the one
+   way into Reveal key, Installation instructions and Edit label at that width looked like
+   an afterthought beside a button that was not there.
+   ⚠️ THE TEST IS "NOTHING ELSE IS SHOWING", NOT "NO CHANGE PLAN", and the difference is a
+   cancelled subscription: it hides Change plan and shows `Renew subscription` instead, so
+   keying on Change plan alone would have put a PRIMARY `Menu` beside it and made the
+   overflow louder than the action the licence actually wants. Computed display, not the
+   `hidden` attribute, because `#couponBtn` is in the DOM and unhidden at this width — the
+   stylesheet puts it in the pop (see the ≤600px block), which `hidden` cannot see.
+   ⚠️ PHONE ONLY. On the desktop the overflow sits in a header row that has its own width
+   and its own inline controls beside it; nothing there reads as a lone disc.
+   ⚠️ THE COMPONENT'S OWN SHAPE: variant swaps primary ⇄ secondary, `btn--icon` comes off
+   because the button is no longer icon-only, the glyph takes `btn-ic` and the word goes in
+   `btn-txt` — the two class names `button()` emits for exactly this content. The accessible
+   name comes from the word while it is there, so the `aria-label` that stood in for it is
+   removed rather than left to contradict it. */
+function applyLicMenuAction(){
+  var btn = $('#headKebabBtn'); if(!btn) return;
+  var zone4 = $('#appView .headactions'); if(!zone4) return;
+  var lone = LIC_PLAN_MQ.matches && !$$('.btn', zone4).some(function(b){
+    return b !== btn && !b.hidden && getComputedStyle(b).display !== 'none';
+  });
+  var sv = $('.ic', btn), txt = $('.btn-txt', btn);
+  btn.classList.toggle('btn--primary', lone);
+  btn.classList.toggle('btn--secondary', !lone);
+  btn.classList.toggle('btn--icon', !lone);
+  btn.classList.toggle('is-action', lone);
+  if(sv) sv.classList.toggle('btn-ic', lone);
+  if(lone){
+    if(!txt){
+      txt = document.createElement('span');
+      txt.className = 'btn-txt';
+      txt.textContent = 'Menu';
+      btn.appendChild(txt);
+    }
+    btn.title = 'Menu';
+    btn.removeAttribute('aria-label');
+  } else {
+    if(txt) txt.remove();
+    btn.removeAttribute('title');
+    btn.setAttribute('aria-label', 'More actions');
+  }
+}
+LIC_PLAN_MQ.addEventListener('change', function(){ try { applyLicMenuAction(); } catch(e){} });
 /* ⚠️ THE INVOICES TAB CROSSES THE SAME LINE, so it repaints on the same signal — the table
    and the card host are chosen by width inside `renderLicInvoices`, and without this the one
    that was right when the panel opened stays on screen after a rotation. `activeLicense` is

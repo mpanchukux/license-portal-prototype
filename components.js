@@ -3752,12 +3752,22 @@ function instCardHTML(r){
     +     '<span class="ver-run">' + (i.version ? versionMark(behind) : '') + esc(i.version || '\u2014') + '</span></span>'
     +   '<span class="instc-ago">' + agoText(i.agoMin) + '</span>'
     + '</div>'
+    /* ⚠️⚠️ THE PRODUCT LINE LEADS HERE TOO (2026-10-13, by request), AND THIS IS THE THIRD
+       PLACE THE SAME FAULT STOOD IN. The grouped view's heading was turned around on
+       2026-09-29, the flat table's `instLicCell` earlier today — and the phone card went on
+       opening with `Factory A` / `On-prem HQ` / `Demo`, so the one surface with the least
+       room spent its lead line on the name a person gave the licence and made the kind of
+       licence the grey line underneath. Same builder family, same order now: product · kind
+       as the link, label beneath it.
+       ⚠️ THE LABEL IS ABSENT WHEN THERE IS NONE, exactly as the table leaves it — nothing
+       stands in for it, because an empty second line under a product name reads as a fact
+       that failed to load. */
     + '<div class="instc-lic"><span class="lp-cell">'
     +   '<span class="lp-ic lp-ic--sm" aria-hidden="true">' + licenseMark(l) + '</span>'
     +   '<span class="ia-lictxt">'
     +     '<a class="link" href="' + licenseHref(l, 'instances') + '" data-invlic="' + esc(l.id) + '">'
-    +     esc(l.label || l.name) + '</a>'
-    +     '<span class="ia-licsub">' + esc(l.product || '') + ' \u00b7 ' + esc(l.type) + '</span>'
+    +     esc(l.product || '') + ' \u00b7 ' + esc(l.type) + '</a>'
+    +     (l.label ? '<span class="ia-licsub">' + esc(l.label) + '</span>' : '')
     +   '</span></span></div>'
   + '</div>';
 }

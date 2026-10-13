@@ -32,6 +32,15 @@ def sig(head):
 # D  a design-system decision — goes into SCALES.md / COMPONENTS.md first
 # E  closed (detected from the strikethrough, never written here)
 CAT = {
+  # ---- 2026-10-13, the sixth pass: the instance card leads with the licence ----
+  'd13fabdb09': 'B',  # three builders draw the instance row's licence; the order is three copies of one decision
+  # ---- 2026-10-13, the fifth pass: the phone pass ----
+  '476e43a426': 'D',  # the invoice number is ink on the phone and grey on the desktop: one component, two answers
+  '9cb97f0c80': 'D',  # Menu is the first button whose variant is assembled at runtime rather than by button()
+  '586948b8b5': 'B',  # Reveal key never displays in the pop by design, so a grant's menu holds one item
+  # ---- 2026-10-13, the fourth pass: the stepper ring, and three texts cut ----
+  'a7e3000044': 'D',  # the bare .emptybox lost its specimen while five live writers keep drawing it
+  '5cc4c16911': 'D',  # the message-placement table gained a third kind and nothing censuses it
   # ---- 2026-10-12, publishing version 14 ----
   '0251ed39cb': 'C',  # the artifact drifts behind main between sessions; publishing is manual
   # ---- 2026-10-12, the fourteenth pass: field states built, tables and toolbars gathered ----
